@@ -1,0 +1,6 @@
+rootProject.name = 'DuDung'
+include 'DuDung-Domain'
+include 'DuDung-Infrastructure'
+include 'DuDung-Api'
+include 'DuDung-Common'
+

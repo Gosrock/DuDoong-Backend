@@ -1,0 +1,62 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '2.7.7'
+    id 'com.diffplug.spotless' version '6.11.0'
+}
+
+bootJar.enabled = false
+
+repositories {
+    mavenCentral()
+}
+
+repositories {
+    mavenCentral()
+}
+
+bootJar.enabled = false
+
+subprojects {
+    group = 'band.gosrock'
+    version = '0.0.1-SNAPSHOT'
+    sourceCompatibility = '17'
+
+    apply plugin: 'java'
+    // build.gradle에서 api() 를 사용하려면 java-library 사용
+    apply plugin: 'java-library'
+    apply plugin: 'org.springframework.boot'
+    // spring boot dependency를 사용하여 사용중인 부트 버전에서 자동으로 의존성을 가져온다.
+    apply plugin: 'io.spring.dependency-management'
+
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    // 관리하는 모듈에 공통 dependencies
+    dependencies {
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    }
+
+    test {
+        useJUnitPlatform()
+    }
+}
+
+spotless {
+    java {
+        target("**/*.java")
+        googleJavaFormat().aosp()
+        importOrder()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
