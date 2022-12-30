@@ -31,10 +31,9 @@ jobs:
 
       - name: Gradle Build
         uses: gradle/gradle-build-action@v2
-        with:
-          arguments: |
-            build --no-daemon
-          build-root-directory: DuDung-Api
+
+      - name: Execute Gradle build
+        run: ./gradlew :DuDung-Api:build --no-daemon
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -49,5 +48,5 @@ jobs:
         with:
           context: ./DuDung-Api
           push: true
-          tags: water0641/dudung-api:${{ steps.get_version.outputs.VERSION }}
+          tags: water0641/DuDung-Api:${{ steps.get_version.outputs.VERSION }}
 

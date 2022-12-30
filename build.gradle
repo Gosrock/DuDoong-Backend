@@ -10,12 +10,6 @@ repositories {
     mavenCentral()
 }
 
-repositories {
-    mavenCentral()
-}
-
-bootJar.enabled = false
-
 subprojects {
     group = 'band.gosrock'
     version = '0.0.1-SNAPSHOT'
