@@ -48,5 +48,5 @@ jobs:
         with:
           context: ./DuDung-Api
           push: true
-          tags: water0641/DuDung-Api:${{ steps.get_version.outputs.VERSION }}
+          tags: water0641/dudung-api:${{ steps.get_version.outputs.VERSION }}
 
