@@ -1,0 +1,29 @@
+# commons
+spring:
+  profiles:
+    include:
+      - infrastructure
+      - domain
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+
+---
+spring:
+  config:
+    activate:
+      on-profile: staging
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod

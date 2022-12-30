@@ -3,6 +3,7 @@ jar { enabled = true }
 
 dependencies {
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
+    api 'mysql:mysql-connector-java'
     runtimeOnly 'com.h2database:h2'
     implementation project(':DuDung-Common')
 }

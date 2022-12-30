@@ -17,12 +17,12 @@ public class ExampleController {
     private final ExampleApiService exampleApiService;
 
     @GetMapping
-    public ExampleResponse get(){
+    public ExampleResponse get() {
         return exampleApiService.getExample();
     }
 
     @PostMapping
-    public ExampleResponse create(){
+    public ExampleResponse create() {
         return exampleApiService.createExample();
     }
 }

@@ -19,7 +19,7 @@ public class ExampleApiService {
         return ExampleResponse.from(query);
     }
 
-    public ExampleResponse createExample(){
+    public ExampleResponse createExample() {
         ExampleEntity asdf = exampleDomainService.save("asdf");
         return ExampleResponse.from(asdf);
     }
