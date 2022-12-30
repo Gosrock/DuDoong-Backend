@@ -3,4 +3,5 @@ include 'DuDung-Domain'
 include 'DuDung-Infrastructure'
 include 'DuDung-Api'
 include 'DuDung-Common'
+include 'DuDung-Socket'
 
