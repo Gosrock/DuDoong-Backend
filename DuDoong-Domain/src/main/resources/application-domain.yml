@@ -10,23 +10,24 @@ spring:
       maxLifetime: 580000
     password: ${MYSQL_PASSWORD}
     username: ${MYSQL_USERNAME}
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
-    jpa:
-      show-sql: ${SHOW_SQL:true}
-      properties:
-        hibernate:
-          format_sql: ${FORMAT_SQL:true}
-          default_batch_fetch_size: ${JPA_BATCH_FETCH_SIZE}
-      open-in-view: false
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+  jpa:
+    show-sql: ${SHOW_SQL:true}
+    properties:
       hibernate:
-        ddl-auto: update
-      defer-datasource-initialization: true
+        format_sql: ${FORMAT_SQL:true}
+        default_batch_fetch_size: ${JPA_BATCH_FETCH_SIZE}
+    hibernate:
+      ddl-auto: update
+    defer-datasource-initialization: true
     sql:
       init:
         mode: always
+    open-in-view: false
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
 ---
 spring:
   config:
@@ -34,10 +35,6 @@ spring:
       on-profile: test
   datasource:
     url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false;MODE=MYSQL
-    jpa:
-      properties:
-        hibernate:
-          dialect: org.hibernate.dialect.MySQL5InnoDBDialect
 ---
 spring:
   config:
@@ -50,10 +47,10 @@ spring:
       maxLifetime: 580000
     password: ${MYSQL_PASSWORD}
     username: ${MYSQL_USERNAME}
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
   jpa:
     properties:
       hibernate:
@@ -70,10 +67,10 @@ spring:
       maxLifetime: 580000
     password: ${MYSQL_PASSWORD}
     username: ${MYSQL_USERNAME}
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
   jpa:
     properties:
       hibernate:
