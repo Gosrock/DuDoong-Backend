@@ -2,7 +2,6 @@ package band.gosrock.common.jwt;
 
 import static band.gosrock.common.consts.DuDoongStatic.*;
 
-import band.gosrock.common.consts.DuDoongStatic;
 import band.gosrock.common.exception.ExpiredTokenException;
 import band.gosrock.common.exception.InvalidTokenException;
 import band.gosrock.common.exception.RefreshTokenExpiredException;
@@ -39,35 +38,35 @@ public class JwtTokenProvider {
     }
 
     private String buildAccessToken(
-        Long id, Date issuedAt, Date accessTokenExpiresIn, String role) {
+            Long id, Date issuedAt, Date accessTokenExpiresIn, String role) {
         final Key encodedKey = getSecretKey();
         return Jwts.builder()
-            .setIssuer(TOKEN_ISSUER)
-            .setIssuedAt(issuedAt)
-            .setSubject(id.toString())
-            .claim(TOKEN_TYPE, ACCESS_TOKEN)
-            .claim(TOKEN_ROLE, role)
-            .setExpiration(accessTokenExpiresIn)
-            .signWith(encodedKey)
-            .compact();
+                .setIssuer(TOKEN_ISSUER)
+                .setIssuedAt(issuedAt)
+                .setSubject(id.toString())
+                .claim(TOKEN_TYPE, ACCESS_TOKEN)
+                .claim(TOKEN_ROLE, role)
+                .setExpiration(accessTokenExpiresIn)
+                .signWith(encodedKey)
+                .compact();
     }
 
     private String buildRefreshToken(Long id, Date issuedAt, Date accessTokenExpiresIn) {
         final Key encodedKey = getSecretKey();
         return Jwts.builder()
-            .setIssuer(TOKEN_ISSUER)
-            .setIssuedAt(issuedAt)
-            .setSubject(id.toString())
-            .claim(TOKEN_TYPE, REFRESH_TOKEN)
-            .setExpiration(accessTokenExpiresIn)
-            .signWith(encodedKey)
-            .compact();
+                .setIssuer(TOKEN_ISSUER)
+                .setIssuedAt(issuedAt)
+                .setSubject(id.toString())
+                .claim(TOKEN_TYPE, REFRESH_TOKEN)
+                .setExpiration(accessTokenExpiresIn)
+                .signWith(encodedKey)
+                .compact();
     }
 
     public String generateAccessToken(Long id, String role) {
         final Date issuedAt = new Date();
         final Date accessTokenExpiresIn =
-            new Date(issuedAt.getTime() + jwtProperties.getAccessExp() * MILLI_TO_SECOND);
+                new Date(issuedAt.getTime() + jwtProperties.getAccessExp() * MILLI_TO_SECOND);
 
         return buildAccessToken(id, issuedAt, accessTokenExpiresIn, role);
     }
@@ -75,7 +74,7 @@ public class JwtTokenProvider {
     public String generateRefreshToken(Long id) {
         final Date issuedAt = new Date();
         final Date refreshTokenExpiresIn =
-            new Date(issuedAt.getTime() + jwtProperties.getRefreshExp() * MILLI_TO_SECOND);
+                new Date(issuedAt.getTime() + jwtProperties.getRefreshExp() * MILLI_TO_SECOND);
         return buildRefreshToken(id, issuedAt, refreshTokenExpiresIn);
     }
 

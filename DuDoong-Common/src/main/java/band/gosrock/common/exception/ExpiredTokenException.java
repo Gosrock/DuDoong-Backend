@@ -1,5 +1,3 @@
 package band.gosrock.common.exception;
 
-public class ExpiredTokenException extends DuDoongException{
-
-}
+public class ExpiredTokenException extends DuDoongException {}

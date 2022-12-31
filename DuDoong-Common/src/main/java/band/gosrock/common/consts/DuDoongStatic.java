@@ -11,5 +11,4 @@ public class DuDoongStatic {
     public static final String REFRESH_TOKEN = "REFRESH_TOKEN";
 
     public static final int MILLI_TO_SECOND = 1000;
-
 }
