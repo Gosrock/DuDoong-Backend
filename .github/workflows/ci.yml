@@ -28,6 +28,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
+      - name: spotless check
+        run: ./gradlew spotlessCheck
+
       - name: test and analyze
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
