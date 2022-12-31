@@ -21,10 +21,11 @@ sonarqube {
         property 'sonar.sources', 'src'
         property 'sonar.language', 'java'
         property 'sonar.sourceEncoding', 'UTF-8'
-        property 'sonar.coverage.jacoco.xmlReportPaths', '${buildDir}/reports/jacoco/test/jacocoTestReport.xml'
-        property 'sonar.java.binaries', '${buildDir}/classes'
+        property 'sonar.java.binaries', "${buildDir}/classes"
         property 'sonar.test.inclusions', '**/*Test.java'
         property 'sonar.exclusions', '**/test/**, **/Q*.java, **/*Doc*.java, **/resources/**'
+        property "sonar.java.coveragePlugin", "jacoco"
+        property "sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/reports/jacoco.xml"
     }
 }
 
@@ -53,10 +54,12 @@ subprojects {
     }
 
     jacocoTestReport {
+        dependsOn test
         reports {
             html.enabled true // html 설정
             csv.enabled true // csv 설정
             xml.enabled true
+            xml.destination file("${buildDir}/reports/jacoco.xml")
         }
         def Qdomains = []
 
@@ -81,6 +84,8 @@ subprojects {
         }
     }
 
+
+
     repositories {
         mavenCentral()
     }
@@ -94,6 +99,7 @@ subprojects {
 
     test {
         useJUnitPlatform()
+        finalizedBy jacocoTestReport
     }
 }
 
