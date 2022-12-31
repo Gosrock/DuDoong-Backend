@@ -1,5 +1,3 @@
 package band.gosrock.domain;
 
-public interface DomainPackageLocation {
-
-}
+public interface DomainPackageLocation {}
