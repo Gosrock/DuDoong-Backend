@@ -2,7 +2,7 @@ package band.gosrock.domain.user.domain;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import band.gosrock.common.consts.DuDoongConsts;
+import band.gosrock.common.consts.DuDoongStatic;
 import band.gosrock.domain.domain.user.domain.OauthInfo;
 import band.gosrock.domain.domain.user.domain.OauthProvider;
 import org.junit.jupiter.api.Test;
@@ -13,7 +13,7 @@ class OauthInfoTest {
     public void 탈퇴시에_OauthInfo_oid가_탈퇴상태가되어야한다() {
         // given
         String testOid = "test";
-        String withDrawOid = DuDoongConsts.WITHDRAW_PREFIX + testOid;
+        String withDrawOid = DuDoongStatic.WITHDRAW_PREFIX + testOid;
         OauthInfo oauthInfo =
                 OauthInfo.builder().oid(testOid).provider(OauthProvider.KAKAO).build();
 
