@@ -17,7 +17,7 @@ public class RegisterUserEventHandler {
     @TransactionalEventListener(
             classes = UserRegisterEvent.class,
             phase = TransactionPhase.AFTER_COMMIT)
-    public void handleDeleteUserEvent(UserRegisterEvent userRegisterEvent) {
+    public void handleRegisterUserEvent(UserRegisterEvent userRegisterEvent) {
         Long userId = userRegisterEvent.getUserId();
         log.info(userId.toString() + "유저 등록");
     }
