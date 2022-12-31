@@ -1,4 +1,4 @@
-package band.gosrock.common.model;
+package band.gosrock.domain.common.model;
 
 
 import java.time.LocalDateTime;

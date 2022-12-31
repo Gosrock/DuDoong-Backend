@@ -1,7 +1,7 @@
 package band.gosrock.domain.user.domain;
 
 
-import band.gosrock.common.model.BaseTimeEntity;
+import band.gosrock.domain.common.model.BaseTimeEntity;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;

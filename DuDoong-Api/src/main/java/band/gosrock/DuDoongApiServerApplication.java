@@ -10,8 +10,8 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.env.Environment;
 
-@SpringBootApplication
 @RequiredArgsConstructor
+@SpringBootApplication
 @Slf4j
 public class DuDoongApiServerApplication implements ApplicationListener<ApplicationReadyEvent> {
 
