@@ -1,5 +1,6 @@
 package band.gosrock.domain.user.domain;
 
+import band.gosrock.common.consts.DuDoongConsts;
 import javax.persistence.Embeddable;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -25,7 +26,7 @@ public class OauthInfo {
     }
 
     public OauthInfo withDrawOauthInfo(){
-        String withDrawPrefix = "DELETED:";
-        return OauthInfo.builder().oid(withDrawPrefix + oid).provider(provider).build();
+        //TODO : 탈퇴이벤트
+        return OauthInfo.builder().oid(DuDoongConsts.WITHDRAW_PREFIX + oid).provider(provider).build();
     }
 }
