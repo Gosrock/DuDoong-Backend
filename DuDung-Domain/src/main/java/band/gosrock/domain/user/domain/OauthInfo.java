@@ -23,4 +23,9 @@ public class OauthInfo {
         this.provider = provider;
         this.oid = oid;
     }
+
+    public OauthInfo withDrawOauthInfo(){
+        String withDrawPrefix = "DELETED:";
+        return OauthInfo.builder().oid(withDrawPrefix + oid).provider(provider).build();
+    }
 }

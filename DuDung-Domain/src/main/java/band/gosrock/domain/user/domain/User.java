@@ -26,7 +26,7 @@ public class User {
     @Embedded
     private Profile profile;
     @Embedded
-    private OauthInfo OauthInfo;
+    private OauthInfo oauthInfo;
 
     @Enumerated(EnumType.STRING)
     private AccountState accountState = AccountState.NORMAL;
@@ -37,12 +37,21 @@ public class User {
     @Builder
     public User(Profile profile, OauthInfo oauthInfo) {
         this.profile = profile;
-        this.OauthInfo = oauthInfo;
+        this.oauthInfo = oauthInfo;
     }
 
     @PostPersist
     public void registerEvent(){
         //TODO : 유저 등록 이벤트 발행
+    }
+
+    public void changeProfile(final Profile newProfile){
+        profile = newProfile;
+    }
+
+    public void withDrawUser(){
+        accountState = AccountState.DELETED;
+        oauthInfo = oauthInfo.withDrawOauthInfo();
     }
 
 }
