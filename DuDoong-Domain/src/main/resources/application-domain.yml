@@ -22,7 +22,7 @@ spring:
           default_batch_fetch_size: ${JPA_BATCH_FETCH_SIZE}
       open-in-view: false
       hibernate:
-        ddl-auto: update
+        ddl-auto: create
       defer-datasource-initialization: true
     sql:
       init:

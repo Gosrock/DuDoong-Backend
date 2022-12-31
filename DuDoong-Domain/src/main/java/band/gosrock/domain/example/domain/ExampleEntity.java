@@ -1,6 +1,7 @@
 package band.gosrock.domain.example.domain;
 
 
+import band.gosrock.common.model.BaseTimeEntity;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -15,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "tbl_example")
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ExampleEntity {
+public class ExampleEntity extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
