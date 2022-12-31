@@ -1,4 +1,5 @@
-package band.gosrock.events;
+package band.gosrock.domain.common.events;
+
 
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -13,11 +14,11 @@ public class Events {
         }
     }
 
-    static void setPublisher(ApplicationEventPublisher publisher) {
+    public static void setPublisher(ApplicationEventPublisher publisher) {
         publisherLocal.set(publisher);
     }
 
-    static void reset() {
+    public static void reset() {
         publisherLocal.remove();
     }
 }

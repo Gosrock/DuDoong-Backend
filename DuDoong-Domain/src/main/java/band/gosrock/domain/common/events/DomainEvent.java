@@ -1,4 +1,5 @@
-package band.gosrock.events;
+package band.gosrock.domain.common.events;
+
 
 import java.time.LocalDateTime;
 import lombok.Getter;

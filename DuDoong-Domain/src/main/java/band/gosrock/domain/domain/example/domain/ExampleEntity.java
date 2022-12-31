@@ -1,4 +1,4 @@
-package band.gosrock.domain.example.domain;
+package band.gosrock.domain.domain.example.domain;
 
 
 import javax.persistence.Entity;

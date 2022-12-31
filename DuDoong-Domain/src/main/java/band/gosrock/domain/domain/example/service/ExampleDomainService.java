@@ -1,9 +1,9 @@
-package band.gosrock.domain.example.service;
+package band.gosrock.domain.domain.example.service;
 
 
 import band.gosrock.common.exception.DuDoongException;
-import band.gosrock.domain.example.domain.ExampleEntity;
-import band.gosrock.domain.example.repository.ExampleRepository;
+import band.gosrock.domain.domain.example.domain.ExampleEntity;
+import band.gosrock.domain.domain.example.repository.ExampleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

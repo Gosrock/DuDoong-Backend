@@ -1,7 +1,7 @@
-package band.gosrock.domain.user.service;
+package band.gosrock.domain.domain.user.service;
 
 
-import band.gosrock.domain.user.repository.UserRepository;
+import band.gosrock.domain.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -2,6 +2,8 @@ package band.gosrock.domain.user.domain;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import band.gosrock.domain.domain.user.domain.Profile;
+import band.gosrock.domain.domain.user.domain.User;
 import org.junit.jupiter.api.Test;
 
 class UserTest {

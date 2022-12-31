@@ -1,6 +1,7 @@
-package band.gosrock.events.user;
+package band.gosrock.domain.common.events.user;
 
-import band.gosrock.events.DomainEvent;
+
+import band.gosrock.domain.common.events.DomainEvent;
 import lombok.Builder;
 import lombok.Getter;
 
