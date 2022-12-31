@@ -11,6 +11,23 @@ repositories {
     mavenCentral()
 }
 
+apply plugin: 'org.sonarqube'
+
+sonarqube {
+    properties {
+        property 'sonar.projectKey', 'Gosrock_DuDoong-Backend'
+        property 'sonar.organization', 'dudung-gosrock'
+        property 'sonar.host.url', 'https://sonarcloud.io'
+        property 'sonar.sources', 'src'
+        property 'sonar.language', 'java'
+        property 'sonar.sourceEncoding', 'UTF-8'
+        property 'sonar.coverage.jacoco.xmlReportPaths', '${buildDir}/reports/jacoco/test/jacocoTestReport.xml'
+        property 'sonar.java.binaries', '${buildDir}/classes'
+        property 'sonar.test.inclusions', '**/*Test.java'
+        property 'sonar.exclusions', '**/test/**, **/Q*.java, **/*Doc*.java, **/resources/**'
+    }
+}
+
 subprojects {
     group = 'band.gosrock'
     version = '0.0.1-SNAPSHOT'
@@ -61,23 +78,6 @@ subprojects {
                         ] + Qdomains)
                     })
             )
-        }
-    }
-
-    apply plugin: 'org.sonarqube'
-
-    sonarqube {
-        properties {
-            property 'sonar.projectKey', 'Gosrock_DuDoong-Backend'
-            property 'sonar.organization', 'dudung-gosrock'
-            property 'sonar.host.url', 'https://sonarcloud.io'
-            property 'sonar.sources', 'src'
-            property 'sonar.language', 'java'
-            property 'sonar.sourceEncoding', 'UTF-8'
-            property 'sonar.coverage.jacoco.xmlReportPaths', '${buildDir}/reports/jacoco/test/jacocoTestReport.xml'
-            property 'sonar.java.binaries', '${buildDir}/classes'
-            property 'sonar.test.inclusions', '**/*Test.java'
-            property 'sonar.exclusions', '**/test/**, **/Q*.java, **/*Doc*.java, **/resources/**'
         }
     }
 
