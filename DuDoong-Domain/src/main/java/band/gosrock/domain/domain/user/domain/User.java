@@ -1,6 +1,8 @@
-package band.gosrock.domain.user.domain;
+package band.gosrock.domain.domain.user.domain;
 
 
+import band.gosrock.domain.common.events.Events;
+import band.gosrock.domain.common.events.user.UserRegisterEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -42,7 +44,8 @@ public class User extends BaseTimeEntity {
 
     @PostPersist
     public void registerEvent() {
-        // TODO : 유저 등록 이벤트 발행
+        UserRegisterEvent userRegisterEvent = UserRegisterEvent.builder().userId(this.id).build();
+        Events.raise(userRegisterEvent);
     }
 
     public void changeProfile(final Profile newProfile) {

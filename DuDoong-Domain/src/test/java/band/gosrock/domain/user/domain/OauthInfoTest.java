@@ -3,6 +3,8 @@ package band.gosrock.domain.user.domain;
 import static org.junit.jupiter.api.Assertions.*;
 
 import band.gosrock.common.consts.DuDoongConsts;
+import band.gosrock.domain.domain.user.domain.OauthInfo;
+import band.gosrock.domain.domain.user.domain.OauthProvider;
 import org.junit.jupiter.api.Test;
 
 class OauthInfoTest {

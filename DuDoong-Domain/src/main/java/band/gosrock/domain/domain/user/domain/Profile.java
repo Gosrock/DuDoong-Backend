@@ -1,4 +1,4 @@
-package band.gosrock.domain.user.domain;
+package band.gosrock.domain.domain.user.domain;
 
 
 import javax.persistence.Embeddable;
