@@ -33,7 +33,7 @@ jobs:
         uses: gradle/gradle-build-action@v2
 
       - name: Execute Gradle build
-        run: ./gradlew :DuDung-Api:build --no-daemon
+        run: ./gradlew :DuDoong-Socket:build --no-daemon
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -46,7 +46,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
-          context: ./DuDung-Api
+          context: ./DuDoong-Socket
           push: true
-          tags: water0641/dudung-socket:${{ steps.get_version.outputs.VERSION }}
+          tags: water0641/dudoong-socket:${{ steps.get_version.outputs.VERSION }}
 
