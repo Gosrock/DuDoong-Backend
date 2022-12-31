@@ -1,6 +1,8 @@
 package band.gosrock.domain.domain.user.domain;
 
 
+import band.gosrock.domain.common.events.Events;
+import band.gosrock.domain.common.events.user.UserRegisterEvent;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -41,7 +43,8 @@ public class User {
 
     @PostPersist
     public void registerEvent() {
-        // TODO : 유저 등록 이벤트 발행
+        UserRegisterEvent userRegisterEvent = UserRegisterEvent.builder().userId(this.id).build();
+        Events.raise(userRegisterEvent);
     }
 
     public void changeProfile(final Profile newProfile) {
