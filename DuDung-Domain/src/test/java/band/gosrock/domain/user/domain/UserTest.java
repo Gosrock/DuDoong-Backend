@@ -9,15 +9,15 @@ class UserTest {
     @Test
     public void 유저프로필변경테스트() {
 
-        //given
+        // given
         Profile profile = Profile.builder().email("t@naver.com").name("곽팔두").build();
         User user = User.builder().profile(profile).build();
         Profile newProfile = Profile.builder().email("a@naver.com").name("홍길동").build();
-        //when
+        // when
         user.changeProfile(newProfile);
-        //then
+        // then
 
-        assertEquals(newProfile.getEmail() , user.getProfile().getEmail());
-        assertEquals(newProfile.getName() , user.getProfile().getName());
-     }
+        assertEquals(newProfile.getEmail(), user.getProfile().getEmail());
+        assertEquals(newProfile.getName(), user.getProfile().getName());
+    }
 }

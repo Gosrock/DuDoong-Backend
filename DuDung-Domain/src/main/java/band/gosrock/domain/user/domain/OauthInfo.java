@@ -1,5 +1,6 @@
 package band.gosrock.domain.user.domain;
 
+
 import band.gosrock.common.consts.DuDoongConsts;
 import javax.persistence.Embeddable;
 import javax.persistence.EnumType;
@@ -25,8 +26,11 @@ public class OauthInfo {
         this.oid = oid;
     }
 
-    public OauthInfo withDrawOauthInfo(){
-        //TODO : 탈퇴이벤트
-        return OauthInfo.builder().oid(DuDoongConsts.WITHDRAW_PREFIX + oid).provider(provider).build();
+    public OauthInfo withDrawOauthInfo() {
+        // TODO : 탈퇴이벤트
+        return OauthInfo.builder()
+                .oid(DuDoongConsts.WITHDRAW_PREFIX + oid)
+                .provider(provider)
+                .build();
     }
 }

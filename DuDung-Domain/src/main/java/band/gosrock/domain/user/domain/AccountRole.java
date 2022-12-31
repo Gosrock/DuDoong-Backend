@@ -1,5 +1,6 @@
 package band.gosrock.domain.user.domain;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

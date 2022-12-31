@@ -8,16 +8,17 @@ import org.junit.jupiter.api.Test;
 class OauthInfoTest {
 
     @Test
-    public void 탈퇴시에_OauthInfo_oid가_탈퇴상태가되어야한다(){
-        //given
+    public void 탈퇴시에_OauthInfo_oid가_탈퇴상태가되어야한다() {
+        // given
         String testOid = "test";
         String withDrawOid = DuDoongConsts.WITHDRAW_PREFIX + testOid;
-        OauthInfo oauthInfo = OauthInfo.builder().oid(testOid).provider(OauthProvider.KAKAO).build();
+        OauthInfo oauthInfo =
+                OauthInfo.builder().oid(testOid).provider(OauthProvider.KAKAO).build();
 
-        //when
+        // when
         OauthInfo withDrawOauthInfo = oauthInfo.withDrawOauthInfo();
 
-        //then
-        assertEquals(withDrawOid,withDrawOauthInfo.getOid());
+        // then
+        assertEquals(withDrawOid, withDrawOauthInfo.getOid());
     }
 }

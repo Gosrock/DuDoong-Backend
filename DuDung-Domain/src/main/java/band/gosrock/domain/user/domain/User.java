@@ -1,5 +1,6 @@
 package band.gosrock.domain.user.domain;
 
+
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -23,10 +24,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Embedded
-    private Profile profile;
-    @Embedded
-    private OauthInfo oauthInfo;
+    @Embedded private Profile profile;
+    @Embedded private OauthInfo oauthInfo;
 
     @Enumerated(EnumType.STRING)
     private AccountState accountState = AccountState.NORMAL;
@@ -41,17 +40,16 @@ public class User {
     }
 
     @PostPersist
-    public void registerEvent(){
-        //TODO : 유저 등록 이벤트 발행
+    public void registerEvent() {
+        // TODO : 유저 등록 이벤트 발행
     }
 
-    public void changeProfile(final Profile newProfile){
+    public void changeProfile(final Profile newProfile) {
         profile = newProfile;
     }
 
-    public void withDrawUser(){
+    public void withDrawUser() {
         accountState = AccountState.DELETED;
         oauthInfo = oauthInfo.withDrawOauthInfo();
     }
-
 }

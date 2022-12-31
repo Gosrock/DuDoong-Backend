@@ -1,5 +1,6 @@
 package band.gosrock.domain.user.domain;
 
+
 import javax.persistence.Embeddable;
 import lombok.AccessLevel;
 import lombok.Builder;
