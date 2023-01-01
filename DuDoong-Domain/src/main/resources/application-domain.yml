@@ -10,10 +10,6 @@ spring:
       maxLifetime: 580000
     password: ${MYSQL_PASSWORD}
     username: ${MYSQL_USERNAME}
-  redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD:}
   jpa:
     show-sql: ${SHOW_SQL:true}
     properties:
@@ -47,10 +43,6 @@ spring:
       maxLifetime: 580000
     password: ${MYSQL_PASSWORD}
     username: ${MYSQL_USERNAME}
-  redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD:}
   jpa:
     properties:
       hibernate:
@@ -67,10 +59,6 @@ spring:
       maxLifetime: 580000
     password: ${MYSQL_PASSWORD}
     username: ${MYSQL_USERNAME}
-  redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD:}
   jpa:
     properties:
       hibernate:

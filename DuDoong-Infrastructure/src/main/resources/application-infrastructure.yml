@@ -1,30 +1,22 @@
 # 공통적용
-oauth:
-  kakao:
-    base-url: ${KAKAO_BASE_URL}
-    client-id: ${KAKAO_CLIENT}
-    client-secret: ${KAKAO_SECRET}
-    redirect-url: ${KAKAO_REDIRECT}
-    app-id : ${KAKAO_APP_ID}
-
 aws:
   access-key: ${AWS_ACCESS_KEY}
   secret-key: ${AWS_SECRET_KEY}
   s3:
     bucket: ${AWS_S3_BUCKET}
     base-url: ${AWS_S3_BASE_URL}
+
+spring:
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+
 ---
 spring:
   config:
     activate:
       on-profile: dev
-oauth:
-  kakao:
-    base-url: ${KAKAO_BASE_URL}
-    client-id: ${KAKAO_CLIENT}
-    client-secret: ${KAKAO_SECRET}
-    redirect-url: ${KAKAO_REDIRECT}
-    app-id : ${KAKAO_APP_ID}
 logging:
   level:
     band.gosrock.infrastructure.outer.api.* : debug
@@ -33,7 +25,6 @@ spring:
   config:
     activate:
       on-profile: test
-
 ---
 spring:
   config:
