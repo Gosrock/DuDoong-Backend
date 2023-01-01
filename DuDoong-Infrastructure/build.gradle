@@ -5,8 +5,6 @@ dependencies {
     implementation("com.slack.api:slack-api-client:1.27.2")
     implementation 'io.github.openfeign:feign-httpclient:12.1'
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:3.1.4'
-    implementation project(':DuDoong-Domain')
     implementation project(':DuDoong-Common')
-    implementation project(':DuDoong-Api')
 
 }

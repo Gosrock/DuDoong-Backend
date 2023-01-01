@@ -6,4 +6,5 @@ dependencies {
     api 'mysql:mysql-connector-java'
     runtimeOnly 'com.h2database:h2'
     implementation project(':DuDoong-Common')
+    implementation project(':DuDoong-Infrastructure')
 }

@@ -4,6 +4,12 @@ spring:
     include:
       - infrastructure
       - domain
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
+springdoc:
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
 
 ---
 spring:

@@ -13,6 +13,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @RequiredArgsConstructor
 @Slf4j
 public class RegisterUserEventHandler {
+
     @Async
     @TransactionalEventListener(
             classes = UserRegisterEvent.class,

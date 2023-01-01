@@ -14,9 +14,15 @@ public class Profile {
     private String name;
     private String email;
 
+    private String phoneNumber;
+
+    private String profileImage;
+
     @Builder
-    public Profile(String name, String email) {
+    public Profile(String name, String email, String phoneNumber, String profileImage) {
         this.name = name;
         this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.profileImage = profileImage;
     }
 }
