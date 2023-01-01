@@ -22,7 +22,12 @@ public class KakaoUserInfoDto {
     private final OauthProvider oauthProvider;
 
     public Profile toProfile() {
-        return Profile.builder().profileImage(this.profileImage).phoneNumber(phoneNumber).name(name).email(email).build();
+        return Profile.builder()
+                .profileImage(this.profileImage)
+                .phoneNumber(phoneNumber)
+                .name(name)
+                .email(email)
+                .build();
     }
 
     public OauthInfo toOauthInfo() {

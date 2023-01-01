@@ -27,9 +27,7 @@ public class RegisterService {
         KakaoUserInfoDto oauthUserInfo = kakaoService.getUserInfo(oauthAccessToken);
 
         Profile profile = oauthUserInfo.toProfile();
-        User user =
-                userDomainService.upsertUser(
-                    profile, oauthUserInfo.toOauthInfo());
+        User user = userDomainService.upsertUser(profile, oauthUserInfo.toOauthInfo());
 
         return RegisterResponse.builder().userProfile(ProfileViewDto.from(user)).build();
     }
