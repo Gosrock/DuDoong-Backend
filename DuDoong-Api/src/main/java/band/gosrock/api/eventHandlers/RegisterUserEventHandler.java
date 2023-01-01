@@ -1,4 +1,4 @@
-package band.gosrock.domain.domains.user.service;
+package band.gosrock.api.eventHandlers;
 
 
 import band.gosrock.domain.common.events.user.UserRegisterEvent;

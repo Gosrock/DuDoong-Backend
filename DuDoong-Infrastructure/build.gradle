@@ -7,5 +7,6 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:3.1.4'
     implementation project(':DuDoong-Domain')
     implementation project(':DuDoong-Common')
+    implementation project(':DuDoong-Api')
 
 }
