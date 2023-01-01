@@ -1,5 +1,7 @@
 package band.gosrock.api.config.response;
 
+
+import band.gosrock.common.dto.SuccessResponse;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
@@ -20,14 +22,14 @@ public class SuccessResponseAdvice implements ResponseBodyAdvice {
 
     @Override
     public Object beforeBodyWrite(
-        Object body,
-        MethodParameter returnType,
-        MediaType selectedContentType,
-        Class selectedConverterType,
-        ServerHttpRequest request,
-        ServerHttpResponse response) {
+            Object body,
+            MethodParameter returnType,
+            MediaType selectedContentType,
+            Class selectedConverterType,
+            ServerHttpRequest request,
+            ServerHttpResponse response) {
         HttpServletResponse servletResponse =
-            ((ServletServerHttpResponse) response).getServletResponse();
+                ((ServletServerHttpResponse) response).getServletResponse();
 
         int status = servletResponse.getStatus();
         HttpStatus resolve = HttpStatus.resolve(status);
