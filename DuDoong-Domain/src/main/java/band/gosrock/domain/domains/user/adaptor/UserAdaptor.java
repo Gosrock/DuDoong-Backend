@@ -22,4 +22,17 @@ public class UserDomainService {
         userRepository.save(newUser);
         return newUser;
     }
+
+    @Transactional
+    public User upsertUser(Profile profile, OauthInfo oauthInfo) {
+        return userRepository
+                .findByOauthInfo(oauthInfo)
+                .orElseGet(
+                        () -> {
+                            User newUser =
+                                    User.builder().profile(profile).oauthInfo(oauthInfo).build();
+                            userRepository.save(newUser);
+                            return newUser;
+                        });
+    }
 }
