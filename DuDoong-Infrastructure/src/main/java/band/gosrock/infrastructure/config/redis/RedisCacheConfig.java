@@ -1,5 +1,6 @@
 package band.gosrock.infrastructure.config.redis;
 
+
 import java.time.Duration;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
@@ -21,35 +22,34 @@ public class RedisCacheConfig {
     @Primary
     public CacheManager redisCacheManager(RedisConnectionFactory cf) {
         RedisCacheConfiguration redisCacheConfiguration =
-            RedisCacheConfiguration.defaultCacheConfig()
-                .serializeKeysWith(
-                    RedisSerializationContext.SerializationPair.fromSerializer(
-                        new StringRedisSerializer()))
-                .serializeValuesWith(
-                    RedisSerializationContext.SerializationPair.fromSerializer(
-                        new GenericJackson2JsonRedisSerializer()))
-                .entryTtl(Duration.ofHours(1L));
+                RedisCacheConfiguration.defaultCacheConfig()
+                        .serializeKeysWith(
+                                RedisSerializationContext.SerializationPair.fromSerializer(
+                                        new StringRedisSerializer()))
+                        .serializeValuesWith(
+                                RedisSerializationContext.SerializationPair.fromSerializer(
+                                        new GenericJackson2JsonRedisSerializer()))
+                        .entryTtl(Duration.ofHours(1L));
 
         return RedisCacheManager.RedisCacheManagerBuilder.fromConnectionFactory(cf)
-            .cacheDefaults(redisCacheConfiguration)
-            .build();
+                .cacheDefaults(redisCacheConfiguration)
+                .build();
     }
 
     @Bean
     public CacheManager oidcCacheManager(RedisConnectionFactory cf) {
         RedisCacheConfiguration redisCacheConfiguration =
-            RedisCacheConfiguration.defaultCacheConfig()
-                .serializeKeysWith(
-                    RedisSerializationContext.SerializationPair.fromSerializer(
-                        new StringRedisSerializer()))
-                .serializeValuesWith(
-                    RedisSerializationContext.SerializationPair.fromSerializer(
-                        new GenericJackson2JsonRedisSerializer()))
-                .entryTtl(Duration.ofDays(7L));
+                RedisCacheConfiguration.defaultCacheConfig()
+                        .serializeKeysWith(
+                                RedisSerializationContext.SerializationPair.fromSerializer(
+                                        new StringRedisSerializer()))
+                        .serializeValuesWith(
+                                RedisSerializationContext.SerializationPair.fromSerializer(
+                                        new GenericJackson2JsonRedisSerializer()))
+                        .entryTtl(Duration.ofDays(7L));
 
         return RedisCacheManager.RedisCacheManagerBuilder.fromConnectionFactory(cf)
-            .cacheDefaults(redisCacheConfiguration)
-            .build();
+                .cacheDefaults(redisCacheConfiguration)
+                .build();
     }
 }
-

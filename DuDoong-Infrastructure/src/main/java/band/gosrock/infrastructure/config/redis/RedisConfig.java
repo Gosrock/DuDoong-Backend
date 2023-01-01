@@ -1,5 +1,6 @@
 package band.gosrock.infrastructure.config.redis;
 
+
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -12,7 +13,7 @@ import org.springframework.data.redis.core.RedisKeyValueAdapter;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 
 @EnableRedisRepositories(
-    enableKeyspaceEvents = RedisKeyValueAdapter.EnableKeyspaceEvents.ON_STARTUP)
+        enableKeyspaceEvents = RedisKeyValueAdapter.EnableKeyspaceEvents.ON_STARTUP)
 @Configuration
 public class RedisConfig {
 
@@ -28,16 +29,16 @@ public class RedisConfig {
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration redisConfig =
-            new RedisStandaloneConfiguration(redisHost, redisPort);
+                new RedisStandaloneConfiguration(redisHost, redisPort);
 
         if (redisPassword != null && !redisPassword.isBlank())
             redisConfig.setPassword(redisPassword);
 
         LettuceClientConfiguration clientConfig =
-            LettuceClientConfiguration.builder()
-                .commandTimeout(Duration.ofSeconds(1))
-                .shutdownTimeout(Duration.ZERO)
-                .build();
+                LettuceClientConfiguration.builder()
+                        .commandTimeout(Duration.ofSeconds(1))
+                        .shutdownTimeout(Duration.ZERO)
+                        .build();
         return new LettuceConnectionFactory(redisConfig, clientConfig);
     }
 }
