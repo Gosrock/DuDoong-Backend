@@ -1,4 +1,4 @@
-package band.gosrock.domain.domain.user.domain;
+package band.gosrock.domain.domains.user.domain;
 
 
 import band.gosrock.common.consts.DuDoongStatic;

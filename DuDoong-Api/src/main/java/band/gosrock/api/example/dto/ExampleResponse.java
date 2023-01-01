@@ -1,7 +1,7 @@
 package band.gosrock.api.example.dto;
 
 
-import band.gosrock.domain.domain.example.domain.ExampleEntity;
+import band.gosrock.domain.domains.example.domain.ExampleEntity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

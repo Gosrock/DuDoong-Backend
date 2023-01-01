@@ -6,4 +6,6 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class DuDoongException extends RuntimeException {}
+public class DuDoongCodeException extends RuntimeException {
+    private ErrorCode errorCode;
+}

@@ -3,8 +3,10 @@ package band.gosrock.domain.domain.user.service;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 
-import band.gosrock.domain.domain.user.domain.OauthInfo;
-import band.gosrock.domain.domain.user.domain.Profile;
+import band.gosrock.domain.domains.user.domain.OauthInfo;
+import band.gosrock.domain.domains.user.domain.Profile;
+import band.gosrock.domain.domains.user.service.RegisterUserEventHandler;
+import band.gosrock.domain.domains.user.service.UserDomainService;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
