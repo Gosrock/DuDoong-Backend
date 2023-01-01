@@ -1,4 +1,4 @@
-package io.github.depromeet.knockknockbackend.global.utils.api.dto.response;
+package band.gosrock.api.auth.model.dto;
 
 
 import lombok.Getter;
