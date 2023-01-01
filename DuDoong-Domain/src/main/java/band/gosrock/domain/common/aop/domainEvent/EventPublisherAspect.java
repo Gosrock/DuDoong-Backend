@@ -1,7 +1,6 @@
-package band.gosrock.domain.common.aspect;
+package band.gosrock.domain.common.aop.domainEvent;
 
 
-import band.gosrock.domain.common.events.Events;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
