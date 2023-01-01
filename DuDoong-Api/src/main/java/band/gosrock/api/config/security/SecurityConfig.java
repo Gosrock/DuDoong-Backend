@@ -9,13 +9,12 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @RequiredArgsConstructor
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final JwtTokenFilter jwtTokenFilter;
+    private final FilterConfig filterConfig;
     private static final String[] SwaggerPatterns = {
         "/swagger-resources/**", "/swagger-ui/**", "/v3/api-docs/**",
     };
@@ -33,7 +32,7 @@ public class SecurityConfig {
                 .permitAll()
                 .anyRequest()
                 .authenticated();
-        http.addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
+        http.apply(filterConfig);
 
         return http.build();
     }
