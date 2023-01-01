@@ -1,4 +1,4 @@
-package band.gosrock.domain.user.domain;
+package band.gosrock.domains.user.domain;
 
 import static org.junit.jupiter.api.Assertions.*;
 

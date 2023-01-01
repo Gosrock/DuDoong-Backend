@@ -23,8 +23,12 @@ public enum ErrorCode {
 
     USER_NOT_FOUND(NOT_FOUND, "USER-404-1", "User Not Found."),
 
-    INTERNAL_SERVER_ERROR(INTERNAL_SERVER, "GLOBAL-500-1", "Internal Server Error.");
+    INTERNAL_SERVER_ERROR(INTERNAL_SERVER, "GLOBAL-500-1", "Internal Server Error."),
 
+    OTHER_SERVER_BAD_REQUEST(BAD_REQUEST, "FEIGN-400-1", "Other server bad request"),
+    OTHER_SERVER_UNAUTHORIZED(BAD_REQUEST, "FEIGN-400-2", "Other server unauthorized"),
+    OTHER_SERVER_FORBIDDEN(BAD_REQUEST, "FEIGN-400-3", "Other server forbidden"),
+    OTHER_SERVER_EXPIRED_TOKEN(BAD_REQUEST, "FEIGN-400-4", "Other server expired token");
     private int status;
     private String code;
     private String reason;

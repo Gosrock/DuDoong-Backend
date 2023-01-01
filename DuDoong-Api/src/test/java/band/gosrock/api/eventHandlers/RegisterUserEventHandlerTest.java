@@ -1,11 +1,11 @@
-package band.gosrock.domain.domain.user.service;
+package band.gosrock.api.eventHandlers;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 
 import band.gosrock.domain.domains.user.domain.OauthInfo;
 import band.gosrock.domain.domains.user.domain.Profile;
-import band.gosrock.domain.domains.user.service.RegisterUserEventHandler;
 import band.gosrock.domain.domains.user.service.UserDomainService;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
