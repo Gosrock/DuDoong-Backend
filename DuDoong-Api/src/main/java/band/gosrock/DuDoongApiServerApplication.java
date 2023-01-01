@@ -11,7 +11,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.core.env.Environment;
 
 @RequiredArgsConstructor
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "band.gosrock.infrastructure")
 @Slf4j
 public class DuDoongApiServerApplication implements ApplicationListener<ApplicationReadyEvent> {
 

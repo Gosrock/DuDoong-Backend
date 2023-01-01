@@ -1,14 +1,13 @@
-package band.gosrock.infrastructure.outer.api;
+package band.gosrock.infrastructure.outer.api.client;
 
 
-import band.gosrock.api.auth.model.dto.OauthAccessTokenResponse;
-import band.gosrock.api.auth.port.KakaoOauthPort;
+import band.gosrock.infrastructure.outer.api.dto.OauthAccessTokenResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 @FeignClient(name = "KakaoAuthClient", url = "https://kauth.kakao.com")
-public interface KakaoOauthAdaptor extends KakaoOauthPort {
+public interface KakaoOauthClient {
 
     @PostMapping(
             "/oauth/token?grant_type=authorization_code&client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&code={CODE}&client_secret={CLIENT_SECRET}")

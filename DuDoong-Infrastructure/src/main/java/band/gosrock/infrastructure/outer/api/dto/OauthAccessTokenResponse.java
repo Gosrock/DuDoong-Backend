@@ -1,4 +1,4 @@
-package band.gosrock.api.auth.model.dto;
+package band.gosrock.infrastructure.outer.api.dto;
 
 
 import lombok.Getter;
