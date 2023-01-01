@@ -91,13 +91,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(DuDoongDynamicException.class)
     public ResponseEntity<ErrorResponse> DuDoongDynamicExceptionHandler(
-        DuDoongDynamicException e, HttpServletRequest request) {
+            DuDoongDynamicException e, HttpServletRequest request) {
         ErrorResponse errorResponse =
-            new ErrorResponse(
-                e.getStatus(),
-                e.getCode(),
-                e.getReason(),
-                request.getRequestURL().toString());
+                new ErrorResponse(
+                        e.getStatus(),
+                        e.getCode(),
+                        e.getReason(),
+                        request.getRequestURL().toString());
         return ResponseEntity.status(HttpStatus.valueOf(e.getStatus())).body(errorResponse);
     }
 
