@@ -43,7 +43,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         if (rawHeader != null
                 && rawHeader.length() > DuDoongStatic.BEARER.length()
                 && rawHeader.startsWith(DuDoongStatic.BEARER)) {
-            return rawHeader.substring(DuDoongStatic.BEARER.length() + 1);
+            return rawHeader.substring(DuDoongStatic.BEARER.length());
         }
         return null;
     }
