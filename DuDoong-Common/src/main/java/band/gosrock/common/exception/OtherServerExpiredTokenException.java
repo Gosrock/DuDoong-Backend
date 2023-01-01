@@ -1,12 +1,8 @@
-package io.github.depromeet.knockknockbackend.global.utils.api.exception;
+package band.gosrock.common.exception;
 
+public class OtherServerExpiredTokenException extends DuDoongCodeException {
 
-import io.github.depromeet.knockknockbackend.global.error.exception.ErrorCode;
-import io.github.depromeet.knockknockbackend.global.error.exception.KnockException;
-
-public class OtherServerExpiredTokenException extends KnockException {
-
-    public static final KnockException EXCEPTION = new OtherServerExpiredTokenException();
+    public static final DuDoongCodeException EXCEPTION = new OtherServerExpiredTokenException();
 
     private OtherServerExpiredTokenException() {
         super(ErrorCode.OTHER_SERVER_EXPIRED_TOKEN);

@@ -7,7 +7,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 
 @ActiveProfiles("test")
-@ComponentScan(basePackages= "band.gosrock")
+@ComponentScan(basePackages = "band.gosrock")
 @SpringBootTest
 class DuDoongApiServerApplication {
     @Test

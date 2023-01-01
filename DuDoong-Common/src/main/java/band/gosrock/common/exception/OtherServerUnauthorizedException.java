@@ -1,12 +1,8 @@
-package io.github.depromeet.knockknockbackend.global.utils.api.exception;
+package band.gosrock.common.exception;
 
+public class OtherServerUnauthorizedException extends DuDoongCodeException {
 
-import io.github.depromeet.knockknockbackend.global.error.exception.ErrorCode;
-import io.github.depromeet.knockknockbackend.global.error.exception.KnockException;
-
-public class OtherServerUnauthorizedException extends KnockException {
-
-    public static final KnockException EXCEPTION = new OtherServerUnauthorizedException();
+    public static final DuDoongCodeException EXCEPTION = new OtherServerUnauthorizedException();
 
     private OtherServerUnauthorizedException() {
         super(ErrorCode.OTHER_SERVER_UNAUTHORIZED);

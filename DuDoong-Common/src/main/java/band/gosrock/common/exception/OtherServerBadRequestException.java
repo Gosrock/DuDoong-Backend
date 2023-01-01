@@ -1,12 +1,8 @@
-package io.github.depromeet.knockknockbackend.global.utils.api.exception;
+package band.gosrock.common.exception;
 
+public class OtherServerBadRequestException extends DuDoongCodeException {
 
-import io.github.depromeet.knockknockbackend.global.error.exception.ErrorCode;
-import io.github.depromeet.knockknockbackend.global.error.exception.KnockException;
-
-public class OtherServerBadRequestException extends KnockException {
-
-    public static final KnockException EXCEPTION = new OtherServerBadRequestException();
+    public static final DuDoongCodeException EXCEPTION = new OtherServerBadRequestException();
 
     private OtherServerBadRequestException() {
         super(ErrorCode.OTHER_SERVER_BAD_REQUEST);
