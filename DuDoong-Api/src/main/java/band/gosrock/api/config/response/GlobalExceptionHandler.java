@@ -36,7 +36,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleExceptionInternal(
             Exception ex, Object body, HttpHeaders headers, HttpStatus status, WebRequest request) {
         ServletWebRequest servletWebRequest = (ServletWebRequest) request;
-
         String url =
                 UriComponentsBuilder.fromHttpRequest(
                                 new ServletServerHttpRequest(servletWebRequest.getRequest()))
@@ -77,7 +76,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(DuDoongCodeException.class)
-    public ResponseEntity<ErrorResponse> KnockExceptionHandler(
+    public ResponseEntity<ErrorResponse> DuDoongExceptionHandler(
             DuDoongCodeException e, HttpServletRequest request) {
         ErrorCode code = e.getErrorCode();
         ErrorResponse errorResponse =
