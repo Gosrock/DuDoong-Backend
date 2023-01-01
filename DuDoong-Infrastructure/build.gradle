@@ -7,5 +7,6 @@ dependencies {
     api 'org.springframework.cloud:spring-cloud-starter-openfeign:3.1.4'
     api project(':DuDoong-Common')
     api 'org.springframework.boot:spring-boot-starter-data-redis'
+    api 'org.redisson:redisson:3.19.0'
 
 }
