@@ -24,12 +24,12 @@ public class AuthController {
             summary = "kakao oauth 링크발급 ( 서버 개발용 )",
             description = "kakao 링크를 받아볼수 있습니다.",
             deprecated = true)
-    @GetMapping("/kakao/link")
+    @GetMapping("/oauth/kakao/link")
     public OauthLoginLinkResponse getKakaoOauthLink() {
         return registerService.getKaKaoOauthLink();
     }
 
-    @GetMapping("/kakao")
+    @GetMapping("/oauth/kakao")
     public RegisterResponse kakaoAuth(@RequestParam("code") String code) {
         return registerService.registerKakaoOauthUser(code);
     }

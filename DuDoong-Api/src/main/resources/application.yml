@@ -6,6 +6,8 @@ spring:
       - domain
   jackson:
     property-naming-strategy: SNAKE_CASE
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
 
 springdoc:
   default-produces-media-type: application/json

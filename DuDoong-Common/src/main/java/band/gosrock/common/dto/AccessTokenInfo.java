@@ -1,11 +1,12 @@
 package band.gosrock.common.dto;
 
+
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder
-public class AccessTokenBodyDto {
-    private final String userId;
+public class AccessTokenInfo {
+    private final Long userId;
     private final String role;
 }

@@ -2,6 +2,7 @@ package band.gosrock.common.jwt;
 
 import static band.gosrock.common.consts.DuDoongStatic.*;
 
+import band.gosrock.common.dto.AccessTokenInfo;
 import band.gosrock.common.exception.ExpiredTokenException;
 import band.gosrock.common.exception.InvalidTokenException;
 import band.gosrock.common.exception.RefreshTokenExpiredException;
@@ -86,10 +87,13 @@ public class JwtTokenProvider {
         return getJws(token).getBody().get(TOKEN_TYPE).equals(REFRESH_TOKEN);
     }
 
-    public Long parseAccessToken(String token) {
+    public AccessTokenInfo parseAccessToken(String token) {
         if (isAccessToken(token)) {
             Claims claims = getJws(token).getBody();
-            return Long.parseLong(claims.getSubject());
+            return AccessTokenInfo.builder()
+                    .userId(Long.parseLong(claims.getSubject()))
+                    .role((String) claims.get(TOKEN_ROLE))
+                    .build();
         }
         throw InvalidTokenException.EXCEPTION;
     }
