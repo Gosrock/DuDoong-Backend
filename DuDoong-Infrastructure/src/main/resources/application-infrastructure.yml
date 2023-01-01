@@ -24,11 +24,6 @@ logging:
 spring:
   config:
     activate:
-      on-profile: test
----
-spring:
-  config:
-    activate:
       on-profile: staging
 
 ---
