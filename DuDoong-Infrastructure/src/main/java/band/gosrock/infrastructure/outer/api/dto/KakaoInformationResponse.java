@@ -23,19 +23,20 @@ public class KakaoInformationResponse {
     @NoArgsConstructor
     public static class KakaoAccount {
 
-        //        private Profile profile;
+        private Profile profile;
         private String email;
-        //        @Getter
-        //        @NoArgsConstructor
-        //        public static class Profile {
-        //            @JsonProperty("profile_image_url")
-        //            private String profileImageUrl;
-        //        }
+        private String phoneNumber;
+        private String name;
 
-        //        public String getProfileImageUrl() {
-        //            return profile.getProfileImageUrl();
-        //        }
+        @Getter
+        @NoArgsConstructor
+        public static class Profile {
+            private String profileImageUrl;
+        }
 
+        public String getProfileImageUrl() {
+            return profile.getProfileImageUrl();
+        }
     }
 
     public String getId() {
@@ -46,12 +47,15 @@ public class KakaoInformationResponse {
         return kakaoAccount.getEmail();
     }
 
-    //    public String getName() {
-    //        return properties.getNickname();
-    //    }
-    //
-    //    public String getProfileImage() {
-    //        return kakaoAccount.getProfileImageUrl();
-    //    }
+    public String getPhoneNumber() {
+        return kakaoAccount.getPhoneNumber();
+    }
 
+    public String getName() {
+        return kakaoAccount.getName();
+    }
+
+    public String getProfileUrl() {
+        return kakaoAccount.getProfileImageUrl();
+    }
 }

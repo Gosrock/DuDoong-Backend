@@ -1,4 +1,4 @@
-package io.github.depromeet.knockknockbackend.domain.credential.presentation.dto.response;
+package band.gosrock.api.auth.model.dto.response;
 
 
 import lombok.AllArgsConstructor;

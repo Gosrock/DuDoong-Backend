@@ -25,6 +25,9 @@ oauth:
     client-secret: ${KAKAO_SECRET}
     redirect-url: ${KAKAO_REDIRECT}
     app-id : ${KAKAO_APP_ID}
+logging:
+  level:
+    band.gosrock.infrastructure.outer.api.* : debug
 ---
 spring:
   config:

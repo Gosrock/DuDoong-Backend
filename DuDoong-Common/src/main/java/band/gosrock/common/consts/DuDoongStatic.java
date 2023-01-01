@@ -1,8 +1,8 @@
 package band.gosrock.common.consts;
 
 public class DuDoongStatic {
-    public static final String AUTH_HEADER = "Authorization";
-    public static final String BEARER = "Bearer";
+    public static final String AUTH_HEADER = "Authorization ";
+    public static final String BEARER = "Bearer ";
     public static final String WITHDRAW_PREFIX = "DELETED:";
     public static final String TOKEN_ROLE = "role";
     public static final String TOKEN_TYPE = "type";
@@ -16,4 +16,7 @@ public class DuDoongStatic {
     public static final int FORBIDDEN = 403;
     public static final int NOT_FOUND = 404;
     public static final int INTERNAL_SERVER = 500;
+
+    public static final String KAKAO_OAUTH_QUERY_STRING =
+            "/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=code";
 }
