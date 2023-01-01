@@ -31,6 +31,9 @@ jobs:
       - name: spotless check
         run: ./gradlew spotlessCheck
 
+      - name: Start containers
+        run: docker-compose up -d
+
       - name: test and analyze
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
