@@ -6,6 +6,8 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class DuDoongException extends RuntimeException {
-    private ErrorCode errorCode;
+public class DuDoongDynamicException extends RuntimeException {
+    private final int status;
+    private final String code;
+    private final String reason;
 }

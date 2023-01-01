@@ -1,4 +1,4 @@
-package band.gosrock.domain.domain.example.domain;
+package band.gosrock.domain.domains.example.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;

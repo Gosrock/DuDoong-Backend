@@ -27,7 +27,7 @@ public class JwtTokenProvider {
         try {
             return Jwts.parserBuilder().setSigningKey(getSecretKey()).build().parseClaimsJws(token);
         } catch (ExpiredJwtException e) {
-            throw new ExpiredTokenException();
+            throw ExpiredTokenException.EXCEPTION;
         } catch (Exception e) {
             throw new InvalidTokenException();
         }
