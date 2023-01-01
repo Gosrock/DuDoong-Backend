@@ -31,7 +31,9 @@ public class RedissonLockAop {
         Method method = signature.getMethod();
 
         RedissonLock redissonLock = method.getAnnotation(RedissonLock.class);
-        String key = this.createKey(signature.getParameterNames(), joinPoint.getArgs(), redissonLock.key());
+        String key =
+                this.createKey(
+                        signature.getParameterNames(), joinPoint.getArgs(), redissonLock.key());
         RLock rLock = redissonClient.getLock(key);
 
         long waitTime = redissonLock.waitTime();
@@ -56,6 +58,7 @@ public class RedissonLockAop {
 
     /**
      * Redisson Key Create
+     *
      * @param parameterNames
      * @param args
      * @param key
