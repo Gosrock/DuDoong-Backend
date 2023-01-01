@@ -6,7 +6,6 @@ import static band.gosrock.common.consts.DuDoongStatic.INTERNAL_SERVER;
 import static band.gosrock.common.consts.DuDoongStatic.NOT_FOUND;
 import static band.gosrock.common.consts.DuDoongStatic.UNAUTHORIZED;
 
-import band.gosrock.common.consts.DuDoongStatic;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -24,8 +23,7 @@ public enum ErrorCode {
 
     USER_NOT_FOUND(NOT_FOUND, "USER-404-1", "User Not Found."),
 
-    INTERNAL_SERVER_ERROR(
-        INTERNAL_SERVER, "GLOBAL-500-1", "Internal Server Error.");
+    INTERNAL_SERVER_ERROR(INTERNAL_SERVER, "GLOBAL-500-1", "Internal Server Error.");
 
     private int status;
     private String code;
