@@ -1,4 +1,4 @@
-package band.gosrock.domain.domains.user.service;
+package band.gosrock.domain.domains.user.adaptor;
 
 
 import band.gosrock.domain.domains.user.domain.OauthInfo;
@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class UserDomainService {
+public class UserAdaptor {
 
     private final UserRepository userRepository;
 
