@@ -4,6 +4,7 @@ spring:
     include:
       - infrastructure
       - domain
+      - common
   jackson:
     property-naming-strategy: SNAKE_CASE
   autoconfigure:

@@ -9,8 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 class JwtPropertiesTest {
 
-    @Autowired
-    JwtProperties jwtProperties;
+    @Autowired JwtProperties jwtProperties;
 
     @Test
     void JWT_환경변수값이_불러와지는지_확인() {
