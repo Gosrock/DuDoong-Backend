@@ -1,4 +1,4 @@
-package band.gosrock.domain.common.events;
+package band.gosrock.domain.common.aop.domainEvent;
 
 
 import java.time.LocalDateTime;

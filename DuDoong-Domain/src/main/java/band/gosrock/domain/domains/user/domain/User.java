@@ -1,7 +1,7 @@
 package band.gosrock.domain.domains.user.domain;
 
 
-import band.gosrock.domain.common.events.Events;
+import band.gosrock.domain.common.aop.domainEvent.Events;
 import band.gosrock.domain.common.events.user.UserRegisterEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import javax.persistence.Embedded;
