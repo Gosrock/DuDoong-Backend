@@ -11,14 +11,13 @@ import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.Profile;
 import band.gosrock.domain.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 @UseCase
 @RequiredArgsConstructor
-public class RegisterService {
+public class RegisterUseCase {
 
-    private final KakaoService kakaoService;
-    private final UserAdaptor userDomainService;
+    private final KakaoOauthHelper kakaoService;
+    private final UserAdaptor userAdaptor;
 
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -31,7 +30,7 @@ public class RegisterService {
         KakaoUserInfoDto oauthUserInfo = kakaoService.getUserInfo(oauthAccessToken);
 
         Profile profile = oauthUserInfo.toProfile();
-        User user = userDomainService.upsertUser(profile, oauthUserInfo.toOauthInfo());
+        User user = userAdaptor.upsertUser(profile, oauthUserInfo.toOauthInfo());
 
         String accessToken =
                 jwtTokenProvider.generateAccessToken(

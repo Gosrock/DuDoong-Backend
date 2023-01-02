@@ -3,7 +3,7 @@ package band.gosrock.api.auth.controller;
 
 import band.gosrock.api.auth.model.dto.response.OauthLoginLinkResponse;
 import band.gosrock.api.auth.model.dto.response.RegisterResponse;
-import band.gosrock.api.auth.service.RegisterService;
+import band.gosrock.api.auth.service.RegisterUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "인증 관련 컨트롤러")
 public class AuthController {
 
-    private final RegisterService registerService;
+    private final RegisterUseCase registerService;
 
     @Operation(
             summary = "kakao oauth 링크발급 ( 서버 개발용 )",
