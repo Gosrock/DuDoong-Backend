@@ -8,7 +8,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class RegisterResponse {
+public class TokenAndUserResponse {
     @Schema(description = "어세스 토큰")
     private final String accessToken;
 

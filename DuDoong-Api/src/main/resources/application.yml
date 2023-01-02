@@ -22,6 +22,10 @@ spring:
 #logging:
 #  level:
 #    root: info
+#logging:
+#  level:
+#    org.springframework.data.*.*: debug
+#    org.springframework.cache.*: debug
 ---
 spring:
   config:

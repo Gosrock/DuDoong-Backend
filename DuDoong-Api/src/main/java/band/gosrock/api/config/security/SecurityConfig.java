@@ -30,6 +30,8 @@ public class SecurityConfig {
                 .permitAll()
                 .mvcMatchers("/v1/auth/oauth/**")
                 .permitAll()
+                .mvcMatchers("/v1/auth/token/refresh")
+                .permitAll()
                 .anyRequest()
                 .authenticated();
         http.apply(filterConfig);
