@@ -13,6 +13,7 @@ import band.gosrock.infrastructure.outer.api.client.KakaoInfoClient;
 import band.gosrock.infrastructure.outer.api.client.KakaoOauthClient;
 import band.gosrock.infrastructure.outer.api.dto.KakaoInformationResponse;
 import band.gosrock.infrastructure.outer.api.dto.OIDCPublicKeysResponse;
+import band.gosrock.infrastructure.outer.api.dto.OauthTokenResponse;
 import band.gosrock.infrastructure.outer.api.dto.UnlinkKaKaoTarget;
 import lombok.RequiredArgsConstructor;
 
@@ -34,15 +35,13 @@ public class KakaoOauthHelper {
                         oauthProperties.getKakaoRedirectUrl());
     }
 
-    public String getOauthAccessToken(String code) {
+    public OauthTokenResponse getOauthToken(String code) {
 
-        return kakaoOauthClient
-                .kakaoAuth(
-                        oauthProperties.getKakaoClientId(),
-                        oauthProperties.getKakaoRedirectUrl(),
-                        code,
-                        oauthProperties.getKakaoClientSecret())
-                .getAccessToken();
+        return kakaoOauthClient.kakaoAuth(
+                oauthProperties.getKakaoClientId(),
+                oauthProperties.getKakaoRedirectUrl(),
+                code,
+                oauthProperties.getKakaoClientSecret());
     }
 
     public KakaoUserInfoDto getUserInfo(String oauthAccessToken) {

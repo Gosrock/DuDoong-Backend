@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class OauthAccessTokenResponse {
+public class OauthTokenResponse {
     private String accessToken;
+    private String refreshToken;
+    private String idToken;
 }
