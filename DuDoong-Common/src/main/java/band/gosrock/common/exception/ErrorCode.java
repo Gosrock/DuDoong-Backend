@@ -30,7 +30,9 @@ public enum ErrorCode {
     OTHER_SERVER_FORBIDDEN(BAD_REQUEST, "FEIGN-400-3", "Other server forbidden"),
     OTHER_SERVER_EXPIRED_TOKEN(BAD_REQUEST, "FEIGN-400-4", "Other server expired token"),
     NOT_AVAILABLE_REDISSON_LOCK(500, "Redisson-500-1", "can not get redisson lock"),
-    SECURITY_CONTEXT_NOT_FOUND(500, "GLOBAL-500-2", "security context not found");
+    SECURITY_CONTEXT_NOT_FOUND(500, "GLOBAL-500-2", "security context not found"),
+    USER_ALREADY_SIGNUP(BAD_REQUEST, "USER-400-1", "User already signup"),
+    USER_FORBIDDEN(FORBIDDEN, "USER_403_1", "user forbidden");
     private int status;
     private String code;
     private String reason;

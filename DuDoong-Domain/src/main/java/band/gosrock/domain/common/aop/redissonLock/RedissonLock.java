@@ -11,8 +11,12 @@ import java.util.concurrent.TimeUnit;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RedissonLock {
-    // 분산락을 걸 고유 키값
+    // 분산락을 걸 파라미터 네임
     String key();
+
+    String LockName();
+
+    Class<?> paramClassType() default Object.class;
 
     // redisson default waitTime 이 30 s 임
     long waitTime() default 10L;
