@@ -12,6 +12,7 @@ import band.gosrock.api.auth.service.OauthUserInfoUseCase;
 import band.gosrock.api.auth.service.RefreshUseCase;
 import band.gosrock.api.auth.service.RegisterUseCase;
 import band.gosrock.api.auth.service.WithDrawUseCase;
+import band.gosrock.common.annotation.DisableSwaggerSecurity;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -42,18 +43,21 @@ public class AuthController {
     private final LogoutUseCase logoutUseCase;
 
     @Operation(summary = "kakao oauth 링크발급", description = "kakao 링크를 받아볼수 있습니다.")
+    @Tag(name = "카카오 oauth")
     @GetMapping("/oauth/kakao/link")
     public OauthLoginLinkResponse getKakaoOauthLink() {
         return registerUseCase.getKaKaoOauthLink();
     }
 
     @Operation(summary = "code 요청받는 핸들러, 클라이언트가 몰라도 됩니다", deprecated = true)
+    @Tag(name = "카카오 oauth")
     @GetMapping("/oauth/kakao")
     public TokenAndUserResponse kakaoAuth(@RequestParam("code") String code) {
         return registerUseCase.upsertKakaoOauthUser(code);
     }
 
     @Operation(summary = "회원가입이 가능한지 id token 으로 확인합니다.")
+    @Tag(name = "카카오 oauth")
     @GetMapping("/oauth/kakao/register/valid")
     public AvailableRegisterResponse kakaoAuthCheckRegisterValid(
             @RequestParam("id_token") String token) {
@@ -61,6 +65,7 @@ public class AuthController {
     }
 
     @Operation(summary = "id_token 으로 회원가입을 합니다.")
+    @Tag(name = "카카오 oauth")
     @PostMapping("/oauth/kakao/register")
     public TokenAndUserResponse kakaoAuthCheckRegisterValid(
             @RequestParam("id_token") String token,
@@ -69,12 +74,14 @@ public class AuthController {
     }
 
     @Operation(summary = "id_token 으로 로그인을 합니다.")
+    @Tag(name = "카카오 oauth")
     @PostMapping("/oauth/kakao/login")
     public TokenAndUserResponse kakaoOauthUserLogin(@RequestParam("id_token") String token) {
         return loginUseCase.execute(token);
     }
 
     @Operation(summary = "accessToken 으로 oauth user 정보를 가져옵니다.")
+    @Tag(name = "카카오 oauth")
     @PostMapping("/oauth/kakao/info")
     public OauthUserInfoResponse kakaoOauthUserInfo(
             @RequestParam("access_token") String accessToken) {
