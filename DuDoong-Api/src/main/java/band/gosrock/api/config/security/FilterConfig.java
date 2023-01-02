@@ -1,7 +1,6 @@
 package band.gosrock.api.config.security;
 
 
-import band.gosrock.api.config.response.ExceptionFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.config.annotation.SecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -16,11 +15,14 @@ public class FilterConfig
         extends SecurityConfigurerAdapter<DefaultSecurityFilterChain, HttpSecurity> {
 
     private final JwtTokenFilter jwtTokenFilter;
-    private final ExceptionFilter exceptionFilter;
+    private final AccessDeniedFilter accessDeniedFilter;
+
+    private final JwtExceptionFilter jwtExceptionFilter;
 
     @Override
-    public void configure(HttpSecurity builder) throws Exception {
+    public void configure(HttpSecurity builder) {
         builder.addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
-        builder.addFilterAfter(exceptionFilter, ExceptionTranslationFilter.class);
+        builder.addFilterBefore(jwtExceptionFilter, JwtTokenFilter.class);
+        builder.addFilterAfter(accessDeniedFilter, ExceptionTranslationFilter.class);
     }
 }

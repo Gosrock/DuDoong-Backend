@@ -1,7 +1,8 @@
-package band.gosrock.api.config.response;
+package band.gosrock.api.config.security;
 
 
 import band.gosrock.common.dto.ErrorResponse;
+import band.gosrock.common.exception.DuDoongCodeException;
 import band.gosrock.common.exception.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -17,7 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 @RequiredArgsConstructor
 @Component
-public class ExceptionFilter extends OncePerRequestFilter {
+public class JwtExceptionFilter extends OncePerRequestFilter {
 
     private final ObjectMapper objectMapper;
 
@@ -27,20 +28,10 @@ public class ExceptionFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         try {
             filterChain.doFilter(request, response);
-        } catch (AccessDeniedException e) {
-            ErrorResponse access_denied =
-                    new ErrorResponse(
-                            403,
-                            "Access Denied",
-                            "check if accessToken exist",
-                            request.getRequestURL().toString());
-            responseToClient(response, access_denied);
-
-        } catch (Exception e) {
-            // TODO : 처리하지 못한 에러 여기서 처리
-            // 처리할수있는 가장 마지막 에러 부분임
-            e.printStackTrace();
-
+        } catch (DuDoongCodeException e) {
+            responseToClient(
+                    response,
+                    getErrorResponse(e.getErrorCode(), request.getRequestURL().toString()));
         } finally {
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         }
