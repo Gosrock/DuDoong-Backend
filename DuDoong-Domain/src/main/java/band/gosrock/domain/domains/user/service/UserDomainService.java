@@ -56,9 +56,8 @@ public class UserDomainService {
     }
 
     @Transactional
-    public User withDrawUser(Long userId){
+    public void withDrawUser(Long userId) {
         User user = userAdaptor.queryUser(userId);
         user.withDrawUser();
-        return user;
     }
 }

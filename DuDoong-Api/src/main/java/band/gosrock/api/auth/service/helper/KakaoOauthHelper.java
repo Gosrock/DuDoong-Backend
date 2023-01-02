@@ -4,7 +4,6 @@ import static band.gosrock.common.consts.DuDoongStatic.BEARER;
 import static band.gosrock.common.consts.DuDoongStatic.KAKAO_OAUTH_QUERY_STRING;
 
 import band.gosrock.api.auth.model.dto.KakaoUserInfoDto;
-import band.gosrock.api.auth.service.helper.OauthOIDCHelper;
 import band.gosrock.common.annotation.Helper;
 import band.gosrock.common.dto.OIDCDecodePayload;
 import band.gosrock.common.properties.OauthProperties;
@@ -14,6 +13,7 @@ import band.gosrock.infrastructure.outer.api.client.KakaoInfoClient;
 import band.gosrock.infrastructure.outer.api.client.KakaoOauthClient;
 import band.gosrock.infrastructure.outer.api.dto.KakaoInformationResponse;
 import band.gosrock.infrastructure.outer.api.dto.OIDCPublicKeysResponse;
+import band.gosrock.infrastructure.outer.api.dto.UnlinkKaKaoTarget;
 import lombok.RequiredArgsConstructor;
 
 @Helper
@@ -74,5 +74,12 @@ public class KakaoOauthHelper {
                 .provider(OauthProvider.KAKAO)
                 .oid(oidcDecodePayload.getSub())
                 .build();
+    }
+
+    public void unlink(String oid) {
+        String kakaoAdminKey = oauthProperties.getKakaoAdminKey();
+        UnlinkKaKaoTarget unlinkKaKaoTarget = UnlinkKaKaoTarget.from(oid);
+        String header = "KakaoAK " + kakaoAdminKey;
+        kakaoInfoClient.unlinkUser(header, unlinkKaKaoTarget);
     }
 }

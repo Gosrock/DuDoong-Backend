@@ -87,17 +87,17 @@ public class AuthController {
         return refreshUseCase.execute(code);
     }
 
-    @Operation(summary = "refreshToken 용입니다.")
+    @Operation(summary = "회원탈퇴를 합니다.")
     @SecurityRequirement(name = "access-token")
     @DeleteMapping("/me")
     public void withDrawUser() {
-        return withDrawUseCase.execute();
+        withDrawUseCase.execute();
     }
 
-    @Operation(summary = "refreshToken 용입니다.")
+    @Operation(summary = "로그아웃을 합니다.")
     @SecurityRequirement(name = "access-token")
     @PostMapping("/logout")
     public void logoutUser() {
-        return logoutUseCase.execute();
+        //        return logoutUseCase.execute();
     }
 }
