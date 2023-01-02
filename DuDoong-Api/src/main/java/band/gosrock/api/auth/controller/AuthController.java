@@ -31,6 +31,6 @@ public class AuthController {
 
     @GetMapping("/oauth/kakao")
     public RegisterResponse kakaoAuth(@RequestParam("code") String code) {
-        return registerService.registerKakaoOauthUser(code);
+        return registerService.upsertKakaoOauthUser(code);
     }
 }
