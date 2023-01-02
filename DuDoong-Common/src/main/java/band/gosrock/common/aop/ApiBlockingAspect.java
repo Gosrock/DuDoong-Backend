@@ -8,8 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +22,7 @@ public class ApiBlockingAspect {
     @Around("@annotation(band.gosrock.common.annotation.DevelopOnlyApi)")
     public Object checkApiAcceptingCondition(ProceedingJoinPoint joinPoint) throws Throwable {
         String[] activeProfiles = env.getActiveProfiles();
-        if ( Arrays.stream(activeProfiles).toList().contains("prod")) {
+        if (Arrays.stream(activeProfiles).toList().contains("prod")) {
             throw new DuDoongDynamicException(405, "Blocked Api", "not working api in production");
         }
         return joinPoint.proceed();
