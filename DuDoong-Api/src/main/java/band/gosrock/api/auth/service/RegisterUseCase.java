@@ -47,7 +47,6 @@ public class RegisterUseCase {
         return new AvailableRegisterResponse(userDomainService.checkUserCanRegister(oauthInfo));
     }
 
-    @Transactional
     public TokenAndUserResponse registerUserByOCIDToken(
             String idToken, RegisterRequest registerUserRequest) {
 

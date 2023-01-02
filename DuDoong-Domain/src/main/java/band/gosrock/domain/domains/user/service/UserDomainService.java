@@ -21,6 +21,7 @@ public class UserDomainService {
     //    @RedissonLock(LockName = "registerUser", paramName = "oauthInfo", paramClassType =
     // OauthInfo.class)
     public User registerUser(Profile profile, OauthInfo oauthInfo) {
+        validUserCanRegister(oauthInfo);
         User newUser = User.builder().profile(profile).oauthInfo(oauthInfo).build();
         userRepository.save(newUser);
         return newUser;
