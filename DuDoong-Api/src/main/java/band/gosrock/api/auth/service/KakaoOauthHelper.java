@@ -7,6 +7,7 @@ import band.gosrock.api.auth.model.dto.KakaoUserInfoDto;
 import band.gosrock.common.annotation.Helper;
 import band.gosrock.common.dto.OIDCDecodePayload;
 import band.gosrock.common.properties.OauthProperties;
+import band.gosrock.domain.domains.user.domain.OauthInfo;
 import band.gosrock.domain.domains.user.domain.OauthProvider;
 import band.gosrock.infrastructure.outer.api.client.KakaoInfoClient;
 import band.gosrock.infrastructure.outer.api.client.KakaoOauthClient;
@@ -64,5 +65,13 @@ public class KakaoOauthHelper {
                 oauthProperties.getKakaoBaseUrl(),
                 oauthProperties.getKakaoAppId(),
                 oidcPublicKeysResponse);
+    }
+
+    public OauthInfo getOauthInfoByIdToken(String idToken) {
+        OIDCDecodePayload oidcDecodePayload = getOIDCDecodePayload(idToken);
+        return OauthInfo.builder()
+                .provider(OauthProvider.KAKAO)
+                .oid(oidcDecodePayload.getSub())
+                .build();
     }
 }

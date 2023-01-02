@@ -4,6 +4,7 @@ package band.gosrock.domain.domains.user.domain;
 import band.gosrock.domain.common.aop.domainEvent.Events;
 import band.gosrock.domain.common.events.user.UserRegisterEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.domains.user.exception.ForbiddenUserException;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -55,5 +56,11 @@ public class User extends BaseTimeEntity {
     public void withDrawUser() {
         accountState = AccountState.DELETED;
         oauthInfo = oauthInfo.withDrawOauthInfo();
+    }
+
+    public void login() {
+        if (!AccountState.NORMAL.equals(this.accountState)) {
+            throw ForbiddenUserException.EXCEPTION;
+        }
     }
 }

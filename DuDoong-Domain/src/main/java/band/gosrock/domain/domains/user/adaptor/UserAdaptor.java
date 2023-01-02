@@ -21,4 +21,10 @@ public class UserAdaptor {
     public Boolean exist(OauthInfo oauthInfo) {
         return userRepository.findByOauthInfo(oauthInfo).isPresent();
     }
+
+    public User queryUserByOauthInfo(OauthInfo oauthInfo) {
+        return userRepository
+                .findByOauthInfo(oauthInfo)
+                .orElseThrow(() -> UserNotFoundException.EXCEPTION);
+    }
 }

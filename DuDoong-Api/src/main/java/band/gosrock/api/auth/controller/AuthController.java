@@ -1,16 +1,20 @@
 package band.gosrock.api.auth.controller;
 
 
+import band.gosrock.api.auth.model.dto.request.RegisterRequest;
 import band.gosrock.api.auth.model.dto.response.AvailableRegisterResponse;
 import band.gosrock.api.auth.model.dto.response.OauthLoginLinkResponse;
 import band.gosrock.api.auth.model.dto.response.TokenAndUserResponse;
+import band.gosrock.api.auth.service.LoginUseCase;
 import band.gosrock.api.auth.service.RefreshUseCase;
 import band.gosrock.api.auth.service.RegisterUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,6 +26,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final RegisterUseCase registerUseCase;
+
+    private final LoginUseCase loginUseCase;
     private final RefreshUseCase refreshUseCase;
 
     @Operation(
@@ -42,6 +48,19 @@ public class AuthController {
     public AvailableRegisterResponse kakaoAuthCheckRegisterValid(
             @RequestParam("id_token") String token) {
         return registerUseCase.checkAvailableRegister(token);
+    }
+
+    @PostMapping("/oauth/kakao/register")
+    public TokenAndUserResponse kakaoAuthCheckRegisterValid(
+            @RequestParam("id_token") String token,
+            @Valid @RequestBody RegisterRequest registerRequest) {
+        return registerUseCase.registerUserByOCIDToken(token, registerRequest);
+    }
+
+    @PostMapping("/oauth/kakao/login")
+    public TokenAndUserResponse kakaoAuthCheckRegisterValid(
+            @RequestParam("id_token") String token) {
+        return loginUseCase.execute(token);
     }
 
     @PostMapping("/token/refresh")
