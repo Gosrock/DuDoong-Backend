@@ -4,6 +4,7 @@ import static band.gosrock.common.consts.DuDoongStatic.BEARER;
 import static band.gosrock.common.consts.DuDoongStatic.KAKAO_OAUTH_QUERY_STRING;
 
 import band.gosrock.api.auth.model.dto.KakaoUserInfoDto;
+import band.gosrock.common.annotation.UseCase;
 import band.gosrock.common.properties.OauthProperties;
 import band.gosrock.domain.domains.user.domain.OauthProvider;
 import band.gosrock.infrastructure.outer.api.client.KakaoInfoClient;
@@ -12,7 +13,7 @@ import band.gosrock.infrastructure.outer.api.dto.KakaoInformationResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-@Service
+@UseCase
 @RequiredArgsConstructor
 public class KakaoService {
     private final OauthProperties oauthProperties;

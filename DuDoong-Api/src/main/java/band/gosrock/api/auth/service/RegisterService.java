@@ -4,6 +4,7 @@ package band.gosrock.api.auth.service;
 import band.gosrock.api.auth.model.dto.KakaoUserInfoDto;
 import band.gosrock.api.auth.model.dto.response.OauthLoginLinkResponse;
 import band.gosrock.api.auth.model.dto.response.RegisterResponse;
+import band.gosrock.common.annotation.UseCase;
 import band.gosrock.common.jwt.JwtTokenProvider;
 import band.gosrock.domain.common.dto.ProfileViewDto;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
@@ -12,7 +13,7 @@ import band.gosrock.domain.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-@Service
+@UseCase
 @RequiredArgsConstructor
 public class RegisterService {
 
