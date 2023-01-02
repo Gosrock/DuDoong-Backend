@@ -1,9 +1,9 @@
 package band.gosrock.api.auth.model.dto.response;
 
+
 import band.gosrock.api.auth.model.dto.KakaoUserInfoDto;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @Getter
 public class OauthUserInfoResponse {
@@ -13,21 +13,20 @@ public class OauthUserInfoResponse {
     private final String name;
 
     @Builder
-    public OauthUserInfoResponse(String email, String phoneNumber, String profileImage,
-        String name) {
+    public OauthUserInfoResponse(
+            String email, String phoneNumber, String profileImage, String name) {
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.profileImage = profileImage;
         this.name = name;
     }
 
-    public static OauthUserInfoResponse from(KakaoUserInfoDto kakaoUserInfoDto){
+    public static OauthUserInfoResponse from(KakaoUserInfoDto kakaoUserInfoDto) {
         return OauthUserInfoResponse.builder()
-            .email(kakaoUserInfoDto.getEmail())
-            .phoneNumber(kakaoUserInfoDto.getPhoneNumber())
-            .profileImage(kakaoUserInfoDto.getProfileImage())
-            .name(kakaoUserInfoDto.getName())
-            .build();
-
+                .email(kakaoUserInfoDto.getEmail())
+                .phoneNumber(kakaoUserInfoDto.getPhoneNumber())
+                .profileImage(kakaoUserInfoDto.getProfileImage())
+                .name(kakaoUserInfoDto.getName())
+                .build();
     }
 }

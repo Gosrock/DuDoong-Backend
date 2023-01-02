@@ -34,33 +34,26 @@ public class AuthController {
 
     private final OauthUserInfoUseCase oauthUserInfoUseCase;
 
-    @Operation(
-            summary = "kakao oauth 링크발급",
-            description = "kakao 링크를 받아볼수 있습니다.")
+    @Operation(summary = "kakao oauth 링크발급", description = "kakao 링크를 받아볼수 있습니다.")
     @GetMapping("/oauth/kakao/link")
     public OauthLoginLinkResponse getKakaoOauthLink() {
         return registerUseCase.getKaKaoOauthLink();
     }
 
-    @Operation(
-        summary = "code 요청받는 핸들러, 클라이언트가 몰라도 됩니다",
-        deprecated = true)
+    @Operation(summary = "code 요청받는 핸들러, 클라이언트가 몰라도 됩니다", deprecated = true)
     @GetMapping("/oauth/kakao")
     public TokenAndUserResponse kakaoAuth(@RequestParam("code") String code) {
         return registerUseCase.upsertKakaoOauthUser(code);
     }
 
-
-    @Operation(
-        summary = "회원가입이 가능한지 id token 으로 확인합니다.")
+    @Operation(summary = "회원가입이 가능한지 id token 으로 확인합니다.")
     @GetMapping("/oauth/kakao/register/valid")
     public AvailableRegisterResponse kakaoAuthCheckRegisterValid(
             @RequestParam("id_token") String token) {
         return registerUseCase.checkAvailableRegister(token);
     }
 
-    @Operation(
-        summary = "id_token 으로 회원가입을 합니다.")
+    @Operation(summary = "id_token 으로 회원가입을 합니다.")
     @PostMapping("/oauth/kakao/register")
     public TokenAndUserResponse kakaoAuthCheckRegisterValid(
             @RequestParam("id_token") String token,
@@ -68,24 +61,20 @@ public class AuthController {
         return registerUseCase.registerUserByOCIDToken(token, registerRequest);
     }
 
-    @Operation(
-        summary = "id_token 으로 로그인을 합니다.")
+    @Operation(summary = "id_token 으로 로그인을 합니다.")
     @PostMapping("/oauth/kakao/login")
-    public TokenAndUserResponse kakaoOauthUserLogin(
-            @RequestParam("id_token") String token) {
+    public TokenAndUserResponse kakaoOauthUserLogin(@RequestParam("id_token") String token) {
         return loginUseCase.execute(token);
     }
 
-    @Operation(
-        summary = "accessToken 으로 oauth user 정보를 가져옵니다.")
+    @Operation(summary = "accessToken 으로 oauth user 정보를 가져옵니다.")
     @PostMapping("/oauth/kakao/info")
     public OauthUserInfoResponse kakaoOauthUserInfo(
-        @RequestParam("access_token") String accessToken) {
+            @RequestParam("access_token") String accessToken) {
         return oauthUserInfoUseCase.execute(accessToken);
     }
 
-    @Operation(
-        summary = "refreshToken 용입니다.")
+    @Operation(summary = "refreshToken 용입니다.")
     @PostMapping("/token/refresh")
     public TokenAndUserResponse tokenRefresh(@RequestParam("token") String code) {
         return refreshUseCase.execute(code);

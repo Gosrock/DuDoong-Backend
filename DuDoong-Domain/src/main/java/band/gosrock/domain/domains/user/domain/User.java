@@ -21,8 +21,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@Table(name = "tbl_user",
-    uniqueConstraints = {@UniqueConstraint(columnNames = {"oid", "provider"})})
+@Table(
+        name = "tbl_user",
+        uniqueConstraints = {@UniqueConstraint(columnNames = {"oid", "provider"})})
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseTimeEntity {
