@@ -5,7 +5,6 @@ import band.gosrock.api.example.dto.ExampleResponse;
 import band.gosrock.api.example.service.ExampleApiService;
 import band.gosrock.common.annotation.DisableSwaggerSecurity;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
