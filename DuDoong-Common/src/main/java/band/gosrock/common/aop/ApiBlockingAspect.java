@@ -1,5 +1,6 @@
 package band.gosrock.common.aop;
 
+
 import band.gosrock.common.exception.DuDoongDynamicException;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -19,10 +20,9 @@ public class ApiBlockingAspect {
     @Around("@annotation(band.gosrock.common.annotation.DevelopOnlyApi)")
     public Object checkApiAcceptingCondition(ProceedingJoinPoint joinPoint) throws Throwable {
         log.info("[ABA::checkApiAcceptingCondition] environment={}", profile);
-        if(profile.equals("prod")) {
-            throw new DuDoongDynamicException(405,"Blocked Api","not working api in production");
+        if (profile.equals("prod")) {
+            throw new DuDoongDynamicException(405, "Blocked Api", "not working api in production");
         }
         return joinPoint.proceed();
-
     }
 }
