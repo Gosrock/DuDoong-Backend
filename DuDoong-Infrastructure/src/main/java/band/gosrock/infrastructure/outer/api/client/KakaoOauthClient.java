@@ -1,8 +1,11 @@
 package band.gosrock.infrastructure.outer.api.client;
 
 
+import band.gosrock.infrastructure.outer.api.dto.OIDCPublicKeysResponse;
 import band.gosrock.infrastructure.outer.api.dto.OauthAccessTokenResponse;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
@@ -17,7 +20,7 @@ public interface KakaoOauthClient {
             @PathVariable("CODE") String code,
             @PathVariable("CLIENT_SECRET") String client_secret);
 
-    //    @Cacheable(cacheNames = "KakaoOICD", cacheManager = "oidcCacheManager")
-    //    @GetMapping("/.well-known/jwks.json")
-    //    OIDCPublicKeysResponse getKakaoOIDCOpenKeys();
+    @Cacheable(cacheNames = "KakaoOICD", cacheManager = "oidcCacheManager")
+    @GetMapping("/.well-known/jwks.json")
+    OIDCPublicKeysResponse getKakaoOIDCOpenKeys();
 }

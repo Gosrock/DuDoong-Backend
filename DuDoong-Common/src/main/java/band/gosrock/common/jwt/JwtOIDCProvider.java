@@ -4,7 +4,6 @@ package band.gosrock.common.jwt;
 import band.gosrock.common.dto.OIDCDecodePayload;
 import band.gosrock.common.exception.ExpiredTokenException;
 import band.gosrock.common.exception.InvalidTokenException;
-import band.gosrock.common.properties.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Header;

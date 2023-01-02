@@ -1,5 +1,6 @@
 package band.gosrock.common.dto;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -15,4 +16,3 @@ public class OIDCDecodePayload {
 
     private String email;
 }
-
