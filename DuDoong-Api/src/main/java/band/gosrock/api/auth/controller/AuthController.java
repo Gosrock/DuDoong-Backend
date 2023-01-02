@@ -98,6 +98,6 @@ public class AuthController {
     @SecurityRequirement(name = "access-token")
     @PostMapping("/logout")
     public void logoutUser() {
-        //        return logoutUseCase.execute();
+        logoutUseCase.execute();
     }
 }

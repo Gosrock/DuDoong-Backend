@@ -3,7 +3,6 @@ package band.gosrock.domain.domains.user.domain;
 
 import band.gosrock.common.consts.DuDoongStatic;
 import java.time.LocalDateTime;
-import java.util.Date;
 import javax.persistence.Embeddable;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -30,7 +29,7 @@ public class OauthInfo {
 
     public OauthInfo withDrawOauthInfo() {
         return OauthInfo.builder()
-                .oid(DuDoongStatic.WITHDRAW_PREFIX + LocalDateTime.now() +":"+ oid)
+                .oid(DuDoongStatic.WITHDRAW_PREFIX + LocalDateTime.now() + ":" + oid)
                 .provider(provider)
                 .build();
     }

@@ -58,7 +58,7 @@ public class User extends BaseTimeEntity {
     }
 
     public void withDrawUser() {
-        if(accountState.equals(AccountState.DELETED)){
+        if (accountState.equals(AccountState.DELETED)) {
             throw AlreadyDeletedUserException.EXCEPTION;
         }
         accountState = AccountState.DELETED;
