@@ -13,6 +13,7 @@ import band.gosrock.domain.domains.user.domain.OauthInfo;
 import band.gosrock.domain.domains.user.domain.Profile;
 import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.domain.domains.user.service.UserDomainService;
+import band.gosrock.infrastructure.outer.api.dto.OauthTokenResponse;
 import lombok.RequiredArgsConstructor;
 
 @UseCase
@@ -34,7 +35,7 @@ public class RegisterUseCase {
      * @return
      */
     public TokenAndUserResponse upsertKakaoOauthUser(String code) {
-        String oauthAccessToken = kakaoOauthHelper.getOauthAccessToken(code);
+        String oauthAccessToken = kakaoOauthHelper.getOauthToken(code).getAccessToken();
         KakaoUserInfoDto oauthUserInfo = kakaoOauthHelper.getUserInfo(oauthAccessToken);
 
         Profile profile = oauthUserInfo.toProfile();
@@ -55,5 +56,9 @@ public class RegisterUseCase {
         User user = userDomainService.registerUser(registerUserRequest.toProfile(), oauthInfo);
 
         return tokenGenerateHelper.execute(user);
+    }
+
+    public OauthTokenResponse getCredentialFromKaKao(String code) {
+        return kakaoOauthHelper.getOauthToken(code);
     }
 }
