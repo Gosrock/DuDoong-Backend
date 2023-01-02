@@ -1,9 +1,10 @@
-package band.gosrock.api.auth.service;
+package band.gosrock.api.auth.service.helper;
 
 import static band.gosrock.common.consts.DuDoongStatic.BEARER;
 import static band.gosrock.common.consts.DuDoongStatic.KAKAO_OAUTH_QUERY_STRING;
 
 import band.gosrock.api.auth.model.dto.KakaoUserInfoDto;
+import band.gosrock.api.auth.service.helper.OauthOIDCHelper;
 import band.gosrock.common.annotation.Helper;
 import band.gosrock.common.dto.OIDCDecodePayload;
 import band.gosrock.common.properties.OauthProperties;
@@ -25,7 +26,7 @@ public class KakaoOauthHelper {
 
     private final OauthOIDCHelper oauthOIDCHelper;
 
-    protected String getKaKaoOauthLink() {
+    public String getKaKaoOauthLink() {
         return oauthProperties.getKakaoBaseUrl()
                 + String.format(
                         KAKAO_OAUTH_QUERY_STRING,

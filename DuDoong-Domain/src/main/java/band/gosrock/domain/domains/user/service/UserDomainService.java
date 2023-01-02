@@ -54,4 +54,11 @@ public class UserDomainService {
         user.login();
         return user;
     }
+
+    @Transactional
+    public User withDrawUser(Long userId){
+        User user = userAdaptor.queryUser(userId);
+        user.withDrawUser();
+        return user;
+    }
 }

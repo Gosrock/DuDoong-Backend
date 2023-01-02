@@ -3,6 +3,7 @@ package band.gosrock.api.auth.service;
 
 import band.gosrock.api.auth.model.dto.KakaoUserInfoDto;
 import band.gosrock.api.auth.model.dto.response.OauthUserInfoResponse;
+import band.gosrock.api.auth.service.helper.KakaoOauthHelper;
 import band.gosrock.common.annotation.UseCase;
 import lombok.RequiredArgsConstructor;
 

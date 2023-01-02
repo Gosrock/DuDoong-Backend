@@ -7,13 +7,17 @@ import band.gosrock.api.auth.model.dto.response.OauthLoginLinkResponse;
 import band.gosrock.api.auth.model.dto.response.OauthUserInfoResponse;
 import band.gosrock.api.auth.model.dto.response.TokenAndUserResponse;
 import band.gosrock.api.auth.service.LoginUseCase;
+import band.gosrock.api.auth.service.LogoutUseCase;
 import band.gosrock.api.auth.service.OauthUserInfoUseCase;
 import band.gosrock.api.auth.service.RefreshUseCase;
 import band.gosrock.api.auth.service.RegisterUseCase;
+import band.gosrock.api.auth.service.WithDrawUseCase;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,6 +37,9 @@ public class AuthController {
     private final RefreshUseCase refreshUseCase;
 
     private final OauthUserInfoUseCase oauthUserInfoUseCase;
+
+    private final WithDrawUseCase withDrawUseCase;
+    private final LogoutUseCase logoutUseCase;
 
     @Operation(summary = "kakao oauth 링크발급", description = "kakao 링크를 받아볼수 있습니다.")
     @GetMapping("/oauth/kakao/link")
@@ -78,5 +85,19 @@ public class AuthController {
     @PostMapping("/token/refresh")
     public TokenAndUserResponse tokenRefresh(@RequestParam("token") String code) {
         return refreshUseCase.execute(code);
+    }
+
+    @Operation(summary = "refreshToken 용입니다.")
+    @SecurityRequirement(name = "access-token")
+    @DeleteMapping("/me")
+    public void withDrawUser() {
+        return withDrawUseCase.execute();
+    }
+
+    @Operation(summary = "refreshToken 용입니다.")
+    @SecurityRequirement(name = "access-token")
+    @PostMapping("/logout")
+    public void logoutUser() {
+        return logoutUseCase.execute();
     }
 }
