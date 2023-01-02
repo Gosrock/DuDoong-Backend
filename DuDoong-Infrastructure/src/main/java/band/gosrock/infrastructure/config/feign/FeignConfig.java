@@ -3,6 +3,7 @@ package band.gosrock.infrastructure.config.feign;
 
 import band.gosrock.infrastructure.DuDoongInfraApplication;
 import feign.Logger.Level;
+import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cloud.openfeign.EnableFeignClients;
@@ -24,5 +25,10 @@ public class FeignConfig {
     @ConditionalOnMissingBean(value = ErrorDecoder.class)
     public FeignClientErrorDecoder commonFeignErrorDecoder() {
         return new FeignClientErrorDecoder();
+    }
+
+    @Bean
+    Encoder formEncoder() {
+        return new feign.form.FormEncoder();
     }
 }

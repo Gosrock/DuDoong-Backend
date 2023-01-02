@@ -22,4 +22,8 @@ public class RefreshTokenAdaptor {
     public RefreshTokenEntity save(RefreshTokenEntity refreshToken) {
         return refreshTokenRepository.save(refreshToken);
     }
+
+    public void deleteByUserId(Long userId) {
+        refreshTokenRepository.deleteById(userId.toString());
+    }
 }

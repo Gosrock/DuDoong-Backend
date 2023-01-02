@@ -6,6 +6,8 @@ import band.gosrock.api.auth.model.dto.request.RegisterRequest;
 import band.gosrock.api.auth.model.dto.response.AvailableRegisterResponse;
 import band.gosrock.api.auth.model.dto.response.OauthLoginLinkResponse;
 import band.gosrock.api.auth.model.dto.response.TokenAndUserResponse;
+import band.gosrock.api.auth.service.helper.KakaoOauthHelper;
+import band.gosrock.api.auth.service.helper.TokenGenerateHelper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.user.domain.OauthInfo;
 import band.gosrock.domain.domains.user.domain.Profile;

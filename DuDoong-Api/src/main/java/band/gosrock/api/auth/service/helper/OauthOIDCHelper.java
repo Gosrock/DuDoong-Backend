@@ -1,4 +1,4 @@
-package band.gosrock.api.auth.service;
+package band.gosrock.api.auth.service.helper;
 
 
 import band.gosrock.common.annotation.Helper;

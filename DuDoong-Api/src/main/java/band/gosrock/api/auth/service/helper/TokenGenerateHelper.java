@@ -1,4 +1,4 @@
-package band.gosrock.api.auth.service;
+package band.gosrock.api.auth.service.helper;
 
 
 import band.gosrock.api.auth.model.dto.response.TokenAndUserResponse;

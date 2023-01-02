@@ -4,6 +4,7 @@ package band.gosrock.domain.domains.user.domain;
 import band.gosrock.domain.common.aop.domainEvent.Events;
 import band.gosrock.domain.common.events.user.UserRegisterEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.domains.user.exception.AlreadyDeletedUserException;
 import band.gosrock.domain.domains.user.exception.ForbiddenUserException;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -57,6 +58,9 @@ public class User extends BaseTimeEntity {
     }
 
     public void withDrawUser() {
+        if (accountState.equals(AccountState.DELETED)) {
+            throw AlreadyDeletedUserException.EXCEPTION;
+        }
         accountState = AccountState.DELETED;
         oauthInfo = oauthInfo.withDrawOauthInfo();
     }

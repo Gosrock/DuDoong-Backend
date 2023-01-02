@@ -32,7 +32,8 @@ public enum ErrorCode {
     NOT_AVAILABLE_REDISSON_LOCK(500, "Redisson-500-1", "can not get redisson lock"),
     SECURITY_CONTEXT_NOT_FOUND(500, "GLOBAL-500-2", "security context not found"),
     USER_ALREADY_SIGNUP(BAD_REQUEST, "USER-400-1", "User already signup"),
-    USER_FORBIDDEN(FORBIDDEN, "USER_403_1", "user forbidden");
+    USER_FORBIDDEN(FORBIDDEN, "USER_403_1", "user forbidden"),
+    USER_ALREADY_DELETED(FORBIDDEN, "USER_403_2", "user already deleted");
     private int status;
     private String code;
     private String reason;
