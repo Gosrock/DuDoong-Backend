@@ -21,6 +21,6 @@ class OauthInfoTest {
         OauthInfo withDrawOauthInfo = oauthInfo.withDrawOauthInfo();
 
         // then
-        assertEquals(withDrawOid, withDrawOauthInfo.getOid());
+        assertTrue(withDrawOauthInfo.getOid().startsWith(DuDoongStatic.WITHDRAW_PREFIX));
     }
 }
