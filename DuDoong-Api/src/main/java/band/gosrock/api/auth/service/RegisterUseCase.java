@@ -13,7 +13,6 @@ import band.gosrock.domain.domains.user.domain.OauthProvider;
 import band.gosrock.domain.domains.user.domain.Profile;
 import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.domain.domains.user.service.UserDomainService;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 
 @UseCase
@@ -32,6 +31,7 @@ public class RegisterUseCase {
 
     /**
      * 개발용 회원가입 upsert 입니다.
+     *
      * @param code
      * @return
      */
@@ -45,18 +45,18 @@ public class RegisterUseCase {
         return tokenGenerateHelper.execute(user);
     }
 
-    public AvailableRegisterResponse checkAvailableRegister(
-        String idToken) {
+    public AvailableRegisterResponse checkAvailableRegister(String idToken) {
         OIDCDecodePayload oidcDecodePayload = kakaoOauthHelper.getOIDCDecodePayload(idToken);
-        Boolean isRegistered = !checkUserCanRegister(oidcDecodePayload);
 
-        return new AvailableRegisterResponse(isRegistered);
+        return new AvailableRegisterResponse(checkUserCanRegister(oidcDecodePayload));
     }
 
-    private Boolean checkUserCanRegister(
-        OIDCDecodePayload oidcDecodePayload) {
-        OauthInfo oauthInfo = OauthInfo.builder().provider(OauthProvider.KAKAO)
-            .oid(oidcDecodePayload.getAud()).build();
-        return userAdaptor.exist(oauthInfo);
+    private Boolean checkUserCanRegister(OIDCDecodePayload oidcDecodePayload) {
+        OauthInfo oauthInfo =
+                OauthInfo.builder()
+                        .provider(OauthProvider.KAKAO)
+                        .oid(oidcDecodePayload.getSub())
+                        .build();
+        return !userAdaptor.exist(oauthInfo);
     }
 }

@@ -1,6 +1,7 @@
 package band.gosrock.api.auth.controller;
 
 
+import band.gosrock.api.auth.model.dto.response.AvailableRegisterResponse;
 import band.gosrock.api.auth.model.dto.response.OauthLoginLinkResponse;
 import band.gosrock.api.auth.model.dto.response.TokenAndUserResponse;
 import band.gosrock.api.auth.service.RefreshUseCase;
@@ -35,6 +36,12 @@ public class AuthController {
     @GetMapping("/oauth/kakao")
     public TokenAndUserResponse kakaoAuth(@RequestParam("code") String code) {
         return registerUseCase.upsertKakaoOauthUser(code);
+    }
+
+    @GetMapping("/oauth/kakao/register/valid")
+    public AvailableRegisterResponse kakaoAuthCheckRegisterValid(
+            @RequestParam("id_token") String token) {
+        return registerUseCase.checkAvailableRegister(token);
     }
 
     @PostMapping("/token/refresh")
