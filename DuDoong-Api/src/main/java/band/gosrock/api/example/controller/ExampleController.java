@@ -3,6 +3,7 @@ package band.gosrock.api.example.controller;
 
 import band.gosrock.api.example.dto.ExampleResponse;
 import band.gosrock.api.example.service.ExampleApiService;
+import band.gosrock.common.annotation.DisableSwaggerSecurity;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +20,7 @@ public class ExampleController {
     private final ExampleApiService exampleApiService;
 
     @GetMapping
+    @DisableSwaggerSecurity
     public ExampleResponse get() {
         return exampleApiService.getExample();
     }
