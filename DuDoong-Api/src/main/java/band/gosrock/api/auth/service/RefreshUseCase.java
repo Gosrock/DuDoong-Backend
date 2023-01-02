@@ -2,9 +2,7 @@ package band.gosrock.api.auth.service;
 
 
 import band.gosrock.api.auth.model.dto.response.TokenAndUserResponse;
-import band.gosrock.api.config.security.SecurityUtils;
 import band.gosrock.common.annotation.UseCase;
-import band.gosrock.common.exception.InvalidTokenException;
 import band.gosrock.common.jwt.JwtTokenProvider;
 import band.gosrock.domain.common.dto.ProfileViewDto;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
@@ -17,15 +15,10 @@ public class RefreshUseCase {
     private final UserAdaptor userAdaptor;
     private final JwtTokenProvider jwtTokenProvider;
 
-    private TokenAndUserResponse execute(String refreshToken) {
+    public TokenAndUserResponse execute(String refreshToken) {
         Long refreshUserId = jwtTokenProvider.parseRefreshToken(refreshToken);
-        Long currentUserId = SecurityUtils.getCurrentUserId();
 
-        if (!refreshUserId.equals(currentUserId)) {
-            throw InvalidTokenException.EXCEPTION;
-        }
-
-        User user = userAdaptor.queryUser(currentUserId);
+        User user = userAdaptor.queryUser(refreshUserId);
 
         String newAccessToken =
                 jwtTokenProvider.generateAccessToken(

@@ -7,7 +7,6 @@ import band.gosrock.api.auth.model.dto.response.TokenAndUserResponse;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.common.jwt.JwtTokenProvider;
 import band.gosrock.domain.common.dto.ProfileViewDto;
-import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.Profile;
 import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.domain.domains.user.service.UserDomainService;
