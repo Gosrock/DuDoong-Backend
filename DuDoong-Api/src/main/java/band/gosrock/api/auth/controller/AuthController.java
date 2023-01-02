@@ -2,7 +2,7 @@ package band.gosrock.api.auth.controller;
 
 
 import band.gosrock.api.auth.model.dto.response.OauthLoginLinkResponse;
-import band.gosrock.api.auth.model.dto.response.RegisterResponse;
+import band.gosrock.api.auth.model.dto.response.TokenAndUserResponse;
 import band.gosrock.api.auth.service.RegisterUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,7 +30,7 @@ public class AuthController {
     }
 
     @GetMapping("/oauth/kakao")
-    public RegisterResponse kakaoAuth(@RequestParam("code") String code) {
+    public TokenAndUserResponse kakaoAuth(@RequestParam("code") String code) {
         return registerService.upsertKakaoOauthUser(code);
     }
 }
