@@ -5,8 +5,6 @@ import band.gosrock.common.exception.DuDoongCodeException;
 import band.gosrock.common.exception.DuDoongDynamicException;
 import band.gosrock.common.exception.NotAvailableRedissonLockException;
 import java.lang.reflect.Method;
-import java.util.LinkedHashSet;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,12 +14,9 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.env.Environment;
-import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.TransactionTimedOutException;
-import org.springframework.util.ClassUtils;
 
 @Aspect
 @Component
@@ -38,11 +33,16 @@ public class RedissonLockAop {
         Method method = signature.getMethod();
 
         RedissonLock redissonLock = method.getAnnotation(RedissonLock.class);
-        //        String key =
-        //                this.createKey(
-        //                        signature.getParameterNames(), joinPoint.getArgs(),
-        // redissonLock.key());
-        RLock rLock = redissonClient.getLock("key");
+        String baseKey = redissonLock.LockName();
+
+        String DynamicKey =
+                generateDynamicKey(
+                        redissonLock.identifier(),
+                        joinPoint.getArgs(),
+                        redissonLock.paramClassType(),
+                        signature.getParameterNames());
+
+        RLock rLock = redissonClient.getLock(baseKey + DynamicKey);
 
         long waitTime = redissonLock.waitTime();
         long leaseTime = redissonLock.leaseTime();
@@ -64,10 +64,22 @@ public class RedissonLockAop {
         }
     }
 
+    private String generateDynamicKey(
+            String identifier, Object[] args, Class<?> paramClassType, String[] parameterNames)
+            throws NoSuchFieldException {
+
+        String dynamicKey;
+        if (paramClassType.equals(Object.class)) {
+            dynamicKey = createDynamicKeyFromPrimitive(parameterNames, args, identifier);
+        } else {
+            dynamicKey = createDynamicKeyFromObject(parameterNames, paramClassType, identifier);
+        }
+        return dynamicKey;
+    }
+
     private String createDynamicKeyFromPrimitive(
             String[] methodParameterNames, Object[] args, String key) {
         String dynamicKey = "";
-        /* key = parameterName */
         for (int i = 0; i < methodParameterNames.length; i++) {
             if (methodParameterNames[i].equals(key)) {
                 dynamicKey += args[i];
@@ -77,31 +89,16 @@ public class RedissonLockAop {
         return dynamicKey;
     }
 
-    private String createDynamicKeyFromObject(Object[] args, String key, Class<?> paramClassType)
+    private String createDynamicKeyFromObject(Object[] args, Class<?> paramClassType, String key)
             throws NoSuchFieldException {
         String dynamicKey = "";
-        /* key = parameterName */
-        String name = paramClassType.getName();
+        String name = paramClassType.getSimpleName();
         for (int i = 0; i < args.length; i++) {
-            if (args[i].getClass().getName().equals(name)) {
+            if (args[i].getClass().getSimpleName().equals(name)) {
                 dynamicKey += args[i].getClass().getField(key);
                 break;
             }
         }
         return dynamicKey;
-    }
-
-    private Set<String> getPackagesToScan(AnnotationMetadata metadata) {
-        AnnotationAttributes attributes =
-                AnnotationAttributes.fromMap(
-                        metadata.getAnnotationAttributes(RedissonLock.class.getName()));
-        Set<String> classScan = new LinkedHashSet<>();
-
-        for (Class<?> basePackageClass : attributes.getClassArray("paramClassType")) {
-            classScan.add(
-                    this.environment.resolvePlaceholders(
-                            ClassUtils.getPackageName(basePackageClass)));
-        }
-        return classScan;
     }
 }

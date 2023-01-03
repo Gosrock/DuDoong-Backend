@@ -12,8 +12,9 @@ import java.util.concurrent.TimeUnit;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RedissonLock {
     // 분산락을 걸 파라미터 네임
-    String key();
+    String identifier();
 
+    // 락 이름
     String LockName();
 
     Class<?> paramClassType() default Object.class;
