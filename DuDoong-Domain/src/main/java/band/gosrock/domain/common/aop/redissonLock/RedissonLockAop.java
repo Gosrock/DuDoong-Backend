@@ -4,6 +4,8 @@ package band.gosrock.domain.common.aop.redissonLock;
 import band.gosrock.common.exception.DuDoongCodeException;
 import band.gosrock.common.exception.DuDoongDynamicException;
 import band.gosrock.common.exception.NotAvailableRedissonLockException;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
@@ -14,9 +16,9 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.TransactionTimedOutException;
+import org.springframework.util.StringUtils;
 
 @Aspect
 @Component
@@ -25,7 +27,6 @@ import org.springframework.transaction.TransactionTimedOutException;
 public class RedissonLockAop {
     private final RedissonClient redissonClient;
     private final RedissonCallTransaction redissonCallTransaction;
-    private final Environment environment;
 
     @Around("@annotation(band.gosrock.domain.common.aop.redissonLock.RedissonLock)")
     public Object lock(final ProceedingJoinPoint joinPoint) throws Throwable {
@@ -64,9 +65,9 @@ public class RedissonLockAop {
         }
     }
 
-    private String generateDynamicKey(
+    public String generateDynamicKey(
             String identifier, Object[] args, Class<?> paramClassType, String[] parameterNames)
-            throws NoSuchFieldException {
+        throws NoSuchFieldException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 
         String dynamicKey;
         if (paramClassType.equals(Object.class)) {
@@ -77,7 +78,7 @@ public class RedissonLockAop {
         return dynamicKey;
     }
 
-    private String createDynamicKeyFromPrimitive(
+    public String createDynamicKeyFromPrimitive(
             String[] methodParameterNames, Object[] args, String key) {
         String dynamicKey = "";
         for (int i = 0; i < methodParameterNames.length; i++) {
@@ -89,14 +90,16 @@ public class RedissonLockAop {
         return dynamicKey;
     }
 
-    private String createDynamicKeyFromObject(Object[] args, Class<?> paramClassType, String key)
-            throws NoSuchFieldException {
+    public String createDynamicKeyFromObject(Object[] args, Class<?> paramClassType, String identifier)
+        throws  IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         String dynamicKey = "";
         String name = paramClassType.getSimpleName();
         for (int i = 0; i < args.length; i++) {
             if (args[i].getClass().getSimpleName().equals(name)) {
-                dynamicKey += args[i].getClass().getField(key);
-                break;
+                Class<?> aClass = args[i].getClass();
+                String capitalize = StringUtils.capitalize(identifier);
+                Object result = aClass.getMethod("get" + capitalize).invoke(args[i]);
+                return String.valueOf(result);
             }
         }
         return dynamicKey;
