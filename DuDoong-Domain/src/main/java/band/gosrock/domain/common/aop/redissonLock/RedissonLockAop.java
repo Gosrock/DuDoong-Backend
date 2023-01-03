@@ -1,10 +1,10 @@
 package band.gosrock.domain.common.aop.redissonLock;
 
 
+import band.gosrock.common.exception.BadLockIdentifierException;
 import band.gosrock.common.exception.DuDoongCodeException;
 import band.gosrock.common.exception.DuDoongDynamicException;
 import band.gosrock.common.exception.NotAvailableRedissonLockException;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
@@ -36,14 +36,16 @@ public class RedissonLockAop {
         RedissonLock redissonLock = method.getAnnotation(RedissonLock.class);
         String baseKey = redissonLock.LockName();
 
-        String DynamicKey =
+        String dynamicKey =
                 generateDynamicKey(
                         redissonLock.identifier(),
                         joinPoint.getArgs(),
                         redissonLock.paramClassType(),
                         signature.getParameterNames());
 
-        RLock rLock = redissonClient.getLock(baseKey + DynamicKey);
+        RLock rLock = redissonClient.getLock(baseKey+":" + dynamicKey);
+
+        log.info("redisson 키 설정" + baseKey+":" + dynamicKey);
 
         long waitTime = redissonLock.waitTime();
         long leaseTime = redissonLock.leaseTime();
@@ -66,33 +68,34 @@ public class RedissonLockAop {
     }
 
     public String generateDynamicKey(
-            String identifier, Object[] args, Class<?> paramClassType, String[] parameterNames)
-        throws NoSuchFieldException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-
-        String dynamicKey;
-        if (paramClassType.equals(Object.class)) {
-            dynamicKey = createDynamicKeyFromPrimitive(parameterNames, args, identifier);
-        } else {
-            dynamicKey = createDynamicKeyFromObject(parameterNames, paramClassType, identifier);
+            String identifier, Object[] args, Class<?> paramClassType, String[] parameterNames) {
+        try {
+            String dynamicKey;
+            if (paramClassType.equals(Object.class)) {
+                dynamicKey = createDynamicKeyFromPrimitive(parameterNames, args, identifier);
+            } else {
+                dynamicKey = createDynamicKeyFromObject(args, paramClassType, identifier);
+            }
+            return dynamicKey;
+        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException error) {
+            log.error(error.getMessage());
+            throw BadLockIdentifierException.EXCEPTION;
         }
-        return dynamicKey;
     }
 
     public String createDynamicKeyFromPrimitive(
-            String[] methodParameterNames, Object[] args, String key) {
-        String dynamicKey = "";
+            String[] methodParameterNames, Object[] args, String paramName) {
         for (int i = 0; i < methodParameterNames.length; i++) {
-            if (methodParameterNames[i].equals(key)) {
-                dynamicKey += args[i];
-                break;
+            if (methodParameterNames[i].equals(paramName)) {
+                return String.valueOf(args[i]);
             }
         }
-        return dynamicKey;
+        throw BadLockIdentifierException.EXCEPTION;
     }
 
-    public String createDynamicKeyFromObject(Object[] args, Class<?> paramClassType, String identifier)
-        throws  IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        String dynamicKey = "";
+    public String createDynamicKeyFromObject(
+            Object[] args, Class<?> paramClassType, String identifier)
+            throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         String name = paramClassType.getSimpleName();
         for (int i = 0; i < args.length; i++) {
             if (args[i].getClass().getSimpleName().equals(name)) {
@@ -102,6 +105,6 @@ public class RedissonLockAop {
                 return String.valueOf(result);
             }
         }
-        return dynamicKey;
+        throw BadLockIdentifierException.EXCEPTION;
     }
 }

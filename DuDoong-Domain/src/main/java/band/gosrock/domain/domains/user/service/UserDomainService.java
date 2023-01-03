@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.user.service;
 
 
 import band.gosrock.common.annotation.DomainService;
+import band.gosrock.domain.common.aop.redissonLock.RedissonLock;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.OauthInfo;
 import band.gosrock.domain.domains.user.domain.Profile;
@@ -18,8 +19,10 @@ public class UserDomainService {
     private final UserAdaptor userAdaptor;
 
     @Transactional
-    //    @RedissonLock(LockName = "registerUser", paramName = "oauthInfo", paramClassType =
-    // OauthInfo.class)
+    @RedissonLock(
+            LockName = "유저등록",
+            identifier = "oid",
+            paramClassType = OauthInfo.class)
     public User registerUser(Profile profile, OauthInfo oauthInfo) {
         validUserCanRegister(oauthInfo);
         User newUser = User.builder().profile(profile).oauthInfo(oauthInfo).build();
@@ -28,6 +31,10 @@ public class UserDomainService {
     }
 
     @Transactional
+    @RedissonLock(
+        LockName = "개발용회원가입",
+        identifier = "oid",
+        paramClassType = OauthInfo.class)
     public User upsertUser(Profile profile, OauthInfo oauthInfo) {
         return userRepository
                 .findByOauthInfo(oauthInfo)
@@ -56,6 +63,9 @@ public class UserDomainService {
     }
 
     @Transactional
+    @RedissonLock(
+        LockName = "유저탈퇴",
+        identifier = "userId")
     public void withDrawUser(Long userId) {
         User user = userAdaptor.queryUser(userId);
         user.withDrawUser();

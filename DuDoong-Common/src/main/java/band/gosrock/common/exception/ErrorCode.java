@@ -33,7 +33,8 @@ public enum ErrorCode {
     SECURITY_CONTEXT_NOT_FOUND(500, "GLOBAL-500-2", "security context not found"),
     USER_ALREADY_SIGNUP(BAD_REQUEST, "USER-400-1", "User already signup"),
     USER_FORBIDDEN(FORBIDDEN, "USER_403_1", "user forbidden"),
-    USER_ALREADY_DELETED(FORBIDDEN, "USER_403_2", "user already deleted");
+    USER_ALREADY_DELETED(FORBIDDEN, "USER_403_2", "user already deleted"),
+    BAD_LOCK_IDENTIFIER(500, "AOP_500_1", "락의 키값이 잘못 세팅 되었습니다");
     private int status;
     private String code;
     private String reason;
