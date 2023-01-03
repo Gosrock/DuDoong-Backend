@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Import;
 @EnableFeignClients(basePackageClasses = BaseFeignClientPackage.class)
 @ComponentScan(basePackageClasses = BaseFeignClientPackage.class)
 @Import(FeignClientErrorDecoder.class)
-//@Configuration
+// @Configuration
 public class FeignOauthConfig {
 
     @Bean

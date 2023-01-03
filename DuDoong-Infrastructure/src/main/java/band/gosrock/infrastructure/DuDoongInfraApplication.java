@@ -16,7 +16,7 @@ import org.springframework.core.env.Environment;
 @Profile("dev")
 @RequiredArgsConstructor
 @Slf4j
-public class DuDoongInfraApplication implements ApplicationListener<ApplicationReadyEvent>  {
+public class DuDoongInfraApplication implements ApplicationListener<ApplicationReadyEvent> {
 
     private final Environment environment;
 

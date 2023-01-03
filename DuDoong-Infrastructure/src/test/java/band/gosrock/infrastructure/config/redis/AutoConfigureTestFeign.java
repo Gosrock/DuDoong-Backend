@@ -7,6 +7,4 @@ import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 
 @ImportAutoConfiguration(value = FeignAutoConfiguration.class)
 @AutoConfigureJson
-public @interface AutoConfigureTestFeign {
-
-}
+public @interface AutoConfigureTestFeign {}

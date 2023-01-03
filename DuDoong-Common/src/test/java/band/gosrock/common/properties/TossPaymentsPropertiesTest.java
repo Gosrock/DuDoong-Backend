@@ -11,8 +11,7 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("common")
 class TossPaymentsPropertiesTest {
 
-    @Autowired
-    TossPaymentsProperties tossPaymentsProperties;
+    @Autowired TossPaymentsProperties tossPaymentsProperties;
 
     @Test
     void 토스페이먼츠_환경변수_값_확인() {

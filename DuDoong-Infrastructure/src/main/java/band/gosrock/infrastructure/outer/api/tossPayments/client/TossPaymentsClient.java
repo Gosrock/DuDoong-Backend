@@ -2,7 +2,7 @@ package band.gosrock.infrastructure.outer.api.tossPayments.client;
 
 
 import band.gosrock.infrastructure.outer.api.tossPayments.config.FeignTossConfig;
-import band.gosrock.infrastructure.outer.api.tossPayments.config.TossHeaderConfig;
+import band.gosrock.infrastructure.outer.api.tossPayments.dto.request.ConfirmPaymentsRequest;
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.request.CreatePaymentsRequest;
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.PaymentsResponse;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -19,11 +19,11 @@ import org.springframework.web.bind.annotation.RequestBody;
         decode404 = true)
 public interface TossPaymentsClient {
 
-    @PostMapping(path = "/v1/payments",consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(path = "/v1/payments", consumes = MediaType.APPLICATION_JSON_VALUE)
     PaymentsResponse createPayments(@RequestBody CreatePaymentsRequest createPaymentsRequest);
 
     @PostMapping("/v1/payments/confirm")
-    PaymentsResponse confirmPayments(@RequestBody CreatePaymentsRequest createPaymentsRequest);
+    PaymentsResponse confirmPayments(@RequestBody ConfirmPaymentsRequest confirmPaymentsRequest);
 
     // TODO : 멱등키 구현
     @PostMapping("/v1/payments/{paymentKey}/cancel")

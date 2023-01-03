@@ -1,5 +1,3 @@
 package band.gosrock.infrastructure.outer.api;
 
-public interface BaseFeignClientPackage {
-
-}
+public interface BaseFeignClientPackage {}

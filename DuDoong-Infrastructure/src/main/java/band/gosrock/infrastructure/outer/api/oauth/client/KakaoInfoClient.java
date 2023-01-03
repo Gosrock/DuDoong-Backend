@@ -10,7 +10,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-@FeignClient(name = "KakaoInfoClient", url = "https://kapi.kakao.com",configuration = FeignOauthConfig.class)
+@FeignClient(
+        name = "KakaoInfoClient",
+        url = "https://kapi.kakao.com",
+        configuration = FeignOauthConfig.class)
 public interface KakaoInfoClient {
 
     @GetMapping("/v2/user/me")
