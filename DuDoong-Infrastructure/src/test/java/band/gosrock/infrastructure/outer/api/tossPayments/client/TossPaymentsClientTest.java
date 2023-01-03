@@ -7,6 +7,7 @@ import band.gosrock.common.properties.TossPaymentsProperties;
 import band.gosrock.infrastructure.config.redis.AutoConfigureTestFeign;
 import band.gosrock.infrastructure.outer.api.tossPayments.config.FeignTossConfig;
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.request.CreatePaymentsRequest;
+import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.PaymentsResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
@@ -34,6 +35,7 @@ class TossPaymentsClientTest {
             .orderId("abcd1234")
             .orderName("주문1").build();
 
-        tossPaymentsClient.createPayments(build);
+        PaymentsResponse payments = tossPaymentsClient.createPayments(build);
+
     }
 }
