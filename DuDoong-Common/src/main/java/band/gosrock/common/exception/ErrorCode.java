@@ -34,7 +34,8 @@ public enum ErrorCode implements BaseErrorCode {
     SECURITY_CONTEXT_NOT_FOUND(500, "GLOBAL-500-2", "security context not found"),
     USER_ALREADY_SIGNUP(BAD_REQUEST, "USER-400-1", "User already signup"),
     USER_FORBIDDEN(FORBIDDEN, "USER_403_1", "user forbidden"),
-    USER_ALREADY_DELETED(FORBIDDEN, "USER_403_2", "user already deleted");
+    USER_ALREADY_DELETED(FORBIDDEN, "USER_403_2", "user already deleted"),
+    TOSS_PAYMENTS_UNHANDLED(INTERNAL_SERVER, "PAYMENTS_INTERNAL_SERVER", "관리자에게 연락부탁드려요.");
     private int status;
     private String code;
     private String reason;

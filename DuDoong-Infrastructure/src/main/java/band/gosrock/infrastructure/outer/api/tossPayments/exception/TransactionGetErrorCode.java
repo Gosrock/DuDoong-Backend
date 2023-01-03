@@ -9,7 +9,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum PaymentsGetErrorCode implements BaseErrorCode {
+public enum TransactionGetErrorCode implements BaseErrorCode {
     UNAUTHORIZED_KEY(
             BAD_REQUEST.value(), "PAYMENTS_GET_UNAUTHORIZED_KEY", "인증되지 않은 시크릿 키 혹은 클라이언트 키 입니다."),
     FORBIDDEN_CONSECUTIVE_REQUEST(

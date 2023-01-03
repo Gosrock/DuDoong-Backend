@@ -8,13 +8,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.format.datetime.standard.DateTimeFormatterRegistrar;
 
-@Import({TossHeaderConfig.class})
-public class FeignTossConfig {
+@Import({TossHeaderConfig.class, PaymentConfirmErrorDecoder.class})
+public class PaymentsConfirmConfig {
 
     @Bean
     @ConditionalOnMissingBean(value = ErrorDecoder.class)
-    public TossErrorDecoder commonFeignErrorDecoder() {
-        return new TossErrorDecoder();
+    public PaymentConfirmErrorDecoder commonFeignErrorDecoder() {
+        return new PaymentConfirmErrorDecoder();
     }
 
     @Bean

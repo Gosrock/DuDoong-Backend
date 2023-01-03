@@ -3,7 +3,6 @@ package band.gosrock.infrastructure.outer.api.tossPayments.client;
 import static org.junit.jupiter.api.Assertions.*;
 
 import band.gosrock.common.DuDoongCommonApplication;
-import band.gosrock.common.properties.TossPaymentsProperties;
 import band.gosrock.infrastructure.config.feign.FeginCommonConfig;
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.request.CancelPaymentsRequest;
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.request.ConfirmPaymentsRequest;
@@ -18,12 +17,13 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles({"common"})
 @SpringBootTest(classes = {FeginCommonConfig.class, DuDoongCommonApplication.class})
 class TossPaymentsClientTest {
-    @Autowired TossPaymentsClient tossPaymentsClient;
-    @Autowired TossPaymentsProperties tossPaymentsProperties;
+    @Autowired PaymentsCancelClient paymentsCancelClient;
+    @Autowired PaymentsCreateClient paymentsCreateClient;
+    @Autowired PaymentsConfirmClient paymentsConfirmClient;
+    @Autowired TransactionGetClient transactionGetClient;
 
     @Test
     public void 결제_요청_테스트() {
-        String secretKey = tossPaymentsProperties.getSecretKey();
         CreatePaymentsRequest createPaymentsRequest =
                 CreatePaymentsRequest.builder()
                         .successUrl("http://localhost:8080/return-url")
@@ -35,7 +35,7 @@ class TossPaymentsClientTest {
                         .build();
 
         PaymentsResponse createPaymentResponse =
-                tossPaymentsClient.createPayments(createPaymentsRequest);
+                paymentsCreateClient.execute(createPaymentsRequest);
     }
 
     @Test
@@ -47,7 +47,7 @@ class TossPaymentsClientTest {
                         .orderId("abcd1233")
                         .build();
         PaymentsResponse confirmPaymentResponse =
-                tossPaymentsClient.confirmPayments(confirmPaymentsRequest);
+                paymentsConfirmClient.execute(confirmPaymentsRequest);
 
         String orderId = confirmPaymentResponse.getOrderId();
         String paymentKey = confirmPaymentResponse.getPaymentKey();
@@ -59,7 +59,7 @@ class TossPaymentsClientTest {
                 CancelPaymentsRequest.builder().cancelReason("취소 사유").build();
 
         PaymentsResponse paymentsResponse =
-                tossPaymentsClient.cancelPayments(
+                paymentsCancelClient.execute(
                         "qKl56WYb7w4vZnjEJeQVxYQd9zBz9rPmOoBN0k12dzgRG9px", cancelPaymentsRequest);
     }
 }
