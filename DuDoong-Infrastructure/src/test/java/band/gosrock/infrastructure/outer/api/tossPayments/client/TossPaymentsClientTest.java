@@ -4,8 +4,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import band.gosrock.common.DuDoongCommonApplication;
 import band.gosrock.common.properties.TossPaymentsProperties;
-import band.gosrock.infrastructure.config.feign.FeignConfig;
 import band.gosrock.infrastructure.config.redis.AutoConfigureTestFeign;
+import band.gosrock.infrastructure.outer.api.tossPayments.config.FeignTossConfig;
+import band.gosrock.infrastructure.outer.api.tossPayments.dto.request.CreatePaymentsRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
@@ -16,9 +17,9 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.test.context.ActiveProfiles;
 
 
-@AutoConfigureTestFeign
+//@AutoConfigureTestFeign
 @ActiveProfiles("common")
-@SpringBootTest(classes = {FeignConfig.class, DuDoongCommonApplication.class})
+@SpringBootTest(classes = {FeignTossConfig.class, DuDoongCommonApplication.class})
 class TossPaymentsClientTest {
     @Autowired
     TossPaymentsClient tossPaymentsClient;
@@ -26,6 +27,13 @@ class TossPaymentsClientTest {
     TossPaymentsProperties tossPaymentsProperties;
     @Test
     public void 요청테스트(){
+        CreatePaymentsRequest build = CreatePaymentsRequest.builder()
+            .successUrl("http://localhost:8080/return-url")
+            .failUrl("http://localhost:8080/failurl-url")
+            .amount(10000L)
+            .orderId("abcd1234")
+            .orderName("주문1").build();
 
+        tossPaymentsClient.createPayments(build);
     }
 }

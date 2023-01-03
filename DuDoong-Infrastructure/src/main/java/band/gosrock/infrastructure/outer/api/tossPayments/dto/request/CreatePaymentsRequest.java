@@ -1,11 +1,11 @@
 package band.gosrock.infrastructure.outer.api.tossPayments.dto.request;
 
 
+import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
+@Builder
 public class CreatePaymentsRequest {
     private final String method;
     private final Long amount;

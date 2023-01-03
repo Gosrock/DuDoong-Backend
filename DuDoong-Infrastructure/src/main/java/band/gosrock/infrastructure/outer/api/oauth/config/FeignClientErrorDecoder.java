@@ -1,4 +1,4 @@
-package band.gosrock.infrastructure.config.feign;
+package band.gosrock.infrastructure.outer.api.oauth.config;
 
 
 import band.gosrock.common.exception.OtherServerBadRequestException;

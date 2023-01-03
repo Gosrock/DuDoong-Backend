@@ -1,10 +1,12 @@
 package band.gosrock.infrastructure.outer.api.tossPayments.client;
 
 
+import band.gosrock.infrastructure.outer.api.tossPayments.config.FeignTossConfig;
 import band.gosrock.infrastructure.outer.api.tossPayments.config.TossHeaderConfig;
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.request.CreatePaymentsRequest;
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.PaymentsResponse;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,10 +15,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 @FeignClient(
         name = "tossCreatePayments",
         url = "https://api.tosspayments.com",
-        configuration = TossHeaderConfig.class)
+        configuration = FeignTossConfig.class,
+        decode404 = true)
 public interface TossPaymentsClient {
 
-    @PostMapping("/v1/payments")
+    @PostMapping(path = "/v1/payments",consumes = MediaType.APPLICATION_JSON_VALUE)
     PaymentsResponse createPayments(@RequestBody CreatePaymentsRequest createPaymentsRequest);
 
     @PostMapping("/v1/payments/confirm")

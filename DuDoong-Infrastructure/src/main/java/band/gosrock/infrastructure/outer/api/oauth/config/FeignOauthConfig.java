@@ -1,7 +1,6 @@
-package band.gosrock.infrastructure.config.feign;
+package band.gosrock.infrastructure.outer.api.oauth.config;
 
 
-import band.gosrock.infrastructure.DuDoongInfraApplication;
 import band.gosrock.infrastructure.outer.api.BaseFeignClientPackage;
 import feign.Logger.Level;
 import feign.codec.Encoder;
@@ -10,14 +9,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 @EnableFeignClients(basePackageClasses = BaseFeignClientPackage.class)
 @ComponentScan(basePackageClasses = BaseFeignClientPackage.class)
 @Import(FeignClientErrorDecoder.class)
-@Configuration
-public class FeignConfig {
+//@Configuration
+public class FeignOauthConfig {
 
     @Bean
     Level feignLoggerLevel() {
