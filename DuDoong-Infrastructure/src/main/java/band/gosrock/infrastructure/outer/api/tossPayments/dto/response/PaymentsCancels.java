@@ -1,7 +1,7 @@
 package band.gosrock.infrastructure.outer.api.tossPayments.dto.response;
 
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -17,8 +17,9 @@ public class PaymentsCancels {
     private Long refundableAmount;
 
     private Long easyPayDiscountAmount;
+
     @DateTimeFormat(iso = ISO.DATE_TIME)
-    private LocalDateTime canceledAt;
+    private ZonedDateTime canceledAt;
 
     private String transactionKey;
 }

@@ -16,8 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @FeignClient(
         name = "tossCreatePayments",
         url = "https://api.tosspayments.com",
-        configuration = FeignTossConfig.class,
-        decode404 = true)
+        configuration = FeignTossConfig.class)
 public interface TossPaymentsClient {
 
     @PostMapping(path = "/v1/payments", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -28,8 +27,9 @@ public interface TossPaymentsClient {
 
     // TODO : 멱등키 구현
     @PostMapping("/v1/payments/{paymentKey}/cancel")
-    PaymentsResponse cancelPayments(@PathVariable("paymentKey") String paymentKey, @RequestBody
-        CancelPaymentsRequest cancelPaymentsRequest);
+    PaymentsResponse cancelPayments(
+            @PathVariable("paymentKey") String paymentKey,
+            @RequestBody CancelPaymentsRequest cancelPaymentsRequest);
 
     @GetMapping("/v1/payments/orders/{orderId}")
     PaymentsResponse getTransactionByOrderId(@PathVariable("orderId") String orderId);
