@@ -9,15 +9,16 @@ import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @ActiveProfiles("common")
-class JwtPropertiesTest {
+class TossPaymentsPropertiesTest {
 
-    @Autowired JwtProperties jwtProperties;
+    @Autowired
+    TossPaymentsProperties tossPaymentsProperties;
 
     @Test
-    void JWT_환경변수값이_불러와지는지_확인() {
-        Long accessExp = jwtProperties.getAccessExp();
-        Long refreshExp = jwtProperties.getRefreshExp();
-        assertEquals(accessExp, 3600);
-        assertEquals(refreshExp, 3600);
+    void 토스페이먼츠_환경변수_값_확인() {
+        String secretKey = tossPaymentsProperties.getSecretKey();
+        String mid = tossPaymentsProperties.getMid();
+        assertNotNull(secretKey);
+        assertNotNull(mid);
     }
 }
