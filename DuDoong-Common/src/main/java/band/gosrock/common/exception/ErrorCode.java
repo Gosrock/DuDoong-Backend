@@ -6,12 +6,13 @@ import static band.gosrock.common.consts.DuDoongStatic.INTERNAL_SERVER;
 import static band.gosrock.common.consts.DuDoongStatic.NOT_FOUND;
 import static band.gosrock.common.consts.DuDoongStatic.UNAUTHORIZED;
 
+import band.gosrock.common.dto.ErrorReason;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum ErrorCode {
+public enum ErrorCode implements BaseErrorCode {
     EXAMPLE_NOT_FOUND(NOT_FOUND, "EXAMPLE_404_1", "Example Not Found."),
 
     ARGUMENT_NOT_VALID_ERROR(BAD_REQUEST, "GLOBAL_400_1", "validation error"),
@@ -37,4 +38,9 @@ public enum ErrorCode {
     private int status;
     private String code;
     private String reason;
+
+    @Override
+    public ErrorReason getErrorReason() {
+        return ErrorReason.builder().reason(reason).code(code).status(status).build();
+    }
 }

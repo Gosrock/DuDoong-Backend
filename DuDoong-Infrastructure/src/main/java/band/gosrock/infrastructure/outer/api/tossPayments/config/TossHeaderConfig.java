@@ -5,7 +5,6 @@ import band.gosrock.common.properties.TossPaymentsProperties;
 import feign.auth.BasicAuthRequestInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
-import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
 public class TossHeaderConfig {
