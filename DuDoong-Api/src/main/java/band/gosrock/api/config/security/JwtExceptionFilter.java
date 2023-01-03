@@ -37,8 +37,8 @@ public class JwtExceptionFilter extends OncePerRequestFilter {
     }
 
     private ErrorResponse getErrorResponse(ErrorCode errorCode, String path) {
-        return new ErrorResponse(
-                errorCode.getStatus(), errorCode.getCode(), errorCode.getReason(), path);
+
+        return new ErrorResponse(errorCode.getErrorReason(), path);
     }
 
     private void responseToClient(HttpServletResponse response, ErrorResponse errorResponse)
