@@ -2,6 +2,7 @@ package band.gosrock.infrastructure.outer.api.tossPayments.client;
 
 
 import band.gosrock.infrastructure.outer.api.tossPayments.config.FeignTossConfig;
+import band.gosrock.infrastructure.outer.api.tossPayments.dto.request.CancelPaymentsRequest;
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.request.ConfirmPaymentsRequest;
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.request.CreatePaymentsRequest;
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.PaymentsResponse;
@@ -27,7 +28,8 @@ public interface TossPaymentsClient {
 
     // TODO : 멱등키 구현
     @PostMapping("/v1/payments/{paymentKey}/cancel")
-    PaymentsResponse cancelPayments(@PathVariable("paymentKey") String paymentKey);
+    PaymentsResponse cancelPayments(@PathVariable("paymentKey") String paymentKey, @RequestBody
+        CancelPaymentsRequest cancelPaymentsRequest);
 
     @GetMapping("/v1/payments/orders/{orderId}")
     PaymentsResponse getTransactionByOrderId(@PathVariable("orderId") String orderId);

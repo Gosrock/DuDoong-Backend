@@ -1,9 +1,12 @@
 package band.gosrock.infrastructure.outer.api.tossPayments.dto.response;
 
 
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.DateTimeFormat.ISO;
 
 @Getter
 @NoArgsConstructor
@@ -49,9 +52,11 @@ public class PaymentsResponse {
     private String status;
 
     // 결제 일어난 시간정보
-    //    private LocalDateTime requestedAt;
+    @DateTimeFormat(iso = ISO.DATE_TIME)
+    private LocalDateTime requestedAt;
     // 결제 승인이 일어난 시간정보
-    //    private LocalDateTime approvedAt;
+    @DateTimeFormat(iso = ISO.DATE_TIME)
+    private LocalDateTime approvedAt;
     // 에스크로 사용여부
     private Boolean useEscrow;
     // 마지막 거래건에대한 키값 승인 후 취소 두번 이면 마지막 취소 키
