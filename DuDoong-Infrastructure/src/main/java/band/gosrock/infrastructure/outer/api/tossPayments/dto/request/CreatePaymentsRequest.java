@@ -7,10 +7,10 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public class CreatePaymentsRequest {
-    private String method;
-    private Long amount;
-    private String orderId;
-    private String orderName;
-    private String successUrl;
-    private String failUrl;
+    private final String method;
+    private final Long amount;
+    private final String orderId;
+    private final String orderName;
+    private final String successUrl;
+    private final String failUrl;
 }
