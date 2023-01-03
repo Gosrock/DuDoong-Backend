@@ -9,12 +9,12 @@ import band.gosrock.common.dto.OIDCDecodePayload;
 import band.gosrock.common.properties.OauthProperties;
 import band.gosrock.domain.domains.user.domain.OauthInfo;
 import band.gosrock.domain.domains.user.domain.OauthProvider;
-import band.gosrock.infrastructure.outer.api.client.KakaoInfoClient;
-import band.gosrock.infrastructure.outer.api.client.KakaoOauthClient;
-import band.gosrock.infrastructure.outer.api.dto.KakaoInformationResponse;
-import band.gosrock.infrastructure.outer.api.dto.OIDCPublicKeysResponse;
-import band.gosrock.infrastructure.outer.api.dto.OauthTokenResponse;
-import band.gosrock.infrastructure.outer.api.dto.UnlinkKaKaoTarget;
+import band.gosrock.infrastructure.outer.api.oauth.client.KakaoInfoClient;
+import band.gosrock.infrastructure.outer.api.oauth.client.KakaoOauthClient;
+import band.gosrock.infrastructure.outer.api.oauth.dto.KakaoInformationResponse;
+import band.gosrock.infrastructure.outer.api.oauth.dto.OIDCPublicKeysResponse;
+import band.gosrock.infrastructure.outer.api.oauth.dto.OauthTokenResponse;
+import band.gosrock.infrastructure.outer.api.oauth.dto.UnlinkKaKaoTarget;
 import lombok.RequiredArgsConstructor;
 
 @Helper

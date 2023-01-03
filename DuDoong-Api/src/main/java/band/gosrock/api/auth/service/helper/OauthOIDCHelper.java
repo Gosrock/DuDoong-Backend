@@ -4,8 +4,8 @@ package band.gosrock.api.auth.service.helper;
 import band.gosrock.common.annotation.Helper;
 import band.gosrock.common.dto.OIDCDecodePayload;
 import band.gosrock.common.jwt.JwtOIDCProvider;
-import band.gosrock.infrastructure.outer.api.dto.OIDCPublicKeyDto;
-import band.gosrock.infrastructure.outer.api.dto.OIDCPublicKeysResponse;
+import band.gosrock.infrastructure.outer.api.oauth.dto.OIDCPublicKeyDto;
+import band.gosrock.infrastructure.outer.api.oauth.dto.OIDCPublicKeysResponse;
 import lombok.RequiredArgsConstructor;
 
 @Helper

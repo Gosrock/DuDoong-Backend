@@ -1,8 +1,8 @@
-package band.gosrock.infrastructure.outer.api.client;
+package band.gosrock.infrastructure.outer.api.oauth.client;
 
 
-import band.gosrock.infrastructure.outer.api.dto.OIDCPublicKeysResponse;
-import band.gosrock.infrastructure.outer.api.dto.OauthTokenResponse;
+import band.gosrock.infrastructure.outer.api.oauth.dto.OIDCPublicKeysResponse;
+import band.gosrock.infrastructure.outer.api.oauth.dto.OauthTokenResponse;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;

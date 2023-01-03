@@ -13,7 +13,7 @@ import band.gosrock.domain.domains.user.domain.OauthInfo;
 import band.gosrock.domain.domains.user.domain.Profile;
 import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.domain.domains.user.service.UserDomainService;
-import band.gosrock.infrastructure.outer.api.dto.OauthTokenResponse;
+import band.gosrock.infrastructure.outer.api.oauth.dto.OauthTokenResponse;
 import lombok.RequiredArgsConstructor;
 
 @UseCase

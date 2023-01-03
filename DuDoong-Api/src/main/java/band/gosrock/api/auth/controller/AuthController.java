@@ -13,7 +13,7 @@ import band.gosrock.api.auth.service.RefreshUseCase;
 import band.gosrock.api.auth.service.RegisterUseCase;
 import band.gosrock.api.auth.service.WithDrawUseCase;
 import band.gosrock.common.annotation.DevelopOnlyApi;
-import band.gosrock.infrastructure.outer.api.dto.OauthTokenResponse;
+import band.gosrock.infrastructure.outer.api.oauth.dto.OauthTokenResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;

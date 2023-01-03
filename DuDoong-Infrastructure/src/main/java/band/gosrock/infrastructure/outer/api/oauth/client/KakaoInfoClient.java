@@ -1,8 +1,8 @@
-package band.gosrock.infrastructure.outer.api.client;
+package band.gosrock.infrastructure.outer.api.oauth.client;
 
 
-import band.gosrock.infrastructure.outer.api.dto.KakaoInformationResponse;
-import band.gosrock.infrastructure.outer.api.dto.UnlinkKaKaoTarget;
+import band.gosrock.infrastructure.outer.api.oauth.dto.KakaoInformationResponse;
+import band.gosrock.infrastructure.outer.api.oauth.dto.UnlinkKaKaoTarget;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
