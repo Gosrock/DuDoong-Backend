@@ -43,9 +43,9 @@ public class RedissonLockAop {
                         redissonLock.paramClassType(),
                         signature.getParameterNames());
 
-        RLock rLock = redissonClient.getLock(baseKey+":" + dynamicKey);
+        RLock rLock = redissonClient.getLock(baseKey + ":" + dynamicKey);
 
-        log.info("redisson 키 설정" + baseKey+":" + dynamicKey);
+        log.info("redisson 키 설정" + baseKey + ":" + dynamicKey);
 
         long waitTime = redissonLock.waitTime();
         long leaseTime = redissonLock.leaseTime();
