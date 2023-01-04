@@ -30,7 +30,7 @@ public class S3UploadPresignedUrlService {
 
     public String execute(Long userId, String fileExtension) {
         validFileExtension(fileExtension);
-        String fixedFileExtension = changJpgToJpeg(fileExtension);
+        String fixedFileExtension = changeJpgToJpeg(fileExtension);
         String fileName =
                 baseUrl
                         + "/"
@@ -47,7 +47,7 @@ public class S3UploadPresignedUrlService {
         return url.toString();
     }
 
-    private String changJpgToJpeg(String fileExtension) {
+    private String changeJpgToJpeg(String fileExtension) {
         if (fileExtension.equals("jpg")) {
             return "jpeg";
         }
