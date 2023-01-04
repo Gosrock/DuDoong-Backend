@@ -11,3 +11,9 @@ oauth:
     client-secret: ${KAKAO_SECRET}
     redirect-url: ${KAKAO_REDIRECT}
     app-id: ${KAKAO_APP_ID}
+    admin-key: ${KAKAO_ADMIN_KEY}
+
+#테스트 키 입니다 상관없어요
+toss:
+  secret-key: ${TOSS_PAYMENTS_KEY:test_sk_ADpexMgkW36weAqp4bNVGbR5ozO0}
+  mid : ${TOSS_MID:gosroc9mwo}

@@ -15,6 +15,14 @@ public class ErrorResponse {
 
     private final String path;
 
+    public ErrorResponse(ErrorReason errorReason, String path) {
+        this.status = errorReason.getStatus();
+        this.code = errorReason.getCode();
+        this.reason = errorReason.getReason();
+        this.timeStamp = LocalDateTime.now();
+        this.path = path;
+    }
+
     public ErrorResponse(int status, String code, String reason, String path) {
         this.status = status;
         this.code = code;

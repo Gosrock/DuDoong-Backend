@@ -1,4 +1,4 @@
-package band.gosrock.infrastructure.config.feign;
+package band.gosrock.infrastructure.outer.api.oauth.config;
 
 
 import band.gosrock.common.exception.OtherServerBadRequestException;
@@ -9,7 +9,7 @@ import feign.FeignException;
 import feign.Response;
 import feign.codec.ErrorDecoder;
 
-public class FeignClientErrorDecoder implements ErrorDecoder {
+public class KakaoOauthErrorDecoder implements ErrorDecoder {
 
     @Override
     public Exception decode(String methodKey, Response response) {

@@ -81,11 +81,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             DuDoongCodeException e, HttpServletRequest request) {
         ErrorCode code = e.getErrorCode();
         ErrorResponse errorResponse =
-                new ErrorResponse(
-                        code.getStatus(),
-                        code.getCode(),
-                        code.getReason(),
-                        request.getRequestURL().toString());
+                new ErrorResponse(code.getErrorReason(), request.getRequestURL().toString());
         return ResponseEntity.status(HttpStatus.valueOf(code.getStatus())).body(errorResponse);
     }
 
