@@ -1,5 +1,6 @@
 package band.gosrock.infrastructure.config.s3;
 
+
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -23,9 +24,8 @@ public class S3Config {
     public AmazonS3 getS3ClientBean() {
         AWSCredentials credentials = new BasicAWSCredentials(this.accessKey, this.secretKey);
         return AmazonS3ClientBuilder.standard()
-            .withCredentials(new AWSStaticCredentialsProvider(credentials))
-            .withRegion(Regions.AP_NORTHEAST_2)
-            .build();
+                .withCredentials(new AWSStaticCredentialsProvider(credentials))
+                .withRegion(Regions.AP_NORTHEAST_2)
+                .build();
     }
 }
-

@@ -1,5 +1,6 @@
 package band.gosrock.infrastructure.config.s3;
 
+
 import band.gosrock.common.exception.BadFileExtensionException;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
@@ -31,23 +32,23 @@ public class S3UploadPresignedUrlService {
         validFileExtension(fileExtension);
         String fixedFileExtension = changJpgToJpeg(fileExtension);
         String fileName =
-            baseUrl
-                + "/"
-                + "u"
-                + userId.toString()
-                + "/"
-                + UUID.randomUUID()
-                + "."
-                + fileExtension;
+                baseUrl
+                        + "/"
+                        + "u"
+                        + userId.toString()
+                        + "/"
+                        + UUID.randomUUID()
+                        + "."
+                        + fileExtension;
         log.info(fileName);
         GeneratePresignedUrlRequest generatePresignedUrlRequest =
-            getGeneratePreSignedUrlRequest(bucket, fileName,fixedFileExtension);
+                getGeneratePreSignedUrlRequest(bucket, fileName, fixedFileExtension);
         URL url = amazonS3.generatePresignedUrl(generatePresignedUrlRequest);
         return url.toString();
     }
 
     private String changJpgToJpeg(String fileExtension) {
-        if(fileExtension.equals("jpg")){
+        if (fileExtension.equals("jpg")) {
             return "jpeg";
         }
         return fileExtension;
@@ -55,22 +56,22 @@ public class S3UploadPresignedUrlService {
 
     private static void validFileExtension(String fileExtension) {
         if (!(fileExtension.equals("jpg")
-            || fileExtension.equals("jpeg")
-            || fileExtension.equals("png"))) {
+                || fileExtension.equals("jpeg")
+                || fileExtension.equals("png"))) {
             throw BadFileExtensionException.EXCEPTION;
         }
     }
 
     private GeneratePresignedUrlRequest getGeneratePreSignedUrlRequest(
-        String bucket, String fileName,String fileExtension) {
+            String bucket, String fileName, String fileExtension) {
         GeneratePresignedUrlRequest generatePresignedUrlRequest =
-            new GeneratePresignedUrlRequest(bucket, fileName)
-                .withMethod(HttpMethod.PUT)
-                .withKey(fileName)
-                .withContentType("image/"+fileExtension)
-                .withExpiration(getPreSignedUrlExpiration());
+                new GeneratePresignedUrlRequest(bucket, fileName)
+                        .withMethod(HttpMethod.PUT)
+                        .withKey(fileName)
+                        .withContentType("image/" + fileExtension)
+                        .withExpiration(getPreSignedUrlExpiration());
         generatePresignedUrlRequest.addRequestParameter(
-            Headers.S3_CANNED_ACL, CannedAccessControlList.PublicRead.toString());
+                Headers.S3_CANNED_ACL, CannedAccessControlList.PublicRead.toString());
         return generatePresignedUrlRequest;
     }
 
