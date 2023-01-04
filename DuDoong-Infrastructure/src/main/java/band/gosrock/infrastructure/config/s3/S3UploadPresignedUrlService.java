@@ -29,6 +29,7 @@ public class S3UploadPresignedUrlService {
 
     public String execute(Long userId, String fileExtension) {
         validFileExtension(fileExtension);
+        String fixedFileExtension = changJpgToJpeg(fileExtension);
         String fileName =
             baseUrl
                 + "/"
@@ -38,10 +39,18 @@ public class S3UploadPresignedUrlService {
                 + UUID.randomUUID()
                 + "."
                 + fileExtension;
+        log.info(fileName);
         GeneratePresignedUrlRequest generatePresignedUrlRequest =
-            getGeneratePreSignedUrlRequest(bucket, fileName);
+            getGeneratePreSignedUrlRequest(bucket, fileName,fixedFileExtension);
         URL url = amazonS3.generatePresignedUrl(generatePresignedUrlRequest);
         return url.toString();
+    }
+
+    private String changJpgToJpeg(String fileExtension) {
+        if(fileExtension.equals("jpg")){
+            return "jpeg";
+        }
+        return fileExtension;
     }
 
     private static void validFileExtension(String fileExtension) {
@@ -53,12 +62,12 @@ public class S3UploadPresignedUrlService {
     }
 
     private GeneratePresignedUrlRequest getGeneratePreSignedUrlRequest(
-        String bucket, String fileName) {
+        String bucket, String fileName,String fileExtension) {
         GeneratePresignedUrlRequest generatePresignedUrlRequest =
             new GeneratePresignedUrlRequest(bucket, fileName)
                 .withMethod(HttpMethod.PUT)
-                .withContentType("image/png")
-                .withContentType("image/jpeg")
+                .withKey(fileName)
+                .withContentType("image/"+fileExtension)
                 .withExpiration(getPreSignedUrlExpiration());
         generatePresignedUrlRequest.addRequestParameter(
             Headers.S3_CANNED_ACL, CannedAccessControlList.PublicRead.toString());
