@@ -1,10 +1,8 @@
 package band.gosrock.api.order.controller;
 
 
-import band.gosrock.api.auth.model.dto.response.OauthUserInfoResponse;
 import band.gosrock.api.order.service.CancelOrderUseCase;
 import band.gosrock.api.order.service.ConfirmOrderUseCase;
-import band.gosrock.api.order.service.CreateOrderLineUseCase;
 import band.gosrock.api.order.service.CreateOrderUseCase;
 import band.gosrock.api.order.service.ReadOrderUseCase;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,7 +13,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @SecurityRequirement(name = "access-token")
@@ -34,27 +31,27 @@ public class OrderController {
     @PostMapping
     public void createOrder() {
         createOrderUseCase.execute();
-//        return oauthUserInfoUseCase.execute(accessToken);
+        //        return oauthUserInfoUseCase.execute(accessToken);
     }
 
     @Operation(summary = "결제 승인요청 . successUrl 로 돌아온 웹페이지에서 query 로 받은 응답값을 응답값만 알고계시면 됩니다.")
     @PostMapping("/{order_id}/confirm")
     public void confirmOrder(@PathVariable("order_id") String orderId) {
         confirmOrderUseCase.execute();
-//        return oauthUserInfoUseCase.execute(accessToken);
+        //        return oauthUserInfoUseCase.execute(accessToken);
     }
 
     @Operation(summary = "결제 취소요청. 취소 요청의 주체는 주문 본인, 호스트 관리자.")
     @PostMapping("/{order_id}/cancel")
     public void cancelOrder(@PathVariable("order_id") String orderId) {
         cancelOrderUseCase.execute();
-//        return oauthUserInfoUseCase.execute(accessToken);
+        //        return oauthUserInfoUseCase.execute(accessToken);
     }
 
     @Operation(summary = "결제 조회. 결제 조회 권한은 주문 본인,  호스트 관리자.")
     @GetMapping("/{order_id}")
     public void readOrder(@PathVariable("order_id") String orderId) {
         readOrderUseCase.execute();
-//        return oauthUserInfoUseCase.execute(accessToken);
+        //        return oauthUserInfoUseCase.execute(accessToken);
     }
 }

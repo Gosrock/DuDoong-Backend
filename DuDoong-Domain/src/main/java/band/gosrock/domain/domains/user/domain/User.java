@@ -4,9 +4,11 @@ package band.gosrock.domain.domains.user.domain;
 import band.gosrock.domain.common.aop.domainEvent.Events;
 import band.gosrock.domain.common.events.user.UserRegisterEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.domains.orderLine.domain.OrderLineId;
 import band.gosrock.domain.domains.user.exception.AlreadyDeletedUserException;
 import band.gosrock.domain.domains.user.exception.ForbiddenUserException;
 import javax.persistence.Embedded;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -28,10 +30,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseTimeEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+    @EmbeddedId
+    private UserId id;
     @Embedded private Profile profile;
     @Embedded private OauthInfo oauthInfo;
 

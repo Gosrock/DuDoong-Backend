@@ -21,7 +21,7 @@ public class ProfileViewDto {
 
     public static ProfileViewDto from(User user) {
         return ProfileViewDto.builder()
-                .id(user.getId())
+                .id(user.getId().getValue())
                 .name(user.getProfile().getName())
                 .profileImage(user.getProfile().getProfileImage())
                 .build();
