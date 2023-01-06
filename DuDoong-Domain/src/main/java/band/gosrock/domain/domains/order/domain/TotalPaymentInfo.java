@@ -1,5 +1,6 @@
 package band.gosrock.domain.domains.order.domain;
 
+
 import band.gosrock.domain.common.vo.Money;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
@@ -18,11 +19,11 @@ public class TotalPaymentInfo {
     private PaymentMethod paymentMethod;
 
     // 총 결제금액
-    private Money paymentAmount;
+    @Embedded private Money paymentAmount;
 
     // 공급가액
-    private Money supplyAmount;
+    @Embedded private Money supplyAmount;
 
     // 총 할인 금액
-    private Money discountAmount;
+    @Embedded private Money discountAmount;
 }

@@ -6,11 +6,7 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Function;
 import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 
 @Getter
 public class Money {
@@ -80,7 +76,7 @@ public class Money {
             return false;
         }
 
-        Money other = (Money)object;
+        Money other = (Money) object;
         return Objects.equals(amount.doubleValue(), other.amount.doubleValue());
     }
 

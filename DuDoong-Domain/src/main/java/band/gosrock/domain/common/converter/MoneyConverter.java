@@ -1,5 +1,6 @@
 package band.gosrock.domain.common.converter;
 
+
 import band.gosrock.domain.common.vo.Money;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;

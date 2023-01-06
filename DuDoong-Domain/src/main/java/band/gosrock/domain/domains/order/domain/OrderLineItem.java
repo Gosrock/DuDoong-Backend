@@ -1,4 +1,4 @@
-package band.gosrock.domain.domains.order;
+package band.gosrock.domain.domains.order.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
@@ -15,9 +15,9 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-public class TicketOrderLine extends BaseTimeEntity {
+public class OrderLineItem extends BaseTimeEntity {
 
-    @EmbeddedId private OrderLineId id;
+    @EmbeddedId private OrderLineItemId id;
 
     // 총 결제 금액
     @Embedded private Money paymentAmount;
@@ -32,7 +32,6 @@ public class TicketOrderLine extends BaseTimeEntity {
     @Embedded private Money paymentDiscount;
     // 쿠폰 아이디 ( nullable함)
     @Embedded private CouponId couponId;
-
 
     // TODO : 티켓아이템에서 티켓 오더 라인 가지기
     // TODO : 할인 쿠폰 정책 적용등?
