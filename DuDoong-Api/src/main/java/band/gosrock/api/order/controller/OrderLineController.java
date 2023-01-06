@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class OrderLineController {
 
-    private CreateOrderLineUseCase createOrderLineUseCase;
-    private ReadOrderLineUseCase readOrderLineUseCase;
+    private final CreateOrderLineUseCase createOrderLineUseCase;
+    private final ReadOrderLineUseCase readOrderLineUseCase;
     @Operation(summary = "티켓상품의 갯수와 사용자가 입력한 옵션을 가진 orderLine 을 만듭니다.")
     @PostMapping("/ticketItems/{ticketItem_id}")
     public void createOrderLine(@PathVariable("ticketItem_id") String ticketItemId) {
