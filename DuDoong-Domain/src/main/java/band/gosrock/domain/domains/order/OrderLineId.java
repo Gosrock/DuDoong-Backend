@@ -1,4 +1,4 @@
-package band.gosrock.domain.domains.coupon.domain;
+package band.gosrock.domain.domains.order;
 
 
 import java.io.Serializable;
@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class CouponId implements Serializable {
+public class OrderLineId implements Serializable {
 
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)

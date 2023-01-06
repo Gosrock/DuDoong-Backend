@@ -1,4 +1,4 @@
-package band.gosrock.domain.domains.orderLine.domain;
+package band.gosrock.domain.domains.order.domain;
 
 
 import java.io.Serializable;
@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class OrderLineId implements Serializable {
+public class OrderId implements Serializable {
 
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
