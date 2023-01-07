@@ -19,12 +19,14 @@ public class KakaoInformationResponse {
 
     @Getter
     @NoArgsConstructor
+    @JsonNaming(SnakeCaseStrategy.class)
     public static class Properties {
         private String nickname;
     }
 
     @Getter
     @NoArgsConstructor
+    @JsonNaming(SnakeCaseStrategy.class)
     public static class KakaoAccount {
 
         private Profile profile;
@@ -34,6 +36,7 @@ public class KakaoInformationResponse {
 
         @Getter
         @NoArgsConstructor
+        @JsonNaming(SnakeCaseStrategy.class)
         public static class Profile {
             private String profileImageUrl;
         }
