@@ -1,4 +1,4 @@
-package band.gosrock.domain.domains.item.domain;
+package band.gosrock.domain.domains.cart.domain;
 
 
 import java.io.Serializable;
@@ -13,9 +13,9 @@ import lombok.NoArgsConstructor;
 @Getter
 @Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ItemId implements Serializable {
+public class CartLineId implements Serializable {
 
-    @Column(name = "id")
+    @Column(name = "cart_line_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long value;
 }

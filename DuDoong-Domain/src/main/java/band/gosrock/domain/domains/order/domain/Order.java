@@ -34,7 +34,10 @@ public class Order extends BaseTimeEntity {
     @Column(nullable = false)
     private String uuid;
 
-    @Embedded private TotalPaymentInfo totalPaymentInfo;
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
+
+    @Embedded private PaymentInfo totalPaymentInfo;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
