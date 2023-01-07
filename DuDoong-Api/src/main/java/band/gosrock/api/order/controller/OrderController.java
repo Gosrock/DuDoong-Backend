@@ -38,7 +38,8 @@ public class OrderController {
 
     @Operation(summary = "결제 승인요청 . successUrl 로 돌아온 웹페이지에서 query 로 받은 응답값을 응답값만 알고계시면 됩니다.")
     @PostMapping("/confirm")
-    public PaymentsResponse confirmOrder(@RequestBody ConfirmPaymentsRequest confirmPaymentsRequest) {
+    public PaymentsResponse confirmOrder(
+            @RequestBody ConfirmPaymentsRequest confirmPaymentsRequest) {
         return confirmOrderUseCase.execute(confirmPaymentsRequest);
     }
 

@@ -2,14 +2,12 @@ package band.gosrock.domain.domains.order.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
-import javax.persistence.AttributeOverride;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.IdClass;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -44,8 +42,8 @@ public class OrderLineItem extends BaseTimeEntity {
             PaymentInfo paymentInfo,
             String productName,
             Long userId,
-        Long couponId,
-        Long itemId,
+            Long couponId,
+            Long itemId,
             Long quantity) {
         this.paymentInfo = paymentInfo;
         this.productName = productName;

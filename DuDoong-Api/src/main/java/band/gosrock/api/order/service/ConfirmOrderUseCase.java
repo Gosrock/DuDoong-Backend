@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 public class ConfirmOrderUseCase {
 
     private final OrderDomainService orderDomainService;
+
     public PaymentsResponse execute(ConfirmPaymentsRequest confirmPaymentsRequest) {
         return orderDomainService.confirmOrder(confirmPaymentsRequest);
     }

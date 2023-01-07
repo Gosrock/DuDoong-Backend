@@ -16,7 +16,6 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.IdClass;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
@@ -49,7 +48,7 @@ public class Order extends BaseTimeEntity {
 
     private LocalDateTime paymentAt;
 
-//         단방향 oneToMany 매핑
+    //         단방향 oneToMany 매핑
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
     private List<OrderLineItem> orderLineItems = new ArrayList<>();
@@ -67,7 +66,7 @@ public class Order extends BaseTimeEntity {
         this.totalPaymentInfo = totalPaymentInfo;
         this.orderStatus = orderStatus;
         this.paymentAt = paymentAt;
-//        this.orderLineItems.addAll(orderLineItems);
+        //        this.orderLineItems.addAll(orderLineItems);
     }
 
     public static Order createOrder(

@@ -45,11 +45,7 @@ public class OrderDomainService {
                         .quantity(3L)
                         .build();
         Order order =
-                Order.createOrder(
-                        1L,
-                        PaymentMethod.EASYPAY,
-                        paymentInfo,
-                        List.of(orderLineItem));
+                Order.createOrder(1L, PaymentMethod.EASYPAY, paymentInfo, List.of(orderLineItem));
         Order save = orderRepository.save(order);
         CreatePaymentsRequest createPaymentsRequest =
                 CreatePaymentsRequest.builder()
