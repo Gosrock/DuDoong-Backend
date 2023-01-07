@@ -8,7 +8,9 @@ import band.gosrock.domain.domains.order.domain.OrderLineItem;
 import band.gosrock.domain.domains.order.domain.PaymentInfo;
 import band.gosrock.domain.domains.order.domain.PaymentMethod;
 import band.gosrock.domain.domains.order.repository.OrderRepository;
+import band.gosrock.infrastructure.outer.api.tossPayments.client.PaymentsConfirmClient;
 import band.gosrock.infrastructure.outer.api.tossPayments.client.PaymentsCreateClient;
+import band.gosrock.infrastructure.outer.api.tossPayments.dto.request.ConfirmPaymentsRequest;
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.request.CreatePaymentsRequest;
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.PaymentsResponse;
 import java.util.List;
@@ -23,6 +25,7 @@ public class OrderDomainService {
     private final OrderRepository orderRepository;
 
     private final PaymentsCreateClient paymentsCreateClient;
+    private final PaymentsConfirmClient paymentsConfirmClient;
 
     @Transactional
     public PaymentsResponse creatOrder() {
@@ -58,5 +61,9 @@ public class OrderDomainService {
                         .amount(Money.wons(15000L).longValue())
                         .build();
         return paymentsCreateClient.execute(createPaymentsRequest);
+    }
+
+    public PaymentsResponse confirmOrder(ConfirmPaymentsRequest confirmPaymentsRequest) {
+        return paymentsConfirmClient.execute(confirmPaymentsRequest);
     }
 }
