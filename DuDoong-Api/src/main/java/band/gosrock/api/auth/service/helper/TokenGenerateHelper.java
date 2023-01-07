@@ -21,13 +21,13 @@ public class TokenGenerateHelper {
     public TokenAndUserResponse execute(User user) {
         String newAccessToken =
                 jwtTokenProvider.generateAccessToken(
-                        user.getId().getValue(), user.getAccountRole().getValue());
-        String newRefreshToken = jwtTokenProvider.generateRefreshToken(user.getId().getValue());
+                        user.getId(), user.getAccountRole().getValue());
+        String newRefreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
 
         RefreshTokenEntity newRefreshTokenEntity =
                 RefreshTokenEntity.builder()
                         .refreshToken(newRefreshToken)
-                        .id(user.getId().getValue())
+                        .id(user.getId())
                         .ttl(jwtTokenProvider.getRefreshTokenTTlSecond())
                         .build();
         refreshTokenAdaptor.save(newRefreshTokenEntity);

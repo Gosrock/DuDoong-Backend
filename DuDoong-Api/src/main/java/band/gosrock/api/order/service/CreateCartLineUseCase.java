@@ -6,5 +6,5 @@ import band.gosrock.common.annotation.UseCase;
 @UseCase
 public class CreateCartLineUseCase {
 
-    public void execute() {}
+    public void execute(Long ticketItemId) {}
 }

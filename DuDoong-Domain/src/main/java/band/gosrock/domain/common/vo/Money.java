@@ -6,14 +6,22 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Function;
 import javax.persistence.Column;
+import javax.persistence.Embeddable;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 @Getter
+@Embeddable
+@RequiredArgsConstructor
 public class Money {
     public static final Money ZERO = Money.wons(0);
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "amount")
     private final BigDecimal amount;
+
+    public Money() {
+        amount = new BigDecimal(0);
+    }
 
     public static Money wons(long amount) {
         return new Money(BigDecimal.valueOf(amount));
@@ -27,9 +35,9 @@ public class Money {
         return bags.stream().map(monetary::apply).reduce(Money.ZERO, Money::plus);
     }
 
-    public Money(BigDecimal amount) {
-        this.amount = amount;
-    }
+    //    public Money(BigDecimal amount) {
+    //        this.amount = amount;
+    //    }
 
     public Money plus(Money amount) {
         return new Money(this.amount.add(amount.amount));

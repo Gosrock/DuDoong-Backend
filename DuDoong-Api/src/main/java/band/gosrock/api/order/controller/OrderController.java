@@ -5,6 +5,7 @@ import band.gosrock.api.order.service.CancelOrderUseCase;
 import band.gosrock.api.order.service.ConfirmOrderUseCase;
 import band.gosrock.api.order.service.CreateOrderUseCase;
 import band.gosrock.api.order.service.ReadOrderUseCase;
+import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.PaymentsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,29 +30,25 @@ public class OrderController {
 
     @Operation(summary = "주문서를 생성합니다. orderId를 발급받을 수 있습니다.")
     @PostMapping
-    public void createOrder() {
-        createOrderUseCase.execute();
-        //        return oauthUserInfoUseCase.execute(accessToken);
+    public PaymentsResponse createOrder() {
+        return createOrderUseCase.execute();
     }
 
     @Operation(summary = "결제 승인요청 . successUrl 로 돌아온 웹페이지에서 query 로 받은 응답값을 응답값만 알고계시면 됩니다.")
     @PostMapping("/{order_id}/confirm")
     public void confirmOrder(@PathVariable("order_id") String orderId) {
         confirmOrderUseCase.execute();
-        //        return oauthUserInfoUseCase.execute(accessToken);
     }
 
     @Operation(summary = "결제 취소요청. 취소 요청의 주체는 주문 본인, 호스트 관리자.")
     @PostMapping("/{order_id}/cancel")
     public void cancelOrder(@PathVariable("order_id") String orderId) {
         cancelOrderUseCase.execute();
-        //        return oauthUserInfoUseCase.execute(accessToken);
     }
 
     @Operation(summary = "결제 조회. 결제 조회 권한은 주문 본인,  호스트 관리자.")
     @GetMapping("/{order_id}")
     public void readOrder(@PathVariable("order_id") String orderId) {
         readOrderUseCase.execute();
-        //        return oauthUserInfoUseCase.execute(accessToken);
     }
 }
