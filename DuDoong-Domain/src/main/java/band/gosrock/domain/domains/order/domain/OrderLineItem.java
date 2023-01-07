@@ -29,7 +29,7 @@ public class OrderLineItem extends BaseTimeEntity {
     @Embedded private UserId userId;
 
     // 할인 금액
-    @Embedded private Money paymentDiscount;
+    @Embedded private Money paymentDiscountAmount;
     // 쿠폰 아이디 ( nullable함)
     @Embedded private CouponId couponId;
 
