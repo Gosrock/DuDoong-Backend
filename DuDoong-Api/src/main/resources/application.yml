@@ -11,7 +11,8 @@ spring:
 springdoc:
   default-produces-media-type: application/json
   default-consumes-media-type: application/json
-
+server:
+  forward-headers-strategy: framework
 ---
 spring:
   config:
