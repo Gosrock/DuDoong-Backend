@@ -2,6 +2,7 @@ package band.gosrock.api.config.security;
 
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,7 +18,6 @@ public class SecurityConfig {
     private final FilterConfig filterConfig;
     private static final String[] SwaggerPatterns = {
         "/swagger-resources/**", "/swagger-ui/**", "/v3/api-docs/**",
-        "/api/swagger-resources/**", "/api/swagger-ui/**", "/api/v3/api-docs/**",
     };
 
     @Bean
@@ -29,9 +29,9 @@ public class SecurityConfig {
                 .expressionHandler(expressionHandler())
                 .mvcMatchers(SwaggerPatterns)
                 .permitAll()
-                .mvcMatchers("/api/v1/auth/oauth/**")
+                .mvcMatchers("/v1/auth/oauth/**")
                 .permitAll()
-                .mvcMatchers("/api/v1/auth/token/refresh")
+                .mvcMatchers("/v1/auth/token/refresh")
                 .permitAll()
                 .anyRequest()
                 .authenticated();
