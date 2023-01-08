@@ -2,13 +2,15 @@ package band.gosrock.domain.domains.coupon.domain;
 
 
 import javax.persistence.*;
+
+import band.gosrock.domain.common.model.BaseTimeEntity;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity(name = "tbl_issued_coupon")
-public class IssuedCoupon {
+public class IssuedCoupon extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
