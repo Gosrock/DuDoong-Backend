@@ -17,6 +17,7 @@ public class SecurityConfig {
     private final FilterConfig filterConfig;
     private static final String[] SwaggerPatterns = {
         "/swagger-resources/**", "/swagger-ui/**", "/v3/api-docs/**",
+        "/api/swagger-resources/**", "/api/swagger-ui/**", "/api/v3/api-docs/**",
     };
 
     @Bean
