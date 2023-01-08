@@ -1,9 +1,8 @@
 package band.gosrock.domain.domains.coupon.domain;
 
 
-import javax.persistence.*;
-
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import javax.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
