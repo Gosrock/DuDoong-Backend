@@ -49,6 +49,7 @@ public class Event extends BaseTimeEntity {
     private String placeAddress;
 
     // 이벤트 상태
+    @Enumerated(EnumType.STRING)
     private EventStatus status;
 
     // (마크다운) 공연 상세 내용

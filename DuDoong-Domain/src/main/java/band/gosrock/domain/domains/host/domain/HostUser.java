@@ -25,6 +25,7 @@ public class HostUser extends BaseTimeEntity {
     private Long userId;
 
     // 유저의 권한
+    @Enumerated(EnumType.STRING)
     private HostRole role;
 
     @Builder

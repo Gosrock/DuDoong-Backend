@@ -21,7 +21,6 @@ public class EventDetailImage extends BaseTimeEntity {
     private Long eventId;
 
     // 이미지 주소
-    @Column(length = 15)
     private String imageUrl;
 
     @Builder
