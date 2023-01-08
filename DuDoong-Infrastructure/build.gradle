@@ -2,10 +2,13 @@ bootJar { enabled = false }
 jar { enabled = true }
 
 dependencies {
-    implementation("com.slack.api:slack-api-client:1.27.2")
-    implementation 'io.github.openfeign:feign-httpclient:12.1'
-    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:3.1.4'
-    implementation project(':DuDoong-Domain')
-    implementation project(':DuDoong-Common')
-
+    api("com.slack.api:slack-api-client:1.27.2")
+    api 'io.github.openfeign:feign-httpclient:12.1'
+    api 'org.springframework.cloud:spring-cloud-starter-openfeign:3.1.4'
+    api project(':DuDoong-Common')
+    api 'org.springframework.boot:spring-boot-starter-data-redis'
+    api 'org.redisson:redisson:3.19.0'
+    api('com.fasterxml.jackson.datatype:jackson-datatype-jdk8')
+    api('com.fasterxml.jackson.datatype:jackson-datatype-jsr310')
+    api 'com.amazonaws:aws-java-sdk-s3control:1.12.372'
 }

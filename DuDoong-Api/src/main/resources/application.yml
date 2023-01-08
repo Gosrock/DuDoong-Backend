@@ -4,18 +4,26 @@ spring:
     include:
       - infrastructure
       - domain
+      - common
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+
+springdoc:
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
 
 ---
 spring:
   config:
     activate:
       on-profile: dev
----
-spring:
-  config:
-    activate:
-      on-profile: test
-
+#logging:
+#  level:
+#    root: info
+#logging:
+#  level:
+#    org.springframework.data.*.*: debug
+#    org.springframework.cache.*: debug
 ---
 spring:
   config:

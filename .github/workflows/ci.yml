@@ -28,5 +28,14 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      - name: Run build
-        run: ./gradlew build -x test
+      - name: spotless check
+        run: ./gradlew spotlessCheck
+
+      - name: Start containers
+        run: docker-compose up -d
+
+      - name: test and analyze
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./gradlew test sonar --info
