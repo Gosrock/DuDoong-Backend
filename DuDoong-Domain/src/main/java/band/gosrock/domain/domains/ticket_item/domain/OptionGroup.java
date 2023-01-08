@@ -38,7 +38,7 @@ public class OptionGroup {
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "option_group_id")
-    private List<OptionAnswer> optionAnswers = new ArrayList<>();
+    private List<Option> options = new ArrayList<>();
 
     @Builder
     public OptionGroup(
@@ -47,12 +47,12 @@ public class OptionGroup {
             String name,
             String description,
             Boolean isEssential,
-            List<OptionAnswer> optionAnswers) {
+            List<Option> options) {
         this.event = event;
         this.type = type;
         this.name = name;
         this.description = description;
         this.isEssential = isEssential;
-        this.optionAnswers = optionAnswers;
+        this.options = options;
     }
 }
