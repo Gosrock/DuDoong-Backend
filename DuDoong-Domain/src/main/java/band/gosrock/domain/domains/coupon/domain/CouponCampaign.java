@@ -40,9 +40,7 @@ public class CouponCampaign extends BaseTimeEntity {
 
     private String couponCode;
 
-    // 단방향 oneToMany 매핑
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "coupon_campaign_id")
+    @OneToMany(mappedBy = "couponCampaign", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<IssuedCoupon> issuedCoupons = new ArrayList<>();
 
     @Builder

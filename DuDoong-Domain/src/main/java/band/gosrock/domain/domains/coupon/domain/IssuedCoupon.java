@@ -15,15 +15,17 @@ public class IssuedCoupon {
     @Column(name = "issued_coupon_id")
     private Long id;
 
-    private Long couponCampaignId;
-
     private Long userId;
 
     private Boolean usageStatus;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "coupon_campaign_id", nullable = false)
+    private CouponCampaign couponCampaign;
+
     @Builder
-    public IssuedCoupon(Long couponCampaignId, Long userId) {
-        this.couponCampaignId = couponCampaignId;
+    public IssuedCoupon(CouponCampaign couponCampaign, Long userId) {
+        this.couponCampaign = couponCampaign;
         this.userId = userId;
         this.usageStatus = false;
     }
