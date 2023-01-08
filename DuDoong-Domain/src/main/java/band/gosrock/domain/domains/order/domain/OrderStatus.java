@@ -14,6 +14,6 @@ public enum OrderStatus {
     // 결제 승인
     CONFIRM("CONFIRM"),
     // 환불
-    CANCELED("CANCELED");
+    REFUND("REFUND");
     private String value;
 }
