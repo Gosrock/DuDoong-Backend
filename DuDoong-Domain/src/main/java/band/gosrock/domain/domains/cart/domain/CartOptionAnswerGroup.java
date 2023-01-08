@@ -1,6 +1,7 @@
 package band.gosrock.domain.domains.cart.domain;
 
 
+import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity(name = "tbl_cart_option_group")
-public class CartOptionAnswerGroup {
+public class CartOptionAnswerGroup extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "cart_option_group_id")
