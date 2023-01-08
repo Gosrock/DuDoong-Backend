@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = "access-token")
 @Tag(name = "장바구니 관련 컨트롤러")
 @RestController
-@RequestMapping("/v1/cartLines")
+@RequestMapping("/api/v1/cartLines")
 @RequiredArgsConstructor
 public class CartLineController {
 
