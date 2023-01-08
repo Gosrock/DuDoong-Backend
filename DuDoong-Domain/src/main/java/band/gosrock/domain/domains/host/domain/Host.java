@@ -30,7 +30,7 @@ public class Host extends BaseTimeEntity {
     private Long masterUserId;
 
     // 파트너 여부
-    private boolean partner;
+    private Boolean partner;
 
     //         단방향 oneToMany 매핑
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -42,7 +42,7 @@ public class Host extends BaseTimeEntity {
             String contactEmail,
             String contactNumber,
             Long masterUserId,
-            boolean partner,
+            Boolean partner,
             List<HostUser> hostUsers) {
         this.contactEmail = contactEmail;
         this.contactNumber = contactNumber;
