@@ -6,6 +6,7 @@ import band.gosrock.domain.common.events.user.UserRegisterEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.domains.user.exception.AlreadyDeletedUserException;
 import band.gosrock.domain.domains.user.exception.ForbiddenUserException;
+import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -30,6 +31,7 @@ import lombok.NoArgsConstructor;
 public class User extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Long id;
 
     @Embedded private Profile profile;
@@ -49,7 +51,7 @@ public class User extends BaseTimeEntity {
 
     @PostPersist
     public void registerEvent() {
-        UserRegisterEvent userRegisterEvent = UserRegisterEvent.builder().userId(this.id).build();
+        UserRegisterEvent userRegisterEvent = UserRegisterEvent.builder().userId(id).build();
         Events.raise(userRegisterEvent);
     }
 

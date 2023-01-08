@@ -1,11 +1,14 @@
 package band.gosrock.infrastructure.outer.api.oauth.dto;
 
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies.SnakeCaseStrategy;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@JsonNaming(SnakeCaseStrategy.class)
 public class KakaoInformationResponse {
 
     private Properties properties;
@@ -15,12 +18,14 @@ public class KakaoInformationResponse {
 
     @Getter
     @NoArgsConstructor
+    @JsonNaming(SnakeCaseStrategy.class)
     public static class Properties {
         private String nickname;
     }
 
     @Getter
     @NoArgsConstructor
+    @JsonNaming(SnakeCaseStrategy.class)
     public static class KakaoAccount {
 
         private Profile profile;
@@ -30,6 +35,7 @@ public class KakaoInformationResponse {
 
         @Getter
         @NoArgsConstructor
+        @JsonNaming(SnakeCaseStrategy.class)
         public static class Profile {
             private String profileImageUrl;
         }
