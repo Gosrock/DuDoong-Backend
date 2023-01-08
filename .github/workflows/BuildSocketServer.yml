@@ -29,6 +29,10 @@ jobs:
           RELEASE_VERSION_WITHOUT_V="$(cut -d'v' -f2 <<< ${GITHUB_REF#refs/*/})"
           echo ::set-output name=VERSION::$RELEASE_VERSION_WITHOUT_V 
 
+      #테스트 수행용 도커 컴포즈
+      - name: Start containers
+        run: docker-compose up -d
+
       - name: Gradle Build
         uses: gradle/gradle-build-action@v2
 
