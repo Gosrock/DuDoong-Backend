@@ -5,10 +5,8 @@ import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.AttributeOverride;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -22,35 +20,23 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Entity(name = "tbl_cart_line_item")
-public class CartLineItem extends BaseTimeEntity {
-
+@Entity(name = "tbl_cart_option_group")
+public class CartOptionAnswerGroup extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "cart_line_id")
+    @Column(name = "cart_option_group_id")
     private Long id;
 
-    // 상품 이름
-    private String productName;
-    // 상품 아이디
-    private Long itemId;
-    // 상품 수량
-    private Long quantity;
-    // 장바구니 담은 유저아이디
-    private Long userId;
+    private Long optionGroupId;
 
-    // 공급 가액
-    @Embedded
-    @AttributeOverride(name = "amount", column = @Column(name = "supplyAmount"))
-    private Money supplyAmount;
-
+    // 객관식 다지선다 가능할수도 있으니? 리스트형
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "cart_line_id")
-    private List<CartOptionAnswerGroup> cartOptionAnswerGroups = new ArrayList<>();
+    @JoinColumn(name = "cart_option_group_id")
+    private List<CartOptionAnswer> cartOptionAnswers = new ArrayList<>();
 
-    public Money getTotalOptionsPrice() {
-        return cartOptionAnswerGroups.stream()
-                .map(CartOptionAnswerGroup::getOptionAnswersPrice)
+    public Money getOptionAnswersPrice() {
+        return cartOptionAnswers.stream()
+                .map(CartOptionAnswer::getOptionPrice)
                 .reduce(Money.ZERO, Money::plus);
     }
 }
