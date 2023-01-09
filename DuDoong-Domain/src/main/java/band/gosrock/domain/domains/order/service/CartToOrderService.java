@@ -20,12 +20,9 @@ public class CartToOrderService {
 
     @Transactional
     public Order creatOrderWithOutCoupon(Long cartId, Long userId) {
-
         Cart cart = cartAdaptor.queryCart(cartId, userId);
         Order order = Order.createOrder(userId, cart);
         order.calculatePaymentInfo();
-        Order save = orderAdaptor.save(order);
-
-        return save;
+        return orderAdaptor.save(order);
     }
 }

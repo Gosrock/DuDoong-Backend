@@ -2,6 +2,7 @@ package band.gosrock.api.order.controller;
 
 
 import band.gosrock.api.order.model.dto.request.CreateOrderRequest;
+import band.gosrock.api.order.model.dto.response.CreateOrderResponse;
 import band.gosrock.api.order.service.CancelOrderUseCase;
 import band.gosrock.api.order.service.ConfirmOrderUseCase;
 import band.gosrock.api.order.service.CreateOrderUseCase;
@@ -45,9 +46,9 @@ public class OrderController {
 
     @Operation(summary = "주문을 생성합니다.")
     @PostMapping
-    public PaymentsResponse createOrder(@RequestBody @Valid CreateOrderRequest createOrderRequest) {
-        //        return createOrderUseCase.execute(createOrderRequest);
-        return null;
+    public CreateOrderResponse createOrder(
+            @RequestBody @Valid CreateOrderRequest createOrderRequest) {
+        return createOrderUseCase.execute(createOrderRequest);
     }
 
     @Operation(summary = "결제 승인요청 . successUrl 로 돌아온 웹페이지에서 query 로 받은 응답값을 응답값만 알고계시면 됩니다.")
