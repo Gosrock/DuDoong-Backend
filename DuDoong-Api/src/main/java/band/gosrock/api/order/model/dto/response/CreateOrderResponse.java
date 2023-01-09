@@ -13,6 +13,7 @@ public class CreateOrderResponse {
     private final String orderName;
     private final String customerEmail;
     private final String customerName;
+    private final Long amount;
 
     public static CreateOrderResponse from(Order order, Profile profile) {
         return CreateOrderResponse.builder()
@@ -20,6 +21,7 @@ public class CreateOrderResponse {
                 .customerName(profile.getName())
                 .orderName(order.getOrderName())
                 .orderId(order.getUuid())
+                .amount(order.getTotalPaymentPrice().longValue())
                 .build();
     }
 }

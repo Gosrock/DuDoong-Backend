@@ -20,7 +20,6 @@ import band.gosrock.domain.domains.ticket_item.repository.OptionRepository;
 import band.gosrock.domain.domains.ticket_item.repository.TicketItemRepository;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,12 +85,12 @@ public class CreateCartUseCase {
         List<CartLineItem> cartLineItems =
                 addCartLineDtos.stream()
                         .map(
-                                addCartLineDto->
+                                addCartLineDto ->
                                         CartLineItem.builder()
                                                 .ticketItem(getTicketItem(addCartLineDto))
                                                 .cartOptionAnswers(
                                                         getCartOptionAnswers(addCartLineDto))
-                                            .quantity(addCartLineDto.getQuantity())
+                                                .quantity(addCartLineDto.getQuantity())
                                                 .build())
                         .toList();
 
@@ -104,10 +103,10 @@ public class CreateCartUseCase {
         int startNum = 1;
         List<CartItemResponse> cartItemResponses = new ArrayList<>();
         for (CartLineItem cartLineItem : newCartLineItems) {
-            cartItemResponses.add(CartItemResponse.of(
-                generateCartLineName(
-                    cartLineItem, startNum, totalQuantity),
-                cartLineItem.getOptionAnswerVos()));
+            cartItemResponses.add(
+                    CartItemResponse.of(
+                            generateCartLineName(cartLineItem, startNum, totalQuantity),
+                            cartLineItem.getOptionAnswerVos()));
             startNum += cartLineItem.getQuantity();
         }
 
@@ -128,21 +127,22 @@ public class CreateCartUseCase {
      * @param totalQuantity
      * @return
      */
-    private String generateCartLineName(CartLineItem cartLineItem, int startNum, Long totalQuantity) {
+    private String generateCartLineName(
+            CartLineItem cartLineItem, int startNum, Long totalQuantity) {
         Long cartLineQuantity = cartLineItem.getQuantity();
         if (cartLineQuantity.equals(1L)) {
             return String.format(
                     "%s (%s/%d) - %s",
                     cartLineItem.getTicketName(),
-                startNum,
+                    startNum,
                     totalQuantity,
-                cartLineItem.getTotalCartLinePrice().toString());
+                    cartLineItem.getTotalCartLinePrice().toString());
         }
-        int endNum = (int) (cartLineQuantity - 1+ startNum );
+        int endNum = (int) (cartLineQuantity - 1 + startNum);
         return String.format(
                 "%s (%s/%d) - %s",
-            cartLineItem.getTicketName(),
-            startNum + "-" + endNum,
+                cartLineItem.getTicketName(),
+                startNum + "-" + endNum,
                 totalQuantity,
                 cartLineItem.getTotalCartLinePrice().toString());
     }
