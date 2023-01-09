@@ -17,6 +17,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -30,27 +31,28 @@ public class CartLineItem extends BaseTimeEntity {
     @Column(name = "cart_line_id")
     private Long id;
 
-    // 상품 이름
-    private String productName;
     // 상품 아이디
     private Long itemId;
     // 상품 수량
     private Long quantity;
     // 장바구니 담은 유저아이디
     private Long userId;
-
-    // 공급 가액
-    @Embedded
-    @AttributeOverride(name = "amount", column = @Column(name = "supplyAmount"))
-    private Money supplyAmount;
-
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "cart_line_id")
-    private List<CartOptionAnswerGroup> cartOptionAnswerGroups = new ArrayList<>();
+    @JoinColumn(name = "cart_option_group_id")
+    private List<CartOptionAnswer> cartOptionAnswers = new ArrayList<>();
+    @Builder
+    public CartLineItem(Long itemId, Long quantity, Long userId, List<CartOptionAnswer> cartOptionAnswers) {
+        this.itemId = itemId;
+        this.quantity = quantity;
+        this.userId = userId;
+        this.cartOptionAnswers.addAll(cartOptionAnswers);
+    }
+
+
 
     public Money getTotalOptionsPrice() {
-        return cartOptionAnswerGroups.stream()
-                .map(CartOptionAnswerGroup::getOptionAnswersPrice)
+        return cartOptionAnswers.stream()
+                .map(CartOptionAnswer::getOptionPrice)
                 .reduce(Money.ZERO, Money::plus);
     }
 }
