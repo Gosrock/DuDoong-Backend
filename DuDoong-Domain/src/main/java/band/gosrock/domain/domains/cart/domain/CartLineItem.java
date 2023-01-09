@@ -3,7 +3,6 @@ package band.gosrock.domain.domains.cart.domain;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
-import band.gosrock.domain.domains.ticket_item.domain.Option;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import java.util.ArrayList;
@@ -49,7 +48,10 @@ public class CartLineItem extends BaseTimeEntity {
 
     @Builder
     public CartLineItem(
-        TicketItem ticketItem, Long quantity, Long userId, List<CartOptionAnswer> cartOptionAnswers) {
+            TicketItem ticketItem,
+            Long quantity,
+            Long userId,
+            List<CartOptionAnswer> cartOptionAnswers) {
         this.ticketItem = ticketItem;
         this.quantity = quantity;
         this.userId = userId;
@@ -62,13 +64,23 @@ public class CartLineItem extends BaseTimeEntity {
                 .reduce(Money.ZERO, Money::plus);
     }
 
-    public String getTicketName(){
+    public String getTicketName() {
         return ticketItem.getName();
     }
-    public Money getTicketPrice(){
+
+    public Money getTicketPrice() {
         return ticketItem.getPrice();
     }
-    public TicketType getTicketType(){
+
+    public Money getTotalPrice() {
+        Money reduce =
+                cartOptionAnswers.stream()
+                        .map(CartOptionAnswer::getOptionPrice)
+                        .reduce(Money.ZERO, Money::plus);
+        return ticketItem.getPrice().plus(reduce);
+    }
+
+    public TicketType getTicketType() {
         return ticketItem.getType();
     }
 }

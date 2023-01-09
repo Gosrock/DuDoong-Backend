@@ -44,16 +44,15 @@ public class CartOptionAnswer extends BaseTimeEntity {
         return option.getAdditionalPrice();
     }
 
-    public String getQuestionDescription(){
+    public String getQuestionDescription() {
         return option.getOptionGroup().getDescription();
-
     }
-    public String getQuestionName(){
+
+    public String getQuestionName() {
         return option.getOptionGroup().getName();
     }
 
-    public OptionGroupType getQuestionType(){
+    public OptionGroupType getQuestionType() {
         return option.getOptionGroup().getType();
     }
-
 }

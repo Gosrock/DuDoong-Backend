@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.cart.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.common.vo.Money;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.CascadeType;
@@ -38,5 +39,11 @@ public class Cart extends BaseTimeEntity {
     public Cart(Long userId, List<CartLineItem> cartLineItems) {
         this.userId = userId;
         this.cartLineItems.addAll(cartLineItems);
+    }
+
+    public Money getTotalPrice() {
+        return cartLineItems.stream()
+                .map(CartLineItem::getTotalPrice)
+                .reduce(Money.ZERO, Money::plus);
     }
 }

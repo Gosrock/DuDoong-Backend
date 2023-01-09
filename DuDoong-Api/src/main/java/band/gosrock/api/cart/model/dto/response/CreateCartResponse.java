@@ -15,5 +15,5 @@ public class CreateCartResponse {
     private final List<CartItemResponse> cartItemDtos;
 
     // 금액
-    private final Long amount;
+    private final String totalPrice;
 }

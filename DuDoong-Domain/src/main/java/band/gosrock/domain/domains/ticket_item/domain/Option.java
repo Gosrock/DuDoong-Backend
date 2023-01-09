@@ -30,4 +30,8 @@ public class Option {
         this.answer = answer;
         this.additionalPrice = additionalPrice;
     }
+
+    public void setOptionGroup(OptionGroup optionGroup) {
+        this.optionGroup = optionGroup;
+    }
 }

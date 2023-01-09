@@ -1,6 +1,7 @@
 package band.gosrock.api.cart.model.dto.request;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import javax.validation.constraints.Min;
@@ -18,8 +19,9 @@ public class AddCartLineDto {
     private final Long quantity;
 
     @Schema(description = "상품 관련 옵션에 대한 답변")
-    private final List<AddCartOptionAnswerDto> addCartOptionAnswerDtos;
+    private List<AddCartOptionAnswerDto> addCartOptionAnswerDtos;
 
+    @JsonIgnore
     public List<Long> getOptionIds() {
         return addCartOptionAnswerDtos.stream().map(AddCartOptionAnswerDto::getOptionId).toList();
     }
