@@ -22,7 +22,7 @@ public class CreateOrderUseCase {
     public CreateOrderResponse execute(CreateOrderRequest createOrderRequest) {
         Long currentUserId = SecurityUtils.getCurrentUserId();
         User user = userAdaptor.queryUser(currentUserId);
-        if (createOrderRequest.getCouponId() != null) {
+        if (createOrderRequest.getCouponId() == null) {
             Order order =
                     cartToOrderService.creatOrderWithOutCoupon(
                             createOrderRequest.getCartId(), currentUserId);

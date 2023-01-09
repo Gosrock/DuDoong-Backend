@@ -50,4 +50,8 @@ public class Cart extends BaseTimeEntity {
                 .map(CartLineItem::getTotalCartLinePrice)
                 .reduce(Money.ZERO, Money::plus);
     }
+
+    public Long getTotalQuantity() {
+        return cartLineItems.stream().map(CartLineItem::getQuantity).reduce(0L, Long::sum);
+    }
 }

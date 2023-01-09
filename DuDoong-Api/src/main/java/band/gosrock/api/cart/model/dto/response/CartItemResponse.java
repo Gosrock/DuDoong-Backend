@@ -14,4 +14,8 @@ public class CartItemResponse {
     private String name;
     // 응답 목록
     private List<OptionAnswerVo> answers;
+
+    public static CartItemResponse of(String name, List<OptionAnswerVo> optionAnswerVos) {
+        return CartItemResponse.builder().answers(optionAnswerVos).name(name).build();
+    }
 }

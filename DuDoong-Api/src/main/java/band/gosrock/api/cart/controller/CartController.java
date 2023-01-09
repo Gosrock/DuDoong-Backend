@@ -3,7 +3,7 @@ package band.gosrock.api.cart.controller;
 
 import band.gosrock.api.cart.model.dto.request.AddCartRequest;
 import band.gosrock.api.cart.model.dto.response.CreateCartResponse;
-import band.gosrock.api.cart.service.CreateCartLinesUseCase;
+import band.gosrock.api.cart.service.CreateCartUseCase;
 import band.gosrock.api.cart.service.ReadCartLineUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -20,9 +20,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/v1/carts")
 @RequiredArgsConstructor
-public class CartLineController {
+public class CartController {
 
-    private final CreateCartLinesUseCase createCartLinesUseCase;
+    private final CreateCartUseCase createCartUseCase;
     private final ReadCartLineUseCase readOrderLineUseCase;
 
     //    @Operation(summary = "상품 아이디에 답변을 해야하는 옵션이 있는지 확인합니다.(추후 아이템 도메인으로 이전?)")
@@ -33,7 +33,7 @@ public class CartLineController {
     @Operation(summary = "상품을 장바구니에 담습니다. 상품에 답변해야하는 응답이 있다면, 응답도 보내주시면 됩니다.")
     @PostMapping
     public CreateCartResponse createCartLines(@RequestBody @Valid AddCartRequest addCartRequest) {
-        return createCartLinesUseCase.execute(addCartRequest);
+        return createCartUseCase.execute(addCartRequest);
     }
 
     //    @Operation(summary = "내 장바구니에 담긴 상품들의 목록을 불러옵니다.")

@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class OrderAdaptor {
 
-    private OrderRepository orderRepository;
+    private final OrderRepository orderRepository;
 
     public Order save(Order order) {
         return orderRepository.save(order);

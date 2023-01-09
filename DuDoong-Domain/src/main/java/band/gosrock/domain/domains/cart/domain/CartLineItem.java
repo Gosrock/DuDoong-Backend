@@ -3,6 +3,7 @@ package band.gosrock.domain.domains.cart.domain;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.common.vo.OptionAnswerVo;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import java.util.ArrayList;
@@ -33,11 +34,12 @@ public class CartLineItem extends BaseTimeEntity {
     private Long id;
 
     // 상품
-    @JoinColumn(name = "ticket_item_id", updatable = false)
+    @JoinColumn(name = "ticket_item_id", updatable = false, nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private TicketItem ticketItem;
 
     // 상품 수량
+    @Column(nullable = false)
     private Long quantity;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -68,10 +70,14 @@ public class CartLineItem extends BaseTimeEntity {
 
     public Money getTotalCartLinePrice() {
         Money totalOptionAnswerPrice = getTotalOptionsPrice();
-        return ticketItem.getPrice().plus(totalOptionAnswerPrice);
+        return ticketItem.getPrice().plus(totalOptionAnswerPrice).times(quantity);
     }
 
     public TicketType getTicketType() {
         return ticketItem.getType();
+    }
+
+    public List<OptionAnswerVo> getOptionAnswerVos() {
+        return cartOptionAnswers.stream().map(CartOptionAnswer::getOptionAnswerVo).toList();
     }
 }

@@ -1,6 +1,7 @@
 package band.gosrock.api.cart.model.dto.response;
 
 
+import band.gosrock.domain.domains.cart.domain.Cart;
 import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
@@ -9,11 +10,21 @@ import lombok.Getter;
 @Builder
 public class CreateCartResponse {
 
-    // 임시값
-    private final String title = "고스락 제 23회 정기공연 일반티켓 총 3매";
+    private final String title;
     // 내티켓 확인하기
     private final List<CartItemResponse> items;
 
     // 금액
     private final String totalPrice;
+
+    private final Long cartId;
+
+    public static CreateCartResponse of(List<CartItemResponse> cartItemResponses, Cart cart) {
+        return CreateCartResponse.builder()
+                .items(cartItemResponses)
+                .totalPrice(cart.getTotalPrice().toString())
+                .cartId(cart.getId())
+                .title(cart.getCartName())
+                .build();
+    }
 }
