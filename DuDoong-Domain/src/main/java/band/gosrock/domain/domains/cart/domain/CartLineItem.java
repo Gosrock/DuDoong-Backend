@@ -5,10 +5,8 @@ import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.AttributeOverride;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -37,18 +35,19 @@ public class CartLineItem extends BaseTimeEntity {
     private Long quantity;
     // 장바구니 담은 유저아이디
     private Long userId;
+
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "cart_option_group_id")
+    @JoinColumn(name = "cart_line_id")
     private List<CartOptionAnswer> cartOptionAnswers = new ArrayList<>();
+
     @Builder
-    public CartLineItem(Long itemId, Long quantity, Long userId, List<CartOptionAnswer> cartOptionAnswers) {
+    public CartLineItem(
+            Long itemId, Long quantity, Long userId, List<CartOptionAnswer> cartOptionAnswers) {
         this.itemId = itemId;
         this.quantity = quantity;
         this.userId = userId;
         this.cartOptionAnswers.addAll(cartOptionAnswers);
     }
-
-
 
     public Money getTotalOptionsPrice() {
         return cartOptionAnswers.stream()

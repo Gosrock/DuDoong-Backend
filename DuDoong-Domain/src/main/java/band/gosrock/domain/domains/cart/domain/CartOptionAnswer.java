@@ -12,7 +12,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -30,7 +29,7 @@ public class CartOptionAnswer extends BaseTimeEntity {
     private String answer;
 
     @Builder
-    public CartOptionAnswer(Long optionId,Long optionGroupId ,String answer) {
+    public CartOptionAnswer(Long optionId, Long optionGroupId, String answer) {
         this.optionId = optionId;
         this.answer = answer;
         this.optionGroupId = optionGroupId;
