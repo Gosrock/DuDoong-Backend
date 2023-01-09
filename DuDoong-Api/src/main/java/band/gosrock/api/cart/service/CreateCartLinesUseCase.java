@@ -143,9 +143,7 @@ public class CreateCartLinesUseCase {
 
     private List<CartOptionAnswer> getCartOptionAnswers(AddCartLineDto addCartLineDto) {
         List<CartOptionAnswer> answers =
-                addCartLineDto.getOptions().stream()
-                        .map(this::getCartOptionAnswer)
-                        .toList();
+                addCartLineDto.getOptions().stream().map(this::getCartOptionAnswer).toList();
         return answers;
     }
 
