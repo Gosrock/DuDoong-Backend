@@ -4,6 +4,7 @@ package band.gosrock.domain.domains.order.domain;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.OptionAnswerVo;
+import band.gosrock.domain.domains.cart.domain.CartOptionAnswer;
 import band.gosrock.domain.domains.ticket_item.domain.Option;
 import band.gosrock.domain.domains.ticket_item.domain.OptionGroupType;
 import javax.persistence.Column;
@@ -40,6 +41,13 @@ public class OrderOptionAnswer extends BaseTimeEntity {
     public OrderOptionAnswer(Option option, String answer) {
         this.option = option;
         this.answer = answer;
+    }
+
+    public static OrderOptionAnswer from(CartOptionAnswer cartOptionAnswer) {
+        return OrderOptionAnswer.builder()
+                .answer(cartOptionAnswer.getAnswer())
+                .option(cartOptionAnswer.getOption())
+                .build();
     }
 
     protected Money getOptionPrice() {

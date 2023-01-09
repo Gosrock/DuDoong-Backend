@@ -3,6 +3,7 @@ package band.gosrock.domain.domains.order.domain;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.domains.cart.domain.CartLineItem;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,10 +47,23 @@ public class OrderLineItem extends BaseTimeEntity {
     private List<OrderOptionAnswer> orderOptionAnswer = new ArrayList<>();
 
     @Builder
-    public OrderLineItem(String productName, TicketItem ticketItem, Long quantity) {
-        this.productName = productName;
+    public OrderLineItem(
+            TicketItem ticketItem, Long quantity, List<OrderOptionAnswer> orderOptionAnswer) {
+        this.productName = ticketItem.getName();
         this.ticketItem = ticketItem;
         this.quantity = quantity;
+        this.orderOptionAnswer.addAll(orderOptionAnswer);
+    }
+
+    @Builder
+    public static OrderLineItem from(CartLineItem cartLineItem) {
+        List<OrderOptionAnswer> orderOptionAnswers =
+                cartLineItem.getCartOptionAnswers().stream().map(OrderOptionAnswer::from).toList();
+        return OrderLineItem.builder()
+                .orderOptionAnswer(orderOptionAnswers)
+                .quantity(cartLineItem.getQuantity())
+                .ticketItem(cartLineItem.getTicketItem())
+                .build();
     }
 
     protected Money getTotalOptionAnswersPrice() {

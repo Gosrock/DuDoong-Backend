@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.order.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -67,34 +68,15 @@ public class Order extends BaseTimeEntity {
     private List<OrderLineItem> orderLineItems = new ArrayList<>();
 
     @Builder
-    public Order(
-            Long userId,
-            PaymentMethod paymentMethod,
-            PaymentInfo totalPaymentInfo,
-            OrderStatus orderStatus,
-            LocalDateTime paymentAt,
-            List<OrderLineItem> orderLineItems) {
+    public Order(Long userId, List<OrderLineItem> orderLineItems) {
         this.userId = userId;
-        this.paymentMethod = paymentMethod;
-        this.totalPaymentInfo = totalPaymentInfo;
-        this.orderStatus = orderStatus;
-        this.paymentAt = paymentAt;
-        //        this.orderLineItems.addAll(orderLineItems);
+        this.orderLineItems.addAll(orderLineItems);
     }
 
-    public static Order createOrder(
-            Long userId,
-            PaymentMethod paymentMethod,
-            PaymentInfo totalPaymentInfo,
-            List<OrderLineItem> orderLineItems) {
-        Order order =
-                Order.builder()
-                        .paymentMethod(paymentMethod)
-                        .userId(userId)
-                        .totalPaymentInfo(totalPaymentInfo)
-                        .orderLineItems(orderLineItems)
-                        .build();
-        return order;
+    public static Order createOrder(Long userId, Cart cart) {
+        List<OrderLineItem> orderLineItems =
+                cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
+        return Order.builder().userId(userId).orderLineItems(orderLineItems).build();
     }
 
     @PrePersist
