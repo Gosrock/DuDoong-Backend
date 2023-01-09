@@ -2,8 +2,10 @@ package band.gosrock.domain.domains.issuedTicket.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.domains.ticket_item.domain.Option;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -27,7 +29,9 @@ public class IssuedTicketOptionAnswer extends BaseTimeEntity {
     /*
     옵션에 대한 답변 참조 (단방향)
      */
-    private Long optionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "option_id")
+    private Option option;
 
     /*
     해당 답변이 속한 티켓 옵션 그룹 (양방향)
@@ -42,11 +46,19 @@ public class IssuedTicketOptionAnswer extends BaseTimeEntity {
     private String answer;
 
     @Builder
-    public IssuedTicketOptionAnswer(String answer) {
+    public IssuedTicketOptionAnswer(
+            Option option, IssuedTicketOptionGroup issuedTicketOptionGroup, String answer) {
+        this.option = option;
+        this.issuedTicketOptionGroup = issuedTicketOptionGroup;
         this.answer = answer;
     }
 
-    public static IssuedTicketOptionAnswer createIssuedTicketOptionAnswer(String answer) {
-        return IssuedTicketOptionAnswer.builder().answer(answer).build();
+    public static IssuedTicketOptionAnswer createIssuedTicketOptionAnswer(
+            Option option, IssuedTicketOptionGroup issuedTicketOptionGroup, String answer) {
+        return IssuedTicketOptionAnswer.builder()
+                .option(option)
+                .issuedTicketOptionGroup(issuedTicketOptionGroup)
+                .answer(answer)
+                .build();
     }
 }

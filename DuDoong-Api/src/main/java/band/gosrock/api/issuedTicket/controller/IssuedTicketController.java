@@ -1,5 +1,6 @@
 package band.gosrock.api.issuedTicket.controller;
 
+
 import band.gosrock.api.issuedTicket.dto.request.PostIssuedTicketRequestDTOs;
 import band.gosrock.api.issuedTicket.dto.response.PostIssuedTicketResponse;
 import band.gosrock.api.issuedTicket.service.CreateIssuedTicketUseCase;
@@ -23,7 +24,8 @@ public class IssuedTicketController {
 
     @Operation(summary = "결제 승인 API 처리 이후 사용자가 입력한 정보 및 옵션들을 바탕으로 티켓을 발급합니다.")
     @PostMapping
-    public PostIssuedTicketResponse createIssuedTicket(@RequestBody PostIssuedTicketRequestDTOs body) {
+    public PostIssuedTicketResponse createIssuedTicket(
+            @RequestBody PostIssuedTicketRequestDTOs body) {
         return createIssuedTicketUseCase.execute(body);
     }
 }

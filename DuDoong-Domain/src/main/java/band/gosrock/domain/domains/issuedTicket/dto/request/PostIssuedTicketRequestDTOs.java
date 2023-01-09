@@ -1,4 +1,4 @@
-package band.gosrock.api.issuedTicket.dto.request;
+package band.gosrock.domain.domains.issuedTicket.dto.request;
 
 
 import java.util.List;
