@@ -1,7 +1,6 @@
 package band.gosrock.api.cart.model.dto.request;
 
 
-import band.gosrock.domain.domains.cart.domain.CartOptionAnswer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -12,10 +11,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AddCartOptionAnswerDto {
 
-    @Schema(description = "상품에 대한 옵션 그룹 아이디")
-    @NotNull
-    private final Long optionGroupId;
-
     @Schema(description = "옵션 아이디")
     @NotNull
     private final Long optionId;
@@ -24,11 +19,10 @@ public class AddCartOptionAnswerDto {
     @NotBlank
     private final String answer;
 
-    public CartOptionAnswer toCartOptionAnswer() {
-        return CartOptionAnswer.builder()
-                .optionId(optionId)
-                .optionGroupId(optionGroupId)
-                .answer(answer)
-                .build();
-    }
+    //    public CartOptionAnswer toCartOptionAnswer(Option option, OptionGroup optionGroup) {
+    //        return CartOptionAnswer.builder()
+    //            .option(option)
+    //            .optionGroup(optionGroup)
+    //                .build();
+    //    }
 }

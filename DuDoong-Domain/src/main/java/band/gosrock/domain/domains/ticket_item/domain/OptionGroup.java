@@ -36,8 +36,7 @@ public class OptionGroup {
     // 필수 응답 여부
     private Boolean isEssential;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "option_group_id")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "optionGroup")
     private List<Option> options = new ArrayList<>();
 
     @Builder

@@ -21,6 +21,10 @@ public class Option {
 
     private Money additionalPrice;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "option_group_id", updatable = false)
+    private OptionGroup optionGroup;
+
     @Builder
     public Option(String answer, Money additionalPrice) {
         this.answer = answer;

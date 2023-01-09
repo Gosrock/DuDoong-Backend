@@ -3,11 +3,15 @@ package band.gosrock.domain.domains.cart.domain;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.domains.ticket_item.domain.Option;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,16 +27,16 @@ public class CartOptionAnswer extends BaseTimeEntity {
     private Long id;
 
     // 연관 관계로 만들면..? 가격정보 도메인 내부로 들일 수 있음
-    private Long optionId;
+    @JoinColumn(name = "option_id", updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Option option;
 
-    private Long optionGroupId;
     private String answer;
 
     @Builder
-    public CartOptionAnswer(Long optionId, Long optionGroupId, String answer) {
-        this.optionId = optionId;
+    public CartOptionAnswer(Option option, String answer) {
+        this.option = option;
         this.answer = answer;
-        this.optionGroupId = optionGroupId;
     }
 
     public Money getOptionPrice() {

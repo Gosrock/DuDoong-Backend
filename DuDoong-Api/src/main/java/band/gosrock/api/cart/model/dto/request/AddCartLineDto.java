@@ -1,8 +1,6 @@
 package band.gosrock.api.cart.model.dto.request;
 
 
-import band.gosrock.domain.domains.cart.domain.CartLineItem;
-import band.gosrock.domain.domains.cart.domain.CartOptionAnswer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import javax.validation.constraints.Min;
@@ -22,15 +20,19 @@ public class AddCartLineDto {
     @Schema(description = "상품 관련 옵션에 대한 답변")
     private final List<AddCartOptionAnswerDto> addCartOptionAnswerDtos;
 
-    public CartLineItem toCartLineItem(Long userId) {
-        List<CartOptionAnswer> cartOptionAnswers =
-                addCartOptionAnswerDtos.stream()
-                        .map(AddCartOptionAnswerDto::toCartOptionAnswer)
-                        .toList();
-        return CartLineItem.builder()
-                .itemId(itemId)
-                .quantity(quantity)
-                .cartOptionAnswers(cartOptionAnswers)
-                .build();
+    public List<Long> getOptionIds() {
+        return addCartOptionAnswerDtos.stream().map(AddCartOptionAnswerDto::getOptionId).toList();
     }
+
+    //    public CartLineItem toCartLineItem(Long userId) {
+    //        List<CartOptionAnswer> cartOptionAnswers =
+    //                addCartOptionAnswerDtos.stream()
+    //                        .map(AddCartOptionAnswerDto::toCartOptionAnswer)
+    //                        .toList();
+    //        return CartLineItem.builder()
+    //                .itemId(itemId)
+    //                .quantity(quantity)
+    //                .cartOptionAnswers(cartOptionAnswers)
+    //                .build();
+    //    }
 }
