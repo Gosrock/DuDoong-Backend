@@ -31,7 +31,7 @@ public class CartLineController {
     //        createOrderLineUseCase.execute(ticketItemId);
     //    }
     @Operation(summary = "상품을 장바구니에 담습니다. 상품에 답변해야하는 응답이 있다면, 응답도 보내주시면 됩니다.")
-    @PostMapping("/add")
+    @PostMapping
     public CreateCartResponse createCartLines(@RequestBody @Valid AddCartRequest addCartRequest) {
         return createCartLinesUseCase.execute(addCartRequest);
     }
