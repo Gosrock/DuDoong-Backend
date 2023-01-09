@@ -31,13 +31,17 @@ public class Cart extends BaseTimeEntity {
 
     private Long userId;
 
+    private String cartName;
+
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "cart_id")
     private List<CartLineItem> cartLineItems = new ArrayList<>();
 
     @Builder
     public Cart(Long userId, List<CartLineItem> cartLineItems) {
+        CartLineItem cartLineItem = cartLineItems.stream().findFirst().orElseThrow();
         this.userId = userId;
+        this.cartName = cartLineItem.getTicketName();
         this.cartLineItems.addAll(cartLineItems);
     }
 

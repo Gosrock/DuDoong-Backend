@@ -4,9 +4,9 @@ package band.gosrock.domain.domains.order.service;
 import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.domains.cart.adaptor.CartAdaptor;
 import band.gosrock.domain.domains.cart.domain.Cart;
+import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.jaxb.OrderAdapter;
 import org.springframework.transaction.annotation.Transactional;
 
 @DomainService
@@ -15,27 +15,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class CartToOrderService {
 
     private final CartAdaptor cartAdaptor;
-    private final OrderAdapter orderAdapter;
+
+    private final OrderAdaptor orderAdaptor;
 
     @Transactional
     public Order creatOrderWithOutCoupon(Long cartId, Long userId) {
 
         Cart cart = cartAdaptor.queryCart(cartId, userId);
-        //        cart.getCartLineItems().stream().map(cartLineItem -> cartLineItem.)
+        Order order = Order.createOrder(userId, cart);
+        order.calculatePaymentInfo();
+        Order save = orderAdaptor.save(order);
 
-        //
-        //        OrderLineItem orderLineItem =
-        //            OrderLineItem.builder()
-        //                .itemId(1L)
-        //                .paymentInfo(paymentInfo)
-        //                .userId(1L)
-        //                .productName("고스락 2023년 3월 공연")
-        //                .quantity(3L)
-        //                .build();
-        //        Order order =
-        //            Order.createOrder(1L, PaymentMethod.EASYPAY, paymentInfo,
-        // List.of(orderLineItem));
-        //        return orderRepository.save(order);
-        return null;
+        return save;
     }
 }

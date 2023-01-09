@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.order.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import java.time.LocalDateTime;
@@ -43,9 +44,13 @@ public class Order extends BaseTimeEntity {
     @Column(nullable = false)
     private String uuid;
 
-    // 결제 방식
+    private String orderName;
+
+    // 결제 방식 ( 토스 승인 이후 저장 )
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
+    // 토스 결제 승인후 결제 긁힌 시간
+    private LocalDateTime paymentAt;
 
     // 결제 정보
     @Embedded private PaymentInfo totalPaymentInfo;
@@ -53,9 +58,6 @@ public class Order extends BaseTimeEntity {
     // 주문 상태
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus = OrderStatus.PENDING;
-
-    // 토스 결제 승인후 결제 긁힌 시간
-    private LocalDateTime paymentAt;
 
     // 발급된 쿠폰 정보
     @JoinColumn(name = "issued_coupon_id", updatable = false)
@@ -68,15 +70,46 @@ public class Order extends BaseTimeEntity {
     private List<OrderLineItem> orderLineItems = new ArrayList<>();
 
     @Builder
-    public Order(Long userId, List<OrderLineItem> orderLineItems) {
+    public Order(Long userId, String OrderName, List<OrderLineItem> orderLineItems) {
         this.userId = userId;
+        this.orderName = OrderName;
         this.orderLineItems.addAll(orderLineItems);
     }
 
     public static Order createOrder(Long userId, Cart cart) {
         List<OrderLineItem> orderLineItems =
                 cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
-        return Order.builder().userId(userId).orderLineItems(orderLineItems).build();
+        return Order.builder()
+                .userId(userId)
+                .OrderName(cart.getCartName())
+                .orderLineItems(orderLineItems)
+                .build();
+    }
+
+    public Money getTotalSupplyPrice() {
+        return orderLineItems.stream()
+                .map(OrderLineItem::getTotalOrderLinePrice)
+                .reduce(Money.ZERO, Money::plus);
+    }
+
+    public Money getTotalPaymentPrice() {
+        return getTotalSupplyPrice().minus(getTotalDiscountPrice());
+    }
+
+    public Money getTotalDiscountPrice() {
+        if (issuedCoupon != null) {
+            return issuedCoupon.getDiscountAmount(getTotalSupplyPrice());
+        }
+        return Money.ZERO;
+    }
+
+    public void calculatePaymentInfo() {
+        totalPaymentInfo =
+                PaymentInfo.builder()
+                        .discountAmount(getTotalDiscountPrice())
+                        .paymentAmount(getTotalPaymentPrice())
+                        .supplyAmount(getTotalSupplyPrice())
+                        .build();
     }
 
     @PrePersist

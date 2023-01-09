@@ -8,9 +8,11 @@ import java.util.List;
 import javax.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
 @Entity(name = "tbl_coupon_campaign")
 public class CouponCampaign extends BaseTimeEntity {
 
