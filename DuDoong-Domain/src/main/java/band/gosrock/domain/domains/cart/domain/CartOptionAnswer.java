@@ -4,6 +4,7 @@ package band.gosrock.domain.domains.cart.domain;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.ticket_item.domain.Option;
+import band.gosrock.domain.domains.ticket_item.domain.OptionGroupType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -40,10 +41,19 @@ public class CartOptionAnswer extends BaseTimeEntity {
     }
 
     public Money getOptionPrice() {
-        // 옵션 엔티티에서 받아오던지...
-        // Money getOptionPrice(Option option)
-        // option.getPrice();
-        // 아니면 복사본을 저장하던지 둘중하나!
-        return Money.ZERO;
+        return option.getAdditionalPrice();
     }
+
+    public String getQuestionDescription(){
+        return option.getOptionGroup().getDescription();
+
+    }
+    public String getQuestionName(){
+        return option.getOptionGroup().getName();
+    }
+
+    public OptionGroupType getQuestionType(){
+        return option.getOptionGroup().getType();
+    }
+
 }

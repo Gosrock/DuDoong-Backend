@@ -15,6 +15,7 @@ import band.gosrock.domain.domains.ticket_item.repository.OptionGroupRepository;
 import band.gosrock.domain.domains.ticket_item.repository.OptionRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @UseCase
 @RequiredArgsConstructor
@@ -28,6 +29,7 @@ public class CreateCartLinesUseCase {
     // 테스트 용
     private final OptionRepository optionRepository;
 
+    @Transactional
     public CreateCartResponse execute(AddCartRequest addCartRequest) {
         Long currentUserId = SecurityUtils.getCurrentUserId();
         Option option = Option.builder().additionalPrice(Money.wons(1000L)).answer("예").build();
