@@ -39,8 +39,6 @@ public class CartLineItem extends BaseTimeEntity {
 
     // 상품 수량
     private Long quantity;
-    // 장바구니 담은 유저아이디
-    private Long userId;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "cart_line_id")
@@ -48,13 +46,9 @@ public class CartLineItem extends BaseTimeEntity {
 
     @Builder
     public CartLineItem(
-            TicketItem ticketItem,
-            Long quantity,
-            Long userId,
-            List<CartOptionAnswer> cartOptionAnswers) {
+            TicketItem ticketItem, Long quantity, List<CartOptionAnswer> cartOptionAnswers) {
         this.ticketItem = ticketItem;
         this.quantity = quantity;
-        this.userId = userId;
         this.cartOptionAnswers.addAll(cartOptionAnswers);
     }
 
@@ -72,12 +66,9 @@ public class CartLineItem extends BaseTimeEntity {
         return ticketItem.getPrice();
     }
 
-    public Money getTotalPrice() {
-        Money reduce =
-                cartOptionAnswers.stream()
-                        .map(CartOptionAnswer::getOptionPrice)
-                        .reduce(Money.ZERO, Money::plus);
-        return ticketItem.getPrice().plus(reduce);
+    public Money getTotalCartLinePrice() {
+        Money totalOptionAnswerPrice = getTotalOptionsPrice();
+        return ticketItem.getPrice().plus(totalOptionAnswerPrice);
     }
 
     public TicketType getTicketType() {

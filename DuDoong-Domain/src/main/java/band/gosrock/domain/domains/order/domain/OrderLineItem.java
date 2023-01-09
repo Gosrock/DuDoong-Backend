@@ -2,12 +2,20 @@ package band.gosrock.domain.domains.order.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import java.util.ArrayList;
+import java.util.List;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.Embedded;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,37 +30,36 @@ public class OrderLineItem extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_line_item_id")
     private Long id;
-    // 결제 정보 ( 할인 ,공급가액, 최종 합 금액 )
-    @Embedded private PaymentInfo paymentInfo;
+
     // 상품 이름
     private String productName;
 
-    // 주문한 유저 아이디
-    private Long userId;
-
-    // 쿠폰 아이디 ( nullable함)
-    private Long couponId;
     // 상품 아이디
-    private Long itemId;
+    @JoinColumn(name = "ticket_item_id", updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private TicketItem ticketItem;
     // 상품 수량
     private Long quantity;
 
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_line_item_id")
+    private List<OrderOptionAnswer> orderOptionAnswer = new ArrayList<>();
+
     @Builder
-    public OrderLineItem(
-            PaymentInfo paymentInfo,
-            String productName,
-            Long userId,
-            Long couponId,
-            Long itemId,
-            Long quantity) {
-        this.paymentInfo = paymentInfo;
+    public OrderLineItem(String productName, TicketItem ticketItem, Long quantity) {
         this.productName = productName;
-        this.userId = userId;
-        this.couponId = couponId;
-        this.itemId = itemId;
+        this.ticketItem = ticketItem;
         this.quantity = quantity;
     }
-    // TODO : 티켓아이템에서 티켓 오더 라인 가지기 오더쪽에선 티켓을 몰라도됨?
-    // TODO : 할인 쿠폰 정책 적용등?
 
+    protected Money getTotalOptionAnswersPrice() {
+        return orderOptionAnswer.stream()
+                .map(OrderOptionAnswer::getOptionPrice)
+                .reduce(Money.ZERO, Money::plus);
+    }
+
+    protected Money getTotalOrderLinePrice() {
+        Money itemPrice = ticketItem.getPrice();
+        return itemPrice.plus(getTotalOptionAnswersPrice());
+    }
 }

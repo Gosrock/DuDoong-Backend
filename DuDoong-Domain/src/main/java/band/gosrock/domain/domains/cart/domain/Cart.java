@@ -43,7 +43,7 @@ public class Cart extends BaseTimeEntity {
 
     public Money getTotalPrice() {
         return cartLineItems.stream()
-                .map(CartLineItem::getTotalPrice)
+                .map(CartLineItem::getTotalCartLinePrice)
                 .reduce(Money.ZERO, Money::plus);
     }
 }

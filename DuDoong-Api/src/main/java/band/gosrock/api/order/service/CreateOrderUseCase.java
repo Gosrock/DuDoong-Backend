@@ -1,9 +1,10 @@
 package band.gosrock.api.order.service;
 
 
+import band.gosrock.api.order.model.dto.request.CreateOrderRequest;
+import band.gosrock.api.order.model.dto.response.CreateOrderResponse;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.order.service.OrderDomainService;
-import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.PaymentsResponse;
 import lombok.RequiredArgsConstructor;
 
 @UseCase
@@ -12,7 +13,8 @@ public class CreateOrderUseCase {
 
     private final OrderDomainService orderDomainService;
 
-    public PaymentsResponse execute() {
-        return orderDomainService.creatOrder();
+    public CreateOrderResponse execute(CreateOrderRequest createOrderRequest) {
+        //        return orderDomainService.creatOrder();
+        return null;
     }
 }

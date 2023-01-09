@@ -4,11 +4,11 @@ package band.gosrock.api.cart.service;
 import band.gosrock.api.cart.model.dto.request.AddCartLineDto;
 import band.gosrock.api.cart.model.dto.request.AddCartOptionAnswerDto;
 import band.gosrock.api.cart.model.dto.request.AddCartRequest;
-import band.gosrock.api.cart.model.dto.response.CartItemOptionAnswerResponse;
 import band.gosrock.api.cart.model.dto.response.CartItemResponse;
 import band.gosrock.api.cart.model.dto.response.CreateCartResponse;
 import band.gosrock.api.config.security.SecurityUtils;
 import band.gosrock.common.annotation.UseCase;
+import band.gosrock.domain.common.vo.OptionAnswerVo;
 import band.gosrock.domain.domains.cart.adaptor.CartAdaptor;
 import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.cart.domain.CartLineItem;
@@ -21,7 +21,6 @@ import band.gosrock.domain.domains.ticket_item.repository.OptionRepository;
 import band.gosrock.domain.domains.ticket_item.repository.TicketItemRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.transaction.annotation.Transactional;
 
 @UseCase
@@ -108,12 +107,12 @@ public class CreateCartLinesUseCase {
                 newCart.getCartLineItems().stream()
                         .map(
                                 cartLineItem -> {
-                                    List<CartItemOptionAnswerResponse>
-                                            cartItemOptionAnswerResponses =
-                                                    getCartItemOptionAnswerResponses(cartLineItem);
-
+                                    List<OptionAnswerVo> optionAnswerVos =
+                                            cartLineItem.getCartOptionAnswers().stream()
+                                                    .map(CartOptionAnswer::getOptionAnswerVo)
+                                                    .toList();
                                     return CartItemResponse.builder()
-                                            .answers(cartItemOptionAnswerResponses)
+                                            .answers(optionAnswerVos)
                                             .name(
                                                     cartLineItem.getTicketName()
                                                             + cartLineItem
@@ -126,19 +125,6 @@ public class CreateCartLinesUseCase {
                 .items(cartItemResponses)
                 .totalPrice(newCart.getTotalPrice().toString())
                 .build();
-    }
-
-    @NotNull
-    private static List<CartItemOptionAnswerResponse> getCartItemOptionAnswerResponses(
-            CartLineItem cartLineItem) {
-        return cartLineItem.getCartOptionAnswers().stream()
-                .map(
-                        cartOptionAnswer ->
-                                CartItemOptionAnswerResponse.builder()
-                                        .answer(cartOptionAnswer.getAnswer())
-                                        .question(cartOptionAnswer.getQuestionName())
-                                        .build())
-                .toList();
     }
 
     private List<CartOptionAnswer> getCartOptionAnswers(AddCartLineDto addCartLineDto) {
