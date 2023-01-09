@@ -10,7 +10,7 @@ import lombok.Getter;
 public class CartItemResponse {
 
     // 일반티켓(1/3) - 4000원
-    private String title;
+    private String name;
     // 응답 목록
     private List<CartItemOptionAnswerResponse> answers;
 }

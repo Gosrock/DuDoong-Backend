@@ -12,7 +12,7 @@ public class CreateCartResponse {
     // 임시값
     private final String title = "고스락 제 23회 정기공연 일반티켓 총 3매";
     // 내티켓 확인하기
-    private final List<CartItemResponse> cartItemDtos;
+    private final List<CartItemResponse> items;
 
     // 금액
     private final String totalPrice;

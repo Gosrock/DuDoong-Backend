@@ -19,11 +19,11 @@ public class AddCartLineDto {
     private final Long quantity;
 
     @Schema(description = "상품 관련 옵션에 대한 답변")
-    private List<AddCartOptionAnswerDto> addCartOptionAnswerDtos;
+    private List<AddCartOptionAnswerDto> options;
 
     @JsonIgnore
     public List<Long> getOptionIds() {
-        return addCartOptionAnswerDtos.stream().map(AddCartOptionAnswerDto::getOptionId).toList();
+        return options.stream().map(AddCartOptionAnswerDto::getOptionId).toList();
     }
 
     //    public CartLineItem toCartLineItem(Long userId) {

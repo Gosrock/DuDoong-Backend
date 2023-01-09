@@ -80,7 +80,7 @@ public class CreateCartLinesUseCase {
         //        List<Long> itemId = addCartLineDtos.stream()
         //            .map(addCartLineDto -> addCartLineDto.getItemId()).toList();
 
-        List<AddCartLineDto> addCartLineDtos = addCartRequest.getAddCartLineDtos();
+        List<AddCartLineDto> addCartLineDtos = addCartRequest.getItems();
 
         List<CartLineItem> cartLineItems =
                 addCartLineDtos.stream()
@@ -114,7 +114,7 @@ public class CreateCartLinesUseCase {
 
                                     return CartItemResponse.builder()
                                             .answers(cartItemOptionAnswerResponses)
-                                            .title(
+                                            .name(
                                                     cartLineItem.getTicketName()
                                                             + cartLineItem
                                                                     .getTicketPrice()
@@ -123,7 +123,7 @@ public class CreateCartLinesUseCase {
                                 })
                         .toList();
         return CreateCartResponse.builder()
-                .cartItemDtos(cartItemResponses)
+                .items(cartItemResponses)
                 .totalPrice(newCart.getTotalPrice().toString())
                 .build();
     }
@@ -143,7 +143,7 @@ public class CreateCartLinesUseCase {
 
     private List<CartOptionAnswer> getCartOptionAnswers(AddCartLineDto addCartLineDto) {
         List<CartOptionAnswer> answers =
-                addCartLineDto.getAddCartOptionAnswerDtos().stream()
+                addCartLineDto.getOptions().stream()
                         .map(this::getCartOptionAnswer)
                         .toList();
         return answers;
