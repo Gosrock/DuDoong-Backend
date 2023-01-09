@@ -7,6 +7,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,8 +24,21 @@ public class IssuedTicketOptionAnswer extends BaseTimeEntity {
     @Column(name = "issued_ticket_option_answer_id")
     private Long id;
 
+    /*
+    옵션에 대한 답변 참조 (단방향)
+     */
     private Long optionId;
 
+    /*
+    해당 답변이 속한 티켓 옵션 그룹 (양방향)
+     */
+    @ManyToOne
+    @JoinColumn(name = "issued_ticket_option_group_id")
+    private IssuedTicketOptionGroup issuedTicketOptionGroup;
+
+    /*
+    답변
+     */
     private String answer;
 
     @Builder

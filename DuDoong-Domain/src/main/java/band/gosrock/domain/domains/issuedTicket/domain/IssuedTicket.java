@@ -41,17 +41,31 @@ public class IssuedTicket extends BaseTimeEntity {
      */
     private Long orderLineId;
 
+    /*
+    티켓 발급 유저 (양방향)
+     */
     private Long userId;
 
+    /*
+    발급 티켓의 item (양방향)
+     */
     private Long ticketItemId;
 
+    /*
+    발급 티켓의 옵션들 (양방향)
+     */
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "issued_ticket_id")
     private List<IssuedTicketOptionGroup> issuedTicketOptionGroups = new ArrayList<>();
 
+    /*
+    발급 티켓 uuid
+     */
     @Column(nullable = false)
     private String uuid;
 
+    /*
+    상태
+     */
     @Enumerated(EnumType.STRING)
     private IssuedTicketStatus issuedTicketStatus = IssuedTicketStatus.ENTRANCE_INCOMPLETE;
 
