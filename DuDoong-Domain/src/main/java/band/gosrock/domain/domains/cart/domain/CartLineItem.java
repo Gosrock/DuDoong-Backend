@@ -3,20 +3,22 @@ package band.gosrock.domain.domains.cart.domain;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.AttributeOverride;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -30,27 +32,55 @@ public class CartLineItem extends BaseTimeEntity {
     @Column(name = "cart_line_id")
     private Long id;
 
-    // 상품 이름
-    private String productName;
-    // 상품 아이디
-    private Long itemId;
+    // 상품
+    @JoinColumn(name = "ticket_item_id", updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private TicketItem ticketItem;
+
     // 상품 수량
     private Long quantity;
     // 장바구니 담은 유저아이디
     private Long userId;
 
-    // 공급 가액
-    @Embedded
-    @AttributeOverride(name = "amount", column = @Column(name = "supplyAmount"))
-    private Money supplyAmount;
-
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "cart_line_id")
-    private List<CartOptionAnswerGroup> cartOptionAnswerGroups = new ArrayList<>();
+    private List<CartOptionAnswer> cartOptionAnswers = new ArrayList<>();
+
+    @Builder
+    public CartLineItem(
+            TicketItem ticketItem,
+            Long quantity,
+            Long userId,
+            List<CartOptionAnswer> cartOptionAnswers) {
+        this.ticketItem = ticketItem;
+        this.quantity = quantity;
+        this.userId = userId;
+        this.cartOptionAnswers.addAll(cartOptionAnswers);
+    }
 
     public Money getTotalOptionsPrice() {
-        return cartOptionAnswerGroups.stream()
-                .map(CartOptionAnswerGroup::getOptionAnswersPrice)
+        return cartOptionAnswers.stream()
+                .map(CartOptionAnswer::getOptionPrice)
                 .reduce(Money.ZERO, Money::plus);
+    }
+
+    public String getTicketName() {
+        return ticketItem.getName();
+    }
+
+    public Money getTicketPrice() {
+        return ticketItem.getPrice();
+    }
+
+    public Money getTotalPrice() {
+        Money reduce =
+                cartOptionAnswers.stream()
+                        .map(CartOptionAnswer::getOptionPrice)
+                        .reduce(Money.ZERO, Money::plus);
+        return ticketItem.getPrice().plus(reduce);
+    }
+
+    public TicketType getTicketType() {
+        return ticketItem.getType();
     }
 }

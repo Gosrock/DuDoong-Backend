@@ -25,6 +25,7 @@ public class OptionGroup {
     private Event event;
 
     // 옵션 그룹 응답 형식
+    @Enumerated(EnumType.STRING)
     private OptionGroupType type;
 
     // 옵션 그룹 이름
@@ -36,8 +37,7 @@ public class OptionGroup {
     // 필수 응답 여부
     private Boolean isEssential;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "option_group_id")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "optionGroup")
     private List<Option> options = new ArrayList<>();
 
     @Builder
@@ -53,6 +53,8 @@ public class OptionGroup {
         this.name = name;
         this.description = description;
         this.isEssential = isEssential;
-        this.options = options;
+
+        this.options.addAll(options);
+        options.forEach(option -> option.setOptionGroup(this));
     }
 }

@@ -15,28 +15,35 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Entity(name = "tbl_cart_option_group")
-public class CartOptionAnswerGroup extends BaseTimeEntity {
+@Entity(name = "tbl_cart")
+public class Cart extends BaseTimeEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "cart_option_group_id")
+    @Column(name = "cart_id")
     private Long id;
 
-    private Long optionGroupId;
+    private Long userId;
 
-    // 객관식 다지선다 가능할수도 있으니? 리스트형
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "cart_option_group_id")
-    private List<CartOptionAnswer> cartOptionAnswers = new ArrayList<>();
+    @JoinColumn(name = "cart_id")
+    private List<CartLineItem> cartLineItems = new ArrayList<>();
 
-    public Money getOptionAnswersPrice() {
-        return cartOptionAnswers.stream()
-                .map(CartOptionAnswer::getOptionPrice)
+    @Builder
+    public Cart(Long userId, List<CartLineItem> cartLineItems) {
+        this.userId = userId;
+        this.cartLineItems.addAll(cartLineItems);
+    }
+
+    public Money getTotalPrice() {
+        return cartLineItems.stream()
+                .map(CartLineItem::getTotalPrice)
                 .reduce(Money.ZERO, Money::plus);
     }
 }
