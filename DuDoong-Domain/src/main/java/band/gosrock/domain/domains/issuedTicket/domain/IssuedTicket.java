@@ -31,8 +31,14 @@ public class IssuedTicket extends BaseTimeEntity {
     @Column(name = "issued_ticket_id")
     private Long id;
 
+    /*
+    발급 티켓의 이벤트 (양방향)
+     */
     private Long eventId;
 
+    /*
+    발급 티켓의 주문 행 (단방향)
+     */
     private Long orderLineId;
 
     private Long userId;
@@ -67,14 +73,12 @@ public class IssuedTicket extends BaseTimeEntity {
             Long eventId,
             Long orderLineId,
             Long userId,
-            Long ticketItemId,
-            IssuedTicketStatus issuedTicketStatus) {
+            Long ticketItemId) {
         return IssuedTicket.builder()
                 .eventId(eventId)
                 .orderLineId(orderLineId)
                 .userId(userId)
                 .ticketItemId(ticketItemId)
-                .issuedTicketStatus(issuedTicketStatus)
                 .build();
     }
 

@@ -22,6 +22,8 @@ public class IssuedTicketOptionAnswer extends BaseTimeEntity {
     @Column(name = "issued_ticket_option_answer_id")
     private Long id;
 
+    private Long optionId;
+
     private String answer;
 
     @Builder
