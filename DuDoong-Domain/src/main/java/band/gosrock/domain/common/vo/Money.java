@@ -1,11 +1,13 @@
 package band.gosrock.domain.common.vo;
 
 
+import band.gosrock.domain.common.converter.BigDecimalScale6WithBankersRoundingConverter;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Function;
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Embeddable;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +18,10 @@ import lombok.RequiredArgsConstructor;
 public class Money {
     public static final Money ZERO = Money.wons(0);
 
-    @Column(nullable = false, name = "amount")
+    // DECIMAL(21,6) 타입에 대한 맵핑 상세 정의
+    // 숫자 범위는 -999999999999999.999999 ~ +999999999999999.999999
+    @Column(name = "amount", nullable = false, precision = 21, scale = 6)
+    @Convert(converter = BigDecimalScale6WithBankersRoundingConverter.class)
     private final BigDecimal amount;
 
     public Money() {
@@ -93,6 +98,6 @@ public class Money {
     }
 
     public String toString() {
-        return amount.toString() + "원";
+        return amount.longValue() + "원";
     }
 }
