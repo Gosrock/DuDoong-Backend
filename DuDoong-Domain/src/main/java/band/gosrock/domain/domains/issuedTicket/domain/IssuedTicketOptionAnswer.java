@@ -34,30 +34,21 @@ public class IssuedTicketOptionAnswer extends BaseTimeEntity {
     private Option option;
 
     /*
-    해당 답변이 속한 티켓 옵션 그룹 (양방향)
-     */
-    @ManyToOne
-    @JoinColumn(name = "issued_ticket_option_group_id")
-    private IssuedTicketOptionGroup issuedTicketOptionGroup;
-
-    /*
     답변
      */
     private String answer;
 
     @Builder
     public IssuedTicketOptionAnswer(
-            Option option, IssuedTicketOptionGroup issuedTicketOptionGroup, String answer) {
+            Option option, String answer) {
         this.option = option;
-        this.issuedTicketOptionGroup = issuedTicketOptionGroup;
         this.answer = answer;
     }
 
     public static IssuedTicketOptionAnswer createIssuedTicketOptionAnswer(
-            Option option, IssuedTicketOptionGroup issuedTicketOptionGroup, String answer) {
+            Option option, String answer) {
         return IssuedTicketOptionAnswer.builder()
                 .option(option)
-                .issuedTicketOptionGroup(issuedTicketOptionGroup)
                 .answer(answer)
                 .build();
     }

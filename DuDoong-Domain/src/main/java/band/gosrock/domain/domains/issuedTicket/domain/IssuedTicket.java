@@ -68,11 +68,7 @@ public class IssuedTicket extends BaseTimeEntity {
     발급 티켓의 옵션들 (양방향)
      */
     @OneToMany(mappedBy = "issuedTicket", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<IssuedTicketOptionGroup> issuedTicketOptionGroups = new ArrayList<>();
-
-    public void insertIssuedTicketOptionGroups(IssuedTicketOptionGroup issuedTicketOptionGroup) {
-        issuedTicketOptionGroups.add(issuedTicketOptionGroup);
-    }
+    private List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers = new ArrayList<>();
 
     /*
     발급 티켓 uuid
@@ -102,13 +98,13 @@ public class IssuedTicket extends BaseTimeEntity {
             TicketItem ticketItem,
             Long price,
             IssuedTicketStatus issuedTicketStatus,
-            List<IssuedTicketOptionGroup> issuedTicketOptionGroups) {
+            List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers) {
         this.event = event;
         this.userId = userId;
         this.ticketItem = ticketItem;
         this.price = price;
         this.issuedTicketStatus = issuedTicketStatus;
-        this.issuedTicketOptionGroups = issuedTicketOptionGroups;
+        this.issuedTicketOptionAnswers.addAll(issuedTicketOptionAnswers);
     }
 
     public static IssuedTicket create(PostIssuedTicketRequest dto) {
@@ -118,7 +114,7 @@ public class IssuedTicket extends BaseTimeEntity {
             .ticketItem(dto.getTicketItem())
             .price(dto.getPrice())
             .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
-            .issuedTicketOptionGroups(new ArrayList<>())
+            .issuedTicketOptionAnswers(new ArrayList<>())
             .build();
     }
 
