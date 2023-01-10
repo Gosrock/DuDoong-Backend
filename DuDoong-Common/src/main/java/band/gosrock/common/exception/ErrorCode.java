@@ -37,7 +37,8 @@ public enum ErrorCode implements BaseErrorCode {
     USER_ALREADY_DELETED(FORBIDDEN, "USER_403_2", "user already deleted"),
     TOSS_PAYMENTS_UNHANDLED(INTERNAL_SERVER, "PAYMENTS_INTERNAL_SERVER", "관리자에게 연락부탁드려요."),
     BAD_LOCK_IDENTIFIER(500, "AOP_500_1", "락의 키값이 잘못 세팅 되었습니다"),
-    BAD_FILE_EXTENSION(BAD_REQUEST, "FILE-400-1", "파일 확장자가 잘못 되었습니다.");
+    BAD_FILE_EXTENSION(BAD_REQUEST, "FILE-400-1", "파일 확장자가 잘못 되었습니다."),
+    CART_NOT_FOUND(NOT_FOUND, "Cart-404-1", "Cart Not Found.");
     private int status;
     private String code;
     private String reason;

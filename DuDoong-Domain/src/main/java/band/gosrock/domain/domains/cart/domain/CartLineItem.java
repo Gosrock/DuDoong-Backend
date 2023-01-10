@@ -3,6 +3,7 @@ package band.gosrock.domain.domains.cart.domain;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.common.vo.OptionAnswerVo;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import java.util.ArrayList;
@@ -33,14 +34,13 @@ public class CartLineItem extends BaseTimeEntity {
     private Long id;
 
     // 상품
-    @JoinColumn(name = "ticket_item_id", updatable = false)
+    @JoinColumn(name = "ticket_item_id", updatable = false, nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private TicketItem ticketItem;
 
     // 상품 수량
+    @Column(nullable = false)
     private Long quantity;
-    // 장바구니 담은 유저아이디
-    private Long userId;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "cart_line_id")
@@ -48,13 +48,9 @@ public class CartLineItem extends BaseTimeEntity {
 
     @Builder
     public CartLineItem(
-            TicketItem ticketItem,
-            Long quantity,
-            Long userId,
-            List<CartOptionAnswer> cartOptionAnswers) {
+            TicketItem ticketItem, Long quantity, List<CartOptionAnswer> cartOptionAnswers) {
         this.ticketItem = ticketItem;
         this.quantity = quantity;
-        this.userId = userId;
         this.cartOptionAnswers.addAll(cartOptionAnswers);
     }
 
@@ -72,15 +68,16 @@ public class CartLineItem extends BaseTimeEntity {
         return ticketItem.getPrice();
     }
 
-    public Money getTotalPrice() {
-        Money reduce =
-                cartOptionAnswers.stream()
-                        .map(CartOptionAnswer::getOptionPrice)
-                        .reduce(Money.ZERO, Money::plus);
-        return ticketItem.getPrice().plus(reduce);
+    public Money getTotalCartLinePrice() {
+        Money totalOptionAnswerPrice = getTotalOptionsPrice();
+        return ticketItem.getPrice().plus(totalOptionAnswerPrice).times(quantity);
     }
 
     public TicketType getTicketType() {
         return ticketItem.getType();
+    }
+
+    public List<OptionAnswerVo> getOptionAnswerVos() {
+        return cartOptionAnswers.stream().map(CartOptionAnswer::getOptionAnswerVo).toList();
     }
 }

@@ -1,9 +1,10 @@
-package band.gosrock.domain.domains.cart.domain;
+package band.gosrock.domain.domains.order.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.OptionAnswerVo;
+import band.gosrock.domain.domains.cart.domain.CartOptionAnswer;
 import band.gosrock.domain.domains.ticket_item.domain.Option;
 import band.gosrock.domain.domains.ticket_item.domain.OptionGroupType;
 import javax.persistence.Column;
@@ -21,11 +22,12 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Entity(name = "tbl_cart_option_answer")
-public class CartOptionAnswer extends BaseTimeEntity {
+@Entity(name = "tbl_order_option_answer")
+public class OrderOptionAnswer extends BaseTimeEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "cart_option_answer_id")
+    @Column(name = "order_option_answer_id")
     private Long id;
 
     // 연관 관계로 만들면..? 가격정보 도메인 내부로 들일 수 있음
@@ -36,9 +38,16 @@ public class CartOptionAnswer extends BaseTimeEntity {
     private String answer;
 
     @Builder
-    public CartOptionAnswer(Option option, String answer) {
+    public OrderOptionAnswer(Option option, String answer) {
         this.option = option;
         this.answer = answer;
+    }
+
+    public static OrderOptionAnswer from(CartOptionAnswer cartOptionAnswer) {
+        return OrderOptionAnswer.builder()
+                .answer(cartOptionAnswer.getAnswer())
+                .option(cartOptionAnswer.getOption())
+                .build();
     }
 
     protected Money getOptionPrice() {
@@ -62,7 +71,6 @@ public class CartOptionAnswer extends BaseTimeEntity {
                 .questionDescription(getQuestionDescription())
                 .optionGroupType(getQuestionType())
                 .questionName(getQuestionName())
-                .answer(answer)
                 .additionalPrice(getOptionPrice().toString())
                 .build();
     }

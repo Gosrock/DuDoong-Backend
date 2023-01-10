@@ -4,7 +4,6 @@ package band.gosrock.api.cart.service;
 import band.gosrock.api.cart.model.dto.request.AddCartLineDto;
 import band.gosrock.api.cart.model.dto.request.AddCartOptionAnswerDto;
 import band.gosrock.api.cart.model.dto.request.AddCartRequest;
-import band.gosrock.api.cart.model.dto.response.CartItemOptionAnswerResponse;
 import band.gosrock.api.cart.model.dto.response.CartItemResponse;
 import band.gosrock.api.cart.model.dto.response.CreateCartResponse;
 import band.gosrock.api.config.security.SecurityUtils;
@@ -19,6 +18,7 @@ import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.ticket_item.repository.OptionGroupRepository;
 import band.gosrock.domain.domains.ticket_item.repository.OptionRepository;
 import band.gosrock.domain.domains.ticket_item.repository.TicketItemRepository;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @UseCase
 @RequiredArgsConstructor
-public class CreateCartLinesUseCase {
+public class CreateCartUseCase {
 
     private final CartDomainService cartDomainService;
     private final CartAdaptor cartAdaptor;
@@ -85,66 +85,70 @@ public class CreateCartLinesUseCase {
         List<CartLineItem> cartLineItems =
                 addCartLineDtos.stream()
                         .map(
-                                addCartLineDto -> {
-                                    List<CartOptionAnswer> answers =
-                                            getCartOptionAnswers(addCartLineDto);
-                                    // 기획상 itemId는 하나긴함
-                                    // 겟 로직 티켓쪽에서 notfound 만들어준다 가정
-                                    TicketItem ticketItem =
-                                            ticketItemRepository
-                                                    .findById(addCartLineDto.getItemId())
-                                                    .get();
-                                    return CartLineItem.builder()
-                                            .ticketItem(ticketItem)
-                                            .cartOptionAnswers(answers)
-                                            .build();
-                                })
+                                addCartLineDto ->
+                                        CartLineItem.builder()
+                                                .ticketItem(getTicketItem(addCartLineDto))
+                                                .cartOptionAnswers(
+                                                        getCartOptionAnswers(addCartLineDto))
+                                                .quantity(addCartLineDto.getQuantity())
+                                                .build())
                         .toList();
 
         Cart newCart =
                 cartAdaptor.save(
                         Cart.builder().cartLineItems(cartLineItems).userId(currentUserId).build());
-        List<CartItemResponse> cartItemResponses =
-                newCart.getCartLineItems().stream()
-                        .map(
-                                cartLineItem -> {
-                                    List<CartItemOptionAnswerResponse>
-                                            cartItemOptionAnswerResponses =
-                                                    getCartItemOptionAnswerResponses(cartLineItem);
+        List<CartLineItem> newCartLineItems = newCart.getCartLineItems();
+        Long totalQuantity = newCart.getTotalQuantity();
 
-                                    return CartItemResponse.builder()
-                                            .answers(cartItemOptionAnswerResponses)
-                                            .name(
-                                                    cartLineItem.getTicketName()
-                                                            + cartLineItem
-                                                                    .getTicketPrice()
-                                                                    .toString())
-                                            .build();
-                                })
-                        .toList();
-        return CreateCartResponse.builder()
-                .items(cartItemResponses)
-                .totalPrice(newCart.getTotalPrice().toString())
-                .build();
+        int startNum = 1;
+        List<CartItemResponse> cartItemResponses = new ArrayList<>();
+        for (CartLineItem cartLineItem : newCartLineItems) {
+            cartItemResponses.add(
+                    CartItemResponse.of(
+                            generateCartLineName(cartLineItem, startNum, totalQuantity),
+                            cartLineItem.getOptionAnswerVos()));
+            startNum += cartLineItem.getQuantity();
+        }
+
+        return CreateCartResponse.of(cartItemResponses, newCart);
     }
 
     @NotNull
-    private static List<CartItemOptionAnswerResponse> getCartItemOptionAnswerResponses(
-            CartLineItem cartLineItem) {
-        return cartLineItem.getCartOptionAnswers().stream()
-                .map(
-                        cartOptionAnswer ->
-                                CartItemOptionAnswerResponse.builder()
-                                        .answer(cartOptionAnswer.getAnswer())
-                                        .question(cartOptionAnswer.getQuestionName())
-                                        .build())
-                .toList();
+    private TicketItem getTicketItem(AddCartLineDto addCartLineDto) {
+        return ticketItemRepository.findById(addCartLineDto.getItemId()).get();
+    }
+
+    /**
+     * 일반티켓(1/3) - 4000원 과 같은 장바구니 상품의 응답을 반환합니다 카트라인 기준입니다. 카트라인에 3개의 상품이 같이 담기면 ( 옵션이 같은 상황 )
+     * 일반티켓(1-3/3) 이런식으로 표현됩니다.
+     *
+     * @param cartLineItem
+     * @param startNum
+     * @param totalQuantity
+     * @return
+     */
+    private String generateCartLineName(
+            CartLineItem cartLineItem, int startNum, Long totalQuantity) {
+        Long cartLineQuantity = cartLineItem.getQuantity();
+        if (cartLineQuantity.equals(1L)) {
+            return String.format(
+                    "%s (%s/%d) - %s",
+                    cartLineItem.getTicketName(),
+                    startNum,
+                    totalQuantity,
+                    cartLineItem.getTotalCartLinePrice().toString());
+        }
+        int endNum = (int) (cartLineQuantity - 1 + startNum);
+        return String.format(
+                "%s (%s/%d) - %s",
+                cartLineItem.getTicketName(),
+                startNum + "-" + endNum,
+                totalQuantity,
+                cartLineItem.getTotalCartLinePrice().toString());
     }
 
     private List<CartOptionAnswer> getCartOptionAnswers(AddCartLineDto addCartLineDto) {
-        List<CartOptionAnswer> answers =
-                addCartLineDto.getOptions().stream().map(this::getCartOptionAnswer).toList();
-        return answers;
+        return addCartLineDto.getOptions().stream().map(this::getCartOptionAnswer).toList();
     }
 
     private CartOptionAnswer getCartOptionAnswer(AddCartOptionAnswerDto addCartOptionAnswerDto) {
