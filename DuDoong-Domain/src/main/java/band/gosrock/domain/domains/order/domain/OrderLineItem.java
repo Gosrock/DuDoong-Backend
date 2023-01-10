@@ -3,6 +3,7 @@ package band.gosrock.domain.domains.order.domain;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.cart.domain.CartLineItem;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import java.util.ArrayList;
@@ -75,5 +76,9 @@ public class OrderLineItem extends BaseTimeEntity {
     protected Money getTotalOrderLinePrice() {
         Money itemPrice = ticketItem.getPrice();
         return itemPrice.plus(getTotalOptionAnswersPrice()).times(quantity);
+    }
+
+    public RefundInfoVo getOrderLineRefundInfo(){
+        return ticketItem.getRefundInfoVo();
     }
 }

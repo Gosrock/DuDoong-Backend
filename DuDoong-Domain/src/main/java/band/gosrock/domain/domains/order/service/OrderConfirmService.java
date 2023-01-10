@@ -34,9 +34,8 @@ public class OrderConfirmService {
         Long currentUserId) {
         Order order = orderAdaptor.findByOrderUuid(confirmPaymentsRequest.getOrderId());
 
-
-
-        order.confirmOrder(currentUserId,Money.wons(confirmPaymentsRequest.getAmount()));
+        order.confirmPaymentOrder(currentUserId,Money.wons(confirmPaymentsRequest.getAmount()));
+        // 결제 승인요청
         PaymentsResponse paymentsResponse= paymentsConfirmClient.execute(confirmPaymentsRequest);
         //TODO : 이넘화 예정
         //TODO : 요청 보내고 난뒤에 도메인 로직 내부에서 실패하면 결제 강제 취소 로직 AOP로 개발 예정
@@ -51,9 +50,11 @@ public class OrderConfirmService {
             }else{
                 throw NotSupportedOrderMethodException.EXCEPTION;
             }
+            // 결제 후처리 정보 업데이트
             order.updatePaymentInfo(approveAt,paymentMethod,vat);
             return order;
         }catch (Exception e){
+            // 내부오류시 결제 강제 취소
             CancelPaymentsRequest cancelPaymentsRequest = CancelPaymentsRequest.builder()
                 .cancelReason("서버 내부 오류").build();
             paymentsCancelClient.execute(confirmPaymentsRequest.getPaymentKey(),cancelPaymentsRequest);

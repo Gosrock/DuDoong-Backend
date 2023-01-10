@@ -5,6 +5,7 @@ import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
+import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
 import band.gosrock.domain.domains.order.exception.NotMyOrderException;
 import band.gosrock.domain.domains.order.exception.NotPendingOrderException;
@@ -24,6 +25,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
@@ -66,7 +68,7 @@ public class Order extends BaseTimeEntity {
 
     // 주문 상태
     @Enumerated(EnumType.STRING)
-    private OrderStatus orderStatus = OrderStatus.PENDING;
+    private OrderStatus orderStatus = OrderStatus.PENDING_PAYMENT;
 
     // 발급된 쿠폰 정보
     @JoinColumn(name = "issued_coupon_id", updatable = false)
@@ -127,20 +129,22 @@ public class Order extends BaseTimeEntity {
     }
 
 
-    public void confirmOrder(Long currentUserId , Money requestAmount){
+    public void confirmPaymentOrder(Long currentUserId , Money requestAmount){
         if(!userId.equals(currentUserId)){
             throw NotMyOrderException.EXCEPTION;
         }
         if(!getTotalPaymentPrice().equals(requestAmount)){
             throw InvalidOrderException.EXCEPTION;
         }
-        if(!orderStatus.equals(OrderStatus.PENDING)){
+        if(!orderStatus.equals(OrderStatus.PENDING_PAYMENT)){
             throw NotPendingOrderException.EXCEPTION;
         }
         //TODO: 재고량 비교 필요?
         orderStatus = OrderStatus.CONFIRM;
     }
-    public void updatePaymentInfo(LocalDateTime paymentAt,PaymentMethod paymentMethod,Money vat){
-
+    public void updatePaymentInfo(LocalDateTime approvedAt,PaymentMethod paymentMethod,Money vat){
+        this.approvedAt = approvedAt;
+        this.paymentMethod = paymentMethod;
+        this.vat = vat;
     }
 }
