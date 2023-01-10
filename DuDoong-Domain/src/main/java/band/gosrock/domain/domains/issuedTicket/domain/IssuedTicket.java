@@ -53,7 +53,7 @@ public class IssuedTicket extends BaseTimeEntity {
     //    private Long orderLineId;
 
     /*
-    티켓 발급 유저 (양방향)
+    티켓 발급 유저 id
      */
     private Long userId;
 

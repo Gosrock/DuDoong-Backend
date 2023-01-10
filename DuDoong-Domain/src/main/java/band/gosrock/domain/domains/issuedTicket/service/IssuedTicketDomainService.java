@@ -42,12 +42,18 @@ public class IssuedTicketDomainService {
         return new PostIssuedTicketResponse(issuedTickets);
     }
 
+    /**
+     * 발급 티켓 정보 가져오기 비즈니스 로직
+     * @param currentUserId 현재 접근 유저 id
+     * @param issuedTicketId 검색하고자 하는 발급 티켓 id
+     * @return IssuedTicketDTO (transaction 상태에서만 지연 로딩 프록시 객체를 갖고올 수 있으므로 DTO로 묶어서 반환)
+     */
     @Transactional(readOnly = true)
-    public IssuedTicket retrieveIssuedTicket(Long currentUserId, Long issuedTicketId) {
+    public IssuedTicketDTO retrieveIssuedTicket(Long currentUserId, Long issuedTicketId) {
         IssuedTicket issuedTicket = issuedTicketAdaptor.find(issuedTicketId);
         if (!Objects.equals(issuedTicket.getUserId(), currentUserId)) {
             throw IssuedTicketUserNotMatchedException.EXCEPTION;
         }
-        return issuedTicket;
+        return new IssuedTicketDTO(issuedTicket);
     }
 }

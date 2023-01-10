@@ -4,6 +4,7 @@ import band.gosrock.api.config.security.SecurityUtils;
 import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketDetailResponse;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
+import band.gosrock.domain.domains.issuedTicket.dto.response.IssuedTicketDTO;
 import band.gosrock.domain.domains.issuedTicket.service.IssuedTicketDomainService;
 import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.domain.domains.user.service.UserDomainService;
@@ -23,7 +24,10 @@ public class ReadIssuedTicketUseCase {
      */
     public RetrieveIssuedTicketDetailResponse execute(Long issuedTicketId) {
         Long currentUserId = SecurityUtils.getCurrentUserId();
-        IssuedTicket issuedTicket = issuedTicketDomainService.retrieveIssuedTicket(currentUserId,
+        /*
+        Todo: 지연 로딩 트랜잭션 이슈 때문에 일단은 DTO로 감싸서 올림. But, 이게 최선일까? 고민해보자.
+         */
+        IssuedTicketDTO issuedTicket = issuedTicketDomainService.retrieveIssuedTicket(currentUserId,
             issuedTicketId);
         User user = userDomainService.retrieveUser(currentUserId);
         return new RetrieveIssuedTicketDetailResponse(issuedTicket, user);
