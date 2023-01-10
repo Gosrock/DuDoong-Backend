@@ -8,7 +8,6 @@ import band.gosrock.common.exception.NotAvailableRedissonLockException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
-import javax.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -28,6 +27,7 @@ import org.springframework.util.StringUtils;
 public class RedissonLockAop {
     private final RedissonClient redissonClient;
     private final RedissonCallTransaction redissonCallTransaction;
+
     @Around("@annotation(band.gosrock.domain.common.aop.redissonLock.RedissonLock)")
     public Object lock(final ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();

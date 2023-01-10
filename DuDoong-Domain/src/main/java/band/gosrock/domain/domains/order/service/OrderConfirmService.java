@@ -59,10 +59,6 @@ public class OrderConfirmService {
             }
             // 결제 후처리 정보 업데이트
             order.updatePaymentInfo(approveAt, paymentMethod, vat);
-            // org.hibernate.LazyInitializationException: could not initialize proxy
-            // 분산락 안쪽에 트랜잭션이 이미 커밋된후에 세션이 닫혀버림..
-            // 커맨드 치고. 위에서 한번더 찾는게 맞을듯
-            orderAdaptor.save(order);
             return order.getId();
         } catch (Exception e) {
             // 내부오류시 결제 강제 취소

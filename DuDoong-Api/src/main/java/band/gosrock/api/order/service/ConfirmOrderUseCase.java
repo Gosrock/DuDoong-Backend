@@ -31,14 +31,16 @@ public class ConfirmOrderUseCase {
     private final IssuedTicketAdaptor issuedTicketAdaptor;
     private final ApplicationContext applicationContext;
 
-    //https://stackoverflow.com/questions/3037006/starting-new-transaction-in-spring-bean
-    private ConfirmOrderUseCase  getSpringProxy() {
+    // https://stackoverflow.com/questions/3037006/starting-new-transaction-in-spring-bean
+    private ConfirmOrderUseCase getSpringProxy() {
         return applicationContext.getBean(this.getClass());
     }
 
-    private OrderResponse getOrderResponseWithNewTransaction(Long confirmedOrderId, String userName) {
-        return getSpringProxy().getOrderResponse(confirmedOrderId,userName);
+    private OrderResponse getOrderResponseWithNewTransaction(
+            Long confirmedOrderId, String userName) {
+        return getSpringProxy().getOrderResponse(confirmedOrderId, userName);
     }
+
     public OrderResponse execute(String orderId, ConfirmOrderRequest confirmOrderRequest) {
         Long currentUserId = SecurityUtils.getCurrentUserId();
         User user = userAdaptor.queryUser(currentUserId);

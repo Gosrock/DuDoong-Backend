@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import band.gosrock.common.exception.BadLockIdentifierException;
 import band.gosrock.domain.common.dto.ProfileViewDto;
 import java.lang.reflect.InvocationTargetException;
-import javax.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;

@@ -11,4 +11,5 @@ dependencies {
     api('com.fasterxml.jackson.datatype:jackson-datatype-jdk8')
     api('com.fasterxml.jackson.datatype:jackson-datatype-jsr310')
     api 'com.amazonaws:aws-java-sdk-s3control:1.12.372'
+    api 'io.github.openfeign:feign-jackson:12.1'
 }
