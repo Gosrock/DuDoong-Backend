@@ -21,6 +21,7 @@ import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/v1/auth")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "인증 관련 컨트롤러")
 public class AuthController {
 
@@ -58,17 +60,23 @@ public class AuthController {
     @GetMapping("/oauth/kakao")
     public void getCredentialFromKaKao(
             @RequestParam("code") String code,
-            @RequestHeader(value = "host") String host,
+            @RequestHeader(value = "referer", required = false) String referer,
+            @RequestHeader(value = "host", required = false) String host,
             HttpServletResponse response)
             throws IOException {
         OauthTokenResponse credentialFromKaKao = registerUseCase.getCredentialFromKaKao(code);
+        log.info(referer);
         String queryString =
                 String.format(
                         "?idToken=%s&accessToken=%s&refreshToken=%s",
                         credentialFromKaKao.getIdToken(),
                         credentialFromKaKao.getAccessToken(),
                         credentialFromKaKao.getRefreshToken());
-        response.sendRedirect("http://" + host + "/kakao/callback" + queryString);
+        if (referer != null) {
+            response.sendRedirect(referer + "/kakao/callback" + queryString);
+        } else {
+            response.sendRedirect("https://" + host + "/kakao/callback" + queryString);
+        }
     }
 
     @Operation(summary = "개발용 회원가입입니다 클라이언트가 몰라도 됩니다.", deprecated = true)
