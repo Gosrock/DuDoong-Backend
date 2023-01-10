@@ -76,7 +76,7 @@ public class Order extends BaseTimeEntity {
     private IssuedCoupon issuedCoupon;
 
     // 단방향 oneToMany 매핑
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "order_id")
     private List<OrderLineItem> orderLineItems = new ArrayList<>();
 
