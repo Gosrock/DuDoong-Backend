@@ -38,7 +38,12 @@ public enum ErrorCode implements BaseErrorCode {
     TOSS_PAYMENTS_UNHANDLED(INTERNAL_SERVER, "PAYMENTS_INTERNAL_SERVER", "관리자에게 연락부탁드려요."),
     BAD_LOCK_IDENTIFIER(500, "AOP_500_1", "락의 키값이 잘못 세팅 되었습니다"),
     BAD_FILE_EXTENSION(BAD_REQUEST, "FILE-400-1", "파일 확장자가 잘못 되었습니다."),
-    CART_NOT_FOUND(NOT_FOUND, "Cart-404-1", "Cart Not Found.");
+    CART_NOT_FOUND(NOT_FOUND, "Cart-404-1", "Cart Not Found."),
+    ORDER_NOT_FOUND(NOT_FOUND, "Order-404-1", "Order Not Found."),
+    ORDER_NOT_MINE(BAD_REQUEST, "Order-400-1", "Order Not MINE"),
+    ORDER_NOT_VALID(BAD_REQUEST, "Order-400-2", "Order Not Valid"),
+    ORDER_NOT_PENDING(BAD_REQUEST, "Order-400-3", "Order Status Not Pending"),
+    ORDER_NOT_SUPPORTED_METHOD(BAD_REQUEST, "Order-400-4", "Order Method Not Supported");
     private int status;
     private String code;
     private String reason;

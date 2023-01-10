@@ -1,6 +1,7 @@
 package band.gosrock.api.order.controller;
 
 
+import band.gosrock.api.order.model.dto.request.ConfirmOrderRequest;
 import band.gosrock.api.order.model.dto.request.CreateOrderRequest;
 import band.gosrock.api.order.model.dto.response.CreateOrderResponse;
 import band.gosrock.api.order.service.CancelOrderUseCase;
@@ -51,11 +52,11 @@ public class OrderController {
         return createOrderUseCase.execute(createOrderRequest);
     }
 
-    @Operation(summary = "결제 승인요청 . successUrl 로 돌아온 웹페이지에서 query 로 받은 응답값을 응답값만 알고계시면 됩니다.")
+    @Operation(summary = "결제 승인요청 . successUrl 로 돌아온 웹페이지에서 query 로 받은 응답값을 서버로 보냅니당.")
     @PostMapping("/confirm")
     public PaymentsResponse confirmOrder(
-            @RequestBody ConfirmPaymentsRequest confirmPaymentsRequest) {
-        return confirmOrderUseCase.execute(confirmPaymentsRequest);
+            @RequestBody ConfirmOrderRequest confirmOrderRequest) {
+        return confirmOrderUseCase.execute(confirmOrderRequest);
     }
 
     @Operation(summary = "결제 취소요청. 취소 요청의 주체는 주문 본인, 호스트 관리자.")

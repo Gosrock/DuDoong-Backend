@@ -14,6 +14,8 @@ public enum OrderStatus {
     // 결제 승인
     CONFIRM("CONFIRM"),
     // 환불
-    REFUND("REFUND");
+    REFUND("REFUND"),
+    // 토스 결제 실패시
+    FAILED("FAILED");
     private String value;
 }

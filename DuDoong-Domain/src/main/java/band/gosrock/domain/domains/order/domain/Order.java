@@ -5,10 +5,14 @@ import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
+import band.gosrock.domain.domains.order.exception.InvalidOrderException;
+import band.gosrock.domain.domains.order.exception.NotMyOrderException;
+import band.gosrock.domain.domains.order.exception.NotPendingOrderException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import javax.persistence.AttributeOverride;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
@@ -50,7 +54,12 @@ public class Order extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
     // 토스 결제 승인후 결제 긁힌 시간
-    private LocalDateTime paymentAt;
+    private LocalDateTime approvedAt;
+
+    // 세금
+    @Embedded
+    @AttributeOverride(name = "amount", column = @Column(name = "vat_amount"))
+    private Money vat;
 
     // 결제 정보
     @Embedded private PaymentInfo totalPaymentInfo;
@@ -68,6 +77,11 @@ public class Order extends BaseTimeEntity {
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
     private List<OrderLineItem> orderLineItems = new ArrayList<>();
+
+    @PrePersist
+    public void addUUID() {
+        this.uuid = UUID.randomUUID().toString();
+    }
 
     @Builder
     public Order(Long userId, String OrderName, List<OrderLineItem> orderLineItems) {
@@ -112,8 +126,21 @@ public class Order extends BaseTimeEntity {
                         .build();
     }
 
-    @PrePersist
-    public void addUUID() {
-        this.uuid = UUID.randomUUID().toString();
+
+    public void confirmOrder(Long currentUserId , Money requestAmount){
+        if(!userId.equals(currentUserId)){
+            throw NotMyOrderException.EXCEPTION;
+        }
+        if(!getTotalPaymentPrice().equals(requestAmount)){
+            throw InvalidOrderException.EXCEPTION;
+        }
+        if(!orderStatus.equals(OrderStatus.PENDING)){
+            throw NotPendingOrderException.EXCEPTION;
+        }
+        //TODO: 재고량 비교 필요?
+        orderStatus = OrderStatus.CONFIRM;
+    }
+    public void updatePaymentInfo(LocalDateTime paymentAt,PaymentMethod paymentMethod,Money vat){
+
     }
 }
