@@ -17,12 +17,15 @@ import band.gosrock.infrastructure.outer.api.oauth.dto.OauthTokenResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.io.IOException;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -53,8 +56,19 @@ public class AuthController {
     @Operation(summary = "code 요청받는 핸들러 클라이언트가 몰라도됩니다.", deprecated = true)
     @Tag(name = "카카오 oauth")
     @GetMapping("/oauth/kakao")
-    public OauthTokenResponse getCredentialFromKaKao(@RequestParam("code") String code) {
-        return registerUseCase.getCredentialFromKaKao(code);
+    public void getCredentialFromKaKao(
+            @RequestParam("code") String code,
+            @RequestHeader(value = "host") String host,
+            HttpServletResponse response)
+            throws IOException {
+        OauthTokenResponse credentialFromKaKao = registerUseCase.getCredentialFromKaKao(code);
+        String queryString =
+                String.format(
+                        "?idToken=%s&accessToken=%s&refreshToken=%s",
+                        credentialFromKaKao.getIdToken(),
+                        credentialFromKaKao.getAccessToken(),
+                        credentialFromKaKao.getRefreshToken());
+        response.sendRedirect("http://" + host + "/kakao/callback" + queryString);
     }
 
     @Operation(summary = "개발용 회원가입입니다 클라이언트가 몰라도 됩니다.", deprecated = true)
