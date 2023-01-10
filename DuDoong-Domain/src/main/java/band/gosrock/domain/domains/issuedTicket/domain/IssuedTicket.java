@@ -64,9 +64,10 @@ public class IssuedTicket extends BaseTimeEntity {
     private TicketItem ticketItem;
 
     /*
-    발급 티켓의 옵션들 (양방향)
+    발급 티켓의 옵션들 (단방향)
      */
-    @OneToMany(mappedBy = "issuedTicket", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "issued_ticket_id")
     private List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers = new ArrayList<>();
 
     /*
