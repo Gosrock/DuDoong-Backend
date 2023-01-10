@@ -3,7 +3,6 @@ package band.gosrock.domain.domains.issuedTicket.dto.request;
 
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
-import band.gosrock.domain.domains.user.domain.User;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

@@ -44,6 +44,7 @@ public class IssuedTicketDomainService {
 
     /**
      * 발급 티켓 정보 가져오기 비즈니스 로직
+     *
      * @param currentUserId 현재 접근 유저 id
      * @param issuedTicketId 검색하고자 하는 발급 티켓 id
      * @return IssuedTicketDTO (transaction 상태에서만 지연 로딩 프록시 객체를 갖고올 수 있으므로 DTO로 묶어서 반환)

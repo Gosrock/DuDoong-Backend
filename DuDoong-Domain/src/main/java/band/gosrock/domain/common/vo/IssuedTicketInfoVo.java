@@ -1,5 +1,6 @@
 package band.gosrock.domain.common.vo;
 
+
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import lombok.Getter;
 
@@ -30,7 +31,6 @@ public class IssuedTicketInfoVo {
     발급 티켓 가격
      */
     private final Long ticketAccount;
-
 
     public IssuedTicketInfoVo(IssuedTicket issuedTicket) {
         this.issuedTicketId = issuedTicket.getId();

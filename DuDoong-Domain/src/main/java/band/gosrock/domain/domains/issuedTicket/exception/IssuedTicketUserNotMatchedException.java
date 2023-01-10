@@ -1,5 +1,6 @@
 package band.gosrock.domain.domains.issuedTicket.exception;
 
+
 import band.gosrock.common.exception.DuDoongCodeException;
 import band.gosrock.common.exception.ErrorCode;
 

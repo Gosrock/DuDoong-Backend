@@ -39,17 +39,13 @@ public class IssuedTicketOptionAnswer extends BaseTimeEntity {
     private String answer;
 
     @Builder
-    public IssuedTicketOptionAnswer(
-            Option option, String answer) {
+    public IssuedTicketOptionAnswer(Option option, String answer) {
         this.option = option;
         this.answer = answer;
     }
 
     public static IssuedTicketOptionAnswer createIssuedTicketOptionAnswer(
             Option option, String answer) {
-        return IssuedTicketOptionAnswer.builder()
-                .option(option)
-                .answer(answer)
-                .build();
+        return IssuedTicketOptionAnswer.builder().option(option).answer(answer).build();
     }
 }

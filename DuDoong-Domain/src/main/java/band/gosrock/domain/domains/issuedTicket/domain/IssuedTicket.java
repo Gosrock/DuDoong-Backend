@@ -5,7 +5,6 @@ import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.issuedTicket.dto.request.PostIssuedTicketRequest;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
-import band.gosrock.domain.domains.user.domain.User;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -109,13 +108,13 @@ public class IssuedTicket extends BaseTimeEntity {
 
     public static IssuedTicket create(PostIssuedTicketRequest dto) {
         return IssuedTicket.builder()
-            .event(dto.getEvent())
-            .userId(dto.getUserId())
-            .ticketItem(dto.getTicketItem())
-            .price(dto.getPrice())
-            .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
-            .issuedTicketOptionAnswers(new ArrayList<>())
-            .build();
+                .event(dto.getEvent())
+                .userId(dto.getUserId())
+                .ticketItem(dto.getTicketItem())
+                .price(dto.getPrice())
+                .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
+                .issuedTicketOptionAnswers(new ArrayList<>())
+                .build();
     }
 
     @PrePersist

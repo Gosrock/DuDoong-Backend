@@ -1,8 +1,8 @@
 package band.gosrock.api.issuedTicket.dto.response;
 
+
 import band.gosrock.domain.common.vo.EventInfoVo;
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
-import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.dto.response.IssuedTicketDTO;
 import band.gosrock.domain.domains.user.domain.User;
 import lombok.Getter;
@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public class RetrieveIssuedTicketDetailResponse {
-
 
     /*
     발급 티켓 정보 VO
@@ -33,5 +32,4 @@ public class RetrieveIssuedTicketDetailResponse {
         this.eventInfo = issuedTicket.getEventInfo();
         this.userName = user.getProfile().getName();
     }
-
 }

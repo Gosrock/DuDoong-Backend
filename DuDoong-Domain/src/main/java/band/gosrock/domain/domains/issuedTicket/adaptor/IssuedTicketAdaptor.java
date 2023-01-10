@@ -18,7 +18,8 @@ public class IssuedTicketAdaptor {
     }
 
     public IssuedTicket find(Long issuedTicket) {
-        return issuedTicketRepository.findById(issuedTicket)
-            .orElseThrow(() -> IssuedTicketNotFoundException.EXCEPTION);
+        return issuedTicketRepository
+                .findById(issuedTicket)
+                .orElseThrow(() -> IssuedTicketNotFoundException.EXCEPTION);
     }
 }
