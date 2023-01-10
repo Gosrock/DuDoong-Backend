@@ -24,7 +24,7 @@ public class PostIssuedTicketRequest {
     /*
     티켓 발급한 유저 id
      */
-    private final User user;
+    private final Long userId;
 
     /*
     발급 티켓 가격

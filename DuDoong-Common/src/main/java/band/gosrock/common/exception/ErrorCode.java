@@ -39,7 +39,8 @@ public enum ErrorCode implements BaseErrorCode {
     BAD_LOCK_IDENTIFIER(500, "AOP_500_1", "락의 키값이 잘못 세팅 되었습니다"),
     BAD_FILE_EXTENSION(BAD_REQUEST, "FILE-400-1", "파일 확장자가 잘못 되었습니다."),
     CART_NOT_FOUND(NOT_FOUND, "Cart-404-1", "Cart Not Found."),
-    ISSUED_TICKET_NOT_FOUND(NOT_FOUND, "IssuedTicket-404-1", "IssuedTicket Not Found");
+    ISSUED_TICKET_NOT_FOUND(NOT_FOUND, "IssuedTicket-404-1", "IssuedTicket Not Found"),
+    ISSUED_TICKET_NOT_MATCHED_USER(FORBIDDEN, "IssuedTicket-403-1", "IssuedTicket User Not Matched");
     private int status;
     private String code;
     private String reason;

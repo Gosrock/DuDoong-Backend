@@ -7,8 +7,10 @@ import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.dto.request.PostIssuedTicketRequestDTOs;
 import band.gosrock.domain.domains.issuedTicket.dto.response.IssuedTicketDTO;
 import band.gosrock.domain.domains.issuedTicket.dto.response.PostIssuedTicketResponse;
+import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketUserNotMatchedException;
 import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepository;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,7 +45,9 @@ public class IssuedTicketDomainService {
     @Transactional(readOnly = true)
     public IssuedTicket retrieveIssuedTicket(Long currentUserId, Long issuedTicketId) {
         IssuedTicket issuedTicket = issuedTicketAdaptor.find(issuedTicketId);
-        // Todo : 권한 검사 로직
+        if (!Objects.equals(issuedTicket.getUserId(), currentUserId)) {
+            throw IssuedTicketUserNotMatchedException.EXCEPTION;
+        }
         return issuedTicket;
     }
 }

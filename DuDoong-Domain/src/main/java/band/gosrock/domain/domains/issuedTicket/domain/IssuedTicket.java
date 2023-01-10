@@ -55,7 +55,7 @@ public class IssuedTicket extends BaseTimeEntity {
     /*
     티켓 발급 유저 (양방향)
      */
-    private User user;
+    private Long userId;
 
     /*
     발급 티켓의 item (양방향)
@@ -98,13 +98,13 @@ public class IssuedTicket extends BaseTimeEntity {
     @Builder
     public IssuedTicket(
             Event event,
-            User user,
+            Long userId,
             TicketItem ticketItem,
             Long price,
             IssuedTicketStatus issuedTicketStatus,
             List<IssuedTicketOptionGroup> issuedTicketOptionGroups) {
         this.event = event;
-        this.user = user;
+        this.userId = userId;
         this.ticketItem = ticketItem;
         this.price = price;
         this.issuedTicketStatus = issuedTicketStatus;
@@ -114,7 +114,7 @@ public class IssuedTicket extends BaseTimeEntity {
     public static IssuedTicket create(PostIssuedTicketRequest dto) {
         return IssuedTicket.builder()
             .event(dto.getEvent())
-            .user(dto.getUser())
+            .userId(dto.getUserId())
             .ticketItem(dto.getTicketItem())
             .price(dto.getPrice())
             .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
