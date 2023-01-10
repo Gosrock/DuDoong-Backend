@@ -27,6 +27,11 @@ public class PostIssuedTicketRequest {
     private final User user;
 
     /*
+    발급 티켓 가격
+     */
+    private final Long price;
+
+    /*
     발급 티켓의 티켓 itemId (발급 티켓의 종류)
      */
     private final TicketItem ticketItem;

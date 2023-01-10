@@ -55,8 +55,6 @@ public class IssuedTicket extends BaseTimeEntity {
     /*
     티켓 발급 유저 (양방향)
      */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
     private User user;
 
     /*
@@ -83,6 +81,11 @@ public class IssuedTicket extends BaseTimeEntity {
     private String uuid;
 
     /*
+    발급 티켓 가격
+     */
+    private Long price;
+
+    /*
     상태
      */
     @Enumerated(EnumType.STRING)
@@ -97,23 +100,26 @@ public class IssuedTicket extends BaseTimeEntity {
             Event event,
             User user,
             TicketItem ticketItem,
+            Long price,
             IssuedTicketStatus issuedTicketStatus,
             List<IssuedTicketOptionGroup> issuedTicketOptionGroups) {
         this.event = event;
         this.user = user;
         this.ticketItem = ticketItem;
+        this.price = price;
         this.issuedTicketStatus = issuedTicketStatus;
         this.issuedTicketOptionGroups = issuedTicketOptionGroups;
     }
 
     public static IssuedTicket create(PostIssuedTicketRequest dto) {
         return IssuedTicket.builder()
-                .event(dto.getEvent())
-                .user(dto.getUser())
-                .ticketItem(dto.getTicketItem())
-                .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
-                .issuedTicketOptionGroups(new ArrayList<>())
-                .build();
+            .event(dto.getEvent())
+            .user(dto.getUser())
+            .ticketItem(dto.getTicketItem())
+            .price(dto.getPrice())
+            .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
+            .issuedTicketOptionGroups(new ArrayList<>())
+            .build();
     }
 
     @PrePersist

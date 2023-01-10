@@ -39,4 +39,11 @@ public class IssuedTicketDomainService {
                         .toList();
         return new PostIssuedTicketResponse(issuedTickets);
     }
+
+    @Transactional(readOnly = true)
+    public IssuedTicket retrieveIssuedTicket(Long currentUserId, Long issuedTicketId) {
+        IssuedTicket issuedTicket = issuedTicketAdaptor.find(issuedTicketId);
+        // Todo : 권한 검사 로직
+        return issuedTicket;
+    }
 }
