@@ -4,7 +4,6 @@ package band.gosrock.api.config;
 import band.gosrock.common.annotation.DisableSwaggerSecurity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.core.jackson.ModelResolver;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -19,13 +18,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 import javax.servlet.ServletContext;
 import org.springdoc.core.customizers.OperationCustomizer;
-import org.springdoc.core.customizers.ServerBaseUrlCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.HandlerMethod;
 
 /** Swagger 사용 환경을 위한 설정 파일 */
-//@OpenAPIDefinition(servers = {@io.swagger.v3.oas.annotations.servers.Server(url = "/", description = "Default Server URL")})
+// @OpenAPIDefinition(servers = {@io.swagger.v3.oas.annotations.servers.Server(url = "/",
+// description = "Default Server URL")})
 @Configuration
 public class SwaggerConfig {
 

@@ -1,15 +1,20 @@
 package band.gosrock.api.order.controller;
 
 
+import band.gosrock.api.order.model.dto.request.CreateOrderRequest;
+import band.gosrock.api.order.model.dto.response.CreateOrderResponse;
 import band.gosrock.api.order.service.CancelOrderUseCase;
 import band.gosrock.api.order.service.ConfirmOrderUseCase;
 import band.gosrock.api.order.service.CreateOrderUseCase;
+import band.gosrock.api.order.service.CreateTossOrderUseCase;
 import band.gosrock.api.order.service.ReadOrderUseCase;
+import band.gosrock.common.annotation.DevelopOnlyApi;
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.request.ConfirmPaymentsRequest;
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.PaymentsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,10 +35,20 @@ public class OrderController {
     private final CancelOrderUseCase cancelOrderUseCase;
     private final ReadOrderUseCase readOrderUseCase;
 
-    @Operation(summary = "주문서를 생성합니다. orderId를 발급받을 수 있습니다.")
-    @PostMapping("/create")
-    public PaymentsResponse createOrder() {
-        return createOrderUseCase.execute();
+    private final CreateTossOrderUseCase createTossOrderUseCase;
+
+    @Operation(summary = "토스페이먼츠에서 주문서를 생성합니다.(테스트용)")
+    @DevelopOnlyApi
+    @PostMapping("/testToss/{order_id}")
+    public PaymentsResponse createTossOrderUseCase(@PathVariable("order_id") String orderId) {
+        return createTossOrderUseCase.execute(orderId);
+    }
+
+    @Operation(summary = "주문을 생성합니다.")
+    @PostMapping
+    public CreateOrderResponse createOrder(
+            @RequestBody @Valid CreateOrderRequest createOrderRequest) {
+        return createOrderUseCase.execute(createOrderRequest);
     }
 
     @Operation(summary = "결제 승인요청 . successUrl 로 돌아온 웹페이지에서 query 로 받은 응답값을 응답값만 알고계시면 됩니다.")
