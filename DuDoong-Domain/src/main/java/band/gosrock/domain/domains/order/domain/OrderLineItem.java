@@ -44,7 +44,7 @@ public class OrderLineItem extends BaseTimeEntity {
     // 상품 수량
     private Long quantity;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "order_line_item_id")
     private List<OrderOptionAnswer> orderOptionAnswer = new ArrayList<>();
 

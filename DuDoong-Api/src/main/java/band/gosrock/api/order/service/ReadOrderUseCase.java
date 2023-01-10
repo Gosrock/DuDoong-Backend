@@ -13,7 +13,6 @@ import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @UseCase
