@@ -94,7 +94,7 @@ public class Event extends BaseTimeEntity {
         this.ticketingEndAt = ticketingEndAt;
     }
 
-    public RefundInfoVo getRefundInfoVo(){
+    public RefundInfoVo getRefundInfoVo() {
         return RefundInfoVo.from(startAt);
     }
 }

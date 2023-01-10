@@ -43,7 +43,8 @@ public enum ErrorCode implements BaseErrorCode {
     ORDER_NOT_MINE(BAD_REQUEST, "Order-400-1", "Order Not MINE"),
     ORDER_NOT_VALID(BAD_REQUEST, "Order-400-2", "Order Not Valid"),
     ORDER_NOT_PENDING(BAD_REQUEST, "Order-400-3", "Order Status Not Pending"),
-    ORDER_NOT_SUPPORTED_METHOD(BAD_REQUEST, "Order-400-4", "Order Method Not Supported");
+    ORDER_NOT_SUPPORTED_METHOD(BAD_REQUEST, "Order-400-4", "Order Method Not Supported"),
+    ORDER_LINE_NOT_FOUND(BAD_REQUEST, "Order-404-2", "Order Line Not Fount");
     private int status;
     private String code;
     private String reason;

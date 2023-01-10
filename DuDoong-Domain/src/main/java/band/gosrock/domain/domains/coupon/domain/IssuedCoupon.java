@@ -42,4 +42,9 @@ public class IssuedCoupon extends BaseTimeEntity {
         this.userId = userId;
         this.usageStatus = false;
     }
+
+    public String getCouponName() {
+        // TODO : 쿠폰코드가 쿠폰이름 맞나?
+        return this.couponCampaign.getCouponCode();
+    }
 }

@@ -17,7 +17,7 @@ public class OrderAdaptor {
         return orderRepository.save(order);
     }
 
-    public Order findByOrderUuid(String uuid){
-        return orderRepository.findByUuid(uuid).orElseThrow(()-> OrderNotFoundException.EXCEPTION);
+    public Order findByOrderUuid(String uuid) {
+        return orderRepository.findByUuid(uuid).orElseThrow(() -> OrderNotFoundException.EXCEPTION);
     }
 }

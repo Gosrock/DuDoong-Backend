@@ -3,7 +3,6 @@ package band.gosrock.domain.domains.cart.domain;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
-import band.gosrock.domain.domains.event.domain.Event;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.CascadeType;
@@ -14,7 +13,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -30,6 +28,7 @@ public class Cart extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "cart_id")
     private Long id;
+
     @Column(nullable = false)
     private Long userId;
 
@@ -40,7 +39,7 @@ public class Cart extends BaseTimeEntity {
     private List<CartLineItem> cartLineItems = new ArrayList<>();
 
     @Builder
-    public Cart(Long userId ,List<CartLineItem> cartLineItems) {
+    public Cart(Long userId, List<CartLineItem> cartLineItems) {
         CartLineItem cartLineItem = cartLineItems.stream().findFirst().orElseThrow();
         this.userId = userId;
         this.cartName = cartLineItem.getTicketName();

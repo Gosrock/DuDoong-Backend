@@ -59,9 +59,8 @@ public class TicketItem extends BaseTimeEntity {
     @JoinTable(name = "tbl_ticket_item_option")
     private List<OptionGroup> optionGroups = new ArrayList<>();
 
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id" ,nullable = false)
+    @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
     @Builder
@@ -90,7 +89,7 @@ public class TicketItem extends BaseTimeEntity {
         this.optionGroups = optionGroups;
     }
 
-    public RefundInfoVo getRefundInfoVo(){
+    public RefundInfoVo getRefundInfoVo() {
         return event.getRefundInfoVo();
     }
 }

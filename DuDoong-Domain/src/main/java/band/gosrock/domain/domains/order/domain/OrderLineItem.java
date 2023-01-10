@@ -3,6 +3,7 @@ package band.gosrock.domain.domains.order.domain;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.common.vo.OptionAnswerVo;
 import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.cart.domain.CartLineItem;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
@@ -78,7 +79,11 @@ public class OrderLineItem extends BaseTimeEntity {
         return itemPrice.plus(getTotalOptionAnswersPrice()).times(quantity);
     }
 
-    public RefundInfoVo getOrderLineRefundInfo(){
+    public RefundInfoVo getRefundInfo() {
         return ticketItem.getRefundInfoVo();
+    }
+
+    public List<OptionAnswerVo> getOptionAnswerVos() {
+        return orderOptionAnswer.stream().map(OrderOptionAnswer::getOptionAnswerVo).toList();
     }
 }

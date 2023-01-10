@@ -3,12 +3,13 @@ package band.gosrock.domain.domains.order.domain;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
-import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
 import band.gosrock.domain.domains.order.exception.NotMyOrderException;
 import band.gosrock.domain.domains.order.exception.NotPendingOrderException;
+import band.gosrock.domain.domains.order.exception.OrderLineNotFountException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +26,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
@@ -92,6 +92,13 @@ public class Order extends BaseTimeEntity {
         this.orderLineItems.addAll(orderLineItems);
     }
 
+    /**
+     * 주문을 생성합니다.
+     *
+     * @param userId
+     * @param cart
+     * @return
+     */
     public static Order createOrder(Long userId, Cart cart) {
         List<OrderLineItem> orderLineItems =
                 cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
@@ -119,6 +126,7 @@ public class Order extends BaseTimeEntity {
         return Money.ZERO;
     }
 
+    /** totalPaymentInfo 를 업데이트 합니다. */
     public void calculatePaymentInfo() {
         totalPaymentInfo =
                 PaymentInfo.builder()
@@ -128,23 +136,64 @@ public class Order extends BaseTimeEntity {
                         .build();
     }
 
-
-    public void confirmPaymentOrder(Long currentUserId , Money requestAmount){
-        if(!userId.equals(currentUserId)){
+    /**
+     * 오더의 결제를 승인 합니다.
+     *
+     * @param currentUserId
+     * @param requestAmount
+     */
+    public void confirmPaymentOrder(Long currentUserId, Money requestAmount) {
+        if (!userId.equals(currentUserId)) {
             throw NotMyOrderException.EXCEPTION;
         }
-        if(!getTotalPaymentPrice().equals(requestAmount)){
+        if (!getTotalPaymentPrice().equals(requestAmount)) {
             throw InvalidOrderException.EXCEPTION;
         }
-        if(!orderStatus.equals(OrderStatus.PENDING_PAYMENT)){
+        if (!orderStatus.equals(OrderStatus.PENDING_PAYMENT)) {
             throw NotPendingOrderException.EXCEPTION;
         }
-        //TODO: 재고량 비교 필요?
+        // TODO: 재고량 비교 필요?
         orderStatus = OrderStatus.CONFIRM;
     }
-    public void updatePaymentInfo(LocalDateTime approvedAt,PaymentMethod paymentMethod,Money vat){
+
+    /**
+     * 토스 결제 승인 이후 넘어온 응답값을 바탕으로 vat 등 결제 정보를 업데이트 합니다.
+     *
+     * @param approvedAt
+     * @param paymentMethod
+     * @param vat
+     */
+    public void updatePaymentInfo(
+            LocalDateTime approvedAt, PaymentMethod paymentMethod, Money vat) {
         this.approvedAt = approvedAt;
         this.paymentMethod = paymentMethod;
         this.vat = vat;
+    }
+
+    /**
+     * 상품의 환불 정보를 가져옵니다. 원래는 오더 라인 마다 쿠폰이 각각 적용되고, 환불 도 가능해야하지만 한이벤트에서만 주문이 가능한 현 기획에 따라 오더라인에 있는
+     * 환불정보(환불정보는 이벤트에 따름) 첫번째꺼를 환불 정보로 노출 시켰습니다.
+     *
+     * @return
+     */
+    public RefundInfoVo getTotalRefundInfo() {
+        OrderLineItem orderLineItem =
+                orderLineItems.stream()
+                        .findFirst()
+                        .orElseThrow(() -> OrderLineNotFountException.EXCEPTION);
+        return orderLineItem.getRefundInfo();
+    }
+
+    /**
+     * 쿠폰의 이름을 가져옵니다
+     *
+     * @default 사용하지않음
+     * @return
+     */
+    public String getCouponName() {
+        if (issuedCoupon != null) {
+            return issuedCoupon.getCouponName();
+        }
+        return "사용하지 않음";
     }
 }

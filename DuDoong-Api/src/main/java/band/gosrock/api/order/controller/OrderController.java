@@ -10,7 +10,6 @@ import band.gosrock.api.order.service.CreateOrderUseCase;
 import band.gosrock.api.order.service.CreateTossOrderUseCase;
 import band.gosrock.api.order.service.ReadOrderUseCase;
 import band.gosrock.common.annotation.DevelopOnlyApi;
-import band.gosrock.infrastructure.outer.api.tossPayments.dto.request.ConfirmPaymentsRequest;
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.PaymentsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -54,8 +53,7 @@ public class OrderController {
 
     @Operation(summary = "결제 승인요청 . successUrl 로 돌아온 웹페이지에서 query 로 받은 응답값을 서버로 보냅니당.")
     @PostMapping("/confirm")
-    public PaymentsResponse confirmOrder(
-            @RequestBody ConfirmOrderRequest confirmOrderRequest) {
+    public PaymentsResponse confirmOrder(@RequestBody ConfirmOrderRequest confirmOrderRequest) {
         return confirmOrderUseCase.execute(confirmOrderRequest);
     }
 
