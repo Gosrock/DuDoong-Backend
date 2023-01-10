@@ -1,6 +1,5 @@
 package band.gosrock.domain.domains.order.domain;
 
-
 import static band.gosrock.common.consts.DuDoongStatic.NO_START_NUMBER;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
@@ -54,14 +53,14 @@ public class Order extends BaseTimeEntity {
     @Column(nullable = false)
     private String uuid;
 
-    @Column(nullable = false)
     private String orderNo;
+
     @Column(nullable = false)
     private String orderName;
 
     // 결제 방식 ( 토스 승인 이후 저장 )
     @Enumerated(EnumType.STRING)
-    private PaymentMethod paymentMethod;
+    private PaymentMethod paymentMethod = PaymentMethod.DEFAULT;
     // 토스 결제 승인후 결제 긁힌 시간
     private LocalDateTime approvedAt;
 
@@ -76,7 +75,7 @@ public class Order extends BaseTimeEntity {
     // 주문 상태
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private OrderStatus orderStatus = OrderStatus.PENDING_PAYMENT;
+    private OrderStatus orderStatus = OrderStatus.PENDING;
 
     // 발급된 쿠폰 정보
     @JoinColumn(name = "issued_coupon_id", updatable = false)
@@ -95,31 +94,50 @@ public class Order extends BaseTimeEntity {
 
     @PostPersist
     public void createOrderNo() {
-        this.orderNo = "R" + Long.sum(NO_START_NUMBER,this.id);
+        this.orderNo = "R" + Long.sum(NO_START_NUMBER, this.id);
     }
 
     @Builder
-    public Order(Long userId, String OrderName, List<OrderLineItem> orderLineItems) {
+    public Order(
+            Long userId,
+            String OrderName,
+            List<OrderLineItem> orderLineItems,
+            OrderStatus orderStatus) {
         this.userId = userId;
         this.orderName = OrderName;
         this.orderLineItems.addAll(orderLineItems);
+        this.orderStatus = orderStatus;
     }
 
     /**
-     * 주문을 생성합니다.
+     * 카드, 간편결제등 토스 요청 과정이 필요한 결제를 생성합니다.
      *
      * @param userId
      * @param cart
      * @return
      */
-    public static Order createOrder(Long userId, Cart cart) {
+    public static Order createPaymentOrder(Long userId, Cart cart) {
+        return orderBaseBuilder(userId, cart).orderStatus(OrderStatus.PENDING_PAYMENT).build();
+    }
+
+    /**
+     * 승인 결제인 주문을 생성합니다.
+     *
+     * @param userId
+     * @param cart
+     * @return
+     */
+    public static Order createApproveOrder(Long userId, Cart cart) {
+        return orderBaseBuilder(userId, cart).orderStatus(OrderStatus.PENDING_APPROVE).build();
+    }
+
+    private static OrderBuilder orderBaseBuilder(Long userId, Cart cart) {
         List<OrderLineItem> orderLineItems =
                 cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
         return Order.builder()
                 .userId(userId)
                 .OrderName(cart.getCartName())
-                .orderLineItems(orderLineItems)
-                .build();
+                .orderLineItems(orderLineItems);
     }
 
     public Money getTotalSupplyPrice() {

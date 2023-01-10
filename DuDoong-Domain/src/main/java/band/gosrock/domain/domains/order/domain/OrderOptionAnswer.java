@@ -69,6 +69,7 @@ public class OrderOptionAnswer extends BaseTimeEntity {
     public OptionAnswerVo getOptionAnswerVo() {
         return OptionAnswerVo.builder()
                 .questionDescription(getQuestionDescription())
+                .answer(answer)
                 .optionGroupType(getQuestionType())
                 .questionName(getQuestionName())
                 .additionalPrice(getOptionPrice().toString())

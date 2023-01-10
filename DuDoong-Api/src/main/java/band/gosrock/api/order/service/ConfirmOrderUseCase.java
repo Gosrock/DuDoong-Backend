@@ -13,11 +13,14 @@ import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.service.OrderConfirmService;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
+import band.gosrock.infrastructure.outer.api.tossPayments.dto.request.ConfirmPaymentsRequest;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @UseCase
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ConfirmOrderUseCase {
 
     private final OrderConfirmService orderConfirmService;
@@ -25,12 +28,17 @@ public class ConfirmOrderUseCase {
     private final UserAdaptor userAdaptor;
     private final IssuedTicketAdaptor issuedTicketAdaptor;
 
-    public OrderResponse execute(ConfirmOrderRequest confirmPaymentsRequest) {
+    public OrderResponse execute(String orderId, ConfirmOrderRequest confirmOrderRequest) {
         Long currentUserId = SecurityUtils.getCurrentUserId();
         User user = userAdaptor.queryUser(currentUserId);
-        Order order =
-                orderConfirmService.execute(
-                        confirmPaymentsRequest.toConfirmPaymentsRequest(), currentUserId);
+        ConfirmPaymentsRequest confirmPaymentsRequest =
+                ConfirmPaymentsRequest.builder()
+                        .paymentKey(confirmOrderRequest.getPaymentKey())
+                        .amount(confirmOrderRequest.getAmount())
+                        .orderId(orderId)
+                        .build();
+        Long confirmedOrderId = orderConfirmService.execute(confirmPaymentsRequest, currentUserId);
+        Order order = orderAdaptor.findById(confirmedOrderId);
 
         List<OrderLineTicketResponse> orderLineTicketResponses =
                 order.getOrderLineItems().stream()

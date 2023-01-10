@@ -27,12 +27,11 @@ public class OrderConfirmService {
     private final PaymentsCancelClient paymentsCancelClient;
     private final OrderAdaptor orderAdaptor;
 
-    @Transactional
     @RedissonLock(
             LockName = "주문승인",
             identifier = "orderId",
             paramClassType = ConfirmPaymentsRequest.class)
-    public Order execute(ConfirmPaymentsRequest confirmPaymentsRequest, Long currentUserId) {
+    public Long execute(ConfirmPaymentsRequest confirmPaymentsRequest, Long currentUserId) {
         Order order = orderAdaptor.findByOrderUuid(confirmPaymentsRequest.getOrderId());
 
         order.confirmPaymentOrder(currentUserId, Money.wons(confirmPaymentsRequest.getAmount()));
@@ -41,6 +40,13 @@ public class OrderConfirmService {
         // TODO : 이넘화 예정
         // TODO : 요청 보내고 난뒤에 도메인 로직 내부에서 실패하면 결제 강제 취소 로직 AOP로 개발 예정
         try {
+            // 실제 거래된 금액이 다를때
+            if (!paymentsResponse
+                    .getTotalAmount()
+                    .equals(order.getTotalPaymentPrice().longValue())) {
+                throw InvalidOrderException.EXCEPTION;
+            }
+            // 수정필요
             LocalDateTime approveAt = paymentsResponse.getApprovedAt().toLocalDateTime();
             Money vat = Money.wons(paymentsResponse.getVat());
             PaymentMethod paymentMethod;
@@ -53,7 +59,11 @@ public class OrderConfirmService {
             }
             // 결제 후처리 정보 업데이트
             order.updatePaymentInfo(approveAt, paymentMethod, vat);
-            return order;
+            // org.hibernate.LazyInitializationException: could not initialize proxy
+            // 분산락 안쪽에 트랜잭션이 이미 커밋된후에 세션이 닫혀버림..
+            // 커맨드 치고. 위에서 한번더 찾는게 맞을듯
+            orderAdaptor.save(order);
+            return order.getId();
         } catch (Exception e) {
             // 내부오류시 결제 강제 취소
             CancelPaymentsRequest cancelPaymentsRequest =

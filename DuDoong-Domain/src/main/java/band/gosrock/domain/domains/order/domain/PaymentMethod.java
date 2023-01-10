@@ -12,6 +12,18 @@ public enum PaymentMethod {
     // 카드결제
     CARD("CARD"),
     // 승인결제
-    APPROVAL("APPROVAL");
+    APPROVAL("APPROVAL"),
+    // 결제방식 미지정상태
+    DEFAULT("DEFAULT");
     private String value;
+
+    @Override
+    public String toString() {
+        return switch (this) {
+            case EASYPAY -> "간편 결제";
+            case CARD -> "카드 결제";
+            case APPROVAL -> "승인 결제";
+            case DEFAULT -> "결제 방식 미지정";
+        };
+    }
 }
