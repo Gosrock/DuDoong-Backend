@@ -17,6 +17,8 @@ public class DuDoongStatic {
     public static final int NOT_FOUND = 404;
     public static final int INTERNAL_SERVER = 500;
 
+    public static final Long NO_START_NUMBER = 1000000L;
+
     public static final String KAKAO_OAUTH_QUERY_STRING =
             "/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=code";
 }

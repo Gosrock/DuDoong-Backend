@@ -25,7 +25,7 @@ public class OrderLineTicketResponse {
             Order order, OrderLineItem orderLineItem, String userName, String ticketNos) {
         return OrderLineTicketResponse.builder()
                 .answers(orderLineItem.getOptionAnswerVos())
-                .orderNo(order.getId() + "-" + orderLineItem.getId())
+                .orderNo(order.getOrderNo() + "-" + orderLineItem.getId())
                 .ticketNos(ticketNos)
                 .ticketName(orderLineItem.getProductName())
                 .paymentAt(order.getApprovedAt())

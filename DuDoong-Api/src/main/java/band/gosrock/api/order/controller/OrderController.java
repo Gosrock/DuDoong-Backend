@@ -4,6 +4,7 @@ package band.gosrock.api.order.controller;
 import band.gosrock.api.order.model.dto.request.ConfirmOrderRequest;
 import band.gosrock.api.order.model.dto.request.CreateOrderRequest;
 import band.gosrock.api.order.model.dto.response.CreateOrderResponse;
+import band.gosrock.api.order.model.dto.response.OrderResponse;
 import band.gosrock.api.order.service.CancelOrderUseCase;
 import band.gosrock.api.order.service.ConfirmOrderUseCase;
 import band.gosrock.api.order.service.CreateOrderUseCase;
@@ -53,7 +54,7 @@ public class OrderController {
 
     @Operation(summary = "결제 승인요청 . successUrl 로 돌아온 웹페이지에서 query 로 받은 응답값을 서버로 보냅니당.")
     @PostMapping("/confirm")
-    public PaymentsResponse confirmOrder(@RequestBody ConfirmOrderRequest confirmOrderRequest) {
+    public OrderResponse confirmOrder(@RequestBody ConfirmOrderRequest confirmOrderRequest) {
         return confirmOrderUseCase.execute(confirmOrderRequest);
     }
 

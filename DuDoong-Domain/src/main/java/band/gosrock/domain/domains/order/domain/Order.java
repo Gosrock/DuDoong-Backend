@@ -1,6 +1,8 @@
 package band.gosrock.domain.domains.order.domain;
 
 
+import static band.gosrock.common.consts.DuDoongStatic.NO_START_NUMBER;
+
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.RefundInfoVo;
@@ -28,6 +30,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.PostPersist;
 import javax.persistence.PrePersist;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -44,12 +47,16 @@ public class Order extends BaseTimeEntity {
     private Long id;
 
     // 주문한 유저아이디
+    @Column(nullable = false)
     private Long userId;
 
     // 토스페이먼츠용 주문번호
     @Column(nullable = false)
     private String uuid;
 
+    @Column(nullable = false)
+    private String orderNo;
+    @Column(nullable = false)
     private String orderName;
 
     // 결제 방식 ( 토스 승인 이후 저장 )
@@ -68,6 +75,7 @@ public class Order extends BaseTimeEntity {
 
     // 주문 상태
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private OrderStatus orderStatus = OrderStatus.PENDING_PAYMENT;
 
     // 발급된 쿠폰 정보
@@ -83,6 +91,11 @@ public class Order extends BaseTimeEntity {
     @PrePersist
     public void addUUID() {
         this.uuid = UUID.randomUUID().toString();
+    }
+
+    @PostPersist
+    public void createOrderNo() {
+        this.orderNo = "R" + Long.sum(NO_START_NUMBER,this.id);
     }
 
     @Builder
