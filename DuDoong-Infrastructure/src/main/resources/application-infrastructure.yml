@@ -25,7 +25,9 @@ spring:
   config:
     activate:
       on-profile: staging
-
+logging:
+  level:
+    band.gosrock.infrastructure.outer.api.* : debug
 ---
 spring:
   config:

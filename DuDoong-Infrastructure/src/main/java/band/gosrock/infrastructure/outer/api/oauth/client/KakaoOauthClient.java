@@ -2,8 +2,8 @@ package band.gosrock.infrastructure.outer.api.oauth.client;
 
 
 import band.gosrock.infrastructure.outer.api.oauth.config.FeignOauthConfig;
+import band.gosrock.infrastructure.outer.api.oauth.dto.KakaoTokenResponse;
 import band.gosrock.infrastructure.outer.api.oauth.dto.OIDCPublicKeysResponse;
-import band.gosrock.infrastructure.outer.api.oauth.dto.OauthTokenResponse;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,7 +18,7 @@ public interface KakaoOauthClient {
 
     @PostMapping(
             "/oauth/token?grant_type=authorization_code&client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&code={CODE}&client_secret={CLIENT_SECRET}")
-    OauthTokenResponse kakaoAuth(
+    KakaoTokenResponse kakaoAuth(
             @PathVariable("CLIENT_ID") String clientId,
             @PathVariable("REDIRECT_URI") String redirectUri,
             @PathVariable("CODE") String code,
