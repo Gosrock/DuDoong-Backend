@@ -22,7 +22,7 @@ public class WithdrawOrderService {
     @RedissonLock(LockName = "결제취소", identifier = "orderUuid")
     public String cancelOrder(String orderUuid, Long userId) {
         Order order = orderAdaptor.findByOrderUuid(orderUuid);
-
+        // TODO : 관리자 권환으로 치환.
         order.validOwner(userId);
         order.cancel();
         PaymentsResponse paymentsResponse =
