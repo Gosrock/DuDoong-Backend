@@ -26,7 +26,7 @@ public class PaymentsResponse {
     // 통화 단위 원화 'KRW' 기본값
     private String currency;
     // 결제할 때 사용한 결제수단 카드, 가상계좌, 간편결제, 휴대폰, 계좌이체, 상품권(문화상품권, 도서문화상품권, 게임문화상품권)
-    private String method;
+    private PaymentMethod method;
     // 총 결제 금액
     private Long totalAmount;
     // 취소할 수 있는 금액(잔고)

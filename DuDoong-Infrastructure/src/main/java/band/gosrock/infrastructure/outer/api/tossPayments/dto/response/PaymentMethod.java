@@ -1,5 +1,9 @@
 package band.gosrock.infrastructure.outer.api.tossPayments.dto.response;
 
+
+import band.gosrock.infrastructure.outer.api.tossPayments.exception.PaymentsEnumNotMatchException;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import java.util.Arrays;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -14,4 +18,12 @@ public enum PaymentMethod {
     GIFT_CARD("상품권");
 
     private String kr;
+
+    @JsonCreator
+    static PaymentMethod findValue(String code) {
+        return Arrays.stream(PaymentMethod.values())
+                .filter(PaymentMethod -> PaymentMethod.getKr().equals(code))
+                .findFirst()
+                .orElseThrow(() -> PaymentsEnumNotMatchException.EXCEPTION);
+    }
 }

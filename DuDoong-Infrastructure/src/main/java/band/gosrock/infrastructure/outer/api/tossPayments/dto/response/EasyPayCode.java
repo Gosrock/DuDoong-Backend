@@ -1,6 +1,9 @@
 package band.gosrock.infrastructure.outer.api.tossPayments.dto.response;
 
 
+import band.gosrock.infrastructure.outer.api.tossPayments.exception.PaymentsEnumNotMatchException;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import java.util.Arrays;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -18,4 +21,12 @@ public enum EasyPayCode {
 
     private String kr;
     private String en;
+
+    @JsonCreator
+    static EasyPayCode findValue(String code) {
+        return Arrays.stream(EasyPayCode.values())
+                .filter(EasyPayCode -> EasyPayCode.getKr().equals(code))
+                .findFirst()
+                .orElseThrow(() -> PaymentsEnumNotMatchException.EXCEPTION);
+    }
 }

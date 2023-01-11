@@ -1,5 +1,6 @@
 package band.gosrock.infrastructure.outer.api.tossPayments.dto.response;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

@@ -47,7 +47,8 @@ public enum ErrorCode implements BaseErrorCode {
     ORDER_LINE_NOT_FOUND(BAD_REQUEST, "Order-404-2", "Order Line Not Fount"),
     ISSUED_TICKET_NOT_FOUND(NOT_FOUND, "IssuedTicket-404-1", "IssuedTicket Not Found"),
     ISSUED_TICKET_NOT_MATCHED_USER(
-            FORBIDDEN, "IssuedTicket-403-1", "IssuedTicket User Not Matched");
+            FORBIDDEN, "IssuedTicket-403-1", "IssuedTicket User Not Matched"),
+    TOSS_PAYMENTS_ENUM_NOT_MATCH(INTERNAL_SERVER, "INFRA-500-1", "토스페이먼츠 이넘값 관련 매칭 안된 문제입니다.");
     private int status;
     private String code;
     private String reason;
