@@ -26,7 +26,7 @@ public class PaymentsResponse {
     // 통화 단위 원화 'KRW' 기본값
     private String currency;
     // 결제할 때 사용한 결제수단 카드, 가상계좌, 간편결제, 휴대폰, 계좌이체, 상품권(문화상품권, 도서문화상품권, 게임문화상품권)
-    private PaymentMethod method;
+    private TossPaymentMethod method;
     // 총 결제 금액
     private Long totalAmount;
     // 취소할 수 있는 금액(잔고)
@@ -75,4 +75,13 @@ public class PaymentsResponse {
     private PaymentsCashReceipt cashReceipt;
     // 카드 프로모션 적용시. 적용안할듯
     private PaymentsCardPromotion discount;
+
+    public String getProviderName(){
+        if(TossPaymentMethod.CARD.equals(this.method)){
+            this.card.getIssuerCode().get
+        }else if(TossPaymentMethod.EASYPAY.equals(this.method)){
+
+        }
+
+    }
 }

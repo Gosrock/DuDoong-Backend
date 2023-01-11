@@ -9,10 +9,10 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum PaymentMethod {
+public enum TossPaymentMethod {
     CARD("카드"),
     VIRTUAL_ACCOUNT("가상계좌"),
-    EASY_PAY("간편결제"),
+    EASYPAY("간편결제"),
     MOBILE_PAY("휴대폰"),
     BANK_TRANSFER("계좌이체"),
     GIFT_CARD("상품권");
@@ -20,8 +20,8 @@ public enum PaymentMethod {
     private String kr;
 
     @JsonCreator
-    static PaymentMethod findValue(String code) {
-        return Arrays.stream(PaymentMethod.values())
+    static TossPaymentMethod findValue(String code) {
+        return Arrays.stream(TossPaymentMethod.values())
                 .filter(PaymentMethod -> PaymentMethod.getKr().equals(code))
                 .findFirst()
                 .orElseThrow(() -> PaymentsEnumNotMatchException.EXCEPTION);
