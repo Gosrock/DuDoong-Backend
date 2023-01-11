@@ -17,8 +17,6 @@ import band.gosrock.infrastructure.outer.api.oauth.dto.OauthTokenResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.io.IOException;
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,35 +46,26 @@ public class AuthController {
     private final WithDrawUseCase withDrawUseCase;
     private final LogoutUseCase logoutUseCase;
 
-    @Operation(summary = "kakao oauth 링크발급", description = "kakao 링크를 받아볼수 있습니다.")
+    @Operation(summary = "kakao oauth 링크발급 (백엔드용 )", description = "kakao 링크를 받아볼수 있습니다.")
+    @Tag(name = "카카오 oauth")
+    @GetMapping("/oauth/kakao/link/test")
+    public OauthLoginLinkResponse getKakaoOauthLinkTest() {
+        return registerUseCase.getKaKaoOauthLinkTest();
+    }
+
+    @Operation(summary = "kakao oauth 링크발급 (클라이언트용)", description = "kakao 링크를 받아볼수 있습니다.")
     @Tag(name = "카카오 oauth")
     @GetMapping("/oauth/kakao/link")
-    public OauthLoginLinkResponse getKakaoOauthLink() {
-        return registerUseCase.getKaKaoOauthLink();
+    public OauthLoginLinkResponse getKakaoOauthLink(
+            @RequestHeader(value = "referer", required = false) String referer) {
+        return registerUseCase.getKaKaoOauthLink(referer);
     }
 
     @Operation(summary = "code 요청받는 핸들러 클라이언트가 몰라도됩니다.", deprecated = true)
     @Tag(name = "카카오 oauth")
     @GetMapping("/oauth/kakao")
-    public void getCredentialFromKaKao(
-            @RequestParam("code") String code,
-            @RequestHeader(value = "referer", required = false) String referer,
-            @RequestHeader(value = "host", required = false) String host,
-            HttpServletResponse response)
-            throws IOException {
-        OauthTokenResponse credentialFromKaKao = registerUseCase.getCredentialFromKaKao(code);
-        log.info(referer);
-        String queryString =
-                String.format(
-                        "?idToken=%s&accessToken=%s&refreshToken=%s",
-                        credentialFromKaKao.getIdToken(),
-                        credentialFromKaKao.getAccessToken(),
-                        credentialFromKaKao.getRefreshToken());
-        if (referer != null) {
-            response.sendRedirect(referer + "/kakao/callback" + queryString);
-        } else {
-            response.sendRedirect("https://" + host + "/kakao/callback" + queryString);
-        }
+    public OauthTokenResponse getCredentialFromKaKao(@RequestParam("code") String code) {
+        return registerUseCase.getCredentialFromKaKao(code);
     }
 
     @Operation(summary = "개발용 회원가입입니다 클라이언트가 몰라도 됩니다.", deprecated = true)
