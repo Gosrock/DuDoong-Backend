@@ -1,5 +1,6 @@
 package band.gosrock.domain.common.vo;
 
+
 import band.gosrock.domain.domains.user.domain.User;
 import lombok.Getter;
 
@@ -7,9 +8,9 @@ import lombok.Getter;
 public class UserInfoVo {
 
     private final Long userId;
-    
+
     private final String userName;
-    
+
     private final String email;
 
     private final String phoneNumber;

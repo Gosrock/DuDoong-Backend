@@ -34,9 +34,9 @@ public class IssuedTicketAdaptor {
         return issuedTicketRepository.findAllByEvent_IdOrderByIdDesc(eventId, pageRequest);
     }
 
-    public Page<IssuedTicket> findAllByEventAndUserName(PageRequest pageRequest, Long eventId,
-        String userName) {
-        return issuedTicketRepository.findAllByEvent_IdAndUser_Profile_NameLike(eventId, userName,
-            pageRequest);
+    public Page<IssuedTicket> findAllByEventAndUserName(
+            PageRequest pageRequest, Long eventId, String userName) {
+        return issuedTicketRepository.findAllByEvent_IdAndUser_Profile_NameLike(
+                eventId, userName, pageRequest);
     }
 }

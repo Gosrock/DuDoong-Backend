@@ -36,10 +36,9 @@ public class IssuedTicketController {
     @Operation(summary = "[어드민 기능] 발급 티켓 리스트 가져오기 API 입니다.")
     @GetMapping
     public RetrieveIssuedTicketListResponse getIssuedTickets(
-        @RequestParam Long page,
-        @RequestParam Long eventId,
-        @RequestParam(required = false) String userName
-    ) {
+            @RequestParam Long page,
+            @RequestParam Long eventId,
+            @RequestParam(required = false) String userName) {
         return readIssuedTicketsUseCase.execute(page, eventId, userName);
     }
 }

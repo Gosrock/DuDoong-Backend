@@ -45,8 +45,11 @@ public class IssuedTicketOptionAnswer extends BaseTimeEntity {
         this.answer = answer;
     }
 
-    public static IssuedTicketOptionAnswer createIssuedTicketOptionAnswer(
+    public static IssuedTicketOptionAnswer cartOptionAnswerToIssuedTicketOptionAnswer(
             CartOptionAnswer cartOptionAnswer) {
-        return IssuedTicketOptionAnswer.builder().option(cartOptionAnswer.getOption()).answer(cartOptionAnswer.getAnswer()).build();
+        return IssuedTicketOptionAnswer.builder()
+                .option(cartOptionAnswer.getOption())
+                .answer(cartOptionAnswer.getAnswer())
+                .build();
     }
 }

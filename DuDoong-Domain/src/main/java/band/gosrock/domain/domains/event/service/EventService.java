@@ -4,7 +4,6 @@ package band.gosrock.domain.domains.event.service;
 import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
-import band.gosrock.domain.domains.event.exception.EventNotFoundException;
 import band.gosrock.domain.domains.event.exception.HostNotAuthEventException;
 import band.gosrock.domain.domains.event.repository.EventRepository;
 import java.util.Objects;

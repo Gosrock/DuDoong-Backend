@@ -39,9 +39,9 @@ public class IssuedTicketInfoVo {
     티켓 발급 시간
      */
     @JsonFormat(
-        shape = JsonFormat.Shape.STRING,
-        pattern = "yyyy-MM-dd hh:mm:ss",
-        timezone = "Asia/Seoul")
+            shape = JsonFormat.Shape.STRING,
+            pattern = "yyyy-MM-dd hh:mm:ss",
+            timezone = "Asia/Seoul")
     private final LocalDateTime createdAt;
 
     /*

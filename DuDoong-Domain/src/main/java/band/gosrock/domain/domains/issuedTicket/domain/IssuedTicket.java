@@ -119,14 +119,14 @@ public class IssuedTicket extends BaseTimeEntity {
 
     public static IssuedTicket create(CreateIssuedTicketRequest dto) {
         return IssuedTicket.builder()
-            .event(dto.getEvent())
-            .user(dto.getUser())
-            .orderLineId(dto.getOrderLineId())
-            .ticketItem(dto.getTicketItem())
-            .price(dto.getPrice())
-            .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
-            .issuedTicketOptionAnswers(new ArrayList<>())
-            .build();
+                .event(dto.getEvent())
+                .user(dto.getUser())
+                .orderLineId(dto.getOrderLineId())
+                .ticketItem(dto.getTicketItem())
+                .price(dto.getPrice())
+                .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
+                .issuedTicketOptionAnswers(new ArrayList<>())
+                .build();
     }
 
     @PrePersist
@@ -139,14 +139,16 @@ public class IssuedTicket extends BaseTimeEntity {
         this.issuedTicketNo = "T" + this.id;
     }
 
-    //todo: 옵션 정리
+    // todo: 옵션 정리
     public Money sumOptionPrice() {
-//        issuedTicketOptionAnswers.forEach(issuedTicketOptionAnswer -> {
-//            this.optionPrice = this.optionPrice.plus(issuedTicketOptionAnswer.getOption()
-//                .getAdditionalPrice());
-//        });
+        //        issuedTicketOptionAnswers.forEach(issuedTicketOptionAnswer -> {
+        //            this.optionPrice = this.optionPrice.plus(issuedTicketOptionAnswer.getOption()
+        //                .getAdditionalPrice());
+        //        });
         return issuedTicketOptionAnswers.stream()
-            .map(issuedTicketOptionAnswer -> issuedTicketOptionAnswer.getOption().getAdditionalPrice())
-            .reduce(Money.ZERO, Money::plus);
+                .map(
+                        issuedTicketOptionAnswer ->
+                                issuedTicketOptionAnswer.getOption().getAdditionalPrice())
+                .reduce(Money.ZERO, Money::plus);
     }
 }

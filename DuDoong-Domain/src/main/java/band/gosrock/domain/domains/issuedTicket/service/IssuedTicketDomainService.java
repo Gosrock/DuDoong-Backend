@@ -7,8 +7,8 @@ import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketOptionAnswer
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketOptionAnswer;
 import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketRequestDTOs;
-import band.gosrock.domain.domains.issuedTicket.dto.response.IssuedTicketDTO;
 import band.gosrock.domain.domains.issuedTicket.dto.response.CreateIssuedTicketResponse;
+import band.gosrock.domain.domains.issuedTicket.dto.response.IssuedTicketDTO;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketUserNotMatchedException;
 import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepository;
 import java.util.List;
@@ -40,17 +40,20 @@ public class IssuedTicketDomainService {
                                     /*
                                     티켓 옵션 답변 저장
                                      */
-                                    List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers = createIssuedTicketRequest.getOptionAnswers()
-                                        .stream().map(
-                                            IssuedTicketOptionAnswer::createIssuedTicketOptionAnswer)
-                                        .toList();
+                                    List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers =
+                                            createIssuedTicketRequest.getOptionAnswers().stream()
+                                                    .map(
+                                                            IssuedTicketOptionAnswer
+                                                                    ::cartOptionAnswerToIssuedTicketOptionAnswer)
+                                                    .toList();
                                     /*
                                     티켓 옵션 답변 매핑
                                      */
                                     issuedTicket.addOptionAnswers(issuedTicketOptionAnswers);
-                                    IssuedTicket saveIssuedTicket = issuedTicketAdaptor.save(issuedTicket);
+                                    IssuedTicket saveIssuedTicket =
+                                            issuedTicketAdaptor.save(issuedTicket);
                                     issuedTicketOptionAnswerAdaptor.saveAll(
-                                        issuedTicketOptionAnswers);
+                                            issuedTicketOptionAnswers);
                                     return new IssuedTicketDTO(saveIssuedTicket);
                                 })
                         .toList();
@@ -75,6 +78,7 @@ public class IssuedTicketDomainService {
 
     /**
      * 발급 티켓 리스트 가져오기 비즈니스 로직
+     *
      * @param page 페이지 번호
      * @param eventId 이벤트 id
      * @param userName 검색할 유저 이름
@@ -82,7 +86,8 @@ public class IssuedTicketDomainService {
      */
     @Transactional(readOnly = true)
     public Page<IssuedTicket> retrieveIssuedTickets(Long page, Long eventId, String userName) {
-        PageRequest pageRequest = PageRequest.of(Math.toIntExact(page-1), 10, Sort.by("id").descending());
+        PageRequest pageRequest =
+                PageRequest.of(Math.toIntExact(page - 1), 10, Sort.by("id").descending());
         if (userName == null) {
             return issuedTicketAdaptor.findAllByEvent(pageRequest, eventId);
         } else {
