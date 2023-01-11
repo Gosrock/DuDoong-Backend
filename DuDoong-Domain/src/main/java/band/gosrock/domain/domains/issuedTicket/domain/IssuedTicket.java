@@ -5,7 +5,6 @@ import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.issuedTicket.dto.request.PostIssuedTicketRequest;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
-import band.gosrock.domain.domains.user.domain.User;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -53,11 +52,9 @@ public class IssuedTicket extends BaseTimeEntity {
     private Long orderLineId;
 
     /*
-    티켓 발급 유저 (양방향)
+    티켓 발급 유저 id
      */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    private Long userId;
 
     /*
     발급 티켓의 item (양방향)
@@ -67,20 +64,22 @@ public class IssuedTicket extends BaseTimeEntity {
     private TicketItem ticketItem;
 
     /*
-    발급 티켓의 옵션들 (양방향)
+    발급 티켓의 옵션들 (단방향)
      */
-    @OneToMany(mappedBy = "issuedTicket", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<IssuedTicketOptionGroup> issuedTicketOptionGroups = new ArrayList<>();
-
-    public void insertIssuedTicketOptionGroups(IssuedTicketOptionGroup issuedTicketOptionGroup) {
-        issuedTicketOptionGroups.add(issuedTicketOptionGroup);
-    }
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "issued_ticket_id")
+    private List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers = new ArrayList<>();
 
     /*
     발급 티켓 uuid
      */
     @Column(nullable = false)
     private String uuid;
+
+    /*
+    발급 티켓 가격
+     */
+    private Long price;
 
     /*
     상태
@@ -95,24 +94,27 @@ public class IssuedTicket extends BaseTimeEntity {
     @Builder
     public IssuedTicket(
             Event event,
-            User user,
+            Long userId,
             TicketItem ticketItem,
+            Long price,
             IssuedTicketStatus issuedTicketStatus,
-            List<IssuedTicketOptionGroup> issuedTicketOptionGroups) {
+            List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers) {
         this.event = event;
-        this.user = user;
+        this.userId = userId;
         this.ticketItem = ticketItem;
+        this.price = price;
         this.issuedTicketStatus = issuedTicketStatus;
-        this.issuedTicketOptionGroups = issuedTicketOptionGroups;
+        this.issuedTicketOptionAnswers.addAll(issuedTicketOptionAnswers);
     }
 
     public static IssuedTicket create(PostIssuedTicketRequest dto) {
         return IssuedTicket.builder()
                 .event(dto.getEvent())
-                .user(dto.getUser())
+                .userId(dto.getUserId())
                 .ticketItem(dto.getTicketItem())
+                .price(dto.getPrice())
                 .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
-                .issuedTicketOptionGroups(new ArrayList<>())
+                .issuedTicketOptionAnswers(new ArrayList<>())
                 .build();
     }
 

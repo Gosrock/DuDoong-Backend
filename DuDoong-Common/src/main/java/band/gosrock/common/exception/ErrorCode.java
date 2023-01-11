@@ -44,7 +44,10 @@ public enum ErrorCode implements BaseErrorCode {
     ORDER_NOT_VALID(BAD_REQUEST, "Order-400-2", "Order Not Valid"),
     ORDER_NOT_PENDING(BAD_REQUEST, "Order-400-3", "Order Status Not Pending"),
     ORDER_NOT_SUPPORTED_METHOD(BAD_REQUEST, "Order-400-4", "Order Method Not Supported"),
-    ORDER_LINE_NOT_FOUND(BAD_REQUEST, "Order-404-2", "Order Line Not Fount");
+    ORDER_LINE_NOT_FOUND(BAD_REQUEST, "Order-404-2", "Order Line Not Fount"),
+    ISSUED_TICKET_NOT_FOUND(NOT_FOUND, "IssuedTicket-404-1", "IssuedTicket Not Found"),
+    ISSUED_TICKET_NOT_MATCHED_USER(
+            FORBIDDEN, "IssuedTicket-403-1", "IssuedTicket User Not Matched");
     private int status;
     private String code;
     private String reason;
