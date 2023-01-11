@@ -44,7 +44,7 @@ public class IssuedTicketDomainService {
                                             createIssuedTicketRequest.getOptionAnswers().stream()
                                                     .map(
                                                             IssuedTicketOptionAnswer
-                                                                    ::cartOptionAnswerToIssuedTicketOptionAnswer)
+                                                                    ::orderOptionAnswerToIssuedTicketOptionAnswer)
                                                     .toList();
                                     /*
                                     티켓 옵션 답변 매핑

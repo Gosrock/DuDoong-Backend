@@ -2,7 +2,7 @@ package band.gosrock.domain.domains.issuedTicket.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
-import band.gosrock.domain.domains.cart.domain.CartOptionAnswer;
+import band.gosrock.domain.domains.order.domain.OrderOptionAnswer;
 import band.gosrock.domain.domains.ticket_item.domain.Option;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -45,11 +45,11 @@ public class IssuedTicketOptionAnswer extends BaseTimeEntity {
         this.answer = answer;
     }
 
-    public static IssuedTicketOptionAnswer cartOptionAnswerToIssuedTicketOptionAnswer(
-            CartOptionAnswer cartOptionAnswer) {
+    public static IssuedTicketOptionAnswer orderOptionAnswerToIssuedTicketOptionAnswer(
+            OrderOptionAnswer orderOptionAnswer) {
         return IssuedTicketOptionAnswer.builder()
-                .option(cartOptionAnswer.getOption())
-                .answer(cartOptionAnswer.getAnswer())
+                .option(orderOptionAnswer.getOption())
+                .answer(orderOptionAnswer.getAnswer())
                 .build();
     }
 }
