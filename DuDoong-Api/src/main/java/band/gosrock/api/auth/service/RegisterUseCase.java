@@ -24,8 +24,12 @@ public class RegisterUseCase {
     private final UserDomainService userDomainService;
     private final TokenGenerateHelper tokenGenerateHelper;
 
-    public OauthLoginLinkResponse getKaKaoOauthLink() {
-        return new OauthLoginLinkResponse(kakaoOauthHelper.getKaKaoOauthLink());
+    public OauthLoginLinkResponse getKaKaoOauthLinkTest() {
+        return new OauthLoginLinkResponse(kakaoOauthHelper.getKaKaoOauthLinkTest());
+    }
+
+    public OauthLoginLinkResponse getKaKaoOauthLink(String referer) {
+        return new OauthLoginLinkResponse(kakaoOauthHelper.getKaKaoOauthLink(referer));
     }
 
     /**
