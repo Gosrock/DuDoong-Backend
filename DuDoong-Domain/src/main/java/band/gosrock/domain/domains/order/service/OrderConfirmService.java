@@ -42,7 +42,8 @@ public class OrderConfirmService {
                     paymentsResponse.getApprovedAt().toLocalDateTime(),
                     PaymentMethod.from(paymentsResponse.getMethod()),
                     Money.wons(paymentsResponse.getVat()),
-                    paymentsResponse.getProviderName()
+                    paymentsResponse.getProviderName(),
+                    paymentsResponse.getReceipt().getUrl()
                 );
             return order.getId();
         } catch (Exception exception) {

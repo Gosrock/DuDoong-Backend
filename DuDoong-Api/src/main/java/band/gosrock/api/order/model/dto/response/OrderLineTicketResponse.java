@@ -24,13 +24,14 @@ public class OrderLineTicketResponse {
     @Schema(description = "유저이름")
     private final String userName;
     @Schema(description = "금액")
-    private final Long supplyAmount;
+    private final String supplyAmount;
+    @Schema(description = "구매수량")
+    private final Long purchaseQuantity;
     @Schema(description = "옵션의 응답 목록")
     private List<OptionAnswerVo> answers;
 
     public static OrderLineTicketResponse of(
             Order order, OrderLineItem orderLineItem, String userName, String ticketNos) {
-//        orderLineItem.getTotalOrderLinePrice()
         return OrderLineTicketResponse.builder()
                 .answers(orderLineItem.getOptionAnswerVos())
                 .orderNo(order.getOrderNo() + "-" + orderLineItem.getId())
@@ -38,7 +39,8 @@ public class OrderLineTicketResponse {
                 .ticketName(orderLineItem.getProductName())
                 .paymentAt(order.getApprovedAt())
                 .userName(userName)
-                .supplyAmount(orderLineItem.getQuantity())
+            .supplyAmount(orderLineItem.getTotalOrderLinePrice().toString())
+            .purchaseQuantity(orderLineItem.getQuantity())
                 .build();
     }
 }

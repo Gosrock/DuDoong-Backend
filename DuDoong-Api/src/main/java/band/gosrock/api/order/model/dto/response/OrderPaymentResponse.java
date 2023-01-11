@@ -26,6 +26,8 @@ public class OrderPaymentResponse {
     private final String totalAmount;
     @Schema(description = "결제 상태" , defaultValue = "결제 완료")
     private final OrderStatus orderStatus;
+    @Schema(description = "영수증 주소" , defaultValue = "영수증주소")
+    private final String receiptUrl;
 
     public static OrderPaymentResponse from(Order order) {
         PaymentInfo totalPaymentInfo = order.getTotalPaymentInfo();
@@ -38,6 +40,7 @@ public class OrderPaymentResponse {
                 .totalAmount(totalPaymentInfo.getPaymentAmount().toString())
                 .couponName(order.getCouponName())
                 .orderStatus(order.getOrderStatus())
+            .receiptUrl(order.getReceiptUrl())
                 .build();
     }
 }

@@ -67,6 +67,9 @@ public class Order extends BaseTimeEntity {
     // 결제 공급자 정보 ex 카카오페이
     private String paymentProvider;
 
+    // 영수증 주소
+    private String receiptUrl;
+
     // 세금
     @Embedded
     @AttributeOverride(name = "amount", column = @Column(name = "vat_amount"))
@@ -198,11 +201,12 @@ public class Order extends BaseTimeEntity {
      * @param vat
      */
     public void afterPaymentAddInfo(
-            LocalDateTime approvedAt, PaymentMethod paymentMethod, Money vat,String provider) {
+            LocalDateTime approvedAt, PaymentMethod paymentMethod, Money vat,String provider,String receiptUrl) {
         this.approvedAt = approvedAt;
         this.paymentMethod = paymentMethod;
         this.vat = vat;
         this.paymentProvider = provider;
+        this.receiptUrl = receiptUrl;
     }
 
     /**
