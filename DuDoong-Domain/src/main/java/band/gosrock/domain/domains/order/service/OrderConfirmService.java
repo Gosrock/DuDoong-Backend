@@ -9,9 +9,7 @@ import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.PaymentMethod;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
 import band.gosrock.domain.domains.order.exception.NotSupportedOrderMethodException;
-import band.gosrock.infrastructure.outer.api.tossPayments.client.PaymentsCancelClient;
 import band.gosrock.infrastructure.outer.api.tossPayments.client.PaymentsConfirmClient;
-import band.gosrock.infrastructure.outer.api.tossPayments.dto.request.CancelPaymentsRequest;
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.request.ConfirmPaymentsRequest;
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.PaymentsResponse;
 import java.time.LocalDateTime;
@@ -24,9 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderConfirmService {
     private final PaymentsConfirmClient paymentsConfirmClient;
 
-    private final PaymentsCancelClient paymentsCancelClient;
     private final OrderAdaptor orderAdaptor;
 
+    private final CancelPaymentService cancelPaymentService;
     @RedissonLock(
             LockName = "주문승인",
             identifier = "orderId",
@@ -62,10 +60,7 @@ public class OrderConfirmService {
             return order.getId();
         } catch (Exception e) {
             // 내부오류시 결제 강제 취소
-            CancelPaymentsRequest cancelPaymentsRequest =
-                    CancelPaymentsRequest.builder().cancelReason("서버 내부 오류").build();
-            paymentsCancelClient.execute(
-                    confirmPaymentsRequest.getPaymentKey(), cancelPaymentsRequest);
+            cancelPaymentService.cancelPayment(order.getUuid(),confirmPaymentsRequest.getPaymentKey(),"서버 오류로 인한 환불")
             throw InvalidOrderException.EXCEPTION;
         }
     }

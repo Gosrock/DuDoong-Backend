@@ -10,6 +10,7 @@ import band.gosrock.api.order.service.ConfirmOrderUseCase;
 import band.gosrock.api.order.service.CreateOrderUseCase;
 import band.gosrock.api.order.service.CreateTossOrderUseCase;
 import band.gosrock.api.order.service.ReadOrderUseCase;
+import band.gosrock.api.order.service.RefundOrderUseCase;
 import band.gosrock.common.annotation.DevelopOnlyApi;
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.PaymentsResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,6 +35,8 @@ public class OrderController {
     private final CreateOrderUseCase createOrderUseCase;
     private final ConfirmOrderUseCase confirmOrderUseCase;
     private final CancelOrderUseCase cancelOrderUseCase;
+
+    private final RefundOrderUseCase refundOrderUseCase;
     private final ReadOrderUseCase readOrderUseCase;
 
     private final CreateTossOrderUseCase createTossOrderUseCase;
@@ -61,10 +64,16 @@ public class OrderController {
         return confirmOrderUseCase.execute(orderId, confirmOrderRequest);
     }
 
-    @Operation(summary = "결제 취소요청. 취소 요청의 주체는 주문 본인, 호스트 관리자.")
+    @Operation(summary = "결제 취소요청. 호스트 관리자가 결제를 취소 시킵니다.! (호스트 관리자용(관리자쪽에서 사용))")
     @PostMapping("/{order_id}/cancel")
     public void cancelOrder(@PathVariable("order_id") String orderId) {
-        cancelOrderUseCase.execute();
+        cancelOrderUseCase.execute(orderId);
+    }
+
+    @Operation(summary = "결제 환불요청. 본인이 구매한 오더를 환불 시킵니다.! (본인 용)")
+    @PostMapping("/{order_id}/refund")
+    public void refundOrder(@PathVariable("order_id") String orderId) {
+        refundOrderUseCase.execute(orderId);
     }
 
     @Operation(summary = "결제 조회. 결제 조회 권한은 주문 본인,  호스트 관리자.")
