@@ -41,14 +41,14 @@ public class ConfirmOrderUseCase {
         return getSpringProxy().getOrderResponse(confirmedOrderId, userName);
     }
 
-    public OrderResponse execute(String orderId, ConfirmOrderRequest confirmOrderRequest) {
+    public OrderResponse execute(String orderUuid, ConfirmOrderRequest confirmOrderRequest) {
         Long currentUserId = SecurityUtils.getCurrentUserId();
         User user = userAdaptor.queryUser(currentUserId);
         ConfirmPaymentsRequest confirmPaymentsRequest =
                 ConfirmPaymentsRequest.builder()
                         .paymentKey(confirmOrderRequest.getPaymentKey())
                         .amount(confirmOrderRequest.getAmount())
-                        .orderId(orderId)
+                        .orderId(orderUuid)
                         .build();
         Long confirmedOrderId = orderConfirmService.execute(confirmPaymentsRequest, currentUserId);
         return getOrderResponseWithNewTransaction(confirmedOrderId, user.getProfile().getName());

@@ -6,5 +6,5 @@ import band.gosrock.common.annotation.UseCase;
 @UseCase
 public class RefundOrderUseCase {
 
-    public void execute(String orderId) {}
+    public void execute(String orderUuid) {}
 }

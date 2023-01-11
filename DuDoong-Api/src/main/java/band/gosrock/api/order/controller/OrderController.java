@@ -43,9 +43,9 @@ public class OrderController {
 
     @Operation(summary = "토스페이먼츠에서 주문서를 생성합니다.(테스트용)")
     @DevelopOnlyApi
-    @PostMapping("/testToss/{order_id}")
-    public PaymentsResponse createTossOrderUseCase(@PathVariable("order_id") String orderId) {
-        return createTossOrderUseCase.execute(orderId);
+    @PostMapping("/testToss/{order_uuid}")
+    public PaymentsResponse createTossOrderUseCase(@PathVariable("order_uuid") String orderUuid) {
+        return createTossOrderUseCase.execute(orderUuid);
     }
 
     // TODO : 승인 결제 방식 도입하면서 좀더 이쁘게 만들 예정
@@ -57,28 +57,28 @@ public class OrderController {
     }
 
     @Operation(summary = "결제 승인요청 . successUrl 로 돌아온 웹페이지에서 query 로 받은 응답값을 서버로 보냅니당.")
-    @PostMapping("/{order_id}/confirm")
+    @PostMapping("/{order_uuid}/confirm")
     public OrderResponse confirmOrder(
-            @PathVariable("order_id") String orderId,
+            @PathVariable("order_uuid") String orderUuid,
             @RequestBody ConfirmOrderRequest confirmOrderRequest) {
-        return confirmOrderUseCase.execute(orderId, confirmOrderRequest);
+        return confirmOrderUseCase.execute(orderUuid, confirmOrderRequest);
     }
 
     @Operation(summary = "결제 취소요청. 호스트 관리자가 결제를 취소 시킵니다.! (호스트 관리자용(관리자쪽에서 사용))")
-    @PostMapping("/{order_id}/cancel")
-    public void cancelOrder(@PathVariable("order_id") String orderId) {
-        cancelOrderUseCase.execute(orderId);
+    @PostMapping("/{order_uuid}/cancel")
+    public void cancelOrder(@PathVariable("order_uuid") String orderUuid) {
+        cancelOrderUseCase.execute(orderUuid);
     }
 
     @Operation(summary = "결제 환불요청. 본인이 구매한 오더를 환불 시킵니다.! (본인 용)")
-    @PostMapping("/{order_id}/refund")
-    public void refundOrder(@PathVariable("order_id") String orderId) {
-        refundOrderUseCase.execute(orderId);
+    @PostMapping("/{order_uuid}/refund")
+    public void refundOrder(@PathVariable("order_uuid") String orderUuid) {
+        refundOrderUseCase.execute(orderUuid);
     }
 
     @Operation(summary = "결제 조회. 결제 조회 권한은 주문 본인,  호스트 관리자.")
-    @GetMapping("/{order_id}")
-    public OrderResponse readOrder(@PathVariable("order_id") String orderId) {
-        return readOrderUseCase.execute(orderId);
+    @GetMapping("/{order_uuid}")
+    public OrderResponse readOrder(@PathVariable("order_uuid") String orderUuid) {
+        return readOrderUseCase.execute(orderUuid);
     }
 }

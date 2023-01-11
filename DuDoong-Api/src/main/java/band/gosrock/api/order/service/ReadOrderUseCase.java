@@ -23,8 +23,8 @@ public class ReadOrderUseCase {
     private final UserAdaptor userAdaptor;
     private final IssuedTicketAdaptor issuedTicketAdaptor;
 
-    public OrderResponse execute(String orderId) {
-        Order order = orderAdaptor.findByOrderUuid(orderId);
+    public OrderResponse execute(String orderUuid) {
+        Order order = orderAdaptor.findByOrderUuid(orderUuid);
         Long currentUserId = SecurityUtils.getCurrentUserId();
         User user = userAdaptor.queryUser(currentUserId);
         List<OrderLineTicketResponse> orderLineTicketResponses =
