@@ -1,15 +1,16 @@
 package band.gosrock.api.order.controller;
 
 
+import band.gosrock.api.order.model.dto.request.ConfirmOrderRequest;
 import band.gosrock.api.order.model.dto.request.CreateOrderRequest;
 import band.gosrock.api.order.model.dto.response.CreateOrderResponse;
+import band.gosrock.api.order.model.dto.response.OrderResponse;
 import band.gosrock.api.order.service.CancelOrderUseCase;
 import band.gosrock.api.order.service.ConfirmOrderUseCase;
 import band.gosrock.api.order.service.CreateOrderUseCase;
 import band.gosrock.api.order.service.CreateTossOrderUseCase;
 import band.gosrock.api.order.service.ReadOrderUseCase;
 import band.gosrock.common.annotation.DevelopOnlyApi;
-import band.gosrock.infrastructure.outer.api.tossPayments.dto.request.ConfirmPaymentsRequest;
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.PaymentsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -44,18 +45,20 @@ public class OrderController {
         return createTossOrderUseCase.execute(orderId);
     }
 
-    @Operation(summary = "주문을 생성합니다.")
-    @PostMapping
+    // TODO : 승인 결제 방식 도입하면서 좀더 이쁘게 만들 예정
+    @Operation(summary = "카드 주문을 생성합니다. 쿠폰없을때 쿠폰아이디 null 로 보내주세염!")
+    @PostMapping("/card")
     public CreateOrderResponse createOrder(
             @RequestBody @Valid CreateOrderRequest createOrderRequest) {
         return createOrderUseCase.execute(createOrderRequest);
     }
 
-    @Operation(summary = "결제 승인요청 . successUrl 로 돌아온 웹페이지에서 query 로 받은 응답값을 응답값만 알고계시면 됩니다.")
-    @PostMapping("/confirm")
-    public PaymentsResponse confirmOrder(
-            @RequestBody ConfirmPaymentsRequest confirmPaymentsRequest) {
-        return confirmOrderUseCase.execute(confirmPaymentsRequest);
+    @Operation(summary = "결제 승인요청 . successUrl 로 돌아온 웹페이지에서 query 로 받은 응답값을 서버로 보냅니당.")
+    @PostMapping("/{order_id}/confirm")
+    public OrderResponse confirmOrder(
+            @PathVariable("order_id") String orderId,
+            @RequestBody ConfirmOrderRequest confirmOrderRequest) {
+        return confirmOrderUseCase.execute(orderId, confirmOrderRequest);
     }
 
     @Operation(summary = "결제 취소요청. 취소 요청의 주체는 주문 본인, 호스트 관리자.")
@@ -66,7 +69,7 @@ public class OrderController {
 
     @Operation(summary = "결제 조회. 결제 조회 권한은 주문 본인,  호스트 관리자.")
     @GetMapping("/{order_id}")
-    public void readOrder(@PathVariable("order_id") String orderId) {
-        readOrderUseCase.execute();
+    public OrderResponse readOrder(@PathVariable("order_id") String orderId) {
+        return readOrderUseCase.execute(orderId);
     }
 }

@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.event.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.common.vo.RefundInfoVo;
 import java.time.LocalDateTime;
 import javax.persistence.*;
 import lombok.AccessLevel;
@@ -91,5 +92,9 @@ public class Event extends BaseTimeEntity {
         this.content = content;
         this.ticketingStartAt = ticketingStartAt;
         this.ticketingEndAt = ticketingEndAt;
+    }
+
+    public RefundInfoVo getRefundInfoVo() {
+        return RefundInfoVo.from(startAt);
     }
 }
