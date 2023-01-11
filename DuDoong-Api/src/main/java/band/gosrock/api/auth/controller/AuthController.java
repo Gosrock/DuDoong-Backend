@@ -57,16 +57,32 @@ public class AuthController {
     @Tag(name = "카카오 oauth")
     @GetMapping("/oauth/kakao/link")
     public OauthLoginLinkResponse getKakaoOauthLink(
-            @RequestHeader(value = "referer", required = false) String referer) {
+            @RequestHeader(value = "referer", required = false) String referer,
+            @RequestHeader(value = "host", required = false) String host) {
+        // 스테이징, prod 서버에 배포된 클라이언트에 해당
+        if (referer.contains(host)) {
+            log.info("/oauth/kakao" + host);
+            String format = String.format("https://%s/", host);
+            return registerUseCase.getKaKaoOauthLink(format);
+        }
+        // 프론트 개발자가 로컬에서 개발 테스트 할 때 해당 https://localhost:3000/
         return registerUseCase.getKaKaoOauthLink(referer);
     }
 
-    @Operation(summary = "code 요청받는 핸들러 클라이언트가 몰라도됩니다.", deprecated = true)
+    @Operation(summary = "code 요청받는 핸들러 클라이언트가 몰라도됩니다.")
     @Tag(name = "카카오 oauth")
     @GetMapping("/oauth/kakao")
     public OauthTokenResponse getCredentialFromKaKao(
             @RequestParam("code") String code,
-            @RequestHeader(value = "referer", required = false) String referer) {
+            @RequestHeader(value = "referer", required = false) String referer,
+            @RequestHeader(value = "host", required = false) String host) {
+        // 스테이징, prod 서버에 배포된 클라이언트에 해당
+        if (referer.contains(host)) {
+            log.info("/oauth/kakao" + host);
+            String format = String.format("https://%s/", host);
+            return registerUseCase.getCredentialFromKaKao(code, format);
+        }
+        // 프론트 개발자가 로컬에서 개발 테스트 할 때 해당 https://localhost:3000/
         return registerUseCase.getCredentialFromKaKao(code, referer);
     }
 
