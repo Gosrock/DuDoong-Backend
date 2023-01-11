@@ -12,8 +12,8 @@ import band.gosrock.domain.domains.user.domain.OauthProvider;
 import band.gosrock.infrastructure.outer.api.oauth.client.KakaoInfoClient;
 import band.gosrock.infrastructure.outer.api.oauth.client.KakaoOauthClient;
 import band.gosrock.infrastructure.outer.api.oauth.dto.KakaoInformationResponse;
+import band.gosrock.infrastructure.outer.api.oauth.dto.KakaoTokenResponse;
 import band.gosrock.infrastructure.outer.api.oauth.dto.OIDCPublicKeysResponse;
-import band.gosrock.infrastructure.outer.api.oauth.dto.OauthTokenResponse;
 import band.gosrock.infrastructure.outer.api.oauth.dto.UnlinkKaKaoTarget;
 import lombok.RequiredArgsConstructor;
 
@@ -43,7 +43,16 @@ public class KakaoOauthHelper {
                         referer + "kakao/callback");
     }
 
-    public OauthTokenResponse getOauthToken(String code) {
+    public KakaoTokenResponse getOauthToken(String code, String referer) {
+
+        return kakaoOauthClient.kakaoAuth(
+                oauthProperties.getKakaoClientId(),
+                referer + "kakao/callback",
+                code,
+                oauthProperties.getKakaoClientSecret());
+    }
+
+    public KakaoTokenResponse getOauthTokenTest(String code) {
 
         return kakaoOauthClient.kakaoAuth(
                 oauthProperties.getKakaoClientId(),
