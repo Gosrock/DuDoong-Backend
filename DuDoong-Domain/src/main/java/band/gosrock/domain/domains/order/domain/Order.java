@@ -227,4 +227,10 @@ public class Order extends BaseTimeEntity {
         }
         return "사용하지 않음";
     }
+
+    public void validPgAndOrderAmountIsEqual(Money pgAmount) {
+        if (!pgAmount.equals(getTotalPaymentPrice())) {
+            throw InvalidOrderException.EXCEPTION;
+        }
+    }
 }

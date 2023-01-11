@@ -25,6 +25,7 @@ public class OrderConfirmService {
     private final OrderAdaptor orderAdaptor;
 
     private final CancelPaymentService cancelPaymentService;
+
     @RedissonLock(
             LockName = "주문승인",
             identifier = "orderId",
@@ -39,11 +40,7 @@ public class OrderConfirmService {
         // TODO : 요청 보내고 난뒤에 도메인 로직 내부에서 실패하면 결제 강제 취소 로직 AOP로 개발 예정
         try {
             // 실제 거래된 금액이 다를때
-            if (!paymentsResponse
-                    .getTotalAmount()
-                    .equals(order.getTotalPaymentPrice().longValue())) {
-                throw InvalidOrderException.EXCEPTION;
-            }
+            order.validPgAndOrderAmountIsEqual(Money.wons(paymentsResponse.getTotalAmount()));
             // 수정필요
             LocalDateTime approveAt = paymentsResponse.getApprovedAt().toLocalDateTime();
             Money vat = Money.wons(paymentsResponse.getVat());
@@ -60,7 +57,8 @@ public class OrderConfirmService {
             return order.getId();
         } catch (Exception e) {
             // 내부오류시 결제 강제 취소
-            cancelPaymentService.cancelPayment(order.getUuid(),confirmPaymentsRequest.getPaymentKey(),"서버 오류로 인한 환불")
+            cancelPaymentService.cancelPayment(
+                    order.getUuid(), confirmPaymentsRequest.getPaymentKey(), "서버 오류로 인한 환불");
             throw InvalidOrderException.EXCEPTION;
         }
     }

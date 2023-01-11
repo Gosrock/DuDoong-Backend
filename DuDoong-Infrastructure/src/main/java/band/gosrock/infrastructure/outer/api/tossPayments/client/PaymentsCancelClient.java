@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 public interface PaymentsCancelClient {
     @PostMapping("/v1/payments/{paymentKey}/cancel")
     PaymentsResponse execute(
-        @RequestHeader("Idempotency-Key") String idempotencyKey,
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
             @PathVariable("paymentKey") String paymentKey,
             @RequestBody CancelPaymentsRequest cancelPaymentsRequest);
 }
