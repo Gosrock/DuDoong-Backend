@@ -12,6 +12,9 @@ import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepositor
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 
 @DomainService
@@ -52,9 +55,26 @@ public class IssuedTicketDomainService {
     @Transactional(readOnly = true)
     public IssuedTicketDTO retrieveIssuedTicket(Long currentUserId, Long issuedTicketId) {
         IssuedTicket issuedTicket = issuedTicketAdaptor.find(issuedTicketId);
-        if (!Objects.equals(issuedTicket.getUserId(), currentUserId)) {
+        if (!Objects.equals(issuedTicket.getUser().getId(), currentUserId)) {
             throw IssuedTicketUserNotMatchedException.EXCEPTION;
         }
         return new IssuedTicketDTO(issuedTicket);
+    }
+
+    /**
+     * 발급 티켓 리스트 가져오기 비즈니스 로직
+     * @param page 페이지 번호
+     * @param eventId 이벤트 id
+     * @param userName 검색할 유저 이름
+     * @return Page<IssuedTicket>
+     */
+    @Transactional(readOnly = true)
+    public Page<IssuedTicket> retrieveIssuedTickets(Long page, Long eventId, String userName) {
+        PageRequest pageRequest = PageRequest.of(Math.toIntExact(page-1), 10, Sort.by("id").descending());
+        if (userName == null) {
+            return issuedTicketAdaptor.findAllByEvent(pageRequest, eventId);
+        } else {
+            return issuedTicketAdaptor.findAllByEventAndUserName(pageRequest, eventId, userName);
+        }
     }
 }

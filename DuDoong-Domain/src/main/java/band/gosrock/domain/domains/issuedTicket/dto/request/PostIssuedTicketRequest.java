@@ -3,6 +3,7 @@ package band.gosrock.domain.domains.issuedTicket.dto.request;
 
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.domain.domains.user.domain.User;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -23,7 +24,7 @@ public class PostIssuedTicketRequest {
     /*
     티켓 발급한 유저 id
      */
-    private final Long userId;
+    private final User user;
 
     /*
     발급 티켓 가격

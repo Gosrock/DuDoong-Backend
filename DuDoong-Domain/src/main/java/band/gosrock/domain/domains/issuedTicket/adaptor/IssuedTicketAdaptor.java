@@ -7,6 +7,8 @@ import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketNotFoundEx
 import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 @Adaptor
 @RequiredArgsConstructor
@@ -26,5 +28,15 @@ public class IssuedTicketAdaptor {
         return issuedTicketRepository
                 .findById(issuedTicket)
                 .orElseThrow(() -> IssuedTicketNotFoundException.EXCEPTION);
+    }
+
+    public Page<IssuedTicket> findAllByEvent(PageRequest pageRequest, Long eventId) {
+        return issuedTicketRepository.findAllByEvent_IdOrderByIdDesc(eventId, pageRequest);
+    }
+
+    public Page<IssuedTicket> findAllByEventAndUserName(PageRequest pageRequest, Long eventId,
+        String userName) {
+        return issuedTicketRepository.findAllByEvent_IdAndUser_Profile_NameLike(eventId, userName,
+            pageRequest);
     }
 }
