@@ -74,7 +74,7 @@ public class OrderLineItem extends BaseTimeEntity {
                 .reduce(Money.ZERO, Money::plus);
     }
 
-    protected Money getTotalOrderLinePrice() {
+    public Money getTotalOrderLinePrice() {
         Money itemPrice = ticketItem.getPrice();
         return itemPrice.plus(getTotalOptionAnswersPrice()).times(quantity);
     }
