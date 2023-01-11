@@ -13,11 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 @Slf4j
-public class CancelPaymentService {
+public class WithdrawPaymentService {
     private final PaymentsCancelClient paymentsCancelClient;
 
-    public PaymentsResponse cancelPayment(String orderUuid, String paymentKey, String reason) {
-        log.info("환불처리 " + orderUuid + " : " + paymentKey);
+    public PaymentsResponse execute(String orderUuid, String paymentKey, String reason) {
+        log.info("취소처리 " + orderUuid + " : " + paymentKey + reason);
         return paymentsCancelClient.execute(
                 orderUuid,
                 paymentKey,

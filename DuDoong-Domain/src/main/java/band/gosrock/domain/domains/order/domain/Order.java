@@ -8,8 +8,7 @@ import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
-import band.gosrock.domain.domains.order.exception.NotMyOrderException;
-import band.gosrock.domain.domains.order.exception.NotPendingOrderException;
+import band.gosrock.domain.domains.order.exception.NotOwnerOrderException;
 import band.gosrock.domain.domains.order.exception.OrderLineNotFountException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -61,16 +60,17 @@ public class Order extends BaseTimeEntity {
     // 결제 방식 ( 토스 승인 이후 저장 )
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod = PaymentMethod.DEFAULT;
-    // 토스 결제 승인후 결제 긁힌 시간
+    // 토스 결제 승인후 결제 긁힌 시간 ( 토스 승인 이후 저장 )
     private LocalDateTime approvedAt;
 
-    // 결제 공급자 정보 ex 카카오페이
+    // 결제 공급자 정보 ex 카카오페이 ( 토스 승인 이후 저장 )
     private String paymentProvider;
 
-    // 영수증 주소
+    // 영수증 주소 ( 토스 승인 이후 저장 )
     private String receiptUrl;
-
-    // 세금
+    // 승인된 거래키 ( 취소 때 사용 )
+    private String paymentKey;
+    // 세금 ( 토스 승인 이후 저장 )
     @Embedded
     @AttributeOverride(name = "amount", column = @Column(name = "vat_amount"))
     private Money vat;
@@ -81,7 +81,7 @@ public class Order extends BaseTimeEntity {
     // 주문 상태
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private OrderStatus orderStatus = OrderStatus.PENDING;
+    private OrderStatus orderStatus = OrderStatus.READY;
 
     // 발급된 쿠폰 정보
     @JoinColumn(name = "issued_coupon_id", updatable = false)
@@ -173,24 +173,21 @@ public class Order extends BaseTimeEntity {
                         .build();
     }
 
-    /**
-     * 오더의 결제를 승인 합니다.
-     *
-     * @param currentUserId
-     * @param requestAmount
-     */
-    public void confirmPaymentOrder(Long currentUserId, Money requestAmount) {
-        if (!userId.equals(currentUserId)) {
-            throw NotMyOrderException.EXCEPTION;
-        }
+    /** 오더의 결제를 승인 합니다. */
+    public void confirmPaymentOrder(Money requestAmount) {
+
         if (!getTotalPaymentPrice().equals(requestAmount)) {
             throw InvalidOrderException.EXCEPTION;
         }
-        if (!orderStatus.equals(OrderStatus.PENDING_PAYMENT)) {
-            throw NotPendingOrderException.EXCEPTION;
-        }
+        orderStatus.validCanOrder();
         // TODO: 재고량 비교 필요?
         orderStatus = OrderStatus.CONFIRM;
+    }
+
+    public void validOwner(Long currentUserId) {
+        if (!userId.equals(currentUserId)) {
+            throw NotOwnerOrderException.EXCEPTION;
+        }
     }
 
     /**
@@ -205,12 +202,14 @@ public class Order extends BaseTimeEntity {
             PaymentMethod paymentMethod,
             Money vat,
             String provider,
-            String receiptUrl) {
+            String receiptUrl,
+            String paymentKey) {
         this.approvedAt = approvedAt;
         this.paymentMethod = paymentMethod;
         this.vat = vat;
         this.paymentProvider = provider;
         this.receiptUrl = receiptUrl;
+        this.paymentKey = paymentKey;
     }
 
     /**
@@ -244,5 +243,15 @@ public class Order extends BaseTimeEntity {
         if (!pgAmount.equals(getTotalPaymentPrice())) {
             throw InvalidOrderException.EXCEPTION;
         }
+    }
+
+    public void cancel() {
+        orderStatus.validCanCancel();
+        this.orderStatus = OrderStatus.CANCELED;
+    }
+
+    public void refund() {
+        orderStatus.validCanRefund();
+        this.orderStatus = OrderStatus.REFUND;
     }
 }
