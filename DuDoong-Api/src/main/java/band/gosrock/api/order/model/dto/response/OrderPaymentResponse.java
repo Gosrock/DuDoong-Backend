@@ -12,21 +12,28 @@ import lombok.Getter;
 @Getter
 @Builder
 public class OrderPaymentResponse {
-    @Schema(description = "결제 수단" , defaultValue = "간편결제")
+    @Schema(description = "결제 수단", defaultValue = "간편결제")
     private final PaymentMethod paymentMethod;
-    @Schema(description = "공급자" , defaultValue = "카카오페이")
+
+    @Schema(description = "공급자", defaultValue = "카카오페이")
     private final String provider;
-    @Schema(description = "공급가액 (금액)" , defaultValue = "12000원")
+
+    @Schema(description = "공급가액 (금액)", defaultValue = "12000원")
     private final String supplyAmount;
-    @Schema(description = "할인 금액" , defaultValue = "1000원")
+
+    @Schema(description = "할인 금액", defaultValue = "1000원")
     private final String discountAmount;
-    @Schema(description = "할인쿠폰 이름" , defaultValue = "사용하지 않음")
+
+    @Schema(description = "할인쿠폰 이름", defaultValue = "사용하지 않음")
     private final String couponName;
-    @Schema(description = "총 결제 금액" , defaultValue = "11000원")
+
+    @Schema(description = "총 결제 금액", defaultValue = "11000원")
     private final String totalAmount;
-    @Schema(description = "결제 상태" , defaultValue = "결제 완료")
+
+    @Schema(description = "결제 상태", defaultValue = "결제 완료")
     private final OrderStatus orderStatus;
-    @Schema(description = "영수증 주소" , defaultValue = "영수증주소")
+
+    @Schema(description = "영수증 주소", defaultValue = "영수증주소")
     private final String receiptUrl;
 
     public static OrderPaymentResponse from(Order order) {
@@ -40,7 +47,7 @@ public class OrderPaymentResponse {
                 .totalAmount(totalPaymentInfo.getPaymentAmount().toString())
                 .couponName(order.getCouponName())
                 .orderStatus(order.getOrderStatus())
-            .receiptUrl(order.getReceiptUrl())
+                .receiptUrl(order.getReceiptUrl())
                 .build();
     }
 }

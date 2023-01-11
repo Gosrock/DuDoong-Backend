@@ -19,12 +19,15 @@ public class CreateCartResponse {
 
     private final Long cartId;
 
+    private final Long totalQuantity;
+
     public static CreateCartResponse of(List<CartItemResponse> cartItemResponses, Cart cart) {
         return CreateCartResponse.builder()
                 .items(cartItemResponses)
                 .totalPrice(cart.getTotalPrice().toString())
                 .cartId(cart.getId())
                 .title(cart.getCartName())
+                .totalQuantity(cart.getTotalQuantity())
                 .build();
     }
 }

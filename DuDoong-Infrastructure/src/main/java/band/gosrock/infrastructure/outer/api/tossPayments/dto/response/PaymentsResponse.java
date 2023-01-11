@@ -76,10 +76,10 @@ public class PaymentsResponse {
     // 카드 프로모션 적용시. 적용안할듯
     private PaymentsCardPromotion discount;
 
-    public String getProviderName(){
-        if(TossPaymentMethod.CARD.equals(this.method)){
+    public String getProviderName() {
+        if (TossPaymentMethod.CARD.equals(this.method)) {
             return this.card.getIssuerCode().getKr();
-        }else if(TossPaymentMethod.EASYPAY.equals(this.method)){
+        } else if (TossPaymentMethod.EASYPAY.equals(this.method)) {
             return this.easyPay.getProvider().getKr();
         }
         return "";

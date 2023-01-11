@@ -12,12 +12,16 @@ import lombok.Getter;
 public class CreateOrderResponse {
     @Schema(description = "UUId")
     private final String orderId;
+
     @Schema(description = "상품명")
     private final String orderName;
+
     @Schema(description = "고객이메일")
     private final String customerEmail;
+
     @Schema(description = "고객이름")
     private final String customerName;
+
     @Schema(description = "결제금액")
     private final Long amount;
 

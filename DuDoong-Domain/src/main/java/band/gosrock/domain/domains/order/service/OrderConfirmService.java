@@ -43,8 +43,7 @@ public class OrderConfirmService {
                     PaymentMethod.from(paymentsResponse.getMethod()),
                     Money.wons(paymentsResponse.getVat()),
                     paymentsResponse.getProviderName(),
-                    paymentsResponse.getReceipt().getUrl()
-                );
+                    paymentsResponse.getReceipt().getUrl());
             return order.getId();
         } catch (Exception exception) {
             // 내부오류시 결제 강제 취소

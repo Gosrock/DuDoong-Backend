@@ -201,7 +201,11 @@ public class Order extends BaseTimeEntity {
      * @param vat
      */
     public void afterPaymentAddInfo(
-            LocalDateTime approvedAt, PaymentMethod paymentMethod, Money vat,String provider,String receiptUrl) {
+            LocalDateTime approvedAt,
+            PaymentMethod paymentMethod,
+            Money vat,
+            String provider,
+            String receiptUrl) {
         this.approvedAt = approvedAt;
         this.paymentMethod = paymentMethod;
         this.vat = vat;

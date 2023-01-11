@@ -75,8 +75,11 @@ public class OrderLineItem extends BaseTimeEntity {
     }
 
     public Money getTotalOrderLinePrice() {
-        Money itemPrice = ticketItem.getPrice();
-        return itemPrice.plus(getTotalOptionAnswersPrice()).times(quantity);
+        return getItemPrice().plus(getTotalOptionAnswersPrice()).times(quantity);
+    }
+
+    public Money getItemPrice() {
+        return ticketItem.getPrice();
     }
 
     public RefundInfoVo getRefundInfo() {

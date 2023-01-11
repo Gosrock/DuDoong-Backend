@@ -13,20 +13,27 @@ import lombok.Getter;
 @Getter
 @Builder
 public class OrderLineTicketResponse {
-    @Schema(description = "티켓명" ,defaultValue = "일반티켓")
+    @Schema(description = "티켓명", defaultValue = "일반티켓")
     private final String ticketName;
-    @Schema(description = "예매 번호" ,defaultValue = "R1000001-123")
+
+    @Schema(description = "예매 번호", defaultValue = "R1000001-123")
     private final String orderNo;
-    @Schema(description = "티켓 번호" ,defaultValue = "T1000001 ~ T1000002 (2매)")
+
+    @Schema(description = "티켓 번호", defaultValue = "T1000001 ~ T1000002 (2매)")
     private final String ticketNos;
+
     @Schema(description = "구매 일시")
     private final LocalDateTime paymentAt;
+
     @Schema(description = "유저이름")
     private final String userName;
+
     @Schema(description = "금액")
-    private final String supplyAmount;
+    private final String orderLinePrice;
+
     @Schema(description = "구매수량")
     private final Long purchaseQuantity;
+
     @Schema(description = "옵션의 응답 목록")
     private List<OptionAnswerVo> answers;
 
@@ -39,8 +46,8 @@ public class OrderLineTicketResponse {
                 .ticketName(orderLineItem.getProductName())
                 .paymentAt(order.getApprovedAt())
                 .userName(userName)
-            .supplyAmount(orderLineItem.getTotalOrderLinePrice().toString())
-            .purchaseQuantity(orderLineItem.getQuantity())
+                .orderLinePrice(orderLineItem.getTotalOrderLinePrice().toString())
+                .purchaseQuantity(orderLineItem.getQuantity())
                 .build();
     }
 }

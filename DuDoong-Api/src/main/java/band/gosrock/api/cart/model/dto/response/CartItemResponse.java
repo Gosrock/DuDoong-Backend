@@ -2,6 +2,7 @@ package band.gosrock.api.cart.model.dto.response;
 
 
 import band.gosrock.domain.common.vo.OptionAnswerVo;
+import band.gosrock.domain.domains.cart.domain.CartLineItem;
 import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,7 +16,15 @@ public class CartItemResponse {
     // 응답 목록
     private List<OptionAnswerVo> answers;
 
-    public static CartItemResponse of(String name, List<OptionAnswerVo> optionAnswerVos) {
-        return CartItemResponse.builder().answers(optionAnswerVos).name(name).build();
+    private String itemPrice;
+    private String cartLinePrice;
+
+    public static CartItemResponse of(String name, CartLineItem cartLineItem) {
+        return CartItemResponse.builder()
+                .answers(cartLineItem.getOptionAnswerVos())
+                .name(name)
+                .cartLinePrice(cartLineItem.getTotalCartLinePrice().toString())
+                .itemPrice(cartLineItem.getItemPrice().toString())
+                .build();
     }
 }
