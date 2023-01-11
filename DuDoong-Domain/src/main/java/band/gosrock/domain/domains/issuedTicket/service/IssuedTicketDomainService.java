@@ -3,10 +3,12 @@ package band.gosrock.domain.domains.issuedTicket.service;
 
 import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
+import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketOptionAnswerAdaptor;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
-import band.gosrock.domain.domains.issuedTicket.dto.request.PostIssuedTicketRequestDTOs;
+import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketOptionAnswer;
+import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketRequestDTOs;
 import band.gosrock.domain.domains.issuedTicket.dto.response.IssuedTicketDTO;
-import band.gosrock.domain.domains.issuedTicket.dto.response.PostIssuedTicketResponse;
+import band.gosrock.domain.domains.issuedTicket.dto.response.CreateIssuedTicketResponse;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketUserNotMatchedException;
 import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepository;
 import java.util.List;
@@ -24,25 +26,35 @@ public class IssuedTicketDomainService {
 
     private final IssuedTicketRepository issuedTicketRepository;
     private final IssuedTicketAdaptor issuedTicketAdaptor;
+    private final IssuedTicketOptionAnswerAdaptor issuedTicketOptionAnswerAdaptor;
 
     @Transactional
-    public PostIssuedTicketResponse createIssuedTicket(
-            PostIssuedTicketRequestDTOs postIssuedTicketRequestDTOs) {
+    public CreateIssuedTicketResponse createIssuedTicket(
+            CreateIssuedTicketRequestDTOs createIssuedTicketRequestDTOs) {
         List<IssuedTicketDTO> issuedTickets =
-                postIssuedTicketRequestDTOs.getPostIssuedTicketRequests().stream()
+                createIssuedTicketRequestDTOs.getCreateIssuedTicketRequests().stream()
                         .map(
-                                postIssuedTicketRequest -> {
+                                createIssuedTicketRequest -> {
                                     IssuedTicket issuedTicket =
-                                            IssuedTicket.create(postIssuedTicketRequest);
+                                            IssuedTicket.create(createIssuedTicketRequest);
                                     /*
-                                    Todo: 발급 티켓 관련 옵션들 처리 로직 어떻게 전달 받을지 논의 후 작성 예정
+                                    티켓 옵션 답변 저장
                                      */
-                                    //                issuedTicketRepository.save(issuedTicket);
-                                    issuedTicketAdaptor.save(issuedTicket);
-                                    return new IssuedTicketDTO(issuedTicket);
+                                    List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers = createIssuedTicketRequest.getOptionAnswers()
+                                        .stream().map(
+                                            IssuedTicketOptionAnswer::createIssuedTicketOptionAnswer)
+                                        .toList();
+                                    /*
+                                    티켓 옵션 답변 매핑
+                                     */
+                                    issuedTicket.addOptionAnswers(issuedTicketOptionAnswers);
+                                    IssuedTicket saveIssuedTicket = issuedTicketAdaptor.save(issuedTicket);
+                                    issuedTicketOptionAnswerAdaptor.saveAll(
+                                        issuedTicketOptionAnswers);
+                                    return new IssuedTicketDTO(saveIssuedTicket);
                                 })
                         .toList();
-        return new PostIssuedTicketResponse(issuedTickets);
+        return new CreateIssuedTicketResponse(issuedTickets);
     }
 
     /**

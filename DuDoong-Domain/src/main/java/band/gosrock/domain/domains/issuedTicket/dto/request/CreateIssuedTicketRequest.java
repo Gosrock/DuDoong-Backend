@@ -1,15 +1,17 @@
 package band.gosrock.domain.domains.issuedTicket.dto.request;
 
 
+import band.gosrock.domain.domains.cart.domain.CartOptionAnswer;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.user.domain.User;
+import java.util.List;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class PostIssuedTicketRequest {
+public class CreateIssuedTicketRequest {
 
     /*
     발급 티켓의 이벤트 id
@@ -19,7 +21,7 @@ public class PostIssuedTicketRequest {
     /*
     발급 티켓의 orderline id
      */
-    //    private Long orderLineId;
+    private Long orderLineId;
 
     /*
     티켓 발급한 유저 id
@@ -37,7 +39,7 @@ public class PostIssuedTicketRequest {
     private final TicketItem ticketItem;
 
     /*
-    발급 티켓에 걸려오는 옵션들 (Collection Map으로 처리)
+    발급 티켓에 걸려오는 옵션들 CartOptionAnswer를 List로 받습니다.
      */
-    //    private Map<Long, Long> option;
+    private final List<CartOptionAnswer> optionAnswers;
 }

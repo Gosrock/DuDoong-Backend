@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.issuedTicket.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.domains.cart.domain.CartOptionAnswer;
 import band.gosrock.domain.domains.ticket_item.domain.Option;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -45,7 +46,7 @@ public class IssuedTicketOptionAnswer extends BaseTimeEntity {
     }
 
     public static IssuedTicketOptionAnswer createIssuedTicketOptionAnswer(
-            Option option, String answer) {
-        return IssuedTicketOptionAnswer.builder().option(option).answer(answer).build();
+            CartOptionAnswer cartOptionAnswer) {
+        return IssuedTicketOptionAnswer.builder().option(cartOptionAnswer.getOption()).answer(cartOptionAnswer.getAnswer()).build();
     }
 }
