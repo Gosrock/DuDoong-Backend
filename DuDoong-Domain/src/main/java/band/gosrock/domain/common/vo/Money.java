@@ -2,6 +2,7 @@ package band.gosrock.domain.common.vo;
 
 
 import band.gosrock.domain.common.converter.BigDecimalScale6WithBankersRoundingConverter;
+import com.fasterxml.jackson.annotation.JsonValue;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Objects;
@@ -97,6 +98,7 @@ public class Money {
         return Objects.hashCode(amount);
     }
 
+    @JsonValue
     public String toString() {
         return amount.longValue() + "원";
     }

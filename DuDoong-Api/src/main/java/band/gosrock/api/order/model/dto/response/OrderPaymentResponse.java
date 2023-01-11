@@ -1,6 +1,7 @@
 package band.gosrock.api.order.model.dto.response;
 
 
+import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
 import band.gosrock.domain.domains.order.domain.PaymentInfo;
@@ -19,16 +20,16 @@ public class OrderPaymentResponse {
     private final String provider;
 
     @Schema(description = "공급가액 (금액)", defaultValue = "12000원")
-    private final String supplyAmount;
+    private final Money supplyAmount;
 
     @Schema(description = "할인 금액", defaultValue = "1000원")
-    private final String discountAmount;
+    private final Money discountAmount;
 
     @Schema(description = "할인쿠폰 이름", defaultValue = "사용하지 않음")
     private final String couponName;
 
     @Schema(description = "총 결제 금액", defaultValue = "11000원")
-    private final String totalAmount;
+    private final Money totalAmount;
 
     @Schema(description = "결제 상태", defaultValue = "결제 완료")
     private final OrderStatus orderStatus;
@@ -42,9 +43,9 @@ public class OrderPaymentResponse {
         return OrderPaymentResponse.builder()
                 .paymentMethod(order.getPaymentMethod())
                 .provider(order.getPaymentProvider())
-                .discountAmount(totalPaymentInfo.getDiscountAmount().toString())
-                .supplyAmount(totalPaymentInfo.getSupplyAmount().toString())
-                .totalAmount(totalPaymentInfo.getPaymentAmount().toString())
+                .discountAmount(totalPaymentInfo.getDiscountAmount())
+                .supplyAmount(totalPaymentInfo.getSupplyAmount())
+                .totalAmount(totalPaymentInfo.getPaymentAmount())
                 .couponName(order.getCouponName())
                 .orderStatus(order.getOrderStatus())
                 .receiptUrl(order.getReceiptUrl())

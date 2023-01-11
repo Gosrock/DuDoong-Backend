@@ -1,6 +1,7 @@
 package band.gosrock.api.order.model.dto.response;
 
 
+import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.user.domain.Profile;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -23,7 +24,7 @@ public class CreateOrderResponse {
     private final String customerName;
 
     @Schema(description = "결제금액")
-    private final Long amount;
+    private final Money amount;
 
     public static CreateOrderResponse from(Order order, Profile profile) {
         return CreateOrderResponse.builder()
@@ -31,7 +32,7 @@ public class CreateOrderResponse {
                 .customerName(profile.getName())
                 .orderName(order.getOrderName())
                 .orderId(order.getUuid())
-                .amount(order.getTotalPaymentPrice().longValue())
+                .amount(order.getTotalPaymentPrice())
                 .build();
     }
 }

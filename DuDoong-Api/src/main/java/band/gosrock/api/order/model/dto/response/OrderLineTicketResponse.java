@@ -1,6 +1,7 @@
 package band.gosrock.api.order.model.dto.response;
 
 
+import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.OptionAnswerVo;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;
@@ -29,7 +30,7 @@ public class OrderLineTicketResponse {
     private final String userName;
 
     @Schema(description = "금액")
-    private final String orderLinePrice;
+    private final Money orderLinePrice;
 
     @Schema(description = "구매수량")
     private final Long purchaseQuantity;
@@ -46,7 +47,7 @@ public class OrderLineTicketResponse {
                 .ticketName(orderLineItem.getProductName())
                 .paymentAt(order.getApprovedAt())
                 .userName(userName)
-                .orderLinePrice(orderLineItem.getTotalOrderLinePrice().toString())
+                .orderLinePrice(orderLineItem.getTotalOrderLinePrice())
                 .purchaseQuantity(orderLineItem.getQuantity())
                 .build();
     }
