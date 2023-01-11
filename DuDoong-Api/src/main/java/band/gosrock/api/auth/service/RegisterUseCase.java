@@ -14,7 +14,6 @@ import band.gosrock.domain.domains.user.domain.OauthInfo;
 import band.gosrock.domain.domains.user.domain.Profile;
 import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.domain.domains.user.service.UserDomainService;
-import band.gosrock.infrastructure.outer.api.oauth.dto.KakaoTokenResponse;
 import lombok.RequiredArgsConstructor;
 
 @UseCase
@@ -63,9 +62,9 @@ public class RegisterUseCase {
         return tokenGenerateHelper.execute(user);
     }
 
-    public OauthTokenResponse getCredentialFromKaKao(String code,String referer) {
+    public OauthTokenResponse getCredentialFromKaKao(String code, String referer) {
 
-        return OauthTokenResponse.from(kakaoOauthHelper.getOauthToken(code,referer));
+        return OauthTokenResponse.from(kakaoOauthHelper.getOauthToken(code, referer));
     }
 
     public OauthTokenResponse getCredentialFromKaKaoTest(String code) {
