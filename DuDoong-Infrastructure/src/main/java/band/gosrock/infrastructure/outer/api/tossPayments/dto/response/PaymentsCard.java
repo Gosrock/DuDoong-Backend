@@ -16,7 +16,7 @@ public class PaymentsCard {
     private Boolean useCardPoint;
     private String cardType;
     private String ownerType;
-    private String acquireStatus;
+    private CardAcquireStatus acquireStatus;
 
     private Boolean isInterestFree;
     private String interestPayer;
