@@ -66,14 +66,14 @@ public class OrderController {
 
     @Operation(summary = "결제 취소요청. 호스트 관리자가 결제를 취소 시킵니다.! (호스트 관리자용(관리자쪽에서 사용))")
     @PostMapping("/{order_uuid}/cancel")
-    public void cancelOrder(@PathVariable("order_uuid") String orderUuid) {
-        cancelOrderUseCase.execute(orderUuid);
+    public OrderResponse cancelOrder(@PathVariable("order_uuid") String orderUuid) {
+        return cancelOrderUseCase.execute(orderUuid);
     }
 
     @Operation(summary = "결제 환불요청. 본인이 구매한 오더를 환불 시킵니다.! (본인 용)")
     @PostMapping("/{order_uuid}/refund")
-    public void refundOrder(@PathVariable("order_uuid") String orderUuid) {
-        refundOrderUseCase.execute(orderUuid);
+    public OrderResponse refundOrder(@PathVariable("order_uuid") String orderUuid) {
+        return refundOrderUseCase.execute(orderUuid);
     }
 
     @Operation(summary = "결제 조회. 결제 조회 권한은 주문 본인,  호스트 관리자.")
