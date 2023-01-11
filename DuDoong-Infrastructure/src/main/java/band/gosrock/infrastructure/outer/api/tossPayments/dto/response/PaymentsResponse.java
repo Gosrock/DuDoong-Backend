@@ -78,10 +78,10 @@ public class PaymentsResponse {
 
     public String getProviderName(){
         if(TossPaymentMethod.CARD.equals(this.method)){
-            this.card.getIssuerCode().get
+            return this.card.getIssuerCode().getKr();
         }else if(TossPaymentMethod.EASYPAY.equals(this.method)){
-
+            return this.easyPay.getProvider().getKr();
         }
-
+        return "";
     }
 }
