@@ -29,6 +29,7 @@ public class Cart extends BaseTimeEntity {
     @Column(name = "cart_id")
     private Long id;
 
+    @Column(nullable = false)
     private Long userId;
 
     private String cartName;

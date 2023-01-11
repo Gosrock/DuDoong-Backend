@@ -18,17 +18,17 @@ public class PaymentInfo {
 
     // 총 결제금액
     @Embedded
-    @AttributeOverride(name = "amount", column = @Column(name = "paymentAmount"))
+    @AttributeOverride(name = "amount", column = @Column(name = "payment_amount"))
     private Money paymentAmount;
 
     // 공급가액
 
     @Embedded
-    @AttributeOverride(name = "amount", column = @Column(name = "supplyAmount"))
+    @AttributeOverride(name = "amount", column = @Column(name = "supply_amount"))
     private Money supplyAmount;
     // 총 할인 금액
     @Embedded
-    @AttributeOverride(name = "amount", column = @Column(name = "discountAmount"))
+    @AttributeOverride(name = "amount", column = @Column(name = "discount_amount"))
     private Money discountAmount;
 
     @Builder

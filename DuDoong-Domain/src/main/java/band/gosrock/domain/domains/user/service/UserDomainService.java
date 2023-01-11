@@ -62,4 +62,12 @@ public class UserDomainService {
         User user = userAdaptor.queryUser(userId);
         user.withDrawUser();
     }
+
+    /*
+    유저 id로 유저 가져오기 작성 - 민준
+     */
+    @Transactional(readOnly = true)
+    public User retrieveUser(Long userId) {
+        return userAdaptor.queryUser(userId);
+    }
 }

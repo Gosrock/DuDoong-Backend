@@ -5,8 +5,6 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.format.annotation.DateTimeFormat.ISO;
 
 @Getter
 @NoArgsConstructor
@@ -52,10 +50,8 @@ public class PaymentsResponse {
     private String status;
 
     // 결제 일어난 시간정보
-    @DateTimeFormat(iso = ISO.DATE_TIME)
     private ZonedDateTime requestedAt;
     // 결제 승인이 일어난 시간정보
-    @DateTimeFormat(iso = ISO.DATE_TIME)
     private ZonedDateTime approvedAt;
     // 에스크로 사용여부
     private Boolean useEscrow;

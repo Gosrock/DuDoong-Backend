@@ -27,12 +27,20 @@ public class KakaoOauthHelper {
 
     private final OauthOIDCHelper oauthOIDCHelper;
 
-    public String getKaKaoOauthLink() {
+    public String getKaKaoOauthLinkTest() {
         return oauthProperties.getKakaoBaseUrl()
                 + String.format(
                         KAKAO_OAUTH_QUERY_STRING,
                         oauthProperties.getKakaoClientId(),
                         oauthProperties.getKakaoRedirectUrl());
+    }
+
+    public String getKaKaoOauthLink(String referer) {
+        return oauthProperties.getKakaoBaseUrl()
+                + String.format(
+                        KAKAO_OAUTH_QUERY_STRING,
+                        oauthProperties.getKakaoClientId(),
+                        referer + "kakao/callback");
     }
 
     public OauthTokenResponse getOauthToken(String code) {
