@@ -3,6 +3,7 @@ package band.gosrock.domain.domains.issuedTicket.adaptor;
 
 import band.gosrock.common.annotation.Adaptor;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
+import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketNotFoundException;
 import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -14,5 +15,11 @@ public class IssuedTicketAdaptor {
 
     public IssuedTicket save(IssuedTicket issuedTicket) {
         return issuedTicketRepository.save(issuedTicket);
+    }
+
+    public IssuedTicket find(Long issuedTicket) {
+        return issuedTicketRepository
+                .findById(issuedTicket)
+                .orElseThrow(() -> IssuedTicketNotFoundException.EXCEPTION);
     }
 }
