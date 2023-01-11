@@ -4,6 +4,7 @@ package band.gosrock.api.auth.controller;
 import band.gosrock.api.auth.model.dto.request.RegisterRequest;
 import band.gosrock.api.auth.model.dto.response.AvailableRegisterResponse;
 import band.gosrock.api.auth.model.dto.response.OauthLoginLinkResponse;
+import band.gosrock.api.auth.model.dto.response.OauthTokenResponse;
 import band.gosrock.api.auth.model.dto.response.OauthUserInfoResponse;
 import band.gosrock.api.auth.model.dto.response.TokenAndUserResponse;
 import band.gosrock.api.auth.service.LoginUseCase;
@@ -13,7 +14,7 @@ import band.gosrock.api.auth.service.RefreshUseCase;
 import band.gosrock.api.auth.service.RegisterUseCase;
 import band.gosrock.api.auth.service.WithDrawUseCase;
 import band.gosrock.common.annotation.DevelopOnlyApi;
-import band.gosrock.infrastructure.outer.api.oauth.dto.OauthTokenResponse;
+import band.gosrock.infrastructure.outer.api.oauth.dto.KakaoTokenResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -64,8 +65,8 @@ public class AuthController {
     @Operation(summary = "code 요청받는 핸들러 클라이언트가 몰라도됩니다.", deprecated = true)
     @Tag(name = "카카오 oauth")
     @GetMapping("/oauth/kakao")
-    public OauthTokenResponse getCredentialFromKaKao(@RequestParam("code") String code) {
-        return registerUseCase.getCredentialFromKaKao(code);
+    public OauthTokenResponse getCredentialFromKaKao(@RequestParam("code") String code,@RequestHeader(value = "referer", required = false) String referer) {
+        return registerUseCase.getCredentialFromKaKao(code,referer);
     }
 
     @Operation(summary = "개발용 회원가입입니다 클라이언트가 몰라도 됩니다.", deprecated = true)
