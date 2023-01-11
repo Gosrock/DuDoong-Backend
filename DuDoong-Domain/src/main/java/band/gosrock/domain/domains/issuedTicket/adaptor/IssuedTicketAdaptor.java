@@ -36,7 +36,7 @@ public class IssuedTicketAdaptor {
 
     public Page<IssuedTicket> findAllByEventAndUserName(
             PageRequest pageRequest, Long eventId, String userName) {
-        return issuedTicketRepository.findAllByEvent_IdAndUser_Profile_NameLike(
+        return issuedTicketRepository.findAllByEvent_IdAndUser_Profile_NameContaining(
                 eventId, userName, pageRequest);
     }
 }

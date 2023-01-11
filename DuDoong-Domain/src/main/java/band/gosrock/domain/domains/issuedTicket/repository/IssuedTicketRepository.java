@@ -14,6 +14,6 @@ public interface IssuedTicketRepository
 
     Page<IssuedTicket> findAllByEvent_IdOrderByIdDesc(Long eventId, Pageable pageable);
 
-    Page<IssuedTicket> findAllByEvent_IdAndUser_Profile_NameLike(
+    Page<IssuedTicket> findAllByEvent_IdAndUser_Profile_NameContaining(
             Long eventId, String userName, Pageable pageable);
 }
