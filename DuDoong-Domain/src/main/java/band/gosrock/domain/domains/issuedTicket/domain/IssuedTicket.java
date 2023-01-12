@@ -155,32 +155,38 @@ public class IssuedTicket extends BaseTimeEntity {
     }
 
     public IssuedTicketInfoVo toIssuedTicketInfoVo(IssuedTicket issuedTicket) {
-        return IssuedTicketInfoVo.builder().issuedTicketId(issuedTicket.getId())
-            .issuedTicketNo(issuedTicket.getIssuedTicketNo()).uuid(issuedTicket.getUuid())
-            .ticketName(issuedTicket.getTicketItem().getName()).ticketPrice(issuedTicket.getPrice())
-            .createdAt(issuedTicket.getCreatedAt())
-            .issuedTicketStatus(issuedTicket.getIssuedTicketStatus())
-            .optionPrice(issuedTicket.sumOptionPrice()).build();
+        return IssuedTicketInfoVo.builder()
+                .issuedTicketId(issuedTicket.getId())
+                .issuedTicketNo(issuedTicket.getIssuedTicketNo())
+                .uuid(issuedTicket.getUuid())
+                .ticketName(issuedTicket.getTicketItem().getName())
+                .ticketPrice(issuedTicket.getPrice())
+                .createdAt(issuedTicket.getCreatedAt())
+                .issuedTicketStatus(issuedTicket.getIssuedTicketStatus())
+                .optionPrice(issuedTicket.sumOptionPrice())
+                .build();
     }
 
-    public static CreateIssuedTicketResponse orderLineItemToIssuedTickets(CreateIssuedTicketDTO dto) {
+    public static CreateIssuedTicketResponse orderLineItemToIssuedTickets(
+            CreateIssuedTicketDTO dto) {
         long quantity = dto.getOrderLineItem().getQuantity();
         List<IssuedTicket> createIssuedTickets = new ArrayList<>();
-        List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers = dto.getOrderLineItem()
-            .getOrderOptionAnswer().stream().map(
-                IssuedTicketOptionAnswer::orderOptionAnswerToIssuedTicketOptionAnswer).toList();
-        for (long i = 1 ; i<=quantity; i++) {
+        List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers =
+                dto.getOrderLineItem().getOrderOptionAnswer().stream()
+                        .map(IssuedTicketOptionAnswer::orderOptionAnswerToIssuedTicketOptionAnswer)
+                        .toList();
+        for (long i = 1; i <= quantity; i++) {
             createIssuedTickets.add(
-                IssuedTicket.builder().event(dto.getOrderLineItem().getTicketItem().getEvent())
-                    .orderLineId(dto.getOrderLineItem()
-                        .getId()).user(dto.getUser())
-                    .price(dto.getOrderLineItem().getTicketItem().getPrice())
-                    .ticketItem(dto.getOrderLineItem()
-                        .getTicketItem()).issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
-                    .issuedTicketOptionAnswers(issuedTicketOptionAnswers)
-                    .build());
+                    IssuedTicket.builder()
+                            .event(dto.getOrderLineItem().getTicketItem().getEvent())
+                            .orderLineId(dto.getOrderLineItem().getId())
+                            .user(dto.getUser())
+                            .price(dto.getOrderLineItem().getTicketItem().getPrice())
+                            .ticketItem(dto.getOrderLineItem().getTicketItem())
+                            .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
+                            .issuedTicketOptionAnswers(issuedTicketOptionAnswers)
+                            .build());
         }
         return new CreateIssuedTicketResponse(createIssuedTickets, issuedTicketOptionAnswers);
     }
-
 }

@@ -75,9 +75,12 @@ public class User extends BaseTimeEntity {
     }
 
     public UserInfoVo toUserInfoVo(User user) {
-        return UserInfoVo.builder().userId(user.getId()).userName(user.getProfile().getName())
-            .email(user.getProfile().getEmail()).phoneNumber(user.getProfile().getPhoneNumber())
-            .profileImage(user.getProfile().getProfileImage()).build();
+        return UserInfoVo.builder()
+                .userId(user.getId())
+                .userName(user.getProfile().getName())
+                .email(user.getProfile().getEmail())
+                .phoneNumber(user.getProfile().getPhoneNumber())
+                .profileImage(user.getProfile().getProfileImage())
+                .build();
     }
-
 }

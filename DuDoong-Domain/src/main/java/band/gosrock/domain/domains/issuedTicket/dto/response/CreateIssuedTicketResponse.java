@@ -13,8 +13,9 @@ public class CreateIssuedTicketResponse {
 
     private final List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers;
 
-    public CreateIssuedTicketResponse(List<IssuedTicket> issuedTickets,
-        List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers) {
+    public CreateIssuedTicketResponse(
+            List<IssuedTicket> issuedTickets,
+            List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers) {
         this.issuedTickets = issuedTickets;
         this.issuedTicketOptionAnswers = issuedTicketOptionAnswers;
     }

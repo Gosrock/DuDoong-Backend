@@ -2,7 +2,6 @@ package band.gosrock.domain.domains.event.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
-import band.gosrock.domain.common.vo.EventInfoVo;
 import band.gosrock.domain.common.vo.RefundInfoVo;
 import java.time.LocalDateTime;
 import javax.persistence.*;

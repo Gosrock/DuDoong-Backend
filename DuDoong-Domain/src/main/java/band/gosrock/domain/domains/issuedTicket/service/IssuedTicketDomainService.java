@@ -30,8 +30,7 @@ public class IssuedTicketDomainService {
     private final IssuedTicketOptionAnswerAdaptor issuedTicketOptionAnswerAdaptor;
 
     @Transactional
-    public void createIssuedTicket(
-            CreateIssuedTicketRequestDTOs createIssuedTicketRequestDTOs) {
+    public void createIssuedTicket(CreateIssuedTicketRequestDTOs createIssuedTicketRequestDTOs) {
         List<IssuedTicketDTO> issuedTickets =
                 createIssuedTicketRequestDTOs.getCreateIssuedTicketRequests().stream()
                         .map(
@@ -58,17 +57,19 @@ public class IssuedTicketDomainService {
                                     return new IssuedTicketDTO(saveIssuedTicket);
                                 })
                         .toList();
-//        return new CreateIssuedTicketResponse(issuedTickets);
+        //        return new CreateIssuedTicketResponse(issuedTickets);
     }
 
     @Transactional
     public void createIssuedTicket2(List<CreateIssuedTicketDTO> createIssuedTicketDTOs) {
-        createIssuedTicketDTOs.forEach(dto -> {
-            CreateIssuedTicketResponse responseDTO = IssuedTicket.orderLineItemToIssuedTickets(
-                dto);
-            issuedTicketAdaptor.saveAll(responseDTO.getIssuedTickets());
-            issuedTicketOptionAnswerAdaptor.saveAll(responseDTO.getIssuedTicketOptionAnswers());
-        });
+        createIssuedTicketDTOs.forEach(
+                dto -> {
+                    CreateIssuedTicketResponse responseDTO =
+                            IssuedTicket.orderLineItemToIssuedTickets(dto);
+                    issuedTicketAdaptor.saveAll(responseDTO.getIssuedTickets());
+                    issuedTicketOptionAnswerAdaptor.saveAll(
+                            responseDTO.getIssuedTicketOptionAnswers());
+                });
     }
 
     /**
