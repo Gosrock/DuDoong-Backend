@@ -19,7 +19,7 @@ public class EventService {
 
     public void checkEventHost(Long hostId, Long eventId) {
         Event event = eventAdaptor.findById(eventId);
-        if (!Objects.equals(event.getHostId(), hostId)) {
+        if (!event.getHostId().equals(hostId)) {
             throw HostNotAuthEventException.EXCEPTION;
         }
     }
