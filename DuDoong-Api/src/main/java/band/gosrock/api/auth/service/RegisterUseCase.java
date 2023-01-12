@@ -5,6 +5,7 @@ import band.gosrock.api.auth.model.dto.KakaoUserInfoDto;
 import band.gosrock.api.auth.model.dto.request.RegisterRequest;
 import band.gosrock.api.auth.model.dto.response.AvailableRegisterResponse;
 import band.gosrock.api.auth.model.dto.response.OauthLoginLinkResponse;
+import band.gosrock.api.auth.model.dto.response.OauthTokenResponse;
 import band.gosrock.api.auth.model.dto.response.TokenAndUserResponse;
 import band.gosrock.api.auth.service.helper.KakaoOauthHelper;
 import band.gosrock.api.auth.service.helper.TokenGenerateHelper;
@@ -13,7 +14,6 @@ import band.gosrock.domain.domains.user.domain.OauthInfo;
 import band.gosrock.domain.domains.user.domain.Profile;
 import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.domain.domains.user.service.UserDomainService;
-import band.gosrock.infrastructure.outer.api.oauth.dto.OauthTokenResponse;
 import lombok.RequiredArgsConstructor;
 
 @UseCase
@@ -24,8 +24,12 @@ public class RegisterUseCase {
     private final UserDomainService userDomainService;
     private final TokenGenerateHelper tokenGenerateHelper;
 
-    public OauthLoginLinkResponse getKaKaoOauthLink() {
-        return new OauthLoginLinkResponse(kakaoOauthHelper.getKaKaoOauthLink());
+    public OauthLoginLinkResponse getKaKaoOauthLinkTest() {
+        return new OauthLoginLinkResponse(kakaoOauthHelper.getKaKaoOauthLinkTest());
+    }
+
+    public OauthLoginLinkResponse getKaKaoOauthLink(String referer) {
+        return new OauthLoginLinkResponse(kakaoOauthHelper.getKaKaoOauthLink(referer));
     }
 
     /**
@@ -35,7 +39,7 @@ public class RegisterUseCase {
      * @return
      */
     public TokenAndUserResponse upsertKakaoOauthUser(String code) {
-        String oauthAccessToken = kakaoOauthHelper.getOauthToken(code).getAccessToken();
+        String oauthAccessToken = kakaoOauthHelper.getOauthTokenTest(code).getAccessToken();
         KakaoUserInfoDto oauthUserInfo = kakaoOauthHelper.getUserInfo(oauthAccessToken);
 
         Profile profile = oauthUserInfo.toProfile();
@@ -58,7 +62,13 @@ public class RegisterUseCase {
         return tokenGenerateHelper.execute(user);
     }
 
-    public OauthTokenResponse getCredentialFromKaKao(String code) {
-        return kakaoOauthHelper.getOauthToken(code);
+    public OauthTokenResponse getCredentialFromKaKao(String code, String referer) {
+
+        return OauthTokenResponse.from(kakaoOauthHelper.getOauthToken(code, referer));
+    }
+
+    public OauthTokenResponse getCredentialFromKaKaoTest(String code) {
+
+        return OauthTokenResponse.from(kakaoOauthHelper.getOauthTokenTest(code));
     }
 }

@@ -50,7 +50,9 @@ public enum ErrorCode implements BaseErrorCode {
             FORBIDDEN, "IssuedTicket-403-1", "IssuedTicket User Not Matched"),
     TOSS_PAYMENTS_ENUM_NOT_MATCH(INTERNAL_SERVER, "INFRA-500-1", "토스페이먼츠 이넘값 관련 매칭 안된 문제입니다."),
     ORDER_CANNOT_CANCEL(BAD_REQUEST, "Order-404-3", "주문을 취소할 수 없는 상태입니다."),
-    ORDER_CANNOT_REFUND(BAD_REQUEST, "Order-404-4", "주문을 환불할 수 없는 상태입니다.");
+    ORDER_CANNOT_REFUND(BAD_REQUEST, "Order-404-4", "주문을 환불할 수 없는 상태입니다."),
+    EVENT_NOT_FOUND(NOT_FOUND, "Event-404-1", "Event Not Found"),
+    Host_NOT_AUTH_EVENT(FORBIDDEN, "Event-403-1", "Host Not Auth Event");
     private int status;
     private String code;
     private String reason;

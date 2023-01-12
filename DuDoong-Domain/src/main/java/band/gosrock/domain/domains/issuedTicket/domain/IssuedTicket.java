@@ -2,9 +2,11 @@ package band.gosrock.domain.domains.issuedTicket.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.domain.Event;
-import band.gosrock.domain.domains.issuedTicket.dto.request.PostIssuedTicketRequest;
+import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketRequest;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.domain.domains.user.domain.User;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -54,7 +56,9 @@ public class IssuedTicket extends BaseTimeEntity {
     /*
     티켓 발급 유저 id
      */
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "userId")
+    private User user;
 
     /*
     발급 티켓의 item (양방향)
@@ -69,6 +73,10 @@ public class IssuedTicket extends BaseTimeEntity {
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "issued_ticket_id")
     private List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers = new ArrayList<>();
+
+    public void addOptionAnswers(List<IssuedTicketOptionAnswer> answers) {
+        issuedTicketOptionAnswers.addAll(answers);
+    }
 
     /*
     발급 티켓 uuid
@@ -94,23 +102,26 @@ public class IssuedTicket extends BaseTimeEntity {
     @Builder
     public IssuedTicket(
             Event event,
-            Long userId,
+            User user,
+            Long orderLineId,
             TicketItem ticketItem,
             Long price,
             IssuedTicketStatus issuedTicketStatus,
             List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers) {
         this.event = event;
-        this.userId = userId;
+        this.user = user;
+        this.orderLineId = orderLineId;
         this.ticketItem = ticketItem;
         this.price = price;
         this.issuedTicketStatus = issuedTicketStatus;
         this.issuedTicketOptionAnswers.addAll(issuedTicketOptionAnswers);
     }
 
-    public static IssuedTicket create(PostIssuedTicketRequest dto) {
+    public static IssuedTicket create(CreateIssuedTicketRequest dto) {
         return IssuedTicket.builder()
                 .event(dto.getEvent())
-                .userId(dto.getUserId())
+                .user(dto.getUser())
+                .orderLineId(dto.getOrderLineId())
                 .ticketItem(dto.getTicketItem())
                 .price(dto.getPrice())
                 .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
@@ -126,5 +137,18 @@ public class IssuedTicket extends BaseTimeEntity {
     @PostPersist
     public void createIssuedTicketNo() {
         this.issuedTicketNo = "T" + this.id;
+    }
+
+    // todo: 옵션 정리
+    public Money sumOptionPrice() {
+        //        issuedTicketOptionAnswers.forEach(issuedTicketOptionAnswer -> {
+        //            this.optionPrice = this.optionPrice.plus(issuedTicketOptionAnswer.getOption()
+        //                .getAdditionalPrice());
+        //        });
+        return issuedTicketOptionAnswers.stream()
+                .map(
+                        issuedTicketOptionAnswer ->
+                                issuedTicketOptionAnswer.getOption().getAdditionalPrice())
+                .reduce(Money.ZERO, Money::plus);
     }
 }
