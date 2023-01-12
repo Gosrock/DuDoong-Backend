@@ -2,7 +2,12 @@ package band.gosrock.api.config;
 
 
 import band.gosrock.api.auth.model.dto.response.OauthLoginLinkResponse;
+import band.gosrock.api.example.docs.ExampleExceptionDocs;
 import band.gosrock.common.annotation.DisableSwaggerSecurity;
+import band.gosrock.common.dto.ErrorReason;
+import band.gosrock.common.dto.ErrorResponse;
+import band.gosrock.common.exception.ErrorCode;
+import band.gosrock.domain.domains.user.exception.UserNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.core.jackson.ModelResolver;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,10 +27,14 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.security.SecurityScheme.In;
 import io.swagger.v3.oas.models.security.SecurityScheme.Type;
 import io.swagger.v3.oas.models.servers.Server;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 import javax.servlet.ServletContext;
+import lombok.RequiredArgsConstructor;
 import org.springdoc.core.customizers.OperationCustomizer;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.HandlerMethod;
@@ -34,8 +43,10 @@ import org.springframework.web.method.HandlerMethod;
 // @OpenAPIDefinition(servers = {@io.swagger.v3.oas.annotations.servers.Server(url = "/",
 // description = "Default Server URL")})
 @Configuration
+@RequiredArgsConstructor
 public class SwaggerConfig {
 
+    private final ApplicationContext applicationContext;
     @Bean
     public OpenAPI openAPI(ServletContext servletContext) {
         String contextPath = servletContext.getContextPath();
@@ -86,7 +97,6 @@ public class SwaggerConfig {
             if (!tags.isEmpty()) {
                 operation.setTags(Collections.singletonList(tags.get(0)));
             }
-
             generateErrorResponseExample(operation);
 
             return operation;
@@ -98,13 +108,17 @@ public class SwaggerConfig {
         Content content = new Content();
         MediaType mediaType = new MediaType();
         ApiResponse apiResponse = new ApiResponse();
-        OauthLoginLinkResponse oauthLoginLinkResponse = new OauthLoginLinkResponse("테스트");
+        //----------------생성
 
-        new OauthLoginLinkResponse("테스트");
+        ExampleExceptionDocs bean = applicationContext.getBean(ExampleExceptionDocs.class);
+        ErrorReason errorReason = UserNotFoundException.EXCEPTION.getErrorCode().getErrorReason();
+        ErrorResponse errorResponse = new ErrorResponse(errorReason, "요청시 패스정보입니다.");
+        Field[] declaredFields = bean.getClass().getDeclaredFields();
         Example example = new Example();
-        example.setValue(oauthLoginLinkResponse);
-        mediaType.addExamples("example",example);
+        example.setValue(errorResponse);
+        mediaType.addExamples(UserNotFoundException.class.getSimpleName(),example);
 
+        // -------------------------- 콘텐츠 세팅
         content.addMediaType("application/json",mediaType);
         apiResponse.setContent(content);
         responses.addApiResponse("400",apiResponse);
