@@ -1,9 +1,7 @@
 package band.gosrock.api.config;
 
-
 import static java.util.stream.Collectors.groupingBy;
 
-import band.gosrock.api.example.docs.ExampleExceptionDocs;
 import band.gosrock.common.annotation.ApiErrorExample;
 import band.gosrock.common.annotation.DisableSwaggerSecurity;
 import band.gosrock.common.annotation.ExplainError;
@@ -46,6 +44,7 @@ import org.springframework.web.method.HandlerMethod;
 public class SwaggerConfig {
 
     private final ApplicationContext applicationContext;
+
     @Bean
     public OpenAPI openAPI(ServletContext servletContext) {
         String contextPath = servletContext.getContextPath();
@@ -87,8 +86,8 @@ public class SwaggerConfig {
         return (Operation operation, HandlerMethod handlerMethod) -> {
             DisableSwaggerSecurity methodAnnotation =
                     handlerMethod.getMethodAnnotation(DisableSwaggerSecurity.class);
-            ApiErrorExample apiErrorExample = handlerMethod.getMethodAnnotation(
-                ApiErrorExample.class);
+            ApiErrorExample apiErrorExample =
+                    handlerMethod.getMethodAnnotation(ApiErrorExample.class);
             List<String> tags = getTags(handlerMethod);
             // DisableSecurity 어노테이션있을시 스웨거 시큐리티 설정 삭제
             if (methodAnnotation != null) {
@@ -99,54 +98,63 @@ public class SwaggerConfig {
                 operation.setTags(Collections.singletonList(tags.get(0)));
             }
             // ApiErrorExample 어노테이션 단 클래스에 적용
-            if(apiErrorExample != null){
-                generateErrorResponseExample(operation ,apiErrorExample.value());
+            if (apiErrorExample != null) {
+                generateErrorResponseExample(operation, apiErrorExample.value());
             }
             return operation;
         };
     }
 
-
+    /** ExplainError 어노테이션으로 부가설명을 붙일수있습니다. 필드들을 가져와서 예시 에러 객체를 동적으로 생성해서 예시값으로 붙입니다. */
     private void generateErrorResponseExample(Operation operation, Class<?> type) {
         ApiResponses responses = operation.getResponses();
 
-        //----------------생성
+        // ----------------생성
         Object bean = applicationContext.getBean(type);
         Field[] declaredFields = bean.getClass().getDeclaredFields();
-        Map<Integer, List<ExampleHolder>> stringListMap = Arrays.stream(declaredFields)
-            .filter(field -> field.getAnnotation(ExplainError.class) != null)
-            .filter(field -> field.getType() == DuDoongCodeException.class)
-            .map(field -> {
-                try {
-                    DuDoongCodeException exception = (DuDoongCodeException) field.get(
-                        bean);
-                    ExplainError annotation = field.getAnnotation(ExplainError.class);
-                    String value = annotation.value();
-                    ErrorReason errorReason = exception.getErrorCode().getErrorReason();
-                    ErrorResponse errorResponse = new ErrorResponse(errorReason, "요청시 패스정보입니다.");
-                    Example example = new Example();
-                    example.description(value);
-                    example.setValue(errorResponse);
-                    return new ExampleHolder(example, field.getName(), errorReason.getStatus());
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
-            }).collect(groupingBy(ExampleHolder::getCode));
+        Map<Integer, List<ExampleHolder>> stringListMap =
+                Arrays.stream(declaredFields)
+                        .filter(field -> field.getAnnotation(ExplainError.class) != null)
+                        .filter(field -> field.getType() == DuDoongCodeException.class)
+                        .map(
+                                field -> {
+                                    try {
+                                        DuDoongCodeException exception =
+                                                (DuDoongCodeException) field.get(bean);
+                                        ExplainError annotation =
+                                                field.getAnnotation(ExplainError.class);
+                                        String value = annotation.value();
+                                        ErrorReason errorReason =
+                                                exception.getErrorCode().getErrorReason();
+                                        ErrorResponse errorResponse =
+                                                new ErrorResponse(errorReason, "요청시 패스정보입니다.");
+                                        Example example = new Example();
+                                        example.description(value);
+                                        example.setValue(errorResponse);
+                                        return new ExampleHolder(
+                                                example, field.getName(), errorReason.getStatus());
+                                    } catch (IllegalAccessException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                })
+                        .collect(groupingBy(ExampleHolder::getCode));
 
         // -------------------------- 콘텐츠 세팅 코드별로 진행
-        stringListMap.forEach((status,v)->{
-            Content content = new Content();
-            MediaType mediaType = new MediaType();
-            ApiResponse apiResponse = new ApiResponse();
-            v.forEach(exampleHolder ->{
-                mediaType.addExamples(exampleHolder.getName(),exampleHolder.getHolder());
-            });
-            content.addMediaType("application/json",mediaType);
-            apiResponse.setContent(content);
-            responses.addApiResponse(status.toString(),apiResponse);
-        });
+        stringListMap.forEach(
+                (status, v) -> {
+                    Content content = new Content();
+                    MediaType mediaType = new MediaType();
+                    ApiResponse apiResponse = new ApiResponse();
+                    v.forEach(
+                            exampleHolder -> {
+                                mediaType.addExamples(
+                                        exampleHolder.getName(), exampleHolder.getHolder());
+                            });
+                    content.addMediaType("application/json", mediaType);
+                    apiResponse.setContent(content);
+                    responses.addApiResponse(status.toString(), apiResponse);
+                });
     }
-
 
     private static List<String> getTags(HandlerMethod handlerMethod) {
         List<String> tags = new ArrayList<>();

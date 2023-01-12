@@ -1,12 +1,12 @@
 package band.gosrock.api.example.docs;
 
+
 import band.gosrock.common.annotation.ExceptionDoc;
 import band.gosrock.common.annotation.ExplainError;
 import band.gosrock.common.exception.DuDoongCodeException;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
 import band.gosrock.domain.domains.order.exception.OrderNotFoundException;
 import band.gosrock.domain.domains.user.exception.UserNotFoundException;
-import org.springframework.stereotype.Component;
 
 @ExceptionDoc
 public class ExampleExceptionDocs {
