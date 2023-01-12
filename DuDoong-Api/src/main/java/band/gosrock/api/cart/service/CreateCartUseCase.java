@@ -106,7 +106,7 @@ public class CreateCartUseCase {
             cartItemResponses.add(
                     CartItemResponse.of(
                             generateCartLineName(cartLineItem, startNum, totalQuantity),
-                            cartLineItem.getOptionAnswerVos()));
+                            cartLineItem));
             startNum += cartLineItem.getQuantity();
         }
 

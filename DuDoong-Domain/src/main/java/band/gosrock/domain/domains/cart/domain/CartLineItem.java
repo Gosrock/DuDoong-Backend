@@ -80,4 +80,8 @@ public class CartLineItem extends BaseTimeEntity {
     public List<OptionAnswerVo> getOptionAnswerVos() {
         return cartOptionAnswers.stream().map(CartOptionAnswer::getOptionAnswerVo).toList();
     }
+
+    public Money getItemPrice() {
+        return ticketItem.getPrice();
+    }
 }

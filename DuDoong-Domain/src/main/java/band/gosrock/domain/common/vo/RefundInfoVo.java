@@ -8,6 +8,7 @@ import lombok.Getter;
 /** 상품 취소 가능 여부를 반환합니다. */
 @Getter
 public class RefundInfoVo {
+
     private final LocalDateTime endAt;
     private final Boolean availAble;
 

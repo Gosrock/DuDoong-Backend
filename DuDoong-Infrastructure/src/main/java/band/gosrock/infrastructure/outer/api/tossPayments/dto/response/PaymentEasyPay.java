@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class PaymentEasyPay {
-    private String provider;
+    private EasyPayCode provider;
     private Long amount;
     private Long discountAmount;
 }

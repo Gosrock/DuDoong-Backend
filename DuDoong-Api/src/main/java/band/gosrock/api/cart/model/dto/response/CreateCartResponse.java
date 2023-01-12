@@ -1,6 +1,7 @@
 package band.gosrock.api.cart.model.dto.response;
 
 
+import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.cart.domain.Cart;
 import java.util.List;
 import lombok.Builder;
@@ -15,16 +16,19 @@ public class CreateCartResponse {
     private final List<CartItemResponse> items;
 
     // 금액
-    private final String totalPrice;
+    private final Money totalPrice;
 
     private final Long cartId;
+
+    private final Long totalQuantity;
 
     public static CreateCartResponse of(List<CartItemResponse> cartItemResponses, Cart cart) {
         return CreateCartResponse.builder()
                 .items(cartItemResponses)
-                .totalPrice(cart.getTotalPrice().toString())
+                .totalPrice(cart.getTotalPrice())
                 .cartId(cart.getId())
                 .title(cart.getCartName())
+                .totalQuantity(cart.getTotalQuantity())
                 .build();
     }
 }

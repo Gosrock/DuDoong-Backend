@@ -19,13 +19,13 @@ public class CreateTossOrderUseCase {
 
     private final OrderAdaptor orderAdaptor;
 
-    public PaymentsResponse execute(String orderId) {
-        Order order = orderAdaptor.findByOrderUuid(orderId);
+    public PaymentsResponse execute(String orderUuid) {
+        Order order = orderAdaptor.findByOrderUuid(orderUuid);
         CreatePaymentsRequest createPaymentsRequest =
                 CreatePaymentsRequest.builder()
                         .method("카드")
                         .orderName(order.getOrderName())
-                        .orderId(orderId)
+                        .orderId(orderUuid)
                         .failUrl("http://localhost:8080/failurl")
                         .successUrl("http://localhost:8080/successUrl")
                         .amount(order.getTotalPaymentPrice().longValue())
