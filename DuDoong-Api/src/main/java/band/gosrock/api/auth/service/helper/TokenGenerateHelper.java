@@ -35,6 +35,8 @@ public class TokenGenerateHelper {
         return TokenAndUserResponse.builder()
                 .userProfile(ProfileViewDto.from(user))
                 .accessToken(newAccessToken)
+                .accessTokenAge(jwtTokenProvider.getAccessTokenTTlSecond())
+                .refreshTokenAge(jwtTokenProvider.getRefreshTokenTTlSecond())
                 .refreshToken(newRefreshToken)
                 .build();
     }
