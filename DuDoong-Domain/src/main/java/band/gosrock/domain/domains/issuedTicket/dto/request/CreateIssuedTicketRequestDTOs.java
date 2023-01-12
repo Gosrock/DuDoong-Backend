@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class PostIssuedTicketRequestDTOs {
+public class CreateIssuedTicketRequestDTOs {
 
-    private List<PostIssuedTicketRequest> postIssuedTicketRequests;
+    private List<CreateIssuedTicketRequest> createIssuedTicketRequests;
 }

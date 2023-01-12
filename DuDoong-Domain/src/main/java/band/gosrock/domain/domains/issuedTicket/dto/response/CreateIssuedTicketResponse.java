@@ -5,11 +5,11 @@ import java.util.List;
 import lombok.Getter;
 
 @Getter
-public class PostIssuedTicketResponse {
+public class CreateIssuedTicketResponse {
 
     private final List<IssuedTicketDTO> issuedTickets;
 
-    public PostIssuedTicketResponse(List<IssuedTicketDTO> issuedTickets) {
+    public CreateIssuedTicketResponse(List<IssuedTicketDTO> issuedTickets) {
         this.issuedTickets = issuedTickets;
     }
 }
