@@ -4,6 +4,7 @@ package band.gosrock.api.config;
 import band.gosrock.api.auth.model.dto.response.OauthLoginLinkResponse;
 import band.gosrock.api.example.docs.ExampleExceptionDocs;
 import band.gosrock.common.annotation.DisableSwaggerSecurity;
+import band.gosrock.common.annotation.ExplainError;
 import band.gosrock.common.dto.ErrorReason;
 import band.gosrock.common.dto.ErrorResponse;
 import band.gosrock.common.exception.ErrorCode;
@@ -113,14 +114,28 @@ public class SwaggerConfig {
         ExampleExceptionDocs bean = applicationContext.getBean(ExampleExceptionDocs.class);
         ErrorReason errorReason = UserNotFoundException.EXCEPTION.getErrorCode().getErrorReason();
         ErrorResponse errorResponse = new ErrorResponse(errorReason, "요청시 패스정보입니다.");
-        Field[] declaredFields = bean.getClass().getDeclaredFields();
-        Example example = new Example();
-        example.setValue(errorResponse);
-        mediaType.addExamples(UserNotFoundException.class.getSimpleName(),example);
+
+        for (Field field: bean.getClass().getDeclaredFields()) {
+            ExplainError explainError = field.getAnnotation(ExplainError.class);
+            if(explainError != null){
+                Example example = new Example();
+                example.description(explainError.value());
+                example.setValue(errorResponse);
+                mediaType.addExamples(UserNotFoundException.class.getSimpleName(),example);
+
+                Example example2 = new Example();
+                example2.description(explainError.value());
+                example2.setValue(errorResponse);
+                mediaType.addExamples("다른 에러",example);
+            }
+        }
+
 
         // -------------------------- 콘텐츠 세팅
         content.addMediaType("application/json",mediaType);
         apiResponse.setContent(content);
+
+
         responses.addApiResponse("400",apiResponse);
     }
 
