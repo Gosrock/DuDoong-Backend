@@ -1,6 +1,7 @@
 package band.gosrock.api.config;
 
 
+import band.gosrock.api.auth.model.dto.response.OauthLoginLinkResponse;
 import band.gosrock.common.annotation.DisableSwaggerSecurity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.core.jackson.ModelResolver;
@@ -8,8 +9,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.examples.Example;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
+import io.swagger.v3.oas.models.media.BooleanSchema;
+import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.media.MediaType;
+import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.responses.ApiResponse;
+import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.security.SecurityScheme.In;
 import io.swagger.v3.oas.models.security.SecurityScheme.Type;
@@ -78,9 +86,30 @@ public class SwaggerConfig {
             if (!tags.isEmpty()) {
                 operation.setTags(Collections.singletonList(tags.get(0)));
             }
+
+            generateErrorResponseExample(operation);
+
             return operation;
         };
     }
+
+    private void generateErrorResponseExample(Operation operation) {
+        ApiResponses responses = operation.getResponses();
+        Content content = new Content();
+        MediaType mediaType = new MediaType();
+        ApiResponse apiResponse = new ApiResponse();
+        OauthLoginLinkResponse oauthLoginLinkResponse = new OauthLoginLinkResponse("테스트");
+
+        new OauthLoginLinkResponse("테스트");
+        Example example = new Example();
+        example.setValue(oauthLoginLinkResponse);
+        mediaType.addExamples("example",example);
+
+        content.addMediaType("application/json",mediaType);
+        apiResponse.setContent(content);
+        responses.addApiResponse("400",apiResponse);
+    }
+
 
     private static List<String> getTags(HandlerMethod handlerMethod) {
         List<String> tags = new ArrayList<>();
