@@ -1,8 +1,11 @@
 package band.gosrock.api.example.controller;
 
 
+import band.gosrock.api.example.docs.ExampleException2Docs;
+import band.gosrock.api.example.docs.ExampleExceptionDocs;
 import band.gosrock.api.example.dto.ExampleResponse;
 import band.gosrock.api.example.service.ExampleApiService;
+import band.gosrock.common.annotation.ApiErrorExample;
 import band.gosrock.common.annotation.DevelopOnlyApi;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
@@ -21,11 +24,13 @@ public class ExampleController {
 
     @GetMapping
     @DevelopOnlyApi
+    @ApiErrorExample(ExampleExceptionDocs.class)
     public ExampleResponse get() {
         return exampleApiService.getExample();
     }
 
     @PostMapping
+    @ApiErrorExample(ExampleException2Docs.class)
     public ExampleResponse create() {
         return exampleApiService.createExample();
     }
