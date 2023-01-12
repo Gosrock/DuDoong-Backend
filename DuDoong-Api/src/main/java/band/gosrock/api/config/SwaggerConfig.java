@@ -4,13 +4,12 @@ package band.gosrock.api.config;
 import static java.util.stream.Collectors.groupingBy;
 
 import band.gosrock.api.example.docs.ExampleExceptionDocs;
+import band.gosrock.common.annotation.ApiErrorExample;
 import band.gosrock.common.annotation.DisableSwaggerSecurity;
 import band.gosrock.common.annotation.ExplainError;
 import band.gosrock.common.dto.ErrorReason;
 import band.gosrock.common.dto.ErrorResponse;
 import band.gosrock.common.exception.DuDoongCodeException;
-import band.gosrock.domain.domains.order.exception.OrderNotFoundException;
-import band.gosrock.domain.domains.user.exception.UserNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.core.jackson.ModelResolver;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -88,6 +87,8 @@ public class SwaggerConfig {
         return (Operation operation, HandlerMethod handlerMethod) -> {
             DisableSwaggerSecurity methodAnnotation =
                     handlerMethod.getMethodAnnotation(DisableSwaggerSecurity.class);
+            ApiErrorExample apiErrorExample = handlerMethod.getMethodAnnotation(
+                ApiErrorExample.class);
             List<String> tags = getTags(handlerMethod);
             // DisableSecurity 어노테이션있을시 스웨거 시큐리티 설정 삭제
             if (methodAnnotation != null) {
@@ -97,19 +98,20 @@ public class SwaggerConfig {
             if (!tags.isEmpty()) {
                 operation.setTags(Collections.singletonList(tags.get(0)));
             }
-            generateErrorResponseExample(operation);
-
+            // ApiErrorExample 어노테이션 단 클래스에 적용
+            if(apiErrorExample != null){
+                generateErrorResponseExample(operation ,apiErrorExample.value());
+            }
             return operation;
         };
     }
 
 
-    private void generateErrorResponseExample(Operation operation) {
+    private void generateErrorResponseExample(Operation operation, Class<?> type) {
         ApiResponses responses = operation.getResponses();
 
         //----------------생성
-
-        ExampleExceptionDocs bean = applicationContext.getBean(ExampleExceptionDocs.class);
+        Object bean = applicationContext.getBean(type);
         Field[] declaredFields = bean.getClass().getDeclaredFields();
         Map<Integer, List<ExampleHolder>> stringListMap = Arrays.stream(declaredFields)
             .filter(field -> field.getAnnotation(ExplainError.class) != null)

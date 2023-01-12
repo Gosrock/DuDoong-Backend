@@ -3,16 +3,16 @@ package band.gosrock.api.example.docs;
 import band.gosrock.common.annotation.ExceptionDoc;
 import band.gosrock.common.annotation.ExplainError;
 import band.gosrock.common.exception.DuDoongCodeException;
+import band.gosrock.common.exception.InvalidTokenException;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
 import band.gosrock.domain.domains.order.exception.OrderNotFoundException;
 import band.gosrock.domain.domains.user.exception.UserNotFoundException;
-import org.springframework.stereotype.Component;
 
 @ExceptionDoc
-public class ExampleExceptionDocs {
+public class ExampleException2Docs {
 
-    @ExplainError("유저검색시에 안나올 때 나오는 에러입니다.")
-    public DuDoongCodeException 유저없을때 = UserNotFoundException.EXCEPTION;
+    @ExplainError("어쩌구 저쩌구")
+    public DuDoongCodeException 유저없을때 = InvalidTokenException.EXCEPTION;
 
     @ExplainError("오더 낫파운드")
     public DuDoongCodeException 한글도된다 = OrderNotFoundException.EXCEPTION;
