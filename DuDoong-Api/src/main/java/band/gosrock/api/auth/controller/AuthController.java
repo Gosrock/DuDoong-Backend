@@ -13,6 +13,7 @@ import band.gosrock.api.auth.service.OauthUserInfoUseCase;
 import band.gosrock.api.auth.service.RefreshUseCase;
 import band.gosrock.api.auth.service.RegisterUseCase;
 import band.gosrock.api.auth.service.WithDrawUseCase;
+import band.gosrock.api.auth.service.helper.CookieGenerateHelper;
 import band.gosrock.common.annotation.DevelopOnlyApi;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -21,8 +22,6 @@ import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -49,6 +48,8 @@ public class AuthController {
 
     private final WithDrawUseCase withDrawUseCase;
     private final LogoutUseCase logoutUseCase;
+
+    private final CookieGenerateHelper cookieGenerateHelper;
 
     @Operation(summary = "kakao oauth 링크발급 (백엔드용 )", description = "kakao 링크를 받아볼수 있습니다.")
     @Tag(name = "카카오 oauth")
@@ -97,8 +98,8 @@ public class AuthController {
     public ResponseEntity<TokenAndUserResponse> developUserSign(@RequestParam("code") String code) {
         TokenAndUserResponse tokenAndUserResponse = registerUseCase.upsertKakaoOauthUser(code);
         return ResponseEntity.ok()
-            .headers(getTokenCookies(tokenAndUserResponse))
-            .body(tokenAndUserResponse);
+                .headers(cookieGenerateHelper.getTokenCookies(tokenAndUserResponse))
+                .body(tokenAndUserResponse);
     }
 
     @Operation(summary = "회원가입이 가능한지 id token 으로 확인합니다.")
@@ -118,28 +119,11 @@ public class AuthController {
         TokenAndUserResponse tokenAndUserResponse =
                 registerUseCase.registerUserByOCIDToken(token, registerRequest);
         return ResponseEntity.ok()
-                .headers(getTokenCookies(tokenAndUserResponse))
+                .headers(cookieGenerateHelper.getTokenCookies(tokenAndUserResponse))
                 .body(tokenAndUserResponse);
     }
 
     @NotNull
-    private static HttpHeaders getTokenCookies(TokenAndUserResponse tokenAndUserResponse) {
-        ResponseCookie accessToken =
-                ResponseCookie.from("accessToken", tokenAndUserResponse.getAccessToken())
-                        .path("/")
-                        .maxAge(tokenAndUserResponse.getAccessTokenAge())
-                        .build();
-        ResponseCookie refreshToken =
-                ResponseCookie.from("refreshToken", tokenAndUserResponse.getRefreshToken())
-                        .path("/")
-                        .maxAge(tokenAndUserResponse.getRefreshTokenAge())
-                        .build();
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add(HttpHeaders.SET_COOKIE, accessToken.toString());
-        httpHeaders.add(HttpHeaders.SET_COOKIE, refreshToken.toString());
-        return httpHeaders;
-    }
-
     @Operation(summary = "id_token 으로 로그인을 합니다.")
     @Tag(name = "카카오 oauth")
     @PostMapping("/oauth/kakao/login")
@@ -147,7 +131,7 @@ public class AuthController {
             @RequestParam("id_token") String token) {
         TokenAndUserResponse tokenAndUserResponse = loginUseCase.execute(token);
         return ResponseEntity.ok()
-                .headers(getTokenCookies(tokenAndUserResponse))
+                .headers(cookieGenerateHelper.getTokenCookies(tokenAndUserResponse))
                 .body(tokenAndUserResponse);
     }
 
