@@ -22,7 +22,7 @@ public class CreateIssuedTicketRequest {
     /*
     발급 티켓의 orderline id
      */
-    private Long orderLineId;
+    private final Long orderLineId;
 
     /*
     티켓 발급한 유저 id

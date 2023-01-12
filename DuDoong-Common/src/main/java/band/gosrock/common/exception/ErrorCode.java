@@ -49,7 +49,7 @@ public enum ErrorCode implements BaseErrorCode {
     ISSUED_TICKET_NOT_MATCHED_USER(
             FORBIDDEN, "IssuedTicket-403-1", "IssuedTicket User Not Matched"),
     EVENT_NOT_FOUND(NOT_FOUND, "Event-404-1", "Event Not Found"),
-    Host_NOT_AUTH_EVENT(FORBIDDEN, "Event-403-1", "Host Not Auth Event");
+    HOST_NOT_AUTH_EVENT(FORBIDDEN, "Event-403-1", "Host Not Auth Event");
     private int status;
     private String code;
     private String reason;

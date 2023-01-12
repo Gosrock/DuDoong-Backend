@@ -5,7 +5,9 @@ import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketDTO;
 import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketRequest;
+import band.gosrock.domain.domains.issuedTicket.dto.response.CreateIssuedTicketResponse;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.user.domain.User;
 import java.util.ArrayList;
@@ -159,6 +161,26 @@ public class IssuedTicket extends BaseTimeEntity {
             .createdAt(issuedTicket.getCreatedAt())
             .issuedTicketStatus(issuedTicket.getIssuedTicketStatus())
             .optionPrice(issuedTicket.sumOptionPrice()).build();
+    }
+
+    public static CreateIssuedTicketResponse orderLineItemToIssuedTickets(CreateIssuedTicketDTO dto) {
+        long quantity = dto.getOrderLineItem().getQuantity();
+        List<IssuedTicket> createIssuedTickets = new ArrayList<>();
+        List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers = dto.getOrderLineItem()
+            .getOrderOptionAnswer().stream().map(
+                IssuedTicketOptionAnswer::orderOptionAnswerToIssuedTicketOptionAnswer).toList();
+        for (long i = 1 ; i<=quantity; i++) {
+            createIssuedTickets.add(
+                IssuedTicket.builder().event(dto.getOrderLineItem().getTicketItem().getEvent())
+                    .orderLineId(dto.getOrderLineItem()
+                        .getId()).user(dto.getUser())
+                    .price(dto.getOrderLineItem().getTicketItem().getPrice())
+                    .ticketItem(dto.getOrderLineItem()
+                        .getTicketItem()).issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
+                    .issuedTicketOptionAnswers(issuedTicketOptionAnswers)
+                    .build());
+        }
+        return new CreateIssuedTicketResponse(createIssuedTickets, issuedTicketOptionAnswers);
     }
 
 }

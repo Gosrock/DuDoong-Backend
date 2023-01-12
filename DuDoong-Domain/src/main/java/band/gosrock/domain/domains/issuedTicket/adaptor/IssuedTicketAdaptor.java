@@ -20,6 +20,10 @@ public class IssuedTicketAdaptor {
         return issuedTicketRepository.save(issuedTicket);
     }
 
+    public void saveAll(List<IssuedTicket> issuedTickets) {
+        issuedTicketRepository.saveAll(issuedTickets);
+    }
+
     public List<IssuedTicket> findAllByOrderLineId(Long orderLineId) {
         return issuedTicketRepository.findAllByOrderLineId(orderLineId);
     }

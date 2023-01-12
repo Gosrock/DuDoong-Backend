@@ -6,6 +6,7 @@ import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketOptionAnswerAdaptor;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketOptionAnswer;
+import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketDTO;
 import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketRequestDTOs;
 import band.gosrock.domain.domains.issuedTicket.dto.response.CreateIssuedTicketResponse;
 import band.gosrock.domain.domains.issuedTicket.dto.response.IssuedTicketDTO;
@@ -29,7 +30,7 @@ public class IssuedTicketDomainService {
     private final IssuedTicketOptionAnswerAdaptor issuedTicketOptionAnswerAdaptor;
 
     @Transactional
-    public CreateIssuedTicketResponse createIssuedTicket(
+    public void createIssuedTicket(
             CreateIssuedTicketRequestDTOs createIssuedTicketRequestDTOs) {
         List<IssuedTicketDTO> issuedTickets =
                 createIssuedTicketRequestDTOs.getCreateIssuedTicketRequests().stream()
@@ -57,7 +58,17 @@ public class IssuedTicketDomainService {
                                     return new IssuedTicketDTO(saveIssuedTicket);
                                 })
                         .toList();
-        return new CreateIssuedTicketResponse(issuedTickets);
+//        return new CreateIssuedTicketResponse(issuedTickets);
+    }
+
+    @Transactional
+    public void createIssuedTicket2(List<CreateIssuedTicketDTO> createIssuedTicketDTOs) {
+        createIssuedTicketDTOs.forEach(dto -> {
+            CreateIssuedTicketResponse responseDTO = IssuedTicket.orderLineItemToIssuedTickets(
+                dto);
+            issuedTicketAdaptor.saveAll(responseDTO.getIssuedTickets());
+            issuedTicketOptionAnswerAdaptor.saveAll(responseDTO.getIssuedTicketOptionAnswers());
+        });
     }
 
     /**
