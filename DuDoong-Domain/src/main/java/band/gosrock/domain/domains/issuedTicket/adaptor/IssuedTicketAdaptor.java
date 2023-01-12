@@ -43,4 +43,10 @@ public class IssuedTicketAdaptor {
         return issuedTicketRepository.findAllByEvent_IdAndUser_Profile_NameContaining(
                 eventId, userName, pageRequest);
     }
+
+    public Page<IssuedTicket> findAllByEventAndUserPhoneNumber(
+            PageRequest pageRequest, Long eventId, String phoneNumber) {
+        return issuedTicketRepository.findAllByEvent_IdAndUser_Profile_PhoneNumberContaining(
+                eventId, phoneNumber, pageRequest);
+    }
 }
