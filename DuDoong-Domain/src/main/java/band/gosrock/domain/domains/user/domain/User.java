@@ -4,6 +4,7 @@ package band.gosrock.domain.domains.user.domain;
 import band.gosrock.domain.common.aop.domainEvent.Events;
 import band.gosrock.domain.common.events.user.UserRegisterEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.common.vo.UserInfoVo;
 import band.gosrock.domain.domains.user.exception.AlreadyDeletedUserException;
 import band.gosrock.domain.domains.user.exception.ForbiddenUserException;
 import javax.persistence.Column;
@@ -72,4 +73,11 @@ public class User extends BaseTimeEntity {
             throw ForbiddenUserException.EXCEPTION;
         }
     }
+
+    public UserInfoVo toUserInfoVo(User user) {
+        return UserInfoVo.builder().userId(user.getId()).userName(user.getProfile().getName())
+            .email(user.getProfile().getEmail()).phoneNumber(user.getProfile().getPhoneNumber())
+            .profileImage(user.getProfile().getProfileImage()).build();
+    }
+
 }
