@@ -1,6 +1,7 @@
 package band.gosrock.domain.domains.issuedTicket.dto.request;
 
 
+import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.order.domain.OrderOptionAnswer;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
@@ -21,7 +22,7 @@ public class CreateIssuedTicketRequest {
     /*
     발급 티켓의 orderline id
      */
-    private Long orderLineId;
+    private final Long orderLineId;
 
     /*
     티켓 발급한 유저 id
@@ -31,7 +32,7 @@ public class CreateIssuedTicketRequest {
     /*
     발급 티켓 가격
      */
-    private final Long price;
+    private final Money price;
 
     /*
     발급 티켓의 티켓 itemId (발급 티켓의 종류)

@@ -2,9 +2,12 @@ package band.gosrock.domain.domains.issuedTicket.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketDTO;
 import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketRequest;
+import band.gosrock.domain.domains.issuedTicket.dto.response.CreateIssuedTicketResponse;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.user.domain.User;
 import java.util.ArrayList;
@@ -87,7 +90,7 @@ public class IssuedTicket extends BaseTimeEntity {
     /*
     발급 티켓 가격
      */
-    private Long price;
+    private Money price;
 
     /*
     상태
@@ -105,7 +108,7 @@ public class IssuedTicket extends BaseTimeEntity {
             User user,
             Long orderLineId,
             TicketItem ticketItem,
-            Long price,
+            Money price,
             IssuedTicketStatus issuedTicketStatus,
             List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers) {
         this.event = event;
@@ -139,7 +142,6 @@ public class IssuedTicket extends BaseTimeEntity {
         this.issuedTicketNo = "T" + this.id;
     }
 
-    // todo: 옵션 정리
     public Money sumOptionPrice() {
         //        issuedTicketOptionAnswers.forEach(issuedTicketOptionAnswer -> {
         //            this.optionPrice = this.optionPrice.plus(issuedTicketOptionAnswer.getOption()
@@ -150,5 +152,32 @@ public class IssuedTicket extends BaseTimeEntity {
                         issuedTicketOptionAnswer ->
                                 issuedTicketOptionAnswer.getOption().getAdditionalPrice())
                 .reduce(Money.ZERO, Money::plus);
+    }
+
+    public IssuedTicketInfoVo toIssuedTicketInfoVo(IssuedTicket issuedTicket) {
+        return IssuedTicketInfoVo.from(issuedTicket);
+    }
+
+    public static CreateIssuedTicketResponse orderLineItemToIssuedTickets(
+            CreateIssuedTicketDTO dto) {
+        long quantity = dto.getOrderLineItem().getQuantity();
+        List<IssuedTicket> createIssuedTickets = new ArrayList<>();
+        List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers =
+                dto.getOrderLineItem().getOrderOptionAnswer().stream()
+                        .map(IssuedTicketOptionAnswer::orderOptionAnswerToIssuedTicketOptionAnswer)
+                        .toList();
+        for (long i = 1; i <= quantity; i++) {
+            createIssuedTickets.add(
+                    IssuedTicket.builder()
+                            .event(dto.getOrderLineItem().getTicketItem().getEvent())
+                            .orderLineId(dto.getOrderLineItem().getId())
+                            .user(dto.getUser())
+                            .price(dto.getOrderLineItem().getTicketItem().getPrice())
+                            .ticketItem(dto.getOrderLineItem().getTicketItem())
+                            .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
+                            .issuedTicketOptionAnswers(issuedTicketOptionAnswers)
+                            .build());
+        }
+        return new CreateIssuedTicketResponse(createIssuedTickets, issuedTicketOptionAnswers);
     }
 }

@@ -16,4 +16,7 @@ public interface IssuedTicketRepository
 
     Page<IssuedTicket> findAllByEvent_IdAndUser_Profile_NameContaining(
             Long eventId, String userName, Pageable pageable);
+
+    Page<IssuedTicket> findAllByEvent_IdAndUser_Profile_PhoneNumberContaining(
+            Long eventId, String phoneNumber, Pageable pageable);
 }
