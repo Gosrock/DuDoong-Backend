@@ -15,7 +15,7 @@ public enum OrderMethod {
 
     @JsonValue private String kr;
 
-    public Boolean isPayment(){
+    public Boolean isPayment() {
         return this.equals(OrderMethod.PAYMENT);
     }
 }

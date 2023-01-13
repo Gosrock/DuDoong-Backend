@@ -3,7 +3,6 @@ package band.gosrock.api.eventHandlers;
 
 import band.gosrock.domain.common.events.order.DoneOrderEvent;
 import band.gosrock.domain.common.events.order.WithDrawOrderEvent;
-import band.gosrock.domain.common.events.user.UserRegisterEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -26,8 +25,8 @@ public class OrderEventHandler {
 
     @Async
     @TransactionalEventListener(
-        classes = WithDrawOrderEvent.class,
-        phase = TransactionPhase.AFTER_COMMIT)
+            classes = WithDrawOrderEvent.class,
+            phase = TransactionPhase.AFTER_COMMIT)
     public void handleRegisterUserEvent(WithDrawOrderEvent withDrawOrderEvent) {
         log.info(withDrawOrderEvent.getUuid() + "주문 상태 철회 , 티켓 제거 필요");
     }

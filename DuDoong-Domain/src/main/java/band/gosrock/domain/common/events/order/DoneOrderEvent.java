@@ -13,7 +13,7 @@ public class DoneOrderEvent extends DomainEvent {
     private final String uuid;
     private final Order order;
 
-    public static DoneOrderEvent of(String uuid, Order order){
-        return new DoneOrderEvent(uuid,order);
+    public static DoneOrderEvent of(String uuid, Order order) {
+        return new DoneOrderEvent(uuid, order);
     }
 }

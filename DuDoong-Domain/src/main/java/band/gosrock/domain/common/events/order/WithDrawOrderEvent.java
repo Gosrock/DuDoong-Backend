@@ -13,7 +13,7 @@ public class WithDrawOrderEvent extends DomainEvent {
     private final String uuid;
     private final Order order;
 
-    public static WithDrawOrderEvent of(String uuid, Order order){
-        return new WithDrawOrderEvent(uuid,order);
+    public static WithDrawOrderEvent of(String uuid, Order order) {
+        return new WithDrawOrderEvent(uuid, order);
     }
 }
