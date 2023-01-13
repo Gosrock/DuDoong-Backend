@@ -101,4 +101,8 @@ public class OrderLineItem extends BaseTimeEntity {
     public Boolean isNeedPayment() {
         return ticketItem.isNeedPayment();
     }
+
+    public Boolean canRefund() {
+        return this.getRefundInfo().getAvailAble();
+    }
 }

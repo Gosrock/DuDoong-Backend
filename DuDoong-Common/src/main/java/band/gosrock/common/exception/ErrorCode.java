@@ -54,7 +54,8 @@ public enum ErrorCode implements BaseErrorCode {
     EVENT_NOT_FOUND(NOT_FOUND, "Event-404-1", "Event Not Found"),
     ORDER_NOT_APPROVAL(BAD_REQUEST, "Order-400-5", "승인 주문이 아닙니다."),
     ORDER_NOT_PAYMENT(BAD_REQUEST, "Order-400-6", "결제 주문이 아닙니다."),
-    HOST_NOT_AUTH_EVENT(FORBIDDEN, "Event-403-1", "Host Not Auth Event");
+    HOST_NOT_AUTH_EVENT(FORBIDDEN, "Event-403-1", "Host Not Auth Event"),
+    ORDER_NOT_REFUND_DATE(BAD_REQUEST, "Order-400-7", "환불을 할 수 있는 기한을 지났습니다.");
     private int status;
     private String code;
     private String reason;

@@ -14,6 +14,7 @@ import band.gosrock.domain.domains.order.exception.InvalidOrderException;
 import band.gosrock.domain.domains.order.exception.NotApprovalOrderException;
 import band.gosrock.domain.domains.order.exception.NotOwnerOrderException;
 import band.gosrock.domain.domains.order.exception.NotPaymentOrderException;
+import band.gosrock.domain.domains.order.exception.NotRefundAvailableDateOrderException;
 import band.gosrock.domain.domains.order.exception.OrderLineNotFountException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -184,6 +185,7 @@ public class Order extends BaseTimeEntity {
     /** 관리자가 주문을 취소 시킵니다 */
     public void cancel() {
         orderStatus.validCanCancel();
+        validCanRefundDate();
         this.orderStatus = OrderStatus.CANCELED;
         Events.raise(WithDrawOrderEvent.of(this.uuid, this));
     }
@@ -191,6 +193,7 @@ public class Order extends BaseTimeEntity {
     /** 사용자가 주문을 환불 시킵니다. */
     public void refund() {
         orderStatus.validCanRefund();
+        validCanRefundDate();
         this.orderStatus = OrderStatus.REFUND;
         Events.raise(WithDrawOrderEvent.of(this.uuid, this));
     }
@@ -218,6 +221,12 @@ public class Order extends BaseTimeEntity {
             throw NotPaymentOrderException.EXCEPTION;
         }
         orderStatus.validCanPaymentConfirm();
+    }
+
+    public void validCanRefundDate() {
+        if (!canRefundDate()) {
+            throw NotRefundAvailableDateOrderException.EXCEPTION;
+        }
     }
 
     /** ---------------------------- 조회용 메서드 ---------------------------------- */
@@ -301,5 +310,11 @@ public class Order extends BaseTimeEntity {
 
     public Boolean isMethodPayment() {
         return orderMethod.isPayment();
+    }
+
+    public Boolean canRefundDate() {
+        return this.orderLineItems.stream()
+                .map(OrderLineItem::canRefund)
+                .reduce(Boolean.TRUE, (Boolean::logicalAnd));
     }
 }
