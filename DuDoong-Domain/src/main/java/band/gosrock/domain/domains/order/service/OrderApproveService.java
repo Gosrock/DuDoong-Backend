@@ -18,7 +18,7 @@ public class OrderApproveService {
     @RedissonLock(LockName = "주문승인", identifier = "orderUuid")
     public String execute(String orderUuid, Long userId) {
         Order order = orderAdaptor.findByOrderUuid(orderUuid);
-        order.validOwner(userId);
+        // TODO : 승인 주문 관리자 할당.
         order.approve();
         return orderUuid;
     }
