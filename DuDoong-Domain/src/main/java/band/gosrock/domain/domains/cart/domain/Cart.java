@@ -37,7 +37,7 @@ public class Cart extends BaseTimeEntity {
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "cart_id")
     private List<CartLineItem> cartLineItems = new ArrayList<>();
-
+    /** ---------------------------- 생성 관련 메서드 ---------------------------------- */
     @Builder
     public Cart(Long userId, List<CartLineItem> cartLineItems) {
         CartLineItem cartLineItem = cartLineItems.stream().findFirst().orElseThrow();
@@ -46,20 +46,26 @@ public class Cart extends BaseTimeEntity {
         this.cartLineItems.addAll(cartLineItems);
     }
 
-    public Money getTotalPrice() {
-        return cartLineItems.stream()
-                .map(CartLineItem::getTotalCartLinePrice)
-                .reduce(Money.ZERO, Money::plus);
-    }
+    /** ---------------------------- 커맨드 메서드 ---------------------------------- */
 
-    public Long getTotalQuantity() {
-        return cartLineItems.stream().map(CartLineItem::getQuantity).reduce(0L, Long::sum);
-    }
+    /** ---------------------------- 검증 메서드 ---------------------------------- */
 
+    /** ---------------------------- 조회용 메서드 ---------------------------------- */
     /** 결제가 필요한 오더인지 반환합니다. */
     public Boolean isNeedPayment() {
         return this.cartLineItems.stream()
                 .map(CartLineItem::isNeedPayment)
                 .reduce(Boolean.FALSE, (Boolean::logicalOr));
+    }
+
+    /** 카트에 담긴 상품의 총 갯수를 가져옵니다. */
+    public Long getTotalQuantity() {
+        return cartLineItems.stream().map(CartLineItem::getQuantity).reduce(0L, Long::sum);
+    }
+    /** 카트에 담긴 상품의 총 가격을 가져옵니다 . (상품 + 옵션 ) * 총갯수 = 카트라인의 가격 , 카트라인의 가격의 합집합 */
+    public Money getTotalPrice() {
+        return cartLineItems.stream()
+                .map(CartLineItem::getTotalCartLinePrice)
+                .reduce(Money.ZERO, Money::plus);
     }
 }

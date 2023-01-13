@@ -108,6 +108,7 @@ public class Order extends BaseTimeEntity {
         this.orderName = OrderName;
         this.orderLineItems.addAll(orderLineItems);
         this.orderStatus = orderStatus;
+        this.orderMethod = orderMethod;
     }
 
     /** 카드, 간편결제등 토스 요청 과정이 필요한 결제를 생성합니다. */
