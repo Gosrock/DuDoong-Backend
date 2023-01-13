@@ -291,4 +291,8 @@ public class Order extends BaseTimeEntity {
         if (this.orderMethod.equals(OrderMethod.APPROVAL)) return null;
         return this.pgPaymentInfo.getReceiptUrl();
     }
+
+    public Boolean isMethodPayment(){
+        return orderMethod.isPayment();
+    }
 }

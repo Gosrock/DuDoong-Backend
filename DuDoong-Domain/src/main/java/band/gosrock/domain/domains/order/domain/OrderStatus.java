@@ -34,14 +34,19 @@ public enum OrderStatus {
 
     @JsonValue private String kr;
 
+
+    private boolean checkCanWithDraw() {
+        return this.equals(OrderStatus.CONFIRM) || this.equals(OrderStatus.APPROVED);
+    }
     public void validCanCancel() {
-        if (!this.equals(OrderStatus.CONFIRM)) {
+        if (!checkCanWithDraw()) {
             throw CanNotCancelOrderException.EXCEPTION;
         }
     }
 
+
     public void validCanRefund() {
-        if (!this.equals(OrderStatus.CONFIRM)) {
+        if (!checkCanWithDraw()) {
             throw CanNotRefundOrderException.EXCEPTION;
         }
     }
