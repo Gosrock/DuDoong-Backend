@@ -2,6 +2,9 @@ package band.gosrock.domain.domains.order.domain;
 
 import static band.gosrock.common.consts.DuDoongStatic.NO_START_NUMBER;
 
+import band.gosrock.domain.common.aop.domainEvent.Events;
+import band.gosrock.domain.common.events.order.DoneOrderEvent;
+import band.gosrock.domain.common.events.order.WithDrawOrderEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.RefundInfoVo;
@@ -163,6 +166,7 @@ public class Order extends BaseTimeEntity {
         orderStatus = OrderStatus.CONFIRM;
         this.approvedAt = approvedAt;
         this.pgPaymentInfo = pgPaymentInfo;
+        Events.raise(DoneOrderEvent.of(this.uuid,this));
     }
 
     /** 승인 방식의 주문을 승인합니다. */
@@ -174,18 +178,21 @@ public class Order extends BaseTimeEntity {
         // TODO: 재고량 비교 필요?
         this.approvedAt = LocalDateTime.now();
         orderStatus = OrderStatus.APPROVED;
+        Events.raise(DoneOrderEvent.of(this.uuid,this));
     }
 
     /** 관리자가 주문을 취소 시킵니다 */
     public void cancel() {
         orderStatus.validCanCancel();
         this.orderStatus = OrderStatus.CANCELED;
+        Events.raise(WithDrawOrderEvent.of(this.uuid,this));
     }
 
     /** 사용자가 주문을 환불 시킵니다. */
     public void refund() {
         orderStatus.validCanRefund();
         this.orderStatus = OrderStatus.REFUND;
+        Events.raise(WithDrawOrderEvent.of(this.uuid,this));
     }
 
     /** ---------------------------- 검증 메서드 ---------------------------------- */
