@@ -7,6 +7,7 @@ import band.gosrock.domain.common.vo.OptionAnswerVo;
 import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.cart.domain.CartLineItem;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.CascadeType;
@@ -88,5 +89,9 @@ public class OrderLineItem extends BaseTimeEntity {
 
     public List<OptionAnswerVo> getOptionAnswerVos() {
         return orderOptionAnswer.stream().map(OrderOptionAnswer::getOptionAnswerVo).toList();
+    }
+
+    public Boolean isNeedPayment(){
+        return ticketItem.isNeedPayment();
     }
 }

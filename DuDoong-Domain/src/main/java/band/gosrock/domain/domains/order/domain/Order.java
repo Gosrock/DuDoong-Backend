@@ -6,6 +6,7 @@ import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.cart.domain.Cart;
+import band.gosrock.domain.domains.cart.domain.CartLineItem;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
 import band.gosrock.domain.domains.order.exception.NotOwnerOrderException;
@@ -253,5 +254,12 @@ public class Order extends BaseTimeEntity {
     public void refund() {
         orderStatus.validCanRefund();
         this.orderStatus = OrderStatus.REFUND;
+    }
+
+    /**
+     * 결제가 필요한 오더인지 반환합니다.
+     */
+    public Boolean isNeedPayment(){
+        return this.orderLineItems.stream().map(OrderLineItem::isNeedPayment).reduce(Boolean.FALSE,(Boolean::logicalOr));
     }
 }

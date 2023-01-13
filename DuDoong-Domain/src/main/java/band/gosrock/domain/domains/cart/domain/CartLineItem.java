@@ -84,4 +84,8 @@ public class CartLineItem extends BaseTimeEntity {
     public Money getItemPrice() {
         return ticketItem.getPrice();
     }
+
+    public Boolean isNeedPayment(){
+        return ticketItem.isNeedPayment();
+    }
 }
