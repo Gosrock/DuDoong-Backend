@@ -33,7 +33,7 @@ public class CookieGenerateHelper {
                         .maxAge(tokenAndUserResponse.getAccessTokenAge())
                         .sameSite(sameSite)
                         .httpOnly(true)
-                        .domain(domain)
+//                        .domain(domain)
                         .secure(true)
                         .build();
         ResponseCookie refreshToken =
@@ -41,7 +41,7 @@ public class CookieGenerateHelper {
                         .path("/")
                         .maxAge(tokenAndUserResponse.getRefreshTokenAge())
                         .sameSite(sameSite)
-                        .domain(domain)
+//                        .domain(domain)
                         .httpOnly(true)
                         .secure(true)
                         .build();
