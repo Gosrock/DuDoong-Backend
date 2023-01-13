@@ -9,6 +9,6 @@ public class HostNotAuthEventException extends DuDoongCodeException {
     public static final DuDoongCodeException EXCEPTION = new HostNotAuthEventException();
 
     private HostNotAuthEventException() {
-        super(ErrorCode.Host_NOT_AUTH_EVENT);
+        super(ErrorCode.HOST_NOT_AUTH_EVENT);
     }
 }

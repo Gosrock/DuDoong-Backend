@@ -6,7 +6,6 @@ import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.exception.HostNotAuthEventException;
 import band.gosrock.domain.domains.event.repository.EventRepository;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,7 +18,7 @@ public class EventService {
 
     public void checkEventHost(Long hostId, Long eventId) {
         Event event = eventAdaptor.findById(eventId);
-        if (!Objects.equals(event.getHostId(), hostId)) {
+        if (!event.getHostId().equals(hostId)) {
             throw HostNotAuthEventException.EXCEPTION;
         }
     }

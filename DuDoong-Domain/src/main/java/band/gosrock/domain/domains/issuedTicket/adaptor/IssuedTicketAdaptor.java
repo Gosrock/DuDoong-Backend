@@ -20,6 +20,10 @@ public class IssuedTicketAdaptor {
         return issuedTicketRepository.save(issuedTicket);
     }
 
+    public void saveAll(List<IssuedTicket> issuedTickets) {
+        issuedTicketRepository.saveAll(issuedTickets);
+    }
+
     public List<IssuedTicket> findAllByOrderLineId(Long orderLineId) {
         return issuedTicketRepository.findAllByOrderLineId(orderLineId);
     }
@@ -38,5 +42,11 @@ public class IssuedTicketAdaptor {
             PageRequest pageRequest, Long eventId, String userName) {
         return issuedTicketRepository.findAllByEvent_IdAndUser_Profile_NameContaining(
                 eventId, userName, pageRequest);
+    }
+
+    public Page<IssuedTicket> findAllByEventAndUserPhoneNumber(
+            PageRequest pageRequest, Long eventId, String phoneNumber) {
+        return issuedTicketRepository.findAllByEvent_IdAndUser_Profile_PhoneNumberContaining(
+                eventId, phoneNumber, pageRequest);
     }
 }

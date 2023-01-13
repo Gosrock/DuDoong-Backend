@@ -14,7 +14,7 @@ public class IssuedTicketDTO {
     private final EventInfoVo eventInfo;
 
     public IssuedTicketDTO(IssuedTicket issuedTicket) {
-        this.issuedTicketInfo = new IssuedTicketInfoVo(issuedTicket);
+        this.issuedTicketInfo = issuedTicket.toIssuedTicketInfoVo(issuedTicket);
         this.eventInfo = new EventInfoVo(issuedTicket.getEvent());
     }
 }

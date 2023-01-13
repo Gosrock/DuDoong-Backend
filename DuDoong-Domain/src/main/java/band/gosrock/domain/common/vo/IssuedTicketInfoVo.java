@@ -5,9 +5,11 @@ import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
+@Builder
 public class IssuedTicketInfoVo {
 
     /*
@@ -54,14 +56,16 @@ public class IssuedTicketInfoVo {
      */
     private final Money optionPrice;
 
-    public IssuedTicketInfoVo(IssuedTicket issuedTicket) {
-        this.issuedTicketId = issuedTicket.getId();
-        this.issuedTicketNo = issuedTicket.getIssuedTicketNo();
-        this.uuid = issuedTicket.getUuid();
-        this.ticketName = issuedTicket.getTicketItem().getName();
-        this.ticketPrice = issuedTicket.getTicketItem().getPrice();
-        this.createdAt = issuedTicket.getCreatedAt();
-        this.issuedTicketStatus = issuedTicket.getIssuedTicketStatus();
-        this.optionPrice = issuedTicket.sumOptionPrice();
+    public static IssuedTicketInfoVo from(IssuedTicket issuedTicket) {
+        return IssuedTicketInfoVo.builder()
+                .issuedTicketId(issuedTicket.getId())
+                .issuedTicketNo(issuedTicket.getIssuedTicketNo())
+                .uuid(issuedTicket.getUuid())
+                .ticketName(issuedTicket.getTicketItem().getName())
+                .ticketPrice(issuedTicket.getPrice())
+                .createdAt(issuedTicket.getCreatedAt())
+                .issuedTicketStatus(issuedTicket.getIssuedTicketStatus())
+                .optionPrice(issuedTicket.sumOptionPrice())
+                .build();
     }
 }

@@ -15,7 +15,7 @@ public class RetrieveIssuedTicketDTO {
     private final UserInfoVo userInfo;
 
     public RetrieveIssuedTicketDTO(IssuedTicket issuedTicket, User user) {
-        this.issuedTicketInfo = new IssuedTicketInfoVo(issuedTicket);
-        this.userInfo = new UserInfoVo(user);
+        this.issuedTicketInfo = issuedTicket.toIssuedTicketInfoVo(issuedTicket);
+        this.userInfo = user.toUserInfoVo(user);
     }
 }

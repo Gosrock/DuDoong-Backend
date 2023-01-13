@@ -26,7 +26,8 @@ public class AdminIssuedTicketController {
     public RetrieveIssuedTicketListResponse getIssuedTickets(
             @RequestParam Long page,
             @RequestParam Long eventId,
-            @RequestParam(required = false) String userName) {
-        return readIssuedTicketsUseCase.execute(page, eventId, userName);
+            @RequestParam(required = false) String userName,
+            @RequestParam(required = false) String phoneNumber) {
+        return readIssuedTicketsUseCase.execute(page, eventId, userName, phoneNumber);
     }
 }
