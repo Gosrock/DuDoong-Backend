@@ -113,4 +113,8 @@ public class JwtTokenProvider {
     public Long getRefreshTokenTTlSecond() {
         return jwtProperties.getRefreshExp();
     }
+
+    public Long getAccessTokenTTlSecond() {
+        return jwtProperties.getAccessExp();
+    }
 }

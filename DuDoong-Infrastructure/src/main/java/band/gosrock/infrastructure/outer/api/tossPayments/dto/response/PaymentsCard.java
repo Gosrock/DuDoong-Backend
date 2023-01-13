@@ -8,15 +8,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PaymentsCard {
     private Long amount;
-    private String issuerCode;
-    private String acquirerCode;
+    private CardCode issuerCode;
+    private CardCode acquirerCode;
     private String number;
     private Long installmentPlanMonths;
     private String approveNo;
     private Boolean useCardPoint;
     private String cardType;
     private String ownerType;
-    private String acquireStatus;
+    private CardAcquireStatus acquireStatus;
 
     private Boolean isInterestFree;
     private String interestPayer;
