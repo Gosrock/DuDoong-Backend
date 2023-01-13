@@ -21,6 +21,8 @@ public enum OrderStatus {
     OUTDATED("OUTDATED", "결제 시간 만료"),
     // 결제 승인
     CONFIRM("CONFIRM", "결제 완료"),
+
+    APPROVED("APPROVED", "승인 완료"),
     // 사용자가 환불
     REFUND("REFUND", "환불 완료"),
 
@@ -44,8 +46,14 @@ public enum OrderStatus {
         }
     }
 
-    public void validCanOrder() {
+    public void validCanPaymentConfirm() {
         if (!this.equals(OrderStatus.PENDING_PAYMENT)) {
+            throw NotPendingOrderException.EXCEPTION;
+        }
+    }
+
+    public void validCanApprove() {
+        if (!this.equals(OrderStatus.PENDING_APPROVE)) {
             throw NotPendingOrderException.EXCEPTION;
         }
     }

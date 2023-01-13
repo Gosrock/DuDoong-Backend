@@ -8,6 +8,7 @@ import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
+import band.gosrock.domain.domains.order.exception.NotApprovalOrderException;
 import band.gosrock.domain.domains.order.exception.NotOwnerOrderException;
 import band.gosrock.domain.domains.order.exception.OrderLineNotFountException;
 import java.time.LocalDateTime;
@@ -117,10 +118,6 @@ public class Order extends BaseTimeEntity {
 
     /**
      * 카드, 간편결제등 토스 요청 과정이 필요한 결제를 생성합니다.
-     *
-     * @param userId
-     * @param cart
-     * @return
      */
     public static Order createPaymentOrder(Long userId, Cart cart) {
         return orderBaseBuilder(userId, cart).orderStatus(OrderStatus.PENDING_PAYMENT).build();
@@ -128,13 +125,18 @@ public class Order extends BaseTimeEntity {
 
     /**
      * 승인 결제인 주문을 생성합니다.
-     *
-     * @param userId
-     * @param cart
-     * @return
      */
     public static Order createApproveOrder(Long userId, Cart cart) {
         return orderBaseBuilder(userId, cart).orderStatus(OrderStatus.PENDING_APPROVE).build();
+    }
+
+    /**
+     * 주문을 생성합니다.
+     */
+    public static Order createOrder(Long userId, Cart cart){
+        if(cart.isNeedPayment())
+            return createPaymentOrder(userId , cart);
+        return createApproveOrder(userId, cart);
     }
 
     private static OrderBuilder orderBaseBuilder(Long userId, Cart cart) {
@@ -179,9 +181,18 @@ public class Order extends BaseTimeEntity {
         if (!getTotalPaymentPrice().equals(requestAmount)) {
             throw InvalidOrderException.EXCEPTION;
         }
-        orderStatus.validCanOrder();
+        orderStatus.validCanPaymentConfirm();
         // TODO: 재고량 비교 필요?
         orderStatus = OrderStatus.CONFIRM;
+    }
+
+    public void approveOrder() {
+        if(isNeedPayment()){
+            throw NotApprovalOrderException.EXCEPTION;
+        }
+        orderStatus.validCanApprove();
+        // TODO: 재고량 비교 필요?
+        orderStatus = OrderStatus.APPROVED;
     }
 
     public void validOwner(Long currentUserId) {

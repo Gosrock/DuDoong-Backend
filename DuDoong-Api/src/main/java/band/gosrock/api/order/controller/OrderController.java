@@ -49,8 +49,8 @@ public class OrderController {
     }
 
     // TODO : 승인 결제 방식 도입하면서 좀더 이쁘게 만들 예정
-    @Operation(summary = "카드 주문을 생성합니다. 쿠폰없을때 쿠폰아이디 null 로 보내주세염!")
-    @PostMapping("/card")
+    @Operation(summary = "주문을 생성합니다. 장바구니 아이디를 주문서로 변환하는 작업을 합니다.")
+    @PostMapping("/")
     public CreateOrderResponse createOrder(
             @RequestBody @Valid CreateOrderRequest createOrderRequest) {
         return createOrderUseCase.execute(createOrderRequest);
