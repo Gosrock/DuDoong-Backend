@@ -56,10 +56,10 @@ public class Cart extends BaseTimeEntity {
         return cartLineItems.stream().map(CartLineItem::getQuantity).reduce(0L, Long::sum);
     }
 
-    /**
-     * 결제가 필요한 오더인지 반환합니다.
-     */
-    public Boolean isNeedPayment(){
-        return this.cartLineItems.stream().map(CartLineItem::isNeedPayment).reduce(Boolean.FALSE,(Boolean::logicalOr));
+    /** 결제가 필요한 오더인지 반환합니다. */
+    public Boolean isNeedPayment() {
+        return this.cartLineItems.stream()
+                .map(CartLineItem::isNeedPayment)
+                .reduce(Boolean.FALSE, (Boolean::logicalOr));
     }
 }
