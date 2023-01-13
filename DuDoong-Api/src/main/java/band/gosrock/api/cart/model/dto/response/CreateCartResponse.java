@@ -35,6 +35,7 @@ public class CreateCartResponse {
                 .totalPrice(cart.getTotalPrice())
                 .cartId(cart.getId())
                 .title(cart.getCartName())
+                .isNeedPayment(cart.isNeedPayment())
                 .totalQuantity(cart.getTotalQuantity())
                 .build();
     }
