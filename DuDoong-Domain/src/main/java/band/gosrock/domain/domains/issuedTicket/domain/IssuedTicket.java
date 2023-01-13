@@ -155,16 +155,7 @@ public class IssuedTicket extends BaseTimeEntity {
     }
 
     public IssuedTicketInfoVo toIssuedTicketInfoVo(IssuedTicket issuedTicket) {
-        return IssuedTicketInfoVo.builder()
-                .issuedTicketId(issuedTicket.getId())
-                .issuedTicketNo(issuedTicket.getIssuedTicketNo())
-                .uuid(issuedTicket.getUuid())
-                .ticketName(issuedTicket.getTicketItem().getName())
-                .ticketPrice(issuedTicket.getPrice())
-                .createdAt(issuedTicket.getCreatedAt())
-                .issuedTicketStatus(issuedTicket.getIssuedTicketStatus())
-                .optionPrice(issuedTicket.sumOptionPrice())
-                .build();
+        return IssuedTicketInfoVo.from(issuedTicket);
     }
 
     public static CreateIssuedTicketResponse orderLineItemToIssuedTickets(
