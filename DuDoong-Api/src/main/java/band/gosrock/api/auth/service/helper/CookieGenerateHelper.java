@@ -21,6 +21,7 @@ public class CookieGenerateHelper {
         if (Arrays.stream(activeProfiles).toList().contains("prod")) {
             sameSite = "Strict";
         }
+
         ResponseCookie accessToken =
                 ResponseCookie.from("accessToken", tokenAndUserResponse.getAccessToken())
                         .path("/")

@@ -26,12 +26,14 @@ public class ReadIssuedTicketsUseCase {
      * 로직이 너무 복잡해짐 => 일단 연관관계 매핑 걸어두고 나중에 QueryDsl 설정 들어오면 바꿔야 할 듯
      */
     @Transactional(readOnly = true)
-    public RetrieveIssuedTicketListResponse execute(Long page, Long eventId, String userName) {
+    public RetrieveIssuedTicketListResponse execute(
+            Long page, Long eventId, String userName, String phoneNumber) {
         Long currentUserId = SecurityUtils.getCurrentUserId();
         // 조회 유저 권한 인증
         eventService.checkEventHost(currentUserId, eventId);
         Page<IssuedTicket> issuedTickets =
-                issuedTicketDomainService.retrieveIssuedTickets(page, eventId, userName);
+                issuedTicketDomainService.retrieveIssuedTickets(
+                        page, eventId, userName, phoneNumber);
         return new RetrieveIssuedTicketListResponse(
                 page,
                 (long) issuedTickets.getTotalPages(),
