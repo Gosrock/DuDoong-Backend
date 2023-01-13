@@ -14,19 +14,26 @@ import org.springframework.http.ResponseCookie;
 public class CookieGenerateHelper {
     private final Environment env;
 
-    public HttpHeaders getTokenCookies(TokenAndUserResponse tokenAndUserResponse) {
+    public HttpHeaders getTokenCookies(
+            TokenAndUserResponse tokenAndUserResponse, String referer, String host) {
         String[] activeProfiles = env.getActiveProfiles();
         String sameSite = "None";
 
         if (Arrays.stream(activeProfiles).toList().contains("prod")) {
             sameSite = "Strict";
         }
+        String domain = "localhost";
+        if (referer.contains(host)) {
+            domain = host;
+        }
+
         ResponseCookie accessToken =
                 ResponseCookie.from("accessToken", tokenAndUserResponse.getAccessToken())
                         .path("/")
                         .maxAge(tokenAndUserResponse.getAccessTokenAge())
                         .sameSite(sameSite)
                         .httpOnly(true)
+                        .domain(domain)
                         .secure(true)
                         .build();
         ResponseCookie refreshToken =
@@ -34,6 +41,7 @@ public class CookieGenerateHelper {
                         .path("/")
                         .maxAge(tokenAndUserResponse.getRefreshTokenAge())
                         .sameSite(sameSite)
+                        .domain(domain)
                         .httpOnly(true)
                         .secure(true)
                         .build();

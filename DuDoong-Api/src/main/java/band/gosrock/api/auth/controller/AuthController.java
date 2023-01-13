@@ -95,10 +95,14 @@ public class AuthController {
     @Tag(name = "카카오 oauth")
     @DevelopOnlyApi
     @GetMapping("/oauth/kakao/develop")
-    public ResponseEntity<TokenAndUserResponse> developUserSign(@RequestParam("code") String code) {
+    public ResponseEntity<TokenAndUserResponse> developUserSign(
+            @RequestParam("code") String code,
+            @RequestHeader(value = "referer", required = false, defaultValue = "localhost")
+                    String referer,
+            @RequestHeader(value = "host", required = false) String host) {
         TokenAndUserResponse tokenAndUserResponse = registerUseCase.upsertKakaoOauthUser(code);
         return ResponseEntity.ok()
-                .headers(cookieGenerateHelper.getTokenCookies(tokenAndUserResponse))
+                .headers(cookieGenerateHelper.getTokenCookies(tokenAndUserResponse, referer, host))
                 .body(tokenAndUserResponse);
     }
 
@@ -115,11 +119,13 @@ public class AuthController {
     @PostMapping("/oauth/kakao/register")
     public ResponseEntity<TokenAndUserResponse> kakaoAuthCheckRegisterValid(
             @RequestParam("id_token") String token,
-            @Valid @RequestBody RegisterRequest registerRequest) {
+            @Valid @RequestBody RegisterRequest registerRequest,
+            @RequestHeader(value = "referer", required = false) String referer,
+            @RequestHeader(value = "host", required = false) String host) {
         TokenAndUserResponse tokenAndUserResponse =
                 registerUseCase.registerUserByOCIDToken(token, registerRequest);
         return ResponseEntity.ok()
-                .headers(cookieGenerateHelper.getTokenCookies(tokenAndUserResponse))
+                .headers(cookieGenerateHelper.getTokenCookies(tokenAndUserResponse, referer, host))
                 .body(tokenAndUserResponse);
     }
 
@@ -128,10 +134,12 @@ public class AuthController {
     @Tag(name = "카카오 oauth")
     @PostMapping("/oauth/kakao/login")
     public ResponseEntity<TokenAndUserResponse> kakaoOauthUserLogin(
-            @RequestParam("id_token") String token) {
+            @RequestParam("id_token") String token,
+            @RequestHeader(value = "referer", required = false) String referer,
+            @RequestHeader(value = "host", required = false) String host) {
         TokenAndUserResponse tokenAndUserResponse = loginUseCase.execute(token);
         return ResponseEntity.ok()
-                .headers(cookieGenerateHelper.getTokenCookies(tokenAndUserResponse))
+                .headers(cookieGenerateHelper.getTokenCookies(tokenAndUserResponse, referer, host))
                 .body(tokenAndUserResponse);
     }
 
