@@ -5,6 +5,7 @@ import band.gosrock.api.order.model.dto.request.ConfirmOrderRequest;
 import band.gosrock.api.order.model.dto.request.CreateOrderRequest;
 import band.gosrock.api.order.model.dto.response.CreateOrderResponse;
 import band.gosrock.api.order.model.dto.response.OrderResponse;
+import band.gosrock.api.order.service.ApproveOrderUseCase;
 import band.gosrock.api.order.service.CancelOrderUseCase;
 import band.gosrock.api.order.service.ConfirmOrderUseCase;
 import band.gosrock.api.order.service.CreateOrderUseCase;
@@ -34,6 +35,7 @@ public class OrderController {
 
     private final CreateOrderUseCase createOrderUseCase;
     private final ConfirmOrderUseCase confirmOrderUseCase;
+    private final ApproveOrderUseCase approveOrderUseCase;
     private final CancelOrderUseCase cancelOrderUseCase;
 
     private final RefundOrderUseCase refundOrderUseCase;
@@ -56,12 +58,18 @@ public class OrderController {
         return createOrderUseCase.execute(createOrderRequest);
     }
 
-    @Operation(summary = "결제 승인요청 . successUrl 로 돌아온 웹페이지에서 query 로 받은 응답값을 서버로 보냅니당.")
+    @Operation(summary = "결제 확인하기 . successUrl 로 돌아온 웹페이지에서 query 로 받은 응답값을 서버로 보냅니당.")
     @PostMapping("/{order_uuid}/confirm")
     public OrderResponse confirmOrder(
             @PathVariable("order_uuid") String orderUuid,
             @RequestBody ConfirmOrderRequest confirmOrderRequest) {
         return confirmOrderUseCase.execute(orderUuid, confirmOrderRequest);
+    }
+
+    @Operation(summary = "주문 승인하기 . 호스트 관리자가 티켓 주문을 승인합니다. ( 어드민 이벤트쪽으로 이동예정 )")
+    @PostMapping("/{order_uuid}/approve")
+    public OrderResponse confirmOrder(@PathVariable("order_uuid") String orderUuid) {
+        return approveOrderUseCase.execute(orderUuid);
     }
 
     @Operation(summary = "결제 취소요청. 호스트 관리자가 결제를 취소 시킵니다.! (호스트 관리자용(관리자쪽에서 사용))")
