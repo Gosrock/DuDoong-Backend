@@ -22,6 +22,7 @@ public class CorsConfig implements WebMvcConfigurer {
         allowedOriginPatterns.add("https://staging.dudoong.com");
         if (!Arrays.stream(activeProfiles).toList().contains("prod")) {
             allowedOriginPatterns.add("http://localhost:3000");
+            allowedOriginPatterns.add("http://localhost:5173");
         }
         String[] patterns = allowedOriginPatterns.toArray(String[]::new);
         registry.addMapping("/**")
