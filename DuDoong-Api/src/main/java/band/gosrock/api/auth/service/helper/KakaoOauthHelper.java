@@ -40,14 +40,14 @@ public class KakaoOauthHelper {
                 + String.format(
                         KAKAO_OAUTH_QUERY_STRING,
                         oauthProperties.getKakaoClientId(),
-                        referer + "kakao/callback");
+                        referer + "/kakao/callback");
     }
 
     public KakaoTokenResponse getOauthToken(String code, String referer) {
 
         return kakaoOauthClient.kakaoAuth(
                 oauthProperties.getKakaoClientId(),
-                referer + "kakao/callback",
+                referer + "/kakao/callback",
                 code,
                 oauthProperties.getKakaoClientSecret());
     }
