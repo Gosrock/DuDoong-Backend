@@ -18,12 +18,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
 
-public class IssuedTicketRepositoryImpl implements IssuedTicketRepositoryCustom {
+public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepository {
 
     private final JPAQueryFactory queryFactory;
 
-    public IssuedTicketRepositoryImpl(EntityManager em) {
-        this.queryFactory = new JPAQueryFactory(em);
+    public IssuedTicketCustomRepositoryImpl(JPAQueryFactory jpaQueryFactory) {
+        this.queryFactory = jpaQueryFactory;
     }
 
     QIssuedTicket qIssuedTicket = QIssuedTicket.issuedTicket;
