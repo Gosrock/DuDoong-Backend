@@ -1,17 +1,3 @@
-/*
- 스프링 부트 2.6 버전 이상에서는 QueryDsl 5.0.0 버전 이용 권장
- 출처 : [https://wangtak.tistory.com/m/44]
- */
-buildscript {
-    ext {
-        queryDslVersion = "5.0.0"
-    }
-}
-
-plugins {
-    id "com.ewerk.gradle.plugins.querydsl" version "1.0.10"
-}
-
 bootJar { enabled = false }
 jar { enabled = true }
 
@@ -22,25 +8,22 @@ dependencies {
     implementation project(':DuDoong-Common')
     implementation project(':DuDoong-Infrastructure')
     //queryDsl 설정 부분
-    implementation "com.querydsl:querydsl-jpa:${queryDslVersion}"
-    //@Entity와 @Id 등의 어노테이션을 QueryDsl이 인식 가능하게 추가
-    annotationProcessor(
-            "javax.persistence:javax.persistence-api",
-            "javax.annotation:javax.annotation-api",
-            "com.querydsl:querydsl-apt:${queryDslVersion}:jpa")
+    api ("com.querydsl:querydsl-core") // querydsl
+    api ("com.querydsl:querydsl-jpa") // querydsl
+    annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jpa" // querydsl JPAAnnotationProcessor 사용 지정
+    annotationProcessor("jakarta.persistence:jakarta.persistence-api")
+    annotationProcessor("jakarta.annotation:jakarta.annotation-api")
+}
+//https://jojoldu.tistory.com/372
+def generated='src/main/generated'
+sourceSets {
+    main.java.srcDirs += [ generated ]
 }
 
-def querydslDir = "$buildDir/generated/querydsl"
-querydsl {
-    jpa = true
-    querydslSourcesDir = querydslDir
+tasks.withType(JavaCompile) {
+    options.annotationProcessorGeneratedSourcesDirectory = file(generated)
 }
-sourceSets {
-    main.java.srcDir querydslDir
-}
-configurations {
-    querydsl.extendsFrom compileClasspath
-}
-compileQuerydsl {
-    options.annotationProcessorPath = configurations.querydsl
+
+clean.doLast {
+    file(generated).deleteDir()
 }

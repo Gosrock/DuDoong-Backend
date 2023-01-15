@@ -37,3 +37,5 @@ out/
 .vscode/
 .env
 .env.*
+
+DuDoong-Domain/src/main/generated/**/*.java
