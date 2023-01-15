@@ -31,10 +31,12 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity(name = "tbl_issued_ticket")
+@BatchSize(size = 10)
 public class IssuedTicket extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -73,7 +75,7 @@ public class IssuedTicket extends BaseTimeEntity {
     /*
     발급 티켓의 옵션들 (단방향)
      */
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "issued_ticket_id")
     private List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers = new ArrayList<>();
 
@@ -150,8 +152,8 @@ public class IssuedTicket extends BaseTimeEntity {
                 .reduce(Money.ZERO, Money::plus);
     }
 
-    public IssuedTicketInfoVo toIssuedTicketInfoVo(IssuedTicket issuedTicket) {
-        return IssuedTicketInfoVo.from(issuedTicket);
+    public IssuedTicketInfoVo toIssuedTicketInfoVo() {
+        return IssuedTicketInfoVo.from(this);
     }
 
     public static CreateIssuedTicketResponse orderLineItemToIssuedTickets(

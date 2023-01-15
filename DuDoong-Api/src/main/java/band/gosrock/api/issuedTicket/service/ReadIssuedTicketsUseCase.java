@@ -2,14 +2,12 @@ package band.gosrock.api.issuedTicket.service;
 
 
 import band.gosrock.api.config.security.SecurityUtils;
-import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketDTO;
 import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketListResponse;
+import band.gosrock.api.issuedTicket.mapper.IssuedTicketMapper;
 import band.gosrock.common.annotation.UseCase;
-import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.service.EventService;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.service.IssuedTicketDomainService;
-import band.gosrock.domain.domains.user.service.UserDomainService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 
@@ -18,7 +16,7 @@ import org.springframework.data.domain.Page;
 public class ReadIssuedTicketsUseCase {
 
     private final IssuedTicketDomainService issuedTicketDomainService;
-    private final UserDomainService userDomainService;
+    private final IssuedTicketMapper issuedTicketMapper;
     private final EventService eventService;
 
     /**
@@ -29,18 +27,10 @@ public class ReadIssuedTicketsUseCase {
             Long page, Long eventId, String userName, String phoneNumber) {
         Long currentUserId = SecurityUtils.getCurrentUserId();
         // 조회 유저 권한 인증
-        Event event = eventService.checkEventHost(currentUserId, eventId);
+        eventService.checkEventHost(currentUserId, eventId);
         Page<IssuedTicket> issuedTickets =
                 issuedTicketDomainService.retrieveIssuedTickets(
                         page, eventId, userName, phoneNumber);
-        return new RetrieveIssuedTicketListResponse(
-                page,
-                (long) issuedTickets.getTotalPages(),
-                issuedTickets.stream()
-                        .map(
-                                issuedTicket ->
-                                        new RetrieveIssuedTicketDTO(
-                                                issuedTicket, issuedTicket.getUser()))
-                        .toList());
+        return RetrieveIssuedTicketListResponse.of(issuedTickets);
     }
 }

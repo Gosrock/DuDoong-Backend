@@ -8,7 +8,6 @@ import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.dto.condtion.IssuedTicketCondition;
 import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketDTO;
 import band.gosrock.domain.domains.issuedTicket.dto.response.CreateIssuedTicketResponse;
-import band.gosrock.domain.domains.issuedTicket.dto.response.IssuedTicketDTO;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketUserNotMatchedException;
 import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepository;
 import java.util.List;
@@ -80,12 +79,12 @@ public class IssuedTicketDomainService {
      * @return IssuedTicketDTO (transaction 상태에서만 지연 로딩 프록시 객체를 갖고올 수 있으므로 DTO로 묶어서 반환)
      */
     @Transactional(readOnly = true)
-    public IssuedTicketDTO retrieveIssuedTicket(Long currentUserId, Long issuedTicketId) {
+    public IssuedTicket retrieveIssuedTicket(Long currentUserId, Long issuedTicketId) {
         IssuedTicket issuedTicket = issuedTicketAdaptor.find(issuedTicketId);
         if (!Objects.equals(issuedTicket.getUser().getId(), currentUserId)) {
             throw IssuedTicketUserNotMatchedException.EXCEPTION;
         }
-        return new IssuedTicketDTO(issuedTicket);
+        return issuedTicket;
     }
 
     /**

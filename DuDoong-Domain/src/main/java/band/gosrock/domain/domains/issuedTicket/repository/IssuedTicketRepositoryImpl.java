@@ -44,12 +44,15 @@ public class IssuedTicketRepositoryImpl implements IssuedTicketRepositoryCustom 
                         .fetchJoin()
                         .leftJoin(qIssuedTicket.ticketItem, qTicketItem)
                         .fetchJoin()
+                        .leftJoin(
+                                qIssuedTicket.issuedTicketOptionAnswers, qIssuedTicketOptionAnswer)
+                        .fetchJoin()
                         .where(
                                 eventIdEq(condition.getEventId()),
                                 userNameContains(condition.getUserName()),
                                 phoneNumberContains(condition.getPhoneNumber()))
                         .offset(pageable.getOffset())
-                        .limit(pageable.getPageSize())
+                        //                        .limit(pageable.getPageSize())
                         .fetch();
 
         JPAQuery<Long> countQuery =
@@ -74,6 +77,9 @@ public class IssuedTicketRepositoryImpl implements IssuedTicketRepositoryCustom 
                         .leftJoin(qIssuedTicket.user, qUser)
                         .fetchJoin()
                         .leftJoin(qIssuedTicket.ticketItem, qTicketItem)
+                        .fetchJoin()
+                        .leftJoin(
+                                qIssuedTicket.issuedTicketOptionAnswers, qIssuedTicketOptionAnswer)
                         .fetchJoin()
                         .where(qIssuedTicket.id.eq(issuedTicketId))
                         .fetchOne();

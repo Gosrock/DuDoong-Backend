@@ -1,22 +1,33 @@
 package band.gosrock.api.issuedTicket.dto.response;
 
 
+import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import java.util.List;
+import lombok.Builder;
 import lombok.Getter;
+import org.springframework.data.domain.Page;
 
 @Getter
+@Builder
 public class RetrieveIssuedTicketListResponse {
 
-    private final Long page;
+    private final int page;
 
-    private final Long totalPage;
+    private final int totalPage;
 
     private final List<RetrieveIssuedTicketDTO> issuedTickets;
 
-    public RetrieveIssuedTicketListResponse(
-            Long page, Long totalPage, List<RetrieveIssuedTicketDTO> issuedTickets) {
-        this.page = page;
-        this.totalPage = totalPage;
-        this.issuedTickets = issuedTickets;
+    public static RetrieveIssuedTicketListResponse of(Page<IssuedTicket> issuedTickets) {
+        return RetrieveIssuedTicketListResponse.builder()
+                .page(issuedTickets.getPageable().getPageNumber())
+                .totalPage(issuedTickets.getTotalPages())
+                .issuedTickets(
+                        issuedTickets.stream()
+                                .map(
+                                        issuedTicket ->
+                                                RetrieveIssuedTicketDTO.of(
+                                                        issuedTicket, issuedTicket.getUser()))
+                                .toList())
+                .build();
     }
 }
