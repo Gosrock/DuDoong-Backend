@@ -9,6 +9,6 @@ public class OrderLineNotFountException extends DuDoongCodeException {
     public static final DuDoongCodeException EXCEPTION = new OrderLineNotFountException();
 
     private OrderLineNotFountException() {
-        super(ErrorCode.ORDER_LINE_NOT_FOUND);
+        super(OrderErrorCode.ORDER_LINE_NOT_FOUND);
     }
 }

@@ -9,6 +9,6 @@ public class OrderNotFoundException extends DuDoongCodeException {
     public static final DuDoongCodeException EXCEPTION = new OrderNotFoundException();
 
     private OrderNotFoundException() {
-        super(ErrorCode.ORDER_NOT_FOUND);
+        super(OrderErrorCode.ORDER_NOT_FOUND);
     }
 }

@@ -9,6 +9,6 @@ public class NotPendingOrderException extends DuDoongCodeException {
     public static final DuDoongCodeException EXCEPTION = new NotPendingOrderException();
 
     private NotPendingOrderException() {
-        super(ErrorCode.ORDER_NOT_PENDING);
+        super(OrderErrorCode.ORDER_NOT_PENDING);
     }
 }

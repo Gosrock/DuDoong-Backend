@@ -5,8 +5,10 @@ import band.gosrock.api.example.docs.ExampleException2Docs;
 import band.gosrock.api.example.docs.ExampleExceptionDocs;
 import band.gosrock.api.example.dto.ExampleResponse;
 import band.gosrock.api.example.service.ExampleApiService;
-import band.gosrock.common.annotation.ApiErrorExample;
+import band.gosrock.common.annotation.ApiErrorCodeExample;
+import band.gosrock.common.annotation.ApiErrorExceptionsExample;
 import band.gosrock.common.annotation.DevelopOnlyApi;
+import band.gosrock.common.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,14 +26,19 @@ public class ExampleController {
 
     @GetMapping
     @DevelopOnlyApi
-    @ApiErrorExample(ExampleExceptionDocs.class)
+    @ApiErrorExceptionsExample(ExampleExceptionDocs.class)
     public ExampleResponse get() {
         return exampleApiService.getExample();
     }
 
     @PostMapping
-    @ApiErrorExample(ExampleException2Docs.class)
+    @ApiErrorExceptionsExample(ExampleException2Docs.class)
     public ExampleResponse create() {
         return exampleApiService.createExample();
     }
+
+    @GetMapping
+    @DevelopOnlyApi
+    @ApiErrorCodeExample(ErrorCode.class)
+    public void getOrderErrorCode() {}
 }

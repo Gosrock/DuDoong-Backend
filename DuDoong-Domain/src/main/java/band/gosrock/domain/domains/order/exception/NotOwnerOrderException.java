@@ -9,6 +9,6 @@ public class NotOwnerOrderException extends DuDoongCodeException {
     public static final DuDoongCodeException EXCEPTION = new NotOwnerOrderException();
 
     private NotOwnerOrderException() {
-        super(ErrorCode.ORDER_NOT_MINE);
+        super(OrderErrorCode.ORDER_NOT_MINE);
     }
 }

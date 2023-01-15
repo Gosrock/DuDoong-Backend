@@ -9,6 +9,6 @@ public class InvalidOrderException extends DuDoongCodeException {
     public static final DuDoongCodeException EXCEPTION = new InvalidOrderException();
 
     private InvalidOrderException() {
-        super(ErrorCode.ORDER_NOT_VALID);
+        super(OrderErrorCode.ORDER_NOT_VALID);
     }
 }

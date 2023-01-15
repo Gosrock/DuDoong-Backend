@@ -12,10 +12,10 @@ import org.springframework.stereotype.Component;
 
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
+@Inherited
 @Documented
 @Component
-@Inherited
-public @interface ExceptionDoc {
+public @interface ErrorCode {
     @AliasFor(annotation = Component.class)
     String value() default "";
 }

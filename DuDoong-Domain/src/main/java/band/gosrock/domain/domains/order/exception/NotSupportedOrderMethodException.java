@@ -9,6 +9,6 @@ public class NotSupportedOrderMethodException extends DuDoongCodeException {
     public static final DuDoongCodeException EXCEPTION = new NotSupportedOrderMethodException();
 
     private NotSupportedOrderMethodException() {
-        super(ErrorCode.ORDER_NOT_SUPPORTED_METHOD);
+        super(OrderErrorCode.ORDER_NOT_SUPPORTED_METHOD);
     }
 }
