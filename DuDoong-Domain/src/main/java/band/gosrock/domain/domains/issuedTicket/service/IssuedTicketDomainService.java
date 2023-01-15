@@ -5,6 +5,7 @@ import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketOptionAnswerAdaptor;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
+import band.gosrock.domain.domains.issuedTicket.dto.condtion.IssuedTicketCondition;
 import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketDTO;
 import band.gosrock.domain.domains.issuedTicket.dto.response.CreateIssuedTicketResponse;
 import band.gosrock.domain.domains.issuedTicket.dto.response.IssuedTicketDTO;
@@ -14,8 +15,6 @@ import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 
 @DomainService
@@ -93,22 +92,14 @@ public class IssuedTicketDomainService {
      * 발급 티켓 리스트 가져오기 비즈니스 로직
      *
      * @param page 페이지 번호
-     * @param eventId 이벤트 id
+     * @param eventId 이벤트
      * @param userName 검색할 유저 이름
      * @return Page<IssuedTicket>
      */
     @Transactional(readOnly = true)
     public Page<IssuedTicket> retrieveIssuedTickets(
             Long page, Long eventId, String userName, String phoneNumber) {
-        PageRequest pageRequest =
-                PageRequest.of(Math.toIntExact(page - 1), 10, Sort.by("id").descending());
-        if (userName == null && phoneNumber == null) {
-            return issuedTicketAdaptor.findAllByEvent(pageRequest, eventId);
-        } else if (userName != null) {
-            return issuedTicketAdaptor.findAllByEventAndUserName(pageRequest, eventId, userName);
-        } else {
-            return issuedTicketAdaptor.findAllByEventAndUserPhoneNumber(
-                    pageRequest, eventId, phoneNumber);
-        }
+        return issuedTicketAdaptor.searchIssuedTicket(
+                page, new IssuedTicketCondition(eventId, userName, phoneNumber));
     }
 }

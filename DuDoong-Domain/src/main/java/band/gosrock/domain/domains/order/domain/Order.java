@@ -123,7 +123,14 @@ public class Order extends BaseTimeEntity {
      * @return
      */
     public static Order createPaymentOrder(Long userId, Cart cart) {
-        return orderBaseBuilder(userId, cart).orderStatus(OrderStatus.PENDING_PAYMENT).build();
+        List<OrderLineItem> orderLineItems =
+                cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
+        return Order.builder()
+                .userId(userId)
+                .OrderName(cart.getCartName())
+                .orderLineItems(orderLineItems)
+                .orderStatus(OrderStatus.PENDING_PAYMENT)
+                .build();
     }
 
     /**
@@ -134,17 +141,24 @@ public class Order extends BaseTimeEntity {
      * @return
      */
     public static Order createApproveOrder(Long userId, Cart cart) {
-        return orderBaseBuilder(userId, cart).orderStatus(OrderStatus.PENDING_APPROVE).build();
-    }
-
-    private static OrderBuilder orderBaseBuilder(Long userId, Cart cart) {
         List<OrderLineItem> orderLineItems =
                 cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
         return Order.builder()
                 .userId(userId)
                 .OrderName(cart.getCartName())
-                .orderLineItems(orderLineItems);
+                .orderLineItems(orderLineItems)
+                .orderStatus(OrderStatus.PENDING_APPROVE)
+                .build();
     }
+
+    //    private static OrderBuilder orderBaseBuilder(Long userId, Cart cart) {
+    //        List<OrderLineItem> orderLineItems =
+    //                cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
+    //        return Order.builder()
+    //                .userId(userId)
+    //                .OrderName(cart.getCartName())
+    //                .orderLineItems(orderLineItems);
+    //    }
 
     public Money getTotalSupplyPrice() {
         return orderLineItems.stream()

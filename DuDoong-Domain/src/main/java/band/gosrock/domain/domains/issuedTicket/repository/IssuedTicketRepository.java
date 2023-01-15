@@ -6,10 +6,9 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.repository.PagingAndSortingRepository;
 
 public interface IssuedTicketRepository
-        extends JpaRepository<IssuedTicket, Long>, PagingAndSortingRepository<IssuedTicket, Long> {
+        extends JpaRepository<IssuedTicket, Long>, IssuedTicketRepositoryCustom {
     List<IssuedTicket> findAllByOrderLineId(Long orderLineId);
 
     Page<IssuedTicket> findAllByEvent_IdOrderByIdDesc(Long eventId, Pageable pageable);

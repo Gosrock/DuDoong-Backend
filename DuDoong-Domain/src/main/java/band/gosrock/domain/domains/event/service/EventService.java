@@ -16,10 +16,11 @@ public class EventService {
     private final EventRepository eventRepository;
     private final EventAdaptor eventAdaptor;
 
-    public void checkEventHost(Long hostId, Long eventId) {
+    public Event checkEventHost(Long hostId, Long eventId) {
         Event event = eventAdaptor.findById(eventId);
         if (!event.getHostId().equals(hostId)) {
             throw HostNotAuthEventException.EXCEPTION;
         }
+        return event;
     }
 }

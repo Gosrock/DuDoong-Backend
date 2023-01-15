@@ -73,7 +73,7 @@ public class IssuedTicket extends BaseTimeEntity {
     /*
     발급 티켓의 옵션들 (단방향)
      */
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "issued_ticket_id")
     private List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers = new ArrayList<>();
 
@@ -143,10 +143,6 @@ public class IssuedTicket extends BaseTimeEntity {
     }
 
     public Money sumOptionPrice() {
-        //        issuedTicketOptionAnswers.forEach(issuedTicketOptionAnswer -> {
-        //            this.optionPrice = this.optionPrice.plus(issuedTicketOptionAnswer.getOption()
-        //                .getAdditionalPrice());
-        //        });
         return issuedTicketOptionAnswers.stream()
                 .map(
                         issuedTicketOptionAnswer ->
