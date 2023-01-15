@@ -9,5 +9,5 @@ import lombok.Getter;
 public enum ApplyTarget {
     ALL("ALL"),
     SUB("SUB");
-    private String value;
+    private final String value;
 }
