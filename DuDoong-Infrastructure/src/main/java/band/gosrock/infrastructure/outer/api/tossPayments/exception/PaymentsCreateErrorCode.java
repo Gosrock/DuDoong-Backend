@@ -2,6 +2,7 @@ package band.gosrock.infrastructure.outer.api.tossPayments.exception;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
+import band.gosrock.common.annotation.ErrorCode;
 import band.gosrock.common.dto.ErrorReason;
 import band.gosrock.common.exception.BaseErrorCode;
 import lombok.AllArgsConstructor;
@@ -9,6 +10,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
+@ErrorCode
 public enum PaymentsCreateErrorCode implements BaseErrorCode {
     NOT_SUPPORTED_METHOD(
             BAD_REQUEST.value(), "PAYMENTS_CREATE_NOT_SUPPORTED_METHOD", "지원되지 않는 결제 수단입니다."),

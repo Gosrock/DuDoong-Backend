@@ -9,6 +9,7 @@ import band.gosrock.common.interfaces.SwaggerExampleExceptions;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
 import band.gosrock.domain.domains.order.exception.OrderNotFoundException;
 
+@ExceptionDoc
 public class ExampleException2Docs implements SwaggerExampleExceptions {
 
     @ExplainError("어쩌구 저쩌구")

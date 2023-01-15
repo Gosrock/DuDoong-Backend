@@ -6,12 +6,14 @@ import static band.gosrock.common.consts.DuDoongStatic.INTERNAL_SERVER;
 import static band.gosrock.common.consts.DuDoongStatic.NOT_FOUND;
 import static band.gosrock.common.consts.DuDoongStatic.UNAUTHORIZED;
 
+import band.gosrock.common.annotation.ErrorCode;
 import band.gosrock.common.dto.ErrorReason;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
+@ErrorCode
 public enum GlobalErrorCode implements BaseErrorCode {
     EXAMPLE_NOT_FOUND(NOT_FOUND, "EXAMPLE_404_1", "Example Not Found."),
 

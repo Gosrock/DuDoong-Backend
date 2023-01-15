@@ -8,6 +8,7 @@ import band.gosrock.common.interfaces.SwaggerExampleExceptions;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
 import band.gosrock.domain.domains.order.exception.OrderNotFoundException;
 import band.gosrock.domain.domains.user.exception.UserNotFoundException;
+@ExceptionDoc
 
 public class ExampleExceptionDocs implements SwaggerExampleExceptions {
 

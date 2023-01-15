@@ -3,6 +3,7 @@ package band.gosrock.infrastructure.outer.api.tossPayments.exception;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
+import band.gosrock.common.annotation.ErrorCode;
 import band.gosrock.common.dto.ErrorReason;
 import band.gosrock.common.exception.BaseErrorCode;
 import lombok.AllArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
+@ErrorCode
 public enum PaymentsCancelErrorCode implements BaseErrorCode {
     ALREADY_CANCELED_PAYMENT(
             INTERNAL_SERVER_ERROR.value(),

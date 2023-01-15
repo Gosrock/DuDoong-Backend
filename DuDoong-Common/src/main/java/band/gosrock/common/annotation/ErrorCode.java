@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Inherited
 @Documented
 @Component
 public @interface ErrorCode {

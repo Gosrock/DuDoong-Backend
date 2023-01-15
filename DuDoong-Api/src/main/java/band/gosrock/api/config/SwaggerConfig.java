@@ -114,8 +114,8 @@ public class SwaggerConfig {
         };
     }
     /**
-     * BaseErrorCode 타입의 이넘값들을 문서화 시킵니다.
-     * ExplainError 어노테이션으로 부가설명을 붙일수있습니다. 필드들을 가져와서 예시 에러 객체를 동적으로 생성해서 예시값으로 붙입니다.
+     * BaseErrorCode 타입의 이넘값들을 문서화 시킵니다. ExplainError 어노테이션으로 부가설명을 붙일수있습니다. 필드들을 가져와서 예시 에러 객체를
+     * 동적으로 생성해서 예시값으로 붙입니다.
      */
     private void generateErrorCodeResponseExample(
             Operation operation, Class<? extends BaseErrorCode> type) {
@@ -153,9 +153,9 @@ public class SwaggerConfig {
     }
 
     /**
-     * SwaggerExampleExceptions 타입의 클래스를 문서화 시킵니다.
-     * SwaggerExampleExceptions 타입의 클래스는 필드로 DuDoongCodeException 타입을 가지며,
-     * DuDoongCodeException 의 errorReason 와,ExplainError 의 설명을 문서화시킵니다.
+     * SwaggerExampleExceptions 타입의 클래스를 문서화 시킵니다. SwaggerExampleExceptions 타입의 클래스는 필드로
+     * DuDoongCodeException 타입을 가지며, DuDoongCodeException 의 errorReason 와,ExplainError 의 설명을
+     * 문서화시킵니다.
      */
     private void generateExceptionResponseExample(Operation operation, Class<?> type) {
         ApiResponses responses = operation.getResponses();

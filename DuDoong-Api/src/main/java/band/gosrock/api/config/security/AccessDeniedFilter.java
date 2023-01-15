@@ -1,7 +1,9 @@
 package band.gosrock.api.config.security;
 
 
+import band.gosrock.common.dto.ErrorReason;
 import band.gosrock.common.dto.ErrorResponse;
+import band.gosrock.common.exception.BaseErrorCode;
 import band.gosrock.common.exception.DuDoongCodeException;
 import band.gosrock.common.exception.GlobalErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,9 +48,10 @@ public class AccessDeniedFilter extends OncePerRequestFilter {
         }
     }
 
-    private ErrorResponse getErrorResponse(GlobalErrorCode errorCode, String path) {
+    private ErrorResponse getErrorResponse(BaseErrorCode errorCode, String path) {
+        ErrorReason errorReason = errorCode.getErrorReason();
         return new ErrorResponse(
-                errorCode.getStatus(), errorCode.getCode(), errorCode.getReason(), path);
+            errorReason.getStatus(), errorReason.getCode(), errorReason.getReason(), path);
     }
 
     private void responseToClient(HttpServletResponse response, ErrorResponse errorResponse)

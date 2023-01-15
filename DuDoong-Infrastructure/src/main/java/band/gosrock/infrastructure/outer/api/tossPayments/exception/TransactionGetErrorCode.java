@@ -2,6 +2,7 @@ package band.gosrock.infrastructure.outer.api.tossPayments.exception;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
+import band.gosrock.common.annotation.ErrorCode;
 import band.gosrock.common.dto.ErrorReason;
 import band.gosrock.common.exception.BaseErrorCode;
 import lombok.AllArgsConstructor;
@@ -9,6 +10,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
+@ErrorCode
 public enum TransactionGetErrorCode implements BaseErrorCode {
     UNAUTHORIZED_KEY(
             BAD_REQUEST.value(), "PAYMENTS_GET_UNAUTHORIZED_KEY", "인증되지 않은 시크릿 키 혹은 클라이언트 키 입니다."),

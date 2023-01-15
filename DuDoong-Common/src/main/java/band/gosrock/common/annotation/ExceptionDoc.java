@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Component
-@Inherited
 public @interface ExceptionDoc {
     @AliasFor(annotation = Component.class)
     String value() default "";

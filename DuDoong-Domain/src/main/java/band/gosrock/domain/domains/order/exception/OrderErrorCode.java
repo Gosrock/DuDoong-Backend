@@ -3,6 +3,7 @@ package band.gosrock.domain.domains.order.exception;
 import static band.gosrock.common.consts.DuDoongStatic.BAD_REQUEST;
 import static band.gosrock.common.consts.DuDoongStatic.NOT_FOUND;
 
+import band.gosrock.common.annotation.ErrorCode;
 import band.gosrock.common.dto.ErrorReason;
 import band.gosrock.common.exception.BaseErrorCode;
 import lombok.AllArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
+@ErrorCode
 public enum OrderErrorCode implements BaseErrorCode {
     ORDER_NOT_MINE(BAD_REQUEST, "Order-400-1", "Order Not MINE"),
     ORDER_NOT_VALID(BAD_REQUEST, "Order-400-2", "Order Not Valid"),
@@ -26,6 +28,10 @@ public enum OrderErrorCode implements BaseErrorCode {
 
     @Override
     public ErrorReason getErrorReason() {
-        return band.gosrock.common.dto.ErrorReason.builder().reason(reason).code(code).status(status).build();
+        return band.gosrock.common.dto.ErrorReason.builder()
+                .reason(reason)
+                .code(code)
+                .status(status)
+                .build();
     }
 }

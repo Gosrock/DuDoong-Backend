@@ -1,7 +1,9 @@
 package band.gosrock.api.config.response;
 
 
+import band.gosrock.common.dto.ErrorReason;
 import band.gosrock.common.dto.ErrorResponse;
+import band.gosrock.common.exception.BaseErrorCode;
 import band.gosrock.common.exception.DuDoongCodeException;
 import band.gosrock.common.exception.DuDoongDynamicException;
 import band.gosrock.common.exception.GlobalErrorCode;
@@ -79,10 +81,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(DuDoongCodeException.class)
     public ResponseEntity<ErrorResponse> DuDoongCodeExceptionHandler(
             DuDoongCodeException e, HttpServletRequest request) {
-        GlobalErrorCode code = e.getErrorCode();
+        BaseErrorCode code = e.getErrorCode();
+        ErrorReason errorReason = code.getErrorReason();
         ErrorResponse errorResponse =
-                new ErrorResponse(code.getErrorReason(), request.getRequestURL().toString());
-        return ResponseEntity.status(HttpStatus.valueOf(code.getStatus())).body(errorResponse);
+                new ErrorResponse(errorReason, request.getRequestURL().toString());
+        return ResponseEntity.status(HttpStatus.valueOf(errorReason.getStatus())).body(errorResponse);
     }
 
     @ExceptionHandler(DuDoongDynamicException.class)

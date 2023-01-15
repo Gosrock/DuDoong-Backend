@@ -8,7 +8,7 @@ import band.gosrock.api.example.service.ExampleApiService;
 import band.gosrock.common.annotation.ApiErrorCodeExample;
 import band.gosrock.common.annotation.ApiErrorExceptionsExample;
 import band.gosrock.common.annotation.DevelopOnlyApi;
-import band.gosrock.common.exception.GlobalErrorCode;
+import band.gosrock.domain.domains.order.exception.OrderErrorCode;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,8 +37,8 @@ public class ExampleController {
         return exampleApiService.createExample();
     }
 
-    @GetMapping
+    @GetMapping("/order")
     @DevelopOnlyApi
-    @ApiErrorCodeExample(GlobalErrorCode.class)
+    @ApiErrorCodeExample(OrderErrorCode.class)
     public void getOrderErrorCode() {}
 }

@@ -2,6 +2,7 @@ package band.gosrock.infrastructure.outer.api.tossPayments.exception;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
+import band.gosrock.common.annotation.ErrorCode;
 import band.gosrock.common.dto.ErrorReason;
 import band.gosrock.common.exception.BaseErrorCode;
 import lombok.AllArgsConstructor;
@@ -9,6 +10,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
+@ErrorCode
 public enum PaymentsConfirmErrorCode implements BaseErrorCode {
     ALREADY_PROCESSED_PAYMENT(
             BAD_REQUEST.value(), "PAYMENTS_CONFIRM_ALREADY_PROCESSED_PAYMENT", "이미 처리된 결제 입니다."),
