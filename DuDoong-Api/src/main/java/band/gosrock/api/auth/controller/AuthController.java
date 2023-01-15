@@ -69,13 +69,13 @@ public class AuthController {
             log.info("/oauth/kakao" + host);
             String format = String.format("https://%s/", host);
             if (referer.contains("admin")) {
-                // 프론트 개발자가 로컬에서 개발 테스트 할 때 해당 https://두둥.com/admin
-                return registerUseCase.getKaKaoOauthLink(format + "/admin");
+                // 프론트 개발자가 로컬에서 개발 테스트 할 때 해당 https://두둥.com/admin/
+                return registerUseCase.getKaKaoOauthLink(format + "admin");
             }
             return registerUseCase.getKaKaoOauthLink(format);
         } else if (referer.contains("5173")) {
-            // 프론트 개발자가 로컬에서 개발 테스트 할 때 해당 https://localhost:5173/
-            return registerUseCase.getKaKaoOauthLink(referer + "/admin");
+            // 프론트 개발자가 로컬에서 개발 테스트 할 때 해당 https://localhost:5173/admin/
+            return registerUseCase.getKaKaoOauthLink(referer + "admin");
         }
         // 프론트 개발자가 로컬에서 개발 테스트 할 때 해당 https://localhost:3000/
         return registerUseCase.getKaKaoOauthLink(referer);
@@ -93,11 +93,11 @@ public class AuthController {
             log.info("/oauth/kakao" + host);
             String format = String.format("https://%s/", host);
             if (referer.contains("admin")) {
-                return registerUseCase.getCredentialFromKaKao(code, format + "/admin");
+                return registerUseCase.getCredentialFromKaKao(code, format + "admin");
             }
             return registerUseCase.getCredentialFromKaKao(code, format);
         } else if (referer.contains("5173")) {
-            return registerUseCase.getCredentialFromKaKao(code, referer + "/admin");
+            return registerUseCase.getCredentialFromKaKao(code, referer + "admin");
         }
         return registerUseCase.getCredentialFromKaKao(code, referer);
 
