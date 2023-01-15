@@ -2,8 +2,11 @@ package band.gosrock.infrastructure.outer.api.oauth.exception;
 
 import static band.gosrock.common.consts.DuDoongStatic.BAD_REQUEST;
 
+import band.gosrock.common.annotation.ExplainError;
 import band.gosrock.common.dto.ErrorReason;
 import band.gosrock.common.exception.BaseErrorCode;
+import java.lang.reflect.Field;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -22,7 +25,7 @@ public enum KakaoKauthErrorCode implements BaseErrorCode {
             "KAKAO_KOE303",
             "invalid_grant",
             "인가 코드 요청 시 사용한 redirect_uri와 액세스 토큰 요청 시 사용한 redirect_uri가 다른 경우"),
-    KOE319(BAD_REQUEST, "KOE319", "invalid_grant", "토큰 갱신 요청 시 리프레시 토큰을 전달하지 않는 경우"),
+    KOE319(BAD_REQUEST, "KAKAO_KOE319", "invalid_grant", "토큰 갱신 요청 시 리프레시 토큰을 전달하지 않는 경우"),
     KOE320(
             BAD_REQUEST,
             "KAKAO_KOE320",
@@ -47,5 +50,12 @@ public enum KakaoKauthErrorCode implements BaseErrorCode {
     @Override
     public ErrorReason getErrorReason() {
         return ErrorReason.builder().status(status).code(errorCode).reason(reason).build();
+    }
+
+    @Override
+    public String getExplainError() throws NoSuchFieldException {
+        Field field = this.getClass().getField(this.name());
+        ExplainError annotation = field.getAnnotation(ExplainError.class);
+        return Objects.nonNull(annotation) ? annotation.value() : this.getReason();
     }
 }
