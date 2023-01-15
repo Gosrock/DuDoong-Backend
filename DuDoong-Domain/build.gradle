@@ -1,10 +1,37 @@
 bootJar { enabled = false }
 jar { enabled = true }
 
+/*
+ 스프링 부트 2.6 버전 이상에서는 QueryDsl 5.0.0 버전 이용 권장
+ 출처 : [https://wangtak.tistory.com/m/44]
+ */
+buildscript {
+    ext {
+        queryDslVersion = "5.0.0"
+    }
+}
+
 dependencies {
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
     api 'mysql:mysql-connector-java'
     runtimeOnly 'com.h2database:h2'
     implementation project(':DuDoong-Common')
     implementation project(':DuDoong-Infrastructure')
+    //queryDsl 설정 부분
+    implementation "com.querydsl:querydsl-jpa:${queryDslVersion}"
+    //@Entity와 @Id 등의 어노테이션을 QueryDsl이 인식 가능하게 추가
+    annotationProcessor(
+            "javax.persistence:javax.persistence-api",
+            "javax.annotation:javax.annotation-api",
+            "com.querydsl:querydsl-apt:${queryDslVersion}:jpa")
+
+    // 컴파일 후 빌드 파일 하위에 Q클래스 생성 디렉토리 지정
+    // 출처 : [https://tecoble.techcourse.co.kr/post/2021-08-08-basic-querydsl/]
+    sourceSets {
+        main {
+            java {
+                srcDirs = ["$projectDir/src/main/java", "$projectDir/build/generated"]
+            }
+        }
+    }
 }
