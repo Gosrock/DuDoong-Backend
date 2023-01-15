@@ -2,7 +2,6 @@ package band.gosrock.infrastructure.outer.api.oauth.dto;
 
 
 import band.gosrock.infrastructure.outer.api.tossPayments.exception.PaymentsUnHandleException;
-import band.gosrock.infrastructure.outer.api.tossPayments.exception.TossPaymentsErrorDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies.SnakeCaseStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;

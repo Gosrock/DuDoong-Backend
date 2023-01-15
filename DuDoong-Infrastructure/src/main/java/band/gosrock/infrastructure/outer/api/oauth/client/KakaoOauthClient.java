@@ -1,7 +1,7 @@
 package band.gosrock.infrastructure.outer.api.oauth.client;
 
 
-import band.gosrock.infrastructure.outer.api.oauth.config.FeignOauthConfig;
+import band.gosrock.infrastructure.outer.api.oauth.config.KakaoInfoConfig;
 import band.gosrock.infrastructure.outer.api.oauth.dto.KakaoTokenResponse;
 import band.gosrock.infrastructure.outer.api.oauth.dto.OIDCPublicKeysResponse;
 import org.springframework.cache.annotation.Cacheable;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 @FeignClient(
         name = "KakaoAuthClient",
         url = "https://kauth.kakao.com",
-        configuration = FeignOauthConfig.class)
+        configuration = KakaoInfoConfig.class)
 public interface KakaoOauthClient {
 
     @PostMapping(
