@@ -1,4 +1,4 @@
-package band.gosrock.api.order.mapper;
+package band.gosrock.api.order.model.mapper;
 
 
 import band.gosrock.api.config.security.SecurityUtils;

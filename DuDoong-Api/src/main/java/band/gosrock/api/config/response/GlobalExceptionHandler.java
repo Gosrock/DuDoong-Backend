@@ -1,10 +1,12 @@
 package band.gosrock.api.config.response;
 
 
+import band.gosrock.common.dto.ErrorReason;
 import band.gosrock.common.dto.ErrorResponse;
+import band.gosrock.common.exception.BaseErrorCode;
 import band.gosrock.common.exception.DuDoongCodeException;
 import band.gosrock.common.exception.DuDoongDynamicException;
-import band.gosrock.common.exception.ErrorCode;
+import band.gosrock.common.exception.GlobalErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.List;
@@ -79,10 +81,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(DuDoongCodeException.class)
     public ResponseEntity<ErrorResponse> DuDoongCodeExceptionHandler(
             DuDoongCodeException e, HttpServletRequest request) {
-        ErrorCode code = e.getErrorCode();
+        BaseErrorCode code = e.getErrorCode();
+        ErrorReason errorReason = code.getErrorReason();
         ErrorResponse errorResponse =
-                new ErrorResponse(code.getErrorReason(), request.getRequestURL().toString());
-        return ResponseEntity.status(HttpStatus.valueOf(code.getStatus())).body(errorResponse);
+                new ErrorResponse(errorReason, request.getRequestURL().toString());
+        return ResponseEntity.status(HttpStatus.valueOf(errorReason.getStatus()))
+                .body(errorResponse);
     }
 
     @ExceptionHandler(DuDoongDynamicException.class)
@@ -107,7 +111,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                         .toUriString();
 
         log.error("INTERNAL_SERVER_ERROR", e);
-        ErrorCode internalServerError = ErrorCode.INTERNAL_SERVER_ERROR;
+        GlobalErrorCode internalServerError = GlobalErrorCode.INTERNAL_SERVER_ERROR;
         ErrorResponse errorResponse =
                 new ErrorResponse(
                         internalServerError.getStatus(),

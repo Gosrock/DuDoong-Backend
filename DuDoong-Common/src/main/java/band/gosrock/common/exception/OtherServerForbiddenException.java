@@ -5,6 +5,6 @@ public class OtherServerForbiddenException extends DuDoongCodeException {
     public static final DuDoongCodeException EXCEPTION = new OtherServerForbiddenException();
 
     private OtherServerForbiddenException() {
-        super(ErrorCode.OTHER_SERVER_FORBIDDEN);
+        super(GlobalErrorCode.OTHER_SERVER_FORBIDDEN);
     }
 }
