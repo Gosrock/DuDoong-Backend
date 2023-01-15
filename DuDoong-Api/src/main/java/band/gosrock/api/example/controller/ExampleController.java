@@ -8,6 +8,7 @@ import band.gosrock.api.example.service.ExampleApiService;
 import band.gosrock.common.annotation.ApiErrorCodeExample;
 import band.gosrock.common.annotation.ApiErrorExceptionsExample;
 import band.gosrock.common.annotation.DevelopOnlyApi;
+import band.gosrock.common.exception.GlobalErrorCode;
 import band.gosrock.domain.domains.order.exception.OrderErrorCode;
 import band.gosrock.domain.domains.user.exception.UserErrorCode;
 import band.gosrock.infrastructure.outer.api.tossPayments.exception.PaymentsCancelErrorCode;
@@ -44,40 +45,44 @@ public class ExampleController {
     public ExampleResponse create() {
         return exampleApiService.createExample();
     }
-
+    @GetMapping("/global")
+    @DevelopOnlyApi
+    @Operation(summary = "글로벌 ( 인증 , aop, 서버 내부 오류등)  관련 에러 코드 나열")
+    @ApiErrorCodeExample(GlobalErrorCode.class)
+    public void getGlobalErrorCode() {}
     @GetMapping("/user")
     @DevelopOnlyApi
-    @Operation(description = "유저 도메인 관련 에러 코드 나열")
+    @Operation(summary = "유저 도메인 관련 에러 코드 나열")
     @ApiErrorCodeExample(UserErrorCode.class)
     public void getUserErrorCode() {}
 
     @GetMapping("/order")
     @DevelopOnlyApi
-    @Operation(description = "주문 도메인 관련 에러 코드 나열")
+    @Operation(summary = "주문 도메인 관련 에러 코드 나열")
     @ApiErrorCodeExample(OrderErrorCode.class)
     public void getOrderErrorCode() {}
 
     @GetMapping("/toss/create")
     @DevelopOnlyApi
-    @Operation(description = "토스 주문 생성 관련 에러 코드 나열")
+    @Operation(summary = "토스 주문 생성 관련 에러 코드 나열")
     @ApiErrorCodeExample(PaymentsCreateErrorCode.class)
     public void getPaymentsCreateErrorCode() {}
 
     @GetMapping("/toss/confirm")
     @DevelopOnlyApi
-    @Operation(description = "토스 주문 승인 관련 에러 코드 나열")
+    @Operation(summary = "토스 주문 승인 관련 에러 코드 나열")
     @ApiErrorCodeExample(PaymentsConfirmErrorCode.class)
     public void getPaymentsConfirmErrorCode() {}
 
     @GetMapping("/toss/cancel")
     @DevelopOnlyApi
-    @Operation(description = "토스 주문 취소 관련 에러 코드 나열")
+    @Operation(summary = "토스 주문 취소 관련 에러 코드 나열")
     @ApiErrorCodeExample(PaymentsCancelErrorCode.class)
     public void getPaymentsCancelErrorCode() {}
 
     @GetMapping("/toss/transaction")
     @DevelopOnlyApi
-    @Operation(description = "토스 거래 조회 관련 에러 코드 나열")
+    @Operation(summary = "토스 거래 조회 관련 에러 코드 나열")
     @ApiErrorCodeExample(TransactionGetErrorCode.class)
     public void getTransactionGetErrorCode() {}
 }
