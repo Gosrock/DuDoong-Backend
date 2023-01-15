@@ -9,7 +9,7 @@ import feign.FeignException;
 import feign.Response;
 import feign.codec.ErrorDecoder;
 
-public class KakaoOauthErrorDecoder implements ErrorDecoder {
+public class KakaoInfoErrorDecoder implements ErrorDecoder {
 
     @Override
     public Exception decode(String methodKey, Response response) {
