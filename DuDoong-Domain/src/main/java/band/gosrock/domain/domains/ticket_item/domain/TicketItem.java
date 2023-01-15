@@ -92,4 +92,8 @@ public class TicketItem extends BaseTimeEntity {
     public RefundInfoVo getRefundInfoVo() {
         return event.getRefundInfoVo();
     }
+
+    public Boolean isNeedPayment() {
+        return this.type.isNeedPayment();
+    }
 }

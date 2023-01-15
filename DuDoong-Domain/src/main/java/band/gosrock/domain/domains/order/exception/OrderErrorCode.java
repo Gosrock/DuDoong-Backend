@@ -22,6 +22,11 @@ public enum OrderErrorCode implements BaseErrorCode {
     ORDER_NOT_SUPPORTED_METHOD(BAD_REQUEST, "Order_400_4", "지원하지 않는 방식의 주문입니다."),
     ORDER_CANNOT_CANCEL(BAD_REQUEST, "Order_400_5", "주문을 취소할 수 없는 상태입니다."),
     ORDER_CANNOT_REFUND(BAD_REQUEST, "Order_400_6", "주문을 환불할 수 없는 상태입니다."),
+
+    ORDER_NOT_APPROVAL(BAD_REQUEST, "Order_400_7", "승인 주문이 아닙니다."),
+    ORDER_NOT_PAYMENT(BAD_REQUEST, "Order_400_8", "결제 주문이 아닙니다."),
+
+    ORDER_NOT_REFUND_DATE(BAD_REQUEST, "Order-400-9", "환불을 할 수 있는 기한을 지났습니다."),
     ORDER_NOT_FOUND(NOT_FOUND, "Order_404_1", "주문을 찾을 수 없습니다."),
     ORDER_LINE_NOT_FOUND(NOT_FOUND, "Order_404_2", "주문 라인을 찾을 수 없습니다.");
 
