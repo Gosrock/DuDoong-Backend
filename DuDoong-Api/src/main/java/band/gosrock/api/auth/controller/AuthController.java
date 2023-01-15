@@ -14,7 +14,9 @@ import band.gosrock.api.auth.service.RefreshUseCase;
 import band.gosrock.api.auth.service.RegisterUseCase;
 import band.gosrock.api.auth.service.WithDrawUseCase;
 import band.gosrock.api.auth.service.helper.CookieGenerateHelper;
+import band.gosrock.common.annotation.ApiErrorCodeExample;
 import band.gosrock.common.annotation.DevelopOnlyApi;
+import band.gosrock.infrastructure.outer.api.oauth.exception.KakaoKauthErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -68,15 +70,23 @@ public class AuthController {
         if (referer.contains(host)) {
             log.info("/oauth/kakao" + host);
             String format = String.format("https://%s/", host);
+            if (referer.contains("admin")) {
+                // 프론트 개발자가 로컬에서 개발 테스트 할 때 해당 https://두둥.com/admin/
+                return registerUseCase.getKaKaoOauthLink(format + "admin");
+            }
             return registerUseCase.getKaKaoOauthLink(format);
+        } else if (referer.contains("5173")) {
+            // 프론트 개발자가 로컬에서 개발 테스트 할 때 해당 https://localhost:5173/admin/
+            return registerUseCase.getKaKaoOauthLink(referer + "admin");
         }
         // 프론트 개발자가 로컬에서 개발 테스트 할 때 해당 https://localhost:3000/
         return registerUseCase.getKaKaoOauthLink(referer);
     }
 
-    @Operation(summary = "code 요청받는 핸들러 클라이언트가 몰라도됩니다.")
+    @Operation(summary = "카카오 code 요청받는 곳입니다. referer,host는 건들이지 말아주세요!안보내셔도됩니다.")
     @Tag(name = "카카오 oauth")
     @GetMapping("/oauth/kakao")
+    @ApiErrorCodeExample(KakaoKauthErrorCode.class)
     public OauthTokenResponse getCredentialFromKaKao(
             @RequestParam("code") String code,
             @RequestHeader(value = "referer", required = false) String referer,
@@ -85,10 +95,16 @@ public class AuthController {
         if (referer.contains(host)) {
             log.info("/oauth/kakao" + host);
             String format = String.format("https://%s/", host);
+            if (referer.contains("admin")) {
+                return registerUseCase.getCredentialFromKaKao(code, format + "admin");
+            }
             return registerUseCase.getCredentialFromKaKao(code, format);
+        } else if (referer.contains("5173")) {
+            return registerUseCase.getCredentialFromKaKao(code, referer + "admin");
         }
-        // 프론트 개발자가 로컬에서 개발 테스트 할 때 해당 https://localhost:3000/
         return registerUseCase.getCredentialFromKaKao(code, referer);
+
+        // 프론트 개발자가 로컬에서 개발 테스트 할 때 해당 https://localhost:3000/
     }
 
     @Operation(summary = "개발용 회원가입입니다 클라이언트가 몰라도 됩니다.", deprecated = true)

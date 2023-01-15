@@ -7,13 +7,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 
-@Import(KakaoOauthErrorDecoder.class)
-public class FeignOauthConfig {
+@Import(KauthErrorDecoder.class)
+public class KakaoKauthConfig {
 
     @Bean
     @ConditionalOnMissingBean(value = ErrorDecoder.class)
-    public KakaoOauthErrorDecoder commonFeignErrorDecoder() {
-        return new KakaoOauthErrorDecoder();
+    public KauthErrorDecoder commonFeignErrorDecoder() {
+        return new KauthErrorDecoder();
     }
 
     @Bean

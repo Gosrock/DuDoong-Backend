@@ -47,7 +47,7 @@ public class OrderLineItem extends BaseTimeEntity {
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "order_line_item_id")
     private List<OrderOptionAnswer> orderOptionAnswer = new ArrayList<>();
-
+    /** ---------------------------- 생성 관련 메서드 ---------------------------------- */
     @Builder
     public OrderLineItem(
             TicketItem ticketItem, Long quantity, List<OrderOptionAnswer> orderOptionAnswer) {
@@ -68,25 +68,41 @@ public class OrderLineItem extends BaseTimeEntity {
                 .build();
     }
 
+    /** ---------------------------- 커맨드 메서드 ---------------------------------- */
+
+    /** ---------------------------- 검증 메서드 ---------------------------------- */
+
+    /** ---------------------------- 조회용 메서드 ---------------------------------- */
+
+    /** 응답한 옵션들의 총 가격을 불러옵니다. */
     protected Money getTotalOptionAnswersPrice() {
         return orderOptionAnswer.stream()
                 .map(OrderOptionAnswer::getOptionPrice)
                 .reduce(Money.ZERO, Money::plus);
     }
 
+    /** 카트라인의 총 가격을 가져옵니다. 상품 + 옵션답변의 가격 */
     public Money getTotalOrderLinePrice() {
         return getItemPrice().plus(getTotalOptionAnswersPrice()).times(quantity);
     }
-
+    /** 상품의 가격을 가져옵니다. */
     public Money getItemPrice() {
         return ticketItem.getPrice();
     }
-
+    /** 환불 가능 정보를 불러옵니다. */
     public RefundInfoVo getRefundInfo() {
         return ticketItem.getRefundInfoVo();
     }
-
+    /** 옵션응답의 정보 VO를 가져옵니다. */
     public List<OptionAnswerVo> getOptionAnswerVos() {
         return orderOptionAnswer.stream().map(OrderOptionAnswer::getOptionAnswerVo).toList();
+    }
+    /** 결제가 필요한 오더라인인지 가져옵니다. */
+    public Boolean isNeedPayment() {
+        return ticketItem.isNeedPayment();
+    }
+
+    public Boolean canRefund() {
+        return this.getRefundInfo().getAvailAble();
     }
 }

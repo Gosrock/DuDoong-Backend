@@ -34,13 +34,18 @@ public class CartOptionAnswer extends BaseTimeEntity {
     private Option option;
 
     private String answer;
-
+    /** ---------------------------- 생성 관련 메서드 ---------------------------------- */
     @Builder
     public CartOptionAnswer(Option option, String answer) {
         this.option = option;
         this.answer = answer;
     }
 
+    /** ---------------------------- 커맨드 메서드 ---------------------------------- */
+
+    /** ---------------------------- 검증 메서드 ---------------------------------- */
+
+    /** ---------------------------- 조회용 메서드 ---------------------------------- */
     protected Money getOptionPrice() {
         return option.getAdditionalPrice();
     }

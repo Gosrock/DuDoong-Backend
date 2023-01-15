@@ -25,10 +25,11 @@ public class WithdrawOrderService {
         // TODO : 관리자 권환으로 치환.
         order.validOwner(userId);
         order.cancel();
-        PaymentsResponse paymentsResponse =
-                withdrawPaymentService.execute(
-                        order.getUuid(), order.getPaymentKey(), "이벤트 관리자에 의한 취소");
-
+        if (order.isMethodPayment()) {
+            PaymentsResponse paymentsResponse =
+                    withdrawPaymentService.execute(
+                            order.getUuid(), order.getPaymentKey(), "이벤트 관리자에 의한 취소");
+        }
         return orderUuid;
     }
 
@@ -37,11 +38,11 @@ public class WithdrawOrderService {
         Order order = orderAdaptor.findByOrderUuid(orderUuid);
         order.validOwner(userId);
         order.refund();
-
-        PaymentsResponse paymentsResponse =
-                withdrawPaymentService.execute(
-                        order.getUuid(), order.getPaymentKey(), "구매자에의한 환불 요청");
-
+        if (order.isMethodPayment()) {
+            PaymentsResponse paymentsResponse =
+                    withdrawPaymentService.execute(
+                            order.getUuid(), order.getPaymentKey(), "구매자에의한 환불 요청");
+        }
         return orderUuid;
     }
 }

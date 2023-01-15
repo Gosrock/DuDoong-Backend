@@ -36,7 +36,7 @@ public class OrderOptionAnswer extends BaseTimeEntity {
     private Option option;
 
     private String answer;
-
+    /** ---------------------------- 생성 관련 메서드 ---------------------------------- */
     @Builder
     public OrderOptionAnswer(Option option, String answer) {
         this.option = option;
@@ -50,6 +50,11 @@ public class OrderOptionAnswer extends BaseTimeEntity {
                 .build();
     }
 
+    /** ---------------------------- 커맨드 메서드 ---------------------------------- */
+
+    /** ---------------------------- 검증 메서드 ---------------------------------- */
+
+    /** ---------------------------- 조회용 메서드 ---------------------------------- */
     protected Money getOptionPrice() {
         return option.getAdditionalPrice();
     }
