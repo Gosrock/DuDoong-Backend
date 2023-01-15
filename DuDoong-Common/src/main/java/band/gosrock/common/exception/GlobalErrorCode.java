@@ -13,6 +13,10 @@ import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+/**
+ * 글로벌 관련 예외 코드들이 나온 곳입니다. 인증 , global, aop 종류등 도메인 제외한 exception 코드들이 모이는 곳입니다. 도메인 관련 Exception
+ * code 들은 도메인 내부 exception 패키지에 위치시키면 됩니다.
+ */
 @Getter
 @AllArgsConstructor
 public enum GlobalErrorCode implements BaseErrorCode {
@@ -25,8 +29,6 @@ public enum GlobalErrorCode implements BaseErrorCode {
 
     INVALID_TOKEN(UNAUTHORIZED, "GLOBAL-401-1", "Invalid Jwt Token."),
 
-    USER_NOT_FOUND(NOT_FOUND, "USER-404-1", "User Not Found."),
-
     INTERNAL_SERVER_ERROR(INTERNAL_SERVER, "GLOBAL-500-1", "Internal Server Error."),
 
     OTHER_SERVER_BAD_REQUEST(BAD_REQUEST, "FEIGN-400-1", "Other server bad request"),
@@ -35,9 +37,7 @@ public enum GlobalErrorCode implements BaseErrorCode {
     OTHER_SERVER_EXPIRED_TOKEN(BAD_REQUEST, "FEIGN-400-4", "Other server expired token"),
     NOT_AVAILABLE_REDISSON_LOCK(500, "Redisson-500-1", "can not get redisson lock"),
     SECURITY_CONTEXT_NOT_FOUND(500, "GLOBAL-500-2", "security context not found"),
-    USER_ALREADY_SIGNUP(BAD_REQUEST, "USER-400-1", "User already signup"),
-    USER_FORBIDDEN(FORBIDDEN, "USER_403_1", "user forbidden"),
-    USER_ALREADY_DELETED(FORBIDDEN, "USER_403_2", "user already deleted"),
+
     TOSS_PAYMENTS_UNHANDLED(INTERNAL_SERVER, "PAYMENTS_INTERNAL_SERVER", "관리자에게 연락부탁드려요."),
     BAD_LOCK_IDENTIFIER(500, "AOP_500_1", "락의 키값이 잘못 세팅 되었습니다"),
     BAD_FILE_EXTENSION(BAD_REQUEST, "FILE-400-1", "파일 확장자가 잘못 되었습니다."),
