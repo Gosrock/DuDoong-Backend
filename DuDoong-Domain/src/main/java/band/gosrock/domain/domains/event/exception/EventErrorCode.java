@@ -1,7 +1,6 @@
 package band.gosrock.domain.domains.event.exception;
 
 import static band.gosrock.common.consts.DuDoongStatic.BAD_REQUEST;
-import static band.gosrock.common.consts.DuDoongStatic.FORBIDDEN;
 import static band.gosrock.common.consts.DuDoongStatic.NOT_FOUND;
 
 import band.gosrock.common.annotation.ExplainError;
@@ -15,7 +14,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum EventErrorCode implements BaseErrorCode {
-
     EVENT_NOT_FOUND(NOT_FOUND, "Event_404_1", "이벤트를 찾을 수 없습니다."),
     HOST_NOT_AUTH_EVENT(BAD_REQUEST, "Event_400_1", "Host Not Auth Event");
     private Integer status;
@@ -24,11 +22,7 @@ public enum EventErrorCode implements BaseErrorCode {
 
     @Override
     public ErrorReason getErrorReason() {
-        return ErrorReason.builder()
-                .reason(reason)
-                .code(code)
-                .status(status)
-                .build();
+        return ErrorReason.builder().reason(reason).code(code).status(status).build();
     }
 
     @Override

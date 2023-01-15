@@ -2,7 +2,6 @@ package band.gosrock.domain.domains.issuedTicket.exception;
 
 
 import band.gosrock.common.exception.DuDoongCodeException;
-import band.gosrock.common.exception.GlobalErrorCode;
 
 public class IssuedTicketNotFoundException extends DuDoongCodeException {
 

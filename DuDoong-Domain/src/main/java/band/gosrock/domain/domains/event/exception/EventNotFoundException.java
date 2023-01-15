@@ -2,7 +2,6 @@ package band.gosrock.domain.domains.event.exception;
 
 
 import band.gosrock.common.exception.DuDoongCodeException;
-import band.gosrock.common.exception.GlobalErrorCode;
 
 public class EventNotFoundException extends DuDoongCodeException {
 

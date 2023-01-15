@@ -1,7 +1,6 @@
 package band.gosrock.domain.domains.issuedTicket.exception;
 
 import static band.gosrock.common.consts.DuDoongStatic.BAD_REQUEST;
-import static band.gosrock.common.consts.DuDoongStatic.FORBIDDEN;
 import static band.gosrock.common.consts.DuDoongStatic.NOT_FOUND;
 
 import band.gosrock.common.annotation.ExplainError;
@@ -17,7 +16,7 @@ import lombok.Getter;
 public enum IssuedTicketErrorCode implements BaseErrorCode {
     ISSUED_TICKET_NOT_FOUND(NOT_FOUND, "IssuedTicket_404_1", "IssuedTicket Not Found"),
     ISSUED_TICKET_NOT_MATCHED_USER(
-        BAD_REQUEST, "IssuedTicket_400_1", "IssuedTicket User Not Matched");
+            BAD_REQUEST, "IssuedTicket_400_1", "IssuedTicket User Not Matched");
 
     private Integer status;
     private String code;
@@ -25,11 +24,7 @@ public enum IssuedTicketErrorCode implements BaseErrorCode {
 
     @Override
     public ErrorReason getErrorReason() {
-        return ErrorReason.builder()
-                .reason(reason)
-                .code(code)
-                .status(status)
-                .build();
+        return ErrorReason.builder().reason(reason).code(code).status(status).build();
     }
 
     @Override
