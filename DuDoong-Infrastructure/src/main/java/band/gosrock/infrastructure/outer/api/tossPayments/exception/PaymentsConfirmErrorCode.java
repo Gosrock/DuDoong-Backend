@@ -2,15 +2,16 @@ package band.gosrock.infrastructure.outer.api.tossPayments.exception;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
-import band.gosrock.common.annotation.ErrorCode;
+import band.gosrock.common.annotation.ExplainError;
 import band.gosrock.common.dto.ErrorReason;
 import band.gosrock.common.exception.BaseErrorCode;
+import java.lang.reflect.Field;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-@ErrorCode
 public enum PaymentsConfirmErrorCode implements BaseErrorCode {
     ALREADY_PROCESSED_PAYMENT(
             BAD_REQUEST.value(), "PAYMENTS_CONFIRM_ALREADY_PROCESSED_PAYMENT", "이미 처리된 결제 입니다."),
@@ -140,12 +141,19 @@ public enum PaymentsConfirmErrorCode implements BaseErrorCode {
             "PAYMENTS_CONFIRM_RESTRICTED_TRANSFER_ACCOUNT",
             "계좌는 등록 후 12시간 뒤부터 결제할 수 있습니다. 관련 정책은 해당 은행으로 문의해주세요.");
 
-    private int status;
+    private Integer status;
     private String code;
     private String reason;
 
     @Override
     public ErrorReason getErrorReason() {
         return ErrorReason.builder().status(status).code(code).reason(reason).build();
+    }
+
+    @Override
+    public String getExplainError() throws NoSuchFieldException {
+        Field field = this.getClass().getField(this.name());
+        ExplainError annotation = field.getAnnotation(ExplainError.class);
+        return Objects.nonNull(annotation) ? annotation.value() : this.getReason();
     }
 }

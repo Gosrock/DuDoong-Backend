@@ -3,15 +3,16 @@ package band.gosrock.infrastructure.outer.api.tossPayments.exception;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
-import band.gosrock.common.annotation.ErrorCode;
+import band.gosrock.common.annotation.ExplainError;
 import band.gosrock.common.dto.ErrorReason;
 import band.gosrock.common.exception.BaseErrorCode;
+import java.lang.reflect.Field;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-@ErrorCode
 public enum PaymentsCancelErrorCode implements BaseErrorCode {
     ALREADY_CANCELED_PAYMENT(
             INTERNAL_SERVER_ERROR.value(),
@@ -76,12 +77,19 @@ public enum PaymentsCancelErrorCode implements BaseErrorCode {
             BAD_REQUEST.value(),
             "PAYMENTS_GET_FAILED_PAYMENT_INTERNAL_SYSTEM_PROCESSING",
             "결제가 완료되지 않았어요. 다시 시도해주세요.");
-    private int status;
+    private Integer status;
     private String code;
     private String reason;
 
     @Override
     public ErrorReason getErrorReason() {
         return ErrorReason.builder().status(status).code(code).reason(reason).build();
+    }
+
+    @Override
+    public String getExplainError() throws NoSuchFieldException {
+        Field field = this.getClass().getField(this.name());
+        ExplainError annotation = field.getAnnotation(ExplainError.class);
+        return Objects.nonNull(annotation) ? annotation.value() : this.getReason();
     }
 }

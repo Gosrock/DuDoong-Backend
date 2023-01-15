@@ -6,14 +6,15 @@ import static band.gosrock.common.consts.DuDoongStatic.INTERNAL_SERVER;
 import static band.gosrock.common.consts.DuDoongStatic.NOT_FOUND;
 import static band.gosrock.common.consts.DuDoongStatic.UNAUTHORIZED;
 
-import band.gosrock.common.annotation.ErrorCode;
+import band.gosrock.common.annotation.ExplainError;
 import band.gosrock.common.dto.ErrorReason;
+import java.lang.reflect.Field;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-@ErrorCode
 public enum GlobalErrorCode implements BaseErrorCode {
     EXAMPLE_NOT_FOUND(NOT_FOUND, "EXAMPLE_404_1", "Example Not Found."),
 
@@ -49,12 +50,19 @@ public enum GlobalErrorCode implements BaseErrorCode {
 
     EVENT_NOT_FOUND(NOT_FOUND, "Event-404-1", "Event Not Found"),
     HOST_NOT_AUTH_EVENT(FORBIDDEN, "Event-403-1", "Host Not Auth Event");
-    private int status;
+    private Integer status;
     private String code;
     private String reason;
 
     @Override
     public ErrorReason getErrorReason() {
         return ErrorReason.builder().reason(reason).code(code).status(status).build();
+    }
+
+    @Override
+    public String getExplainError() throws NoSuchFieldException {
+        Field field = this.getClass().getField(this.name());
+        ExplainError annotation = field.getAnnotation(ExplainError.class);
+        return Objects.nonNull(annotation) ? annotation.value() : this.getReason();
     }
 }

@@ -85,7 +85,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ErrorReason errorReason = code.getErrorReason();
         ErrorResponse errorResponse =
                 new ErrorResponse(errorReason, request.getRequestURL().toString());
-        return ResponseEntity.status(HttpStatus.valueOf(errorReason.getStatus())).body(errorResponse);
+        return ResponseEntity.status(HttpStatus.valueOf(errorReason.getStatus()))
+                .body(errorResponse);
     }
 
     @ExceptionHandler(DuDoongDynamicException.class)

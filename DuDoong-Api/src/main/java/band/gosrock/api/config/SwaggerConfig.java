@@ -121,29 +121,23 @@ public class SwaggerConfig {
             Operation operation, Class<? extends BaseErrorCode> type) {
         ApiResponses responses = operation.getResponses();
 
-        Field[] declaredFields = type.getDeclaredFields();
-        Object errorCodeEnum = applicationContext.getBean(type);
+        BaseErrorCode[] errorCodes = type.getEnumConstants();
 
         Map<Integer, List<ExampleHolder>> statusWithExampleHolders =
-                Arrays.stream(declaredFields)
-                        .filter(field -> field.getAnnotation(ExplainError.class) != null)
+                Arrays.stream(errorCodes)
                         .map(
-                                field -> {
+                                baseErrorCode -> {
                                     try {
-                                        BaseErrorCode baseErrorCode =
-                                                (BaseErrorCode) field.get(errorCodeEnum);
                                         ErrorReason errorReason = baseErrorCode.getErrorReason();
-                                        ExplainError annotation =
-                                                field.getAnnotation(ExplainError.class);
-                                        String explainError = annotation.value();
                                         return ExampleHolder.builder()
                                                 .holder(
                                                         getSwaggerExample(
-                                                                explainError, errorReason))
+                                                                baseErrorCode.getExplainError(),
+                                                                errorReason))
                                                 .code(errorReason.getStatus())
-                                                .name(field.getName())
+                                                .name(errorReason.getCode())
                                                 .build();
-                                    } catch (IllegalAccessException e) {
+                                    } catch (NoSuchFieldException e) {
                                         throw new RuntimeException(e);
                                     }
                                 })

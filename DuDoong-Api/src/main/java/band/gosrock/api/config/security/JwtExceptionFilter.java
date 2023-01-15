@@ -1,11 +1,9 @@
 package band.gosrock.api.config.security;
 
 
-import band.gosrock.common.dto.ErrorReason;
 import band.gosrock.common.dto.ErrorResponse;
 import band.gosrock.common.exception.BaseErrorCode;
 import band.gosrock.common.exception.DuDoongCodeException;
-import band.gosrock.common.exception.GlobalErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import javax.servlet.FilterChain;
