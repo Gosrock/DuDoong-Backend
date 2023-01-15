@@ -5,4 +5,6 @@ import band.gosrock.common.dto.ErrorReason;
 
 public interface BaseErrorCode {
     public ErrorReason getErrorReason();
+
+    String getExplainError() throws NoSuchFieldException;
 }
