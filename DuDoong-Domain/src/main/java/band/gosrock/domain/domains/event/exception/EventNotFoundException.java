@@ -9,6 +9,6 @@ public class EventNotFoundException extends DuDoongCodeException {
     public static final DuDoongCodeException EXCEPTION = new EventNotFoundException();
 
     private EventNotFoundException() {
-        super(GlobalErrorCode.EVENT_NOT_FOUND);
+        super(EventErrorCode.EVENT_NOT_FOUND);
     }
 }

@@ -48,13 +48,7 @@ public enum GlobalErrorCode implements BaseErrorCode {
     TOSS_PAYMENTS_UNHANDLED(INTERNAL_SERVER, "PAYMENTS_INTERNAL_SERVER", "관리자에게 연락부탁드려요."),
     BAD_LOCK_IDENTIFIER(500, "AOP_500_1", "락의 키값이 잘못 세팅 되었습니다"),
     BAD_FILE_EXTENSION(BAD_REQUEST, "FILE_400_1", "파일 확장자가 잘못 되었습니다."),
-    ISSUED_TICKET_NOT_FOUND(NOT_FOUND, "IssuedTicket_404_1", "IssuedTicket Not Found"),
-    ISSUED_TICKET_NOT_MATCHED_USER(
-            FORBIDDEN, "IssuedTicket_403_1", "IssuedTicket User Not Matched"),
-    TOSS_PAYMENTS_ENUM_NOT_MATCH(INTERNAL_SERVER, "INFRA_500_1", "토스페이먼츠 이넘값 관련 매칭 안된 문제입니다."),
-
-    EVENT_NOT_FOUND(NOT_FOUND, "Event_404_1", "Event Not Found"),
-    HOST_NOT_AUTH_EVENT(FORBIDDEN, "Event_403_1", "Host Not Auth Event");
+    TOSS_PAYMENTS_ENUM_NOT_MATCH(INTERNAL_SERVER, "INFRA_500_1", "토스페이먼츠 이넘값 관련 매칭 안된 문제입니다.");
     private Integer status;
     private String code;
     private String reason;

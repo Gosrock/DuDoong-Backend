@@ -9,6 +9,6 @@ public class CartNotFoundException extends DuDoongCodeException {
     public static final DuDoongCodeException EXCEPTION = new CartNotFoundException();
 
     private CartNotFoundException() {
-        super(GlobalErrorCode.CART_NOT_FOUND);
+        super(CartErrorCode.CART_NOT_FOUND);
     }
 }
