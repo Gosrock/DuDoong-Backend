@@ -44,7 +44,7 @@ public class IssuedCoupon extends BaseTimeEntity {
     }
 
     public String getCouponName() {
-        // TODO : 쿠폰코드가 쿠폰이름 맞나?
+        // 쿠폰코드==쿠폰이름
         return this.couponCampaign.getCouponCode();
     }
 }
