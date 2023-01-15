@@ -123,8 +123,8 @@ public class Order extends BaseTimeEntity {
                 .userId(userId)
                 .OrderName(cart.getCartName())
                 .orderLineItems(orderLineItems)
-            .orderStatus(OrderStatus.PENDING_PAYMENT)
-            .orderMethod(OrderMethod.PAYMENT)
+                .orderStatus(OrderStatus.PENDING_PAYMENT)
+                .orderMethod(OrderMethod.PAYMENT)
                 .build();
     }
 
@@ -136,8 +136,8 @@ public class Order extends BaseTimeEntity {
                 .userId(userId)
                 .OrderName(cart.getCartName())
                 .orderLineItems(orderLineItems)
-            .orderStatus(OrderStatus.PENDING_APPROVE)
-            .orderMethod(OrderMethod.APPROVAL)
+                .orderStatus(OrderStatus.PENDING_APPROVE)
+                .orderMethod(OrderMethod.APPROVAL)
                 .build();
     }
 
