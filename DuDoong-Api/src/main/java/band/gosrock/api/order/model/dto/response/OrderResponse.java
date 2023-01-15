@@ -3,6 +3,7 @@ package band.gosrock.api.order.model.dto.response;
 
 import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.order.domain.Order;
+import band.gosrock.domain.domains.order.domain.OrderMethod;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.Builder;
@@ -29,9 +30,13 @@ public class OrderResponse {
     @Schema(description = "주문 id")
     private final Long orderId;
 
+    @Schema(description = "주문 방식 ( 결제 방식 , 승인 방식 )")
+    private final OrderMethod orderMethod;
+
     public static OrderResponse of(Order order, List<OrderLineTicketResponse> tickets) {
         return OrderResponse.builder()
                 .refundInfo(order.getTotalRefundInfo())
+                .orderMethod(order.getOrderMethod())
                 .paymentInfo(OrderPaymentResponse.from(order))
                 .tickets(tickets)
                 .orderUuid(order.getUuid())

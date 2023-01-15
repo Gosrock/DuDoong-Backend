@@ -2,19 +2,25 @@ package band.gosrock.domain.domains.order.domain;
 
 import static band.gosrock.common.consts.DuDoongStatic.NO_START_NUMBER;
 
+import band.gosrock.domain.common.aop.domainEvent.Events;
+import band.gosrock.domain.common.events.order.DoneOrderEvent;
+import band.gosrock.domain.common.events.order.WithDrawOrderEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
+import band.gosrock.domain.domains.order.exception.NotApprovalOrderException;
 import band.gosrock.domain.domains.order.exception.NotOwnerOrderException;
+import band.gosrock.domain.domains.order.exception.NotPaymentOrderException;
+import band.gosrock.domain.domains.order.exception.NotRefundAvailableDateOrderException;
 import band.gosrock.domain.domains.order.exception.OrderLineNotFountException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
-import javax.persistence.AttributeOverride;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
@@ -57,24 +63,15 @@ public class Order extends BaseTimeEntity {
     @Column(nullable = false)
     private String orderName;
 
-    // 결제 방식 ( 토스 승인 이후 저장 )
-    @Enumerated(EnumType.STRING)
-    private PaymentMethod paymentMethod = PaymentMethod.DEFAULT;
-    // 토스 결제 승인후 결제 긁힌 시간 ( 토스 승인 이후 저장 )
+    // 결제 대행사 정보 ( 토스 승인 이후 저장 )
+    @Embedded private PgPaymentInfo pgPaymentInfo;
+
+    // 결제 완료 된시간 승인 결제등.
     private LocalDateTime approvedAt;
 
-    // 결제 공급자 정보 ex 카카오페이 ( 토스 승인 이후 저장 )
-    private String paymentProvider;
-
-    // 영수증 주소 ( 토스 승인 이후 저장 )
-    private String receiptUrl;
-    // 승인된 거래키 ( 취소 때 사용 )
-    private String paymentKey;
-    // 세금 ( 토스 승인 이후 저장 )
-    @Embedded
-    @AttributeOverride(name = "amount", column = @Column(name = "vat_amount"))
-    private Money vat;
-
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrderMethod orderMethod;
     // 결제 정보
     @Embedded private PaymentInfo totalPaymentInfo;
 
@@ -103,38 +100,41 @@ public class Order extends BaseTimeEntity {
         this.orderNo = "R" + Long.sum(NO_START_NUMBER, this.id);
     }
 
+    /** ---------------------------- 생성 관련 메서드 ---------------------------------- */
     @Builder
     public Order(
             Long userId,
             String OrderName,
             List<OrderLineItem> orderLineItems,
-            OrderStatus orderStatus) {
+            OrderStatus orderStatus,
+            OrderMethod orderMethod) {
         this.userId = userId;
         this.orderName = OrderName;
         this.orderLineItems.addAll(orderLineItems);
         this.orderStatus = orderStatus;
+        this.orderMethod = orderMethod;
     }
 
-    /**
-     * 카드, 간편결제등 토스 요청 과정이 필요한 결제를 생성합니다.
-     *
-     * @param userId
-     * @param cart
-     * @return
-     */
+    /** 카드, 간편결제등 토스 요청 과정이 필요한 결제를 생성합니다. */
     public static Order createPaymentOrder(Long userId, Cart cart) {
-        return orderBaseBuilder(userId, cart).orderStatus(OrderStatus.PENDING_PAYMENT).build();
+        return orderBaseBuilder(userId, cart)
+                .orderStatus(OrderStatus.PENDING_PAYMENT)
+                .orderMethod(OrderMethod.PAYMENT)
+                .build();
     }
 
-    /**
-     * 승인 결제인 주문을 생성합니다.
-     *
-     * @param userId
-     * @param cart
-     * @return
-     */
+    /** 승인 결제인 주문을 생성합니다. */
     public static Order createApproveOrder(Long userId, Cart cart) {
-        return orderBaseBuilder(userId, cart).orderStatus(OrderStatus.PENDING_APPROVE).build();
+        return orderBaseBuilder(userId, cart)
+                .orderStatus(OrderStatus.PENDING_APPROVE)
+                .orderMethod(OrderMethod.APPROVAL)
+                .build();
+    }
+
+    /** 주문을 생성합니다. */
+    public static Order createOrder(Long userId, Cart cart) {
+        if (cart.isNeedPayment()) return createPaymentOrder(userId, cart);
+        return createApproveOrder(userId, cart);
     }
 
     private static OrderBuilder orderBaseBuilder(Long userId, Cart cart) {
@@ -146,22 +146,7 @@ public class Order extends BaseTimeEntity {
                 .orderLineItems(orderLineItems);
     }
 
-    public Money getTotalSupplyPrice() {
-        return orderLineItems.stream()
-                .map(OrderLineItem::getTotalOrderLinePrice)
-                .reduce(Money.ZERO, Money::plus);
-    }
-
-    public Money getTotalPaymentPrice() {
-        return getTotalSupplyPrice().minus(getTotalDiscountPrice());
-    }
-
-    public Money getTotalDiscountPrice() {
-        if (issuedCoupon != null) {
-            return issuedCoupon.getDiscountAmount(getTotalSupplyPrice());
-        }
-        return Money.ZERO;
-    }
+    /** ---------------------------- 커맨드 메서드 ---------------------------------- */
 
     /** totalPaymentInfo 를 업데이트 합니다. */
     public void calculatePaymentInfo() {
@@ -173,43 +158,115 @@ public class Order extends BaseTimeEntity {
                         .build();
     }
 
-    /** 오더의 결제를 승인 합니다. */
-    public void confirmPaymentOrder(Money requestAmount) {
-
-        if (!getTotalPaymentPrice().equals(requestAmount)) {
-            throw InvalidOrderException.EXCEPTION;
-        }
-        orderStatus.validCanOrder();
+    /** 결제 방식의 주문을 승인 합니다. */
+    public void confirmPayment(
+            Money pgAmount, LocalDateTime approvedAt, PgPaymentInfo pgPaymentInfo) {
         // TODO: 재고량 비교 필요?
+        validCanConfirmPayment(pgAmount);
+        validPgAndOrderAmountIsEqual(pgAmount);
         orderStatus = OrderStatus.CONFIRM;
+        this.approvedAt = approvedAt;
+        this.pgPaymentInfo = pgPaymentInfo;
+        Events.raise(DoneOrderEvent.of(this.uuid, this));
     }
 
+    /** 승인 방식의 주문을 승인합니다. */
+    public void approve() {
+        if (isNeedPayment()) {
+            throw NotApprovalOrderException.EXCEPTION;
+        }
+        orderStatus.validCanApprove();
+        // TODO: 재고량 비교 필요?
+        this.approvedAt = LocalDateTime.now();
+        orderStatus = OrderStatus.APPROVED;
+        Events.raise(DoneOrderEvent.of(this.uuid, this));
+    }
+
+    /** 관리자가 주문을 취소 시킵니다 */
+    public void cancel() {
+        orderStatus.validCanCancel();
+        validCanRefundDate();
+        this.orderStatus = OrderStatus.CANCELED;
+        Events.raise(WithDrawOrderEvent.of(this.uuid, this));
+    }
+
+    /** 사용자가 주문을 환불 시킵니다. */
+    public void refund() {
+        orderStatus.validCanRefund();
+        validCanRefundDate();
+        this.orderStatus = OrderStatus.REFUND;
+        Events.raise(WithDrawOrderEvent.of(this.uuid, this));
+    }
+
+    /** ---------------------------- 검증 메서드 ---------------------------------- */
+
+    /** PG 사를 통한 결제 대금이 주문의 가격과 동일한지 검증합니다. */
+    public void validPgAndOrderAmountIsEqual(Money pgAmount) {
+        if (!pgAmount.equals(getTotalPaymentPrice())) {
+            throw InvalidOrderException.EXCEPTION;
+        }
+    }
+    /** 주문에대한 주인인지 검증합니다. */
     public void validOwner(Long currentUserId) {
         if (!userId.equals(currentUserId)) {
             throw NotOwnerOrderException.EXCEPTION;
         }
     }
+    /** 결제 방식의 주문을 승인할수있는지 확인합니다. */
+    public void validCanConfirmPayment(Money requestAmount) {
+        if (!getTotalPaymentPrice().equals(requestAmount)) {
+            throw InvalidOrderException.EXCEPTION;
+        }
+        if (!isNeedPayment()) {
+            throw NotPaymentOrderException.EXCEPTION;
+        }
+        orderStatus.validCanPaymentConfirm();
+    }
+
+    public void validCanRefundDate() {
+        if (!canRefundDate()) {
+            throw NotRefundAvailableDateOrderException.EXCEPTION;
+        }
+    }
+
+    /** ---------------------------- 조회용 메서드 ---------------------------------- */
+    /** 결제 방식의 paymentKey를 가져옵니다. */
+    public String getPaymentKey() {
+        if (Objects.isNull(this.pgPaymentInfo)) {
+            throw NotPaymentOrderException.EXCEPTION;
+        }
+        return this.pgPaymentInfo.getPaymentKey();
+    }
 
     /**
-     * 토스 결제 승인 이후 넘어온 응답값을 바탕으로 vat 등 결제 정보를 업데이트 합니다.
+     * 쿠폰의 이름을 가져옵니다
      *
-     * @param approvedAt
-     * @param paymentMethod
-     * @param vat
+     * @default 사용하지않음
      */
-    public void afterPaymentAddInfo(
-            LocalDateTime approvedAt,
-            PaymentMethod paymentMethod,
-            Money vat,
-            String provider,
-            String receiptUrl,
-            String paymentKey) {
-        this.approvedAt = approvedAt;
-        this.paymentMethod = paymentMethod;
-        this.vat = vat;
-        this.paymentProvider = provider;
-        this.receiptUrl = receiptUrl;
-        this.paymentKey = paymentKey;
+    public String getCouponName() {
+        if (issuedCoupon != null) {
+            return issuedCoupon.getCouponName();
+        }
+        return "사용하지 않음";
+    }
+
+    /** 총 공급가액을 가져옵니다. */
+    public Money getTotalSupplyPrice() {
+        return orderLineItems.stream()
+                .map(OrderLineItem::getTotalOrderLinePrice)
+                .reduce(Money.ZERO, Money::plus);
+    }
+
+    /** 총 결제금액을 가져옵니다. 공급가액 - 할인가 */
+    public Money getTotalPaymentPrice() {
+        return getTotalSupplyPrice().minus(getTotalDiscountPrice());
+    }
+    /** 총 할인금액을 가져옵니다. */
+    public Money getTotalDiscountPrice() {
+        if (issuedCoupon != null) {
+            return issuedCoupon.getDiscountAmount(getTotalSupplyPrice());
+        }
+        return Money.ZERO;
     }
 
     /**
@@ -226,32 +283,38 @@ public class Order extends BaseTimeEntity {
         return orderLineItem.getRefundInfo();
     }
 
-    /**
-     * 쿠폰의 이름을 가져옵니다
-     *
-     * @default 사용하지않음
-     * @return
-     */
-    public String getCouponName() {
-        if (issuedCoupon != null) {
-            return issuedCoupon.getCouponName();
-        }
-        return "사용하지 않음";
+    /** 결제가 필요한 오더인지 반환합니다. */
+    public Boolean isNeedPayment() {
+        return this.orderLineItems.stream()
+                .map(OrderLineItem::isNeedPayment)
+                .reduce(Boolean.FALSE, (Boolean::logicalOr));
     }
 
-    public void validPgAndOrderAmountIsEqual(Money pgAmount) {
-        if (!pgAmount.equals(getTotalPaymentPrice())) {
-            throw InvalidOrderException.EXCEPTION;
-        }
+    /** 결제 수단 정보를 가져옵니다. */
+    public String getMethod() {
+        if (this.orderMethod.equals(OrderMethod.APPROVAL)) return OrderMethod.APPROVAL.getKr();
+        return this.pgPaymentInfo.getPaymentMethod().getKr();
     }
 
-    public void cancel() {
-        orderStatus.validCanCancel();
-        this.orderStatus = OrderStatus.CANCELED;
+    /** 결제 공급자 정보를 가져옵니다. */
+    public String getProvider() {
+        if (this.orderMethod.equals(OrderMethod.APPROVAL)) return null;
+        return this.pgPaymentInfo.getPaymentProvider();
     }
 
-    public void refund() {
-        orderStatus.validCanRefund();
-        this.orderStatus = OrderStatus.REFUND;
+    /** 결제 공급자 정보를 가져옵니다. */
+    public String getReceiptUrl() {
+        if (this.orderMethod.equals(OrderMethod.APPROVAL)) return null;
+        return this.pgPaymentInfo.getReceiptUrl();
+    }
+
+    public Boolean isMethodPayment() {
+        return orderMethod.isPayment();
+    }
+
+    public Boolean canRefundDate() {
+        return this.orderLineItems.stream()
+                .map(OrderLineItem::canRefund)
+                .reduce(Boolean.TRUE, (Boolean::logicalAnd));
     }
 }

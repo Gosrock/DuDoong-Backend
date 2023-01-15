@@ -5,20 +5,21 @@ import band.gosrock.api.config.security.SecurityUtils;
 import band.gosrock.api.order.model.dto.response.OrderResponse;
 import band.gosrock.api.order.model.mapper.OrderMapper;
 import band.gosrock.common.annotation.UseCase;
-import band.gosrock.domain.domains.order.service.WithdrawOrderService;
+import band.gosrock.domain.domains.order.service.OrderApproveService;
 import lombok.RequiredArgsConstructor;
 
-/** 환불을 위함 환불이라 함은, 사용자가 직접 구매한 물품을 취소시킴 */
 @UseCase
 @RequiredArgsConstructor
-public class RefundOrderUseCase {
-    private final WithdrawOrderService withdrawOrderService;
+public class ApproveOrderUseCase {
+
+    private final OrderApproveService orderApproveService;
 
     private final OrderMapper orderMapper;
 
     public OrderResponse execute(String orderUuid) {
+        // TODO : 권한 체크 ( 호스트 관리자인지 )
         Long currentUserId = SecurityUtils.getCurrentUserId();
-        withdrawOrderService.refundOrder(orderUuid, currentUserId);
-        return orderMapper.toOrderResponse(orderUuid);
+        String confirmOrderUuid = orderApproveService.execute(orderUuid, currentUserId);
+        return orderMapper.toOrderResponse(confirmOrderUuid);
     }
 }
