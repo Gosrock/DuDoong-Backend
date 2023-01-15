@@ -12,4 +12,9 @@ public enum TicketType {
     // 승인
     APPROVAL("APPROVAL");
     private String value;
+
+    /** 결제가 필요한지 상태를 반환하는 메서드 */
+    public Boolean isNeedPayment() {
+        return this.equals(TicketType.FIRST_COME_FIRST_SERVED);
+    }
 }

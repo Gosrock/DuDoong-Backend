@@ -5,6 +5,6 @@ public class NotAvailableRedissonLockException extends DuDoongCodeException {
     public static final DuDoongCodeException EXCEPTION = new NotAvailableRedissonLockException();
 
     private NotAvailableRedissonLockException() {
-        super(ErrorCode.NOT_AVAILABLE_REDISSON_LOCK);
+        super(GlobalErrorCode.NOT_AVAILABLE_REDISSON_LOCK);
     }
 }

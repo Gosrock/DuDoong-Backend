@@ -46,6 +46,7 @@ public class CartLineItem extends BaseTimeEntity {
     @JoinColumn(name = "cart_line_id")
     private List<CartOptionAnswer> cartOptionAnswers = new ArrayList<>();
 
+    /** ---------------------------- 생성 관련 메서드 ---------------------------------- */
     @Builder
     public CartLineItem(
             TicketItem ticketItem, Long quantity, List<CartOptionAnswer> cartOptionAnswers) {
@@ -54,34 +55,42 @@ public class CartLineItem extends BaseTimeEntity {
         this.cartOptionAnswers.addAll(cartOptionAnswers);
     }
 
+    /** ---------------------------- 커맨드 메서드 ---------------------------------- */
+
+    /** ---------------------------- 검증 메서드 ---------------------------------- */
+
+    /** ---------------------------- 조회용 메서드 ---------------------------------- */
+
+    /** 응답한 옵션들의 총 가격을 불러옵니다. */
     public Money getTotalOptionsPrice() {
         return cartOptionAnswers.stream()
                 .map(CartOptionAnswer::getOptionPrice)
                 .reduce(Money.ZERO, Money::plus);
     }
-
+    /** 상품의 이름을 가져옵니다. */
     public String getTicketName() {
         return ticketItem.getName();
     }
 
-    public Money getTicketPrice() {
-        return ticketItem.getPrice();
-    }
-
+    /** 카트라인의 총 가격을 가져옵니다. 상품 + 옵션답변의 가격 */
     public Money getTotalCartLinePrice() {
         Money totalOptionAnswerPrice = getTotalOptionsPrice();
         return ticketItem.getPrice().plus(totalOptionAnswerPrice).times(quantity);
     }
-
+    /** 상품의 타입을 가져옵니다. ( 승인 방식 , 결제 방식 ) */
     public TicketType getTicketType() {
         return ticketItem.getType();
     }
-
+    /** 옵션응답의 정보 VO를 가져옵니다. */
     public List<OptionAnswerVo> getOptionAnswerVos() {
         return cartOptionAnswers.stream().map(CartOptionAnswer::getOptionAnswerVo).toList();
     }
-
+    /** 상품의 가격을 가져옵니다. */
     public Money getItemPrice() {
         return ticketItem.getPrice();
+    }
+    /** 장바구니의 담긴 상품이 결제가 필요한지. 가져옵니다. */
+    public Boolean isNeedPayment() {
+        return ticketItem.isNeedPayment();
     }
 }

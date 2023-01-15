@@ -1,7 +1,7 @@
 package band.gosrock.infrastructure.outer.api.oauth.client;
 
 
-import band.gosrock.infrastructure.outer.api.oauth.config.FeignOauthConfig;
+import band.gosrock.infrastructure.outer.api.oauth.config.KakaoInfoConfig;
 import band.gosrock.infrastructure.outer.api.oauth.dto.KakaoInformationResponse;
 import band.gosrock.infrastructure.outer.api.oauth.dto.UnlinkKaKaoTarget;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 @FeignClient(
         name = "KakaoInfoClient",
         url = "https://kapi.kakao.com",
-        configuration = FeignOauthConfig.class)
+        configuration = KakaoInfoConfig.class)
 public interface KakaoInfoClient {
 
     @GetMapping("/v2/user/me")

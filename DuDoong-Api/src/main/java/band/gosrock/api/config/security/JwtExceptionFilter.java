@@ -2,8 +2,8 @@ package band.gosrock.api.config.security;
 
 
 import band.gosrock.common.dto.ErrorResponse;
+import band.gosrock.common.exception.BaseErrorCode;
 import band.gosrock.common.exception.DuDoongCodeException;
-import band.gosrock.common.exception.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import javax.servlet.FilterChain;
@@ -36,7 +36,7 @@ public class JwtExceptionFilter extends OncePerRequestFilter {
         }
     }
 
-    private ErrorResponse getErrorResponse(ErrorCode errorCode, String path) {
+    private ErrorResponse getErrorResponse(BaseErrorCode errorCode, String path) {
 
         return new ErrorResponse(errorCode.getErrorReason(), path);
     }
