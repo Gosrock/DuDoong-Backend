@@ -6,7 +6,6 @@ import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.dto.condtion.IssuedTicketCondition;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketNotFoundException;
 import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepository;
-import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepositoryImpl;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,7 +17,6 @@ import org.springframework.data.domain.Sort;
 public class IssuedTicketAdaptor {
 
     private final IssuedTicketRepository issuedTicketRepository;
-    private final IssuedTicketRepositoryImpl issuedTicketRepositoryImpl;
 
     public IssuedTicket save(IssuedTicket issuedTicket) {
         return issuedTicketRepository.save(issuedTicket);
@@ -34,13 +32,13 @@ public class IssuedTicketAdaptor {
 
     public IssuedTicket find(Long issuedTicket) {
         return issuedTicketRepository
-                .findById(issuedTicket)
+                .find(issuedTicket)
                 .orElseThrow(() -> IssuedTicketNotFoundException.EXCEPTION);
     }
 
     public Page<IssuedTicket> searchIssuedTicket(Long page, IssuedTicketCondition condition) {
         PageRequest pageRequest =
                 PageRequest.of(Math.toIntExact(page), 10, Sort.by("id").descending());
-        return issuedTicketRepositoryImpl.search(condition, pageRequest);
+        return issuedTicketRepository.searchToPage(condition, pageRequest);
     }
 }

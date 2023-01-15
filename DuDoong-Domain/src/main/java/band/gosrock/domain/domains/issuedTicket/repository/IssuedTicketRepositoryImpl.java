@@ -12,6 +12,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
+import java.util.Optional;
 import javax.persistence.EntityManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,7 +34,7 @@ public class IssuedTicketRepositoryImpl implements IssuedTicketRepositoryCustom 
             QIssuedTicketOptionAnswer.issuedTicketOptionAnswer;
 
     @Override
-    public Page<IssuedTicket> search(IssuedTicketCondition condition, Pageable pageable) {
+    public Page<IssuedTicket> searchToPage(IssuedTicketCondition condition, Pageable pageable) {
         List<IssuedTicket> issuedTickets =
                 queryFactory
                         .selectFrom(qIssuedTicket)
@@ -61,6 +62,22 @@ public class IssuedTicketRepositoryImpl implements IssuedTicketRepositoryCustom 
                                 phoneNumberContains(condition.getPhoneNumber()));
 
         return PageableExecutionUtils.getPage(issuedTickets, pageable, countQuery::fetchOne);
+    }
+
+    @Override
+    public Optional<IssuedTicket> find(Long issuedTicketId) {
+        IssuedTicket issuedTicket =
+                queryFactory
+                        .selectFrom(qIssuedTicket)
+                        .leftJoin(qIssuedTicket.event, qEvent)
+                        .fetchJoin()
+                        .leftJoin(qIssuedTicket.user, qUser)
+                        .fetchJoin()
+                        .leftJoin(qIssuedTicket.ticketItem, qTicketItem)
+                        .fetchJoin()
+                        .where(qIssuedTicket.id.eq(issuedTicketId))
+                        .fetchOne();
+        return Optional.ofNullable(issuedTicket);
     }
 
     private BooleanExpression eventIdEq(Long eventId) {
