@@ -123,7 +123,8 @@ public class Order extends BaseTimeEntity {
                 .userId(userId)
                 .OrderName(cart.getCartName())
                 .orderLineItems(orderLineItems)
-                .orderStatus(OrderStatus.PENDING_PAYMENT)
+            .orderStatus(OrderStatus.PENDING_PAYMENT)
+            .orderMethod(OrderMethod.PAYMENT)
                 .build();
     }
 
@@ -135,8 +136,14 @@ public class Order extends BaseTimeEntity {
                 .userId(userId)
                 .OrderName(cart.getCartName())
                 .orderLineItems(orderLineItems)
-                .orderStatus(OrderStatus.PENDING_APPROVE)
+            .orderStatus(OrderStatus.PENDING_APPROVE)
+            .orderMethod(OrderMethod.APPROVAL)
                 .build();
+    }
+
+    public static Order createOrder(Long userId, Cart cart) {
+        if (cart.isNeedPayment()) return createPaymentOrder(userId, cart);
+        return createApproveOrder(userId, cart);
     }
     /** ---------------------------- 커맨드 메서드 ---------------------------------- */
 
