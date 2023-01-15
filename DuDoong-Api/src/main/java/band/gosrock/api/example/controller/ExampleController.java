@@ -9,8 +9,11 @@ import band.gosrock.common.annotation.ApiErrorCodeExample;
 import band.gosrock.common.annotation.ApiErrorExceptionsExample;
 import band.gosrock.common.annotation.DevelopOnlyApi;
 import band.gosrock.common.exception.GlobalErrorCode;
+import band.gosrock.domain.domains.cart.exception.CartErrorCode;
+import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketErrorCode;
 import band.gosrock.domain.domains.order.exception.OrderErrorCode;
 import band.gosrock.domain.domains.user.exception.UserErrorCode;
+import band.gosrock.infrastructure.outer.api.oauth.exception.KakaoKauthErrorCode;
 import band.gosrock.infrastructure.outer.api.tossPayments.exception.PaymentsCancelErrorCode;
 import band.gosrock.infrastructure.outer.api.tossPayments.exception.PaymentsConfirmErrorCode;
 import band.gosrock.infrastructure.outer.api.tossPayments.exception.PaymentsCreateErrorCode;
@@ -63,6 +66,24 @@ public class ExampleController {
     @Operation(summary = "주문 도메인 관련 에러 코드 나열")
     @ApiErrorCodeExample(OrderErrorCode.class)
     public void getOrderErrorCode() {}
+
+    @GetMapping("/cart")
+    @DevelopOnlyApi
+    @Operation(summary = "주문 도메인 관련 에러 코드 나열")
+    @ApiErrorCodeExample(CartErrorCode.class)
+    public void getCartErrorCode() {}
+
+    @GetMapping("/issuedTicket")
+    @DevelopOnlyApi
+    @Operation(summary = "주문 도메인 관련 에러 코드 나열")
+    @ApiErrorCodeExample(IssuedTicketErrorCode.class)
+    public void getIssuedTicketErrorCode() {}
+
+    @GetMapping("/kakao")
+    @DevelopOnlyApi
+    @Operation(summary = "카카오 에러 코드 나열")
+    @ApiErrorCodeExample(KakaoKauthErrorCode.class)
+    public void getKakaoKauthErrorCode() {}
 
     @GetMapping("/toss/create")
     @DevelopOnlyApi

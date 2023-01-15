@@ -14,7 +14,9 @@ import band.gosrock.api.auth.service.RefreshUseCase;
 import band.gosrock.api.auth.service.RegisterUseCase;
 import band.gosrock.api.auth.service.WithDrawUseCase;
 import band.gosrock.api.auth.service.helper.CookieGenerateHelper;
+import band.gosrock.common.annotation.ApiErrorCodeExample;
 import band.gosrock.common.annotation.DevelopOnlyApi;
+import band.gosrock.infrastructure.outer.api.oauth.exception.KakaoKauthErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -81,9 +83,10 @@ public class AuthController {
         return registerUseCase.getKaKaoOauthLink(referer);
     }
 
-    @Operation(summary = "code 요청받는 핸들러 클라이언트가 몰라도됩니다.")
+    @Operation(summary = "카카오 code 요청받는 곳입니다. referer,host는 건들이지 말아주세요!안보내셔도됩니다.")
     @Tag(name = "카카오 oauth")
     @GetMapping("/oauth/kakao")
+    @ApiErrorCodeExample(KakaoKauthErrorCode.class)
     public OauthTokenResponse getCredentialFromKaKao(
             @RequestParam("code") String code,
             @RequestHeader(value = "referer", required = false) String referer,
