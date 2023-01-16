@@ -3,13 +3,14 @@ package band.gosrock.api.issuedTicket.dto.response;
 
 import band.gosrock.domain.common.vo.EventInfoVo;
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
-import band.gosrock.domain.domains.issuedTicket.dto.response.IssuedTicketDTO;
-import band.gosrock.domain.domains.user.domain.User;
+import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
+@Builder
 public class RetrieveIssuedTicketDetailResponse {
 
     /*
@@ -27,9 +28,11 @@ public class RetrieveIssuedTicketDetailResponse {
      */
     private final String userName;
 
-    public RetrieveIssuedTicketDetailResponse(IssuedTicketDTO issuedTicket, User user) {
-        this.issuedTicketInfo = issuedTicket.getIssuedTicketInfo();
-        this.eventInfo = issuedTicket.getEventInfo();
-        this.userName = user.getProfile().getName();
+    public static RetrieveIssuedTicketDetailResponse of(IssuedTicket issuedTicket) {
+        return RetrieveIssuedTicketDetailResponse.builder()
+                .issuedTicketInfo(issuedTicket.toIssuedTicketInfoVo())
+                .eventInfo(issuedTicket.getEvent().toEventInfoVo())
+                .userName(issuedTicket.getUser().getProfile().getName())
+                .build();
     }
 }

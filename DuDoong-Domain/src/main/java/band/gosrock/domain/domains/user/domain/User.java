@@ -74,7 +74,7 @@ public class User extends BaseTimeEntity {
         }
     }
 
-    public UserInfoVo toUserInfoVo(User user) {
-        return UserInfoVo.from(user);
+    public UserInfoVo toUserInfoVo() {
+        return UserInfoVo.from(this);
     }
 }

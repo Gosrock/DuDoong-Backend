@@ -161,8 +161,11 @@ public class AuthController {
 
     @Operation(summary = "refreshToken 용입니다.")
     @PostMapping("/token/refresh")
-    public TokenAndUserResponse tokenRefresh(@RequestParam("token") String code) {
-        return refreshUseCase.execute(code);
+    public ResponseEntity<TokenAndUserResponse> tokenRefresh(@RequestParam("token") String code) {
+        TokenAndUserResponse tokenAndUserResponse = refreshUseCase.execute(code);
+        return ResponseEntity.ok()
+                .headers(cookieGenerateHelper.getTokenCookies(tokenAndUserResponse))
+                .body(tokenAndUserResponse);
     }
 
     @Operation(summary = "회원탈퇴를 합니다.")
