@@ -1,6 +1,7 @@
 package band.gosrock.api.coupon.service;
 
 
+import band.gosrock.api.config.security.SecurityUtils;
 import band.gosrock.api.coupon.dto.reqeust.CreateCouponCampaignRequest;
 import band.gosrock.api.coupon.dto.response.CreateCouponCampaignResponse;
 import band.gosrock.common.annotation.UseCase;
@@ -21,9 +22,9 @@ public class CreateCouponUseCase {
 
     @Transactional
     public CreateCouponCampaignResponse execute(
-            Long userId, CreateCouponCampaignRequest createCouponCampaignRequest) {
+            CreateCouponCampaignRequest createCouponCampaignRequest) {
         // 존재하는 유저인지 검증
-        userDomainService.retrieveUser(userId);
+        userDomainService.retrieveUser(SecurityUtils.getCurrentUserId());
         // 슈퍼 호스트인지 검증
         // TODO : 차후 호스트쪽 코드 구조 나오는 거 보고 넣을 예정
         // 이미 생성된 쿠폰 코드인지 검증
@@ -32,7 +33,6 @@ public class CreateCouponUseCase {
         // 쿠폰 생성
         CouponCampaign couponCampaign =
                 couponCampaignRepository.save(createCouponCampaignRequest.toOnceEntity());
-        return CreateCouponCampaignResponse.createWhenCouponCampaignCreate(
-                couponCampaign, couponCampaign.getHostId());
+        return CreateCouponCampaignResponse.of(couponCampaign, couponCampaign.getHostId());
     }
 }

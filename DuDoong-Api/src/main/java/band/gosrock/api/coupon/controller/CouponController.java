@@ -1,7 +1,6 @@
 package band.gosrock.api.coupon.controller;
 
 
-import band.gosrock.api.config.security.SecurityUtils;
 import band.gosrock.api.coupon.dto.reqeust.*;
 import band.gosrock.api.coupon.dto.response.*;
 import band.gosrock.api.coupon.service.CreateCouponUseCase;
@@ -28,7 +27,6 @@ public class CouponController {
     @PostMapping("/campaigns")
     public CreateCouponCampaignResponse createCouponCampaign(
             @RequestBody @Valid CreateCouponCampaignRequest createCouponCampaignRequest) {
-        Long userId = SecurityUtils.getCurrentUserId();
-        return createCouponUseCase.execute(userId, createCouponCampaignRequest);
+        return createCouponUseCase.execute(createCouponCampaignRequest);
     }
 }
