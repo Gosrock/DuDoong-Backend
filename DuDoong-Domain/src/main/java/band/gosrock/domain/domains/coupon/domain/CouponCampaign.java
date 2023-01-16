@@ -10,7 +10,10 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 
+@DynamicInsert
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Entity(name = "tbl_coupon_campaign")
@@ -27,6 +30,7 @@ public class CouponCampaign extends BaseTimeEntity {
     private DiscountType discountType;
 
     @Enumerated(EnumType.STRING)
+    @ColumnDefault("'ALL'")
     private ApplyTarget applyTarget;
 
     // 사용기한(일자) ex.10 -> 발급 이후 10일 동안 쿠폰 사용 가능
