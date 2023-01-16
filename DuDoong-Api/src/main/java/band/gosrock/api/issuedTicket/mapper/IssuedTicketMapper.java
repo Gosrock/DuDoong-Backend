@@ -5,9 +5,8 @@ import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketDetailResp
 import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketListResponse;
 import band.gosrock.common.annotation.Mapper;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
-import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
+import band.gosrock.domain.domains.issuedTicket.dto.condtion.IssuedTicketCondition;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
 
 @Mapper
@@ -18,16 +17,15 @@ public class IssuedTicketMapper {
 
     @Transactional(readOnly = true)
     public RetrieveIssuedTicketListResponse toIssuedTicketPageResponse(
-            Page<IssuedTicket> issuedTickets) {
-        return RetrieveIssuedTicketListResponse.of(issuedTickets);
+            Long page, IssuedTicketCondition condition) {
+        return RetrieveIssuedTicketListResponse.of(
+                issuedTicketAdaptor.searchIssuedTicket(page, condition));
     }
 
     @Transactional(readOnly = true)
     public RetrieveIssuedTicketDetailResponse toIssuedTicketDetailResponse(
-            IssuedTicket issuedTicket) {
-        System.out.println(
-                "issuedTicket.getIssuedTicketOptionAnswers().size() = "
-                        + issuedTicket.getIssuedTicketOptionAnswers().size());
-        return RetrieveIssuedTicketDetailResponse.of(issuedTicket);
+            Long currentUserId, Long issuedTicketId) {
+        return RetrieveIssuedTicketDetailResponse.of(
+                issuedTicketAdaptor.find(currentUserId, issuedTicketId));
     }
 }

@@ -5,7 +5,6 @@ import band.gosrock.api.config.security.SecurityUtils;
 import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketDetailResponse;
 import band.gosrock.api.issuedTicket.mapper.IssuedTicketMapper;
 import band.gosrock.common.annotation.UseCase;
-import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.service.IssuedTicketDomainService;
 import lombok.RequiredArgsConstructor;
 
@@ -24,8 +23,6 @@ public class ReadIssuedTicketUseCase {
      */
     public RetrieveIssuedTicketDetailResponse execute(Long issuedTicketId) {
         Long currentUserId = SecurityUtils.getCurrentUserId();
-        IssuedTicket issuedTicket =
-                issuedTicketDomainService.retrieveIssuedTicket(currentUserId, issuedTicketId);
-        return RetrieveIssuedTicketDetailResponse.of(issuedTicket);
+        return issuedTicketMapper.toIssuedTicketDetailResponse(currentUserId, issuedTicketId);
     }
 }

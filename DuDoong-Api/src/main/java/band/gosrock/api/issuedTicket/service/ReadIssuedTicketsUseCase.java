@@ -6,10 +6,9 @@ import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketListRespon
 import band.gosrock.api.issuedTicket.mapper.IssuedTicketMapper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.event.service.EventService;
-import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
+import band.gosrock.domain.domains.issuedTicket.dto.condtion.IssuedTicketCondition;
 import band.gosrock.domain.domains.issuedTicket.service.IssuedTicketDomainService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 
 @UseCase
 @RequiredArgsConstructor
@@ -28,9 +27,7 @@ public class ReadIssuedTicketsUseCase {
         Long currentUserId = SecurityUtils.getCurrentUserId();
         // 조회 유저 권한 인증
         eventService.checkEventHost(currentUserId, eventId);
-        Page<IssuedTicket> issuedTickets =
-                issuedTicketDomainService.retrieveIssuedTickets(
-                        page, eventId, userName, phoneNumber);
-        return RetrieveIssuedTicketListResponse.of(issuedTickets);
+        return issuedTicketMapper.toIssuedTicketPageResponse(
+                page, new IssuedTicketCondition(eventId, userName, phoneNumber));
     }
 }

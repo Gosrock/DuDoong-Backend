@@ -5,8 +5,10 @@ import band.gosrock.common.annotation.Adaptor;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.dto.condtion.IssuedTicketCondition;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketNotFoundException;
+import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketUserNotMatchedException;
 import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepository;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,10 +32,15 @@ public class IssuedTicketAdaptor {
         return issuedTicketRepository.findAllByOrderLineId(orderLineId);
     }
 
-    public IssuedTicket find(Long issuedTicket) {
-        return issuedTicketRepository
-                .find(issuedTicket)
-                .orElseThrow(() -> IssuedTicketNotFoundException.EXCEPTION);
+    public IssuedTicket find(Long currentUserId, Long issuedTicketId) {
+        IssuedTicket issuedTicket =
+                issuedTicketRepository
+                        .find(issuedTicketId)
+                        .orElseThrow(() -> IssuedTicketNotFoundException.EXCEPTION);
+        if (!Objects.equals(issuedTicket.getUser().getId(), currentUserId)) {
+            throw IssuedTicketUserNotMatchedException.EXCEPTION;
+        }
+        return issuedTicket;
     }
 
     public Page<IssuedTicket> searchIssuedTicket(Long page, IssuedTicketCondition condition) {
