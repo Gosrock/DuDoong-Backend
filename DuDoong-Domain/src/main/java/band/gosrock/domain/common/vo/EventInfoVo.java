@@ -5,12 +5,14 @@ import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.domain.EventStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
+import lombok.Builder;
 import lombok.Getter;
 
 /*
 이벤트 정보 VO (공용)
  */
 @Getter
+@Builder
 public class EventInfoVo {
 
     /*
@@ -41,11 +43,13 @@ public class EventInfoVo {
      */
     private final EventStatus eventStatus;
 
-    public EventInfoVo(Event event) {
-        this.eventName = event.getName();
-        this.posterImage = event.getPosterImage();
-        this.startAt = event.getStartAt();
-        this.eventStatus = event.getStatus();
-        this.placeName = event.getPlaceName();
+    public static EventInfoVo from(Event event) {
+        return EventInfoVo.builder()
+                .eventName(event.getName())
+                .posterImage(event.getPosterImage())
+                .startAt(event.getStartAt())
+                .placeName(event.getPlaceName())
+                .eventStatus(event.getStatus())
+                .build();
     }
 }

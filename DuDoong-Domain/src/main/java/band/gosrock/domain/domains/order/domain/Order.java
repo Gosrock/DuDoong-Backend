@@ -117,7 +117,12 @@ public class Order extends BaseTimeEntity {
 
     /** 카드, 간편결제등 토스 요청 과정이 필요한 결제를 생성합니다. */
     public static Order createPaymentOrder(Long userId, Cart cart) {
-        return orderBaseBuilder(userId, cart)
+        List<OrderLineItem> orderLineItems =
+                cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
+        return Order.builder()
+                .userId(userId)
+                .OrderName(cart.getCartName())
+                .orderLineItems(orderLineItems)
                 .orderStatus(OrderStatus.PENDING_PAYMENT)
                 .orderMethod(OrderMethod.PAYMENT)
                 .build();
@@ -125,27 +130,21 @@ public class Order extends BaseTimeEntity {
 
     /** 승인 결제인 주문을 생성합니다. */
     public static Order createApproveOrder(Long userId, Cart cart) {
-        return orderBaseBuilder(userId, cart)
-                .orderStatus(OrderStatus.PENDING_APPROVE)
-                .orderMethod(OrderMethod.APPROVAL)
-                .build();
-    }
-
-    /** 주문을 생성합니다. */
-    public static Order createOrder(Long userId, Cart cart) {
-        if (cart.isNeedPayment()) return createPaymentOrder(userId, cart);
-        return createApproveOrder(userId, cart);
-    }
-
-    private static OrderBuilder orderBaseBuilder(Long userId, Cart cart) {
         List<OrderLineItem> orderLineItems =
                 cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
         return Order.builder()
                 .userId(userId)
                 .OrderName(cart.getCartName())
-                .orderLineItems(orderLineItems);
+                .orderLineItems(orderLineItems)
+                .orderStatus(OrderStatus.PENDING_APPROVE)
+                .orderMethod(OrderMethod.APPROVAL)
+                .build();
     }
 
+    public static Order createOrder(Long userId, Cart cart) {
+        if (cart.isNeedPayment()) return createPaymentOrder(userId, cart);
+        return createApproveOrder(userId, cart);
+    }
     /** ---------------------------- 커맨드 메서드 ---------------------------------- */
 
     /** totalPaymentInfo 를 업데이트 합니다. */
