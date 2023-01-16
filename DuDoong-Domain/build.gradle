@@ -7,4 +7,23 @@ dependencies {
     runtimeOnly 'com.h2database:h2'
     implementation project(':DuDoong-Common')
     implementation project(':DuDoong-Infrastructure')
+    //queryDsl 설정 부분
+    api ("com.querydsl:querydsl-core") // querydsl
+    api ("com.querydsl:querydsl-jpa") // querydsl
+    annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jpa" // querydsl JPAAnnotationProcessor 사용 지정
+    annotationProcessor("jakarta.persistence:jakarta.persistence-api")
+    annotationProcessor("jakarta.annotation:jakarta.annotation-api")
+}
+//https://jojoldu.tistory.com/372
+def generated='src/main/generated'
+sourceSets {
+    main.java.srcDirs += [ generated ]
+}
+
+tasks.withType(JavaCompile) {
+    options.annotationProcessorGeneratedSourcesDirectory = file(generated)
+}
+
+clean.doLast {
+    file(generated).deleteDir()
 }

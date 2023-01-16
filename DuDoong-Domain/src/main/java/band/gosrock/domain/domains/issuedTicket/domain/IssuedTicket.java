@@ -143,10 +143,6 @@ public class IssuedTicket extends BaseTimeEntity {
     }
 
     public Money sumOptionPrice() {
-        //        issuedTicketOptionAnswers.forEach(issuedTicketOptionAnswer -> {
-        //            this.optionPrice = this.optionPrice.plus(issuedTicketOptionAnswer.getOption()
-        //                .getAdditionalPrice());
-        //        });
         return issuedTicketOptionAnswers.stream()
                 .map(
                         issuedTicketOptionAnswer ->
@@ -154,8 +150,8 @@ public class IssuedTicket extends BaseTimeEntity {
                 .reduce(Money.ZERO, Money::plus);
     }
 
-    public IssuedTicketInfoVo toIssuedTicketInfoVo(IssuedTicket issuedTicket) {
-        return IssuedTicketInfoVo.from(issuedTicket);
+    public IssuedTicketInfoVo toIssuedTicketInfoVo() {
+        return IssuedTicketInfoVo.from(this);
     }
 
     public static CreateIssuedTicketResponse orderLineItemToIssuedTickets(

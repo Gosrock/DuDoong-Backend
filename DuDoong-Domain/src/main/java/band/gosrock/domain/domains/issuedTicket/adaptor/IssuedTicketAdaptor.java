@@ -3,12 +3,16 @@ package band.gosrock.domain.domains.issuedTicket.adaptor;
 
 import band.gosrock.common.annotation.Adaptor;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
+import band.gosrock.domain.domains.issuedTicket.dto.condtion.IssuedTicketCondition;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketNotFoundException;
+import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketUserNotMatchedException;
 import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepository;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 @Adaptor
 @RequiredArgsConstructor
@@ -28,25 +32,20 @@ public class IssuedTicketAdaptor {
         return issuedTicketRepository.findAllByOrderLineId(orderLineId);
     }
 
-    public IssuedTicket find(Long issuedTicket) {
-        return issuedTicketRepository
-                .findById(issuedTicket)
-                .orElseThrow(() -> IssuedTicketNotFoundException.EXCEPTION);
+    public IssuedTicket find(Long currentUserId, Long issuedTicketId) {
+        IssuedTicket issuedTicket =
+                issuedTicketRepository
+                        .find(issuedTicketId)
+                        .orElseThrow(() -> IssuedTicketNotFoundException.EXCEPTION);
+        if (!Objects.equals(issuedTicket.getUser().getId(), currentUserId)) {
+            throw IssuedTicketUserNotMatchedException.EXCEPTION;
+        }
+        return issuedTicket;
     }
 
-    public Page<IssuedTicket> findAllByEvent(PageRequest pageRequest, Long eventId) {
-        return issuedTicketRepository.findAllByEvent_IdOrderByIdDesc(eventId, pageRequest);
-    }
-
-    public Page<IssuedTicket> findAllByEventAndUserName(
-            PageRequest pageRequest, Long eventId, String userName) {
-        return issuedTicketRepository.findAllByEvent_IdAndUser_Profile_NameContaining(
-                eventId, userName, pageRequest);
-    }
-
-    public Page<IssuedTicket> findAllByEventAndUserPhoneNumber(
-            PageRequest pageRequest, Long eventId, String phoneNumber) {
-        return issuedTicketRepository.findAllByEvent_IdAndUser_Profile_PhoneNumberContaining(
-                eventId, phoneNumber, pageRequest);
+    public Page<IssuedTicket> searchIssuedTicket(Long page, IssuedTicketCondition condition) {
+        PageRequest pageRequest =
+                PageRequest.of(Math.toIntExact(page), 10, Sort.by("id").descending());
+        return issuedTicketRepository.searchToPage(condition, pageRequest);
     }
 }
