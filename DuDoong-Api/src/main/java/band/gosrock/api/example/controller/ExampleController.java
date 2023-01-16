@@ -10,6 +10,7 @@ import band.gosrock.common.annotation.ApiErrorExceptionsExample;
 import band.gosrock.common.annotation.DevelopOnlyApi;
 import band.gosrock.common.exception.GlobalErrorCode;
 import band.gosrock.domain.domains.cart.exception.CartErrorCode;
+import band.gosrock.domain.domains.coupon.exception.CouponErrorCode;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketErrorCode;
 import band.gosrock.domain.domains.order.exception.OrderErrorCode;
 import band.gosrock.domain.domains.user.exception.UserErrorCode;
@@ -108,4 +109,10 @@ public class ExampleController {
     @Operation(summary = "토스 거래 조회 관련 에러 코드 나열")
     @ApiErrorCodeExample(TransactionGetErrorCode.class)
     public void getTransactionGetErrorCode() {}
+
+    @GetMapping("/coupon")
+    @DevelopOnlyApi
+    @Operation(summary = "쿠폰 도메인 관련 에러 코드 나열")
+    @ApiErrorCodeExample(CouponErrorCode.class)
+    public void getCouponErrorCode() {}
 }
