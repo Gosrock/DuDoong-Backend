@@ -19,38 +19,38 @@ import org.springframework.lang.Nullable;
 @RequiredArgsConstructor
 public class CreateCouponCampaignRequest {
 
-    @NotNull(message = "CREATE_COUPON_CAMPAIGN_REQUEST_EMPTY_HOST_ID")
+    @NotNull(message = "host Id를 입력해주세요.")
     private Long hostId;
 
-    @NotNull(message = "CREATE_COUPON_CAMPAIGN_REQUEST_EMPTY_DISCOUNT_TYPE")
+    @NotNull(message = "discountType을 입력해주세요.")
     private DiscountType discountType;
 
     @Nullable
     @Schema(nullable = true, defaultValue = "ALL")
     private ApplyTarget applyTarget;
 
-    @NotNull(message = "CREATE_COUPON_CAMPAIGN_REQUEST_EMPTY_VALID_TERM")
-    @Positive(message = "CREATE_COUPON_CAMPAIGN_REQUEST_NOT_POSITIVE_VALID_TERM")
+    @NotNull(message = "validTerm을 입력해주세요.")
+    @Positive(message = "validTerm은 양수여야합니다.(유효기간)")
     private Long validTerm;
 
     // 쿠폰 발행 시작 시각
-    @NotNull(message = "CREATE_COUPON_CAMPAIGN_REQUEST_EMPTY_START_AT")
+    @NotNull(message = "startAt을 입력해주세요.")
     private LocalDateTime startAt;
 
     // 쿠폰 발행 마감 시각
-    @NotNull(message = "CREATE_COUPON_CAMPAIGN_REQUEST_EMPTY_END_AT")
-    @Future(message = "CREATE_COUPON_CAMPAIGN_REQUEST_END_AT_MUST_BE_FUTURE")
+    @NotNull(message = "endAt을 입력해주세요.")
+    @Future(message = "endAt은 값이 미래여야합니다.")
     private LocalDateTime endAt;
 
-    @NotNull(message = "CREATE_COUPON_CAMPAIGN_REQUEST_EMPTY_ISSUED_AMOUNT")
-    @Positive(message = "CREATE_COUPON_CAMPAIGN_REQUEST_NOT_POSITIVE_ISSUED_AMOUNT")
+    @NotNull(message = "issuedAmount을 입력해주세요.")
+    @Positive(message = "issuedAmount는 양수여야합니다.")
     private Long issuedAmount;
 
-    @NotNull(message = "CREATE_COUPON_CAMPAIGN_REQUEST_EMPTY_DISCOUNT_AMOUNT")
-    @Positive(message = "CREATE_COUPON_CAMPAIGN_REQUEST_NOT_POSITIVE_DISCOUNT_AMOUNT")
+    @NotNull(message = "discountAmount을 입력해주세요.")
+    @Positive(message = "discountAmount은 양수여야합니다.")
     private Long discountAmount;
 
-    @NotBlank(message = "CREATE_COUPON_CAMPAIGN_REQUEST_4008")
+    @NotBlank(message = "couponCode를 입력해주세요.")
     private String couponCode;
 
     public CouponCampaign toOnceEntity() {
