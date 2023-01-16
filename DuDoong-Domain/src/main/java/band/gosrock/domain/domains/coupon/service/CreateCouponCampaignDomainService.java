@@ -2,8 +2,8 @@ package band.gosrock.domain.domains.coupon.service;
 
 
 import band.gosrock.common.annotation.DomainService;
-import band.gosrock.domain.domains.coupon.exception.AlreadyExistCouponCampaignException;
-import band.gosrock.domain.domains.coupon.repository.CouponCampaignRepository;
+import band.gosrock.domain.domains.coupon.adaptor.CouponCampaignAdaptor;
+import band.gosrock.domain.domains.coupon.domain.CouponCampaign;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,12 +11,15 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CreateCouponCampaignDomainService {
 
-    private final CouponCampaignRepository couponCampaignRepository;
+    private final CouponCampaignAdaptor couponCampaignAdaptor;
 
     @Transactional(readOnly = true)
     public void checkCouponCodeExists(String couponCode) {
-        if (couponCampaignRepository.existsByCouponCode(couponCode)) {
-            throw AlreadyExistCouponCampaignException.EXCEPTION;
-        }
+        couponCampaignAdaptor.existsByCouponCode(couponCode);
+    }
+
+    @Transactional
+    public CouponCampaign createCouponCampaign(CouponCampaign couponCampaign) {
+        return couponCampaignAdaptor.save(couponCampaign);
     }
 }

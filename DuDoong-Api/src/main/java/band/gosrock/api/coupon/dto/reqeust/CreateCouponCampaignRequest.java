@@ -1,10 +1,8 @@
 package band.gosrock.api.coupon.dto.reqeust;
 
 
-import band.gosrock.domain.domains.coupon.domain.ApplyTarget;
-import band.gosrock.domain.domains.coupon.domain.CouponCampaign;
-import band.gosrock.domain.domains.coupon.domain.CouponStockInfo;
-import band.gosrock.domain.domains.coupon.domain.DiscountType;
+import band.gosrock.domain.common.vo.DateTimePeriod;
+import band.gosrock.domain.domains.coupon.domain.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import javax.validation.constraints.Future;
@@ -59,14 +57,15 @@ public class CreateCouponCampaignRequest {
                         .issuedAmount(issuedAmount)
                         .remainingAmount(issuedAmount)
                         .build();
+        DateTimePeriod dateTimePeriod =
+                DateTimePeriod.builder().startAt(startAt).endAt(endAt).build();
 
         return CouponCampaign.builder()
                 .hostId(hostId)
                 .discountType(discountType)
                 .applyTarget(applyTarget)
                 .validTerm(validTerm)
-                .startAt(startAt)
-                .endAt(endAt)
+                .dateTimePeriod(dateTimePeriod)
                 .couponStockInfo(couponStockInfo)
                 .discountAmount(discountAmount)
                 .couponCode(couponCode)
