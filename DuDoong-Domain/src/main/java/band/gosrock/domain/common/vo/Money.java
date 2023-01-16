@@ -80,7 +80,6 @@ public class Money {
     public Double doubleValue() {
         return amount.doubleValue();
     }
-
     public boolean equals(Object object) {
         if (this == object) {
             return true;
@@ -101,5 +100,11 @@ public class Money {
     @JsonValue
     public String toString() {
         return amount.longValue() + "원";
+    }
+
+    public long getDiscountAmountByPercentage(Money supply, Long percentage) {
+        double discountPercent = percentage * 0.01;
+        // 할인 퍼센트 적용한 값 반올림 처리
+        return Math.round(supply.times(discountPercent).longValue());
     }
 }
