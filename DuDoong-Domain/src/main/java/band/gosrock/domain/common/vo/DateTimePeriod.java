@@ -1,4 +1,4 @@
-package band.gosrock.domain.domains.coupon.domain;
+package band.gosrock.domain.common.vo;
 
 
 import java.time.LocalDateTime;

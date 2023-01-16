@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.coupon.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.common.vo.DateTimePeriod;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.*;

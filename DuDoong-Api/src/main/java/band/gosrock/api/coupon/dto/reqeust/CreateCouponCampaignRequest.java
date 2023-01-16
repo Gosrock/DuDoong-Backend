@@ -1,6 +1,7 @@
 package band.gosrock.api.coupon.dto.reqeust;
 
 
+import band.gosrock.domain.common.vo.DateTimePeriod;
 import band.gosrock.domain.domains.coupon.domain.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
