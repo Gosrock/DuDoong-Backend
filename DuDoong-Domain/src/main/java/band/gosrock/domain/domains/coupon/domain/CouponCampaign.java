@@ -29,6 +29,7 @@ public class CouponCampaign extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private ApplyTarget applyTarget;
 
+    // 사용기한(일자) ex.10 -> 발급 이후 10일 동안 쿠폰 사용 가능
     private Long validTerm;
 
     // 쿠폰 발행 시작 시각
