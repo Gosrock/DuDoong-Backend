@@ -133,20 +133,24 @@ public class IssuedTicket extends BaseTimeEntity {
                 .build();
     }
 
-    public static IssuedTicket createForDev(CreateIssuedTicketRequestForDev dto) {
+    public static IssuedTicket createForDev(
+            Event event,
+            User user,
+            Long orderLineId,
+            TicketItem ticketItem,
+            Money price,
+            List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers) {
         IssuedTicket createIssuedTicket =
                 IssuedTicket.builder()
-                        .event(dto.getEvent())
-                        .user(dto.getUser())
-                        .orderLineId(dto.getOrderLineId())
-                        .ticketItem(dto.getTicketItem())
-                        .price(dto.getPrice())
+                        .event(event)
+                        .user(user)
+                        .orderLineId(orderLineId)
+                        .ticketItem(ticketItem)
+                        .price(price)
                         .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
                         .issuedTicketOptionAnswers(new ArrayList<>())
                         .build();
-        createIssuedTicket
-                .getIssuedTicketOptionAnswers()
-                .addAll(dto.getIssuedTicketOptionAnswers());
+        createIssuedTicket.getIssuedTicketOptionAnswers().addAll(issuedTicketOptionAnswers);
         return createIssuedTicket;
     }
 
