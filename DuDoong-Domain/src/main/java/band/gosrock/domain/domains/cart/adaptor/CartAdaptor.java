@@ -25,4 +25,10 @@ public class CartAdaptor {
                 .findByIdAndUserId(cartId, userId)
                 .orElseThrow(() -> CartNotFoundException.EXCEPTION);
     }
+
+    public Cart upsert(Cart cart) {
+        return cartRepository
+                .findByIdAndUserId(cart.getId(), cart.getUserId())
+                .orElseGet(() -> cartRepository.save(cart));
+    }
 }

@@ -2,7 +2,7 @@ package band.gosrock.api.cart.controller;
 
 
 import band.gosrock.api.cart.model.dto.request.AddCartRequest;
-import band.gosrock.api.cart.model.dto.response.CreateCartResponse;
+import band.gosrock.api.cart.model.dto.response.CartResponse;
 import band.gosrock.api.cart.service.CreateCartUseCase;
 import band.gosrock.api.cart.service.ReadCartLineUseCase;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,7 +32,7 @@ public class CartController {
     //    }
     @Operation(summary = "상품을 장바구니에 담습니다. 상품에 답변해야하는 응답이 있다면, 응답도 보내주시면 됩니다.")
     @PostMapping
-    public CreateCartResponse createCartLines(@RequestBody @Valid AddCartRequest addCartRequest) {
+    public CartResponse createCartLines(@RequestBody @Valid AddCartRequest addCartRequest) {
         return createCartUseCase.execute(addCartRequest);
     }
 
