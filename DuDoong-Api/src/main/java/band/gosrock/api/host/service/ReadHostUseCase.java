@@ -8,7 +8,6 @@ import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.domain.domains.user.service.UserDomainService;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +24,6 @@ public class ReadHostUseCase {
         // Todo:: hostId로 변경필요
         return hostAdaptor.findAllByMasterUserId(securityUserId).stream()
                 .map(HostResponse::of)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

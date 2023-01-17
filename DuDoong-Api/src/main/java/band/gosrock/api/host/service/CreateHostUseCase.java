@@ -7,12 +7,9 @@ import band.gosrock.api.host.model.dto.response.CreateHostResponse;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
-import band.gosrock.domain.domains.host.domain.HostRole;
-import band.gosrock.domain.domains.host.domain.HostUser;
 import band.gosrock.domain.domains.host.service.HostService;
 import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.domain.domains.user.service.UserDomainService;
-import java.util.Collections;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,20 +23,20 @@ public class CreateHostUseCase {
 
     @Transactional
     public CreateHostResponse execute(CreateHostRequest createHostRequest) {
-        Long securityUserId = SecurityUtils.getCurrentUserId();
+        final Long securityUserId = SecurityUtils.getCurrentUserId();
         // 존재하는 유저인지 검증
-        User user = userDomainService.retrieveUser(securityUserId);
+        final User user = userDomainService.retrieveUser(securityUserId);
+
         // 호스트 생성
-        Host host = hostService.createHost(createHostRequest.toEntity(securityUserId));
-
-        HostUser hostUser =
-                HostUser.builder()
-                        .userId(securityUserId)
-                        .hostId(host.getId())
-                        .role(HostRole.SUPER_HOST)
-                        .build();
-
-        host.addHostUsers(Collections.singletonList(hostUser));
-        return CreateHostResponse.of(host);
+        final Host host =
+                hostService.createHost(
+                        Host.builder()
+                                .contactEmail(createHostRequest.getContactEmail())
+                                .contactNumber(createHostRequest.getContactNumber())
+                                .masterUserId(securityUserId)
+                                .partner(createHostRequest.isPartner())
+                                .build());
+        // todo :: host 생성 레이어 찾기
+        return CreateHostResponse.of(hostService.addHostUser(host, securityUserId));
     }
 }

@@ -3,9 +3,12 @@ package band.gosrock.domain.domains.host.service;
 
 import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.domains.host.domain.Host;
+import band.gosrock.domain.domains.host.domain.HostRole;
+import band.gosrock.domain.domains.host.domain.HostUser;
 import band.gosrock.domain.domains.host.exception.HostNotFoundException;
 import band.gosrock.domain.domains.host.exception.NotSuperHostException;
 import band.gosrock.domain.domains.host.repository.HostRepository;
+import java.util.Collections;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +19,22 @@ public class HostService {
     private final HostRepository hostRepository;
 
     public Host createHost(Host host) {
+        return hostRepository.save(host);
+    }
+
+    public Host addHostUser(Host host, HostUser hostUser) {
+        host.addHostUsers(Collections.singletonList(hostUser));
+        return hostRepository.save(host);
+    }
+
+    public Host addHostUser(Host host, Long userId) {
+        HostUser hostUser =
+                HostUser.builder()
+                        .userId(userId)
+                        .hostId(host.getId())
+                        .role(HostRole.SUPER_HOST)
+                        .build();
+        host.addHostUsers(Collections.singletonList(hostUser));
         return hostRepository.save(host);
     }
 

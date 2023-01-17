@@ -1,7 +1,6 @@
 package band.gosrock.api.host.model.dto.request;
 
 
-import band.gosrock.domain.domains.host.domain.Host;
 import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.constraints.NotNull;
 import lombok.Getter;
@@ -22,13 +21,4 @@ public class CreateHostRequest {
     //    private final Long masterUserId;
 
     private final boolean partner;
-
-    public Host toEntity(Long masterUserId) {
-        return Host.builder()
-                .contactEmail(contactEmail)
-                .contactNumber(contactNumber)
-                .masterUserId(masterUserId)
-                .partner(partner)
-                .build();
-    }
 }
