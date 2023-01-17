@@ -17,6 +17,7 @@ import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.user.domain.User;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @DomainService
 @RequiredArgsConstructor
@@ -28,18 +29,11 @@ public class IssuedTicketDomainDevService {
     private final TicketItemAdaptor ticketItemAdaptor;
     private final OptionAdaptor optionAdaptor;
 
+    @Transactional
     public IssuedTicket createIssuedTicket(CreateIssuedTicketForDevDTO createDTO, User user) {
         Event event = eventAdaptor.findById(createDTO.getEventId());
         TicketItem ticketItem = ticketItemAdaptor.find(createDTO.getTicketItemId());
 
-        //        Map<Long, String> optionAnswers = createDTO.getOptionAnswers();
-        //        List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers = new ArrayList<>();
-        //        for (Long optionId : optionAnswers.keySet()) {
-        //            Option option = optionAdaptor.find(optionId);
-        //            issuedTicketOptionAnswers.add(
-        //                IssuedTicketOptionAnswer.builder().answer(optionAnswers.get(optionId))
-        //                    .option(option).build());
-        //        }
         List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers =
                 createDTO.getOptionAnswers().stream()
                         .map(
