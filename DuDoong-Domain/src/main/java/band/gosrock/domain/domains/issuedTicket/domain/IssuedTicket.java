@@ -1,5 +1,6 @@
 package band.gosrock.domain.domains.issuedTicket.domain;
 
+import static band.gosrock.common.consts.DuDoongStatic.NO_START_NUMBER;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
@@ -156,7 +157,7 @@ public class IssuedTicket extends BaseTimeEntity {
 
     @PostPersist
     public void createIssuedTicketNo() {
-        this.issuedTicketNo = "T" + this.id;
+        this.issuedTicketNo = "T" + Long.sum(NO_START_NUMBER, this.id);
     }
 
     public Money sumOptionPrice() {
