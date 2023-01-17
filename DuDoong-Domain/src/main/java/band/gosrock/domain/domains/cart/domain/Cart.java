@@ -3,8 +3,13 @@ package band.gosrock.domain.domains.cart.domain;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.domains.cart.policy.CartPolicy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -50,6 +55,12 @@ public class Cart extends BaseTimeEntity {
 
     /** ---------------------------- 검증 메서드 ---------------------------------- */
 
+    public void validItemKindPolicy(Supplier<CartPolicy> supplier){
+        Objects.requireNonNull(supplier);
+        CartPolicy cartPolicy = supplier.get();
+        cartPolicy.itemKindAvailableQuantity(this.getCartLineItemKindIds().size());
+    }
+
     /** ---------------------------- 조회용 메서드 ---------------------------------- */
     /** 결제가 필요한 오더인지 반환합니다. */
     public Boolean isNeedPayment() {
@@ -67,5 +78,9 @@ public class Cart extends BaseTimeEntity {
         return cartLineItems.stream()
                 .map(CartLineItem::getTotalCartLinePrice)
                 .reduce(Money.ZERO, Money::plus);
+    }
+    private List<Long> getCartLineItemKindIds() {
+        return this.cartLineItems.stream()
+            .map(cartLineItem -> cartLineItem.getTicketItem().getId()).distinct().toList();
     }
 }
