@@ -16,6 +16,10 @@ public class EventService {
     private final EventRepository eventRepository;
     private final EventAdaptor eventAdaptor;
 
+    public Event createEvent(Event event) {
+        return eventRepository.save(event);
+    }
+
     public void checkEventHost(Long hostId, Long eventId) {
         Event event = eventAdaptor.findById(eventId);
         if (!event.getHostId().equals(hostId)) {

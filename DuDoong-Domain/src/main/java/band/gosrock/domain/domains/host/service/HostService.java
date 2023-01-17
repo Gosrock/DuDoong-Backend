@@ -10,5 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class HostService {
-    private final HostRepository orderRepository;
+    private final HostRepository hostRepository;
+
+
 }
