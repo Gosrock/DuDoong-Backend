@@ -32,12 +32,12 @@ public class CartAdaptor {
         return cartRepository.findByUserId(userId);
     }
 
-    public Cart upsert(Cart cart) {
-        Objects.requireNonNull(cart.getUserId());
-        return cartRepository
-                .findByUserId(cart.getUserId())
-                .orElseGet(() -> cartRepository.save(cart));
-    }
+//    public Cart upsert(Cart cart) {
+//        Objects.requireNonNull(cart.getUserId());
+//        return cartRepository
+//                .findByUserId(cart.getUserId())
+//                .orElseGet(() -> cartRepository.save(cart));
+//    }
 
     public void deleteByUserId(Long userId) {
         cartRepository.deleteByUserId(userId);

@@ -22,7 +22,7 @@ public class CreateCartUseCase {
         Long currentUserId = SecurityUtils.getCurrentUserId();
 
         Cart cart = cartMapper.toEntity(addCartRequest, currentUserId);
-        Long cartId = cartDomainService.createCart(cart);
+        Long cartId = cartDomainService.createCart(cart,currentUserId);
         return cartMapper.toCartResponse(cartId);
     }
 }

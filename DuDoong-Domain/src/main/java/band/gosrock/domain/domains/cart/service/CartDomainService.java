@@ -6,6 +6,14 @@ import band.gosrock.domain.common.aop.redissonLock.RedissonLock;
 import band.gosrock.domain.domains.cart.adaptor.CartAdaptor;
 import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.cart.policy.CartPolicy;
+import band.gosrock.domain.domains.ticket_item.domain.Option;
+import band.gosrock.domain.domains.ticket_item.domain.OptionGroup;
+import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.domain.domains.ticket_item.repository.OptionGroupRepository;
+import band.gosrock.domain.domains.ticket_item.repository.OptionRepository;
+import band.gosrock.domain.domains.ticket_item.repository.TicketItemRepository;
+import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,11 +26,27 @@ public class CartDomainService {
 
     private final CartPolicy cartPolicy;
 
+    private final OptionRepository optionRepository;
+    private final OptionGroupRepository optionGroupRepository;
+    private final TicketItemRepository ticketItemRepository;
+
     // 한유저당 한 카트를 소유할 수 있는 제약조건을 가짐
     @RedissonLock(LockName = "카트생성", paramClassType = Cart.class, identifier = "userId")
-    public Long createCart(Cart cart) {
-        Cart upsert = cartAdaptor.upsert(cart);
+    public Long createCart(Cart cart , Long userId) {
+        //항상 지우고 다시만들기
+//        Option option = optionRepository.findById(11L).get();
+//        OptionGroup optionGroup1 = optionGroupRepository.findById(6L).get();
+
+//        TicketItem ticketItem = ticketItemRepository.findById(1L).get();
+//        ticketItem.addOptionGroup(optionGroup1);
+//        List<Long> optionGroupIds = ticketItem.getOptionGroupIds();
+
+//        OptionGroup optionGroup = option.getOptionGroup();
+//        Long id = optionGroup.getId();
         cart.validItemKindPolicy(() -> cartPolicy);
-        return upsert.getId();
+        cartAdaptor.deleteByUserId(userId);
+        Cart savedCart = cartAdaptor.save(cart);
+        savedCart.validCorrectAnswerToItems();
+        return savedCart.getId();
     }
 }

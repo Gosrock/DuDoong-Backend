@@ -52,10 +52,17 @@ public class Cart extends BaseTimeEntity {
     /** ---------------------------- 커맨드 메서드 ---------------------------------- */
 
     /** ---------------------------- 검증 메서드 ---------------------------------- */
+
+    /** 카트에 담을 수 있는 아이템의 정책이 올바른지 확인합니다. ( 한 카트에 한 아이템 ) */
     public void validItemKindPolicy(Supplier<CartPolicy> supplier) {
         Objects.requireNonNull(supplier);
         CartPolicy cartPolicy = supplier.get();
         cartPolicy.itemKindAvailableQuantity(this.getCartLineItemKindIds().size());
+    }
+
+    /** 아이템에 요구하는 답변을 올바르게 했는지 확인합니다. */
+    public void validCorrectAnswerToItems(){
+        this.cartLineItems.forEach(CartLineItem::validCorrectAnswer);
     }
 
     /** ---------------------------- 조회용 메서드 ---------------------------------- */
