@@ -31,10 +31,26 @@ public class CartMapper {
     @Transactional(readOnly = true)
     public CartResponse toCartResponse(Long cartId) {
         Cart cart = cartAdaptor.queryCart(cartId);
+        return getCartResponse(cart);
+    }
 
+    @Transactional(readOnly = true)
+    public CartResponse toCartResponse(Cart cart) {
+        return getCartResponse(cart);
+    }
+
+    private CartResponse getCartResponse(Cart cart) {
         List<CartLineItem> newCartLineItems = cart.getCartLineItems();
         Long totalQuantity = cart.getTotalQuantity();
 
+        List<CartItemResponse> cartItemResponses =
+                getCartItemResponses(newCartLineItems, totalQuantity);
+
+        return CartResponse.of(cartItemResponses, cart);
+    }
+
+    private List<CartItemResponse> getCartItemResponses(
+            List<CartLineItem> newCartLineItems, Long totalQuantity) {
         int startNum = 1;
         List<CartItemResponse> cartItemResponses = new ArrayList<>();
         for (CartLineItem cartLineItem : newCartLineItems) {
@@ -44,8 +60,7 @@ public class CartMapper {
                             cartLineItem));
             startNum += cartLineItem.getQuantity();
         }
-
-        return CartResponse.of(cartItemResponses, cart);
+        return cartItemResponses;
     }
 
     public Cart toEntity(AddCartRequest addCartRequest, Long currentUserId) {

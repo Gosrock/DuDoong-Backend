@@ -6,7 +6,6 @@ import band.gosrock.domain.common.aop.redissonLock.RedissonLock;
 import band.gosrock.domain.domains.cart.adaptor.CartAdaptor;
 import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.cart.policy.CartPolicy;
-import band.gosrock.domain.domains.cart.policy.CartPolicyImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +22,7 @@ public class CartDomainService {
     @RedissonLock(LockName = "카트생성", paramClassType = Cart.class, identifier = "userId")
     public Long createCart(Cart cart) {
         Cart upsert = cartAdaptor.upsert(cart);
-        cart.validItemKindPolicy(()-> cartPolicy);
+        cart.validItemKindPolicy(() -> cartPolicy);
         return upsert.getId();
     }
 }

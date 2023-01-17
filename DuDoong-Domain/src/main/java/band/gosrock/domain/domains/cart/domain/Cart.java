@@ -7,9 +7,7 @@ import band.gosrock.domain.domains.cart.policy.CartPolicy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -54,8 +52,7 @@ public class Cart extends BaseTimeEntity {
     /** ---------------------------- 커맨드 메서드 ---------------------------------- */
 
     /** ---------------------------- 검증 메서드 ---------------------------------- */
-
-    public void validItemKindPolicy(Supplier<CartPolicy> supplier){
+    public void validItemKindPolicy(Supplier<CartPolicy> supplier) {
         Objects.requireNonNull(supplier);
         CartPolicy cartPolicy = supplier.get();
         cartPolicy.itemKindAvailableQuantity(this.getCartLineItemKindIds().size());
@@ -79,8 +76,11 @@ public class Cart extends BaseTimeEntity {
                 .map(CartLineItem::getTotalCartLinePrice)
                 .reduce(Money.ZERO, Money::plus);
     }
+
     private List<Long> getCartLineItemKindIds() {
         return this.cartLineItems.stream()
-            .map(cartLineItem -> cartLineItem.getTicketItem().getId()).distinct().toList();
+                .map(cartLineItem -> cartLineItem.getTicketItem().getId())
+                .distinct()
+                .toList();
     }
 }

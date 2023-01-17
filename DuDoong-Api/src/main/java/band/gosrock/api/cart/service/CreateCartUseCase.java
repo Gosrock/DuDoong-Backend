@@ -9,7 +9,6 @@ import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.cart.service.CartDomainService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.transaction.annotation.Transactional;
 
 @UseCase
 @RequiredArgsConstructor
@@ -18,7 +17,6 @@ public class CreateCartUseCase {
     private final CartDomainService cartDomainService;
     private final CartMapper cartMapper;
 
-    @Transactional
     public CartResponse execute(AddCartRequest addCartRequest) {
 
         Long currentUserId = SecurityUtils.getCurrentUserId();

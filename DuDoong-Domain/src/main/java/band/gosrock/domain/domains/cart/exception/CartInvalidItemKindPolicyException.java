@@ -8,6 +8,6 @@ public class CartInvalidItemKindPolicyException extends DuDoongCodeException {
     public static final DuDoongCodeException EXCEPTION = new CartInvalidItemKindPolicyException();
 
     private CartInvalidItemKindPolicyException() {
-        super(CartErrorCode.CART_NOT_FOUND);
+        super(CartErrorCode.CART_INVALID_ITEM_KIND_POLICY);
     }
 }
