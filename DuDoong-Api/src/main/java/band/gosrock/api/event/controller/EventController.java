@@ -9,11 +9,10 @@ import band.gosrock.api.event.service.ReadEventUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
-import javax.validation.Valid;
-import java.util.List;
 
 @SecurityRequirement(name = "access-token")
 @Tag(name = "이벤트(공연) 관련 컨트롤러")
@@ -33,7 +32,8 @@ public class EventController {
 
     @Operation(summary = "새로운 이벤트(공연)를 생성합니다")
     @PostMapping
-    public CreateEventResponse createEvent(@RequestBody @Valid CreateEventRequest createEventRequest) {
+    public CreateEventResponse createEvent(
+            @RequestBody @Valid CreateEventRequest createEventRequest) {
         return createEventUseCase.execute(createEventRequest);
     }
 }

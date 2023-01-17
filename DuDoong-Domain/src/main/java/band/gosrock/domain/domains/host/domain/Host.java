@@ -37,20 +37,14 @@ public class Host extends BaseTimeEntity {
     @JoinColumn(name = "host_user_id")
     private List<HostUser> hostUsers = new ArrayList<>();
 
-
     public void addHostUsers(List<HostUser> hostUserList) {
         hostUsers.addAll(hostUserList);
     }
 
-
     @Builder
-    public Host(
-            String contactEmail,
-            String contactNumber,
-            Long masterUserId,
-            Boolean partner
-//            List<HostUser> hostUsers
-    ) {
+    public Host(String contactEmail, String contactNumber, Long masterUserId, Boolean partner
+            //            List<HostUser> hostUsers
+            ) {
         this.contactEmail = contactEmail;
         this.contactNumber = contactNumber;
         this.masterUserId = masterUserId;

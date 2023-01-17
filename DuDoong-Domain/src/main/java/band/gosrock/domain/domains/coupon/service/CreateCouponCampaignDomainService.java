@@ -23,4 +23,3 @@ public class CreateCouponCampaignDomainService {
         return couponCampaignAdaptor.save(couponCampaign);
     }
 }
-

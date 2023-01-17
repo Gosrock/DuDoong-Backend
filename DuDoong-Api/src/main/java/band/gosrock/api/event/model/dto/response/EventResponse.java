@@ -1,5 +1,6 @@
 package band.gosrock.api.event.model.dto.response;
 
+
 import band.gosrock.domain.domains.event.domain.Event;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -12,8 +13,6 @@ public class EventResponse {
     private final String name;
 
     public static EventResponse of(Event event) {
-        return EventResponse.builder()
-                .name(event.getName())
-                .build();
+        return EventResponse.builder().name(event.getName()).build();
     }
 }

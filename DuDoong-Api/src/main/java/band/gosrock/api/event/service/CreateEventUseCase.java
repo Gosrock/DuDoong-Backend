@@ -1,5 +1,6 @@
 package band.gosrock.api.event.service;
 
+
 import band.gosrock.api.config.security.SecurityUtils;
 import band.gosrock.api.event.model.dto.request.CreateEventRequest;
 import band.gosrock.api.event.model.dto.response.CreateEventResponse;

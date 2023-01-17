@@ -1,12 +1,11 @@
 package band.gosrock.api.event.model.dto.response;
 
+
 import band.gosrock.domain.domains.event.domain.Event;
 import io.swagger.v3.oas.annotations.media.Schema;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NonNull;
-
-import javax.validation.constraints.NotNull;
 
 @Getter
 @Builder
@@ -17,8 +16,6 @@ public class CreateEventResponse {
     private final String name;
 
     public static CreateEventResponse of(Event event) {
-        return CreateEventResponse.builder()
-                .name(event.getName())
-                .build();
+        return CreateEventResponse.builder().name(event.getName()).build();
     }
 }

@@ -5,9 +5,8 @@ import band.gosrock.common.annotation.Adaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.exception.EventNotFoundException;
 import band.gosrock.domain.domains.event.repository.EventRepository;
-import lombok.RequiredArgsConstructor;
-
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @Adaptor
 @RequiredArgsConstructor
@@ -25,5 +24,4 @@ public class EventAdaptor {
     public List<Event> findAllByHostId(Long hostId) {
         return eventRepository.findAll();
     }
-
 }
