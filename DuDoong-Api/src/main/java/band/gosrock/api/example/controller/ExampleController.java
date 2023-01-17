@@ -11,6 +11,8 @@ import band.gosrock.common.annotation.DevelopOnlyApi;
 import band.gosrock.common.exception.GlobalErrorCode;
 import band.gosrock.domain.domains.cart.exception.CartErrorCode;
 import band.gosrock.domain.domains.coupon.exception.CouponErrorCode;
+import band.gosrock.domain.domains.event.exception.EventErrorCode;
+import band.gosrock.domain.domains.host.exception.HostErrorCode;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketErrorCode;
 import band.gosrock.domain.domains.order.exception.OrderErrorCode;
 import band.gosrock.domain.domains.user.exception.UserErrorCode;
@@ -115,4 +117,16 @@ public class ExampleController {
     @Operation(summary = "쿠폰 도메인 관련 에러 코드 나열")
     @ApiErrorCodeExample(CouponErrorCode.class)
     public void getCouponErrorCode() {}
+
+    @GetMapping("/host")
+    @DevelopOnlyApi
+    @Operation(summary = "호스트 도메인 관련 에러 코드 나열")
+    @ApiErrorCodeExample(HostErrorCode.class)
+    public void getHostErrorCode() {}
+
+    @GetMapping("/event")
+    @DevelopOnlyApi
+    @Operation(summary = "이벤트 도메인 관련 에러 코드 나열")
+    @ApiErrorCodeExample(EventErrorCode.class)
+    public void getEventErrorCode() {}
 }
