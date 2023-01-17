@@ -17,8 +17,4 @@ public class CreateHostRequest {
     @NotNull(message = "담당자 번호를 입력하세요")
     // todo:: 정규식 적용
     private final String contactNumber;
-
-    //    private final Long masterUserId;
-
-    private final boolean partner;
 }

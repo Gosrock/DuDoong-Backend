@@ -2,8 +2,8 @@ package band.gosrock.domain.domains.host.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import javax.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -35,20 +35,17 @@ public class Host extends BaseTimeEntity {
     //         단방향 oneToMany 매핑
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "host_user_id")
-    private List<HostUser> hostUsers = new ArrayList<>();
+    private Set<HostUser> hostUsers = new HashSet<>();
 
-    public void addHostUsers(List<HostUser> hostUserList) {
+    public void addHostUsers(Set<HostUser> hostUserList) {
         hostUsers.addAll(hostUserList);
     }
 
     @Builder
-    public Host(String contactEmail, String contactNumber, Long masterUserId, Boolean partner
-            //            List<HostUser> hostUsers
-            ) {
+    public Host(String contactEmail, String contactNumber, Long masterUserId) {
         this.contactEmail = contactEmail;
         this.contactNumber = contactNumber;
         this.masterUserId = masterUserId;
-        this.partner = partner;
-        //        this.hostUsers = hostUsers;
+        this.partner = false; // 정책상 초기값 false 로 고정입니다
     }
 }

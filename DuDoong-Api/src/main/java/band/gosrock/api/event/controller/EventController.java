@@ -2,7 +2,6 @@ package band.gosrock.api.event.controller;
 
 
 import band.gosrock.api.event.model.dto.request.CreateEventRequest;
-import band.gosrock.api.event.model.dto.response.CreateEventResponse;
 import band.gosrock.api.event.model.dto.response.EventResponse;
 import band.gosrock.api.event.service.CreateEventUseCase;
 import band.gosrock.api.event.service.ReadEventUseCase;
@@ -32,8 +31,7 @@ public class EventController {
 
     @Operation(summary = "새로운 이벤트(공연)를 생성합니다")
     @PostMapping
-    public CreateEventResponse createEvent(
-            @RequestBody @Valid CreateEventRequest createEventRequest) {
+    public EventResponse createEvent(@RequestBody @Valid CreateEventRequest createEventRequest) {
         return createEventUseCase.execute(createEventRequest);
     }
 }

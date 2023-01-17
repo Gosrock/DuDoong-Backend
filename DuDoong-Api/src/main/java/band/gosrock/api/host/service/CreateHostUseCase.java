@@ -3,7 +3,7 @@ package band.gosrock.api.host.service;
 
 import band.gosrock.api.config.security.SecurityUtils;
 import band.gosrock.api.host.model.dto.request.CreateHostRequest;
-import band.gosrock.api.host.model.dto.response.CreateHostResponse;
+import band.gosrock.api.host.model.dto.response.HostResponse;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
@@ -22,7 +22,7 @@ public class CreateHostUseCase {
     private final HostAdaptor hostAdaptor;
 
     @Transactional
-    public CreateHostResponse execute(CreateHostRequest createHostRequest) {
+    public HostResponse execute(CreateHostRequest createHostRequest) {
         final Long securityUserId = SecurityUtils.getCurrentUserId();
         // 존재하는 유저인지 검증
         final User user = userDomainService.retrieveUser(securityUserId);
@@ -34,9 +34,8 @@ public class CreateHostUseCase {
                                 .contactEmail(createHostRequest.getContactEmail())
                                 .contactNumber(createHostRequest.getContactNumber())
                                 .masterUserId(securityUserId)
-                                .partner(createHostRequest.isPartner())
                                 .build());
         // todo :: host 생성 레이어 찾기
-        return CreateHostResponse.of(hostService.addHostUser(host, securityUserId));
+        return HostResponse.of(hostService.addHostUser(host, securityUserId));
     }
 }

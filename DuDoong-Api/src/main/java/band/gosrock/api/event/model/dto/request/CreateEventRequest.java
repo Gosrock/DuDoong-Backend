@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 public class CreateEventRequest {
     private String name;
 
+    @Deprecated
     public Event toEntity() {
         return Event.builder().name(name).build();
     }

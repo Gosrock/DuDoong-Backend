@@ -2,7 +2,6 @@ package band.gosrock.api.host.controller;
 
 
 import band.gosrock.api.host.model.dto.request.CreateHostRequest;
-import band.gosrock.api.host.model.dto.response.CreateHostResponse;
 import band.gosrock.api.host.model.dto.response.HostResponse;
 import band.gosrock.api.host.service.CreateHostUseCase;
 import band.gosrock.api.host.service.ReadHostUseCase;
@@ -32,8 +31,7 @@ public class HostController {
 
     @Operation(summary = "새로운 이벤트(공연)를 생성합니다")
     @PostMapping
-    public CreateHostResponse createEvent(
-            @RequestBody @Valid CreateHostRequest createEventRequest) {
+    public HostResponse createEvent(@RequestBody @Valid CreateHostRequest createEventRequest) {
         return createHostUseCase.execute(createEventRequest);
     }
 }
