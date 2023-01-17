@@ -21,7 +21,7 @@ public class IssuedCoupon extends BaseTimeEntity {
 
     private Long userId;
 
-    private Boolean usageStatus;
+    private boolean usageStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coupon_campaign_id", nullable = false)
@@ -54,7 +54,7 @@ public class IssuedCoupon extends BaseTimeEntity {
         this.usageStatus = false;
     }
 
-    public String getCouponName() { //쿠폰코드==쿠폰이름
+    public String getCouponName() { // 쿠폰코드==쿠폰이름
         return this.couponCampaign.getCouponCode();
     }
 }
