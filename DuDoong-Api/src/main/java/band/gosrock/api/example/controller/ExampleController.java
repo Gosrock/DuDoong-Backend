@@ -15,6 +15,7 @@ import band.gosrock.domain.domains.event.exception.EventErrorCode;
 import band.gosrock.domain.domains.host.exception.HostErrorCode;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketErrorCode;
 import band.gosrock.domain.domains.order.exception.OrderErrorCode;
+import band.gosrock.domain.domains.ticket_item.exception.TicketItemErrorCode;
 import band.gosrock.domain.domains.user.exception.UserErrorCode;
 import band.gosrock.infrastructure.outer.api.oauth.exception.KakaoKauthErrorCode;
 import band.gosrock.infrastructure.outer.api.tossPayments.exception.PaymentsCancelErrorCode;
@@ -78,7 +79,7 @@ public class ExampleController {
 
     @GetMapping("/issuedTicket")
     @DevelopOnlyApi
-    @Operation(summary = "주문 도메인 관련 에러 코드 나열")
+    @Operation(summary = "티켓 발급 관련 에러 코드 나열")
     @ApiErrorCodeExample(IssuedTicketErrorCode.class)
     public void getIssuedTicketErrorCode() {}
 
@@ -117,6 +118,12 @@ public class ExampleController {
     @Operation(summary = "쿠폰 도메인 관련 에러 코드 나열")
     @ApiErrorCodeExample(CouponErrorCode.class)
     public void getCouponErrorCode() {}
+
+    @GetMapping("/ticketItem")
+    @DevelopOnlyApi
+    @Operation(summary = "티켓 상품 관련 에러 코드 나열")
+    @ApiErrorCodeExample(TicketItemErrorCode.class)
+    public void getTicketItemErrorCode() {}
 
     @GetMapping("/host")
     @DevelopOnlyApi
