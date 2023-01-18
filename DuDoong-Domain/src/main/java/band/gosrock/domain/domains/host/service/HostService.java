@@ -27,13 +27,9 @@ public class HostService {
         return hostRepository.save(host);
     }
 
-    public Host addHostUser(Host host, Long userId) {
+    public Host addHostUser(Host host, Long userId, HostRole role) {
         HostUser hostUser =
-                HostUser.builder()
-                        .userId(userId)
-                        .hostId(host.getId())
-                        .role(HostRole.SUPER_HOST)
-                        .build();
+                HostUser.builder().userId(userId).hostId(host.getId()).role(role).build();
         host.addHostUsers(Set.of(hostUser));
         return hostRepository.save(host);
     }
