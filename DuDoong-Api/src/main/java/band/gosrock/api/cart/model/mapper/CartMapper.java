@@ -11,9 +11,10 @@ import band.gosrock.domain.domains.cart.adaptor.CartAdaptor;
 import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.cart.domain.CartLineItem;
 import band.gosrock.domain.domains.cart.domain.CartOptionAnswer;
+import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor;
+import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.ticket_item.repository.OptionRepository;
-import band.gosrock.domain.domains.ticket_item.repository.TicketItemRepository;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Mapper
 @RequiredArgsConstructor
 public class CartMapper {
-    private final TicketItemRepository ticketItemRepository;
+    private final TicketItemAdaptor ticketItemAdaptor;
+    private final OptionAdaptor optionAdaptor;
     private final OptionRepository optionRepository;
 
     private final CartAdaptor cartAdaptor;
@@ -82,7 +84,7 @@ public class CartMapper {
 
     @NotNull
     private TicketItem getTicketItem(AddCartLineDto addCartLineDto) {
-        return ticketItemRepository.findById(addCartLineDto.getItemId()).get();
+        return ticketItemAdaptor.queryTicketItem(addCartLineDto.getItemId());
     }
 
     /**
@@ -120,7 +122,7 @@ public class CartMapper {
 
     private CartOptionAnswer getCartOptionAnswer(AddCartOptionAnswerDto addCartOptionAnswerDto) {
         return CartOptionAnswer.builder()
-                .option(optionRepository.findById(addCartOptionAnswerDto.getOptionId()).get())
+                .option(optionAdaptor.queryOption(addCartOptionAnswerDto.getOptionId()))
                 .answer(addCartOptionAnswerDto.getAnswer())
                 .build();
     }
