@@ -1,12 +1,12 @@
 package band.gosrock.api.coupon.service;
 
 
-import band.gosrock.api.config.security.SecurityUtils;
+import band.gosrock.api.common.UserUtils;
 import band.gosrock.api.coupon.dto.response.ReadIssuedCouponOrderResponse;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.coupon.adaptor.IssuedCouponAdaptor;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
-import band.gosrock.domain.domains.user.service.UserDomainService;
+import band.gosrock.domain.domains.user.domain.User;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ReadIssuedCouponUseCase {
 
-    private final UserDomainService userDomainService;
+    private final UserUtils userUtils;
     private final IssuedCouponAdaptor issuedCouponAdaptor;
 
     /**
@@ -26,12 +26,12 @@ public class ReadIssuedCouponUseCase {
      */
     @Transactional(readOnly = true)
     public ReadIssuedCouponOrderResponse execute() {
-        // TODO : utils로 변경 필요
-        Long currentUserId = SecurityUtils.getCurrentUserId();
         // 존재하는 유저인지 검증
-        userDomainService.retrieveUser(currentUserId);
+        User user = userUtils.getCurrentUser();
+
         List<IssuedCoupon> issuedCoupons =
-                issuedCouponAdaptor.findAllByUserIdAndUsageStatus(currentUserId);
+                issuedCouponAdaptor.findAllByUserIdAndUsageStatus(user.getId());
+
         List<IssuedCoupon> validTermIssuedCoupons =
                 issuedCoupons.stream()
                         .filter(
