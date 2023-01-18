@@ -80,6 +80,7 @@ public class Money {
     public Double doubleValue() {
         return amount.doubleValue();
     }
+
     public boolean equals(Object object) {
         if (this == object) {
             return true;
