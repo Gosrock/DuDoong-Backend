@@ -12,13 +12,13 @@ import org.redisson.api.RedissonClient;
 
 class RedissonLockAopTest {
     @Mock RedissonClient redissonClient;
-    @Mock RedissonCallNewTransaction redissonCallTransaction;
+    @Mock CallTransactionFactory callTransactionFactory;
 
     RedissonLockAop redissonLockAop;
 
     @BeforeEach
     public void beforeEach() {
-        redissonLockAop = new RedissonLockAop(redissonClient, redissonCallTransaction);
+        redissonLockAop = new RedissonLockAop(redissonClient, callTransactionFactory);
     }
 
     @Test
