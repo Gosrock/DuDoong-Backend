@@ -26,7 +26,7 @@ import org.springframework.util.StringUtils;
 @Slf4j
 public class RedissonLockAop {
     private final RedissonClient redissonClient;
-    private final RedissonCallTransaction redissonCallTransaction;
+    private final CallTransactionFactory callTransactionFactory;
 
     @Around("@annotation(band.gosrock.domain.common.aop.redissonLock.RedissonLock)")
     public Object lock(final ProceedingJoinPoint joinPoint) throws Throwable {
@@ -55,7 +55,9 @@ public class RedissonLockAop {
             if (!available) {
                 throw NotAvailableRedissonLockException.EXCEPTION;
             }
-            return redissonCallTransaction.proceed(joinPoint);
+            return callTransactionFactory
+                    .getCallTransaction(redissonLock.newTransaction())
+                    .proceed(joinPoint);
         } catch (DuDoongCodeException | DuDoongDynamicException | TransactionTimedOutException e) {
             throw e;
         } finally {
