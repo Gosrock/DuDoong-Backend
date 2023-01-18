@@ -33,16 +33,6 @@ public class CartDomainService {
     // 한유저당 한 카트를 소유할 수 있는 제약조건을 가짐
     @RedissonLock(LockName = "카트생성", paramClassType = Cart.class, identifier = "userId")
     public Long createCart(Cart cart , Long userId) {
-        //항상 지우고 다시만들기
-//        Option option = optionRepository.findById(11L).get();
-//        OptionGroup optionGroup1 = optionGroupRepository.findById(6L).get();
-
-//        TicketItem ticketItem = ticketItemRepository.findById(1L).get();
-//        ticketItem.addOptionGroup(optionGroup1);
-//        List<Long> optionGroupIds = ticketItem.getOptionGroupIds();
-
-//        OptionGroup optionGroup = option.getOptionGroup();
-//        Long id = optionGroup.getId();
         cart.validItemKindPolicy(() -> cartPolicy);
         cartAdaptor.deleteByUserId(userId);
         Cart savedCart = cartAdaptor.save(cart);

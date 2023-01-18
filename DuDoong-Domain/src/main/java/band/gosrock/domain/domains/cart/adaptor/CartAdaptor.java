@@ -32,6 +32,10 @@ public class CartAdaptor {
         return cartRepository.findByUserId(userId);
     }
 
+    public Cart find(Long cartId) {
+        return cartRepository.find(cartId).orElseThrow(() -> CartNotFoundException.EXCEPTION);
+    }
+
 //    public Cart upsert(Cart cart) {
 //        Objects.requireNonNull(cart.getUserId());
 //        return cartRepository

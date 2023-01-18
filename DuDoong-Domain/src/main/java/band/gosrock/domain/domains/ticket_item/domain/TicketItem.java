@@ -58,7 +58,7 @@ public class TicketItem extends BaseTimeEntity {
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
-    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "item")
     private List<ItemOptionGroup> itemOptionGroups = new ArrayList<>();
 
 
