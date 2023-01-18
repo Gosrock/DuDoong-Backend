@@ -177,7 +177,7 @@ public class Order extends BaseTimeEntity {
         orderStatus.validCanApprove();
         // TODO: 재고량 비교 필요?
         this.approvedAt = LocalDateTime.now();
-        orderStatus = OrderStatus.APPROVED;
+        this.orderStatus = OrderStatus.APPROVED;
         Events.raise(DoneOrderEvent.of(this.uuid, this));
     }
 

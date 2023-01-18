@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -64,7 +65,7 @@ public class CartController {
     //        createOrderLineUseCase.execute(ticketItemId);
     //    }
     @Operation(summary = "사용자가 최근에 만들었던 장바구니를 불러옵니다. 없으면 data null (구현 안해도 됨)")
-    @PostMapping("/recent")
+    @GetMapping("/recent")
     public CartResponse getRecentMyCart() {
         return readCartUseCase.execute();
     }

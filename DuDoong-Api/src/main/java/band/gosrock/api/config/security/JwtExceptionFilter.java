@@ -31,8 +31,6 @@ public class JwtExceptionFilter extends OncePerRequestFilter {
             responseToClient(
                     response,
                     getErrorResponse(e.getErrorCode(), request.getRequestURL().toString()));
-        } finally {
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         }
     }
 
@@ -43,6 +41,8 @@ public class JwtExceptionFilter extends OncePerRequestFilter {
 
     private void responseToClient(HttpServletResponse response, ErrorResponse errorResponse)
             throws IOException {
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(errorResponse.getStatus());
         response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
     }

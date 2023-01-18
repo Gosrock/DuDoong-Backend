@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -21,6 +22,7 @@ public class DoneOrderEventHandler {
     @TransactionalEventListener(
             classes = DoneOrderEvent.class,
             phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional
     public void handleDoneOrderEvent(DoneOrderEvent doneOrderEvent) {
         log.info(doneOrderEvent.getUuid() + "주문 상태 완료, 장바구니를 제거합니다.");
         Long userId = doneOrderEvent.getOrder().getUserId();
