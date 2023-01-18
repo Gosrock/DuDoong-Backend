@@ -12,10 +12,9 @@ import lombok.RequiredArgsConstructor;
 public class IssuedCouponAdaptor {
     private final IssuedCouponRepository issuedCouponRepository;
 
-    public List<IssuedCoupon> findAllByUserIdAndUsageStatusAndValidTerm(Long userId) {
+    public List<IssuedCoupon> findAllByUserIdAndUsageStatus(Long userId) {
         List<IssuedCoupon> issuedCoupons =
-                issuedCouponRepository.findAllByUserIdAndUsageStatusAndCalculateValidTerm(
-                        userId, false);
+                issuedCouponRepository.findAllByUserIdAndUsageStatus(userId, false);
         return issuedCoupons;
     }
 }

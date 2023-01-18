@@ -6,6 +6,5 @@ import java.util.List;
 
 public interface IssuedCouponCustomRepository {
 
-    List<IssuedCoupon> findAllByUserIdAndUsageStatusAndCalculateValidTerm(
-            Long userId, boolean usageStatus);
+    List<IssuedCoupon> findAllByUserIdAndUsageStatus(Long userId, boolean usageStatus);
 }

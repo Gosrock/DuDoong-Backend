@@ -5,7 +5,10 @@ import band.gosrock.api.config.security.SecurityUtils;
 import band.gosrock.api.coupon.dto.response.ReadIssuedCouponOrderResponse;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.coupon.adaptor.IssuedCouponAdaptor;
+import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import band.gosrock.domain.domains.user.service.UserDomainService;
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +30,21 @@ public class ReadIssuedCouponUseCase {
         Long currentUserId = SecurityUtils.getCurrentUserId();
         // 존재하는 유저인지 검증
         userDomainService.retrieveUser(currentUserId);
-        return ReadIssuedCouponOrderResponse.of(
-                issuedCouponAdaptor.findAllByUserIdAndUsageStatusAndValidTerm(currentUserId));
+        List<IssuedCoupon> issuedCoupons =
+                issuedCouponAdaptor.findAllByUserIdAndUsageStatus(currentUserId);
+        List<IssuedCoupon> validTermIssuedCoupons =
+                issuedCoupons.stream()
+                        .filter(
+                                issuedCoupon ->
+                                        LocalDateTime.now()
+                                                .isBefore(
+                                                        issuedCoupon
+                                                                .getCreatedAt()
+                                                                .plusDays(
+                                                                        issuedCoupon
+                                                                                .getCouponCampaign()
+                                                                                .getValidTerm())))
+                        .toList();
+        return ReadIssuedCouponOrderResponse.of(validTermIssuedCoupons);
     }
 }
