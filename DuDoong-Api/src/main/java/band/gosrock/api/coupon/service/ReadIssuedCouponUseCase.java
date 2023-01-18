@@ -36,8 +36,8 @@ public class ReadIssuedCouponUseCase {
                 issuedCoupons.stream()
                         .filter(
                                 issuedCoupon ->
-                                        LocalDateTime.now()
-                                                .isBefore(
+                                        !LocalDateTime.now()
+                                                .isAfter(
                                                         issuedCoupon
                                                                 .getCreatedAt()
                                                                 .plusDays(
