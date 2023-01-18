@@ -13,7 +13,7 @@ public class TicketItemAdaptor {
 
     private final TicketItemRepository ticketItemRepository;
 
-    public TicketItem find(Long ticketItemId) {
+    public TicketItem queryTicketItem(Long ticketItemId) {
         return ticketItemRepository
                 .findById(ticketItemId)
                 .orElseThrow(() -> TicketItemNotFoundException.EXCEPTION);

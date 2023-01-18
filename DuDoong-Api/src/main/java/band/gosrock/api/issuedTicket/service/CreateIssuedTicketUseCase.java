@@ -44,7 +44,7 @@ public class CreateIssuedTicketUseCase {
                         .map(
                                 option ->
                                         IssuedTicketOptionAnswer.builder()
-                                                .option(optionAdaptor.find(option))
+                                                .option(optionAdaptor.queryOption(option))
                                                 .answer("test")
                                                 .build())
                         .toList();
@@ -74,6 +74,6 @@ public class CreateIssuedTicketUseCase {
     }
 
     private TicketItem getTicketItem(Long ticketItemId) {
-        return ticketItemAdaptor.find(ticketItemId);
+        return ticketItemAdaptor.queryTicketItem(ticketItemId);
     }
 }

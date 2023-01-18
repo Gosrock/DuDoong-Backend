@@ -13,7 +13,7 @@ public class OptionAdaptor {
 
     private final OptionRepository optionRepository;
 
-    public Option find(Long optionId) {
+    public Option queryOption(Long optionId) {
         return optionRepository
                 .findById(optionId)
                 .orElseThrow(() -> OptionNotFoundException.EXCEPTION);
