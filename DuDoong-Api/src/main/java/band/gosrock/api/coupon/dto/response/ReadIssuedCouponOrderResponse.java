@@ -4,7 +4,6 @@ package band.gosrock.api.coupon.dto.response;
 import band.gosrock.domain.common.vo.IssuedCouponInfoVo;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
