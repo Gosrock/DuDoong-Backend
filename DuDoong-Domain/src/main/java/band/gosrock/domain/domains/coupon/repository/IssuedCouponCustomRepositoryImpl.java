@@ -6,7 +6,6 @@ import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -15,16 +14,14 @@ public class IssuedCouponCustomRepositoryImpl implements IssuedCouponCustomRepos
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Optional<List<IssuedCoupon>> findAllByUserIdAndUsageStatusAndCalculateValidTerm(
+    public List<IssuedCoupon> findAllByUserIdAndUsageStatusAndCalculateValidTerm(
             Long userId, boolean usageStatus) {
-        return Optional.ofNullable(
-                queryFactory
-                        .selectFrom(issuedCoupon)
-                        //
-                        // .leftJoin(issuedCoupon.couponCampaign,couponCampaign)
-                        //                        .fetchJoin()
-                        .where(userIdEq(userId), usageStatusEq(usageStatus))
-                        .fetch());
+        return queryFactory
+                .selectFrom(issuedCoupon)
+                // .leftJoin(issuedCoupon.couponCampaign,couponCampaign)
+                //                        .fetchJoin()
+                .where(userIdEq(userId), usageStatusEq(usageStatus))
+                .fetch();
     }
 
     private BooleanExpression userIdEq(Long userId) {
