@@ -8,11 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
 
 @Getter
-@RequiredArgsConstructor
 public class CreateOrderRequest {
     @Nullable
     @Schema(nullable = true, defaultValue = "null")
-    private final Long couponId;
+    private Long couponId;
 
-    @NotNull private final Long cartId;
+    @NotNull private Long cartId;
 }
