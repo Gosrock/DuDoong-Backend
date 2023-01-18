@@ -9,5 +9,5 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CreateIssuedTicketRequestDTOs {
 
-    private List<CreateIssuedTicketRequest> createIssuedTicketRequests;
+    private List<CreateIssuedTicketRequestForDev> createIssuedTicketRequestForDevs;
 }

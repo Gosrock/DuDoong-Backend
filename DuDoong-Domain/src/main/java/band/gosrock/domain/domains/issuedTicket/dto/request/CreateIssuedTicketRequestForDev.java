@@ -3,7 +3,7 @@ package band.gosrock.domain.domains.issuedTicket.dto.request;
 
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.domain.Event;
-import band.gosrock.domain.domains.order.domain.OrderOptionAnswer;
+import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketOptionAnswer;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.user.domain.User;
 import java.util.List;
@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class CreateIssuedTicketRequest {
+public class CreateIssuedTicketRequestForDev {
 
     /*
     발급 티켓의 이벤트 id
@@ -42,5 +42,5 @@ public class CreateIssuedTicketRequest {
     /*
     발급 티켓에 걸려오는 옵션들 CartOptionAnswer를 List로 받습니다.
      */
-    private final List<OrderOptionAnswer> optionAnswers;
+    private final List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers;
 }
