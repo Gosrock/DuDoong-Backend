@@ -5,6 +5,7 @@ import band.gosrock.common.dto.ErrorReason;
 import band.gosrock.common.dto.ErrorResponse;
 import band.gosrock.common.exception.BaseErrorCode;
 import band.gosrock.common.exception.DuDoongCodeException;
+import band.gosrock.common.exception.GlobalErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import javax.servlet.FilterChain;
@@ -36,14 +37,9 @@ public class AccessDeniedFilter extends OncePerRequestFilter {
         } catch (AccessDeniedException e) {
             ErrorResponse access_denied =
                     new ErrorResponse(
-                            403,
-                            "Access Denied",
-                            "check if accessToken exist",
+                            GlobalErrorCode.ACCESS_TOKEN_NOT_EXIST.getErrorReason(),
                             request.getRequestURL().toString());
             responseToClient(response, access_denied);
-
-        } finally {
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         }
     }
 
@@ -55,6 +51,9 @@ public class AccessDeniedFilter extends OncePerRequestFilter {
 
     private void responseToClient(HttpServletResponse response, ErrorResponse errorResponse)
             throws IOException {
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setStatus(errorResponse.getStatus());
         response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
     }
 }

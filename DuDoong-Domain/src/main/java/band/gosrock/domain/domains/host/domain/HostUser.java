@@ -11,6 +11,12 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity(name = "tbl_host_user")
+@Table(
+        uniqueConstraints = {
+            @UniqueConstraint(
+                    name = "constraintName",
+                    columnNames = {"host_id", "user_id"})
+        })
 public class HostUser extends BaseTimeEntity {
 
     @Id
@@ -19,9 +25,11 @@ public class HostUser extends BaseTimeEntity {
     private Long id;
 
     // 소속 호스트 아이디
+    @Column(name = "host_id")
     private Long hostId;
 
     // 소속 호스트를 관리중인 유저 아이디
+    @Column(name = "user_id")
     private Long userId;
 
     // 유저의 권한

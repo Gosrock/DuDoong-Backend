@@ -10,7 +10,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class CreateCartResponse {
+public class CartResponse {
     @Schema(description = "장바구니명 입니다.", defaultValue = "")
     private final String title;
     // 내티켓 확인하기
@@ -29,8 +29,8 @@ public class CreateCartResponse {
     @Schema(description = "결제가 필요한지에 대한 여부를 결정합니다. 필요한 true면 결제창 띄우시면됩니다.", defaultValue = "true")
     private final Boolean isNeedPayment;
 
-    public static CreateCartResponse of(List<CartItemResponse> cartItemResponses, Cart cart) {
-        return CreateCartResponse.builder()
+    public static CartResponse of(List<CartItemResponse> cartItemResponses, Cart cart) {
+        return CartResponse.builder()
                 .items(cartItemResponses)
                 .totalPrice(cart.getTotalPrice())
                 .cartId(cart.getId())

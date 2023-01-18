@@ -1,12 +1,13 @@
 package band.gosrock.domain.domains.issuedTicket.domain;
 
+import static band.gosrock.common.consts.DuDoongStatic.NO_START_NUMBER;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketDTO;
-import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketRequest;
+import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketRequestForDev;
 import band.gosrock.domain.domains.issuedTicket.dto.response.CreateIssuedTicketResponse;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.user.domain.User;
@@ -120,7 +121,7 @@ public class IssuedTicket extends BaseTimeEntity {
         this.issuedTicketOptionAnswers.addAll(issuedTicketOptionAnswers);
     }
 
-    public static IssuedTicket create(CreateIssuedTicketRequest dto) {
+    public static IssuedTicket create(CreateIssuedTicketRequestForDev dto) {
         return IssuedTicket.builder()
                 .event(dto.getEvent())
                 .user(dto.getUser())
@@ -132,6 +133,27 @@ public class IssuedTicket extends BaseTimeEntity {
                 .build();
     }
 
+    public static IssuedTicket createForDev(
+            Event event,
+            User user,
+            Long orderLineId,
+            TicketItem ticketItem,
+            Money price,
+            List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers) {
+        IssuedTicket createIssuedTicket =
+                IssuedTicket.builder()
+                        .event(event)
+                        .user(user)
+                        .orderLineId(orderLineId)
+                        .ticketItem(ticketItem)
+                        .price(price)
+                        .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
+                        .issuedTicketOptionAnswers(new ArrayList<>())
+                        .build();
+        createIssuedTicket.getIssuedTicketOptionAnswers().addAll(issuedTicketOptionAnswers);
+        return createIssuedTicket;
+    }
+
     @PrePersist
     public void createUUID() {
         this.uuid = UUID.randomUUID().toString();
@@ -139,7 +161,7 @@ public class IssuedTicket extends BaseTimeEntity {
 
     @PostPersist
     public void createIssuedTicketNo() {
-        this.issuedTicketNo = "T" + this.id;
+        this.issuedTicketNo = "T" + Long.sum(NO_START_NUMBER, this.id);
     }
 
     public Money sumOptionPrice() {

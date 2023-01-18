@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.issuedTicket.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.common.vo.IssuedTicketOptionAnswerVo;
 import band.gosrock.domain.domains.order.domain.OrderOptionAnswer;
 import band.gosrock.domain.domains.ticket_item.domain.Option;
 import javax.persistence.Column;
@@ -13,12 +14,12 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity(name = "tbl_issued_ticket_option_answer")
 public class IssuedTicketOptionAnswer extends BaseTimeEntity {
 
@@ -51,5 +52,9 @@ public class IssuedTicketOptionAnswer extends BaseTimeEntity {
                 .option(orderOptionAnswer.getOption())
                 .answer(orderOptionAnswer.getAnswer())
                 .build();
+    }
+
+    public IssuedTicketOptionAnswerVo toIssuedTicketOptionAnswerVo() {
+        return IssuedTicketOptionAnswerVo.from(this);
     }
 }

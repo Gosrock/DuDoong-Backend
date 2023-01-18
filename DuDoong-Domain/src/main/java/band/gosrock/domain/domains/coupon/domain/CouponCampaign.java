@@ -2,7 +2,7 @@ package band.gosrock.domain.domains.coupon.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
-import java.time.LocalDateTime;
+import band.gosrock.domain.common.vo.DateTimePeriod;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.*;
@@ -10,7 +10,10 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 
+@DynamicInsert
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Entity(name = "tbl_coupon_campaign")
@@ -27,15 +30,16 @@ public class CouponCampaign extends BaseTimeEntity {
     private DiscountType discountType;
 
     @Enumerated(EnumType.STRING)
+    @ColumnDefault("'ALL'")
     private ApplyTarget applyTarget;
 
+    // 사용기한(일자) ex.10 -> 발급 이후 10일 동안 쿠폰 사용 가능
     private Long validTerm;
 
-    // 쿠폰 발행 시작 시각
-    private LocalDateTime startAt;
-    // 쿠폰 발행 마감 시각
-    private LocalDateTime endAt;
+    // 쿠폰 발행 가능 기간
+    @Embedded private DateTimePeriod dateTimePeriod;
 
+    // 쿠폰 총 발행량 및 잔량
     @Embedded private CouponStockInfo couponStockInfo;
 
     private Long discountAmount;
@@ -51,8 +55,7 @@ public class CouponCampaign extends BaseTimeEntity {
             DiscountType discountType,
             ApplyTarget applyTarget,
             Long validTerm,
-            LocalDateTime startAt,
-            LocalDateTime endAt,
+            DateTimePeriod dateTimePeriod,
             CouponStockInfo couponStockInfo,
             Long discountAmount,
             String couponCode) {
@@ -60,8 +63,7 @@ public class CouponCampaign extends BaseTimeEntity {
         this.discountType = discountType;
         this.applyTarget = applyTarget;
         this.validTerm = validTerm;
-        this.startAt = startAt;
-        this.endAt = endAt;
+        this.dateTimePeriod = dateTimePeriod;
         this.couponStockInfo = couponStockInfo;
         this.discountAmount = discountAmount;
         this.couponCode = couponCode;

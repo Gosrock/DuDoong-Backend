@@ -11,5 +11,5 @@ public enum DiscountType {
     AMOUNT("AMOUNT"),
     // 정률 할인
     PERCENTAGE("PERCENTAGE");
-    private String value;
+    private final String value;
 }

@@ -36,11 +36,7 @@ public enum OrderErrorCode implements BaseErrorCode {
 
     @Override
     public ErrorReason getErrorReason() {
-        return band.gosrock.common.dto.ErrorReason.builder()
-                .reason(reason)
-                .code(code)
-                .status(status)
-                .build();
+        return ErrorReason.builder().reason(reason).code(code).status(status).build();
     }
 
     @Override
