@@ -124,7 +124,7 @@ public class ExampleController {
     @Operation(summary = "티켓 상품 관련 에러 코드 나열")
     @ApiErrorCodeExample(TicketItemErrorCode.class)
     public void getTicketItemErrorCode() {}
-  
+
     @GetMapping("/host")
     @DevelopOnlyApi
     @Operation(summary = "호스트 도메인 관련 에러 코드 나열")
