@@ -11,10 +11,10 @@ public class CallTransactionFactory {
     private final RedissonCallSameTransaction redissonCallSameTransaction;
     private final RedissonCallNewTransaction redissonCallNewTransaction;
 
-    public CallTransaction getCallTransaction(boolean needNew) {
-        if (needNew == true) {
-            return redissonCallNewTransaction;
+    public CallTransaction getCallTransaction(boolean needSame) {
+        if (needSame) {
+            return redissonCallSameTransaction;
         }
-        return redissonCallSameTransaction;
+        return redissonCallNewTransaction;
     }
 }
