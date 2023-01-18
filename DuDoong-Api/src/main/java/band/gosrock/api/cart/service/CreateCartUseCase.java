@@ -21,14 +21,13 @@ public class CreateCartUseCase {
 
     private final EntityManager entityManager;
 
-
     @Transactional
     public CartResponse execute(AddCartRequest addCartRequest) {
 
         Long currentUserId = SecurityUtils.getCurrentUserId();
 
         Cart cart = cartMapper.toEntity(addCartRequest, currentUserId);
-        Long cartId = cartDomainService.createCart(cart,currentUserId);
+        Long cartId = cartDomainService.createCart(cart, currentUserId);
         return cartMapper.toCartResponse(cartId);
     }
 }

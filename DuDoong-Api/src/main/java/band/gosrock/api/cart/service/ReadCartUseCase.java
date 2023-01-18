@@ -15,10 +15,7 @@ public class ReadCartUseCase {
     private final CartMapper cartMapper;
     private final CartAdaptor cartAdaptor;
 
-    /**
-     * 내가 지금 가지고 있는 장바구니를 리턴합니다.
-     * 에러 상황은 아니기때문에 없으면 null 리턴합니다.
-     */
+    /** 내가 지금 가지고 있는 장바구니를 리턴합니다. 에러 상황은 아니기때문에 없으면 null 리턴합니다. */
     @Transactional(readOnly = true)
     public CartResponse execute() {
         Long currentUserId = SecurityUtils.getCurrentUserId();

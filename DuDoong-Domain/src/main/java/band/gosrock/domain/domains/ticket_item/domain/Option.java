@@ -35,7 +35,7 @@ public class Option {
         this.optionGroup = optionGroup;
     }
 
-    public Long getOptionGroupId(){
+    public Long getOptionGroupId() {
         return this.optionGroup.getId();
     }
 }

@@ -16,7 +16,6 @@ import band.gosrock.domain.domains.ticket_item.repository.OptionRepository;
 import band.gosrock.domain.domains.ticket_item.repository.TicketItemRepository;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.transaction.annotation.Transactional;

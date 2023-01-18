@@ -66,6 +66,6 @@ public class CartController {
     @Operation(summary = "사용자가 최근에 만들었던 장바구니를 불러옵니다. 없으면 data null (구현 안해도 됨)")
     @PostMapping("/recent")
     public CartResponse getRecentMyCart() {
-       return readCartUseCase.execute();
+        return readCartUseCase.execute();
     }
 }

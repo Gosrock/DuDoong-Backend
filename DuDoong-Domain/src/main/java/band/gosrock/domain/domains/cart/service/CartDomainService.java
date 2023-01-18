@@ -6,14 +6,9 @@ import band.gosrock.domain.common.aop.redissonLock.RedissonLock;
 import band.gosrock.domain.domains.cart.adaptor.CartAdaptor;
 import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.cart.policy.CartPolicy;
-import band.gosrock.domain.domains.ticket_item.domain.Option;
-import band.gosrock.domain.domains.ticket_item.domain.OptionGroup;
-import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.ticket_item.repository.OptionGroupRepository;
 import band.gosrock.domain.domains.ticket_item.repository.OptionRepository;
 import band.gosrock.domain.domains.ticket_item.repository.TicketItemRepository;
-import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +27,7 @@ public class CartDomainService {
 
     // 한유저당 한 카트를 소유할 수 있는 제약조건을 가짐
     @RedissonLock(LockName = "카트생성", paramClassType = Cart.class, identifier = "userId")
-    public Long createCart(Cart cart , Long userId) {
+    public Long createCart(Cart cart, Long userId) {
         cart.validItemKindPolicy(() -> cartPolicy);
         cartAdaptor.deleteByUserId(userId);
         Cart savedCart = cartAdaptor.save(cart);

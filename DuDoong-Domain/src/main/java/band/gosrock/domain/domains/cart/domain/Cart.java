@@ -61,7 +61,7 @@ public class Cart extends BaseTimeEntity {
     }
 
     /** 아이템에 요구하는 답변을 올바르게 했는지 확인합니다. */
-    public void validCorrectAnswerToItems(){
+    public void validCorrectAnswerToItems() {
         this.cartLineItems.forEach(CartLineItem::validCorrectAnswer);
     }
 

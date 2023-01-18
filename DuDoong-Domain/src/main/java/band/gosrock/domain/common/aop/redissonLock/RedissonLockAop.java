@@ -55,7 +55,9 @@ public class RedissonLockAop {
             if (!available) {
                 throw NotAvailableRedissonLockException.EXCEPTION;
             }
-            return callTransactionFactory.getCallTransaction(redissonLock.newTransaction()).proceed(joinPoint);
+            return callTransactionFactory
+                    .getCallTransaction(redissonLock.newTransaction())
+                    .proceed(joinPoint);
         } catch (DuDoongCodeException | DuDoongDynamicException | TransactionTimedOutException e) {
             throw e;
         } finally {

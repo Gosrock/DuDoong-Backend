@@ -12,8 +12,7 @@ import org.redisson.api.RedissonClient;
 
 class RedissonLockAopTest {
     @Mock RedissonClient redissonClient;
-    @Mock
-    RedissonCallNewTransaction redissonCallTransaction;
+    @Mock RedissonCallNewTransaction redissonCallTransaction;
 
     RedissonLockAop redissonLockAop;
 

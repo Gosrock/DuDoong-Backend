@@ -18,11 +18,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(
-    uniqueConstraints = {
-        @UniqueConstraint(
-            columnNames = {"item_id", "option_group_id"})
-    })
+@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"item_id", "option_group_id"})})
 @Entity(name = "tbl_item_option_group")
 public class ItemOptionGroup {
     @Id

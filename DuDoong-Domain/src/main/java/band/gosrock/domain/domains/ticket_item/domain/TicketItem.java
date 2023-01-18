@@ -54,13 +54,13 @@ public class TicketItem extends BaseTimeEntity {
 
     // 판매 종료 시간
     private LocalDateTime saleEndAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
     @OneToMany(mappedBy = "item")
     private List<ItemOptionGroup> itemOptionGroups = new ArrayList<>();
-
 
     @Builder
     public TicketItem(
@@ -74,7 +74,7 @@ public class TicketItem extends BaseTimeEntity {
             Boolean isSellable,
             LocalDateTime saleStartAt,
             LocalDateTime saleEndAt,
-        List<ItemOptionGroup> itemOptionGroups) {
+            List<ItemOptionGroup> itemOptionGroups) {
         this.type = type;
         this.name = name;
         this.description = description;
@@ -96,17 +96,19 @@ public class TicketItem extends BaseTimeEntity {
         return this.type.isNeedPayment();
     }
 
-    public Boolean hasOption(){
+    public Boolean hasOption() {
         return !itemOptionGroups.isEmpty();
     }
 
-    public List<Long> getOptionGroupIds(){
-        return itemOptionGroups.stream().map(itemOptionGroup -> itemOptionGroup.getOptionGroup().getId()).toList();
+    public List<Long> getOptionGroupIds() {
+        return itemOptionGroups.stream()
+                .map(itemOptionGroup -> itemOptionGroup.getOptionGroup().getId())
+                .toList();
     }
 
-    public void addOptionGroup(OptionGroup optionGroup){
-        ItemOptionGroup itemOptionGroup = ItemOptionGroup.builder().item(this).optionGroup(optionGroup)
-            .build();
+    public void addOptionGroup(OptionGroup optionGroup) {
+        ItemOptionGroup itemOptionGroup =
+                ItemOptionGroup.builder().item(this).optionGroup(optionGroup).build();
         this.itemOptionGroups.add(itemOptionGroup);
     }
 }
