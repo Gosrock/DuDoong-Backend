@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.issuedTicket.service;
 
 
 import band.gosrock.common.annotation.DomainService;
+import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketOptionAnswerAdaptor;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
@@ -20,6 +21,7 @@ public class IssuedTicketDomainService {
     private final IssuedTicketRepository issuedTicketRepository;
     private final IssuedTicketAdaptor issuedTicketAdaptor;
     private final IssuedTicketOptionAnswerAdaptor issuedTicketOptionAnswerAdaptor;
+    private final EventAdaptor eventAdaptor;
 
     // Todo 둘 중 어떤 로직이 더 나은지 비교해주세요
     //    @Transactional
