@@ -27,15 +27,17 @@ public class HostService {
         return hostRepository.save(host);
     }
 
-    public Host addHostUser(Host host, Long userId) {
+    public Host addHostUser(Host host, Long userId, HostRole role) {
         HostUser hostUser =
-                HostUser.builder()
-                        .userId(userId)
-                        .hostId(host.getId())
-                        .role(HostRole.SUPER_HOST)
-                        .build();
+                HostUser.builder().userId(userId).hostId(host.getId()).role(role).build();
         host.addHostUsers(Set.of(hostUser));
         return hostRepository.save(host);
+    }
+
+    /** 해당 호스트 유저에 특정 userId 가 포함되어 있는지 반환하는 로직입니다 */
+    public Boolean hasHostUser(Host host, Long userId) {
+        return host.getHostUsers().stream()
+                .anyMatch(hostUser -> hostUser.getUserId().equals(userId));
     }
 
     /** 해당 유저가 호스트의 마스터(담당자, 방장)인지 확인하는 검증 로직입니다 */
