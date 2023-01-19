@@ -7,7 +7,6 @@ import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.host.domain.HostRole;
-import band.gosrock.domain.domains.host.domain.HostUser;
 import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException;
 import band.gosrock.domain.domains.host.service.HostService;
 import band.gosrock.domain.domains.user.domain.User;
@@ -29,11 +28,9 @@ public class JoinHostUseCase {
         final User user = userDomainService.retrieveUser(securityUserId);
         final Host host = hostAdaptor.findById(hostId);
 
-        for (HostUser hostUser : host.getHostUsers()) {
-            // 이 호스트에 이미 속함
-            if (hostUser.getUserId().equals(securityUserId)) {
-                throw AlreadyJoinedHostException.EXCEPTION;
-            }
+        // 이 호스트에 이미 속함
+        if (hostService.hasHostUser(host, securityUserId)) {
+            throw AlreadyJoinedHostException.EXCEPTION;
         }
         return HostDetailResponse.of(hostService.addHostUser(host, securityUserId, HostRole.HOST));
     }
