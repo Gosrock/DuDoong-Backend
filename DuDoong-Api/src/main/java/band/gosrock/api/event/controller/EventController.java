@@ -30,8 +30,9 @@ public class EventController {
     }
 
     @Operation(summary = "새로운 이벤트(공연)를 생성합니다")
-    @PostMapping
-    public EventResponse createEvent(@RequestBody @Valid CreateEventRequest createEventRequest) {
-        return createEventUseCase.execute(createEventRequest);
+    @PostMapping("/{hostId}")
+    public EventResponse createEvent(
+            @PathVariable Long hostId, @RequestBody @Valid CreateEventRequest createEventRequest) {
+        return createEventUseCase.execute(hostId, createEventRequest);
     }
 }

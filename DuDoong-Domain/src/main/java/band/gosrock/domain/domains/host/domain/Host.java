@@ -38,7 +38,7 @@ public class Host extends BaseTimeEntity {
     private Set<HostUser> hostUsers = new HashSet<>();
 
     public void addHostUsers(Set<HostUser> hostUserList) {
-        hostUsers.addAll(hostUserList);
+        this.hostUsers.addAll(hostUserList);
     }
 
     @Builder
