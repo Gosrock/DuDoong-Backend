@@ -6,6 +6,8 @@ import band.gosrock.api.coupon.dto.reqeust.CreateCouponCampaignRequest;
 import band.gosrock.api.coupon.dto.response.CreateCouponCampaignResponse;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.coupon.domain.CouponCampaign;
+import band.gosrock.domain.domains.coupon.domain.DiscountType;
+import band.gosrock.domain.domains.coupon.exception.WrongDiscountAmountException;
 import band.gosrock.domain.domains.coupon.service.CreateCouponCampaignDomainService;
 import band.gosrock.domain.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +30,11 @@ public class CreateCouponUseCase {
         // 이미 생성된 쿠폰 코드인지 검증
         createCouponCampaignDomainService.checkCouponCodeExists(
                 createCouponCampaignRequest.getCouponCode());
-        // TODO : 정률 할인일 경우 discountAmount 값이 100이하인지 추가 검증 필요
+        // 정률 할인시 discountAmount 값이 100 이하인지 검증
+        if (createCouponCampaignRequest.getDiscountType().equals(DiscountType.PERCENTAGE)
+                && createCouponCampaignRequest.getDiscountAmount() > 100) {
+            throw WrongDiscountAmountException.EXCEPTION;
+        }
         // 쿠폰 생성
         CouponCampaign couponCampaign =
                 createCouponCampaignDomainService.createCouponCampaign(
