@@ -21,17 +21,28 @@ public class IssuedCoupon extends BaseTimeEntity {
 
     private Long userId;
 
-    private Boolean usageStatus;
+    private boolean usageStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coupon_campaign_id", nullable = false)
     private CouponCampaign couponCampaign;
 
+    /** 주문에서 사용하는 할인 금액 계산 함수, 할인 금액보다 결제 금액이 작을 경우 할인 불가로 Money.ZERO 리턴 */
     public Money getDiscountAmount(Money supplyAmount) {
-        if (couponCampaign.getDiscountType().equals(DiscountType.AMOUNT)) {
-            // 그냥 이정도로만 만들게유!! 메소드만 필요해서 - 찬진
-            // TODO : 할인 금액이 결제 가능 금액보다 작을때 에러 등 검증 필요
-            return supplyAmount.minus(Money.wons(couponCampaign.getDiscountAmount()));
+        if (couponCampaign.getDiscountType().equals(DiscountType.AMOUNT)) { // 정액 할인
+            return checkSupplyIsGreaterThenDiscount(
+                    supplyAmount, couponCampaign.getDiscountAmount());
+        }
+        // 정률 할인
+        Long discountAmount =
+                supplyAmount.getDiscountAmountByPercentage(
+                        supplyAmount, couponCampaign.getDiscountAmount());
+        return checkSupplyIsGreaterThenDiscount(supplyAmount, discountAmount);
+    }
+
+    public Money checkSupplyIsGreaterThenDiscount(Money supply, Long discount) {
+        if (supply.isGreaterThanOrEqual(Money.wons(discount))) {
+            return Money.wons(discount);
         }
         return Money.ZERO;
     }
@@ -43,8 +54,7 @@ public class IssuedCoupon extends BaseTimeEntity {
         this.usageStatus = false;
     }
 
-    public String getCouponName() {
-        // 쿠폰코드==쿠폰이름
+    public String getCouponName() { // 쿠폰코드==쿠폰이름
         return this.couponCampaign.getCouponCode();
     }
 }

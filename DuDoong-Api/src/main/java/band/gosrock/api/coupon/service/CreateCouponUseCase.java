@@ -28,6 +28,7 @@ public class CreateCouponUseCase {
         // 이미 생성된 쿠폰 코드인지 검증
         createCouponCampaignDomainService.checkCouponCodeExists(
                 createCouponCampaignRequest.getCouponCode());
+        // TODO : 정률 할인일 경우 discountAmount 값이 100이하인지 추가 검증 필요
         // 쿠폰 생성
         CouponCampaign couponCampaign =
                 createCouponCampaignDomainService.createCouponCampaign(
