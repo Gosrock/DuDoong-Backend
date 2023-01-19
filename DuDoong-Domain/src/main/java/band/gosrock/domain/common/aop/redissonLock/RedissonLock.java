@@ -19,6 +19,8 @@ public @interface RedissonLock {
 
     Class<?> paramClassType() default Object.class;
 
+    boolean needSameTransaction() default false;
+
     // redisson default waitTime 이 30 s 임
     long waitTime() default 10L;
 

@@ -2,26 +2,28 @@ package band.gosrock.api.host.service;
 
 
 import band.gosrock.api.config.security.SecurityUtils;
-import band.gosrock.api.host.model.dto.response.HostDetailResponse;
+import band.gosrock.api.host.model.dto.response.HostResponse;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
-import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.domain.domains.user.service.UserDomainService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
 @UseCase
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ReadHostUseCase {
+public class ReadHostListUseCase {
     private final UserDomainService userDomainService;
     private final HostAdaptor hostAdaptor;
 
-    public HostDetailResponse execute(Long hostId) {
-        final Long securityUserId = SecurityUtils.getCurrentUserId();
-        final User user = userDomainService.retrieveUser(securityUserId);
-        final Host host = hostAdaptor.findById(hostId);
-        return HostDetailResponse.of(host);
+    public List<HostResponse> execute() {
+        Long securityUserId = SecurityUtils.getCurrentUserId();
+        User user = userDomainService.retrieveUser(securityUserId);
+        // Todo:: hostId로 변경필요
+        return hostAdaptor.findAllByMasterUserId(securityUserId).stream()
+                .map(HostResponse::of)
+                .toList();
     }
 }
