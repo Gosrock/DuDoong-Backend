@@ -7,7 +7,6 @@ import band.gosrock.infrastructure.outer.api.tossPayments.dto.request.CancelPaym
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.PaymentsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
 
 @DomainService
 @RequiredArgsConstructor
