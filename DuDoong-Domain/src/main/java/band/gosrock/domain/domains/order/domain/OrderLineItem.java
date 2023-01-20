@@ -103,12 +103,11 @@ public class OrderLineItem extends BaseTimeEntity {
         return ticketItem.isNeedPayment();
     }
     /** 주문 철회 가능 여부를 반환합니다. */
-
     public Boolean canRefund() {
         return this.getRefundInfo().getAvailAble();
     }
     /** 아이템의 이벤트 정보를 불러옵니다. */
-    public Event getItemEvent(){
+    public Event getItemEvent() {
         return this.ticketItem.getEvent();
     }
 }

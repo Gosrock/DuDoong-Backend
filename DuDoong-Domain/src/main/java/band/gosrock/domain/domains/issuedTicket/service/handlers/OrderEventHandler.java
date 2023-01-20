@@ -1,4 +1,4 @@
-package band.gosrock.domain.domains.issuedTicket.handlers;
+package band.gosrock.domain.domains.issuedTicket.service.handlers;
 
 
 import band.gosrock.domain.common.events.order.DoneOrderEvent;
@@ -28,15 +28,17 @@ public class OrderEventHandler {
     private final UserAdaptor userAdaptor;
 
     private final OrderAdaptor orderAdaptor;
-    @EventListener(
-            classes = DoneOrderEvent.class)
+
+    @EventListener(classes = DoneOrderEvent.class)
     public void handleDoneOrderEvent(DoneOrderEvent doneOrderEvent) {
         log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 티켓 생성작업 진행");
-//        throw  new RuntimeException();
+        //        throw  new RuntimeException();
         User user = userAdaptor.queryUser(doneOrderEvent.getUserId());
         Order order = orderAdaptor.findByOrderUuid(doneOrderEvent.getOrderUuid());
-        List<CreateIssuedTicketDTO> createIssuedTicketDTOS = order.getOrderLineItems().stream()
-            .map(orderLineItem -> new CreateIssuedTicketDTO(order, orderLineItem, user)).toList();
+        List<CreateIssuedTicketDTO> createIssuedTicketDTOS =
+                order.getOrderLineItems().stream()
+                        .map(orderLineItem -> new CreateIssuedTicketDTO(order, orderLineItem, user))
+                        .toList();
         issuedTicketDomainService.createIssuedTicket(createIssuedTicketDTOS);
         log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 티켓 생성작업 완료");
     }
