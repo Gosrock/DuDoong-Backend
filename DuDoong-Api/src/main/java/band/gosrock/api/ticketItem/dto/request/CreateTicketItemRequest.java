@@ -1,15 +1,15 @@
 package band.gosrock.api.ticketItem.dto.request;
 
+
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
-
-import javax.validation.constraints.NotNull;
 
 @Getter
 @RequiredArgsConstructor

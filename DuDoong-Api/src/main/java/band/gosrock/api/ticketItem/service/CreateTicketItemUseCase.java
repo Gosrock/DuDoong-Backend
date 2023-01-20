@@ -1,5 +1,6 @@
 package band.gosrock.api.ticketItem.service;
 
+
 import band.gosrock.api.common.UserUtils;
 import band.gosrock.api.ticketItem.dto.request.CreateTicketItemRequest;
 import band.gosrock.api.ticketItem.dto.response.CreateTicketItemResponse;
@@ -37,7 +38,8 @@ public class CreateTicketItemUseCase {
         if (!host.getPartner()) {
             ticketItemService.checkTicketPrice(Money.wons(createTicketItemRequest.getPrice()));
         }
-        TicketItem ticketItem = ticketItemService.createTicketItem(createTicketItemRequest.toEntity(event));
+        TicketItem ticketItem =
+                ticketItemService.createTicketItem(createTicketItemRequest.toEntity(event));
         return CreateTicketItemResponse.from(ticketItem);
     }
 }

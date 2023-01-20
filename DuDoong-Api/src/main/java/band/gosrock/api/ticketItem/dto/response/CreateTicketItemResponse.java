@@ -1,12 +1,12 @@
 package band.gosrock.api.ticketItem.dto.response;
 
+
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
-
 
 @Getter
 @Builder
