@@ -31,7 +31,7 @@ public class OrderEventHandler {
     @TransactionalEventListener(
             classes = DoneOrderEvent.class,
             phase = TransactionPhase.BEFORE_COMMIT)
-    public void handleDoneOrderEvent(DoneOrderEvent doneOrderEvent) throws InterruptedException {
+    public void handleDoneOrderEvent(DoneOrderEvent doneOrderEvent) {
         log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 티켓 생성작업 진행");
         User user = userAdaptor.queryUser(doneOrderEvent.getUserId());
         Order order = orderAdaptor.findByOrderUuid(doneOrderEvent.getOrderUuid());
