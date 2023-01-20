@@ -5,6 +5,7 @@ import band.gosrock.api.config.security.SecurityUtils;
 import band.gosrock.api.event.model.dto.request.CreateEventRequest;
 import band.gosrock.api.event.model.dto.response.EventResponse;
 import band.gosrock.common.annotation.UseCase;
+import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.domain.EventStatus;
 import band.gosrock.domain.domains.event.service.EventService;
@@ -23,6 +24,7 @@ public class CreateEventUseCase {
     private final HostService hostService;
     private final HostAdaptor hostAdaptor;
     private final EventService eventService;
+    private final EventAdaptor eventAdaptor;
     private final UserDomainService userDomainService;
 
     @Transactional
@@ -32,7 +34,7 @@ public class CreateEventUseCase {
         userDomainService.retrieveUser(userId);
         // 호스트에 속하는지 검증 후 이벤트 생성
         final Host host = hostAdaptor.findById(hostId);
-        if (hostService.hasHostUser(host, userId)) {
+        if (host.hasHostUserId(userId)) {
             Event event =
                     eventService.createEvent(
                             Event.builder()
