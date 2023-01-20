@@ -33,7 +33,7 @@ public class CreateTicketItemUseCase {
         Event event = eventAdaptor.findById(createTicketItemRequest.getEventId());
         Host host = hostAdaptor.findById(event.getHostId());
         // 권한 체크 ( 해당 이벤트의 호스트인지 )
-        hostService.hasHostUser(host, user.getId());
+        host.hasHostUserId(user.getId());
         // 호스트 제휴 여부에 따른 가격 체크
         if (!host.getPartner()) {
             ticketItemService.checkTicketPrice(Money.wons(createTicketItemRequest.getPrice()));
