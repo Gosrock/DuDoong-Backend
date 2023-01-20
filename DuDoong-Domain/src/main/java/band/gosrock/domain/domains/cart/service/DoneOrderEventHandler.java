@@ -24,8 +24,8 @@ public class DoneOrderEventHandler {
             phase = TransactionPhase.AFTER_COMMIT)
     @Transactional
     public void handleDoneOrderEvent(DoneOrderEvent doneOrderEvent) {
-        log.info(doneOrderEvent.getUuid() + "주문 상태 완료, 장바구니를 제거합니다.");
-        Long userId = doneOrderEvent.getOrder().getUserId();
+        log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 장바구니를 제거합니다.");
+        Long userId = doneOrderEvent.getUserId();
         cartAdaptor.deleteByUserId(userId);
     }
 }

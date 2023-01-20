@@ -190,7 +190,7 @@ public class IssuedTicket extends BaseTimeEntity {
                             .event(dto.getOrderLineItem().getTicketItem().getEvent())
                             .orderLineId(dto.getOrderLineItem().getId())
                             .user(dto.getUser())
-                            .price(dto.getOrderLineItem().getTicketItem().getPrice())
+                            .price(dto.getOrderLineItem().getItemPrice())
                             .ticketItem(dto.getOrderLineItem().getTicketItem())
                             .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
                             .issuedTicketOptionAnswers(issuedTicketOptionAnswers)

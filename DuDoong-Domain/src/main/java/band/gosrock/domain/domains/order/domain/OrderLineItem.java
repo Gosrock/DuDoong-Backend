@@ -6,6 +6,7 @@ import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.OptionAnswerVo;
 import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.cart.domain.CartLineItem;
+import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import java.util.ArrayList;
 import java.util.List;
@@ -101,8 +102,12 @@ public class OrderLineItem extends BaseTimeEntity {
     public Boolean isNeedPayment() {
         return ticketItem.isNeedPayment();
     }
-
+    /** 주문 철회 가능 여부를 반환합니다. */
     public Boolean canRefund() {
         return this.getRefundInfo().getAvailAble();
+    }
+    /** 아이템의 이벤트 정보를 불러옵니다. */
+    public Event getItemEvent() {
+        return this.ticketItem.getEvent();
     }
 }
