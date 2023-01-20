@@ -6,7 +6,6 @@ import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.host.domain.HostRole;
 import band.gosrock.domain.domains.host.domain.HostUser;
-import band.gosrock.domain.domains.host.exception.HostNotFoundException;
 import band.gosrock.domain.domains.host.exception.NotMasterHostException;
 import band.gosrock.domain.domains.host.exception.NotSuperHostException;
 import band.gosrock.domain.domains.host.repository.HostRepository;

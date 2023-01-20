@@ -26,4 +26,4 @@ public class HostAdaptor {
     public List<Host> findAllByHostUsers_UserId(Long userId) {
         return hostRepository.findAllByHostUsers_UserId(userId);
     }
- }
+}

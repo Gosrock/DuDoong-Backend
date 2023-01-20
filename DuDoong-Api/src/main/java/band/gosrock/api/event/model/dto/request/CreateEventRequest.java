@@ -13,6 +13,10 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public class CreateEventRequest {
+    @Schema(defaultValue = "1", description = "호스트 고유 아이디")
+    @Positive
+    private Long hostId;
+
     @Schema(defaultValue = "고스락 제 22회 정기공연", description = "공연 이름")
     @NotBlank(message = "공연 이름을 입력하세요")
     private String name;
@@ -29,7 +33,7 @@ public class CreateEventRequest {
             timezone = "Asia/Seoul")
     private LocalDateTime startAt;
 
-    // 공연 진행 시간, Long 인데 1시간 30분이면 어떻게 처리할까?
+    // 분단위 입니다
     @Schema(defaultValue = "2", description = "공연 진행시간")
     @Positive(message = "공연 진행 소요시간을 입력하세요")
     private Long runTime;

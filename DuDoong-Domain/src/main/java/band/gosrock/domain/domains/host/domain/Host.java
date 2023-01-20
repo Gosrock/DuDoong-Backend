@@ -46,7 +46,11 @@ public class Host extends BaseTimeEntity {
     }
 
     public Boolean isSuperHostUserId(Long userId) {
-        return this.hostUsers.stream().anyMatch(hostUser -> hostUser.getUserId().equals(userId) && hostUser.getRole().equals(HostRole.SUPER_HOST));
+        return this.hostUsers.stream()
+                .anyMatch(
+                        hostUser ->
+                                hostUser.getUserId().equals(userId)
+                                        && hostUser.getRole().equals(HostRole.SUPER_HOST));
     }
 
     @Builder

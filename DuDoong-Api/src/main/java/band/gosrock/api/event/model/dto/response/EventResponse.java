@@ -2,6 +2,7 @@ package band.gosrock.api.event.model.dto.response;
 
 
 import band.gosrock.domain.domains.event.domain.Event;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import lombok.Builder;
@@ -14,8 +15,13 @@ public class EventResponse {
     private String name;
 
     @Schema(description = "공연 시작 시간")
+    @JsonFormat(
+            shape = JsonFormat.Shape.STRING,
+            pattern = "yyyy-MM-dd HH:mm",
+            timezone = "Asia/Seoul")
     private LocalDateTime startAt;
 
+    // 분 단위입니다
     private Long runTime;
 
     private Double latitude;
@@ -32,8 +38,16 @@ public class EventResponse {
 
     private String content;
 
+    @JsonFormat(
+            shape = JsonFormat.Shape.STRING,
+            pattern = "yyyy-MM-dd HH:mm",
+            timezone = "Asia/Seoul")
     private LocalDateTime ticketingStartAt;
 
+    @JsonFormat(
+            shape = JsonFormat.Shape.STRING,
+            pattern = "yyyy-MM-dd HH:mm",
+            timezone = "Asia/Seoul")
     private LocalDateTime ticketingEndAt;
 
     public static EventResponse of(Event event) {
