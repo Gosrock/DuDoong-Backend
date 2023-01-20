@@ -38,7 +38,19 @@ public class Host extends BaseTimeEntity {
     private Set<HostUser> hostUsers = new HashSet<>();
 
     public void addHostUsers(Set<HostUser> hostUserList) {
-        hostUsers.addAll(hostUserList);
+        this.hostUsers.addAll(hostUserList);
+    }
+
+    public Boolean hasHostUserId(Long userId) {
+        return this.hostUsers.stream().anyMatch(hostUser -> hostUser.getUserId().equals(userId));
+    }
+
+    public Boolean isSuperHostUserId(Long userId) {
+        return this.hostUsers.stream()
+                .anyMatch(
+                        hostUser ->
+                                hostUser.getUserId().equals(userId)
+                                        && hostUser.getRole().equals(HostRole.SUPER_HOST));
     }
 
     @Builder

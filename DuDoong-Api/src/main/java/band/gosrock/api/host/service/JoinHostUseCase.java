@@ -29,7 +29,7 @@ public class JoinHostUseCase {
         final Host host = hostAdaptor.findById(hostId);
 
         // 이 호스트에 이미 속함
-        if (hostService.hasHostUser(host, securityUserId)) {
+        if (host.hasHostUserId(securityUserId)) {
             throw AlreadyJoinedHostException.EXCEPTION;
         }
         return HostDetailResponse.of(hostService.addHostUser(host, securityUserId, HostRole.HOST));

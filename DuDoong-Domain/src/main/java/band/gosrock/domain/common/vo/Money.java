@@ -102,4 +102,10 @@ public class Money {
     public String toString() {
         return amount.longValue() + "원";
     }
+
+    public long getDiscountAmountByPercentage(Money supply, Long percentage) {
+        double discountPercent = percentage * 0.01;
+        // 할인 퍼센트 적용한 값 반올림 처리
+        return Math.round(supply.times(discountPercent).longValue());
+    }
 }

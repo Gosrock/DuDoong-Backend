@@ -25,7 +25,6 @@ public class CreateHostUseCase {
         final Long securityUserId = SecurityUtils.getCurrentUserId();
         // 존재하는 유저인지 검증
         final User user = userDomainService.retrieveUser(securityUserId);
-
         // 호스트 생성
         final Host host =
                 hostService.createHost(
@@ -34,7 +33,6 @@ public class CreateHostUseCase {
                                 .contactNumber(createHostRequest.getContactNumber())
                                 .masterUserId(securityUserId)
                                 .build());
-        // todo :: host 생성 레이어 찾기
         return HostResponse.of(hostService.addHostUser(host, securityUserId, HostRole.SUPER_HOST));
     }
 }

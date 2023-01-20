@@ -23,5 +23,6 @@ public class EventAdaptor {
     // Todo:: hostId 지정해서 뽑아오도록 변경하기 (임시)
     public List<Event> findAllByHostId(Long hostId) {
         return eventRepository.findAll();
+        //        return eventRepository.findAllByHostId(hostId);
     }
 }
