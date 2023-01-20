@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -24,12 +25,18 @@ public class ConfirmOrderFailHandler {
     @TransactionalEventListener(
             classes = DoneOrderEvent.class,
             phase = TransactionPhase.AFTER_ROLLBACK)
+    @Transactional
     public void handleRegisterUserEvent(DoneOrderEvent doneOrderEvent) {
         log.info(doneOrderEvent.getOrderUuid() + "주문 실패 처리 핸들러");
 
         Order order = orderAdaptor.findByOrderUuid(doneOrderEvent.getOrderUuid());
+        order.fail();
         if (doneOrderEvent.getOrderMethod().isPayment()) {
-            log.info(doneOrderEvent.getOrderUuid() + "주문 실패 시 결제 취소");
+            log.info(
+                    doneOrderEvent.getOrderUuid()
+                            + ":"
+                            + doneOrderEvent.getPaymentKey()
+                            + "주문 실패 시 결제 취소");
             cancelPaymentService.execute(
                     order.getUuid(), doneOrderEvent.getPaymentKey(), "서버 오류로 인한 환불");
         }

@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
 @DomainService
-@Transactional(readOnly = true)
 @RequiredArgsConstructor
 @Slf4j
 public class WithdrawPaymentService {

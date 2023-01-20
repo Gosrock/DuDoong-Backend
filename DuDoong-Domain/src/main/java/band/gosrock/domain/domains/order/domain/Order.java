@@ -186,7 +186,7 @@ public class Order extends BaseTimeEntity {
         orderStatus.validCanCancel();
         validCanRefundDate();
         this.orderStatus = OrderStatus.CANCELED;
-        Events.raise(WithDrawOrderEvent.of(this.uuid, this.userId));
+        Events.raise(WithDrawOrderEvent.from(this));
     }
 
     /** 사용자가 주문을 환불 시킵니다. */
@@ -194,7 +194,12 @@ public class Order extends BaseTimeEntity {
         orderStatus.validCanRefund();
         validCanRefundDate();
         this.orderStatus = OrderStatus.REFUND;
-        Events.raise(WithDrawOrderEvent.of(this.uuid, this.userId));
+        Events.raise(WithDrawOrderEvent.from(this));
+    }
+
+    /** 결제 실패 된 주문입니다 */
+    public void fail() {
+        this.orderStatus = OrderStatus.FAILED;
     }
 
     /** ---------------------------- 검증 메서드 ---------------------------------- */

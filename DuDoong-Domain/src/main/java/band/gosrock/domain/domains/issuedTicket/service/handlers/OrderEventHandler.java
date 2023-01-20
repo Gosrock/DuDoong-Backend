@@ -29,18 +29,24 @@ public class OrderEventHandler {
 
     private final OrderAdaptor orderAdaptor;
 
-    @EventListener(classes = DoneOrderEvent.class)
-    public void handleDoneOrderEvent(DoneOrderEvent doneOrderEvent) {
+    @TransactionalEventListener(
+        classes = DoneOrderEvent.class,
+        phase = TransactionPhase.BEFORE_COMMIT)
+    public void handleDoneOrderEvent(DoneOrderEvent doneOrderEvent) throws InterruptedException {
         log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 티켓 생성작업 진행");
-        //        throw  new RuntimeException();
-        User user = userAdaptor.queryUser(doneOrderEvent.getUserId());
-        Order order = orderAdaptor.findByOrderUuid(doneOrderEvent.getOrderUuid());
-        List<CreateIssuedTicketDTO> createIssuedTicketDTOS =
-                order.getOrderLineItems().stream()
-                        .map(orderLineItem -> new CreateIssuedTicketDTO(order, orderLineItem, user))
-                        .toList();
-        issuedTicketDomainService.createIssuedTicket(createIssuedTicketDTOS);
-        log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 티켓 생성작업 완료");
+        Thread.sleep(3000L);
+
+        log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 티켓 생성작업 진행, exception");
+
+        throw  new RuntimeException();
+//        User user = userAdaptor.queryUser(doneOrderEvent.getUserId());
+//        Order order = orderAdaptor.findByOrderUuid(doneOrderEvent.getOrderUuid());
+//        List<CreateIssuedTicketDTO> createIssuedTicketDTOS =
+//                order.getOrderLineItems().stream()
+//                        .map(orderLineItem -> new CreateIssuedTicketDTO(order, orderLineItem, user))
+//                        .toList();
+//        issuedTicketDomainService.createIssuedTicket(createIssuedTicketDTOS);
+//        log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 티켓 생성작업 완료");
     }
 
     @Async
@@ -48,6 +54,6 @@ public class OrderEventHandler {
             classes = WithDrawOrderEvent.class,
             phase = TransactionPhase.AFTER_COMMIT)
     public void handleRegisterUserEvent(WithDrawOrderEvent withDrawOrderEvent) {
-        log.info(withDrawOrderEvent.getUuid() + "주문 상태 철회 , 티켓 제거 필요");
+        log.info(withDrawOrderEvent.getOrderUuid() + "주문 상태 철회 , 티켓 제거 필요");
     }
 }
