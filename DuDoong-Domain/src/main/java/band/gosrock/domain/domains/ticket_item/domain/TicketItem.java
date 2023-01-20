@@ -74,6 +74,7 @@ public class TicketItem extends BaseTimeEntity {
             Boolean isSellable,
             LocalDateTime saleStartAt,
             LocalDateTime saleEndAt,
+            Event event,
             List<ItemOptionGroup> itemOptionGroups) {
         this.type = type;
         this.name = name;
@@ -85,6 +86,7 @@ public class TicketItem extends BaseTimeEntity {
         this.isSellable = isSellable;
         this.saleStartAt = saleStartAt;
         this.saleEndAt = saleEndAt;
+        this.event = event;
         this.itemOptionGroups = itemOptionGroups;
     }
 
