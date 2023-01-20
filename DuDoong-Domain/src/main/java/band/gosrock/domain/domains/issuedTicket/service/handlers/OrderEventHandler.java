@@ -35,15 +35,10 @@ public class OrderEventHandler {
         Order order = orderAdaptor.findByOrderUuid(doneOrderEvent.getOrderUuid());
         List<CreateIssuedTicketDTO> createIssuedTicketDTOS =
                 order.getOrderLineItems().stream()
-                        .map(
-                                orderLineItem -> {
-                                    orderLineItem
-                                            .getTicketItem()
-                                            .reduceQuantity(orderLineItem.getQuantity());
-                                    return new CreateIssuedTicketDTO(order, orderLineItem, user);
-                                })
+                        .map(orderLineItem -> new CreateIssuedTicketDTO(order, orderLineItem, user))
                         .toList();
-        issuedTicketDomainService.createIssuedTicket(createIssuedTicketDTOS);
+        issuedTicketDomainService.createIssuedTicket(
+                order.getTicketItemOfOrder(), createIssuedTicketDTOS);
         log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 티켓 생성작업 완료");
     }
 }

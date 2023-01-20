@@ -10,6 +10,7 @@ import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketDTO;
 import band.gosrock.domain.domains.issuedTicket.dto.response.CreateIssuedTicketResponse;
 import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepository;
+import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,11 +27,12 @@ public class IssuedTicketDomainService {
 
     @RedissonLock(
             LockName = "티켓생성",
-            paramClassType = IssuedTicket.class,
-            identifier = "ticketItem",
+            paramClassType = TicketItem.class,
+            identifier = "id",
             needSameTransaction = true)
     @Transactional
-    public void createIssuedTicket(List<CreateIssuedTicketDTO> createIssuedTicketDTOs) {
+    public void createIssuedTicket(
+            TicketItem ticketItem, List<CreateIssuedTicketDTO> createIssuedTicketDTOs) {
         createIssuedTicketDTOs.forEach(
                 dto -> {
                     CreateIssuedTicketResponse responseDTO =
@@ -43,14 +45,14 @@ public class IssuedTicketDomainService {
 
     @RedissonLock(
             LockName = "티켓환불",
-            paramClassType = IssuedTicket.class,
-            identifier = "ticketItem",
+            paramClassType = TicketItem.class,
+            identifier = "id",
             needSameTransaction = true)
     @Transactional
-    public void withDrawIssuedTicket(List<IssuedTicket> issuedTickets) {
+    public void withDrawIssuedTicket(TicketItem ticketItem, List<IssuedTicket> issuedTickets) {
         issuedTickets.forEach(
                 issuedTicket -> {
-                    issuedTicket.getTicketItem().quantityRollBack(1L);
+                    issuedTicket.getTicketItem().increaseQuantity(1L);
                     issuedTicketAdaptor.delete(issuedTicket);
                 });
     }

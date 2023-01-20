@@ -19,7 +19,10 @@ public enum TicketItemErrorCode implements BaseErrorCode {
     @ExplainError("요청에서 보내준 옵션 id 값이 올바르지 않을 때 발생하는 오류입니다.")
     OPTION_NOT_FOUND(NOT_FOUND, "Option_404_1", "옵션을 찾을 수 없습니다."),
     @ExplainError("주문 요청한 티켓 상품 재고가 부족할 때 발생하는 오류입니다.")
-    TICKET_ITEM_QUANTITY_LACK(BAD_REQUEST, "Ticket_Item_400_1", "티켓 상품 재고가 부족합니다.");
+    TICKET_ITEM_QUANTITY_LACK(BAD_REQUEST, "Ticket_Item_400_1", "티켓 상품 재고가 부족합니다."),
+    @ExplainError("티켓 상품 재고가 ")
+    TICKET_ITEM_QUANTITY_LESS_THAN_ZERO(
+            BAD_REQUEST, "Ticket_Item_400_2", "티켓 아이텝 재고가 0보다 작을 수 없습니다.");
 
     private Integer status;
     private String code;

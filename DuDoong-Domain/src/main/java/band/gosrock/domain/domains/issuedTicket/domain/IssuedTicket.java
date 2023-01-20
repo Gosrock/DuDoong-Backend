@@ -174,6 +174,7 @@ public class IssuedTicket extends BaseTimeEntity {
     public static CreateIssuedTicketResponse orderLineItemToIssuedTickets(
             CreateIssuedTicketDTO dto) {
         long quantity = dto.getOrderLineItem().getQuantity();
+        dto.getOrderLineItem().getTicketItem().reduceQuantity(quantity);
         List<IssuedTicket> createIssuedTickets = new ArrayList<>();
         List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers =
                 dto.getOrderLineItem().getOrderOptionAnswer().stream()
