@@ -24,6 +24,10 @@ spring:
         mode: always
     open-in-view: false
     database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+logging:
+  level:
+    org.springframework.orm.jpa: DEBUG
+    org.springframework.transaction: DEBUG
 ---
 spring:
   config:
@@ -50,7 +54,10 @@ spring:
     hibernate:
       ddl-auto: update
     database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
-
+logging:
+  level:
+    org.springframework.orm.jpa: DEBUG
+    org.springframework.transaction: DEBUG
 ---
 spring:
   config:

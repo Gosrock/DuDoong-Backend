@@ -166,7 +166,7 @@ public class Order extends BaseTimeEntity {
         orderStatus = OrderStatus.CONFIRM;
         this.approvedAt = approvedAt;
         this.pgPaymentInfo = pgPaymentInfo;
-        Events.raise(DoneOrderEvent.of(this.uuid, this));
+        Events.raise(DoneOrderEvent.from(this));
     }
 
     /** 승인 방식의 주문을 승인합니다. */
@@ -178,7 +178,7 @@ public class Order extends BaseTimeEntity {
         // TODO: 재고량 비교 필요?
         this.approvedAt = LocalDateTime.now();
         this.orderStatus = OrderStatus.APPROVED;
-        Events.raise(DoneOrderEvent.of(this.uuid, this));
+        Events.raise(DoneOrderEvent.from(this));
     }
 
     /** 관리자가 주문을 취소 시킵니다 */
@@ -186,7 +186,7 @@ public class Order extends BaseTimeEntity {
         orderStatus.validCanCancel();
         validCanRefundDate();
         this.orderStatus = OrderStatus.CANCELED;
-        Events.raise(WithDrawOrderEvent.of(this.uuid, this));
+        Events.raise(WithDrawOrderEvent.from(this));
     }
 
     /** 사용자가 주문을 환불 시킵니다. */
@@ -194,7 +194,12 @@ public class Order extends BaseTimeEntity {
         orderStatus.validCanRefund();
         validCanRefundDate();
         this.orderStatus = OrderStatus.REFUND;
-        Events.raise(WithDrawOrderEvent.of(this.uuid, this));
+        Events.raise(WithDrawOrderEvent.from(this));
+    }
+
+    /** 결제 실패 된 주문입니다 */
+    public void fail() {
+        this.orderStatus = OrderStatus.FAILED;
     }
 
     /** ---------------------------- 검증 메서드 ---------------------------------- */
