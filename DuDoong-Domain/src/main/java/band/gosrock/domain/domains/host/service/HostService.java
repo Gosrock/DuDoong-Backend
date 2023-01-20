@@ -45,7 +45,7 @@ public class HostService {
         throw NotMasterHostException.EXCEPTION;
     }
 
-    /** 해당 유저가 호스트의 마스터(담당자, 방장)인지 확인하는 검증 로직입니다 */
+    /** 해당 유저가 슈퍼 호스트인지 확인하는 검증 로직입니다 */
     public void validateSuperHost(Long hostId, Long userId) {
         Host host = hostAdaptor.findById(hostId);
         if (host.isSuperHostUserId(userId)) {

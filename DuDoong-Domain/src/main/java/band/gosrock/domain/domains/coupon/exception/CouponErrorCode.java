@@ -13,7 +13,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum CouponErrorCode implements BaseErrorCode {
-    DUPLICATE_COUPON_CODE(BAD_REQUEST, "Coupon_400_1", "동일한 쿠폰 코드가 이미 존재합니다.");
+    DUPLICATE_COUPON_CODE(BAD_REQUEST, "Coupon_400_1", "동일한 쿠폰 코드가 이미 존재합니다."),
+    WRONG_DISCOUNT_AMOUNT(BAD_REQUEST, "Coupon_400_2", "정률 할인은 100 이하 퍼센트만 할인 가능합니다.");
     private final Integer status;
     private final String code;
     private final String reason;
