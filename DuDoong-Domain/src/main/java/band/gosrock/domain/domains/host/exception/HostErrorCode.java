@@ -17,7 +17,8 @@ public enum HostErrorCode implements BaseErrorCode {
     HOST_NOT_FOUND(NOT_FOUND, "Host_404_1", "해당 호스트를 찾을 수 없습니다."),
     NOT_SUPER_HOST(BAD_REQUEST, "HOST_400_1", "슈퍼 호스트 권한이 없는 유저입니다."),
     FORBIDDEN_HOST(BAD_REQUEST, "HOST_400_2", "해당 호스트에 대한 접근 권한이 없습니다."),
-    ALREADY_JOINED_HOST(BAD_REQUEST, "HOST_400_3", "이미 가입되어 있는 호스트입니다.");
+    ALREADY_JOINED_HOST(BAD_REQUEST, "HOST_400_3", "이미 가입되어 있는 호스트입니다."),
+    NOT_MASTER_HOST(BAD_REQUEST, "NOT_MASTER_HOST", "마스터 호스트 권한이 없는 유저입니다.");
 
     private Integer status;
     private String code;

@@ -1,9 +1,10 @@
 package band.gosrock.common.annotation.validator;
 
+
 import band.gosrock.common.annotation.Phone;
 import javax.validation.*;
 
-public class PhoneValidator implements ConstraintValidator<Phone, String>{
+public class PhoneValidator implements ConstraintValidator<Phone, String> {
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) { // 2
         if (value == null) {

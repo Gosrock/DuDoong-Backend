@@ -3,9 +3,7 @@ package band.gosrock.api.host.model.dto.request;
 
 import band.gosrock.common.annotation.Phone;
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import javax.validation.constraints.Email;
-import javax.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
