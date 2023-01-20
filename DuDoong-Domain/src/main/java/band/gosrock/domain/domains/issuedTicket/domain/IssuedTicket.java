@@ -52,6 +52,11 @@ public class IssuedTicket extends BaseTimeEntity {
     private Event event;
 
     /*
+    발급 티켓 주문 id (단방향)
+     */
+    private String orderUuid;
+
+    /*
     발급 티켓의 주문 행 (단방향)
     Todo: 발급 티켓이 굳이 order line 을 알아야 할까? -찬진 OrderResponse 에서 필요함! 연관관계는 따로안짓고 레지스터리에서 불러올게용ㄴ
      */

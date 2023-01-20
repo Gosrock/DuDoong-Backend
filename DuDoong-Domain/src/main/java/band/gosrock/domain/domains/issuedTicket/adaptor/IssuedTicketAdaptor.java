@@ -48,4 +48,12 @@ public class IssuedTicketAdaptor {
                 PageRequest.of(Math.toIntExact(page), 10, Sort.by("id").descending());
         return issuedTicketRepository.searchToPage(condition, pageRequest);
     }
+
+    public void delete(IssuedTicket issuedTicket) {
+        issuedTicketRepository.delete(issuedTicket);
+    }
+
+    public List<IssuedTicket> findAllByOrderUuid(String orderUuid) {
+        return issuedTicketRepository.findAllByOrderUuid(orderUuid);
+    }
 }
