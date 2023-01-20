@@ -17,13 +17,13 @@ public class HostAdaptor {
         return hostRepository.findById(hostId).orElseThrow(() -> HostNotFoundException.EXCEPTION);
     }
 
+    /** 자신이 마스터인 호스트 리스트를 가져오는 쿼리 요청 */
     public List<Host> findAllByMasterUserId(Long userId) {
         return hostRepository.findAllByMasterUserId(userId);
     }
 
-    //    public List<Host> findAllByUserId(Long userId) {
-    //        return hostRepository.findAllByMasterUserId(userId);
-    ////                .orElseThrow(() -> HostNotFoundException.EXCEPTION);
-    //    }
-
+    /** 자신이 속해있는 호스트 리스트를 가져오는 쿼리 요청 */
+    public List<Host> findAllByHostUsers_UserId(Long userId) {
+        return hostRepository.findAllByHostUsers_UserId(userId);
+    }
 }
