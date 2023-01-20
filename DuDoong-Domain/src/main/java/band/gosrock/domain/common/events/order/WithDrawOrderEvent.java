@@ -11,9 +11,8 @@ import lombok.RequiredArgsConstructor;
 public class WithDrawOrderEvent extends DomainEvent {
 
     private final String uuid;
-    private final Order order;
-
-    public static WithDrawOrderEvent of(String uuid, Order order) {
-        return new WithDrawOrderEvent(uuid, order);
+    private final Long userId;
+    public static WithDrawOrderEvent of(String uuid,Long userId) {
+        return new WithDrawOrderEvent(uuid,userId);
     }
 }

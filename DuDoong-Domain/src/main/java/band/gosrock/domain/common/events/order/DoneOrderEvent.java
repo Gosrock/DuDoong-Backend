@@ -10,10 +10,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DoneOrderEvent extends DomainEvent {
 
-    private final String uuid;
-    private final Order order;
+    private final String orderUuid;
 
-    public static DoneOrderEvent of(String uuid, Order order) {
-        return new DoneOrderEvent(uuid, order);
+    private final Long userId;
+    public static DoneOrderEvent of(String uuid,Long userId) {
+        return new DoneOrderEvent(uuid,userId);
     }
 }

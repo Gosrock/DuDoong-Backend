@@ -5,12 +5,14 @@ import band.gosrock.domain.common.events.order.DoneOrderEvent;
 import band.gosrock.domain.common.events.order.WithDrawOrderEvent;
 import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketDTO;
 import band.gosrock.domain.domains.issuedTicket.service.IssuedTicketDomainService;
+import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -24,18 +26,19 @@ public class OrderEventHandler {
     private final IssuedTicketDomainService issuedTicketDomainService;
 
     private final UserAdaptor userAdaptor;
-    @Async
-    @TransactionalEventListener(
-            classes = DoneOrderEvent.class,
-            phase = TransactionPhase.AFTER_COMMIT)
+
+    private final OrderAdaptor orderAdaptor;
+    @EventListener(
+            classes = DoneOrderEvent.class)
     public void handleDoneOrderEvent(DoneOrderEvent doneOrderEvent) {
-        log.info(doneOrderEvent.getUuid() + "주문 상태 완료, 티켓 생성작업 진행");
-        Order order = doneOrderEvent.getOrder();
-        User user = userAdaptor.queryUser(order.getUserId());
+        log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 티켓 생성작업 진행");
+//        throw  new RuntimeException();
+        User user = userAdaptor.queryUser(doneOrderEvent.getUserId());
+        Order order = orderAdaptor.findByOrderUuid(doneOrderEvent.getOrderUuid());
         List<CreateIssuedTicketDTO> createIssuedTicketDTOS = order.getOrderLineItems().stream()
             .map(orderLineItem -> new CreateIssuedTicketDTO(order, orderLineItem, user)).toList();
         issuedTicketDomainService.createIssuedTicket(createIssuedTicketDTOS);
-        log.info(doneOrderEvent.getUuid() + "주문 상태 완료, 티켓 생성작업 완료");
+        log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 티켓 생성작업 완료");
     }
 
     @Async
