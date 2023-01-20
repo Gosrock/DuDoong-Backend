@@ -26,7 +26,7 @@ public class ConfirmOrderFailHandler {
             classes = DoneOrderEvent.class,
             phase = TransactionPhase.AFTER_ROLLBACK)
     @Transactional
-    public void handleRegisterUserEvent(DoneOrderEvent doneOrderEvent) {
+    public void handleDoneOrderFailEvent(DoneOrderEvent doneOrderEvent) {
         log.info(doneOrderEvent.getOrderUuid() + "주문 실패 처리 핸들러");
 
         Order order = orderAdaptor.findByOrderUuid(doneOrderEvent.getOrderUuid());
