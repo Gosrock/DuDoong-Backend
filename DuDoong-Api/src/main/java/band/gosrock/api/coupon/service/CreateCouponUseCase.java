@@ -9,6 +9,7 @@ import band.gosrock.domain.domains.coupon.domain.CouponCampaign;
 import band.gosrock.domain.domains.coupon.domain.DiscountType;
 import band.gosrock.domain.domains.coupon.exception.WrongDiscountAmountException;
 import band.gosrock.domain.domains.coupon.service.CreateCouponCampaignDomainService;
+import band.gosrock.domain.domains.host.service.HostService;
 import band.gosrock.domain.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,7 @@ public class CreateCouponUseCase {
 
     private final UserUtils userUtils;
     private final CreateCouponCampaignDomainService createCouponCampaignDomainService;
+    private final HostService hostService;
 
     @Transactional
     public CreateCouponCampaignResponse execute(
@@ -26,7 +28,7 @@ public class CreateCouponUseCase {
         // 존재하는 유저인지 검증
         User user = userUtils.getCurrentUser();
         // 슈퍼 호스트인지 검증
-        // TODO : 차후 호스트쪽 코드 구조 나오는 거 보고 넣을 예정
+        hostService.validateSuperHost(createCouponCampaignRequest.getHostId(), user.getId());
         // 이미 생성된 쿠폰 코드인지 검증
         createCouponCampaignDomainService.checkCouponCodeExists(
                 createCouponCampaignRequest.getCouponCode());
