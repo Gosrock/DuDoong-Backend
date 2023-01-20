@@ -22,7 +22,9 @@ public enum TicketItemErrorCode implements BaseErrorCode {
     TICKET_ITEM_QUANTITY_LACK(BAD_REQUEST, "Ticket_Item_400_1", "티켓 상품 재고가 부족합니다."),
     @ExplainError("티켓 상품 재고가 ")
     TICKET_ITEM_QUANTITY_LESS_THAN_ZERO(
-            BAD_REQUEST, "Ticket_Item_400_2", "티켓 아이텝 재고가 0보다 작을 수 없습니다.");
+            BAD_REQUEST, "Ticket_Item_400_2", "티켓 아이텝 재고가 0보다 작을 수 없습니다."),
+    @ExplainError("제휴되지 않은 호스트가 티켓 가격을 0이 아닌 값으로 요청했을때 발생하는 오류입니다.")
+    INVALID_TICKET_PRICE(BAD_REQUEST, "Ticket_Item_400_3", "티켓 가격을 설정할 수 없습니다.");
 
     private Integer status;
     private String code;

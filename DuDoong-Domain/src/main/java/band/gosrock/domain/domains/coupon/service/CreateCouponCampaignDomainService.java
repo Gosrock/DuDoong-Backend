@@ -20,6 +20,8 @@ public class CreateCouponCampaignDomainService {
 
     @Transactional
     public CouponCampaign createCouponCampaign(CouponCampaign couponCampaign) {
+        couponCampaign.validatePercentageAmount(
+                couponCampaign.getDiscountType(), couponCampaign.getDiscountAmount());
         return couponCampaignAdaptor.save(couponCampaign);
     }
 }
