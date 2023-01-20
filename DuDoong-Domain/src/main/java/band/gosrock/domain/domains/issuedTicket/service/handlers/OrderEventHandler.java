@@ -12,7 +12,6 @@ import band.gosrock.domain.domains.user.domain.User;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -43,10 +42,9 @@ public class OrderEventHandler {
         log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 티켓 생성작업 완료");
     }
 
-    @Async
     @TransactionalEventListener(
             classes = WithDrawOrderEvent.class,
-            phase = TransactionPhase.AFTER_COMMIT)
+            phase = TransactionPhase.BEFORE_COMMIT)
     public void handleRegisterUserEvent(WithDrawOrderEvent withDrawOrderEvent) {
         log.info(withDrawOrderEvent.getOrderUuid() + "주문 상태 철회 , 티켓 제거 필요");
     }
