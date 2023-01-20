@@ -1,5 +1,9 @@
 package band.gosrock.api.ticketItem.dto.request;
 
+import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -12,8 +16,12 @@ import javax.validation.constraints.NotNull;
 public class CreateTicketItemRequest {
 
     @NotNull
-    @Schema(nullable = false, example = "APPROVAL")
-    private String type;
+    @Schema(nullable = false, example = "1")
+    private Long eventId;
+
+    @NotNull
+    @Schema(nullable = false, defaultValue = "FIRST_COME_FIRST_SERVED")
+    private TicketType type;
 
     @NotNull
     @Schema(nullable = false, example = "일반 티켓")
@@ -35,4 +43,18 @@ public class CreateTicketItemRequest {
     @Schema(nullable = false, example = "1")
     private Long purchaseLimit;
 
+    public TicketItem toEntity(Event event) {
+
+        return TicketItem.builder()
+                .type(type)
+                .name(name)
+                .description(description)
+                .price(Money.wons(price))
+                .quantity(supplyCount)
+                .supplyCount(supplyCount)
+                .purchaseLimit(purchaseLimit)
+                .isSellable(true)
+                .event(event)
+                .build();
+    }
 }
