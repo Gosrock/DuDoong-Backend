@@ -24,25 +24,34 @@ public class IssuedTicketDomainService {
     private final IssuedTicketOptionAnswerAdaptor issuedTicketOptionAnswerAdaptor;
     private final EventAdaptor eventAdaptor;
 
-    @RedissonLock(LockName = "티켓생성", paramClassType = IssuedTicket.class, identifier = "ticketItem", needSameTransaction = true)
+    @RedissonLock(
+            LockName = "티켓생성",
+            paramClassType = IssuedTicket.class,
+            identifier = "ticketItem",
+            needSameTransaction = true)
     @Transactional
     public void createIssuedTicket(List<CreateIssuedTicketDTO> createIssuedTicketDTOs) {
         createIssuedTicketDTOs.forEach(
-            dto -> {
-                CreateIssuedTicketResponse responseDTO =
-                    IssuedTicket.orderLineItemToIssuedTickets(dto);
-                issuedTicketAdaptor.saveAll(responseDTO.getIssuedTickets());
-                issuedTicketOptionAnswerAdaptor.saveAll(
-                    responseDTO.getIssuedTicketOptionAnswers());
-            });
+                dto -> {
+                    CreateIssuedTicketResponse responseDTO =
+                            IssuedTicket.orderLineItemToIssuedTickets(dto);
+                    issuedTicketAdaptor.saveAll(responseDTO.getIssuedTickets());
+                    issuedTicketOptionAnswerAdaptor.saveAll(
+                            responseDTO.getIssuedTicketOptionAnswers());
+                });
     }
 
-    @RedissonLock(LockName = "티켓환불", paramClassType = IssuedTicket.class, identifier = "ticketItem", needSameTransaction = true)
+    @RedissonLock(
+            LockName = "티켓환불",
+            paramClassType = IssuedTicket.class,
+            identifier = "ticketItem",
+            needSameTransaction = true)
     @Transactional
     public void withDrawIssuedTicket(List<IssuedTicket> issuedTickets) {
-        issuedTickets.forEach(issuedTicket -> {
-            issuedTicket.getTicketItem().quantityRollBack(1L);
-            issuedTicketAdaptor.delete(issuedTicket);
-        });
+        issuedTickets.forEach(
+                issuedTicket -> {
+                    issuedTicket.getTicketItem().quantityRollBack(1L);
+                    issuedTicketAdaptor.delete(issuedTicket);
+                });
     }
 }

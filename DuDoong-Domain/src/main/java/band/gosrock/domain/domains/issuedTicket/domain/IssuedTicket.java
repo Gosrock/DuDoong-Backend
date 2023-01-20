@@ -7,7 +7,6 @@ import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketDTO;
-import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketRequestForDev;
 import band.gosrock.domain.domains.issuedTicket.dto.response.CreateIssuedTicketResponse;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.user.domain.User;
@@ -112,6 +111,7 @@ public class IssuedTicket extends BaseTimeEntity {
     public IssuedTicket(
             Event event,
             User user,
+            String orderUuid,
             Long orderLineId,
             TicketItem ticketItem,
             Money price,
@@ -119,23 +119,12 @@ public class IssuedTicket extends BaseTimeEntity {
             List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers) {
         this.event = event;
         this.user = user;
+        this.orderUuid = orderUuid;
         this.orderLineId = orderLineId;
         this.ticketItem = ticketItem;
         this.price = price;
         this.issuedTicketStatus = issuedTicketStatus;
         this.issuedTicketOptionAnswers.addAll(issuedTicketOptionAnswers);
-    }
-
-    public static IssuedTicket create(CreateIssuedTicketRequestForDev dto) {
-        return IssuedTicket.builder()
-                .event(dto.getEvent())
-                .user(dto.getUser())
-                .orderLineId(dto.getOrderLineId())
-                .ticketItem(dto.getTicketItem())
-                .price(dto.getPrice())
-                .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
-                .issuedTicketOptionAnswers(new ArrayList<>())
-                .build();
     }
 
     public static IssuedTicket createForDev(
@@ -149,6 +138,7 @@ public class IssuedTicket extends BaseTimeEntity {
                 IssuedTicket.builder()
                         .event(event)
                         .user(user)
+                        .orderUuid("test")
                         .orderLineId(orderLineId)
                         .ticketItem(ticketItem)
                         .price(price)
@@ -193,6 +183,7 @@ public class IssuedTicket extends BaseTimeEntity {
             createIssuedTickets.add(
                     IssuedTicket.builder()
                             .event(dto.getOrderLineItem().getTicketItem().getEvent())
+                            .orderUuid(dto.getOrder().getUuid())
                             .orderLineId(dto.getOrderLineItem().getId())
                             .user(dto.getUser())
                             .price(dto.getOrderLineItem().getItemPrice())
