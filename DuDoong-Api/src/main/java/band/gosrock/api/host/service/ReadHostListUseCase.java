@@ -21,8 +21,7 @@ public class ReadHostListUseCase {
     public List<HostResponse> execute() {
         Long securityUserId = SecurityUtils.getCurrentUserId();
         User user = userDomainService.retrieveUser(securityUserId);
-        // Todo:: hostId로 변경필요
-        return hostAdaptor.findAllByMasterUserId(securityUserId).stream()
+        return hostAdaptor.findAllByHostUsers_UserId(securityUserId).stream()
                 .map(HostResponse::of)
                 .toList();
     }

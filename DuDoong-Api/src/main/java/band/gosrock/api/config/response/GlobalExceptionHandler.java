@@ -35,6 +35,28 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RequiredArgsConstructor
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+    //    /** Json 날짜 형식 파싱에 대한 에러 핸들러 */
+    //    @ExceptionHandler({ InvalidFormatException.class, DateTimeParseException.class})
+    //    public ResponseEntity<ErrorResponse> JsonParseExceptionHandler(
+    //            DateTimeParseException e, HttpServletRequest request) {
+    //        String errorMessage;
+    //        if (e.getMessage().contains("LocalDateTime")) {
+    //            errorMessage = "날짜 형식이 올바르지 않습니다";
+    //        }
+    //        else {
+    //            errorMessage = "Json 입력 형식 에러입니다";
+    //        }
+    //        ErrorReason errorReason = ErrorReason.builder()
+    //                .code("BAD_REQUEST")
+    //                .status(400)
+    //                .reason(errorMessage)
+    //                .build();
+    //        ErrorResponse errorResponse =
+    //                new ErrorResponse(errorReason, request.getRequestURL().toString());
+    //        return ResponseEntity.status(HttpStatus.valueOf(errorReason.getStatus()))
+    //                .body(errorResponse);
+    //    }
+
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(
             Exception ex, Object body, HttpHeaders headers, HttpStatus status, WebRequest request) {

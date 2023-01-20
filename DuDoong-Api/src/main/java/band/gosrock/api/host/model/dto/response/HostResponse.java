@@ -17,7 +17,6 @@ public class HostResponse {
 
     @Schema(description = "마스터 유저의 고유 아이디")
     private final Long masterUserId;
-    //    private final HostUser masterUser;
 
     @Schema(description = "파트너쉽 여부")
     private final boolean partner;

@@ -7,4 +7,6 @@ import org.springframework.data.repository.CrudRepository;
 
 public interface EventRepository extends CrudRepository<Event, Long> {
     List<Event> findAll();
+
+    List<Event> findAllByHostId(Long hostId);
 }

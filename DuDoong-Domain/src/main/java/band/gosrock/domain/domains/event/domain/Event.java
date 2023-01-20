@@ -75,7 +75,6 @@ public class Event extends BaseTimeEntity {
             String url,
             String placeName,
             String placeAddress,
-            EventStatus status,
             String content,
             LocalDateTime ticketingStartAt,
             LocalDateTime ticketingEndAt) {
@@ -89,7 +88,7 @@ public class Event extends BaseTimeEntity {
         this.url = url;
         this.placeName = placeName;
         this.placeAddress = placeAddress;
-        this.status = status;
+        this.status = EventStatus.PREPARING;
         this.content = content;
         this.ticketingStartAt = ticketingStartAt;
         this.ticketingEndAt = ticketingEndAt;
