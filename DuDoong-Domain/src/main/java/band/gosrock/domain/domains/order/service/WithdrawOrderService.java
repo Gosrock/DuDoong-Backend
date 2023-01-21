@@ -16,8 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class WithdrawOrderService {
 
     private final OrderAdaptor orderAdaptor;
-    private final WithdrawPaymentService withdrawPaymentService;
-
     @RedissonLock(LockName = "주문", identifier = "orderUuid")
     public String cancelOrder(String orderUuid, Long userId) {
         Order order = orderAdaptor.findByOrderUuid(orderUuid);

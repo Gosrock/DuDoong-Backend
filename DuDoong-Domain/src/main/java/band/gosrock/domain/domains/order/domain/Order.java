@@ -105,12 +105,12 @@ public class Order extends BaseTimeEntity {
     @Builder
     public Order(
             Long userId,
-            String OrderName,
+            String orderName,
             List<OrderLineItem> orderLineItems,
             OrderStatus orderStatus,
             OrderMethod orderMethod) {
         this.userId = userId;
-        this.orderName = OrderName;
+        this.orderName = orderName;
         this.orderLineItems.addAll(orderLineItems);
         this.orderStatus = orderStatus;
         this.orderMethod = orderMethod;
@@ -122,7 +122,7 @@ public class Order extends BaseTimeEntity {
                 cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
         return Order.builder()
                 .userId(userId)
-                .OrderName(cart.getCartName())
+                .orderName(cart.getCartName())
                 .orderLineItems(orderLineItems)
                 .orderStatus(OrderStatus.PENDING_PAYMENT)
                 .orderMethod(OrderMethod.PAYMENT)
@@ -135,7 +135,7 @@ public class Order extends BaseTimeEntity {
                 cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
         return Order.builder()
                 .userId(userId)
-                .OrderName(cart.getCartName())
+                .orderName(cart.getCartName())
                 .orderLineItems(orderLineItems)
                 .orderStatus(OrderStatus.PENDING_APPROVE)
                 .orderMethod(OrderMethod.APPROVAL)
