@@ -26,7 +26,7 @@ public class IssuedTicketDomainService {
     private final EventAdaptor eventAdaptor;
 
     @RedissonLock(
-            LockName = "티켓생성",
+            LockName = "티켓재고관리",
             paramClassType = TicketItem.class,
             identifier = "id",
             needSameTransaction = true)
@@ -42,7 +42,7 @@ public class IssuedTicketDomainService {
     }
 
     @RedissonLock(
-            LockName = "티켓환불",
+            LockName = "티켓재고관리",
             paramClassType = TicketItem.class,
             identifier = "id",
             needSameTransaction = true)
