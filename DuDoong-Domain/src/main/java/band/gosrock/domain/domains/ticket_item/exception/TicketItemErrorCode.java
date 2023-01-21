@@ -26,8 +26,8 @@ public enum TicketItemErrorCode implements BaseErrorCode {
     @ExplainError("제휴되지 않은 호스트가 티켓 가격을 0이 아닌 값으로 요청했을때 발생하는 오류입니다.")
     INVALID_TICKET_PRICE(BAD_REQUEST, "Ticket_Item_400_3", "티켓 가격을 설정할 수 없습니다."),
     @ExplainError("예매 취소 및 티켓 취소 요청 시 티켓 상품 공급량보다 많은 양이 반환될 때 발생하는 오류입니다.")
-    TICKET_ITEM_QUANTITY_LARGER_THAN_SUPPLY_COUNT(BAD_REQUEST, "Ticket_Item_400_4", "공급량보다 많은 티켓 아이템 재고가 설정되었습니다.");
-
+    TICKET_ITEM_QUANTITY_LARGER_THAN_SUPPLY_COUNT(
+            BAD_REQUEST, "Ticket_Item_400_4", "공급량보다 많은 티켓 아이템 재고가 설정되었습니다.");
 
     private Integer status;
     private String code;

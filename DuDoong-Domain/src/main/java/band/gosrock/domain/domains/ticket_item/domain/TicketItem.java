@@ -132,6 +132,5 @@ public class TicketItem extends BaseTimeEntity {
             throw TicketItemQuantityLargeException.EXCEPTION;
         }
         this.quantity = this.quantity + quantity;
-
     }
 }

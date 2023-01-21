@@ -38,8 +38,6 @@ public class IssuedTicketDomainService {
                     CreateIssuedTicketResponse responseDTO =
                             IssuedTicket.orderLineItemToIssuedTickets(dto);
                     issuedTicketAdaptor.saveAll(responseDTO.getIssuedTickets());
-                    issuedTicketOptionAnswerAdaptor.saveAll(
-                            responseDTO.getIssuedTicketOptionAnswers());
                 });
     }
 

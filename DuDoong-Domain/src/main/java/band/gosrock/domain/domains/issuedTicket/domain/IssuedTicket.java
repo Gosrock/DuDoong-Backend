@@ -195,4 +195,8 @@ public class IssuedTicket extends BaseTimeEntity {
         }
         return new CreateIssuedTicketResponse(createIssuedTickets, issuedTicketOptionAnswers);
     }
+
+    public void cancelIssuedTicket() {
+        this.issuedTicketStatus = IssuedTicketStatus.CANCELED;
+    }
 }

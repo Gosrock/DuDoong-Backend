@@ -28,7 +28,7 @@ public class WithDrawOrderEventHandler {
     @TransactionalEventListener(
             classes = WithDrawOrderEventHandler.class,
             phase = TransactionPhase.BEFORE_COMMIT)
-    public void handleRegisterUserEvent(WithDrawOrderEvent withDrawOrderEvent) {
+    public void handleWithDrawOrderEvent(WithDrawOrderEvent withDrawOrderEvent) {
         log.info(withDrawOrderEvent.getOrderUuid() + "주문 상태 철회 , 티켓 제거 필요");
         Order order = orderAdaptor.findByOrderUuid(withDrawOrderEvent.getOrderUuid());
         List<IssuedTicket> issuedTickets =
