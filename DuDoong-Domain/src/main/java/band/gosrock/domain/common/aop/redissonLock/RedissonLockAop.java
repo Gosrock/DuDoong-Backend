@@ -55,7 +55,13 @@ public class RedissonLockAop {
             if (!available) {
                 throw NotAvailableRedissonLockException.EXCEPTION;
             }
-            log.info("redisson 락 안으로 진입 " + baseKey + ":" + dynamicKey + "쓰레드 아이디" + Thread.currentThread().getId());
+            log.info(
+                    "redisson 락 안으로 진입 "
+                            + baseKey
+                            + ":"
+                            + dynamicKey
+                            + "쓰레드 아이디"
+                            + Thread.currentThread().getId());
             return callTransactionFactory
                     .getCallTransaction(redissonLock.needSameTransaction())
                     .proceed(joinPoint);
