@@ -7,6 +7,7 @@ import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityException;
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLackException;
+import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLargeException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -127,6 +128,10 @@ public class TicketItem extends BaseTimeEntity {
     }
 
     public void increaseQuantity(Long quantity) {
+        if (this.quantity + quantity > supplyCount) {
+            throw TicketItemQuantityLargeException.EXCEPTION;
+        }
         this.quantity = this.quantity + quantity;
+
     }
 }
