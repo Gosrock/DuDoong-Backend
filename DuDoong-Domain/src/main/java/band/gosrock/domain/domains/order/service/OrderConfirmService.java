@@ -22,7 +22,7 @@ public class OrderConfirmService {
     private final OrderAdaptor orderAdaptor;
 
     @RedissonLock(
-            LockName = "주문승인",
+            LockName = "주문",
             identifier = "orderId",
             paramClassType = ConfirmPaymentsRequest.class)
     public String execute(ConfirmPaymentsRequest confirmPaymentsRequest, Long currentUserId) {

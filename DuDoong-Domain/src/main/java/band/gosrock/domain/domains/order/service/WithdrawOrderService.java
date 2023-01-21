@@ -18,7 +18,7 @@ public class WithdrawOrderService {
     private final OrderAdaptor orderAdaptor;
     private final WithdrawPaymentService withdrawPaymentService;
 
-    @RedissonLock(LockName = "결제취소", identifier = "orderUuid")
+    @RedissonLock(LockName = "주문", identifier = "orderUuid")
     public String cancelOrder(String orderUuid, Long userId) {
         Order order = orderAdaptor.findByOrderUuid(orderUuid);
         // TODO : 관리자 권환으로 치환.
@@ -27,7 +27,7 @@ public class WithdrawOrderService {
         return orderUuid;
     }
 
-    @RedissonLock(LockName = "결제취소", identifier = "orderUuid")
+    @RedissonLock(LockName = "주문", identifier = "orderUuid")
     public String refundOrder(String orderUuid, Long userId) {
         Order order = orderAdaptor.findByOrderUuid(orderUuid);
         order.validOwner(userId);
