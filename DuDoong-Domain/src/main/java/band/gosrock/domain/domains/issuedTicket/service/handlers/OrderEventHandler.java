@@ -2,7 +2,6 @@ package band.gosrock.domain.domains.issuedTicket.service.handlers;
 
 
 import band.gosrock.domain.common.events.order.DoneOrderEvent;
-import band.gosrock.domain.common.events.order.WithDrawOrderEvent;
 import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketDTO;
 import band.gosrock.domain.domains.issuedTicket.service.IssuedTicketDomainService;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
@@ -38,14 +37,8 @@ public class OrderEventHandler {
                 order.getOrderLineItems().stream()
                         .map(orderLineItem -> new CreateIssuedTicketDTO(order, orderLineItem, user))
                         .toList();
-        issuedTicketDomainService.createIssuedTicket(createIssuedTicketDTOS);
+        issuedTicketDomainService.createIssuedTicket(
+                order.getTicketItemOfOrder(), createIssuedTicketDTOS);
         log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 티켓 생성작업 완료");
-    }
-
-    @TransactionalEventListener(
-            classes = WithDrawOrderEvent.class,
-            phase = TransactionPhase.BEFORE_COMMIT)
-    public void handleRegisterUserEvent(WithDrawOrderEvent withDrawOrderEvent) {
-        log.info(withDrawOrderEvent.getOrderUuid() + "주문 상태 철회 , 티켓 제거 필요");
     }
 }

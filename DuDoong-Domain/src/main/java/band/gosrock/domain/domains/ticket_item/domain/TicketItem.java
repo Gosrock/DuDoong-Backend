@@ -5,6 +5,9 @@ import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityException;
+import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLackException;
+import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLargeException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -112,5 +115,22 @@ public class TicketItem extends BaseTimeEntity {
         ItemOptionGroup itemOptionGroup =
                 ItemOptionGroup.builder().item(this).optionGroup(optionGroup).build();
         this.itemOptionGroups.add(itemOptionGroup);
+    }
+
+    public void reduceQuantity(Long quantity) {
+        if (this.quantity < 0) {
+            throw TicketItemQuantityException.EXCEPTION;
+        }
+        if (this.quantity < quantity) {
+            throw TicketItemQuantityLackException.EXCEPTION;
+        }
+        this.quantity = this.quantity - quantity;
+    }
+
+    public void increaseQuantity(Long quantity) {
+        if (this.quantity + quantity > supplyCount) {
+            throw TicketItemQuantityLargeException.EXCEPTION;
+        }
+        this.quantity = this.quantity + quantity;
     }
 }
