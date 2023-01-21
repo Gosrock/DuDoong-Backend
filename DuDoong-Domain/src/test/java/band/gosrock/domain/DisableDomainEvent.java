@@ -8,17 +8,17 @@ import java.lang.annotation.Target;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.TestPropertySources;
 
 
 /**
- * 도메인 모듈의 통합테스트의 편의성을 위해서 만든 어노테이션
+ * 도메인 이벤트의 발행을 중지 시킬 수 있습니다.
  * -이찬진
  */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@SpringBootTest(classes = DomainIntegrateTestConfig.class)
-@ActiveProfiles(resolver = DomainIntegrateProfileResolver.class)
+@TestPropertySource(
+    properties = {"ableDomainEvent=false"}
+)
 @Documented
-public @interface DomainIntegrateSpringBootTest {
+public @interface DisableDomainEvent {
 }

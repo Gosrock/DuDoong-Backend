@@ -4,12 +4,16 @@ package band.gosrock.domain.common.aop.domainEvent;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.stereotype.Component;
 
 @Aspect
 @Component
+@ConditionalOnExpression("${ableDomainEvent:true}")
 public class EventPublisherAspect implements ApplicationEventPublisherAware {
 
     private ApplicationEventPublisher publisher;
