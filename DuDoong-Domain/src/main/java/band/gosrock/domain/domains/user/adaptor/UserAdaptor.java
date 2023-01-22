@@ -6,9 +6,8 @@ import band.gosrock.domain.domains.user.domain.OauthInfo;
 import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.domain.domains.user.exception.UserNotFoundException;
 import band.gosrock.domain.domains.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-
 import java.util.Set;
+import lombok.RequiredArgsConstructor;
 
 @Adaptor
 @RequiredArgsConstructor
@@ -34,5 +33,4 @@ public class UserAdaptor {
     public Set<User> queryUserListByIdIn(Set<Long> userIdList) {
         return userRepository.findAllByIdIn(userIdList);
     }
-
 }

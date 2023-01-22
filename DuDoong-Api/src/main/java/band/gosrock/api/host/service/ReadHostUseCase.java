@@ -5,8 +5,6 @@ import band.gosrock.api.config.security.SecurityUtils;
 import band.gosrock.api.host.model.dto.response.HostDetailResponse;
 import band.gosrock.api.host.model.mapper.HostMapper;
 import band.gosrock.common.annotation.UseCase;
-import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
-import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.domain.domains.user.service.UserDomainService;
 import lombok.RequiredArgsConstructor;

@@ -3,7 +3,6 @@ package band.gosrock.api.host.model.dto.response;
 
 import band.gosrock.domain.common.vo.UserInfoVo;
 import band.gosrock.domain.domains.host.domain.Host;
-import band.gosrock.domain.domains.host.domain.HostRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.HashSet;
 import java.util.Set;
@@ -31,15 +30,14 @@ public class HostDetailResponse {
     public static HostDetailResponse of(Host host, Set<UserInfoVo> userInfoVoSet) {
         HostDetailResponseBuilder builder = HostDetailResponse.builder();
         Set<UserInfoVo> userInfoVoList = new HashSet<>();
-        userInfoVoSet
-                .forEach(
-                        userInfoVo -> {
-                            if (userInfoVo.getUserId().equals(host.getMasterUserId())) {
-                                builder.masterHostUserInfo(userInfoVo);
-                            } else {
-                                userInfoVoList.add(userInfoVo);
-                            }
-                        });
+        userInfoVoSet.forEach(
+                userInfoVo -> {
+                    if (userInfoVo.getUserId().equals(host.getMasterUserId())) {
+                        builder.masterHostUserInfo(userInfoVo);
+                    } else {
+                        userInfoVoList.add(userInfoVo);
+                    }
+                });
 
         return builder.contactEmail(host.getContactEmail())
                 .contactNumber(host.getContactNumber())

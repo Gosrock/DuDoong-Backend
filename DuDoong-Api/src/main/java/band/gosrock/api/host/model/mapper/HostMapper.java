@@ -3,20 +3,17 @@ package band.gosrock.api.host.model.mapper;
 
 import band.gosrock.api.host.model.dto.request.CreateHostRequest;
 import band.gosrock.api.host.model.dto.response.HostDetailResponse;
-import band.gosrock.api.host.model.dto.response.HostResponse;
 import band.gosrock.common.annotation.Mapper;
 import band.gosrock.domain.common.vo.UserInfoVo;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
-import lombok.RequiredArgsConstructor;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @Mapper
 @RequiredArgsConstructor
@@ -48,9 +45,10 @@ public class HostMapper {
         Set<Long> userIdList = new HashSet<>();
 
         host.getHostUsers().forEach(hostUser -> userIdList.add(hostUser.getHostId()));
-        final Set<UserInfoVo> userInfoVoSet = userAdaptor.queryUserListByIdIn(userIdList).stream().map(
-                User::toUserInfoVo
-        ).collect(Collectors.toSet());
+        final Set<UserInfoVo> userInfoVoSet =
+                userAdaptor.queryUserListByIdIn(userIdList).stream()
+                        .map(User::toUserInfoVo)
+                        .collect(Collectors.toSet());
 
         return HostDetailResponse.of(host, userInfoVoSet);
     }
