@@ -11,7 +11,9 @@ public enum IssuedTicketStatus {
     // 입장 완료
     ENTRANCE_COMPLETED("ENTRANCE_COMPLETED", "입장 완료"),
     // 입장 미완료
-    ENTRANCE_INCOMPLETE("ENTRANCE_INCOMPLETE", "입장 전");
+    ENTRANCE_INCOMPLETE("ENTRANCE_INCOMPLETE", "입장 전"),
+    // 티켓 취소 (withDraw || cancel)
+    CANCELED("CANCELED", "취소 티켓");
 
     private final String value;
 
