@@ -3,6 +3,7 @@ package band.gosrock.api.host.service;
 
 import band.gosrock.api.config.security.SecurityUtils;
 import band.gosrock.api.host.model.dto.response.HostDetailResponse;
+import band.gosrock.api.host.model.mapper.HostMapper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
@@ -21,6 +22,7 @@ public class JoinHostUseCase {
     private final UserDomainService userDomainService;
     private final HostService hostService;
     private final HostAdaptor hostAdaptor;
+    private final HostMapper hostMapper;
 
     @Transactional
     public HostDetailResponse execute(Long hostId) {
@@ -32,6 +34,7 @@ public class JoinHostUseCase {
         if (host.hasHostUserId(securityUserId)) {
             throw AlreadyJoinedHostException.EXCEPTION;
         }
-        return HostDetailResponse.of(hostService.addHostUser(host, securityUserId, HostRole.HOST));
+        hostService.addHostUser(host, securityUserId, HostRole.HOST);
+        return hostMapper.toHostDetailResponse(host);
     }
 }

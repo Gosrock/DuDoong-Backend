@@ -8,6 +8,8 @@ import band.gosrock.domain.domains.user.exception.UserNotFoundException;
 import band.gosrock.domain.domains.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Set;
+
 @Adaptor
 @RequiredArgsConstructor
 public class UserAdaptor {
@@ -27,4 +29,10 @@ public class UserAdaptor {
                 .findByOauthInfo(oauthInfo)
                 .orElseThrow(() -> UserNotFoundException.EXCEPTION);
     }
+
+    /** user id 리스트에 포함되어 있는 유저를 모두 가져오는 쿼리 */
+    public Set<User> queryUserListByIdIn(Set<Long> userIdList) {
+        return userRepository.findAllByIdIn(userIdList);
+    }
+
 }

@@ -1,6 +1,7 @@
 package band.gosrock.api.host.model.dto.response;
 
 
+import band.gosrock.domain.common.vo.UserInfoVo;
 import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.host.domain.HostRole;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,38 +19,31 @@ public class HostDetailResponse {
     @Schema(description = "담당자 전화번호")
     private final String contactNumber;
 
-    //    @Schema(description = "마스터 유저의 정보")
-    //    private final UserInfoVo masterUserInfoVo;
-    //
-    //    @Schema(description = "호스트 유저 정보")
-    //    private final Set<UserInfoVo> userInfoVoList;
-    // todo:: UserRole 에서 Set<User> 추출해서 VO 리스트로 넣기
+    @Schema(description = "마스터 유저의 정보")
+    private final UserInfoVo masterHostUserInfo;
 
-    @Schema(description = "마스터 유저의 아이디")
-    private final Long masterUserId;
-
-    @Schema(description = "호스트 유저 아이디")
-    private final Set<Long> userId;
+    @Schema(description = "호스트 유저 정보")
+    private final Set<UserInfoVo> hostUserInfoList;
 
     @Schema(description = "파트너쉽 여부")
     private final boolean partner;
 
-    public static HostDetailResponse of(Host host) {
+    public static HostDetailResponse of(Host host, Set<UserInfoVo> userInfoVoSet) {
         HostDetailResponseBuilder builder = HostDetailResponse.builder();
-        Set<Long> userIdList = new HashSet<>();
-        host.getHostUsers()
+        Set<UserInfoVo> userInfoVoList = new HashSet<>();
+        userInfoVoSet
                 .forEach(
-                        hostUser -> {
-                            if (hostUser.getRole().equals(HostRole.SUPER_HOST)) {
-                                builder.masterUserId(hostUser.getUserId());
+                        userInfoVo -> {
+                            if (userInfoVo.getUserId().equals(host.getMasterUserId())) {
+                                builder.masterHostUserInfo(userInfoVo);
                             } else {
-                                userIdList.add(hostUser.getUserId());
+                                userInfoVoList.add(userInfoVo);
                             }
                         });
 
         return builder.contactEmail(host.getContactEmail())
                 .contactNumber(host.getContactNumber())
-                .userId(userIdList)
+                .hostUserInfoList(userInfoVoList)
                 .partner(host.getPartner())
                 .build();
     }
