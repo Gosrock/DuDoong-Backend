@@ -4,6 +4,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
+import band.gosrock.domain.CunCurrencyExecutorService;
 import band.gosrock.domain.DisableDomainEvent;
 import band.gosrock.domain.DisableRedissonLock;
 import band.gosrock.domain.DomainIntegrateSpringBootTest;
@@ -12,9 +13,6 @@ import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,25 +57,10 @@ class OrderApproveServiceConcurrencyFailTest {
     void 동시성_실패_주문승인() throws InterruptedException {
         // given
         // when
-        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreadPool);
-        CountDownLatch latch = new CountDownLatch(numberOfThreads);
         AtomicLong successCount = new AtomicLong();
+        CunCurrencyExecutorService.execute(
+                () -> orderApproveService.execute(order.getUuid()), successCount);
 
-        for (long i = 1; i <= numberOfThreads; i++) {
-            executorService.submit(
-                    () -> {
-                        try {
-                            orderApproveService.execute(order.getUuid());
-                            // 오류없이 성공을 하면 성공횟수를 증가시킵니다.
-                            successCount.getAndIncrement();
-                        } catch (Exception e) {
-                            log.info(e.getClass().getName());
-                        } finally {
-                            latch.countDown();
-                        }
-                    });
-        }
-        latch.await();
         // then
         // 가끔 동시요청이 ci 환경에서 중복안될때가 있음 로그로 확인하셈!
         log.info(String.valueOf(successCount.get()));

@@ -12,9 +12,6 @@ import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,11 +63,9 @@ class OrderApproveServiceConcurrencyTest {
         // given
         // when
         AtomicLong successCount = new AtomicLong();
-        CunCurrencyExecutorService.execute(()->orderApproveService.execute(order.getUuid()), successCount);
-
+        CunCurrencyExecutorService.execute(
+                () -> orderApproveService.execute(order.getUuid()), successCount);
         // then
         assertThat(successCount.get()).isEqualTo(1);
     }
-
-
 }

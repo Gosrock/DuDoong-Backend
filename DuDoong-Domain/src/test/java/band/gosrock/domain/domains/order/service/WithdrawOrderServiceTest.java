@@ -9,6 +9,4 @@ import lombok.extern.slf4j.Slf4j;
 @DomainIntegrateSpringBootTest
 @DisableDomainEvent
 @Slf4j
-class WithdrawOrderServiceTest {
-
-}
+class WithdrawOrderServiceTest {}
