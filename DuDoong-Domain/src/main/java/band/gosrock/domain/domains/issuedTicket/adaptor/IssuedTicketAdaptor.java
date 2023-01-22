@@ -50,7 +50,7 @@ public class IssuedTicketAdaptor {
     }
 
     public void delete(IssuedTicket issuedTicket) {
-        issuedTicket.cancelIssuedTicket();
+        issuedTicket.cancel();
     }
 
     public List<IssuedTicket> findAllByOrderUuid(String orderUuid) {
