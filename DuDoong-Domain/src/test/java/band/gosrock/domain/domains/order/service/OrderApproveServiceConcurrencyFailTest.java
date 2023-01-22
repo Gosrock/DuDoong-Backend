@@ -19,7 +19,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -28,15 +27,11 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 @DisableRedissonLock
 @Slf4j
 class OrderApproveServiceConcurrencyFailTest {
-    static int numberOfThreads = 20;
-    static int numberOfThreadPool = 20;
-    @Autowired private OrderApproveService orderApproveService;
-
-    @Autowired RedissonClient redissonClient;
+    @Autowired OrderApproveService orderApproveService;
 
     @Mock OrderLineItem orderLineItem;
 
-    @MockBean private OrderAdaptor orderAdaptor;
+    @MockBean OrderAdaptor orderAdaptor;
 
     Order order;
 
