@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 import band.gosrock.domain.DisableDomainEvent;
-import band.gosrock.domain.DisableRedissonLock;
 import band.gosrock.domain.DomainIntegrateSpringBootTest;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
@@ -27,9 +26,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 @DomainIntegrateSpringBootTest
 @DisableDomainEvent
-@DisableRedissonLock
 @Slf4j
-class OrderApproveServiceFailTest {
+class OrderApproveServiceConcurrencyTest {
     static int numberOfThreads = 10;
     static int numberOfThreadPool = 5;
     @Autowired private OrderApproveService orderApproveService;
@@ -51,12 +49,20 @@ class OrderApproveServiceFailTest {
                         .orderLineItems(List.of(orderLineItem))
                         .build();
         order.addUUID();
+        // https://stackoverflow.com/questions/11785498/simulate-first-call-fails-second-call-succeeds
+        // 첫 요청엔 성공하도록
+        // 그 이후 두번째부턴 실패하도록 하고싶다면? ( 그냥 예시로 남긴거임 )
+        //        BDDStubber bddStubber = willDoNothing();
+        //        for(int i =0 ; i <= numberOfThreads ; i++){
+        //            bddStubber.willThrow(new
+        // DuDoongCodeException(OrderErrorCode.ORDER_NOT_PENDING));
+        //        }
         given(orderAdaptor.findByOrderUuid(any())).willReturn(order);
     }
 
     @Test
-    @DisplayName("락을 적용안하면 동시에 여러 주문요청이 들어왔을 때 실패해야한다.")
-    void 동시성_실패_주문승인() throws InterruptedException {
+    @DisplayName("동시에 주문 승인 요청이 와도 하나의 요청만 성공해야한다.")
+    void 동시성_주문승인() throws InterruptedException {
         // given
         // when
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreadPool);
@@ -79,6 +85,6 @@ class OrderApproveServiceFailTest {
         }
         latch.await();
         // then
-        assertThat(successCount.get()).isNotEqualTo(1);
+        assertThat(successCount.get()).isEqualTo(1);
     }
 }
