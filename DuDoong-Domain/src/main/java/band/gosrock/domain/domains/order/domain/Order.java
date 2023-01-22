@@ -65,7 +65,7 @@ public class Order extends BaseTimeEntity {
     private String orderName;
 
     // 결제 대행사 정보 ( 토스 승인 이후 저장 )
-    @Embedded private PgPaymentInfo pgPaymentInfo;
+    @Embedded private PgPaymentInfo pgPaymentInfo = PgPaymentInfo.empty();
 
     // 결제 완료 된시간 승인 결제등.
     private LocalDateTime approvedAt;
@@ -306,19 +306,17 @@ public class Order extends BaseTimeEntity {
 
     /** 결제 수단 정보를 가져옵니다. */
     public String getMethod() {
-        if (this.orderMethod.equals(OrderMethod.APPROVAL)) return OrderMethod.APPROVAL.getKr();
-        return this.pgPaymentInfo.getPaymentMethod().getKr();
+        if (orderMethod.equals(OrderMethod.APPROVAL)) return OrderMethod.APPROVAL.getKr();
+        return pgPaymentInfo.getPaymentMethod().getKr();
     }
 
     /** 결제 공급자 정보를 가져옵니다. */
     public String getProvider() {
-        if (this.orderMethod.equals(OrderMethod.APPROVAL)) return null;
         return this.pgPaymentInfo.getPaymentProvider();
     }
 
     /** 결제 공급자 정보를 가져옵니다. */
     public String getReceiptUrl() {
-        if (this.orderMethod.equals(OrderMethod.APPROVAL)) return null;
         return this.pgPaymentInfo.getReceiptUrl();
     }
 
