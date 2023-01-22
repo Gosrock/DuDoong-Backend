@@ -249,7 +249,7 @@ public class Order extends BaseTimeEntity {
      * @default 사용하지않음
      */
     public String getCouponName() {
-        if (issuedCoupon != null) {
+        if (hasCoupon()) {
             return issuedCoupon.getCouponName();
         }
         return "사용하지 않음";
@@ -268,10 +268,14 @@ public class Order extends BaseTimeEntity {
     }
     /** 총 할인금액을 가져옵니다. */
     public Money getTotalDiscountPrice() {
-        if (issuedCoupon != null) {
+        if (hasCoupon()) {
             return issuedCoupon.getDiscountAmount(getTotalSupplyPrice());
         }
         return Money.ZERO;
+    }
+
+    public Boolean hasCoupon() {
+        return issuedCoupon != null;
     }
 
     /**
@@ -281,20 +285,18 @@ public class Order extends BaseTimeEntity {
      * @return
      */
     public RefundInfoVo getTotalRefundInfo() {
-        OrderLineItem orderLineItem =
-                orderLineItems.stream()
-                        .findFirst()
-                        .orElseThrow(() -> OrderLineNotFountException.EXCEPTION);
-        return orderLineItem.getRefundInfo();
+        return getOrderLineItem().getRefundInfo();
+    }
+
+    private OrderLineItem getOrderLineItem() {
+        return orderLineItems.stream()
+                .findFirst()
+                .orElseThrow(() -> OrderLineNotFountException.EXCEPTION);
     }
 
     /** 주문에서 티켓 상품 반환합니다. - 민준 */
     public TicketItem getTicketItemOfOrder() {
-        OrderLineItem orderLineItem =
-                orderLineItems.stream()
-                        .findFirst()
-                        .orElseThrow(() -> OrderLineNotFountException.EXCEPTION);
-        return orderLineItem.getTicketItem();
+        return getOrderLineItem().getTicketItem();
     }
 
     /** 결제가 필요한 오더인지 반환합니다. */
