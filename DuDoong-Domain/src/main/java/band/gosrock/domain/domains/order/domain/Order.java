@@ -161,9 +161,8 @@ public class Order extends BaseTimeEntity {
     /** 결제 방식의 주문을 승인 합니다. */
     public void confirmPayment(
             Money pgAmount, LocalDateTime approvedAt, PgPaymentInfo pgPaymentInfo) {
-        // TODO: 재고량 비교 필요?
         validCanConfirmPayment(pgAmount);
-        validPgAndOrderAmountIsEqual(pgAmount);
+        validNormalOrder(pgAmount);
         orderStatus = OrderStatus.CONFIRM;
         this.approvedAt = approvedAt;
         this.pgPaymentInfo = pgPaymentInfo;
@@ -172,11 +171,8 @@ public class Order extends BaseTimeEntity {
 
     /** 승인 방식의 주문을 승인합니다. */
     public void approve() {
-        if (isNeedPayment()) {
-            throw NotApprovalOrderException.EXCEPTION;
-        }
+        validApprovalOrder();
         orderStatus.validCanApprove();
-        // TODO: 재고량 비교 필요?
         this.approvedAt = LocalDateTime.now();
         this.orderStatus = OrderStatus.APPROVED;
         Events.raise(DoneOrderEvent.from(this));
@@ -204,13 +200,13 @@ public class Order extends BaseTimeEntity {
     }
 
     /** ---------------------------- 검증 메서드 ---------------------------------- */
-
-    /** PG 사를 통한 결제 대금이 주문의 가격과 동일한지 검증합니다. */
-    public void validPgAndOrderAmountIsEqual(Money pgAmount) {
-        if (!pgAmount.equals(getTotalPaymentPrice())) {
-            throw InvalidOrderException.EXCEPTION;
+    /** 승인 가능한 주문인지 검증합니다. */
+    public void validApprovalOrder() {
+        if (isNeedPayment()) {
+            throw NotApprovalOrderException.EXCEPTION;
         }
     }
+
     /** 주문에대한 주인인지 검증합니다. */
     public void validOwner(Long currentUserId) {
         if (!userId.equals(currentUserId)) {
@@ -219,13 +215,22 @@ public class Order extends BaseTimeEntity {
     }
     /** 결제 방식의 주문을 승인할수있는지 확인합니다. */
     public void validCanConfirmPayment(Money requestAmount) {
+        validNormalOrder(requestAmount);
+        validPaymentOrder();
+        orderStatus.validCanPaymentConfirm();
+    }
+
+    /** 결제대금과,요청금액의 비교를 통해 정상적인 주문인지 검증합니다. */
+    private void validNormalOrder(Money requestAmount) {
         if (!getTotalPaymentPrice().equals(requestAmount)) {
             throw InvalidOrderException.EXCEPTION;
         }
+    }
+
+    public void validPaymentOrder() {
         if (!isNeedPayment()) {
             throw NotPaymentOrderException.EXCEPTION;
         }
-        orderStatus.validCanPaymentConfirm();
     }
 
     public void validCanRefundDate() {
