@@ -16,6 +16,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.TransactionTimedOutException;
 import org.springframework.util.StringUtils;
@@ -24,6 +25,7 @@ import org.springframework.util.StringUtils;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@ConditionalOnExpression("${ableRedissonLock:true}")
 public class RedissonLockAop {
     private final RedissonClient redissonClient;
     private final CallTransactionFactory callTransactionFactory;
