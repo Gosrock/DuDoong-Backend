@@ -76,4 +76,8 @@ public class CouponCampaign extends BaseTimeEntity {
             throw WrongDiscountAmountException.EXCEPTION;
         }
     }
+
+    public void decreaseCouponStock() {
+        couponStockInfo.decreaseCouponStock();
+    }
 }

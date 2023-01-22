@@ -1,6 +1,7 @@
 package band.gosrock.domain.domains.coupon.domain;
 
 
+import band.gosrock.domain.domains.coupon.exception.NoCouponStockLeftException;
 import javax.persistence.Embeddable;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -19,5 +20,16 @@ public class CouponStockInfo {
     public CouponStockInfo(Long issuedAmount, Long remainingAmount) {
         this.issuedAmount = issuedAmount;
         this.remainingAmount = remainingAmount;
+    }
+
+    public void checkCouponLeft() {
+        if (remainingAmount < 1) { // 재고 없을 경우 에러 처리
+            throw NoCouponStockLeftException.EXCEPTION;
+        }
+    }
+
+    public void decreaseCouponStock() {
+        checkCouponLeft();
+        this.remainingAmount = remainingAmount - 1;
     }
 }
