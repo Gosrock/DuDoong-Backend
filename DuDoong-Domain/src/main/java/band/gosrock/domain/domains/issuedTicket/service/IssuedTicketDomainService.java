@@ -28,11 +28,7 @@ public class IssuedTicketDomainService {
     private final IssuedTicketOptionAnswerAdaptor issuedTicketOptionAnswerAdaptor;
     private final EventAdaptor eventAdaptor;
 
-    @RedissonLock(
-            LockName = "티켓재고관리",
-            paramClassType = TicketItem.class,
-            identifier = "id",
-            needSameTransaction = true)
+    @RedissonLock(LockName = "티켓재고관리", paramClassType = TicketItem.class, identifier = "id")
     @Transactional
     public void createIssuedTicket(
             TicketItem ticketItem, List<CreateIssuedTicketDTO> createIssuedTicketDTOs) {
@@ -44,11 +40,7 @@ public class IssuedTicketDomainService {
                 });
     }
 
-    @RedissonLock(
-            LockName = "티켓재고관리",
-            paramClassType = TicketItem.class,
-            identifier = "id",
-            needSameTransaction = true)
+    @RedissonLock(LockName = "티켓재고관리", paramClassType = TicketItem.class, identifier = "id")
     @Transactional
     public void withDrawIssuedTicket(TicketItem ticketItem, List<IssuedTicket> issuedTickets) {
         issuedTickets.forEach(
