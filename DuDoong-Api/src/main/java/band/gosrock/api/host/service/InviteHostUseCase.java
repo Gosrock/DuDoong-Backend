@@ -35,5 +35,7 @@ public class InviteHostUseCase {
         final Host host = hostAdaptor.findById(hostId);
         final HostUser hostUser = hostMapper.toHostUser(hostId, inviteUserId);
         return hostMapper.toHostDetailResponse(hostService.addHostUser(host, hostUser));
+
+        // todo :: 초대 성공 시 상대방에게 알림 이벤트 발송
     }
 }

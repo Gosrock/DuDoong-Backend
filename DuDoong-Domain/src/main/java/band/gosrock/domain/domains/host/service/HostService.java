@@ -4,12 +4,12 @@ package band.gosrock.domain.domains.host.service;
 import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
+import band.gosrock.domain.domains.host.domain.HostRole;
 import band.gosrock.domain.domains.host.domain.HostUser;
 import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException;
 import band.gosrock.domain.domains.host.exception.NotMasterHostException;
 import band.gosrock.domain.domains.host.exception.NotSuperHostException;
 import band.gosrock.domain.domains.host.repository.HostRepository;
-import band.gosrock.domain.domains.host.repository.HostUserRepository;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class HostService {
     private final HostRepository hostRepository;
-    private final HostUserRepository hostUserRepository;
     private final HostAdaptor hostAdaptor;
 
     public Host createHost(Host host) {
@@ -38,8 +37,9 @@ public class HostService {
         return hostRepository.save(host);
     }
 
-    public HostUser createHostUser(HostUser hostUser) {
-        return hostUserRepository.save(hostUser);
+    public Host updateHostUserRole(Host host, Long userId, HostRole role) {
+        host.setHostUserRole(userId, role);
+        return hostRepository.save(host);
     }
 
     /** 해당 유저가 호스트의 마스터(담당자, 방장)인지 확인하는 검증 로직입니다 */
@@ -61,6 +61,13 @@ public class HostService {
     /** 해당 유저가 슈퍼 호스트인지 확인하는 검증 로직입니다 */
     public void validateSuperHost(Long hostId, Long userId) {
         Host host = hostAdaptor.findById(hostId);
+        if (host.isSuperHostUserId(userId)) {
+            return;
+        }
+        throw NotSuperHostException.EXCEPTION;
+    }
+
+    public void validateSuperHost(Host host, Long userId) {
         if (host.isSuperHostUserId(userId)) {
             return;
         }

@@ -2,7 +2,7 @@ package band.gosrock.api.host.model.dto.response;
 
 
 import band.gosrock.domain.common.vo.HostInfoVo;
-import band.gosrock.domain.common.vo.UserInfoVo;
+import band.gosrock.domain.common.vo.HostUserVo;
 import band.gosrock.domain.domains.host.domain.Host;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -19,10 +19,10 @@ public class HostDetailResponse {
     private final HostInfoVo hostInfo;
 
     @Schema(description = "마스터 유저의 정보")
-    private final UserInfoVo masterUser;
+    private final HostUserVo masterUser;
 
     @Schema(description = "호스트 유저 정보")
-    private final Set<UserInfoVo> hostUsers;
+    private final Set<HostUserVo> hostUsers;
 
     @Schema(description = "슬랙 알람 url")
     private final String slackUrl;
@@ -32,15 +32,15 @@ public class HostDetailResponse {
 
     // todo:: 이벤트 정보도 묶어서 내보내기
 
-    public static HostDetailResponse of(Host host, Set<UserInfoVo> userInfoVoSet) {
+    public static HostDetailResponse of(Host host, Set<HostUserVo> hostUserVoSet) {
         HostDetailResponseBuilder builder = HostDetailResponse.builder();
-        Set<UserInfoVo> userInfoVoList = new HashSet<>();
-        userInfoVoSet.forEach(
-                userInfoVo -> {
-                    if (userInfoVo.getUserId().equals(host.getMasterUserId())) {
-                        builder.masterUser(userInfoVo);
+        Set<HostUserVo> userInfoVoList = new HashSet<>();
+        hostUserVoSet.forEach(
+                hostUserVo -> {
+                    if (hostUserVo.getUserInfoVo().getUserId().equals(host.getMasterUserId())) {
+                        builder.masterUser(hostUserVo);
                     } else {
-                        userInfoVoList.add(userInfoVo);
+                        userInfoVoList.add(hostUserVo);
                     }
                 });
 

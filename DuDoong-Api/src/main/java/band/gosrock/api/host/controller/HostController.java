@@ -1,10 +1,7 @@
 package band.gosrock.api.host.controller;
 
 
-import band.gosrock.api.host.model.dto.request.CreateHostRequest;
-import band.gosrock.api.host.model.dto.request.InviteHostRequest;
-import band.gosrock.api.host.model.dto.request.UpdateHostRequest;
-import band.gosrock.api.host.model.dto.request.UpdateHostSlackRequest;
+import band.gosrock.api.host.model.dto.request.*;
 import band.gosrock.api.host.model.dto.response.HostDetailResponse;
 import band.gosrock.api.host.model.dto.response.HostResponse;
 import band.gosrock.api.host.service.*;
@@ -28,6 +25,7 @@ public class HostController {
     private final CreateHostUseCase createHostUseCase;
     private final UpdateHostProfileUseCase updateHostProfileUseCase;
     private final UpdateHostSlackUrlUseCase updateHostSlackUrlUseCase;
+    private final UpdateHostUserRoleUseCase updateHostUserRoleUseCase;
     private final InviteHostUseCase inviteHostUseCase;
     private final JoinHostUseCase joinHostUseCase;
 
@@ -60,6 +58,14 @@ public class HostController {
     public HostDetailResponse inviteHost(
             @PathVariable Long hostId, @RequestBody @Valid InviteHostRequest inviteHostRequest) {
         return inviteHostUseCase.execute(hostId, inviteHostRequest);
+    }
+
+    @Operation(summary = "호스트 유저의 권한을 변경합니다.")
+    @PatchMapping("/{hostId}/role")
+    public HostDetailResponse patchHostUserRole(
+            @PathVariable Long hostId,
+            @RequestBody @Valid UpdateHostUserRoleRequest updateHostUserRoleRequest) {
+        return updateHostUserRoleUseCase.execute(hostId, updateHostUserRoleRequest);
     }
 
     // todo :: 슈퍼 호스트 이상으로?

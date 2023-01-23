@@ -5,6 +5,7 @@ import band.gosrock.api.host.model.dto.request.CreateHostRequest;
 import band.gosrock.api.host.model.dto.request.UpdateHostRequest;
 import band.gosrock.api.host.model.dto.response.HostDetailResponse;
 import band.gosrock.common.annotation.Mapper;
+import band.gosrock.domain.common.vo.HostUserVo;
 import band.gosrock.domain.common.vo.UserInfoVo;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
@@ -70,13 +71,24 @@ public class HostMapper {
 
     private HostDetailResponse toHostDetailResponseExecute(Host host) {
         Set<Long> userIdList = new HashSet<>();
-
         host.getHostUsers().forEach(hostUser -> userIdList.add(hostUser.getUserId()));
         final Set<UserInfoVo> userInfoVoSet =
                 userAdaptor.queryUserListByIdIn(userIdList).stream()
                         .map(User::toUserInfoVo)
                         .collect(Collectors.toSet());
 
-        return HostDetailResponse.of(host, userInfoVoSet);
+        // todo :: 유저 리스트에 역할까지 추가하기
+
+        final Set<HostUserVo> hostUserVoSet =
+                userInfoVoSet.stream()
+                        .map(
+                                userInfoVo ->
+                                        HostUserVo.from(
+                                                userInfoVo,
+                                                host.getHostUserByUserId(userInfoVo.getUserId())
+                                                        .getRole()))
+                        .collect(Collectors.toSet());
+
+        return HostDetailResponse.of(host, hostUserVoSet);
     }
 }

@@ -30,7 +30,7 @@ public class UpdateHostSlackUrlUseCase {
         final Host host = hostAdaptor.findById(hostId);
 
         // 마스터 호스트 검증
-        hostService.validateMasterUser(host, userId);
+        hostService.validateSuperHost(host, userId);
         host.setSlackUrl(updateHostSlackRequest.getSlackUrl());
         return hostMapper.toHostDetailResponse(hostService.updateHost(host));
     }

@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.host.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.domains.host.exception.HostUserNotFoundException;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.*;
@@ -42,6 +43,13 @@ public class Host extends BaseTimeEntity {
         return this.hostUsers.stream().anyMatch(hostUser -> hostUser.getUserId().equals(userId));
     }
 
+    public HostUser getHostUserByUserId(Long userId) {
+        return this.hostUsers.stream()
+                .filter(hostUser -> hostUser.getUserId().equals(userId))
+                .findFirst()
+                .orElse(null);
+    }
+
     public void setProfile(HostProfile hostProfile) {
         this.profile = hostProfile;
     }
@@ -56,6 +64,14 @@ public class Host extends BaseTimeEntity {
                         hostUser ->
                                 hostUser.getUserId().equals(userId)
                                         && hostUser.getRole().equals(HostRole.SUPER_HOST));
+    }
+
+    public void setHostUserRole(Long userId, HostRole role) {
+        this.hostUsers.stream()
+                .filter(hostUser -> hostUser.getUserId().equals(userId))
+                .findFirst()
+                .orElseThrow(() -> HostUserNotFoundException.EXCEPTION)
+                .setHostRole(role);
     }
 
     @Builder
