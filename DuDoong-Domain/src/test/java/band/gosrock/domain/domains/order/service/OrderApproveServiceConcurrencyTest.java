@@ -43,8 +43,8 @@ class OrderApproveServiceConcurrencyTest {
         given(orderLineItem.isNeedPaid()).willReturn(Boolean.FALSE);
         order =
                 Order.builder()
-                    .orderMethod(OrderMethod.APPROVAL)
-                    .orderStatus(OrderStatus.PENDING_APPROVE)
+                        .orderMethod(OrderMethod.APPROVAL)
+                        .orderStatus(OrderStatus.PENDING_APPROVE)
                         .orderLineItems(List.of(orderLineItem))
                         .build();
         order.addUUID();
