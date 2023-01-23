@@ -19,7 +19,8 @@ public enum CartErrorCode implements BaseErrorCode {
 
     @ExplainError("한 장바구니엔 관련된 한 아이템만 올수 있음")
     CART_INVALID_ITEM_KIND_POLICY(BAD_REQUEST, "Cart_400_1", "장바구니에 아이템을 담는 정책을 위반하였습니다."),
-    CART_INVALID_OPTION_ANSWER(BAD_REQUEST, "Cart_400_2", "옵션을 잘못 응답 하였습니다.");
+    CART_INVALID_OPTION_ANSWER(BAD_REQUEST, "Cart_400_2", "옵션을 잘못 응답 하였습니다."),
+    CART_LINE_NOT_FOUND(BAD_REQUEST, "Cart_400_3", "장바구니 안에 상품을 찾을 수 없습니다.");
     private Integer status;
     private String code;
     private String reason;

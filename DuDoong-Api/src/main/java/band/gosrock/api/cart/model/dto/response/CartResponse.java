@@ -29,6 +29,9 @@ public class CartResponse {
     @Schema(description = "결제가 필요한지에 대한 여부를 결정합니다. 필요한 true면 결제창 띄우시면됩니다.", defaultValue = "true")
     private final Boolean isNeedPayment;
 
+    @Schema(description = "결제가 필요한지에 대한 여부를 결정합니다. 필요한 true면 결제창 띄우시면됩니다.", defaultValue = "true")
+    private final Boolean isNeedPayment;
+
     public static CartResponse of(List<CartItemResponse> cartItemResponses, Cart cart) {
         return CartResponse.builder()
                 .items(cartItemResponses)
