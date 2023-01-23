@@ -32,6 +32,6 @@ public class UpdateHostProfileUseCase {
         // 마스터 호스트 검증
         hostService.validateMasterUser(host, userId);
         host.setProfile(hostMapper.toHostProfile(updateHostRequest));
-        return hostMapper.toHostDetailResponse(hostService.save(host));
+        return hostMapper.toHostDetailResponse(hostService.updateHost(host));
     }
 }

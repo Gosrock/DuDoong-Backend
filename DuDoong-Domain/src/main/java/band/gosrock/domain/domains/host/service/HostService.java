@@ -4,7 +4,6 @@ package band.gosrock.domain.domains.host.service;
 import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
-import band.gosrock.domain.domains.host.domain.HostRole;
 import band.gosrock.domain.domains.host.domain.HostUser;
 import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException;
 import band.gosrock.domain.domains.host.exception.NotMasterHostException;
@@ -27,22 +26,14 @@ public class HostService {
         return hostRepository.save(host);
     }
 
-    public Host save(Host host) {
+    public Host updateHost(Host host) {
         return hostRepository.save(host);
     }
 
     public Host addHostUser(Host host, HostUser hostUser) {
-        host.addHostUsers(Set.of(hostUser));
-        return hostRepository.save(host);
-    }
-
-    public Host addHostUser(Long hostId, Long userId, HostRole role) {
-        Host host = hostAdaptor.findById(hostId);
-        // 이 호스트에 이미 속함
-        if (host.hasHostUserId(userId)) {
+        if (host.hasHostUserId(hostUser.getUserId())) {
             throw AlreadyJoinedHostException.EXCEPTION;
         }
-        HostUser hostUser = HostUser.builder().userId(userId).host(host).role(role).build();
         host.addHostUsers(Set.of(hostUser));
         return hostRepository.save(host);
     }

@@ -45,9 +45,16 @@ public class HostMapper {
                 .build();
     }
 
-    public HostUser toHostUser(Long hostId, Long userId, HostRole role) {
+    /** 기본 역할인 HOST 로 강제 주입하는 생성자 */
+    public HostUser toHostUser(Long hostId, Long userId) {
         final Host host = hostAdaptor.findById(hostId);
-        return HostUser.builder().userId(userId).host(host).role(role).build();
+        return HostUser.builder().userId(userId).host(host).role(HostRole.HOST).build();
+    }
+
+    /** 역할 지정하여 주입하는 생성자 */
+    public HostUser toHostUser(Long hostId, Long userId, HostRole hostRole) {
+        final Host host = hostAdaptor.findById(hostId);
+        return HostUser.builder().userId(userId).host(host).role(hostRole).build();
     }
 
     @Transactional(readOnly = true)

@@ -7,7 +7,8 @@ import band.gosrock.api.host.model.dto.response.HostDetailResponse;
 import band.gosrock.api.host.model.mapper.HostMapper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
-import band.gosrock.domain.domains.host.domain.HostRole;
+import band.gosrock.domain.domains.host.domain.Host;
+import band.gosrock.domain.domains.host.domain.HostUser;
 import band.gosrock.domain.domains.host.service.HostService;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
@@ -31,7 +32,8 @@ public class InviteHostUseCase {
         // 초대할 유저
         final Long inviteUserId =
                 userAdaptor.queryUserByEmail(inviteHostRequest.getEmail()).getId();
-        return hostMapper.toHostDetailResponse(
-                hostService.addHostUser(hostId, inviteUserId, HostRole.HOST));
+        final Host host = hostAdaptor.findById(hostId);
+        final HostUser hostUser = hostMapper.toHostUser(hostId, inviteUserId);
+        return hostMapper.toHostDetailResponse(hostService.addHostUser(host, hostUser));
     }
 }

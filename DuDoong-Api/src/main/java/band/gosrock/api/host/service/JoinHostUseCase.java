@@ -7,7 +7,6 @@ import band.gosrock.api.host.model.mapper.HostMapper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
-import band.gosrock.domain.domains.host.domain.HostRole;
 import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException;
 import band.gosrock.domain.domains.host.service.HostService;
 import band.gosrock.domain.domains.user.domain.User;
@@ -34,7 +33,7 @@ public class JoinHostUseCase {
         if (host.hasHostUserId(userId)) {
             throw AlreadyJoinedHostException.EXCEPTION;
         }
-        hostService.addHostUser(host.getId(), userId, HostRole.HOST);
+        hostService.addHostUser(host, hostMapper.toHostUser(hostId, userId));
         return hostMapper.toHostDetailResponse(host);
     }
 }
