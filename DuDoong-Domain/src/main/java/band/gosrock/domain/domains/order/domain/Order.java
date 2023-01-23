@@ -219,7 +219,7 @@ public class Order extends BaseTimeEntity {
     /** ---------------------------- 검증 메서드 ---------------------------------- */
     /** 승인 가능한 주문인지 검증합니다. */
     public void validApprovalOrder() {
-        if (isNeedPayment()) {
+        if (orderMethod.isPayment()) {
             throw NotApprovalOrderException.EXCEPTION;
         }
     }
@@ -245,7 +245,7 @@ public class Order extends BaseTimeEntity {
     }
 
     public void validPaymentOrder() {
-        if (!isNeedPayment()) {
+        if (!orderMethod.isPayment()) {
             throw NotPaymentOrderException.EXCEPTION;
         }
     }
@@ -357,5 +357,12 @@ public class Order extends BaseTimeEntity {
         return this.orderLineItems.stream()
                 .map(OrderLineItem::canRefund)
                 .reduce(Boolean.TRUE, (Boolean::logicalAnd));
+    }
+
+    /** PG 사를 통해 결제가 된 주문인지 반환합니다. */
+    public Boolean isPaid(){
+        if(isNeedPayment())
+            return Boolean.TRUE;
+        return Boolean.FALSE;
     }
 }

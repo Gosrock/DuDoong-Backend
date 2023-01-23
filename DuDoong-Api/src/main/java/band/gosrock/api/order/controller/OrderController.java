@@ -10,6 +10,7 @@ import band.gosrock.api.order.service.CancelOrderUseCase;
 import band.gosrock.api.order.service.ConfirmOrderUseCase;
 import band.gosrock.api.order.service.CreateOrderUseCase;
 import band.gosrock.api.order.service.CreateTossOrderUseCase;
+import band.gosrock.api.order.service.FreeOrderUseCase;
 import band.gosrock.api.order.service.ReadOrderUseCase;
 import band.gosrock.api.order.service.RefundOrderUseCase;
 import band.gosrock.common.annotation.DevelopOnlyApi;
@@ -36,6 +37,7 @@ public class OrderController {
     private final CreateOrderUseCase createOrderUseCase;
     private final ConfirmOrderUseCase confirmOrderUseCase;
     private final ApproveOrderUseCase approveOrderUseCase;
+    private final FreeOrderUseCase freeOrderUseCase;
     private final CancelOrderUseCase cancelOrderUseCase;
 
     private final RefundOrderUseCase refundOrderUseCase;
@@ -75,7 +77,7 @@ public class OrderController {
     @Operation(summary = "주문을 무료로 결제합니다. 선착순 방식 결제 0원일 때 지원")
     @PostMapping("/{order_uuid}/free")
     public OrderResponse freeOrder(@PathVariable("order_uuid") String orderUuid) {
-        return approveOrderUseCase.execute(orderUuid);
+        return freeOrderUseCase.execute(orderUuid);
     }
 
     @Operation(summary = "결제 취소요청. 호스트 관리자가 결제를 취소 시킵니다.! (호스트 관리자용(관리자쪽에서 사용))")

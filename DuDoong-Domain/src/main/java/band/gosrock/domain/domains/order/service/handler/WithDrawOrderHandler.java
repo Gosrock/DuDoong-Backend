@@ -28,10 +28,14 @@ public class WithDrawOrderHandler {
             classes = WithDrawOrderEvent.class,
             phase = TransactionPhase.AFTER_COMMIT)
     @Transactional
-    public void handleRegisterUserEvent(WithDrawOrderEvent withDrawOrderEvent) {
+    public void handleWithDrawOrderEvent(WithDrawOrderEvent withDrawOrderEvent) {
         log.info(withDrawOrderEvent.getOrderUuid() + "주문 철회 핸들러");
         OrderStatus orderStatus = withDrawOrderEvent.getOrderStatus();
         Order order = orderAdaptor.findByOrderUuid(withDrawOrderEvent.getOrderUuid());
+        // 결제를 하지않았던 주문이라면?
+        if(!order.isPaid())
+            return;
+
         String reason = "결제 취소";
         if (orderStatus.equals(OrderStatus.CANCELED)) {
             reason = "이벤트 관리자에 의한 취소";
