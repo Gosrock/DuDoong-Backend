@@ -31,9 +31,8 @@ public class Host extends BaseTimeEntity {
     private String slackUrl;
 
     // 단방향 oneToMany 매핑
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "host_user_id")
-    private Set<HostUser> hostUsers = new HashSet<>();
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private final Set<HostUser> hostUsers = new HashSet<>();
 
     public void addHostUsers(Set<HostUser> hostUserList) {
         this.hostUsers.addAll(hostUserList);

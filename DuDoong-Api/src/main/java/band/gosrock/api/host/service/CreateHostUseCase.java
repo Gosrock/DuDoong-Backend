@@ -28,6 +28,6 @@ public class CreateHostUseCase {
         // 호스트 생성
         final Host host = hostMapper.toEntity(createHostRequest, userId);
         hostService.createHost(host);
-        return HostResponse.of(hostService.addHostUser(host, userId, HostRole.SUPER_HOST));
+        return HostResponse.of(hostService.addHostUser(host.getId(), userId, HostRole.SUPER_HOST));
     }
 }

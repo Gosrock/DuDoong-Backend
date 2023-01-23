@@ -12,4 +12,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     /** user id 리스트에 포함되어 있는 유저를 모두 가져오는 쿼리 */
     Set<User> findAllByIdIn(Set<Long> id);
+
+    /** email 로 유저를 가져오는 쿼리 */
+    Optional<User> findByProfileEmail(String email);
 }

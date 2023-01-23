@@ -33,4 +33,11 @@ public class UserAdaptor {
     public Set<User> queryUserListByIdIn(Set<Long> userIdList) {
         return userRepository.findAllByIdIn(userIdList);
     }
+
+    /** 이메일로 유저를 가져오는 쿼리 */
+    public User queryUserByEmail(String email) {
+        return userRepository
+                .findByProfileEmail(email)
+                .orElseThrow(() -> UserNotFoundException.EXCEPTION);
+    }
 }

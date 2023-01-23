@@ -9,6 +9,8 @@ import band.gosrock.domain.common.vo.UserInfoVo;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.host.domain.HostProfile;
+import band.gosrock.domain.domains.host.domain.HostRole;
+import band.gosrock.domain.domains.host.domain.HostUser;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
 import java.util.HashSet;
@@ -23,7 +25,6 @@ public class HostMapper {
     private final HostAdaptor hostAdaptor;
     private final UserAdaptor userAdaptor;
 
-    @Transactional(readOnly = true)
     public Host toEntity(CreateHostRequest createHostRequest, Long masterUserId) {
         return Host.builder()
                 .name(createHostRequest.getName())
@@ -33,7 +34,6 @@ public class HostMapper {
                 .build();
     }
 
-    @Transactional(readOnly = true)
     public HostProfile toHostProfile(UpdateHostRequest updateHostRequest) {
         return HostProfile.builder()
                 .name(updateHostRequest.getName())
@@ -43,6 +43,11 @@ public class HostMapper {
                 .contactEmail(updateHostRequest.getContactEmail())
                 .contactNumber(updateHostRequest.getContactNumber())
                 .build();
+    }
+
+    public HostUser toHostUser(Long hostId, Long userId, HostRole role) {
+        final Host host = hostAdaptor.findById(hostId);
+        return HostUser.builder().userId(userId).host(host).role(role).build();
     }
 
     @Transactional(readOnly = true)
@@ -59,7 +64,7 @@ public class HostMapper {
     private HostDetailResponse toHostDetailResponseExecute(Host host) {
         Set<Long> userIdList = new HashSet<>();
 
-        host.getHostUsers().forEach(hostUser -> userIdList.add(hostUser.getHostId()));
+        host.getHostUsers().forEach(hostUser -> userIdList.add(hostUser.getUserId()));
         final Set<UserInfoVo> userInfoVoSet =
                 userAdaptor.queryUserListByIdIn(userIdList).stream()
                         .map(User::toUserInfoVo)
