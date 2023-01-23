@@ -14,14 +14,11 @@ public class CreateIssuedCouponDomainService {
 
     private final IssuedCouponAdaptor issuedCouponAdaptor;
 
-    @RedissonLock(
-            LockName = "유저쿠폰발급",
-            identifier = "id",
-            paramClassType = CouponCampaign.class)
-    public IssuedCoupon createIssuedCoupon(IssuedCoupon issuedCoupon,CouponCampaign couponCampaign) {
+    @RedissonLock(LockName = "유저쿠폰발급", identifier = "id", paramClassType = CouponCampaign.class)
+    public IssuedCoupon createIssuedCoupon(
+            IssuedCoupon issuedCoupon, CouponCampaign couponCampaign) {
         // 이미 해당 유저가 쿠폰 발급했는지 검증
-        issuedCouponAdaptor.exist(
-                couponCampaign.getId(), issuedCoupon.getUserId());
+        issuedCouponAdaptor.exist(couponCampaign.getId(), issuedCoupon.getUserId());
         // 재고 감소 로직
         couponCampaign.decreaseCouponStock();
         // 쿠폰 발급

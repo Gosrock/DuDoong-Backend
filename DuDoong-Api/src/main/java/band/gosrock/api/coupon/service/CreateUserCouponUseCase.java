@@ -31,7 +31,7 @@ public class CreateUserCouponUseCase {
         // 재고 감소 및 쿠폰 발급
         IssuedCoupon issuedCoupon =
                 createIssuedCouponDomainService.createIssuedCoupon(
-                        issuedCouponMapper.toEntity(couponCampaign, user.getId()),couponCampaign);
+                        issuedCouponMapper.toEntity(couponCampaign, user.getId()), couponCampaign);
         return issuedCouponMapper.toCreateUserCouponResponse(issuedCoupon, couponCampaign);
     }
 }
