@@ -15,7 +15,7 @@ public class CreateHostResponse {
     @Schema(description = "담당자 전화번호")
     private final String contactNumber;
 
-    @Schema(description = "마스터 유저의 고유 아이디")
+    @Schema(description = "마스터 유저의 정보")
     private final Long masterUserId;
     //    private final HostUser masterUser;
 

@@ -25,7 +25,7 @@ public class HostResponse {
         return HostResponse.builder()
                 .contactEmail(host.getContactEmail())
                 .contactNumber(host.getContactNumber())
-                .masterUserId(host.getMasterUserId()) // todo:: 마스터 정보 나오도록
+                .masterUserId(host.getMasterUserId())
                 .partner(host.getPartner())
                 .build();
     }
