@@ -150,7 +150,7 @@ public class Order extends BaseTimeEntity {
             return createPaymentOrder(userId, cart);
         }
         // 선착순이 아니라면? 승인 방식임. 승인방식의 결제가 필요한 상황은 지원하지않음.
-        if (cart.isNeedPayment()) {
+        if (cart.isNeedPaid()) {
             throw InvalidOrderException.EXCEPTION;
         }
         return createApproveOrder(userId, cart);

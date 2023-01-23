@@ -41,7 +41,7 @@ public class CartResponse {
                 .totalPrice(cart.getTotalPrice())
                 .cartId(cart.getId())
                 .title(cart.getCartName())
-                .isNeedPayment(cart.isNeedPayment())
+                .isNeedPayment(cart.isNeedPaid())
                 .totalQuantity(cart.getTotalQuantity())
                 .ticketType(cart.getItemType())
                 .build();

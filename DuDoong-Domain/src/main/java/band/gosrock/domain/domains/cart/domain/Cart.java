@@ -69,9 +69,9 @@ public class Cart extends BaseTimeEntity {
 
     /** ---------------------------- 조회용 메서드 ---------------------------------- */
     /** 결제가 필요한 오더인지 반환합니다. */
-    public Boolean isNeedPayment() {
+    public Boolean isNeedPaid() {
         return this.cartLineItems.stream()
-                .map(CartLineItem::isNeedPayment)
+                .map(CartLineItem::isNeedPaid)
                 .reduce(Boolean.FALSE, (Boolean::logicalOr));
     }
 
