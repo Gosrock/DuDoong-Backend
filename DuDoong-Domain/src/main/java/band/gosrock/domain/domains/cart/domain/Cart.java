@@ -93,13 +93,13 @@ public class Cart extends BaseTimeEntity {
                 .toList();
     }
 
-    public TicketType getItemType(){
+    public TicketType getItemType() {
         return getCartLineItem().getTicketItem().getType();
     }
 
     private CartLineItem getCartLineItem() {
         return cartLineItems.stream()
-            .findFirst()
-            .orElseThrow(() -> CartLineItemNotFoundException.EXCEPTION);
+                .findFirst()
+                .orElseThrow(() -> CartLineItemNotFoundException.EXCEPTION);
     }
 }

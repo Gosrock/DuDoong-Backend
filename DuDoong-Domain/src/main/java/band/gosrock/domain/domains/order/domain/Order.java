@@ -143,7 +143,14 @@ public class Order extends BaseTimeEntity {
     }
 
     public static Order createOrder(Long userId, Cart cart) {
-        if (cart.isNeedPayment()) return createPaymentOrder(userId, cart);
+        // 결제가 필요한 상황인데,
+        if (cart.isNeedPayment()) {
+            // 선착순이 아니라면? 승인 방식임. 승인방식의 결제가 필요한 상황은 지원하지않음.
+            if (!cart.getItemType().isFCFS()) {
+                throw InvalidOrderException.EXCEPTION;
+            }
+            return createPaymentOrder(userId, cart);
+        }
         return createApproveOrder(userId, cart);
     }
     /** ---------------------------- 커맨드 메서드 ---------------------------------- */
@@ -173,6 +180,15 @@ public class Order extends BaseTimeEntity {
     public void approve() {
         validApprovalOrder();
         orderStatus.validCanApprove();
+        this.approvedAt = LocalDateTime.now();
+        this.orderStatus = OrderStatus.APPROVED;
+        Events.raise(DoneOrderEvent.from(this));
+    }
+
+    /** 선착순 방식의 0원 결제입니다. */
+    public void freeConfirm() {
+        validPaymentOrder();
+        orderStatus.validCanPaymentConfirm();
         this.approvedAt = LocalDateTime.now();
         this.orderStatus = OrderStatus.APPROVED;
         Events.raise(DoneOrderEvent.from(this));

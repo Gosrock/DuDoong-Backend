@@ -27,7 +27,9 @@ public class CartResponse {
     @Schema(description = "전체 아이템 수량을 의미합니다", defaultValue = "3")
     private final Long totalQuantity;
 
-    @Schema(description = "결제가 필요한지에 대한 여부를 결정합니다. 필요한 true면 결제창 띄우시면됩니다. 이단계에선 무시하셔도 됩니다.", defaultValue = "true")
+    @Schema(
+            description = "결제가 필요한지에 대한 여부를 결정합니다. 필요한 true면 결제창 띄우시면됩니다. 이단계에선 무시하셔도 됩니다.",
+            defaultValue = "true")
     private final Boolean isNeedPayment;
 
     @Schema(description = "티켓의 타입. 승인방식 , 결제방식 두가지입니다.")

@@ -72,6 +72,12 @@ public class OrderController {
         return approveOrderUseCase.execute(orderUuid);
     }
 
+    @Operation(summary = "주문을 무료로 결제합니다. 선착순 방식 결제 0원일 때 지원")
+    @PostMapping("/{order_uuid}/free")
+    public OrderResponse freeOrder(@PathVariable("order_uuid") String orderUuid) {
+        return approveOrderUseCase.execute(orderUuid);
+    }
+
     @Operation(summary = "결제 취소요청. 호스트 관리자가 결제를 취소 시킵니다.! (호스트 관리자용(관리자쪽에서 사용))")
     @PostMapping("/{order_uuid}/cancel")
     public OrderResponse cancelOrder(@PathVariable("order_uuid") String orderUuid) {
