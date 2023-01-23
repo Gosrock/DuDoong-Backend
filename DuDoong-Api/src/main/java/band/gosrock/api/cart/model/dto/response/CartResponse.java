@@ -3,6 +3,7 @@ package band.gosrock.api.cart.model.dto.response;
 
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.cart.domain.Cart;
+import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.Builder;
@@ -30,7 +31,7 @@ public class CartResponse {
     private final Boolean isNeedPayment;
 
     @Schema(description = "결제가 필요한지에 대한 여부를 결정합니다. 필요한 true면 결제창 띄우시면됩니다.", defaultValue = "true")
-    private final Boolean isNeedPayment;
+    private final TicketType ticketType;
 
     public static CartResponse of(List<CartItemResponse> cartItemResponses, Cart cart) {
         return CartResponse.builder()
