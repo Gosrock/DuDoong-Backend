@@ -9,7 +9,6 @@ import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.host.domain.HostRole;
-import band.gosrock.domain.domains.host.exception.ForbiddenHostOperationException;
 import band.gosrock.domain.domains.host.service.HostService;
 import band.gosrock.domain.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;

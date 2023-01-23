@@ -8,8 +8,6 @@ import band.gosrock.domain.domains.host.domain.HostProfile;
 import band.gosrock.domain.domains.host.domain.HostRole;
 import band.gosrock.domain.domains.host.domain.HostUser;
 import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException;
-import band.gosrock.domain.domains.host.exception.NotMasterHostException;
-import band.gosrock.domain.domains.host.exception.NotSuperHostException;
 import band.gosrock.domain.domains.host.repository.HostRepository;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +43,11 @@ public class HostService {
 
     public Host updateHostProfile(Host host, HostProfile profile) {
         host.setProfile(profile);
+        return hostRepository.save(host);
+    }
+
+    public Host updateHostSlackUrl(Host host, String url) {
+        host.setSlackUrl(url);
         return hostRepository.save(host);
     }
 

@@ -60,7 +60,7 @@ public class HostController {
         return inviteHostUseCase.execute(hostId, inviteHostRequest);
     }
 
-    @Operation(summary = "호스트 유저의 권한을 변경합니다.")
+    @Operation(summary = "호스트 유저의 권한을 변경합니다.  슈퍼 호스트 이상만 가능합니다.")
     @PatchMapping("/{hostId}/role")
     public HostDetailResponse patchHostUserRole(
             @PathVariable Long hostId,
@@ -69,14 +69,14 @@ public class HostController {
     }
 
     // todo :: 슈퍼 호스트 이상으로?
-    @Operation(summary = "호스트 정보를 변경합니다. 마스터 호스트만 가능합니다.")
+    @Operation(summary = "호스트 정보를 변경합니다. 슈퍼 호스트 이상만 가능합니다.")
     @PatchMapping("/{hostId}/profile")
     public HostDetailResponse patchHostById(
             @PathVariable Long hostId, @RequestBody @Valid UpdateHostRequest updateHostRequest) {
         return updateHostProfileUseCase.execute(hostId, updateHostRequest);
     }
 
-    @Operation(summary = "호스트 슬랙 알람 URL 을 변경합니다. 마스터 호스트만 가능합니다.")
+    @Operation(summary = "호스트 슬랙 알람 URL 을 변경합니다. 슈퍼 호스트 이상만 가능합니다.")
     @PatchMapping("/{hostId}/slack")
     public HostDetailResponse patchHostSlackUrlById(
             @PathVariable Long hostId,

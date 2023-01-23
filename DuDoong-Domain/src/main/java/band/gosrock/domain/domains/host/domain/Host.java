@@ -4,12 +4,11 @@ package band.gosrock.domain.domains.host.domain;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.domains.host.exception.ForbiddenHostOperationException;
 import band.gosrock.domain.domains.host.exception.HostUserNotFoundException;
+import band.gosrock.domain.domains.host.exception.NotMasterHostException;
+import band.gosrock.domain.domains.host.exception.NotSuperHostException;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.*;
-
-import band.gosrock.domain.domains.host.exception.NotMasterHostException;
-import band.gosrock.domain.domains.host.exception.NotSuperHostException;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;

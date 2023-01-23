@@ -31,7 +31,7 @@ public class UpdateHostProfileUseCase {
         // 슈퍼 호스트 검증
         host.validateSuperHostUser(userId);
 
-
-        return hostMapper.toHostDetailResponse(hostService.updateHostProfile(host, hostMapper.toHostProfile(updateHostRequest)));
+        return hostMapper.toHostDetailResponse(
+                hostService.updateHostProfile(host, hostMapper.toHostProfile(updateHostRequest)));
     }
 }
