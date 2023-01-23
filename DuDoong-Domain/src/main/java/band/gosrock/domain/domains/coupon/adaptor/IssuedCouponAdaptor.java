@@ -2,7 +2,6 @@ package band.gosrock.domain.domains.coupon.adaptor;
 
 
 import band.gosrock.common.annotation.Adaptor;
-import band.gosrock.domain.domains.coupon.domain.CouponCampaign;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import band.gosrock.domain.domains.coupon.exception.AlreadyIssuedCouponException;
 import band.gosrock.domain.domains.coupon.repository.IssuedCouponRepository;
@@ -22,9 +21,9 @@ public class IssuedCouponAdaptor {
         return issuedCouponRepository.save(issuedCoupon);
     }
 
-    public void checkIssuedCouponExists(CouponCampaign couponCampaign, Long userId) {
+    public void exist(Long couponCampaignId, Long userId) {
         issuedCouponRepository
-                .findByCouponCampaignAndUserId(couponCampaign, userId)
+                .findByCouponCampaignIdAndUserId(couponCampaignId, userId)
                 .ifPresent(
                         l -> {
                             throw AlreadyIssuedCouponException.EXCEPTION;
