@@ -26,6 +26,8 @@ public class CreateOrderResponse {
     @Schema(description = "결제금액")
     private final Money amount;
 
+    @Schema(description = "결제가 필요한지에 대한 여부를 결정합니다. 필요한 true면 결제창 띄우시면됩니다.", defaultValue = "true")
+    private final Boolean isNeedPayment;
     public static CreateOrderResponse from(Order order, Profile profile) {
         return CreateOrderResponse.builder()
                 .customerEmail(profile.getEmail())
@@ -33,6 +35,7 @@ public class CreateOrderResponse {
                 .orderName(order.getOrderName())
                 .orderId(order.getUuid())
                 .amount(order.getTotalPaymentPrice())
+                .isNeedPayment(order.isNeedPayment())
                 .build();
     }
 }
