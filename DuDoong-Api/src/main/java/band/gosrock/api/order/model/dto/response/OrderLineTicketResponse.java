@@ -38,6 +38,9 @@ public class OrderLineTicketResponse {
     @Schema(description = "옵션의 응답 목록")
     private List<OptionAnswerVo> answers;
 
+    @Schema(description = "각 옵션 가격")
+    private final Money eachOptionPrice;
+
     public static OrderLineTicketResponse of(
             Order order, OrderLineItem orderLineItem, String userName, String ticketNos) {
         return OrderLineTicketResponse.builder()
@@ -49,6 +52,7 @@ public class OrderLineTicketResponse {
                 .userName(userName)
                 .orderLinePrice(orderLineItem.getTotalOrderLinePrice())
                 .purchaseQuantity(orderLineItem.getQuantity())
+                .eachOptionPrice(orderLineItem.getOptionAnswersPrice())
                 .build();
     }
 }

@@ -58,7 +58,7 @@ class OrderLineItemTest {
         given(orderOptionAnswer2.getOptionPrice()).willReturn(optionAnswerPrice2);
 
         // when
-        Money totalOptionAnswersPrice = orderLineItem.getTotalOptionAnswersPrice();
+        Money totalOptionAnswersPrice = orderLineItem.getOptionAnswersPrice();
         // then
         assertEquals(totalOptionAnswersPrice, optionAnswerPrice1.plus(optionAnswerPrice2));
     }
