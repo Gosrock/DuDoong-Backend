@@ -76,7 +76,7 @@ public class OrderLineItem extends BaseTimeEntity {
     /** ---------------------------- 조회용 메서드 ---------------------------------- */
 
     /** 응답한 옵션들의 총 가격을 불러옵니다. */
-    protected Money getTotalOptionAnswersPrice() {
+    public Money getOptionAnswersPrice() {
         return orderOptionAnswer.stream()
                 .map(OrderOptionAnswer::getOptionPrice)
                 .reduce(Money.ZERO, Money::plus);
@@ -84,7 +84,7 @@ public class OrderLineItem extends BaseTimeEntity {
 
     /** 카트라인의 총 가격을 가져옵니다. 상품 + 옵션답변의 가격 */
     public Money getTotalOrderLinePrice() {
-        return getItemPrice().plus(getTotalOptionAnswersPrice()).times(quantity);
+        return getItemPrice().plus(getOptionAnswersPrice()).times(quantity);
     }
     /** 상품의 가격을 가져옵니다. */
     public Money getItemPrice() {
