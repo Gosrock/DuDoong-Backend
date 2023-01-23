@@ -37,8 +37,7 @@ public class OrderEventHandler {
                 order.getOrderLineItems().stream()
                         .map(orderLineItem -> new CreateIssuedTicketDTO(order, orderLineItem, user))
                         .toList();
-        issuedTicketDomainService.createIssuedTicket(
-                order.getItem(), createIssuedTicketDTOS);
+        issuedTicketDomainService.createIssuedTicket(order.getItem(), createIssuedTicketDTOS);
         log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 티켓 생성작업 완료");
     }
 }

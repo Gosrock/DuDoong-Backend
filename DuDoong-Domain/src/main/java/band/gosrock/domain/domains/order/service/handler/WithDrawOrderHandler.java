@@ -33,8 +33,7 @@ public class WithDrawOrderHandler {
         OrderStatus orderStatus = withDrawOrderEvent.getOrderStatus();
         Order order = orderAdaptor.findByOrderUuid(withDrawOrderEvent.getOrderUuid());
         // 결제를 하지않았던 주문이라면?
-        if(!order.isPaid())
-            return;
+        if (!order.isPaid()) return;
 
         String reason = "결제 취소";
         if (orderStatus.equals(OrderStatus.CANCELED)) {

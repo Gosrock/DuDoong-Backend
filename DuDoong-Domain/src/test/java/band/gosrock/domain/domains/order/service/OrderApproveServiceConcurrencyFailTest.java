@@ -37,7 +37,7 @@ class OrderApproveServiceConcurrencyFailTest {
 
     @BeforeEach
     void setUp() {
-        given(orderLineItem.isNeedPayment()).willReturn(Boolean.FALSE);
+        given(orderLineItem.isNeedPaid()).willReturn(Boolean.FALSE);
         order =
                 Order.builder()
                         .orderStatus(OrderStatus.PENDING_APPROVE)

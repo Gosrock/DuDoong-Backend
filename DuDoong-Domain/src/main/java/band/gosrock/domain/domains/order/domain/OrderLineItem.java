@@ -99,7 +99,7 @@ public class OrderLineItem extends BaseTimeEntity {
         return orderOptionAnswer.stream().map(OrderOptionAnswer::getOptionAnswerVo).toList();
     }
     /** 결제가 필요한 오더라인인지 가져옵니다. */
-    public Boolean isNeedPayment() {
+    public Boolean isNeedPaid() {
         Money totalOrderLinePrice = getTotalOrderLinePrice();
         // 0 < totalOrderLinePrice
         return Money.ZERO.isLessThan(totalOrderLinePrice);

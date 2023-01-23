@@ -12,6 +12,7 @@ import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
 import band.gosrock.domain.domains.order.exception.NotApprovalOrderException;
+import band.gosrock.domain.domains.order.exception.NotFreeOrderException;
 import band.gosrock.domain.domains.order.exception.NotOwnerOrderException;
 import band.gosrock.domain.domains.order.exception.NotPaymentOrderException;
 import band.gosrock.domain.domains.order.exception.NotRefundAvailableDateOrderException;
@@ -189,6 +190,7 @@ public class Order extends BaseTimeEntity {
     /** 선착순 방식의 0원 결제입니다. */
     public void freeConfirm() {
         validPaymentOrder();
+        validFreeOrder();
         orderStatus.validCanPaymentConfirm();
         this.approvedAt = LocalDateTime.now();
         this.orderStatus = OrderStatus.APPROVED;
@@ -244,15 +246,24 @@ public class Order extends BaseTimeEntity {
         }
     }
 
+    /** 주문 방식이 결제 방식인지 검증합니다. */
     public void validPaymentOrder() {
         if (!orderMethod.isPayment()) {
             throw NotPaymentOrderException.EXCEPTION;
         }
     }
 
+    /** 환불 가능한 시점인지 검증합니다. */
     public void validCanRefundDate() {
         if (!canRefundDate()) {
             throw NotRefundAvailableDateOrderException.EXCEPTION;
+        }
+    }
+
+    /** 무료 주문인지 검증합니다. */
+    public void validFreeOrder() {
+        if (isNeedPaid()) {
+            throw NotFreeOrderException.EXCEPTION;
         }
     }
 
@@ -321,15 +332,15 @@ public class Order extends BaseTimeEntity {
         return getOrderLineItem().getTicketItem();
     }
 
-    /** 주문에서 티켓 상품의 타입을 반환합니다.*/
+    /** 주문에서 티켓 상품의 타입을 반환합니다. */
     public TicketType getItemType() {
         return getItem().getType();
     }
 
     /** 결제가 필요한 오더인지 반환합니다. */
-    public Boolean isNeedPayment() {
+    public Boolean isNeedPaid() {
         return this.orderLineItems.stream()
-                .map(OrderLineItem::isNeedPayment)
+                .map(OrderLineItem::isNeedPaid)
                 .reduce(Boolean.FALSE, (Boolean::logicalOr));
     }
 
@@ -360,9 +371,8 @@ public class Order extends BaseTimeEntity {
     }
 
     /** PG 사를 통해 결제가 된 주문인지 반환합니다. */
-    public Boolean isPaid(){
-        if(isNeedPayment())
-            return Boolean.TRUE;
+    public Boolean isPaid() {
+        if (isNeedPaid()) return Boolean.TRUE;
         return Boolean.FALSE;
     }
 }

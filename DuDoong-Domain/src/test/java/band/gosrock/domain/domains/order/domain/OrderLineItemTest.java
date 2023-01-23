@@ -90,7 +90,7 @@ class OrderLineItemTest {
         given(ticketItem.getPrice()).willReturn(Money.ZERO);
 
         // when
-        Boolean needPayment = orderLineItem.isNeedPayment();
+        Boolean needPayment = orderLineItem.isNeedPaid();
 
         assertTrue(needPayment);
     }
@@ -103,7 +103,7 @@ class OrderLineItemTest {
         given(ticketItem.getPrice()).willReturn(money3000);
 
         // when
-        Boolean needPayment = orderLineItem.isNeedPayment();
+        Boolean needPayment = orderLineItem.isNeedPaid();
 
         assertTrue(needPayment);
     }
@@ -116,7 +116,7 @@ class OrderLineItemTest {
         given(ticketItem.getPrice()).willReturn(Money.ZERO);
 
         // when
-        Boolean needPayment = orderLineItem.isNeedPayment();
+        Boolean needPayment = orderLineItem.isNeedPaid();
 
         assertFalse(needPayment);
     }
