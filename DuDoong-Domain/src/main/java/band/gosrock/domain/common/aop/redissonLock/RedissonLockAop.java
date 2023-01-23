@@ -107,9 +107,10 @@ public class RedissonLockAop {
     public String createDynamicKeyFromObject(
             Object[] args, Class<?> paramClassType, String identifier)
             throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        String name = paramClassType.getSimpleName();
+        String paramClassName = paramClassType.getSimpleName();
         for (int i = 0; i < args.length; i++) {
-            if (args[i].getClass().getSimpleName().equals(name)) {
+            String argsClassName = args[i].getClass().getSimpleName();
+            if (argsClassName.startsWith(paramClassName)) {
                 Class<?> aClass = args[i].getClass();
                 String capitalize = StringUtils.capitalize(identifier);
                 Object result = aClass.getMethod("get" + capitalize).invoke(args[i]);
