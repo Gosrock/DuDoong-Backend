@@ -13,6 +13,8 @@ dependencies {
     annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jpa" // querydsl JPAAnnotationProcessor 사용 지정
     annotationProcessor("jakarta.persistence:jakarta.persistence-api")
     annotationProcessor("jakarta.annotation:jakarta.annotation-api")
+    //for @Nullable  https://velog.io/@saintho/javaxannotationmetawhennotfound
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
 }
 //https://jojoldu.tistory.com/372
 def generated='src/main/generated'
