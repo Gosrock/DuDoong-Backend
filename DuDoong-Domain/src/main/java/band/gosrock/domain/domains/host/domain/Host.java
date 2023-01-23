@@ -19,12 +19,7 @@ public class Host extends BaseTimeEntity {
     @Column(name = "host_id")
     private Long id;
 
-    // 대표자 이메일
-    private String contactEmail;
-
-    // 대표자 연락처
-    @Column(length = 15)
-    private String contactNumber;
+    @Embedded private HostProfile profile;
 
     // 마스터 유저 id
     private Long masterUserId;
@@ -32,7 +27,10 @@ public class Host extends BaseTimeEntity {
     // 파트너 여부
     private Boolean partner;
 
-    //         단방향 oneToMany 매핑
+    // 슬랙 웹훅 url
+    private String slackUrl;
+
+    // 단방향 oneToMany 매핑
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "host_user_id")
     private Set<HostUser> hostUsers = new HashSet<>();
@@ -45,6 +43,14 @@ public class Host extends BaseTimeEntity {
         return this.hostUsers.stream().anyMatch(hostUser -> hostUser.getUserId().equals(userId));
     }
 
+    public void setProfile(HostProfile hostProfile) {
+        this.profile = hostProfile;
+    }
+
+    public void setSlackUrl(String slackUrl) {
+        this.slackUrl = slackUrl;
+    }
+
     public Boolean isSuperHostUserId(Long userId) {
         return this.hostUsers.stream()
                 .anyMatch(
@@ -54,10 +60,26 @@ public class Host extends BaseTimeEntity {
     }
 
     @Builder
-    public Host(String contactEmail, String contactNumber, Long masterUserId) {
-        this.contactEmail = contactEmail;
-        this.contactNumber = contactNumber;
+    public Host(
+            String name,
+            String introduce,
+            String since,
+            String profileImageUrl,
+            String contactEmail,
+            String contactNumber,
+            String slackUrl,
+            Long masterUserId) {
+        this.profile =
+                HostProfile.builder()
+                        .name(name)
+                        .introduce(introduce)
+                        .since(since)
+                        .profileImageUrl(profileImageUrl)
+                        .contactEmail(contactEmail)
+                        .contactNumber(contactNumber)
+                        .build();
         this.masterUserId = masterUserId;
+        this.slackUrl = slackUrl;
         this.partner = false; // 정책상 초기값 false 로 고정입니다
     }
 }

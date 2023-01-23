@@ -2,11 +2,13 @@ package band.gosrock.api.host.model.mapper;
 
 
 import band.gosrock.api.host.model.dto.request.CreateHostRequest;
+import band.gosrock.api.host.model.dto.request.UpdateHostRequest;
 import band.gosrock.api.host.model.dto.response.HostDetailResponse;
 import band.gosrock.common.annotation.Mapper;
 import band.gosrock.domain.common.vo.UserInfoVo;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
+import band.gosrock.domain.domains.host.domain.HostProfile;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
 import java.util.HashSet;
@@ -24,9 +26,22 @@ public class HostMapper {
     @Transactional(readOnly = true)
     public Host toEntity(CreateHostRequest createHostRequest, Long masterUserId) {
         return Host.builder()
+                .name(createHostRequest.getName())
                 .contactEmail(createHostRequest.getContactEmail())
                 .contactNumber(createHostRequest.getContactNumber())
                 .masterUserId(masterUserId)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public HostProfile toHostProfile(UpdateHostRequest updateHostRequest) {
+        return HostProfile.builder()
+                .name(updateHostRequest.getName())
+                .introduce(updateHostRequest.getIntroduce())
+                .since(updateHostRequest.getSince())
+                .profileImageUrl(updateHostRequest.getProfileImageUrl())
+                .contactEmail(updateHostRequest.getContactEmail())
+                .contactNumber(updateHostRequest.getContactNumber())
                 .build();
     }
 

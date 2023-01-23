@@ -1,13 +1,13 @@
 package band.gosrock.api.host.model.dto.response;
 
 
-import band.gosrock.domain.domains.host.domain.Host;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder
+@Deprecated
 public class CreateHostResponse {
     @Schema(description = "담당자 이메일")
     private final String contactEmail;
@@ -22,12 +22,12 @@ public class CreateHostResponse {
     @Schema(description = "파트너쉽 여부")
     private final boolean partner;
 
-    public static CreateHostResponse of(Host host) {
-        return CreateHostResponse.builder()
-                .contactEmail(host.getContactEmail())
-                .contactNumber(host.getContactNumber())
-                .masterUserId(host.getMasterUserId()) // todo:: 마스터 정보 나오도록
-                .partner(host.getPartner())
-                .build();
-    }
+    //    public static CreateHostResponse of(Host host) {
+    //        return CreateHostResponse.builder()
+    //                .contactEmail(host.getContactEmail())
+    //                .contactNumber(host.getContactNumber())
+    //                .masterUserId(host.getMasterUserId()) // todo:: 마스터 정보 나오도록
+    //                .partner(host.getPartner())
+    //                .build();
+    //    }
 }

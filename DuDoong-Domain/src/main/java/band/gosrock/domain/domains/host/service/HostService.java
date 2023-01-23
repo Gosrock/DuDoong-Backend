@@ -24,6 +24,10 @@ public class HostService {
         return hostRepository.save(host);
     }
 
+    public Host save(Host host) {
+        return hostRepository.save(host);
+    }
+
     public Host addHostUser(Host host, HostUser hostUser) {
         host.addHostUsers(Set.of(hostUser));
         return hostRepository.save(host);
@@ -39,6 +43,13 @@ public class HostService {
     /** 해당 유저가 호스트의 마스터(담당자, 방장)인지 확인하는 검증 로직입니다 */
     public void validateMasterUser(Long hostId, Long userId) {
         Host host = hostAdaptor.findById(hostId);
+        if (host.getMasterUserId().equals(userId)) {
+            return;
+        }
+        throw NotMasterHostException.EXCEPTION;
+    }
+
+    public void validateMasterUser(Host host, Long userId) {
         if (host.getMasterUserId().equals(userId)) {
             return;
         }

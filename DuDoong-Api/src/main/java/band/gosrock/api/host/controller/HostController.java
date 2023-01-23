@@ -2,12 +2,11 @@ package band.gosrock.api.host.controller;
 
 
 import band.gosrock.api.host.model.dto.request.CreateHostRequest;
+import band.gosrock.api.host.model.dto.request.UpdateHostRequest;
+import band.gosrock.api.host.model.dto.request.UpdateHostSlackRequest;
 import band.gosrock.api.host.model.dto.response.HostDetailResponse;
 import band.gosrock.api.host.model.dto.response.HostResponse;
-import band.gosrock.api.host.service.CreateHostUseCase;
-import band.gosrock.api.host.service.JoinHostUseCase;
-import band.gosrock.api.host.service.ReadHostListUseCase;
-import band.gosrock.api.host.service.ReadHostUseCase;
+import band.gosrock.api.host.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,6 +25,8 @@ public class HostController {
     private final ReadHostUseCase readHostUseCase;
     private final ReadHostListUseCase readHostListUseCase;
     private final CreateHostUseCase createHostUseCase;
+    private final UpdateHostProfileUseCase updateHostProfileUseCase;
+    private final UpdateHostSlackUrlUseCase updateHostSlackUrlUseCase;
     private final JoinHostUseCase joinHostUseCase;
 
     @Operation(summary = "내가 속한 호스트 리스트를 가져옵니다.")
@@ -34,10 +35,27 @@ public class HostController {
         return readHostListUseCase.execute();
     }
 
-    @Operation(summary = "새로운 호스트를 생성합니다. 호스트를 생성한 유저 자신은 슈퍼호스트가 됩니다.")
+    @Operation(summary = "호스트 간편 생성. 호스트를 생성한 유저 자신은 마스터 호스트가 됩니다.")
     @PostMapping
     public HostResponse createHost(@RequestBody @Valid CreateHostRequest createEventRequest) {
         return createHostUseCase.execute(createEventRequest);
+    }
+
+
+    // todo :: 슈퍼 호스트 이상으로?
+    @Operation(summary = "호스트 정보를 변경합니다. 마스터 호스트만 가능합니다.")
+    @PatchMapping("/{hostId}/profile")
+    public HostDetailResponse patchHostById(
+            @PathVariable Long hostId, @RequestBody @Valid UpdateHostRequest updateHostRequest) {
+        return updateHostProfileUseCase.execute(hostId, updateHostRequest);
+    }
+
+    @Operation(summary = "호스트 슬랙 알람 URL 을 변경합니다. 마스터 호스트만 가능합니다.")
+    @PatchMapping("/{hostId}/slack")
+    public HostDetailResponse patchHostSlackUrlById(
+            @PathVariable Long hostId,
+            @RequestBody @Valid UpdateHostSlackRequest updateHostSlackRequest) {
+        return updateHostSlackUrlUseCase.execute(hostId, updateHostSlackRequest);
     }
 
     @Operation(summary = "내가 속해있는, 고유 아이디에 해당하는 호스트 정보를 가져옵니다.")
