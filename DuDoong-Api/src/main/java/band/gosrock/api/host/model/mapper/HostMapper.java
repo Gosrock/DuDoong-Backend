@@ -53,9 +53,9 @@ public class HostMapper {
     }
 
     /** 역할 지정하여 주입하는 생성자 */
-    public HostUser toHostUser(Long hostId, Long userId, HostRole hostRole) {
+    public HostUser toSuperHostUser(Long hostId, Long userId) {
         final Host host = hostAdaptor.findById(hostId);
-        return HostUser.builder().userId(userId).host(host).role(hostRole).build();
+        return HostUser.builder().userId(userId).host(host).role(HostRole.SUPER_HOST).build();
     }
 
     @Transactional(readOnly = true)

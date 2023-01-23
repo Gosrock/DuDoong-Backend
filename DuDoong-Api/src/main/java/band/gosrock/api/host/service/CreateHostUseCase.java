@@ -7,7 +7,6 @@ import band.gosrock.api.host.model.dto.response.HostResponse;
 import band.gosrock.api.host.model.mapper.HostMapper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.host.domain.Host;
-import band.gosrock.domain.domains.host.domain.HostRole;
 import band.gosrock.domain.domains.host.service.HostService;
 import band.gosrock.domain.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +29,6 @@ public class CreateHostUseCase {
         hostService.createHost(host);
 
         return HostResponse.of(
-                hostService.addHostUser(
-                        host, hostMapper.toHostUser(host.getId(), userId, HostRole.SUPER_HOST)));
+                hostService.addHostUser(host, hostMapper.toSuperHostUser(host.getId(), userId)));
     }
 }
