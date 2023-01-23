@@ -38,4 +38,16 @@ public class Option {
     public Long getOptionGroupId() {
         return this.optionGroup.getId();
     }
+
+    public String getQuestionDescription() {
+        return this.optionGroup.getDescription();
+    }
+
+    public String getQuestionName() {
+        return this.optionGroup.getName();
+    }
+
+    public OptionGroupType getQuestionType() {
+        return this.optionGroup.getType();
+    }
 }

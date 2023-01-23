@@ -60,15 +60,15 @@ public class OrderOptionAnswer extends BaseTimeEntity {
     }
 
     protected String getQuestionDescription() {
-        return option.getOptionGroup().getDescription();
+        return option.getQuestionDescription();
     }
 
     protected String getQuestionName() {
-        return option.getOptionGroup().getName();
+        return option.getQuestionName();
     }
 
     protected OptionGroupType getQuestionType() {
-        return option.getOptionGroup().getType();
+        return option.getQuestionType();
     }
 
     public OptionAnswerVo getOptionAnswerVo() {
@@ -77,7 +77,7 @@ public class OrderOptionAnswer extends BaseTimeEntity {
                 .answer(answer)
                 .optionGroupType(getQuestionType())
                 .questionName(getQuestionName())
-                .additionalPrice(getOptionPrice().toString())
+                .additionalPrice(getOptionPrice())
                 .build();
     }
 }
