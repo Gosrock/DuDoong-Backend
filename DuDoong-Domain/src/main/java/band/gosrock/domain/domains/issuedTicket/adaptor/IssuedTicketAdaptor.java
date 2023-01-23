@@ -55,7 +55,7 @@ public class IssuedTicketAdaptor {
         return issuedTicketRepository.searchToPage(condition, pageRequest);
     }
 
-    public void delete(IssuedTicket issuedTicket) {
+    public void cancel(IssuedTicket issuedTicket) {
         issuedTicket.cancel();
     }
 

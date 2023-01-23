@@ -46,7 +46,7 @@ public class IssuedTicketDomainService {
         issuedTickets.forEach(
                 issuedTicket -> {
                     issuedTicket.getTicketItem().increaseQuantity(1L);
-                    issuedTicketAdaptor.delete(issuedTicket);
+                    issuedTicketAdaptor.cancel(issuedTicket);
                 });
     }
 
