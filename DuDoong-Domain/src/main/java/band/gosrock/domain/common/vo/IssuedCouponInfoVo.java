@@ -1,6 +1,7 @@
 package band.gosrock.domain.common.vo;
 
 
+import band.gosrock.common.annotation.DateFormat;
 import band.gosrock.domain.domains.coupon.domain.ApplyTarget;
 import band.gosrock.domain.domains.coupon.domain.DiscountType;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
@@ -28,10 +29,7 @@ public class IssuedCouponInfoVo {
     private final Long discountAmount;
 
     // 쿠폰 사용 가능 마감 시각
-    @JsonFormat(
-            shape = JsonFormat.Shape.STRING,
-            pattern = "yyyy-MM-dd hh:mm:ss",
-            timezone = "Asia/Seoul")
+    @DateFormat
     private final LocalDateTime validDateTime;
 
     public static IssuedCouponInfoVo of(IssuedCoupon issuedCoupon) {

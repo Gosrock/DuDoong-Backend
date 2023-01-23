@@ -1,6 +1,7 @@
 package band.gosrock.api.coupon.dto.response;
 
 
+import band.gosrock.common.annotation.DateFormat;
 import band.gosrock.domain.domains.coupon.domain.DiscountType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
@@ -21,7 +22,11 @@ public class CreateUserCouponResponse {
     private final String couponCode;
 
     // TODO : DateFormat 어노테이션 적용
-    @Schema(description = "유효 기간")
+    @Schema(
+            type = "string",
+            pattern = "yyyy-MM-dd HH:mm",
+            description = "쿠폰 유효 기간")
+    @DateFormat
     private final LocalDateTime validTerm;
 
     @Schema(description = "할인타입(정액,정률)")

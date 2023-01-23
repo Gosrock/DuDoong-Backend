@@ -1,6 +1,7 @@
 package band.gosrock.api.coupon.dto.reqeust;
 
 
+import band.gosrock.common.annotation.DateFormat;
 import band.gosrock.domain.common.vo.DateTimePeriod;
 import band.gosrock.domain.domains.coupon.domain.*;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -32,12 +33,22 @@ public class CreateCouponCampaignRequest {
     private Long validTerm;
 
     // 쿠폰 발행 시작 시각
+    @Schema(
+            type = "string",
+            pattern = "yyyy-MM-dd HH:mm",
+            description = "쿠폰 발행 시작 시간")
     @NotNull(message = "startAt을 입력해주세요.")
+    @DateFormat
     private LocalDateTime startAt;
 
     // 쿠폰 발행 마감 시각
+    @Schema(
+            type = "string",
+            pattern = "yyyy-MM-dd HH:mm",
+            description = "쿠폰 발행 마감 시간")
     @NotNull(message = "endAt을 입력해주세요.")
     @Future(message = "endAt은 값이 미래여야합니다.")
+    @DateFormat
     private LocalDateTime endAt;
 
     @NotNull(message = "issuedAmount을 입력해주세요.")
