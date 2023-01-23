@@ -1,7 +1,7 @@
 package band.gosrock.api.host.service;
 
 
-import band.gosrock.api.config.security.SecurityUtils;
+import band.gosrock.api.common.UserUtils;
 import band.gosrock.api.host.model.dto.request.CreateHostRequest;
 import band.gosrock.api.host.model.dto.response.HostResponse;
 import band.gosrock.api.host.model.mapper.HostMapper;
@@ -10,23 +10,21 @@ import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.host.domain.HostRole;
 import band.gosrock.domain.domains.host.service.HostService;
 import band.gosrock.domain.domains.user.domain.User;
-import band.gosrock.domain.domains.user.service.UserDomainService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
 @UseCase
 @RequiredArgsConstructor
 public class CreateHostUseCase {
-
-    private final UserDomainService userDomainService;
+    private final UserUtils userUtils;
     private final HostService hostService;
     private final HostMapper hostMapper;
 
     @Transactional
     public HostResponse execute(CreateHostRequest createHostRequest) {
-        final Long userId = SecurityUtils.getCurrentUserId();
         // 존재하는 유저인지 검증
-        final User user = userDomainService.retrieveUser(userId);
+        final User user = userUtils.getCurrentUser();
+        final Long userId = user.getId();
         // 호스트 생성
         final Host host = hostMapper.toEntity(createHostRequest, userId);
         hostService.createHost(host);
