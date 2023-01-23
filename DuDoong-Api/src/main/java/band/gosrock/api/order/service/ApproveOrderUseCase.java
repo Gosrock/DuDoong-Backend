@@ -1,7 +1,6 @@
 package band.gosrock.api.order.service;
 
 
-import band.gosrock.api.config.security.SecurityUtils;
 import band.gosrock.api.order.model.dto.response.OrderResponse;
 import band.gosrock.api.order.model.mapper.OrderMapper;
 import band.gosrock.common.annotation.UseCase;
@@ -18,8 +17,7 @@ public class ApproveOrderUseCase {
 
     public OrderResponse execute(String orderUuid) {
         // TODO : 권한 체크 ( 호스트 관리자인지 )
-        Long currentUserId = SecurityUtils.getCurrentUserId();
-        String confirmOrderUuid = orderApproveService.execute(orderUuid, currentUserId);
+        String confirmOrderUuid = orderApproveService.execute(orderUuid);
         return orderMapper.toOrderResponse(confirmOrderUuid);
     }
 }

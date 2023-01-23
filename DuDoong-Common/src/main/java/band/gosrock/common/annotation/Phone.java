@@ -7,7 +7,7 @@ import javax.validation.Constraint;
 
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = PhoneValidator.class) // 3
+@Constraint(validatedBy = PhoneValidator.class)
 public @interface Phone {
     String message() default "";
 

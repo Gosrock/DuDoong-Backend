@@ -6,7 +6,7 @@ import javax.validation.*;
 
 public class PhoneValidator implements ConstraintValidator<Phone, String> {
     @Override
-    public boolean isValid(String value, ConstraintValidatorContext context) { // 2
+    public boolean isValid(String value, ConstraintValidatorContext context) {
         if (value == null) {
             return false;
         }

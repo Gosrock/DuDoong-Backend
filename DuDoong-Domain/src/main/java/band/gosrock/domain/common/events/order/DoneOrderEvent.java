@@ -23,7 +23,7 @@ public class DoneOrderEvent extends DomainEvent {
     public static DoneOrderEvent from(Order order) {
         return DoneOrderEvent.builder()
                 .orderMethod(order.getOrderMethod())
-                .paymentKey(order.getPaymentKey())
+                .paymentKey(order.isNeedPayment() ? order.getPaymentKey() : null)
                 .userId(order.getUserId())
                 .orderUuid(order.getUuid())
                 .build();

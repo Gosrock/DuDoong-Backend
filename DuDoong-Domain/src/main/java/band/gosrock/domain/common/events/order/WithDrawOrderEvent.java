@@ -23,7 +23,7 @@ public class WithDrawOrderEvent extends DomainEvent {
     public static WithDrawOrderEvent from(Order order) {
         return WithDrawOrderEvent.builder()
                 .orderMethod(order.getOrderMethod())
-                .paymentKey(order.getPaymentKey())
+                .paymentKey(order.isNeedPayment() ? order.getPaymentKey() : null)
                 .userId(order.getUserId())
                 .orderUuid(order.getUuid())
                 .orderStatus(order.getOrderStatus())
