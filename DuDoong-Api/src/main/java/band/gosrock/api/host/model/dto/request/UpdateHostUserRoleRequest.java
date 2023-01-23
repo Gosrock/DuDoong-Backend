@@ -19,6 +19,6 @@ public class UpdateHostUserRoleRequest {
     private Long userId;
 
     @Schema(defaultValue = "HOST", description = "호스트 유저 역할")
-    @Enum(enumClass = HostRole.class, message = "HOST 또는 SUPER_HOST 만 허용됩니다")
+    @Enum(message = "HOST 또는 SUPER_HOST 만 허용됩니다")
     private HostRole role;
 }
