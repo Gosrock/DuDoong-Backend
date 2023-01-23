@@ -19,7 +19,8 @@ public enum IssuedTicketErrorCode implements BaseErrorCode {
             BAD_REQUEST, "IssuedTicket_400_1", "IssuedTicket User Not Matched"),
     CAN_NOT_CANCEL(BAD_REQUEST, "IssuedTicket_400_2", "티켓을 취소 할 수 있는 상태가 아닙니다."),
     CAN_NOT_CANCEL_ENTRANCE(BAD_REQUEST, "IssuedTicket_400_3", "티켓이 입장 취소 할 수 있는 상태가 아닙니다."),
-    CAN_NOT_ENTRANCE(BAD_REQUEST, "IssuedTicket_400_5", "티켓이 입장 할 수 있는 상태가 아닙니다.");
+    CAN_NOT_ENTRANCE(BAD_REQUEST, "IssuedTicket_400_4", "티켓이 입장 할 수 있는 상태가 아닙니다."),
+    ISSUED_TICKET_ALREADY_ENTRANCE(BAD_REQUEST, "IssuedTicket_400_5", "이미 입장 처리된 티켓입니다.");
 
     private Integer status;
     private String code;

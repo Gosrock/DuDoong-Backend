@@ -32,7 +32,7 @@ public class IssuedTicketAdaptor {
         return issuedTicketRepository.findAllByOrderLineId(orderLineId);
     }
 
-    public IssuedTicket find(Long currentUserId, Long issuedTicketId) {
+    public IssuedTicket findForUser(Long currentUserId, Long issuedTicketId) {
         IssuedTicket issuedTicket =
                 issuedTicketRepository
                         .find(issuedTicketId)
@@ -41,6 +41,12 @@ public class IssuedTicketAdaptor {
             throw IssuedTicketUserNotMatchedException.EXCEPTION;
         }
         return issuedTicket;
+    }
+
+    public IssuedTicket find(Long issuedTicketId) {
+        return issuedTicketRepository
+                .find(issuedTicketId)
+                .orElseThrow(() -> IssuedTicketNotFoundException.EXCEPTION);
     }
 
     public Page<IssuedTicket> searchIssuedTicket(Long page, IssuedTicketCondition condition) {

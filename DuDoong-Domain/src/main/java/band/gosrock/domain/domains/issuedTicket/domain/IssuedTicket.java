@@ -11,6 +11,7 @@ import band.gosrock.domain.domains.issuedTicket.dto.response.CreateIssuedTicketR
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelEntranceException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotEntranceException;
+import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketAlreadyEntranceException;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.user.domain.User;
 import java.util.ArrayList;
@@ -236,8 +237,11 @@ public class IssuedTicket extends BaseTimeEntity {
     티켓이 입장 미완료 상태가 아니면 입장 할 수 없음
      */
     public void entrance() {
-        if (this.issuedTicketStatus != IssuedTicketStatus.ENTRANCE_INCOMPLETE) {
+        if (this.issuedTicketStatus == IssuedTicketStatus.CANCELED) {
             throw CanNotEntranceException.EXCEPTION;
+        }
+        if (this.issuedTicketStatus == IssuedTicketStatus.ENTRANCE_COMPLETED) {
+            throw IssuedTicketAlreadyEntranceException.EXCEPTION;
         }
         this.issuedTicketStatus = IssuedTicketStatus.ENTRANCE_COMPLETED;
     }

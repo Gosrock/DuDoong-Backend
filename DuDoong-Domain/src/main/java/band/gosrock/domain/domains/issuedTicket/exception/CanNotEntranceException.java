@@ -1,5 +1,6 @@
 package band.gosrock.domain.domains.issuedTicket.exception;
 
+
 import band.gosrock.common.exception.DuDoongCodeException;
 
 public class CanNotEntranceException extends DuDoongCodeException {
@@ -9,5 +10,4 @@ public class CanNotEntranceException extends DuDoongCodeException {
     private CanNotEntranceException() {
         super(IssuedTicketErrorCode.CAN_NOT_ENTRANCE);
     }
-
 }

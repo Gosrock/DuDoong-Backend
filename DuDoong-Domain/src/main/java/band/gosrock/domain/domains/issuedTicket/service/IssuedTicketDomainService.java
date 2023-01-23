@@ -3,7 +3,9 @@ package band.gosrock.domain.domains.issuedTicket.service;
 
 import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.common.aop.redissonLock.RedissonLock;
+import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
+import band.gosrock.domain.domains.event.exception.HostNotAuthEventException;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketOptionAnswerAdaptor;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
@@ -12,6 +14,7 @@ import band.gosrock.domain.domains.issuedTicket.dto.response.CreateIssuedTicketR
 import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepository;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,5 +56,16 @@ public class IssuedTicketDomainService {
                     issuedTicket.getTicketItem().increaseQuantity(1L);
                     issuedTicketAdaptor.delete(issuedTicket);
                 });
+    }
+
+    @Transactional
+    public IssuedTicketInfoVo processingEntranceIssuedTicket(
+            Long currentUserId, Long issuedTicketId) {
+        IssuedTicket issuedTicket = issuedTicketAdaptor.find(issuedTicketId);
+        if (!Objects.equals(issuedTicket.getEvent().getHostId(), currentUserId)) {
+            throw HostNotAuthEventException.EXCEPTION;
+        }
+        issuedTicket.entrance();
+        return issuedTicket.toIssuedTicketInfoVo();
     }
 }
