@@ -19,6 +19,8 @@ public class CreateIssuedCouponDomainService {
             IssuedCoupon issuedCoupon, CouponCampaign couponCampaign) {
         // 이미 해당 유저가 쿠폰 발급했는지 검증
         issuedCouponAdaptor.exist(couponCampaign.getId(), issuedCoupon.getUserId());
+        // 발급 가능 시간인지 검증
+        couponCampaign.validateIssuePeriod();
         // 재고 감소 로직
         couponCampaign.decreaseCouponStock();
         // 쿠폰 발급
