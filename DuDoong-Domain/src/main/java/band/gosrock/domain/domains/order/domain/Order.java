@@ -17,6 +17,7 @@ import band.gosrock.domain.domains.order.exception.NotPaymentOrderException;
 import band.gosrock.domain.domains.order.exception.NotRefundAvailableDateOrderException;
 import band.gosrock.domain.domains.order.exception.OrderLineNotFountException;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -143,13 +144,13 @@ public class Order extends BaseTimeEntity {
     }
 
     public static Order createOrder(Long userId, Cart cart) {
-        // 결제가 필요한 상황인데,
-        if (cart.isNeedPayment()) {
-            // 선착순이 아니라면? 승인 방식임. 승인방식의 결제가 필요한 상황은 지원하지않음.
-            if (!cart.getItemType().isFCFS()) {
-                throw InvalidOrderException.EXCEPTION;
-            }
+        // 선착순 결제라면
+        if (cart.getItemType().isFCFS()) {
             return createPaymentOrder(userId, cart);
+        }
+        // 선착순이 아니라면? 승인 방식임. 승인방식의 결제가 필요한 상황은 지원하지않음.
+        if (cart.isNeedPayment()) {
+            throw InvalidOrderException.EXCEPTION;
         }
         return createApproveOrder(userId, cart);
     }
@@ -316,8 +317,13 @@ public class Order extends BaseTimeEntity {
     }
 
     /** 주문에서 티켓 상품 반환합니다. - 민준 */
-    public TicketItem getTicketItemOfOrder() {
+    public TicketItem getItem() {
         return getOrderLineItem().getTicketItem();
+    }
+
+    /** 주문에서 티켓 상품의 타입을 반환합니다.*/
+    public TicketType getItemType() {
+        return getItem().getType();
     }
 
     /** 결제가 필요한 오더인지 반환합니다. */

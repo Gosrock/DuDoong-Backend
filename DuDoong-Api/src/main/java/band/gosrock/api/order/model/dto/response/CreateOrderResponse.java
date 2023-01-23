@@ -3,6 +3,8 @@ package band.gosrock.api.order.model.dto.response;
 
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.order.domain.Order;
+import band.gosrock.domain.domains.order.domain.OrderMethod;
+import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import band.gosrock.domain.domains.user.domain.Profile;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -29,6 +31,12 @@ public class CreateOrderResponse {
     @Schema(description = "결제가 필요한지에 대한 여부를 결정합니다. 필요한 true면 결제창 띄우시면됩니다.", defaultValue = "true")
     private final Boolean isNeedPayment;
 
+    @Schema(description = "주문 방식 ( 결제 방식 , 승인 방식 )")
+    private final OrderMethod orderMethod;
+
+    @Schema(description = "티켓의 타입. 승인 , 선착순 두가지입니다.")
+    private final TicketType ticketType;
+
     public static CreateOrderResponse from(Order order, Profile profile) {
         return CreateOrderResponse.builder()
                 .customerEmail(profile.getEmail())
@@ -36,7 +44,9 @@ public class CreateOrderResponse {
                 .orderName(order.getOrderName())
                 .orderId(order.getUuid())
                 .amount(order.getTotalPaymentPrice())
+                .orderMethod(order.getOrderMethod())
                 .isNeedPayment(order.isNeedPayment())
+                .ticketType(order.getItemType())
                 .build();
     }
 }
