@@ -2,10 +2,14 @@ package band.gosrock.domain.domains.host.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.domains.host.exception.ForbiddenHostOperationException;
 import band.gosrock.domain.domains.host.exception.HostUserNotFoundException;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.*;
+
+import band.gosrock.domain.domains.host.exception.NotMasterHostException;
+import band.gosrock.domain.domains.host.exception.NotSuperHostException;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -67,11 +71,29 @@ public class Host extends BaseTimeEntity {
     }
 
     public void setHostUserRole(Long userId, HostRole role) {
+        // 마스터의 역할은 수정할 수 없음
+        if (this.getMasterUserId().equals(userId)) {
+            throw ForbiddenHostOperationException.EXCEPTION;
+        }
         this.hostUsers.stream()
                 .filter(hostUser -> hostUser.getUserId().equals(userId))
                 .findFirst()
                 .orElseThrow(() -> HostUserNotFoundException.EXCEPTION)
                 .setHostRole(role);
+    }
+
+    /** 해당 유저가 슈퍼 호스트인지 확인하는 검증 로직입니다 */
+    public void validateSuperHostUser(Long userId) {
+        if (!this.isSuperHostUserId(userId)) {
+            throw NotSuperHostException.EXCEPTION;
+        }
+    }
+
+    /** 해당 유저가 호스트의 마스터(담당자, 방장)인지 확인하는 검증 로직입니다 */
+    public void validateMasterHostUser(Long userId) {
+        if (!this.getMasterUserId().equals(userId)) {
+            throw NotMasterHostException.EXCEPTION;
+        }
     }
 
     @Builder

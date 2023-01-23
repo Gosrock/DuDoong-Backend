@@ -28,19 +28,13 @@ public class UpdateHostUserRoleUseCase {
             Long hostId, UpdateHostUserRoleRequest updateHostUserRoleRequest) {
         // 존재하는 유저인지 검증
         final User user = userUtils.getCurrentUser();
-        final Host host = hostAdaptor.findById(hostId);
         final Long userId = user.getId();
+        final Host host = hostAdaptor.findById(hostId);
+        // 슈퍼 호스트 검증
+        host.validateSuperHostUser(userId);
 
         final Long updateUserId = updateHostUserRoleRequest.getUserId();
         final HostRole updateUserRole = updateHostUserRoleRequest.getRole();
-
-        // 마스터 호스트 검증
-        hostService.validateSuperHost(host, userId);
-
-        // 마스터 호스트의 권한은 변경할 수 없음
-        if (host.getMasterUserId().equals(updateUserId)) {
-            throw ForbiddenHostOperationException.EXCEPTION;
-        }
 
         return hostMapper.toHostDetailResponse(
                 hostService.updateHostUserRole(host, updateUserId, updateUserRole));

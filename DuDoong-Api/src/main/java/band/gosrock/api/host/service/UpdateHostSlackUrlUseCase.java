@@ -28,9 +28,9 @@ public class UpdateHostSlackUrlUseCase {
         final Long userId = user.getId();
 
         final Host host = hostAdaptor.findById(hostId);
+        // 슈퍼 호스트 검증
+        host.validateSuperHostUser(userId);
 
-        // 마스터 호스트 검증
-        hostService.validateSuperHost(host, userId);
         host.setSlackUrl(updateHostSlackRequest.getSlackUrl());
         return hostMapper.toHostDetailResponse(hostService.updateHost(host));
     }

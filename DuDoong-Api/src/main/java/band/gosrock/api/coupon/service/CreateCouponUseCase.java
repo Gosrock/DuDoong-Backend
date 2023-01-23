@@ -26,7 +26,7 @@ public class CreateCouponUseCase {
         // 존재하는 유저인지 검증
         User user = userUtils.getCurrentUser();
         // 슈퍼 호스트인지 검증
-        hostService.validateSuperHost(createCouponCampaignRequest.getHostId(), user.getId());
+        hostService.validateSuperHostUser(createCouponCampaignRequest.getHostId(), user.getId());
         // 이미 생성된 쿠폰 코드인지 검증
         createCouponCampaignDomainService.checkCouponCodeExists(
                 createCouponCampaignRequest.getCouponCode());

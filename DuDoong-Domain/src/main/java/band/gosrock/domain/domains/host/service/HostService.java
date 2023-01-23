@@ -4,6 +4,7 @@ package band.gosrock.domain.domains.host.service;
 import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
+import band.gosrock.domain.domains.host.domain.HostProfile;
 import band.gosrock.domain.domains.host.domain.HostRole;
 import band.gosrock.domain.domains.host.domain.HostUser;
 import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException;
@@ -42,35 +43,19 @@ public class HostService {
         return hostRepository.save(host);
     }
 
-    /** 해당 유저가 호스트의 마스터(담당자, 방장)인지 확인하는 검증 로직입니다 */
-    public void validateMasterUser(Long hostId, Long userId) {
-        Host host = hostAdaptor.findById(hostId);
-        if (host.getMasterUserId().equals(userId)) {
-            return;
-        }
-        throw NotMasterHostException.EXCEPTION;
+    public Host updateHostProfile(Host host, HostProfile profile) {
+        host.setProfile(profile);
+        return hostRepository.save(host);
     }
 
-    public void validateMasterUser(Host host, Long userId) {
-        if (host.getMasterUserId().equals(userId)) {
-            return;
-        }
-        throw NotMasterHostException.EXCEPTION;
+    /** 해당 유저가 호스트의 마스터(담당자, 방장)인지 확인하는 검증 로직입니다 */
+    public void validateMasterHostUser(Host host, Long userId) {
+        host.validateMasterHostUser(userId);
     }
 
     /** 해당 유저가 슈퍼 호스트인지 확인하는 검증 로직입니다 */
-    public void validateSuperHost(Long hostId, Long userId) {
+    public void validateSuperHostUser(Long hostId, Long userId) {
         Host host = hostAdaptor.findById(hostId);
-        if (host.isSuperHostUserId(userId)) {
-            return;
-        }
-        throw NotSuperHostException.EXCEPTION;
-    }
-
-    public void validateSuperHost(Host host, Long userId) {
-        if (host.isSuperHostUserId(userId)) {
-            return;
-        }
-        throw NotSuperHostException.EXCEPTION;
+        host.validateSuperHostUser(userId);
     }
 }

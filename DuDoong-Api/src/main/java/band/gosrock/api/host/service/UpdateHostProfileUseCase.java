@@ -28,10 +28,10 @@ public class UpdateHostProfileUseCase {
         final Long userId = user.getId();
 
         final Host host = hostAdaptor.findById(hostId);
-
         // 슈퍼 호스트 검증
-        hostService.validateSuperHost(host, userId);
-        host.setProfile(hostMapper.toHostProfile(updateHostRequest));
-        return hostMapper.toHostDetailResponse(hostService.updateHost(host));
+        host.validateSuperHostUser(userId);
+
+
+        return hostMapper.toHostDetailResponse(hostService.updateHostProfile(host, hostMapper.toHostProfile(updateHostRequest)));
     }
 }
