@@ -4,6 +4,7 @@ package band.gosrock.api.coupon.controller;
 import band.gosrock.api.coupon.dto.reqeust.*;
 import band.gosrock.api.coupon.dto.response.*;
 import band.gosrock.api.coupon.service.CreateCouponUseCase;
+import band.gosrock.api.coupon.service.CreateUserCouponUseCase;
 import band.gosrock.api.coupon.service.ReadIssuedCouponUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -21,6 +22,7 @@ public class CouponController {
 
     private final CreateCouponUseCase createCouponUseCase;
     private final ReadIssuedCouponUseCase readIssuedCouponUseCase;
+    private final CreateUserCouponUseCase createUserCouponUseCase;
 
     @Operation(summary = "쿠폰 캠페인 생성 API")
     @PostMapping("/campaigns")
@@ -33,5 +35,12 @@ public class CouponController {
     @GetMapping("/issuedCoupons/orders")
     public ReadIssuedCouponOrderResponse getAllIssuedCouponsUsedInOrders() {
         return readIssuedCouponUseCase.execute();
+    }
+
+    @Operation(summary = "유저 쿠폰 발급 API")
+    @PostMapping("/campaigns/{coupon_code}")
+    public CreateUserCouponResponse createUserCoupon(
+            @PathVariable("coupon_code") String couponCode) {
+        return createUserCouponUseCase.execute(couponCode);
     }
 }
