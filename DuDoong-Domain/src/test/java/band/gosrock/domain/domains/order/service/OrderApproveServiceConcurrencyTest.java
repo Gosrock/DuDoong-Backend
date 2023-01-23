@@ -10,6 +10,7 @@ import band.gosrock.domain.DomainIntegrateSpringBootTest;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;
+import band.gosrock.domain.domains.order.domain.OrderMethod;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -39,9 +40,10 @@ class OrderApproveServiceConcurrencyTest {
 
     @BeforeEach
     void setUp() {
-        given(orderLineItem.isNeedPayment()).willReturn(Boolean.FALSE);
+        given(orderLineItem.isNeedPaid()).willReturn(Boolean.FALSE);
         order =
                 Order.builder()
+                        .orderMethod(OrderMethod.APPROVAL)
                         .orderStatus(OrderStatus.PENDING_APPROVE)
                         .orderLineItems(List.of(orderLineItem))
                         .build();

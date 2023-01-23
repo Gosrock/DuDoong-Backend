@@ -33,7 +33,7 @@ public class WithDrawOrderEventHandler {
         Order order = orderAdaptor.findByOrderUuid(withDrawOrderEvent.getOrderUuid());
         List<IssuedTicket> issuedTickets =
                 issuedTicketAdaptor.findAllByOrderUuid(withDrawOrderEvent.getOrderUuid());
-        issuedTicketDomainService.withDrawIssuedTicket(order.getTicketItemOfOrder(), issuedTickets);
+        issuedTicketDomainService.withDrawIssuedTicket(order.getItem(), issuedTickets);
         log.info(withDrawOrderEvent.getOrderUuid() + "주문 상태 완료, 티켓 생성작업 완료");
     }
 }

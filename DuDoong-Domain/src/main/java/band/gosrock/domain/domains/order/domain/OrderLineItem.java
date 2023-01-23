@@ -99,8 +99,10 @@ public class OrderLineItem extends BaseTimeEntity {
         return orderOptionAnswer.stream().map(OrderOptionAnswer::getOptionAnswerVo).toList();
     }
     /** 결제가 필요한 오더라인인지 가져옵니다. */
-    public Boolean isNeedPayment() {
-        return ticketItem.isNeedPayment();
+    public Boolean isNeedPaid() {
+        Money totalOrderLinePrice = getTotalOrderLinePrice();
+        // 0 < totalOrderLinePrice
+        return Money.ZERO.isLessThan(totalOrderLinePrice);
     }
     /** 주문 철회 가능 여부를 반환합니다. */
     public Boolean canRefund() {

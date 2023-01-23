@@ -12,11 +12,13 @@ import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
 import band.gosrock.domain.domains.order.exception.NotApprovalOrderException;
+import band.gosrock.domain.domains.order.exception.NotFreeOrderException;
 import band.gosrock.domain.domains.order.exception.NotOwnerOrderException;
 import band.gosrock.domain.domains.order.exception.NotPaymentOrderException;
 import band.gosrock.domain.domains.order.exception.NotRefundAvailableDateOrderException;
 import band.gosrock.domain.domains.order.exception.OrderLineNotFountException;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -143,7 +145,14 @@ public class Order extends BaseTimeEntity {
     }
 
     public static Order createOrder(Long userId, Cart cart) {
-        if (cart.isNeedPayment()) return createPaymentOrder(userId, cart);
+        // 선착순 결제라면
+        if (cart.getItemType().isFCFS()) {
+            return createPaymentOrder(userId, cart);
+        }
+        // 선착순이 아니라면? 승인 방식임. 승인방식의 결제가 필요한 상황은 지원하지않음.
+        if (cart.isNeedPaid()) {
+            throw InvalidOrderException.EXCEPTION;
+        }
         return createApproveOrder(userId, cart);
     }
     /** ---------------------------- 커맨드 메서드 ---------------------------------- */
@@ -178,6 +187,16 @@ public class Order extends BaseTimeEntity {
         Events.raise(DoneOrderEvent.from(this));
     }
 
+    /** 선착순 방식의 0원 결제입니다. */
+    public void freeConfirm() {
+        validPaymentOrder();
+        validFreeOrder();
+        orderStatus.validCanPaymentConfirm();
+        this.approvedAt = LocalDateTime.now();
+        this.orderStatus = OrderStatus.APPROVED;
+        Events.raise(DoneOrderEvent.from(this));
+    }
+
     /** 관리자가 주문을 취소 시킵니다 */
     public void cancel() {
         orderStatus.validCanCancel();
@@ -202,7 +221,7 @@ public class Order extends BaseTimeEntity {
     /** ---------------------------- 검증 메서드 ---------------------------------- */
     /** 승인 가능한 주문인지 검증합니다. */
     public void validApprovalOrder() {
-        if (isNeedPayment()) {
+        if (orderMethod.isPayment()) {
             throw NotApprovalOrderException.EXCEPTION;
         }
     }
@@ -227,15 +246,24 @@ public class Order extends BaseTimeEntity {
         }
     }
 
+    /** 주문 방식이 결제 방식인지 검증합니다. */
     public void validPaymentOrder() {
-        if (!isNeedPayment()) {
+        if (!orderMethod.isPayment()) {
             throw NotPaymentOrderException.EXCEPTION;
         }
     }
 
+    /** 환불 가능한 시점인지 검증합니다. */
     public void validCanRefundDate() {
         if (!canRefundDate()) {
             throw NotRefundAvailableDateOrderException.EXCEPTION;
+        }
+    }
+
+    /** 무료 주문인지 검증합니다. */
+    public void validFreeOrder() {
+        if (isNeedPaid()) {
+            throw NotFreeOrderException.EXCEPTION;
         }
     }
 
@@ -300,14 +328,19 @@ public class Order extends BaseTimeEntity {
     }
 
     /** 주문에서 티켓 상품 반환합니다. - 민준 */
-    public TicketItem getTicketItemOfOrder() {
+    public TicketItem getItem() {
         return getOrderLineItem().getTicketItem();
     }
 
+    /** 주문에서 티켓 상품의 타입을 반환합니다. */
+    public TicketType getItemType() {
+        return getItem().getType();
+    }
+
     /** 결제가 필요한 오더인지 반환합니다. */
-    public Boolean isNeedPayment() {
+    public Boolean isNeedPaid() {
         return this.orderLineItems.stream()
-                .map(OrderLineItem::isNeedPayment)
+                .map(OrderLineItem::isNeedPaid)
                 .reduce(Boolean.FALSE, (Boolean::logicalOr));
     }
 
@@ -335,5 +368,11 @@ public class Order extends BaseTimeEntity {
         return this.orderLineItems.stream()
                 .map(OrderLineItem::canRefund)
                 .reduce(Boolean.TRUE, (Boolean::logicalAnd));
+    }
+
+    /** PG 사를 통해 결제가 된 주문인지 반환합니다. */
+    public Boolean isPaid() {
+        if (isNeedPaid()) return Boolean.TRUE;
+        return Boolean.FALSE;
     }
 }

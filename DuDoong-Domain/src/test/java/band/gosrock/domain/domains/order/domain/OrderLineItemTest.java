@@ -79,4 +79,45 @@ class OrderLineItemTest {
         Money total = optionAnswerPrice1.plus(optionAnswerPrice2).plus(money3000).times(quantity);
         assertEquals(totalOrderLinePrice, total);
     }
+
+    @Test
+    void 옵션에_가격이_붙으면_결제가_필요한_오더라인이다() {
+        // given
+        Money optionAnswerPrice1 = Money.wons(1000L);
+        given(orderOptionAnswer1.getOptionPrice()).willReturn(optionAnswerPrice1);
+        Money optionAnswerPrice2 = Money.wons(2000L);
+        given(orderOptionAnswer2.getOptionPrice()).willReturn(optionAnswerPrice2);
+        given(ticketItem.getPrice()).willReturn(Money.ZERO);
+
+        // when
+        Boolean needPayment = orderLineItem.isNeedPaid();
+
+        assertTrue(needPayment);
+    }
+
+    @Test
+    void 아이템에_가격이_있으면_결제가_필요한_오더라인이다() {
+        // given
+        given(orderOptionAnswer1.getOptionPrice()).willReturn(Money.ZERO);
+        given(orderOptionAnswer2.getOptionPrice()).willReturn(Money.ZERO);
+        given(ticketItem.getPrice()).willReturn(money3000);
+
+        // when
+        Boolean needPayment = orderLineItem.isNeedPaid();
+
+        assertTrue(needPayment);
+    }
+
+    @Test
+    void 가격이없는_오더라인이면_결제가_필요하지않다() {
+        // given
+        given(orderOptionAnswer1.getOptionPrice()).willReturn(Money.ZERO);
+        given(orderOptionAnswer2.getOptionPrice()).willReturn(Money.ZERO);
+        given(ticketItem.getPrice()).willReturn(Money.ZERO);
+
+        // when
+        Boolean needPayment = orderLineItem.isNeedPaid();
+
+        assertFalse(needPayment);
+    }
 }

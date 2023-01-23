@@ -28,7 +28,8 @@ public enum OrderErrorCode implements BaseErrorCode {
 
     ORDER_NOT_REFUND_DATE(BAD_REQUEST, "Order_400_9", "환불을 할 수 있는 기한을 지났습니다."),
     ORDER_NOT_FOUND(NOT_FOUND, "Order_404_1", "주문을 찾을 수 없습니다."),
-    ORDER_LINE_NOT_FOUND(NOT_FOUND, "Order_404_2", "주문 라인을 찾을 수 없습니다.");
+    ORDER_LINE_NOT_FOUND(NOT_FOUND, "Order_404_2", "주문 라인을 찾을 수 없습니다."),
+    ORDER_NOT_FREE(BAD_REQUEST, "Order_400_10", "무료 주문이 아닙니다.");
 
     private Integer status;
     private String code;

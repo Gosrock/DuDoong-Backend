@@ -97,8 +97,9 @@ public class TicketItem extends BaseTimeEntity {
         return event.getRefundInfoVo();
     }
 
-    public Boolean isNeedPayment() {
-        return this.type.isNeedPayment();
+    /** 선착순 결제인지 확인하는 메서드 */
+    public Boolean isFCFS() {
+        return this.type.isFCFS();
     }
 
     public Boolean hasOption() {

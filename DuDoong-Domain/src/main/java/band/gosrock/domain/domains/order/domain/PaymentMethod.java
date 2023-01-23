@@ -15,7 +15,7 @@ public enum PaymentMethod {
     // 카드결제
     CARD("CARD", "카드 결제"),
     // 결제방식 미지정상태
-    DEFAULT("DEFAULT", "결제 방식 미지정");
+    DEFAULT("DEFAULT", "");
     private String value;
 
     @JsonValue private String kr;
