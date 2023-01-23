@@ -21,16 +21,16 @@ public class PgPaymentInfo {
     private PaymentMethod paymentMethod = PaymentMethod.DEFAULT;
 
     // 결제 공급자 정보 ex 카카오페이 ( 토스 승인 이후 저장 )
-    private String paymentProvider;
+    private String paymentProvider = "";
 
     // 영수증 주소 ( 토스 승인 이후 저장 )
-    private String receiptUrl;
+    private String receiptUrl = "";
     // 승인된 거래키 ( 취소 때 사용 )
-    private String paymentKey;
+    private String paymentKey = "";
     // 세금 ( 토스 승인 이후 저장 )
     @Embedded
     @AttributeOverride(name = "amount", column = @Column(name = "vat_amount"))
-    private Money vat;
+    private Money vat = Money.ZERO;
 
     @Builder
     public PgPaymentInfo(
@@ -55,5 +55,9 @@ public class PgPaymentInfo {
                 .receiptUrl(paymentsResponse.getReceipt().getUrl())
                 .vat(Money.wons(paymentsResponse.getVat()))
                 .build();
+    }
+
+    public static PgPaymentInfo empty() {
+        return new PgPaymentInfo();
     }
 }
