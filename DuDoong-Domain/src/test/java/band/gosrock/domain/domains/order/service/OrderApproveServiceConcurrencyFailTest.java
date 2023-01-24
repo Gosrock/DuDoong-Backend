@@ -13,6 +13,7 @@ import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;
 import band.gosrock.domain.domains.order.domain.OrderMethod;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
+import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,7 @@ class OrderApproveServiceConcurrencyFailTest {
     @Autowired OrderApproveService orderApproveService;
 
     @Mock OrderLineItem orderLineItem;
+    @Mock TicketItem ticketItem;
 
     @MockBean OrderAdaptor orderAdaptor;
 
@@ -39,6 +41,8 @@ class OrderApproveServiceConcurrencyFailTest {
     @BeforeEach
     void setUp() {
         given(orderLineItem.isNeedPaid()).willReturn(Boolean.FALSE);
+        given(orderLineItem.getTicketItem()).willReturn(ticketItem);
+        given(ticketItem.getId()).willReturn(1L);
         order =
                 Order.builder()
                         .orderMethod(OrderMethod.APPROVAL)

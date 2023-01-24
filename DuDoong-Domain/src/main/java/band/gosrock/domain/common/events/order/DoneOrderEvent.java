@@ -28,7 +28,7 @@ public class DoneOrderEvent extends DomainEvent {
                 .paymentKey(order.isNeedPaid() ? order.getPaymentKey() : null)
                 .userId(order.getUserId())
                 .orderUuid(order.getUuid())
-                .itemId(order.getItem().getId())
+                .itemId(order.getItemId())
                 .build();
     }
 }

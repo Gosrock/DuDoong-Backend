@@ -28,7 +28,7 @@ public class WithDrawOrderEvent extends DomainEvent {
                 .userId(order.getUserId())
                 .orderUuid(order.getUuid())
                 .orderStatus(order.getOrderStatus())
-                .itemId(order.getItem().getId())
+                .itemId(order.getItemId())
                 .build();
     }
 }
