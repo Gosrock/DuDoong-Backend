@@ -28,7 +28,7 @@ public class IssuedCoupon extends BaseTimeEntity {
     private Long userId;
 
     @ColumnDefault("'false'")
-    private boolean usageStatus;
+    private boolean usageStatus = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coupon_campaign_id", nullable = false)
@@ -64,14 +64,14 @@ public class IssuedCoupon extends BaseTimeEntity {
         return this.couponCampaign.getCouponCode();
     }
 
-    public void validMine(Long userId){
-        if(!Objects.equals(userId,this.userId)){
+    public void validMine(Long userId) {
+        if (!Objects.equals(userId, this.userId)) {
             throw NotMyCouponException.EXCEPTION;
         }
     }
 
     public void use() {
-        if(!usageStatus){
+        if (usageStatus) {
             throw AlreadyUsedCouponException.EXCEPTION;
         }
         usageStatus = true;
