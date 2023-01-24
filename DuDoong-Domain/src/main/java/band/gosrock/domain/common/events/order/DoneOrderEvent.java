@@ -20,12 +20,15 @@ public class DoneOrderEvent extends DomainEvent {
 
     @Nullable private final String paymentKey;
 
+    private final Long itemId;
+
     public static DoneOrderEvent from(Order order) {
         return DoneOrderEvent.builder()
                 .orderMethod(order.getOrderMethod())
                 .paymentKey(order.isNeedPaid() ? order.getPaymentKey() : null)
                 .userId(order.getUserId())
                 .orderUuid(order.getUuid())
+                .itemId(order.getItemId())
                 .build();
     }
 }
