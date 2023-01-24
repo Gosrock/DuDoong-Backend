@@ -1,6 +1,7 @@
 package band.gosrock.api.event.model.dto.response;
 
 
+import band.gosrock.common.annotation.DateFormat;
 import band.gosrock.domain.domains.event.domain.Event;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,15 +12,18 @@ import lombok.Getter;
 @Getter
 @Builder
 public class EventResponse {
+    private Long hostId;
+
     @Schema(description = "공연 이름")
     private String name;
 
     @Schema(description = "공연 시작 시간")
-    @JsonFormat(
-            shape = JsonFormat.Shape.STRING,
-            pattern = "yyyy-MM-dd HH:mm",
-            timezone = "Asia/Seoul")
+    @DateFormat
     private LocalDateTime startAt;
+
+    @Schema(description = "공연 시작 시간")
+    @DateFormat
+    private LocalDateTime endAt;
 
     // 분 단위입니다
     private Long runTime;
@@ -30,7 +34,7 @@ public class EventResponse {
 
     private String posterImage;
 
-    private String url;
+    private String urlName;
 
     private String placeName;
 
@@ -38,27 +42,23 @@ public class EventResponse {
 
     private String content;
 
-    @JsonFormat(
-            shape = JsonFormat.Shape.STRING,
-            pattern = "yyyy-MM-dd HH:mm",
-            timezone = "Asia/Seoul")
+    @DateFormat
     private LocalDateTime ticketingStartAt;
 
-    @JsonFormat(
-            shape = JsonFormat.Shape.STRING,
-            pattern = "yyyy-MM-dd HH:mm",
-            timezone = "Asia/Seoul")
+    @DateFormat
     private LocalDateTime ticketingEndAt;
 
     public static EventResponse of(Event event) {
         return EventResponse.builder()
+                .hostId(event.getHostId())
                 .name(event.getName())
                 .startAt(event.getStartAt())
+                .endAt(event.getEndAt())
                 .runTime(event.getRunTime())
                 .latitude(event.getLatitude())
                 .longitude(event.getLongitude())
                 .posterImage(event.getPosterImage())
-                .url(event.getUrl())
+                .urlName(event.getUrlName())
                 .placeName(event.getPlaceName())
                 .placeAddress(event.getPlaceAddress())
                 .content(event.getContent())

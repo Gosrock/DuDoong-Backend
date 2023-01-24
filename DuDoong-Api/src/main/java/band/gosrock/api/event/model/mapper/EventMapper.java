@@ -5,9 +5,9 @@ import band.gosrock.api.event.model.dto.request.CreateEventRequest;
 import band.gosrock.common.annotation.Mapper;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.event.service.EventService;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
-import band.gosrock.domain.domains.host.exception.ForbiddenHostException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,27 +17,20 @@ public class EventMapper {
 
     private final HostAdaptor hostAdaptor;
     private final EventAdaptor eventAdaptor;
+    private final EventService eventService;
 
     @Transactional(readOnly = true)
-    public Event toEntity(CreateEventRequest createEventRequest, Long userId) {
+    public Event toEntity(Long userId, CreateEventRequest createEventRequest) {
         final Host host = hostAdaptor.findById(createEventRequest.getHostId());
-        if (host.hasHostUserId(userId)) {
-            return Event.builder()
-                    .hostId(host.getId())
-                    .startAt(createEventRequest.getStartAt())
-                    .runTime(createEventRequest.getRunTime())
-                    .latitude(createEventRequest.getLatitude())
-                    .longitude(createEventRequest.getLongitude())
-                    .posterImage(createEventRequest.getPosterImageUrl())
-                    .name(createEventRequest.getName())
-                    .url(createEventRequest.getAliasUrl())
-                    .placeName(createEventRequest.getPlaceName())
-                    .placeAddress(createEventRequest.getPlaceAddress())
-                    .content(createEventRequest.getContent())
-                    .ticketingStartAt(createEventRequest.getTicketingStartAt())
-                    .ticketingEndAt(createEventRequest.getTicketingEndAt())
-                    .build();
-        }
-        throw ForbiddenHostException.EXCEPTION;
+        // 슈퍼 호스트 이상만 공연 생성 가능
+        host.validateSuperHostUser(userId);
+        Event event =
+                Event.builder()
+                        .hostId(host.getId())
+                        .name(createEventRequest.getName())
+                        .urlName(createEventRequest.getUrlName())
+                        .build();
+        event.setTime(createEventRequest.getStartAt(), createEventRequest.getEndAt());
+        return eventService.setEventUrlName(event, createEventRequest.getUrlName());
     }
 }

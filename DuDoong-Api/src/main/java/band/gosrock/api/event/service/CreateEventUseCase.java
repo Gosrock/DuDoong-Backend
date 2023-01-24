@@ -9,7 +9,6 @@ import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.service.EventService;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
-import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,9 +25,7 @@ public class CreateEventUseCase {
     public EventResponse execute(CreateEventRequest createEventRequest) {
         final User user = userUtils.getCurrentUser();
         final Long userId = user.getId();
-        final Host host = hostAdaptor.findById(createEventRequest.getHostId());
-        // 호스트에 속하는지 검증 후 이벤트 생성
-        final Event event = eventMapper.toEntity(createEventRequest, userId);
+        final Event event = eventMapper.toEntity(userId, createEventRequest);
         return EventResponse.of(eventService.createEvent(event));
     }
 }

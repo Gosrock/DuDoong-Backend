@@ -20,6 +20,11 @@ public class EventAdaptor {
                 .orElseThrow(() -> EventNotFoundException.EXCEPTION);
     }
 
+    /** url 표시 이름 중복 확인하는 쿼리 */
+    public Boolean existByAliasUrl(String urlName) {
+        return eventRepository.existsByUrlName(urlName);
+    }
+
     // Todo:: hostId 지정해서 뽑아오도록 변경하기 (임시)
     public List<Event> findAllByHostId(Long hostId) {
         return eventRepository.findAll();

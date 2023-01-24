@@ -4,6 +4,7 @@ package band.gosrock.domain.domains.event.domain;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.EventInfoVo;
 import band.gosrock.domain.common.vo.RefundInfoVo;
+import band.gosrock.domain.domains.event.exception.EventCannotEndBeforeStartException;
 import java.time.LocalDateTime;
 import javax.persistence.*;
 import lombok.AccessLevel;
@@ -23,8 +24,11 @@ public class Event extends BaseTimeEntity {
     // 호스트 정보
     private Long hostId;
 
-    // 공연 시작일
+    // 공연 시작 시각
     private LocalDateTime startAt;
+
+    // 공연 종료 시각
+    private LocalDateTime endAt;
 
     // 공연 진행 시간
     private Long runTime;
@@ -42,7 +46,7 @@ public class Event extends BaseTimeEntity {
     private String name;
 
     // url 표시 이름 (unique)
-    private String url;
+    private String urlName;
 
     // 공연 장소
     private String placeName;
@@ -52,7 +56,7 @@ public class Event extends BaseTimeEntity {
 
     // 이벤트 상태
     @Enumerated(EnumType.STRING)
-    private EventStatus status;
+    private EventStatus status = EventStatus.PREPARING;
 
     // (마크다운) 공연 상세 내용
     private String content;
@@ -63,35 +67,52 @@ public class Event extends BaseTimeEntity {
     // 예매 종료 시각
     private LocalDateTime ticketingEndAt;
 
+    /** 이벤트의 시작과 종료 시간을 지정 */
+    public void setTime(LocalDateTime startAt, LocalDateTime endAt) {
+        // 이벤트 종료가 시작보다 빠르면 안됨
+        if (startAt.isAfter(endAt)) {
+            throw EventCannotEndBeforeStartException.EXCEPTION;
+        }
+        this.startAt = startAt;
+        this.endAt = endAt;
+    }
+
+    /** 티켓팅 시작과 종료 시간을 지정 */
+    public void setTicketingTime(LocalDateTime startAt, LocalDateTime endAt) {
+        // 이벤트 종료가 시작보다 빠르면 안됨
+        if (startAt.isAfter(endAt)) {
+            throw EventCannotEndBeforeStartException.EXCEPTION;
+        }
+        this.ticketingStartAt = startAt;
+        this.ticketingEndAt = endAt;
+    }
+
+    public void setUrlName(String urlName) {
+        this.urlName = urlName;
+    }
+
     @Builder
     public Event(
             Long hostId,
-            LocalDateTime startAt,
+            String name,
             Long runTime,
             Double latitude,
             Double longitude,
             String posterImage,
-            String name,
-            String url,
+            String urlName,
             String placeName,
             String placeAddress,
-            String content,
-            LocalDateTime ticketingStartAt,
-            LocalDateTime ticketingEndAt) {
+            String content) {
         this.hostId = hostId;
-        this.startAt = startAt;
         this.runTime = runTime;
         this.latitude = latitude;
         this.longitude = longitude;
         this.posterImage = posterImage;
         this.name = name;
-        this.url = url;
+        this.urlName = urlName;
         this.placeName = placeName;
         this.placeAddress = placeAddress;
-        this.status = EventStatus.PREPARING;
         this.content = content;
-        this.ticketingStartAt = ticketingStartAt;
-        this.ticketingEndAt = ticketingEndAt;
     }
 
     public RefundInfoVo getRefundInfoVo() {

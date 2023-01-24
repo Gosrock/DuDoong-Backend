@@ -23,7 +23,7 @@ public class EventController {
     private final CreateEventUseCase createEventUseCase;
     private final ReadEventUseCase readEventUseCase;
 
-    @Operation(summary = "내가 관리하는 이벤트 리스트를 가져옵니다")
+    @Operation(summary = "내가 관리하는 이벤트(공연) 리스트를 가져옵니다")
     @GetMapping
     public List<EventResponse> getAllEvents() {
         return readEventUseCase.execute();
@@ -35,7 +35,7 @@ public class EventController {
     //        return readEventUseCase.execute();
     //    }
 
-    @Operation(summary = "새로운 이벤트(공연)를 생성합니다")
+    @Operation(summary = "공연 기본 정보를 등록하여, 새로운 이벤트(공연)를 생성합니다")
     @PostMapping
     public EventResponse createEvent(@RequestBody @Valid CreateEventRequest createEventRequest) {
         return createEventUseCase.execute(createEventRequest);
