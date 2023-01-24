@@ -19,6 +19,7 @@ public class WithDrawOrderEvent extends DomainEvent {
     private final OrderStatus orderStatus;
 
     @Nullable private final String paymentKey;
+    private final Long itemId;
 
     public static WithDrawOrderEvent from(Order order) {
         return WithDrawOrderEvent.builder()
@@ -27,6 +28,7 @@ public class WithDrawOrderEvent extends DomainEvent {
                 .userId(order.getUserId())
                 .orderUuid(order.getUuid())
                 .orderStatus(order.getOrderStatus())
+                .itemId(order.getItem().getId())
                 .build();
     }
 }

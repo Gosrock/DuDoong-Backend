@@ -73,15 +73,15 @@ public class IssuedTicketDomainService {
         Order order = orderAdaptor.findByOrderUuid(orderUuid);
 
         List<CreateIssuedTicketDTO> createIssuedTicketDTOS =
-            order.getOrderLineItems().stream()
-                .map(orderLineItem -> new CreateIssuedTicketDTO(order, orderLineItem, user))
-                .toList();
+                order.getOrderLineItems().stream()
+                        .map(orderLineItem -> new CreateIssuedTicketDTO(order, orderLineItem, user))
+                        .toList();
 
         createIssuedTicketDTOS.forEach(
-            dto -> {
-                CreateIssuedTicketResponse responseDTO =
-                    IssuedTicket.orderLineItemToIssuedTickets(dto);
-                issuedTicketAdaptor.saveAll(responseDTO.getIssuedTickets());
-            });
+                dto -> {
+                    CreateIssuedTicketResponse responseDTO =
+                            IssuedTicket.orderLineItemToIssuedTickets(dto);
+                    issuedTicketAdaptor.saveAll(responseDTO.getIssuedTickets());
+                });
     }
 }
