@@ -35,7 +35,8 @@ public class OrderCouponVo {
 
     public void validMinimumPaymentAmount(Money supplyAmount) {
         Money paymentAmount = supplyAmount.minus(this.discountAmount);
-        if (paymentAmount.isLessThan(Money.wons(MINIMUM_PAYMENT_WON))) {
+        // 0원 결제는 가능함!
+        if (!paymentAmount.equals(Money.ZERO) && paymentAmount.isLessThan(Money.wons(MINIMUM_PAYMENT_WON))) {
             throw LessThanMinmumPaymentOrderException.EXCEPTION;
         }
     }

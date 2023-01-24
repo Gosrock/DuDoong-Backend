@@ -363,9 +363,11 @@ public class Order extends BaseTimeEntity {
 
     /** 결제가 필요한 오더인지 반환합니다. */
     public Boolean isNeedPaid() {
-        return this.orderLineItems.stream()
-                .map(OrderLineItem::isNeedPaid)
-                .reduce(Boolean.FALSE, (Boolean::logicalOr));
+        // 결제 여부는 총 결제금액으로 정함
+        return Money.ZERO.isLessThan(getTotalPaymentPrice());
+//        return this.orderLineItems.stream()
+//                .map(OrderLineItem::isNeedPaid)
+//                .reduce(Boolean.FALSE, (Boolean::logicalOr));
     }
 
     /** 결제 수단 정보를 가져옵니다. */
