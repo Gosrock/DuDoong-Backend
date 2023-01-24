@@ -8,7 +8,7 @@ import static band.gosrock.domain.domains.user.domain.QUser.user;
 
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus;
-import band.gosrock.domain.domains.issuedTicket.dto.condtion.IssuedTicketCondition;
+import band.gosrock.domain.domains.issuedTicket.dto.condition.IssuedTicketCondition;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;

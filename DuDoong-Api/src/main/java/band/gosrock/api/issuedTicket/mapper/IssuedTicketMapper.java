@@ -5,7 +5,7 @@ import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketDetailResp
 import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketListResponse;
 import band.gosrock.common.annotation.Mapper;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
-import band.gosrock.domain.domains.issuedTicket.dto.condtion.IssuedTicketCondition;
+import band.gosrock.domain.domains.issuedTicket.dto.condition.IssuedTicketCondition;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -7,7 +7,9 @@ import band.gosrock.domain.domains.user.domain.User;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 import lombok.Builder;
+import lombok.Getter;
 
+@Getter
 @Builder
 public class CreateCommentResponse {
 
@@ -19,7 +21,7 @@ public class CreateCommentResponse {
 
     @JsonFormat(
             shape = JsonFormat.Shape.STRING,
-            pattern = "yyyy-MM-dd hh:mm:ss",
+            pattern = "yyyy-MM-dd HH:mm:ss",
             timezone = "Asia/Seoul")
     private final LocalDateTime createdAt;
 

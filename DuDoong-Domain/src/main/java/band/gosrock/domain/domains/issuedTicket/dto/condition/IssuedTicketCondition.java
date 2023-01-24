@@ -1,4 +1,4 @@
-package band.gosrock.domain.domains.issuedTicket.dto.condtion;
+package band.gosrock.domain.domains.issuedTicket.dto.condition;
 
 
 import lombok.AllArgsConstructor;

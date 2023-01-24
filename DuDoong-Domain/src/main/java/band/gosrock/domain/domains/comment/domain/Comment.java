@@ -2,11 +2,16 @@ package band.gosrock.domain.domains.comment.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.common.vo.CommentInfoVo;
+import band.gosrock.domain.domains.user.domain.User;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -28,24 +33,30 @@ public class Comment extends BaseTimeEntity {
     @Column(length = 15)
     private String nickName;
 
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "userId")
+    private User user;
 
     private Long eventId;
 
     @Builder
-    public Comment(String content, String nickName, Long userId, Long eventId) {
+    public Comment(String content, String nickName, User user, Long eventId) {
         this.content = content;
         this.nickName = nickName;
-        this.userId = userId;
+        this.user = user;
         this.eventId = eventId;
     }
 
-    public static Comment create(String content, String nickName, Long userId, Long eventId) {
+    public static Comment create(String content, String nickName, User user, Long eventId) {
         return Comment.builder()
                 .content(content)
                 .nickName(nickName)
-                .userId(userId)
+                .user(user)
                 .eventId(eventId)
                 .build();
+    }
+
+    public CommentInfoVo toCommentInfoVo() {
+        return CommentInfoVo.from(this);
     }
 }

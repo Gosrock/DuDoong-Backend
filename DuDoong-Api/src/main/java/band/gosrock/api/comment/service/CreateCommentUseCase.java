@@ -27,7 +27,7 @@ public class CreateCommentUseCase {
         User currentUser = userUtils.getCurrentUser();
         Comment comment =
                 commentAdaptor.save(
-                        commentMapper.toEntity(currentUser.getId(), eventId, createDTO));
+                        commentMapper.toEntity(currentUser, eventId, createDTO));
         return commentMapper.toCreateCommentResponse(comment, currentUser);
     }
 }
