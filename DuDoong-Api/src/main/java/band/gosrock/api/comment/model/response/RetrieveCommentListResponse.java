@@ -16,12 +16,14 @@ public class RetrieveCommentListResponse {
 
     private final Long offset;
 
+    private final Long lastId;
+
     private final List<RetrieveCommentDTO> comments;
 
     public static RetrieveCommentListResponse of(Page<Comment> comments) {
         return RetrieveCommentListResponse.builder().page(comments.getPageable().getPageNumber())
             .totalPage(
-                comments.getTotalPages()).offset(comments.getPageable().getOffset()).comments(
+                comments.getTotalPages()).offset(comments.getPageable().getOffset()).lastId(comments.stream().skip(comments.stream().count()).findFirst().get().getId()).comments(
                 comments.stream().map(comment -> RetrieveCommentDTO.of(comment, comment.getUser()))
                     .toList()).build();
     }
