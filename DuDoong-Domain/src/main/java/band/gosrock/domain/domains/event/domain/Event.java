@@ -39,9 +39,6 @@ public class Event extends BaseTimeEntity {
     // (지도 정보) 경도 - y
     private Double longitude;
 
-    // 포스터 이미지
-    private String posterImage;
-
     // 공연 이름
     private String name;
 
@@ -58,8 +55,7 @@ public class Event extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private EventStatus status = EventStatus.PREPARING;
 
-    // (마크다운) 공연 상세 내용
-    private String content;
+    @Embedded private EventDetail eventDetail;
 
     // 예매 시작 시각
     private LocalDateTime ticketingStartAt;
@@ -91,6 +87,10 @@ public class Event extends BaseTimeEntity {
         this.urlName = urlName;
     }
 
+    public void setEventDetail(EventDetail eventDetail) {
+        this.eventDetail = eventDetail;
+    }
+
     @Builder
     public Event(
             Long hostId,
@@ -98,7 +98,6 @@ public class Event extends BaseTimeEntity {
             Long runTime,
             Double latitude,
             Double longitude,
-            String posterImage,
             String urlName,
             String placeName,
             String placeAddress,
@@ -107,12 +106,10 @@ public class Event extends BaseTimeEntity {
         this.runTime = runTime;
         this.latitude = latitude;
         this.longitude = longitude;
-        this.posterImage = posterImage;
         this.name = name;
         this.urlName = urlName;
         this.placeName = placeName;
         this.placeAddress = placeAddress;
-        this.content = content;
     }
 
     public RefundInfoVo getRefundInfoVo() {

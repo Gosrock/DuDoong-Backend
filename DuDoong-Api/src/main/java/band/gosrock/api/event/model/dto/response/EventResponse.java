@@ -2,7 +2,9 @@ package band.gosrock.api.event.model.dto.response;
 
 
 import band.gosrock.common.annotation.DateFormat;
+import band.gosrock.domain.common.vo.EventDetailVo;
 import band.gosrock.domain.domains.event.domain.Event;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import lombok.Builder;
@@ -11,6 +13,8 @@ import lombok.Getter;
 @Getter
 @Builder
 public class EventResponse {
+    private Long eventId;
+
     private Long hostId;
 
     @Schema(description = "공연 이름")
@@ -31,15 +35,13 @@ public class EventResponse {
 
     private Double longitude;
 
-    private String posterImage;
+    @JsonUnwrapped private EventDetailVo eventDetail;
 
     private String urlName;
 
     private String placeName;
 
     private String placeAddress;
-
-    private String content;
 
     @DateFormat private LocalDateTime ticketingStartAt;
 
@@ -54,11 +56,10 @@ public class EventResponse {
                 .runTime(event.getRunTime())
                 .latitude(event.getLatitude())
                 .longitude(event.getLongitude())
-                .posterImage(event.getPosterImage())
+                .eventDetail(EventDetailVo.from(event))
                 .urlName(event.getUrlName())
                 .placeName(event.getPlaceName())
                 .placeAddress(event.getPlaceAddress())
-                .content(event.getContent())
                 .ticketingStartAt(event.getTicketingStartAt())
                 .ticketingEndAt(event.getTicketingEndAt())
                 .build();

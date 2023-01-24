@@ -13,8 +13,7 @@ import org.hibernate.validator.constraints.URL;
 
 @Getter
 @RequiredArgsConstructor
-public class CreateEventDetailRequest {
-
+public class UpdateEventDetailRequest {
     // 분단위 입니다
     @Schema(defaultValue = "90", description = "공연 진행시간")
     @Positive(message = "공연 진행 소요시간(분)을 입력하세요")
@@ -25,11 +24,20 @@ public class CreateEventDetailRequest {
     @URL(message = "올바른 url 형식을 입력하세요")
     private String posterImageUrl;
 
-    // 상세 이미지 url
+    // 상세 이미지 url 1
     @Schema(defaultValue = "https://s3.dudoong.com/img1", description = "공연 상세 이미지 url1")
     @URL(message = "올바른 url 형식을 입력하세요")
-    private String detailImageUrl;
-    // todo :: 리스트로 받던가, 3개 필드로 받기
+    private String detailImageUrl1;
+
+    // 상세 이미지 url 2
+    @Schema(defaultValue = "https://s3.dudoong.com/img1", description = "공연 상세 이미지 url2")
+    @URL(message = "올바른 url 형식을 입력하세요")
+    private String detailImageUrl2;
+
+    // 상세 이미지 url 3
+    @Schema(defaultValue = "https://s3.dudoong.com/img1", description = "공연 상세 이미지 url3")
+    @URL(message = "올바른 url 형식을 입력하세요")
+    private String detailImageUrl3;
 
     // (마크다운) 공연 상세 내용
     @Schema(defaultValue = "고스락 공연에 여러분을 초대합니다 웰컴웰컴", description = "공연 상세 내용")
