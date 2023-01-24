@@ -22,7 +22,6 @@ public class OrderEventHandler {
 
     private final IssuedTicketDomainService issuedTicketDomainService;
 
-    private final UserAdaptor userAdaptor;
 
     private final OrderAdaptor orderAdaptor;
 
@@ -31,13 +30,8 @@ public class OrderEventHandler {
             phase = TransactionPhase.BEFORE_COMMIT)
     public void handleDoneOrderEvent(DoneOrderEvent doneOrderEvent) {
         log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 티켓 생성작업 진행");
-        User user = userAdaptor.queryUser(doneOrderEvent.getUserId());
         Order order = orderAdaptor.findByOrderUuid(doneOrderEvent.getOrderUuid());
-        List<CreateIssuedTicketDTO> createIssuedTicketDTOS =
-                order.getOrderLineItems().stream()
-                        .map(orderLineItem -> new CreateIssuedTicketDTO(order, orderLineItem, user))
-                        .toList();
-        issuedTicketDomainService.createIssuedTicket(order.getItem(), createIssuedTicketDTOS);
+        issuedTicketDomainService.createIssuedTicket(order.getItem().getId(), doneOrderEvent.getOrderUuid() , doneOrderEvent.getUserId());
         log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 티켓 생성작업 완료");
     }
 }
