@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 
 import band.gosrock.domain.common.vo.Money;
-import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import band.gosrock.domain.domains.coupon.domain.OrderCouponVo;
 import band.gosrock.domain.domains.order.exception.NotOwnerOrderException;
 import band.gosrock.domain.domains.order.exception.NotRefundAvailableDateOrderException;
@@ -27,7 +26,7 @@ class OrderTest {
     // 조회용테스트 order
     Order notHaveCouponOrder;
 
-    Order couponOrder ;
+    Order couponOrder;
 
     @BeforeEach
     void setUp() {
@@ -38,15 +37,17 @@ class OrderTest {
                         .orderLineItems(List.of(orderLineItem1, orderLineItem2))
                         .orderStatus(OrderStatus.PENDING_APPROVE)
                         .orderMethod(OrderMethod.APPROVAL)
+                        .orderCouponVo(OrderCouponVo.empty())
                         .build();
-        couponOrder = Order.builder()
-            .userId(1L)
-            .orderName("주문이름")
-            .orderLineItems(List.of(orderLineItem1, orderLineItem2))
-            .orderStatus(OrderStatus.PENDING_APPROVE)
-            .orderMethod(OrderMethod.APPROVAL)
-            .orderCouponVo(orderCouponVo)
-            .build();
+        couponOrder =
+                Order.builder()
+                        .userId(1L)
+                        .orderName("주문이름")
+                        .orderLineItems(List.of(orderLineItem1, orderLineItem2))
+                        .orderStatus(OrderStatus.PENDING_APPROVE)
+                        .orderMethod(OrderMethod.APPROVAL)
+                        .orderCouponVo(orderCouponVo)
+                        .build();
     }
 
     @Test

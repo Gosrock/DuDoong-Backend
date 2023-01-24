@@ -8,6 +8,8 @@ import static org.mockito.BDDMockito.given;
 import band.gosrock.domain.CunCurrencyExecutorService;
 import band.gosrock.domain.DisableDomainEvent;
 import band.gosrock.domain.DomainIntegrateSpringBootTest;
+import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.domains.coupon.domain.OrderCouponVo;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;
@@ -44,11 +46,14 @@ class WithdrawOrderServiceTest {
                         .userId(userId)
                         .orderStatus(OrderStatus.CONFIRM)
                         .orderLineItems(List.of(orderLineItem))
+                        .orderCouponVo(OrderCouponVo.empty())
                         .build();
         order.addUUID();
         given(orderAdaptor.findByOrderUuid(any())).willReturn(order);
         given(orderLineItem.getTicketItem()).willReturn(ticketItem);
         given(orderLineItem.canRefund()).willReturn(Boolean.TRUE);
+        given(orderLineItem.getTotalOrderLinePrice()).willReturn(Money.ZERO);
+
         given(ticketItem.getId()).willReturn(1L);
     }
 
