@@ -3,7 +3,6 @@ package band.gosrock.api.event.model.dto.response;
 
 import band.gosrock.common.annotation.DateFormat;
 import band.gosrock.domain.domains.event.domain.Event;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import lombok.Builder;
@@ -42,11 +41,9 @@ public class EventResponse {
 
     private String content;
 
-    @DateFormat
-    private LocalDateTime ticketingStartAt;
+    @DateFormat private LocalDateTime ticketingStartAt;
 
-    @DateFormat
-    private LocalDateTime ticketingEndAt;
+    @DateFormat private LocalDateTime ticketingEndAt;
 
     public static EventResponse of(Event event) {
         return EventResponse.builder()

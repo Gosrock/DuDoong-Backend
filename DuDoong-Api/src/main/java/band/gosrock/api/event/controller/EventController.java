@@ -4,7 +4,7 @@ package band.gosrock.api.event.controller;
 import band.gosrock.api.event.model.dto.request.CreateEventRequest;
 import band.gosrock.api.event.model.dto.response.EventResponse;
 import band.gosrock.api.event.service.CreateEventUseCase;
-import band.gosrock.api.event.service.ReadEventUseCase;
+import band.gosrock.api.event.service.ReadEventListUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,19 +21,14 @@ import org.springframework.web.bind.annotation.*;
 public class EventController {
 
     private final CreateEventUseCase createEventUseCase;
-    private final ReadEventUseCase readEventUseCase;
+    private final ReadEventListUseCase readHostEventListUseCase;
 
-    @Operation(summary = "내가 관리하는 이벤트(공연) 리스트를 가져옵니다")
+    // todo :: querydsl + 검색 기능 작동하도록 만들기
+    @Operation(summary = "특정 호스트가 관리 중인 이벤트 리스트를 가져옵니다")
     @GetMapping
-    public List<EventResponse> getAllEvents() {
-        return readEventUseCase.execute();
+    public List<EventResponse> getAllEventByHostId(@RequestParam Long hostId) {
+        return readHostEventListUseCase.execute(hostId);
     }
-
-    //    @Operation(summary = "특정 이벤트의 상세 정보를 가져옵니다")
-    //    @GetMapping("/{eventId}")
-    //    public List<EventResponse> getEventById() {
-    //        return readEventUseCase.execute();
-    //    }
 
     @Operation(summary = "공연 기본 정보를 등록하여, 새로운 이벤트(공연)를 생성합니다")
     @PostMapping
