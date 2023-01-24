@@ -76,4 +76,7 @@ public class IssuedCoupon extends BaseTimeEntity {
         }
         usageStatus = true;
     }
+
+    // TODO : 밸리데이션 진행해주세요.
+    public void validCanDiscount(Money supplyAmount) {}
 }

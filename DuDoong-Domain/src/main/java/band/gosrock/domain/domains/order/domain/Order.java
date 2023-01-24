@@ -10,6 +10,7 @@ import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
+import band.gosrock.domain.domains.coupon.domain.OrderCouponVo;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
 import band.gosrock.domain.domains.order.exception.NotApprovalOrderException;
 import band.gosrock.domain.domains.order.exception.NotFreeOrderException;
@@ -36,7 +37,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.PostPersist;
 import javax.persistence.PrePersist;
 import lombok.AccessLevel;
@@ -83,10 +83,7 @@ public class Order extends BaseTimeEntity {
     @Column(nullable = false)
     private OrderStatus orderStatus = OrderStatus.READY;
 
-    // 발급된 쿠폰 정보
-    @JoinColumn(name = "issued_coupon_id", updatable = false)
-    @OneToOne(fetch = FetchType.LAZY)
-    private IssuedCoupon issuedCoupon;
+    @Embedded private OrderCouponVo orderCouponVo = OrderCouponVo.empty();
 
     // 단방향 oneToMany 매핑
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -110,12 +107,14 @@ public class Order extends BaseTimeEntity {
             String orderName,
             List<OrderLineItem> orderLineItems,
             OrderStatus orderStatus,
-            OrderMethod orderMethod) {
+            OrderMethod orderMethod,
+            OrderCouponVo orderCouponVo) {
         this.userId = userId;
         this.orderName = orderName;
         this.orderLineItems.addAll(orderLineItems);
         this.orderStatus = orderStatus;
         this.orderMethod = orderMethod;
+        this.orderCouponVo = orderCouponVo;
     }
 
     /** 카드, 간편결제등 토스 요청 과정이 필요한 결제를 생성합니다. */
@@ -144,7 +143,26 @@ public class Order extends BaseTimeEntity {
                 .build();
     }
 
-    public static Order createOrder(Long userId, Cart cart) {
+    public static Order createWithCoupon(Long userId, Cart cart, IssuedCoupon coupon) {
+        // 선착순 결제라면 결제 가능한 금액이 있어야 쿠폰 적용이 가능하다.
+        if (!cart.getItemType().isFCFS() || !cart.isNeedPaid()) {
+            throw InvalidOrderException.EXCEPTION;
+        }
+        coupon.validCanDiscount(cart.getTotalPrice());
+        OrderCouponVo couponVo = OrderCouponVo.of(coupon, cart.getTotalPrice());
+        List<OrderLineItem> orderLineItems =
+                cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
+        return Order.builder()
+                .userId(userId)
+                .orderName(cart.getCartName())
+                .orderLineItems(orderLineItems)
+                .orderStatus(OrderStatus.PENDING_PAYMENT)
+                .orderMethod(OrderMethod.PAYMENT)
+                .orderCouponVo(couponVo)
+                .build();
+    }
+
+    public static Order create(Long userId, Cart cart) {
         // 선착순 결제라면
         if (cart.getItemType().isFCFS()) {
             return createPaymentOrder(userId, cart);

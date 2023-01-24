@@ -25,7 +25,7 @@ public class CreateOrderService {
     @Transactional
     public Order WithOutCoupon(Long cartId, Long userId) {
         Cart cart = cartAdaptor.queryCart(cartId, userId);
-        Order order = Order.createOrder(userId, cart);
+        Order order = Order.create(userId, cart);
         order.calculatePaymentInfo();
         return orderAdaptor.save(order);
     }
@@ -33,10 +33,8 @@ public class CreateOrderService {
     @Transactional
     public Order withCoupon(Long cartId, Long userId, Long couponId) {
         IssuedCoupon coupon = issuedCouponAdaptor.query(couponId);
-        coupon.validMine(userId);
-
         Cart cart = cartAdaptor.queryCart(cartId, userId);
-        Order order = Order.createOrder(userId, cart);
+        Order order = Order.createWithCoupon(userId, cart, coupon);
         order.calculatePaymentInfo();
         return orderAdaptor.save(order);
     }
