@@ -26,9 +26,18 @@ public class Option {
     private OptionGroup optionGroup;
 
     @Builder
-    public Option(String answer, Money additionalPrice) {
+    public Option(String answer, Money additionalPrice, OptionGroup optionGroup) {
         this.answer = answer;
         this.additionalPrice = additionalPrice;
+        this.optionGroup = optionGroup;
+    }
+
+    public static Option create(String answer, Money additionalPrice, OptionGroup optionGroup) {
+        return Option.builder()
+                .answer(answer)
+                .additionalPrice(additionalPrice)
+                .optionGroup(optionGroup)
+                .build();
     }
 
     public void setOptionGroup(OptionGroup optionGroup) {
