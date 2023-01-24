@@ -18,4 +18,8 @@ public class TicketItemAdaptor {
                 .findById(ticketItemId)
                 .orElseThrow(() -> TicketItemNotFoundException.EXCEPTION);
     }
+
+    public TicketItem save(TicketItem ticketItem) {
+        return ticketItemRepository.save(ticketItem);
+    }
 }

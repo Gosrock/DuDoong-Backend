@@ -15,8 +15,8 @@ public class OrderApproveService {
 
     private final OrderAdaptor orderAdaptor;
 
-    @RedissonLock(LockName = "주문승인", identifier = "orderUuid")
-    public String execute(String orderUuid, Long userId) {
+    @RedissonLock(LockName = "주문", identifier = "orderUuid")
+    public String execute(String orderUuid) {
         Order order = orderAdaptor.findByOrderUuid(orderUuid);
         // TODO : 승인 주문 관리자 할당.
         order.approve();

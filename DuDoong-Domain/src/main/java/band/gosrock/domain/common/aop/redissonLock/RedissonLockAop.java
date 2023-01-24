@@ -16,6 +16,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.TransactionTimedOutException;
 import org.springframework.util.StringUtils;
@@ -24,6 +25,7 @@ import org.springframework.util.StringUtils;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@ConditionalOnExpression("${ableRedissonLock:true}")
 public class RedissonLockAop {
     private final RedissonClient redissonClient;
     private final CallTransactionFactory callTransactionFactory;
@@ -55,6 +57,13 @@ public class RedissonLockAop {
             if (!available) {
                 throw NotAvailableRedissonLockException.EXCEPTION;
             }
+            log.info(
+                    "redisson 락 안으로 진입 "
+                            + baseKey
+                            + ":"
+                            + dynamicKey
+                            + "쓰레드 아이디"
+                            + Thread.currentThread().getId());
             return callTransactionFactory
                     .getCallTransaction(redissonLock.needSameTransaction())
                     .proceed(joinPoint);
@@ -98,9 +107,10 @@ public class RedissonLockAop {
     public String createDynamicKeyFromObject(
             Object[] args, Class<?> paramClassType, String identifier)
             throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        String name = paramClassType.getSimpleName();
+        String paramClassName = paramClassType.getSimpleName();
         for (int i = 0; i < args.length; i++) {
-            if (args[i].getClass().getSimpleName().equals(name)) {
+            String argsClassName = args[i].getClass().getSimpleName();
+            if (argsClassName.startsWith(paramClassName)) {
                 Class<?> aClass = args[i].getClass();
                 String capitalize = StringUtils.capitalize(identifier);
                 Object result = aClass.getMethod("get" + capitalize).invoke(args[i]);

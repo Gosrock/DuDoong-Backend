@@ -68,7 +68,7 @@ public class CartOptionAnswer extends BaseTimeEntity {
                 .optionGroupType(getQuestionType())
                 .questionName(getQuestionName())
                 .answer(answer)
-                .additionalPrice(getOptionPrice().toString())
+                .additionalPrice(getOptionPrice())
                 .build();
     }
 }

@@ -29,6 +29,12 @@ public class EventController {
         return readEventUseCase.execute();
     }
 
+    //    @Operation(summary = "특정 이벤트의 상세 정보를 가져옵니다")
+    //    @GetMapping("/{eventId}")
+    //    public List<EventResponse> getEventById() {
+    //        return readEventUseCase.execute();
+    //    }
+
     @Operation(summary = "새로운 이벤트(공연)를 생성합니다")
     @PostMapping
     public EventResponse createEvent(@RequestBody @Valid CreateEventRequest createEventRequest) {

@@ -6,6 +6,7 @@ import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.OptionAnswerVo;
 import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.cart.domain.CartLineItem;
+import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import java.util.ArrayList;
 import java.util.List;
@@ -75,7 +76,7 @@ public class OrderLineItem extends BaseTimeEntity {
     /** ---------------------------- 조회용 메서드 ---------------------------------- */
 
     /** 응답한 옵션들의 총 가격을 불러옵니다. */
-    protected Money getTotalOptionAnswersPrice() {
+    public Money getOptionAnswersPrice() {
         return orderOptionAnswer.stream()
                 .map(OrderOptionAnswer::getOptionPrice)
                 .reduce(Money.ZERO, Money::plus);
@@ -83,7 +84,7 @@ public class OrderLineItem extends BaseTimeEntity {
 
     /** 카트라인의 총 가격을 가져옵니다. 상품 + 옵션답변의 가격 */
     public Money getTotalOrderLinePrice() {
-        return getItemPrice().plus(getTotalOptionAnswersPrice()).times(quantity);
+        return getItemPrice().plus(getOptionAnswersPrice()).times(quantity);
     }
     /** 상품의 가격을 가져옵니다. */
     public Money getItemPrice() {
@@ -98,11 +99,17 @@ public class OrderLineItem extends BaseTimeEntity {
         return orderOptionAnswer.stream().map(OrderOptionAnswer::getOptionAnswerVo).toList();
     }
     /** 결제가 필요한 오더라인인지 가져옵니다. */
-    public Boolean isNeedPayment() {
-        return ticketItem.isNeedPayment();
+    public Boolean isNeedPaid() {
+        Money totalOrderLinePrice = getTotalOrderLinePrice();
+        // 0 < totalOrderLinePrice
+        return Money.ZERO.isLessThan(totalOrderLinePrice);
     }
-
+    /** 주문 철회 가능 여부를 반환합니다. */
     public Boolean canRefund() {
         return this.getRefundInfo().getAvailAble();
+    }
+    /** 아이템의 이벤트 정보를 불러옵니다. */
+    public Event getItemEvent() {
+        return this.ticketItem.getEvent();
     }
 }

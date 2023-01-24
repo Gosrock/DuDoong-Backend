@@ -32,7 +32,7 @@ public class IssuedTicketAdaptor {
         return issuedTicketRepository.findAllByOrderLineId(orderLineId);
     }
 
-    public IssuedTicket find(Long currentUserId, Long issuedTicketId) {
+    public IssuedTicket findForUser(Long currentUserId, Long issuedTicketId) {
         IssuedTicket issuedTicket =
                 issuedTicketRepository
                         .find(issuedTicketId)
@@ -43,9 +43,23 @@ public class IssuedTicketAdaptor {
         return issuedTicket;
     }
 
+    public IssuedTicket find(Long issuedTicketId) {
+        return issuedTicketRepository
+                .find(issuedTicketId)
+                .orElseThrow(() -> IssuedTicketNotFoundException.EXCEPTION);
+    }
+
     public Page<IssuedTicket> searchIssuedTicket(Long page, IssuedTicketCondition condition) {
         PageRequest pageRequest =
                 PageRequest.of(Math.toIntExact(page), 10, Sort.by("id").descending());
         return issuedTicketRepository.searchToPage(condition, pageRequest);
+    }
+
+    public void cancel(IssuedTicket issuedTicket) {
+        issuedTicket.cancel();
+    }
+
+    public List<IssuedTicket> findAllByOrderUuid(String orderUuid) {
+        return issuedTicketRepository.findAllByOrderUuid(orderUuid);
     }
 }

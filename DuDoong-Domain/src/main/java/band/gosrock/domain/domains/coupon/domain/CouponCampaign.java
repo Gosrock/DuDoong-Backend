@@ -3,6 +3,9 @@ package band.gosrock.domain.domains.coupon.domain;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.DateTimePeriod;
+import band.gosrock.domain.domains.coupon.exception.NotIssuingCouponPeriodException;
+import band.gosrock.domain.domains.coupon.exception.WrongDiscountAmountException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.*;
@@ -67,5 +70,23 @@ public class CouponCampaign extends BaseTimeEntity {
         this.couponStockInfo = couponStockInfo;
         this.discountAmount = discountAmount;
         this.couponCode = couponCode;
+    }
+
+    // 정률 할인시 discountAmount 값이 100 이하인지 검증
+    public void validatePercentageAmount(DiscountType discountType, Long DiscountAmount) {
+        if (discountType.equals(DiscountType.PERCENTAGE) && DiscountAmount > 100) {
+            throw WrongDiscountAmountException.EXCEPTION;
+        }
+    }
+
+    public void decreaseCouponStock() {
+        couponStockInfo.decreaseCouponStock();
+    }
+
+    public void validateIssuePeriod() {
+        LocalDateTime nowTime = LocalDateTime.now();
+        if (!dateTimePeriod.contains(nowTime)) {
+            throw NotIssuingCouponPeriodException.EXCEPTION;
+        }
     }
 }

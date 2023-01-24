@@ -7,6 +7,7 @@ import static band.gosrock.domain.domains.ticket_item.domain.QTicketItem.ticketI
 import static band.gosrock.domain.domains.user.domain.QUser.user;
 
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
+import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus;
 import band.gosrock.domain.domains.issuedTicket.dto.condtion.IssuedTicketCondition;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -37,7 +38,11 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
                         .where(
                                 eventIdEq(condition.getEventId()),
                                 userNameContains(condition.getUserName()),
-                                phoneNumberContains(condition.getPhoneNumber()))
+                                phoneNumberContains(condition.getPhoneNumber()),
+                                issuedTicket
+                                        .issuedTicketStatus
+                                        .eq(IssuedTicketStatus.CANCELED)
+                                        .not())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize())
                         .fetch();
@@ -67,7 +72,15 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
                         .fetchJoin()
                         .leftJoin(issuedTicket.issuedTicketOptionAnswers, issuedTicketOptionAnswer)
                         .fetchJoin()
-                        .where(issuedTicket.id.eq(issuedTicketId))
+                        .where(
+                                issuedTicket
+                                        .id
+                                        .eq(issuedTicketId)
+                                        .and(
+                                                issuedTicket
+                                                        .issuedTicketStatus
+                                                        .eq(IssuedTicketStatus.CANCELED)
+                                                        .not()))
                         .fetchOne();
         return Optional.ofNullable(findIssuedTicket);
     }

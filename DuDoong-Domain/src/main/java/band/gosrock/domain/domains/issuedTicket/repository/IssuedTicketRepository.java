@@ -8,4 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface IssuedTicketRepository
         extends JpaRepository<IssuedTicket, Long>, IssuedTicketCustomRepository {
     List<IssuedTicket> findAllByOrderLineId(Long orderLineId);
+
+    List<IssuedTicket> findAllByOrderUuid(String orderId);
 }

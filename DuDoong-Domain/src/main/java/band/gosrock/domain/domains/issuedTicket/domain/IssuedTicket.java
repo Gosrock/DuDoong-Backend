@@ -7,8 +7,11 @@ import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketDTO;
-import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketRequestForDev;
 import band.gosrock.domain.domains.issuedTicket.dto.response.CreateIssuedTicketResponse;
+import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelEntranceException;
+import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelException;
+import band.gosrock.domain.domains.issuedTicket.exception.CanNotEntranceException;
+import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketAlreadyEntranceException;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.user.domain.User;
 import java.util.ArrayList;
@@ -52,8 +55,12 @@ public class IssuedTicket extends BaseTimeEntity {
     private Event event;
 
     /*
+    발급 티켓 주문 id (단방향)
+     */
+    private String orderUuid;
+
+    /*
     발급 티켓의 주문 행 (단방향)
-    Todo: 발급 티켓이 굳이 order line 을 알아야 할까? -찬진 OrderResponse 에서 필요함! 연관관계는 따로안짓고 레지스터리에서 불러올게용ㄴ
      */
     private Long orderLineId;
 
@@ -94,7 +101,7 @@ public class IssuedTicket extends BaseTimeEntity {
     private Money price;
 
     /*
-    상태
+    발급 티켓 상태
      */
     @Enumerated(EnumType.STRING)
     private IssuedTicketStatus issuedTicketStatus = IssuedTicketStatus.ENTRANCE_INCOMPLETE;
@@ -107,6 +114,7 @@ public class IssuedTicket extends BaseTimeEntity {
     public IssuedTicket(
             Event event,
             User user,
+            String orderUuid,
             Long orderLineId,
             TicketItem ticketItem,
             Money price,
@@ -114,6 +122,7 @@ public class IssuedTicket extends BaseTimeEntity {
             List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers) {
         this.event = event;
         this.user = user;
+        this.orderUuid = orderUuid;
         this.orderLineId = orderLineId;
         this.ticketItem = ticketItem;
         this.price = price;
@@ -121,18 +130,11 @@ public class IssuedTicket extends BaseTimeEntity {
         this.issuedTicketOptionAnswers.addAll(issuedTicketOptionAnswers);
     }
 
-    public static IssuedTicket create(CreateIssuedTicketRequestForDev dto) {
-        return IssuedTicket.builder()
-                .event(dto.getEvent())
-                .user(dto.getUser())
-                .orderLineId(dto.getOrderLineId())
-                .ticketItem(dto.getTicketItem())
-                .price(dto.getPrice())
-                .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
-                .issuedTicketOptionAnswers(new ArrayList<>())
-                .build();
-    }
+    /** ---------------------------- 생성 관련 메서드 ---------------------------------- */
 
+    /*
+    개발 및 테스트 용도로 사용되는 티켓 발급 정적 메서드
+     */
     public static IssuedTicket createForDev(
             Event event,
             User user,
@@ -144,6 +146,7 @@ public class IssuedTicket extends BaseTimeEntity {
                 IssuedTicket.builder()
                         .event(event)
                         .user(user)
+                        .orderUuid("test")
                         .orderLineId(orderLineId)
                         .ticketItem(ticketItem)
                         .price(price)
@@ -154,16 +157,25 @@ public class IssuedTicket extends BaseTimeEntity {
         return createIssuedTicket;
     }
 
+    /*
+    issuedTicket 생성하면서 UUID 생성
+     */
     @PrePersist
     public void createUUID() {
         this.uuid = UUID.randomUUID().toString();
     }
 
+    /*
+    issuedTicket 생성하면서 티켓 넘버 부여
+     */
     @PostPersist
     public void createIssuedTicketNo() {
         this.issuedTicketNo = "T" + Long.sum(NO_START_NUMBER, this.id);
     }
 
+    /*
+    발급 티켓 옵션들 합 계산
+     */
     public Money sumOptionPrice() {
         return issuedTicketOptionAnswers.stream()
                 .map(
@@ -172,13 +184,20 @@ public class IssuedTicket extends BaseTimeEntity {
                 .reduce(Money.ZERO, Money::plus);
     }
 
+    /*
+    issuedTicket VO 변환 메서드
+     */
     public IssuedTicketInfoVo toIssuedTicketInfoVo() {
         return IssuedTicketInfoVo.from(this);
     }
 
+    /*
+    orderLine -> issuedTicket 생성 메서드
+     */
     public static CreateIssuedTicketResponse orderLineItemToIssuedTickets(
             CreateIssuedTicketDTO dto) {
         long quantity = dto.getOrderLineItem().getQuantity();
+        dto.getOrderLineItem().getTicketItem().reduceQuantity(quantity);
         List<IssuedTicket> createIssuedTickets = new ArrayList<>();
         List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers =
                 dto.getOrderLineItem().getOrderOptionAnswer().stream()
@@ -188,14 +207,53 @@ public class IssuedTicket extends BaseTimeEntity {
             createIssuedTickets.add(
                     IssuedTicket.builder()
                             .event(dto.getOrderLineItem().getTicketItem().getEvent())
+                            .orderUuid(dto.getOrder().getUuid())
                             .orderLineId(dto.getOrderLineItem().getId())
                             .user(dto.getUser())
-                            .price(dto.getOrderLineItem().getTicketItem().getPrice())
+                            .price(dto.getOrderLineItem().getItemPrice())
                             .ticketItem(dto.getOrderLineItem().getTicketItem())
                             .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
                             .issuedTicketOptionAnswers(issuedTicketOptionAnswers)
                             .build());
         }
         return new CreateIssuedTicketResponse(createIssuedTickets, issuedTicketOptionAnswers);
+    }
+
+    /** ---------------------------- 상태 변환 관련 메서드 ---------------------------------- */
+
+    /*
+    발급 티켓 취소 메서드
+    티켓이 입장 미완료 상태가 아니면 취소 할 수 없음
+     */
+    public void cancel() {
+        if (this.issuedTicketStatus != IssuedTicketStatus.ENTRANCE_INCOMPLETE) {
+            throw CanNotCancelException.EXCEPTION;
+        }
+        this.issuedTicketStatus = IssuedTicketStatus.CANCELED;
+    }
+
+    /*
+    발급 티켓으로 입장 시 상태 변환 메서드
+    티켓이 입장 미완료 상태가 아니면 입장 할 수 없음
+     */
+    public void entrance() {
+        if (this.issuedTicketStatus == IssuedTicketStatus.CANCELED) {
+            throw CanNotEntranceException.EXCEPTION;
+        }
+        if (this.issuedTicketStatus == IssuedTicketStatus.ENTRANCE_COMPLETED) {
+            throw IssuedTicketAlreadyEntranceException.EXCEPTION;
+        }
+        this.issuedTicketStatus = IssuedTicketStatus.ENTRANCE_COMPLETED;
+    }
+
+    /*
+    입장 처리 취소 메서드
+    티켓이 입장 완료 상태가 아니면 입장 취소 할 수 없음
+     */
+    public void entranceCancel() {
+        if (this.issuedTicketStatus != IssuedTicketStatus.ENTRANCE_COMPLETED) {
+            throw CanNotCancelEntranceException.EXCEPTION;
+        }
+        this.issuedTicketStatus = IssuedTicketStatus.ENTRANCE_INCOMPLETE;
     }
 }

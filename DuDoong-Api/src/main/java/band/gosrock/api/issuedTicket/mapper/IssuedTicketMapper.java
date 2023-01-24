@@ -26,6 +26,6 @@ public class IssuedTicketMapper {
     public RetrieveIssuedTicketDetailResponse toIssuedTicketDetailResponse(
             Long currentUserId, Long issuedTicketId) {
         return RetrieveIssuedTicketDetailResponse.of(
-                issuedTicketAdaptor.find(currentUserId, issuedTicketId));
+                issuedTicketAdaptor.findForUser(currentUserId, issuedTicketId));
     }
 }

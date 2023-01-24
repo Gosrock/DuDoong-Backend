@@ -2,14 +2,19 @@ package band.gosrock.domain.domains.issuedTicket.service;
 
 
 import band.gosrock.common.annotation.DomainService;
+import band.gosrock.domain.common.aop.redissonLock.RedissonLock;
+import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
+import band.gosrock.domain.domains.event.exception.HostNotAuthEventException;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketOptionAnswerAdaptor;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketDTO;
 import band.gosrock.domain.domains.issuedTicket.dto.response.CreateIssuedTicketResponse;
 import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepository;
+import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,49 +28,36 @@ public class IssuedTicketDomainService {
     private final IssuedTicketOptionAnswerAdaptor issuedTicketOptionAnswerAdaptor;
     private final EventAdaptor eventAdaptor;
 
-    // Todo 둘 중 어떤 로직이 더 나은지 비교해주세요
-    //    @Transactional
-    //    public void createIssuedTicket(CreateIssuedTicketRequestDTOs
-    // createIssuedTicketRequestDTOs) {
-    //        List<IssuedTicketDTO> issuedTickets =
-    //                createIssuedTicketRequestDTOs.getCreateIssuedTicketRequests().stream()
-    //                        .map(
-    //                                createIssuedTicketRequest -> {
-    //                                    IssuedTicket issuedTicket =
-    //                                            IssuedTicket.create(createIssuedTicketRequest);
-    //                                    /*
-    //                                    티켓 옵션 답변 저장
-    //                                     */
-    //                                    List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers =
-    //
-    // createIssuedTicketRequest.getOptionAnswers().stream()
-    //                                                    .map(
-    //                                                            IssuedTicketOptionAnswer
-    //
-    // ::orderOptionAnswerToIssuedTicketOptionAnswer)
-    //                                                    .toList();
-    //                                    /*
-    //                                    티켓 옵션 답변 매핑
-    //                                     */
-    //                                    issuedTicket.addOptionAnswers(issuedTicketOptionAnswers);
-    //                                    IssuedTicket saveIssuedTicket =
-    //                                            issuedTicketAdaptor.save(issuedTicket);
-    //                                    issuedTicketOptionAnswerAdaptor.saveAll(
-    //                                            issuedTicketOptionAnswers);
-    //                                    return new IssuedTicketDTO(saveIssuedTicket);
-    //                                })
-    //                        .toList();
-    //    }
-
+    @RedissonLock(LockName = "티켓재고관리", paramClassType = TicketItem.class, identifier = "id")
     @Transactional
-    public void createIssuedTicket(List<CreateIssuedTicketDTO> createIssuedTicketDTOs) {
+    public void createIssuedTicket(
+            TicketItem ticketItem, List<CreateIssuedTicketDTO> createIssuedTicketDTOs) {
         createIssuedTicketDTOs.forEach(
                 dto -> {
                     CreateIssuedTicketResponse responseDTO =
                             IssuedTicket.orderLineItemToIssuedTickets(dto);
                     issuedTicketAdaptor.saveAll(responseDTO.getIssuedTickets());
-                    issuedTicketOptionAnswerAdaptor.saveAll(
-                            responseDTO.getIssuedTicketOptionAnswers());
                 });
+    }
+
+    @RedissonLock(LockName = "티켓재고관리", paramClassType = TicketItem.class, identifier = "id")
+    @Transactional
+    public void withDrawIssuedTicket(TicketItem ticketItem, List<IssuedTicket> issuedTickets) {
+        issuedTickets.forEach(
+                issuedTicket -> {
+                    issuedTicket.getTicketItem().increaseQuantity(1L);
+                    issuedTicketAdaptor.cancel(issuedTicket);
+                });
+    }
+
+    @Transactional
+    public IssuedTicketInfoVo processingEntranceIssuedTicket(
+            Long currentUserId, Long issuedTicketId) {
+        IssuedTicket issuedTicket = issuedTicketAdaptor.find(issuedTicketId);
+        if (!Objects.equals(issuedTicket.getEvent().getHostId(), currentUserId)) {
+            throw HostNotAuthEventException.EXCEPTION;
+        }
+        issuedTicket.entrance();
+        return issuedTicket.toIssuedTicketInfoVo();
     }
 }

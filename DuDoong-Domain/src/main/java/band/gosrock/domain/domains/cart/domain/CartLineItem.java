@@ -117,8 +117,10 @@ public class CartLineItem extends BaseTimeEntity {
         return ticketItem.getPrice();
     }
     /** 장바구니의 담긴 상품이 결제가 필요한지. 가져옵니다. */
-    public Boolean isNeedPayment() {
-        return ticketItem.isNeedPayment();
+    public Boolean isNeedPaid() {
+        Money totalCartLinePrice = getTotalCartLinePrice();
+        // 0 < totalCartLinePrice
+        return Money.ZERO.isLessThan(totalCartLinePrice);
     }
 
     /** 아이템이 옵션을 가지고 있는지 판별합니다. */

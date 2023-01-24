@@ -12,10 +12,13 @@ import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
 import band.gosrock.domain.domains.order.exception.NotApprovalOrderException;
+import band.gosrock.domain.domains.order.exception.NotFreeOrderException;
 import band.gosrock.domain.domains.order.exception.NotOwnerOrderException;
 import band.gosrock.domain.domains.order.exception.NotPaymentOrderException;
 import band.gosrock.domain.domains.order.exception.NotRefundAvailableDateOrderException;
 import band.gosrock.domain.domains.order.exception.OrderLineNotFountException;
+import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +67,7 @@ public class Order extends BaseTimeEntity {
     private String orderName;
 
     // 결제 대행사 정보 ( 토스 승인 이후 저장 )
-    @Embedded private PgPaymentInfo pgPaymentInfo;
+    @Embedded private PgPaymentInfo pgPaymentInfo = PgPaymentInfo.empty();
 
     // 결제 완료 된시간 승인 결제등.
     private LocalDateTime approvedAt;
@@ -104,12 +107,12 @@ public class Order extends BaseTimeEntity {
     @Builder
     public Order(
             Long userId,
-            String OrderName,
+            String orderName,
             List<OrderLineItem> orderLineItems,
             OrderStatus orderStatus,
             OrderMethod orderMethod) {
         this.userId = userId;
-        this.orderName = OrderName;
+        this.orderName = orderName;
         this.orderLineItems.addAll(orderLineItems);
         this.orderStatus = orderStatus;
         this.orderMethod = orderMethod;
@@ -121,7 +124,7 @@ public class Order extends BaseTimeEntity {
                 cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
         return Order.builder()
                 .userId(userId)
-                .OrderName(cart.getCartName())
+                .orderName(cart.getCartName())
                 .orderLineItems(orderLineItems)
                 .orderStatus(OrderStatus.PENDING_PAYMENT)
                 .orderMethod(OrderMethod.PAYMENT)
@@ -134,7 +137,7 @@ public class Order extends BaseTimeEntity {
                 cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
         return Order.builder()
                 .userId(userId)
-                .OrderName(cart.getCartName())
+                .orderName(cart.getCartName())
                 .orderLineItems(orderLineItems)
                 .orderStatus(OrderStatus.PENDING_APPROVE)
                 .orderMethod(OrderMethod.APPROVAL)
@@ -142,7 +145,14 @@ public class Order extends BaseTimeEntity {
     }
 
     public static Order createOrder(Long userId, Cart cart) {
-        if (cart.isNeedPayment()) return createPaymentOrder(userId, cart);
+        // 선착순 결제라면
+        if (cart.getItemType().isFCFS()) {
+            return createPaymentOrder(userId, cart);
+        }
+        // 선착순이 아니라면? 승인 방식임. 승인방식의 결제가 필요한 상황은 지원하지않음.
+        if (cart.isNeedPaid()) {
+            throw InvalidOrderException.EXCEPTION;
+        }
         return createApproveOrder(userId, cart);
     }
     /** ---------------------------- 커맨드 메서드 ---------------------------------- */
@@ -160,25 +170,31 @@ public class Order extends BaseTimeEntity {
     /** 결제 방식의 주문을 승인 합니다. */
     public void confirmPayment(
             Money pgAmount, LocalDateTime approvedAt, PgPaymentInfo pgPaymentInfo) {
-        // TODO: 재고량 비교 필요?
         validCanConfirmPayment(pgAmount);
-        validPgAndOrderAmountIsEqual(pgAmount);
+        validNormalOrder(pgAmount);
         orderStatus = OrderStatus.CONFIRM;
         this.approvedAt = approvedAt;
         this.pgPaymentInfo = pgPaymentInfo;
-        Events.raise(DoneOrderEvent.of(this.uuid, this));
+        Events.raise(DoneOrderEvent.from(this));
     }
 
     /** 승인 방식의 주문을 승인합니다. */
     public void approve() {
-        if (isNeedPayment()) {
-            throw NotApprovalOrderException.EXCEPTION;
-        }
+        validApprovalOrder();
         orderStatus.validCanApprove();
-        // TODO: 재고량 비교 필요?
         this.approvedAt = LocalDateTime.now();
         this.orderStatus = OrderStatus.APPROVED;
-        Events.raise(DoneOrderEvent.of(this.uuid, this));
+        Events.raise(DoneOrderEvent.from(this));
+    }
+
+    /** 선착순 방식의 0원 결제입니다. */
+    public void freeConfirm() {
+        validPaymentOrder();
+        validFreeOrder();
+        orderStatus.validCanPaymentConfirm();
+        this.approvedAt = LocalDateTime.now();
+        this.orderStatus = OrderStatus.APPROVED;
+        Events.raise(DoneOrderEvent.from(this));
     }
 
     /** 관리자가 주문을 취소 시킵니다 */
@@ -186,7 +202,7 @@ public class Order extends BaseTimeEntity {
         orderStatus.validCanCancel();
         validCanRefundDate();
         this.orderStatus = OrderStatus.CANCELED;
-        Events.raise(WithDrawOrderEvent.of(this.uuid, this));
+        Events.raise(WithDrawOrderEvent.from(this));
     }
 
     /** 사용자가 주문을 환불 시킵니다. */
@@ -194,17 +210,22 @@ public class Order extends BaseTimeEntity {
         orderStatus.validCanRefund();
         validCanRefundDate();
         this.orderStatus = OrderStatus.REFUND;
-        Events.raise(WithDrawOrderEvent.of(this.uuid, this));
+        Events.raise(WithDrawOrderEvent.from(this));
+    }
+
+    /** 결제 실패 된 주문입니다 */
+    public void fail() {
+        this.orderStatus = OrderStatus.FAILED;
     }
 
     /** ---------------------------- 검증 메서드 ---------------------------------- */
-
-    /** PG 사를 통한 결제 대금이 주문의 가격과 동일한지 검증합니다. */
-    public void validPgAndOrderAmountIsEqual(Money pgAmount) {
-        if (!pgAmount.equals(getTotalPaymentPrice())) {
-            throw InvalidOrderException.EXCEPTION;
+    /** 승인 가능한 주문인지 검증합니다. */
+    public void validApprovalOrder() {
+        if (orderMethod.isPayment()) {
+            throw NotApprovalOrderException.EXCEPTION;
         }
     }
+
     /** 주문에대한 주인인지 검증합니다. */
     public void validOwner(Long currentUserId) {
         if (!userId.equals(currentUserId)) {
@@ -213,18 +234,36 @@ public class Order extends BaseTimeEntity {
     }
     /** 결제 방식의 주문을 승인할수있는지 확인합니다. */
     public void validCanConfirmPayment(Money requestAmount) {
-        if (!getTotalPaymentPrice().equals(requestAmount)) {
-            throw InvalidOrderException.EXCEPTION;
-        }
-        if (!isNeedPayment()) {
-            throw NotPaymentOrderException.EXCEPTION;
-        }
+        validNormalOrder(requestAmount);
+        validPaymentOrder();
         orderStatus.validCanPaymentConfirm();
     }
 
+    /** 결제대금과,요청금액의 비교를 통해 정상적인 주문인지 검증합니다. */
+    private void validNormalOrder(Money requestAmount) {
+        if (!getTotalPaymentPrice().equals(requestAmount)) {
+            throw InvalidOrderException.EXCEPTION;
+        }
+    }
+
+    /** 주문 방식이 결제 방식인지 검증합니다. */
+    public void validPaymentOrder() {
+        if (!orderMethod.isPayment()) {
+            throw NotPaymentOrderException.EXCEPTION;
+        }
+    }
+
+    /** 환불 가능한 시점인지 검증합니다. */
     public void validCanRefundDate() {
         if (!canRefundDate()) {
             throw NotRefundAvailableDateOrderException.EXCEPTION;
+        }
+    }
+
+    /** 무료 주문인지 검증합니다. */
+    public void validFreeOrder() {
+        if (isNeedPaid()) {
+            throw NotFreeOrderException.EXCEPTION;
         }
     }
 
@@ -243,7 +282,7 @@ public class Order extends BaseTimeEntity {
      * @default 사용하지않음
      */
     public String getCouponName() {
-        if (issuedCoupon != null) {
+        if (hasCoupon()) {
             return issuedCoupon.getCouponName();
         }
         return "사용하지 않음";
@@ -262,10 +301,14 @@ public class Order extends BaseTimeEntity {
     }
     /** 총 할인금액을 가져옵니다. */
     public Money getTotalDiscountPrice() {
-        if (issuedCoupon != null) {
+        if (hasCoupon()) {
             return issuedCoupon.getDiscountAmount(getTotalSupplyPrice());
         }
         return Money.ZERO;
+    }
+
+    public Boolean hasCoupon() {
+        return issuedCoupon != null;
     }
 
     /**
@@ -275,35 +318,45 @@ public class Order extends BaseTimeEntity {
      * @return
      */
     public RefundInfoVo getTotalRefundInfo() {
-        OrderLineItem orderLineItem =
-                orderLineItems.stream()
-                        .findFirst()
-                        .orElseThrow(() -> OrderLineNotFountException.EXCEPTION);
-        return orderLineItem.getRefundInfo();
+        return getOrderLineItem().getRefundInfo();
+    }
+
+    private OrderLineItem getOrderLineItem() {
+        return orderLineItems.stream()
+                .findFirst()
+                .orElseThrow(() -> OrderLineNotFountException.EXCEPTION);
+    }
+
+    /** 주문에서 티켓 상품 반환합니다. - 민준 */
+    public TicketItem getItem() {
+        return getOrderLineItem().getTicketItem();
+    }
+
+    /** 주문에서 티켓 상품의 타입을 반환합니다. */
+    public TicketType getItemType() {
+        return getItem().getType();
     }
 
     /** 결제가 필요한 오더인지 반환합니다. */
-    public Boolean isNeedPayment() {
+    public Boolean isNeedPaid() {
         return this.orderLineItems.stream()
-                .map(OrderLineItem::isNeedPayment)
+                .map(OrderLineItem::isNeedPaid)
                 .reduce(Boolean.FALSE, (Boolean::logicalOr));
     }
 
     /** 결제 수단 정보를 가져옵니다. */
     public String getMethod() {
-        if (this.orderMethod.equals(OrderMethod.APPROVAL)) return OrderMethod.APPROVAL.getKr();
-        return this.pgPaymentInfo.getPaymentMethod().getKr();
+        if (orderMethod.equals(OrderMethod.APPROVAL)) return OrderMethod.APPROVAL.getKr();
+        return pgPaymentInfo.getPaymentMethod().getKr();
     }
 
     /** 결제 공급자 정보를 가져옵니다. */
     public String getProvider() {
-        if (this.orderMethod.equals(OrderMethod.APPROVAL)) return null;
         return this.pgPaymentInfo.getPaymentProvider();
     }
 
     /** 결제 공급자 정보를 가져옵니다. */
     public String getReceiptUrl() {
-        if (this.orderMethod.equals(OrderMethod.APPROVAL)) return null;
         return this.pgPaymentInfo.getReceiptUrl();
     }
 
@@ -315,5 +368,11 @@ public class Order extends BaseTimeEntity {
         return this.orderLineItems.stream()
                 .map(OrderLineItem::canRefund)
                 .reduce(Boolean.TRUE, (Boolean::logicalAnd));
+    }
+
+    /** PG 사를 통해 결제가 된 주문인지 반환합니다. */
+    public Boolean isPaid() {
+        if (isNeedPaid()) return Boolean.TRUE;
+        return Boolean.FALSE;
     }
 }

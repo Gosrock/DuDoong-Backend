@@ -4,15 +4,14 @@ package band.gosrock.api.coupon.controller;
 import band.gosrock.api.coupon.dto.reqeust.*;
 import band.gosrock.api.coupon.dto.response.*;
 import band.gosrock.api.coupon.service.CreateCouponUseCase;
+import band.gosrock.api.coupon.service.CreateUserCouponUseCase;
+import band.gosrock.api.coupon.service.ReadIssuedCouponUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @SecurityRequirement(name = "access-token")
 @Tag(name = "쿠폰 관련 컨트롤러")
@@ -22,11 +21,26 @@ import org.springframework.web.bind.annotation.RestController;
 public class CouponController {
 
     private final CreateCouponUseCase createCouponUseCase;
+    private final ReadIssuedCouponUseCase readIssuedCouponUseCase;
+    private final CreateUserCouponUseCase createUserCouponUseCase;
 
     @Operation(summary = "쿠폰 캠페인 생성 API")
     @PostMapping("/campaigns")
     public CreateCouponCampaignResponse createCouponCampaign(
             @RequestBody @Valid CreateCouponCampaignRequest createCouponCampaignRequest) {
         return createCouponUseCase.execute(createCouponCampaignRequest);
+    }
+
+    @Operation(summary = "주문시 쿠폰 조회 API")
+    @GetMapping("/issuedCoupons/orders")
+    public ReadIssuedCouponOrderResponse getAllIssuedCouponsUsedInOrders() {
+        return readIssuedCouponUseCase.execute();
+    }
+
+    @Operation(summary = "유저 쿠폰 발급 API")
+    @PostMapping("/campaigns/{coupon_code}")
+    public CreateUserCouponResponse createUserCoupon(
+            @PathVariable("coupon_code") String couponCode) {
+        return createUserCouponUseCase.execute(couponCode);
     }
 }
