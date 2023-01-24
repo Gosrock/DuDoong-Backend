@@ -4,11 +4,10 @@ package band.gosrock.api.event.model.mapper;
 import band.gosrock.api.event.model.dto.request.CreateEventRequest;
 import band.gosrock.api.event.model.dto.request.UpdateEventDetailRequest;
 import band.gosrock.common.annotation.Mapper;
-import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.domain.EventDetail;
+import band.gosrock.domain.domains.event.domain.EventPlace;
 import band.gosrock.domain.domains.event.service.EventService;
-import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,8 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class EventMapper {
 
-    private final HostAdaptor hostAdaptor;
-    private final EventAdaptor eventAdaptor;
     private final EventService eventService;
 
     @Transactional(readOnly = true)
@@ -26,12 +23,9 @@ public class EventMapper {
                 Event.builder()
                         .hostId(createEventRequest.getHostId())
                         .name(createEventRequest.getName())
-                        .latitude(createEventRequest.getLatitude())
-                        .longitude(createEventRequest.getLongitude())
-                        .placeName(createEventRequest.getPlaceName())
-                        .placeAddress(createEventRequest.getPlaceAddress())
                         .urlName(createEventRequest.getUrlName())
                         .build();
+        event.setEventPlace(toEventPlace(createEventRequest));
         event.setTime(createEventRequest.getStartAt(), createEventRequest.getEndAt());
         return eventService.updateEventUrlName(event, createEventRequest.getUrlName());
     }
@@ -44,6 +38,15 @@ public class EventMapper {
                 .detailImage2(updateEventDetailRequest.getDetailImageUrl2())
                 .detailImage3(updateEventDetailRequest.getDetailImageUrl3())
                 .content(updateEventDetailRequest.getContent())
+                .build();
+    }
+
+    public EventPlace toEventPlace(CreateEventRequest createEventRequest) {
+        return EventPlace.builder()
+                .placeName(createEventRequest.getPlaceName())
+                .placeAddress(createEventRequest.getPlaceAddress())
+                .latitude(createEventRequest.getLatitude())
+                .longitude(createEventRequest.getLongitude())
                 .build();
     }
 

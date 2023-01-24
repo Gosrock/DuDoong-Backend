@@ -39,7 +39,7 @@ public class EventInfoVo {
     /*
     공연 장소
      */
-    private final String placeName;
+    @JsonUnwrapped private final EventPlaceVo eventPlace;
 
     /*
     공연 상태
@@ -52,7 +52,7 @@ public class EventInfoVo {
                 .eventDetailVo(EventDetailVo.from(event))
                 .startAt(event.getStartAt())
                 .endAt(event.getEndAt())
-                .placeName(event.getPlaceName())
+                .eventPlace(EventPlaceVo.from(event))
                 .eventStatus(event.getStatus())
                 .build();
     }

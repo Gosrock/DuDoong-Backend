@@ -5,6 +5,7 @@ import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.domain.EventDetail;
+import band.gosrock.domain.domains.event.domain.EventPlace;
 import band.gosrock.domain.domains.event.exception.AlreadyExistEventUrlNameException;
 import band.gosrock.domain.domains.event.exception.HostNotAuthEventException;
 import band.gosrock.domain.domains.event.repository.EventRepository;
@@ -33,6 +34,11 @@ public class EventService {
 
     public Event updateEventDetail(Event event, EventDetail eventDetail) {
         event.setEventDetail(eventDetail);
+        return eventRepository.save(event);
+    }
+
+    public Event updateEventPlace(Event event, EventPlace eventPlace) {
+        event.setEventPlace(eventPlace);
         return eventRepository.save(event);
     }
 

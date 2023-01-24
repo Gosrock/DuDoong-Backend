@@ -24,44 +24,37 @@ public class Event extends BaseTimeEntity {
     // 호스트 정보
     private Long hostId;
 
-    // 공연 시작 시각
-    private LocalDateTime startAt;
-
-    // 공연 종료 시각
-    private LocalDateTime endAt;
-
-    // 공연 진행 시간
-    private Long runTime;
-
-    // (지도 정보) 위도 - x
-    private Double latitude;
-
-    // (지도 정보) 경도 - y
-    private Double longitude;
-
     // 공연 이름
     private String name;
 
     // url 표시 이름 (unique)
     private String urlName;
 
-    // 공연 장소
-    private String placeName;
+    // 공연 시작 시각
+    private LocalDateTime startAt;
 
-    // 공연 상세 주소
-    private String placeAddress;
+    // 공연 종료 시각
+    private LocalDateTime endAt;
+
+    // 공연 장소 정보
+    @Embedded private EventPlace eventPlace;
+
+    @Embedded private EventDetail eventDetail;
 
     // 이벤트 상태
     @Enumerated(EnumType.STRING)
     private EventStatus status = EventStatus.PREPARING;
 
-    @Embedded private EventDetail eventDetail;
+    /*********** 미확정된 정보 ***********/
+    // 공연 진행 시간
+    private Long runTime;
 
     // 예매 시작 시각
     private LocalDateTime ticketingStartAt;
 
     // 예매 종료 시각
     private LocalDateTime ticketingEndAt;
+    /*********** 미확정된 정보 ***********/
 
     /** 이벤트의 시작과 종료 시간을 지정 */
     public void setTime(LocalDateTime startAt, LocalDateTime endAt) {
@@ -91,25 +84,16 @@ public class Event extends BaseTimeEntity {
         this.eventDetail = eventDetail;
     }
 
+    public void setEventPlace(EventPlace eventPlace) {
+        this.eventPlace = eventPlace;
+    }
+
     @Builder
-    public Event(
-            Long hostId,
-            String name,
-            Long runTime,
-            Double latitude,
-            Double longitude,
-            String urlName,
-            String placeName,
-            String placeAddress,
-            String content) {
+    public Event(Long hostId, String name, Long runTime, String urlName) {
         this.hostId = hostId;
         this.runTime = runTime;
-        this.latitude = latitude;
-        this.longitude = longitude;
         this.name = name;
         this.urlName = urlName;
-        this.placeName = placeName;
-        this.placeAddress = placeAddress;
     }
 
     public RefundInfoVo getRefundInfoVo() {

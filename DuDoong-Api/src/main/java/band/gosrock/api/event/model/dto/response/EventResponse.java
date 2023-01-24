@@ -3,6 +3,7 @@ package band.gosrock.api.event.model.dto.response;
 
 import band.gosrock.common.annotation.DateFormat;
 import band.gosrock.domain.common.vo.EventDetailVo;
+import band.gosrock.domain.common.vo.EventPlaceVo;
 import band.gosrock.domain.domains.event.domain.Event;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -28,38 +29,30 @@ public class EventResponse {
     @DateFormat
     private LocalDateTime endAt;
 
-    // 분 단위입니다
-    private Long runTime;
-
-    private Double latitude;
-
-    private Double longitude;
-
-    @JsonUnwrapped private EventDetailVo eventDetail;
-
     private String urlName;
 
-    private String placeName;
+    @JsonUnwrapped private EventDetailVo eventDetail;
+    @JsonUnwrapped private EventPlaceVo eventPlace;
 
-    private String placeAddress;
+    /*************** 미확정된 정보 ******************/
+    private Long runTime;
 
     @DateFormat private LocalDateTime ticketingStartAt;
 
     @DateFormat private LocalDateTime ticketingEndAt;
+    /************* 미확정된 정보 ******************/
 
     public static EventResponse of(Event event) {
         return EventResponse.builder()
+                .eventId(event.getId())
                 .hostId(event.getHostId())
                 .name(event.getName())
                 .startAt(event.getStartAt())
                 .endAt(event.getEndAt())
                 .runTime(event.getRunTime())
-                .latitude(event.getLatitude())
-                .longitude(event.getLongitude())
                 .eventDetail(EventDetailVo.from(event))
+                .eventPlace(EventPlaceVo.from(event))
                 .urlName(event.getUrlName())
-                .placeName(event.getPlaceName())
-                .placeAddress(event.getPlaceAddress())
                 .ticketingStartAt(event.getTicketingStartAt())
                 .ticketingEndAt(event.getTicketingEndAt())
                 .build();
