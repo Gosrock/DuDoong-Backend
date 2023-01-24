@@ -1,7 +1,9 @@
 package band.gosrock.api.host.model.dto.response;
 
 
+import band.gosrock.domain.common.vo.HostInfoVo;
 import band.gosrock.domain.domains.host.domain.Host;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -9,11 +11,9 @@ import lombok.Getter;
 @Getter
 @Builder
 public class HostResponse {
-    @Schema(description = "담당자 이메일")
-    private final String contactEmail;
-
-    @Schema(description = "담당자 전화번호")
-    private final String contactNumber;
+    @Schema(description = "호스트 프로필")
+    @JsonUnwrapped
+    private final HostInfoVo profile;
 
     @Schema(description = "마스터 유저의 고유 아이디")
     private final Long masterUserId;
@@ -23,8 +23,7 @@ public class HostResponse {
 
     public static HostResponse of(Host host) {
         return HostResponse.builder()
-                .contactEmail(host.getContactEmail())
-                .contactNumber(host.getContactNumber())
+                .profile(HostInfoVo.from(host))
                 .masterUserId(host.getMasterUserId())
                 .partner(host.getPartner())
                 .build();
