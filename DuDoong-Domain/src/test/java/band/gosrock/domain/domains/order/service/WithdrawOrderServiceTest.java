@@ -10,12 +10,15 @@ import band.gosrock.domain.DisableDomainEvent;
 import band.gosrock.domain.DomainIntegrateSpringBootTest;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
+import band.gosrock.domain.domains.order.domain.OrderLineItem;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
+import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -27,6 +30,8 @@ class WithdrawOrderServiceTest {
     @Autowired WithdrawOrderService withdrawOrderService;
 
     @MockBean OrderAdaptor orderAdaptor;
+    @Mock OrderLineItem orderLineItem;
+    @Mock TicketItem ticketItem;
 
     Order order;
 
@@ -38,10 +43,13 @@ class WithdrawOrderServiceTest {
                 Order.builder()
                         .userId(userId)
                         .orderStatus(OrderStatus.CONFIRM)
-                        .orderLineItems(List.of())
+                        .orderLineItems(List.of(orderLineItem))
                         .build();
         order.addUUID();
         given(orderAdaptor.findByOrderUuid(any())).willReturn(order);
+        given(orderLineItem.getTicketItem()).willReturn(ticketItem);
+        given(orderLineItem.canRefund()).willReturn(Boolean.TRUE);
+        given(ticketItem.getId()).willReturn(1L);
     }
 
     @Test

@@ -332,6 +332,10 @@ public class Order extends BaseTimeEntity {
         return getOrderLineItem().getTicketItem();
     }
 
+    public Long getItemId() {
+        return getOrderLineItem().getTicketItem().getId();
+    }
+
     /** 주문에서 티켓 상품의 타입을 반환합니다. */
     public TicketType getItemType() {
         return getItem().getType();
