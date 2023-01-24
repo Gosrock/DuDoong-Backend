@@ -3,6 +3,7 @@ package band.gosrock.domain.domains.order.domain;
 import static band.gosrock.common.consts.DuDoongStatic.NO_START_NUMBER;
 
 import band.gosrock.domain.common.aop.domainEvent.Events;
+import band.gosrock.domain.common.events.order.CreateOrderEvent;
 import band.gosrock.domain.common.events.order.DoneOrderEvent;
 import band.gosrock.domain.common.events.order.WithDrawOrderEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
@@ -43,6 +44,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -96,8 +98,9 @@ public class Order extends BaseTimeEntity {
     }
 
     @PostPersist
-    public void createOrderNo() {
+    public void createOrder() {
         this.orderNo = "R" + Long.sum(NO_START_NUMBER, this.id);
+        Events.raise(CreateOrderEvent.from(this));
     }
 
     /** ---------------------------- 생성 관련 메서드 ---------------------------------- */
@@ -119,12 +122,11 @@ public class Order extends BaseTimeEntity {
 
     /** 카드, 간편결제등 토스 요청 과정이 필요한 결제를 생성합니다. */
     public static Order createPaymentOrder(Long userId, Cart cart) {
-        List<OrderLineItem> orderLineItems =
-                cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
+
         return Order.builder()
                 .userId(userId)
                 .orderName(cart.getCartName())
-                .orderLineItems(orderLineItems)
+                .orderLineItems(getOrderLineItems(cart))
                 .orderStatus(OrderStatus.PENDING_PAYMENT)
                 .orderMethod(OrderMethod.PAYMENT)
                 .build();
@@ -132,12 +134,10 @@ public class Order extends BaseTimeEntity {
 
     /** 승인 결제인 주문을 생성합니다. */
     public static Order createApproveOrder(Long userId, Cart cart) {
-        List<OrderLineItem> orderLineItems =
-                cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
         return Order.builder()
                 .userId(userId)
                 .orderName(cart.getCartName())
-                .orderLineItems(orderLineItems)
+                .orderLineItems(getOrderLineItems(cart))
                 .orderStatus(OrderStatus.PENDING_APPROVE)
                 .orderMethod(OrderMethod.APPROVAL)
                 .build();
@@ -148,18 +148,26 @@ public class Order extends BaseTimeEntity {
         if (!cart.getItemType().isFCFS() || !cart.isNeedPaid()) {
             throw InvalidOrderException.EXCEPTION;
         }
-        coupon.validCanDiscount(cart.getTotalPrice());
-        OrderCouponVo couponVo = OrderCouponVo.of(coupon, cart.getTotalPrice());
-        List<OrderLineItem> orderLineItems =
-                cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
+
+        Money supplyAmount = cart.getTotalPrice();
+        OrderCouponVo couponVo = OrderCouponVo.of(coupon, supplyAmount);
+        couponVo.validMinimumPaymentAmount(supplyAmount);
+
         return Order.builder()
                 .userId(userId)
                 .orderName(cart.getCartName())
-                .orderLineItems(orderLineItems)
+                .orderLineItems(getOrderLineItems(cart))
                 .orderStatus(OrderStatus.PENDING_PAYMENT)
                 .orderMethod(OrderMethod.PAYMENT)
                 .orderCouponVo(couponVo)
                 .build();
+    }
+
+    @NotNull
+    private static List<OrderLineItem> getOrderLineItems(Cart cart) {
+        List<OrderLineItem> orderLineItems =
+                cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
+        return orderLineItems;
     }
 
     public static Order create(Long userId, Cart cart) {
@@ -300,10 +308,7 @@ public class Order extends BaseTimeEntity {
      * @default 사용하지않음
      */
     public String getCouponName() {
-        if (hasCoupon()) {
-            return issuedCoupon.getCouponName();
-        }
-        return "사용하지 않음";
+       return orderCouponVo.getName();
     }
 
     /** 총 공급가액을 가져옵니다. */
@@ -319,14 +324,11 @@ public class Order extends BaseTimeEntity {
     }
     /** 총 할인금액을 가져옵니다. */
     public Money getTotalDiscountPrice() {
-        if (hasCoupon()) {
-            return issuedCoupon.getDiscountAmount(getTotalSupplyPrice());
-        }
-        return Money.ZERO;
+        return orderCouponVo.getDiscountAmount();
     }
 
     public Boolean hasCoupon() {
-        return issuedCoupon != null;
+        return !orderCouponVo.isDefault();
     }
 
     /**

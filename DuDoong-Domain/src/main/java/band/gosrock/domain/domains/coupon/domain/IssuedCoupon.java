@@ -71,12 +71,9 @@ public class IssuedCoupon extends BaseTimeEntity {
     }
 
     public void use() {
-        if (usageStatus) {
+        if (usageStatus) { // 동시성 이슈 가능
             throw AlreadyUsedCouponException.EXCEPTION;
         }
         usageStatus = true;
     }
-
-    // TODO : 밸리데이션 진행해주세요.
-    public void validCanDiscount(Money supplyAmount) {}
 }

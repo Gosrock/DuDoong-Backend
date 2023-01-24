@@ -3,7 +3,6 @@ package band.gosrock.domain.domains.issuedTicket.service.handlers;
 
 import band.gosrock.domain.common.events.order.DoneOrderEvent;
 import band.gosrock.domain.domains.issuedTicket.service.IssuedTicketDomainService;
-import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -16,8 +15,6 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class OrderEventHandler {
 
     private final IssuedTicketDomainService issuedTicketDomainService;
-
-    private final OrderAdaptor orderAdaptor;
 
     @TransactionalEventListener(
             classes = DoneOrderEvent.class,
