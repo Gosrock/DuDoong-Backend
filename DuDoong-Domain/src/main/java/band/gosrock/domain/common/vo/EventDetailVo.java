@@ -29,7 +29,7 @@ public class EventDetailVo {
     public static EventDetailVo from(Event event) {
         EventDetail eventDetail = event.getEventDetail();
         if (eventDetail == null) {
-            return null;
+            return EventDetailVo.builder().build();
         }
         return EventDetailVo.builder()
                 .posterImage(eventDetail.getPosterImage())

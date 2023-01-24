@@ -24,7 +24,7 @@ public class EventPlaceVo {
     public static EventPlaceVo from(Event event) {
         EventPlace eventPlace = event.getEventPlace();
         if (eventPlace == null) {
-            return null;
+            return EventPlaceVo.builder().build();
         }
         return EventPlaceVo.builder()
                 .latitude(eventPlace.getLatitude())
