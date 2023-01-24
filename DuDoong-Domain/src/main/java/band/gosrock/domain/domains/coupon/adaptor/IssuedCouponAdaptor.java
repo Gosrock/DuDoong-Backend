@@ -4,6 +4,7 @@ package band.gosrock.domain.domains.coupon.adaptor;
 import band.gosrock.common.annotation.Adaptor;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import band.gosrock.domain.domains.coupon.exception.AlreadyIssuedCouponException;
+import band.gosrock.domain.domains.coupon.exception.CouponNotFoundException;
 import band.gosrock.domain.domains.coupon.repository.IssuedCouponRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -28,5 +29,9 @@ public class IssuedCouponAdaptor {
                         l -> {
                             throw AlreadyIssuedCouponException.EXCEPTION;
                         });
+    }
+
+    public IssuedCoupon query(Long couponCampaignId){
+        return issuedCouponRepository.findById(couponCampaignId).orElseThrow(()-> CouponNotFoundException.EXCEPTION);
     }
 }
