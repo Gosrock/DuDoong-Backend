@@ -8,6 +8,8 @@ import band.gosrock.domain.CunCurrencyExecutorService;
 import band.gosrock.domain.DisableDomainEvent;
 import band.gosrock.domain.DisableRedissonLock;
 import band.gosrock.domain.DomainIntegrateSpringBootTest;
+import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.domains.coupon.domain.OrderCouponVo;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;
@@ -40,7 +42,7 @@ class OrderApproveServiceConcurrencyFailTest {
 
     @BeforeEach
     void setUp() {
-        given(orderLineItem.isNeedPaid()).willReturn(Boolean.FALSE);
+        given(orderLineItem.getTotalOrderLinePrice()).willReturn(Money.ZERO);
         given(orderLineItem.getTicketItem()).willReturn(ticketItem);
         given(ticketItem.getId()).willReturn(1L);
         order =
@@ -48,6 +50,7 @@ class OrderApproveServiceConcurrencyFailTest {
                         .orderMethod(OrderMethod.APPROVAL)
                         .orderStatus(OrderStatus.PENDING_APPROVE)
                         .orderLineItems(List.of(orderLineItem))
+                        .orderCouponVo(OrderCouponVo.empty())
                         .build();
         order.addUUID();
         given(orderAdaptor.findByOrderUuid(any())).willReturn(order);

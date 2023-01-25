@@ -27,6 +27,7 @@ public class CunCurrencyExecutorService {
                             // 오류없이 성공을 하면 성공횟수를 증가시킵니다.
                             successCount.getAndIncrement();
                         } catch (Throwable e) {
+                            // 에러뜨면 여기서 확인해보셔요!
                             log.info(e.getClass().getName());
                         } finally {
                             latch.countDown();

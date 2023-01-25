@@ -3,6 +3,9 @@ package band.gosrock.domain.domains.coupon.domain;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.domains.coupon.exception.AlreadyUsedCouponException;
+import band.gosrock.domain.domains.coupon.exception.NotMyCouponException;
+import java.util.Objects;
 import javax.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -25,12 +28,11 @@ public class IssuedCoupon extends BaseTimeEntity {
     private Long userId;
 
     @ColumnDefault("'false'")
-    private boolean usageStatus;
+    private boolean usageStatus = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coupon_campaign_id", nullable = false)
     private CouponCampaign couponCampaign;
-
     /** 주문에서 사용하는 할인 금액 계산 함수, 할인 금액보다 결제 금액이 작을 경우 할인 불가로 Money.ZERO 리턴 */
     public Money getDiscountAmount(Money supplyAmount) {
         if (couponCampaign.getDiscountType().equals(DiscountType.AMOUNT)) { // 정액 할인
@@ -60,5 +62,18 @@ public class IssuedCoupon extends BaseTimeEntity {
 
     public String getCouponName() { // 쿠폰코드==쿠폰이름
         return this.couponCampaign.getCouponCode();
+    }
+
+    public void validMine(Long userId) {
+        if (!Objects.equals(userId, this.userId)) {
+            throw NotMyCouponException.EXCEPTION;
+        }
+    }
+
+    public void use() {
+        if (usageStatus) { // 동시성 이슈 가능
+            throw AlreadyUsedCouponException.EXCEPTION;
+        }
+        usageStatus = true;
     }
 }
