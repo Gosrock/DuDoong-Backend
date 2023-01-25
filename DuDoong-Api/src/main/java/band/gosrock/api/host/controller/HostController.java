@@ -35,7 +35,7 @@ public class HostController {
         return readHostListUseCase.execute();
     }
 
-    @Operation(summary = "내가 속해있는, 고유 아이디에 해당하는 호스트 정보를 가져옵니다.")
+    @Operation(summary = "고유 아이디에 해당하는 호스트 정보를 가져옵니다.")
     @GetMapping("/{hostId}")
     public HostDetailResponse getHostById(@PathVariable Long hostId) {
         return readHostUseCase.execute(hostId);

@@ -2,12 +2,14 @@ package band.gosrock.api.event.model.mapper;
 
 
 import band.gosrock.api.event.model.dto.request.CreateEventRequest;
+import band.gosrock.api.event.model.dto.request.UpdateEventBasicRequest;
+import band.gosrock.api.event.model.dto.request.UpdateEventDetailRequest;
 import band.gosrock.common.annotation.Mapper;
-import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
-import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
-import band.gosrock.domain.domains.host.domain.Host;
-import band.gosrock.domain.domains.host.exception.ForbiddenHostException;
+import band.gosrock.domain.domains.event.domain.EventBasic;
+import band.gosrock.domain.domains.event.domain.EventDetail;
+import band.gosrock.domain.domains.event.domain.EventPlace;
+import band.gosrock.domain.domains.event.service.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,29 +17,42 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class EventMapper {
 
-    private final HostAdaptor hostAdaptor;
-    private final EventAdaptor eventAdaptor;
+    private final EventService eventService;
 
     @Transactional(readOnly = true)
-    public Event toEntity(CreateEventRequest createEventRequest, Long userId) {
-        final Host host = hostAdaptor.findById(createEventRequest.getHostId());
-        if (host.hasHostUserId(userId)) {
-            return Event.builder()
-                    .hostId(host.getId())
-                    .startAt(createEventRequest.getStartAt())
-                    .runTime(createEventRequest.getRunTime())
-                    .latitude(createEventRequest.getLatitude())
-                    .longitude(createEventRequest.getLongitude())
-                    .posterImage(createEventRequest.getPosterImageUrl())
-                    .name(createEventRequest.getName())
-                    .url(createEventRequest.getAliasUrl())
-                    .placeName(createEventRequest.getPlaceName())
-                    .placeAddress(createEventRequest.getPlaceAddress())
-                    .content(createEventRequest.getContent())
-                    .ticketingStartAt(createEventRequest.getTicketingStartAt())
-                    .ticketingEndAt(createEventRequest.getTicketingEndAt())
-                    .build();
-        }
-        throw ForbiddenHostException.EXCEPTION;
+    public Event toEntity(CreateEventRequest createEventRequest) {
+        return Event.builder()
+                .hostId(createEventRequest.getHostId())
+                .name(createEventRequest.getName())
+                .startAt(createEventRequest.getStartAt())
+                .runTime(createEventRequest.getRunTime())
+                .build();
     }
+
+    public EventBasic toEventBasic(UpdateEventBasicRequest updateEventBasicRequest) {
+        return EventBasic.builder()
+                .name(updateEventBasicRequest.getName())
+                .runTime(updateEventBasicRequest.getRunTime())
+                .startAt(updateEventBasicRequest.getStartAt())
+                .build();
+    }
+
+    public EventDetail toEventDetail(UpdateEventDetailRequest updateEventDetailRequest) {
+        return EventDetail.builder()
+                .posterImage(updateEventDetailRequest.getPosterImage())
+                .detailImages(updateEventDetailRequest.getDetailImages())
+                .content(updateEventDetailRequest.getContent())
+                .build();
+    }
+
+    public EventPlace toEventPlace(UpdateEventBasicRequest updateEventBasicRequest) {
+        return EventPlace.builder()
+                .placeName(updateEventBasicRequest.getPlaceName())
+                .placeAddress(updateEventBasicRequest.getPlaceAddress())
+                .latitude(updateEventBasicRequest.getLatitude())
+                .longitude(updateEventBasicRequest.getLongitude())
+                .build();
+    }
+
+    // todo :: 공연 장소
 }

@@ -1,9 +1,10 @@
 package band.gosrock.domain.common.vo;
 
 
+import band.gosrock.common.annotation.DateFormat;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.domain.EventStatus;
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,24 +20,26 @@ public class EventInfoVo {
     이벤트 이름
      */
     private final String eventName;
+
     /*
-    이벤트 이미지
+    이벤트 디테일
      */
-    private final String posterImage;
+    @JsonUnwrapped private final EventDetailVo eventDetailVo;
 
     /*
     이벤트 시작 시간
      */
-    @JsonFormat(
-            shape = JsonFormat.Shape.STRING,
-            pattern = "yyyy-MM-dd hh:mm:ss",
-            timezone = "Asia/Seoul")
-    private final LocalDateTime startAt;
+    @DateFormat private final LocalDateTime startAt;
+
+    /*
+    이벤트 시작 시간
+     */
+    @DateFormat private final LocalDateTime endAt;
 
     /*
     공연 장소
      */
-    private final String placeName;
+    @JsonUnwrapped private final EventPlaceVo eventPlace;
 
     /*
     공연 상태
@@ -45,10 +48,11 @@ public class EventInfoVo {
 
     public static EventInfoVo from(Event event) {
         return EventInfoVo.builder()
-                .eventName(event.getName())
-                .posterImage(event.getPosterImage())
+                .eventName(EventBasicVo.from(event).getName())
+                .eventDetailVo(EventDetailVo.from(event))
                 .startAt(event.getStartAt())
-                .placeName(event.getPlaceName())
+                .endAt(event.getEndAt())
+                .eventPlace(EventPlaceVo.from(event))
                 .eventStatus(event.getStatus())
                 .build();
     }
