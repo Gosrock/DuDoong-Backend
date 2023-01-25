@@ -31,12 +31,6 @@ public class EventMapper {
     }
 
     public EventDetail toEventDetail(UpdateEventDetailRequest updateEventDetailRequest) {
-        //        @Valid @URL String detailImage1 =
-        // updateEventDetailRequest.getDetailImageUrl().get(0);
-        //        @Valid @URL String detailImage2 =
-        // updateEventDetailRequest.getDetailImageUrl().get(0);
-        //        @Valid @URL String detailImage3 =
-        // updateEventDetailRequest.getDetailImageUrl().get(0);
         // todo :: 러닝 타임, 티켓팅 시각 정보는 추후 협의
         return EventDetail.builder()
                 .posterImage(updateEventDetailRequest.getPosterImageUrl())
