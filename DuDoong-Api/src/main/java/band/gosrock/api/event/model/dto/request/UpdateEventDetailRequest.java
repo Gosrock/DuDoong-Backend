@@ -27,21 +27,6 @@ public class UpdateEventDetailRequest {
     @URL(message = "올바른 url 형식을 입력하세요")
     private String posterImageUrl;
 
-    //    // 상세 이미지 url 1
-    //    @Schema(defaultValue = "https://s3.dudoong.com/img1", description = "공연 상세 이미지 url1")
-    //    @URL(message = "올바른 url 형식을 입력하세요")
-    //    private String detailImageUrl1;
-    //
-    //    // 상세 이미지 url 2
-    //    @Schema(defaultValue = "https://s3.dudoong.com/img1", description = "공연 상세 이미지 url2")
-    //    @URL(message = "올바른 url 형식을 입력하세요")
-    //    private String detailImageUrl2;
-    //
-    //    // 상세 이미지 url 3
-    //    @Schema(defaultValue = "https://s3.dudoong.com/img1", description = "공연 상세 이미지 url3")
-    //    @URL(message = "올바른 url 형식을 입력하세요")
-    //    private String detailImageUrl3;
-
     @ArraySchema(
             arraySchema =
                     @Schema(
@@ -49,8 +34,8 @@ public class UpdateEventDetailRequest {
                                     "[\"https://s3.dudoong.com/img1\", \"https://s3.dudoong.com/img2\", null]"),
             maxItems = 3)
     @NotNull
-    @Size(min = 3, max = 3, message = "NULL 포함 3개의 이미지를 등록해주세요")
-    private List<String> detailImageUrl;
+    @Size(min = 3, max = 3, message = "NULL 포함 3개의 이미지 URL 을 등록해주세요")
+    private List<@URL String> detailImageUrl;
 
     // (마크다운) 공연 상세 내용
     @Schema(defaultValue = "고스락 공연에 여러분을 초대합니다 웰컴웰컴", description = "공연 상세 내용")
