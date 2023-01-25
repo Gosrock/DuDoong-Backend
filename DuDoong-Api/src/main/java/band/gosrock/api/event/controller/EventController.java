@@ -40,7 +40,7 @@ public class EventController {
     }
 
     @Operation(summary = "공연 상세 정보를 등록합니다.")
-    @PatchMapping("/{eventId}/detail")
+    @PatchMapping("/{eventId}/details")
     public EventResponse updateEventDetail(
             @PathVariable Long eventId,
             @RequestBody @Valid UpdateEventDetailRequest updateEventDetailRequest) {
