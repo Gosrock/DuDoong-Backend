@@ -39,10 +39,8 @@ public class EventMapper {
 
     public EventDetail toEventDetail(UpdateEventDetailRequest updateEventDetailRequest) {
         return EventDetail.builder()
-                .posterImage(updateEventDetailRequest.getPosterImageUrl())
-                .detailImage1(updateEventDetailRequest.getDetailImageUrl().get(0))
-                .detailImage2(updateEventDetailRequest.getDetailImageUrl().get(1))
-                .detailImage3(updateEventDetailRequest.getDetailImageUrl().get(2))
+                .posterImage(updateEventDetailRequest.getPosterImage())
+                .detailImages(updateEventDetailRequest.getDetailImages())
                 .content(updateEventDetailRequest.getContent())
                 .build();
     }
