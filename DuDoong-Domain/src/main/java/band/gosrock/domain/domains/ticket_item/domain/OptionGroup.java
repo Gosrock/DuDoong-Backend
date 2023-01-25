@@ -1,6 +1,9 @@
 package band.gosrock.domain.domains.ticket_item.domain;
 
+import static band.gosrock.domain.common.vo.Money.ZERO;
+import static band.gosrock.domain.domains.ticket_item.domain.OptionGroupType.*;
 
+import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.domain.Event;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,5 +59,16 @@ public class OptionGroup {
 
         this.options.addAll(options);
         options.forEach(option -> option.setOptionGroup(this));
+    }
+
+    public OptionGroup createTicketOption(Money additionalPrice) {
+        OptionGroupType type = this.getType();
+        if (type == TRUE_FALSE) {
+            this.options.add(Option.create("YES", additionalPrice, this));
+            this.options.add(Option.create("NO", ZERO, this));
+        } else if (type == SUBJECTIVE) {
+            this.options.add(Option.create("", ZERO, this));
+        }
+        return this;
     }
 }
