@@ -23,7 +23,7 @@ public class CreateOrderService {
     private final IssuedCouponAdaptor issuedCouponAdaptor;
 
     @Transactional
-    public Order WithOutCoupon(Long cartId, Long userId) {
+    public Order withOutCoupon(Long cartId, Long userId) {
         Cart cart = cartAdaptor.queryCart(cartId, userId);
         Order order = Order.create(userId, cart);
         order.calculatePaymentInfo();
