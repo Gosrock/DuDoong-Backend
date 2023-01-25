@@ -20,11 +20,6 @@ public class EventAdaptor {
                 .orElseThrow(() -> EventNotFoundException.EXCEPTION);
     }
 
-    /** url 표시 이름 중복 확인하는 쿼리 */
-    public Boolean existByAliasUrl(String urlName) {
-        return eventRepository.existsByUrlName(urlName);
-    }
-
     public List<Event> findAllByHostId(Long hostId) {
         return eventRepository.findAllByHostId(hostId);
     }

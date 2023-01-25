@@ -2,9 +2,9 @@ package band.gosrock.domain.domains.event.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
-import band.gosrock.domain.common.vo.DateTimePeriod;
 import band.gosrock.domain.common.vo.EventInfoVo;
 import band.gosrock.domain.common.vo.RefundInfoVo;
+import band.gosrock.domain.domains.event.exception.CannotModifyEventBasicException;
 import band.gosrock.domain.domains.event.exception.EventCannotEndBeforeStartException;
 import java.time.LocalDateTime;
 import javax.persistence.*;
@@ -25,13 +25,7 @@ public class Event extends BaseTimeEntity {
     // 호스트 정보
     private Long hostId;
 
-    // 공연 이름
-    private String name;
-
-    // url 표시 이름 (unique)
-    private String urlName;
-
-    @Embedded private DateTimePeriod eventTime;
+    @Embedded private EventBasic eventBasic;
 
     @Embedded private EventPlace eventPlace;
 
@@ -41,9 +35,10 @@ public class Event extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private EventStatus status = EventStatus.PREPARING;
 
+    private Boolean updated = false;
+
     /*********** 미확정된 정보 ***********/
     // 공연 진행 시간
-    private Long runTime;
 
     // 예매 시작 시각
     private LocalDateTime ticketingStartAt;
@@ -53,26 +48,17 @@ public class Event extends BaseTimeEntity {
     /*********** 미확정된 정보 ***********/
 
     public LocalDateTime getStartAt() {
-        if (this.eventTime == null) {
+        if (this.eventBasic == null) {
             return null;
         }
-        return this.eventTime.getStartAt();
+        return this.getEventBasic().getStartAt();
     }
 
     public LocalDateTime getEndAt() {
-        if (this.eventTime == null) {
+        if (this.eventBasic == null) {
             return null;
         }
-        return this.eventTime.getEndAt();
-    }
-
-    /** 이벤트의 시작과 종료 시간을 지정 */
-    public void setTime(LocalDateTime startAt, LocalDateTime endAt) {
-        // 이벤트 종료가 시작보다 빠르면 안됨
-        if (startAt.isAfter(endAt)) {
-            throw EventCannotEndBeforeStartException.EXCEPTION;
-        }
-        this.eventTime = new DateTimePeriod(startAt, endAt);
+        return this.getEventBasic().getStartAt().plusMinutes(getEventBasic().getRunTime());
     }
 
     /** 티켓팅 시작과 종료 시간을 지정 */
@@ -85,8 +71,12 @@ public class Event extends BaseTimeEntity {
         this.ticketingEndAt = endAt;
     }
 
-    public void setUrlName(String urlName) {
-        this.urlName = urlName;
+    public void setEventBasic(EventBasic eventBasic) {
+        if (updated) {
+            throw CannotModifyEventBasicException.EXCEPTION;
+        }
+        this.updated = true;
+        this.eventBasic = eventBasic;
     }
 
     public void setEventDetail(EventDetail eventDetail) {
@@ -94,19 +84,19 @@ public class Event extends BaseTimeEntity {
     }
 
     public void setEventPlace(EventPlace eventPlace) {
+        // 정보 한 번 등록시 변경 불가
+        this.updated = true;
         this.eventPlace = eventPlace;
     }
 
     @Builder
-    public Event(Long hostId, String name, Long runTime, String urlName) {
+    public Event(Long hostId, String name, LocalDateTime startAt, Long runTime) {
         this.hostId = hostId;
-        this.runTime = runTime;
-        this.name = name;
-        this.urlName = urlName;
+        this.eventBasic = EventBasic.builder().name(name).startAt(startAt).runTime(runTime).build();
     }
 
     public RefundInfoVo getRefundInfoVo() {
-        return RefundInfoVo.from(getStartAt());
+        return RefundInfoVo.from(getEndAt());
     }
 
     public EventInfoVo toEventInfoVo() {

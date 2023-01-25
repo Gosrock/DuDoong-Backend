@@ -9,6 +9,4 @@ public interface EventRepository extends CrudRepository<Event, Long> {
     List<Event> findAll();
 
     List<Event> findAllByHostId(Long hostId);
-
-    Boolean existsByUrlName(String urlName);
 }

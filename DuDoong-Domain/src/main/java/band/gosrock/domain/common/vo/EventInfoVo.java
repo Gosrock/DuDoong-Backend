@@ -48,7 +48,7 @@ public class EventInfoVo {
 
     public static EventInfoVo from(Event event) {
         return EventInfoVo.builder()
-                .eventName(event.getName())
+                .eventName(EventBasicVo.from(event).getName())
                 .eventDetailVo(EventDetailVo.from(event))
                 .startAt(event.getStartAt())
                 .endAt(event.getEndAt())

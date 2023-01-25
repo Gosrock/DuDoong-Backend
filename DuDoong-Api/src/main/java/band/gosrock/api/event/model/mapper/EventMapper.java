@@ -2,9 +2,11 @@ package band.gosrock.api.event.model.mapper;
 
 
 import band.gosrock.api.event.model.dto.request.CreateEventRequest;
+import band.gosrock.api.event.model.dto.request.UpdateEventBasicRequest;
 import band.gosrock.api.event.model.dto.request.UpdateEventDetailRequest;
 import band.gosrock.common.annotation.Mapper;
 import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.event.domain.EventBasic;
 import band.gosrock.domain.domains.event.domain.EventDetail;
 import band.gosrock.domain.domains.event.domain.EventPlace;
 import band.gosrock.domain.domains.event.service.EventService;
@@ -18,20 +20,24 @@ public class EventMapper {
     private final EventService eventService;
 
     @Transactional(readOnly = true)
-    public Event toEntity(Long userId, CreateEventRequest createEventRequest) {
-        Event event =
-                Event.builder()
-                        .hostId(createEventRequest.getHostId())
-                        .name(createEventRequest.getName())
-                        .urlName(createEventRequest.getUrlName())
-                        .build();
-        event.setEventPlace(toEventPlace(createEventRequest));
-        event.setTime(createEventRequest.getStartAt(), createEventRequest.getEndAt());
-        return eventService.updateEventUrlName(event, createEventRequest.getUrlName());
+    public Event toEntity(CreateEventRequest createEventRequest) {
+        return Event.builder()
+                .hostId(createEventRequest.getHostId())
+                .name(createEventRequest.getName())
+                .startAt(createEventRequest.getStartAt())
+                .runTime(createEventRequest.getRunTime())
+                .build();
+    }
+
+    public EventBasic toEventBasic(UpdateEventBasicRequest updateEventBasicRequest) {
+        return EventBasic.builder()
+                .name(updateEventBasicRequest.getName())
+                .runTime(updateEventBasicRequest.getRunTime())
+                .startAt(updateEventBasicRequest.getStartAt())
+                .build();
     }
 
     public EventDetail toEventDetail(UpdateEventDetailRequest updateEventDetailRequest) {
-        // todo :: 러닝 타임, 티켓팅 시각 정보는 추후 협의
         return EventDetail.builder()
                 .posterImage(updateEventDetailRequest.getPosterImageUrl())
                 .detailImage1(updateEventDetailRequest.getDetailImageUrl().get(0))
@@ -41,12 +47,12 @@ public class EventMapper {
                 .build();
     }
 
-    public EventPlace toEventPlace(CreateEventRequest createEventRequest) {
+    public EventPlace toEventPlace(UpdateEventBasicRequest updateEventBasicRequest) {
         return EventPlace.builder()
-                .placeName(createEventRequest.getPlaceName())
-                .placeAddress(createEventRequest.getPlaceAddress())
-                .latitude(createEventRequest.getLatitude())
-                .longitude(createEventRequest.getLongitude())
+                .placeName(updateEventBasicRequest.getPlaceName())
+                .placeAddress(updateEventBasicRequest.getPlaceAddress())
+                .latitude(updateEventBasicRequest.getLatitude())
+                .longitude(updateEventBasicRequest.getLongitude())
                 .build();
     }
 

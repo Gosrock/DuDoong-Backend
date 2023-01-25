@@ -4,9 +4,9 @@ package band.gosrock.domain.domains.event.service;
 import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.event.domain.EventBasic;
 import band.gosrock.domain.domains.event.domain.EventDetail;
 import band.gosrock.domain.domains.event.domain.EventPlace;
-import band.gosrock.domain.domains.event.exception.AlreadyExistEventUrlNameException;
 import band.gosrock.domain.domains.event.exception.HostNotAuthEventException;
 import band.gosrock.domain.domains.event.repository.EventRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,12 +23,9 @@ public class EventService {
         return eventRepository.save(event);
     }
 
-    public Event updateEventUrlName(Event event, String urlName) {
-        // 중복된 URL 표시 이름 불가
-        if (eventAdaptor.existByAliasUrl(urlName)) {
-            throw AlreadyExistEventUrlNameException.EXCEPTION;
-        }
-        event.setUrlName(urlName);
+    public Event updateEventBasic(Event event, EventBasic eventBasic, EventPlace eventPlace) {
+        event.setEventBasic(eventBasic);
+        event.setEventPlace(eventPlace);
         return eventRepository.save(event);
     }
 
