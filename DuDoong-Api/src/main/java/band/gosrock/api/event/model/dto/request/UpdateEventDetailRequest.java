@@ -32,6 +32,7 @@ public class UpdateEventDetailRequest {
                     @Schema(
                             defaultValue =
                                     "[\"https://s3.dudoong.com/img1\", \"https://s3.dudoong.com/img2\", null]"),
+            minItems = 3,
             maxItems = 3)
     @NotNull
     @Size(min = 3, max = 3, message = "NULL 포함 3개의 이미지 URL 을 등록해주세요")
