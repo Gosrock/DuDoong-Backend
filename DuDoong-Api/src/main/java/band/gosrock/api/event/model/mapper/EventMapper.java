@@ -8,6 +8,8 @@ import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.domain.EventDetail;
 import band.gosrock.domain.domains.event.domain.EventPlace;
 import band.gosrock.domain.domains.event.service.EventService;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,9 +36,9 @@ public class EventMapper {
         // todo :: 러닝 타임, 티켓팅 시각 정보는 추후 협의
         return EventDetail.builder()
                 .posterImage(updateEventDetailRequest.getPosterImageUrl())
-                .detailImage1(updateEventDetailRequest.getDetailImageUrl1())
-                .detailImage2(updateEventDetailRequest.getDetailImageUrl2())
-                .detailImage3(updateEventDetailRequest.getDetailImageUrl3())
+                .detailImage1(updateEventDetailRequest.getDetailImageUrl().get(0))
+                .detailImage2(updateEventDetailRequest.getDetailImageUrl().get(1))
+                .detailImage3(updateEventDetailRequest.getDetailImageUrl().get(2))
                 .content(updateEventDetailRequest.getContent())
                 .build();
     }
