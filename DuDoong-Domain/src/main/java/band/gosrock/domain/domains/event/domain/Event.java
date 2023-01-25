@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.event.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.common.vo.DateTimePeriod;
 import band.gosrock.domain.common.vo.EventInfoVo;
 import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.event.exception.EventCannotEndBeforeStartException;
@@ -30,13 +31,8 @@ public class Event extends BaseTimeEntity {
     // url 표시 이름 (unique)
     private String urlName;
 
-    // 공연 시작 시각
-    private LocalDateTime startAt;
+    @Embedded private DateTimePeriod eventTime;
 
-    // 공연 종료 시각
-    private LocalDateTime endAt;
-
-    // 공연 장소 정보
     @Embedded private EventPlace eventPlace;
 
     @Embedded private EventDetail eventDetail;
@@ -56,14 +52,27 @@ public class Event extends BaseTimeEntity {
     private LocalDateTime ticketingEndAt;
     /*********** 미확정된 정보 ***********/
 
+    public LocalDateTime getStartAt() {
+        if (this.eventTime == null) {
+            return null;
+        }
+        return this.eventTime.getStartAt();
+    }
+
+    public LocalDateTime getEndAt() {
+        if (this.eventTime == null) {
+            return null;
+        }
+        return this.eventTime.getEndAt();
+    }
+
     /** 이벤트의 시작과 종료 시간을 지정 */
     public void setTime(LocalDateTime startAt, LocalDateTime endAt) {
         // 이벤트 종료가 시작보다 빠르면 안됨
         if (startAt.isAfter(endAt)) {
             throw EventCannotEndBeforeStartException.EXCEPTION;
         }
-        this.startAt = startAt;
-        this.endAt = endAt;
+        this.eventTime = new DateTimePeriod(startAt, endAt);
     }
 
     /** 티켓팅 시작과 종료 시간을 지정 */
@@ -97,7 +106,7 @@ public class Event extends BaseTimeEntity {
     }
 
     public RefundInfoVo getRefundInfoVo() {
-        return RefundInfoVo.from(startAt);
+        return RefundInfoVo.from(getStartAt());
     }
 
     public EventInfoVo toEventInfoVo() {
