@@ -3,6 +3,7 @@ package band.gosrock.domain.domains.coupon.domain;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.domains.coupon.exception.AlreadyRecoveredCouponException;
 import band.gosrock.domain.domains.coupon.exception.AlreadyUsedCouponException;
 import band.gosrock.domain.domains.coupon.exception.NotApplicableCouponException;
 import band.gosrock.domain.domains.coupon.exception.NotMyCouponException;
@@ -79,6 +80,9 @@ public class IssuedCoupon extends BaseTimeEntity {
     }
 
     public void recovery() {
+        if (!usageStatus) { // 동시성 이슈 가능
+            throw AlreadyRecoveredCouponException.EXCEPTION;
+        }
         usageStatus = false;
     }
 }
