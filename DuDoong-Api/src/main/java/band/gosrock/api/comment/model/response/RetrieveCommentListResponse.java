@@ -15,10 +15,13 @@ public class RetrieveCommentListResponse {
 
     private final List<RetrieveCommentDTO> comments;
 
-    public static RetrieveCommentListResponse of(Slice<Comment> comments) {
+    public static RetrieveCommentListResponse of(Slice<Comment> comments, Long currentUserId) {
         return RetrieveCommentListResponse.builder()
                 .hasNext(comments.hasNext())
-                .comments(comments.stream().map(RetrieveCommentDTO::of).toList())
+                .comments(
+                        comments.stream()
+                                .map(comment -> RetrieveCommentDTO.of(comment, currentUserId))
+                                .toList())
                 .build();
     }
 }

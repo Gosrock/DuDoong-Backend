@@ -31,8 +31,8 @@ public class CommentMapper {
 
     @Transactional(readOnly = true)
     public RetrieveCommentListResponse toRetrieveCommentListResponse(
-            CommentCondition commentCondition) {
+            CommentCondition commentCondition, Long currentUserId) {
         Slice<Comment> comments = commentAdaptor.searchComment(commentCondition);
-        return RetrieveCommentListResponse.of(comments);
+        return RetrieveCommentListResponse.of(comments, currentUserId);
     }
 }
