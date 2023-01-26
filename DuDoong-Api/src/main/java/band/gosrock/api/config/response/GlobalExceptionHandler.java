@@ -9,10 +9,12 @@ import band.gosrock.common.exception.DuDoongDynamicException;
 import band.gosrock.common.exception.GlobalErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -105,6 +107,40 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             DuDoongCodeException e, HttpServletRequest request) {
         BaseErrorCode code = e.getErrorCode();
         ErrorReason errorReason = code.getErrorReason();
+        ErrorResponse errorResponse =
+                new ErrorResponse(errorReason, request.getRequestURL().toString());
+        return ResponseEntity.status(HttpStatus.valueOf(errorReason.getStatus()))
+                .body(errorResponse);
+    }
+
+    /** Request Param Validation 예외 처리 */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> ConstraintViolationExceptionHandler(
+            ConstraintViolationException e, HttpServletRequest request) {
+        Map<String, Object> bindingErrors = new HashMap<>();
+        e.getConstraintViolations()
+                .forEach(
+                        constraintViolation -> {
+                            List<String> propertyPath =
+                                    List.of(
+                                            constraintViolation
+                                                    .getPropertyPath()
+                                                    .toString()
+                                                    .split("\\."));
+                            String path =
+                                    propertyPath.stream()
+                                            .skip(propertyPath.size() - 1)
+                                            .findFirst()
+                                            .orElse(null);
+                            bindingErrors.put(path, constraintViolation.getMessage());
+                        });
+
+        ErrorReason errorReason =
+                ErrorReason.builder()
+                        .code("BAD_REQUEST")
+                        .status(400)
+                        .reason(bindingErrors.toString())
+                        .build();
         ErrorResponse errorResponse =
                 new ErrorResponse(errorReason, request.getRequestURL().toString());
         return ResponseEntity.status(HttpStatus.valueOf(errorReason.getStatus()))
