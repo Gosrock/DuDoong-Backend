@@ -21,6 +21,9 @@ public class WithDrawOrderEvent extends DomainEvent {
     @Nullable private final String paymentKey;
     private final Long itemId;
 
+    private final Boolean isUsingCoupon;
+    @Nullable private final Long issuedCouponId;
+
     public static WithDrawOrderEvent from(Order order) {
         return WithDrawOrderEvent.builder()
                 .orderMethod(order.getOrderMethod())
@@ -29,6 +32,8 @@ public class WithDrawOrderEvent extends DomainEvent {
                 .orderUuid(order.getUuid())
                 .orderStatus(order.getOrderStatus())
                 .itemId(order.getItemId())
+                .isUsingCoupon(order.hasCoupon())
+                .issuedCouponId(order.getOrderCouponVo().getCouponId())
                 .build();
     }
 }

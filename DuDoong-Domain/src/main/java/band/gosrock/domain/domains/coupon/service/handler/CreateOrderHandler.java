@@ -26,7 +26,7 @@ public class CreateOrderHandler {
             log.info(createOrderEvent.getOrderUuid() + "주문 생성 이벤트 쿠폰 사용 리스너 : 쿠폰 사용 도메인 서비스 호출");
             useCouponService.execute(
                     createOrderEvent.getUserId(), createOrderEvent.getIssuedCouponId());
-            log.info(createOrderEvent.getOrderUuid() + "주문 생성 이벤트 쿠폰 사용 리스너 : 쿠폰 사용 도메인 서비스 호출종료");
+            log.info(createOrderEvent.getOrderUuid() + "주문 생성 이벤트 쿠폰 사용 리스너 : 쿠폰 사용 도메인 서비스 호출 종료");
         }
     }
 }

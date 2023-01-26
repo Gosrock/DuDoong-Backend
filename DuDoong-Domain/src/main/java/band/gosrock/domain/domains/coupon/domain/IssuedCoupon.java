@@ -50,6 +50,7 @@ public class IssuedCoupon extends BaseTimeEntity {
         if (supply.isGreaterThanOrEqual(Money.wons(discount))) {
             return Money.wons(discount);
         }
+        // TODO : 에러로 변경
         return Money.ZERO;
     }
 
@@ -75,5 +76,9 @@ public class IssuedCoupon extends BaseTimeEntity {
             throw AlreadyUsedCouponException.EXCEPTION;
         }
         usageStatus = true;
+    }
+
+    public void recovery() {
+        usageStatus = false;
     }
 }
