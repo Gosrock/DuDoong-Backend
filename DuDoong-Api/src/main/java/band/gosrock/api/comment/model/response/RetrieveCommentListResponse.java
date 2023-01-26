@@ -18,10 +18,7 @@ public class RetrieveCommentListResponse {
     public static RetrieveCommentListResponse of(Slice<Comment> comments) {
         return RetrieveCommentListResponse.builder()
                 .hasNext(comments.hasNext())
-                .comments(
-                        comments.stream()
-                                .map(comment -> RetrieveCommentDTO.of(comment, comment.getUser()))
-                                .toList())
+                .comments(comments.stream().map(RetrieveCommentDTO::of).toList())
                 .build();
     }
 }
