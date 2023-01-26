@@ -1,4 +1,4 @@
-name: Build Api Server
+name: Build Socket Server
 on:
   push:
     tags:
