@@ -8,9 +8,10 @@ import band.gosrock.common.annotation.Mapper;
 import band.gosrock.domain.domains.comment.adaptor.CommentAdaptor;
 import band.gosrock.domain.domains.comment.domain.Comment;
 import band.gosrock.domain.domains.comment.dto.condition.CommentCondition;
+import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Slice;
 import org.springframework.transaction.annotation.Transactional;
 
 @Mapper
@@ -19,8 +20,8 @@ public class CommentMapper {
 
     private final CommentAdaptor commentAdaptor;
 
-    public Comment toEntity(User user, Long eventId, CreateCommentRequest createDTO) {
-        return Comment.create(createDTO.getContent(), createDTO.getNickName(), user, eventId);
+    public Comment toEntity(User user, Event event, CreateCommentRequest createDTO) {
+        return Comment.create(createDTO.getContent(), createDTO.getNickName(), user, event.getId());
     }
 
     @Transactional(readOnly = true)
@@ -30,8 +31,8 @@ public class CommentMapper {
 
     @Transactional(readOnly = true)
     public RetrieveCommentListResponse toRetrieveCommentListResponse(
-        CommentCondition commentCondition) {
-        Page<Comment> comments = commentAdaptor.searchComment(commentCondition);
+            CommentCondition commentCondition) {
+        Slice<Comment> comments = commentAdaptor.searchComment(commentCondition);
         return RetrieveCommentListResponse.of(comments);
     }
 }

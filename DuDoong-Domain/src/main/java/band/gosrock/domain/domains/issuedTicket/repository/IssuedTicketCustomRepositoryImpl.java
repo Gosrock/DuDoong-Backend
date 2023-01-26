@@ -43,6 +43,7 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
                                         .issuedTicketStatus
                                         .eq(IssuedTicketStatus.CANCELED)
                                         .not())
+                        .orderBy(issuedTicket.id.desc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize())
                         .fetch();

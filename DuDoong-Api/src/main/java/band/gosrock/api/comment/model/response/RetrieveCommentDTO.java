@@ -1,5 +1,6 @@
 package band.gosrock.api.comment.model.response;
 
+
 import band.gosrock.domain.common.vo.CommentInfoVo;
 import band.gosrock.domain.common.vo.UserInfoVo;
 import band.gosrock.domain.domains.comment.domain.Comment;
@@ -16,7 +17,9 @@ public class RetrieveCommentDTO {
     private final UserInfoVo userInfo;
 
     public static RetrieveCommentDTO of(Comment comment, User user) {
-        return RetrieveCommentDTO.builder().commentInfo(comment.toCommentInfoVo())
-            .userInfo(user.toUserInfoVo()).build();
+        return RetrieveCommentDTO.builder()
+                .commentInfo(comment.toCommentInfoVo())
+                .userInfo(user.toUserInfoVo())
+                .build();
     }
 }

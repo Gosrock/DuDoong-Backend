@@ -1,30 +1,27 @@
 package band.gosrock.api.comment.model.response;
 
+
 import band.gosrock.domain.domains.comment.domain.Comment;
 import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Slice;
 
 @Getter
 @Builder
 public class RetrieveCommentListResponse {
 
-    private final int page;
-
-    private final int totalPage;
-
-    private final Long offset;
-
-    private final Long lastId;
+    private final Boolean hasNext;
 
     private final List<RetrieveCommentDTO> comments;
 
-    public static RetrieveCommentListResponse of(Page<Comment> comments) {
-        return RetrieveCommentListResponse.builder().page(comments.getPageable().getPageNumber())
-            .totalPage(
-                comments.getTotalPages()).offset(comments.getPageable().getOffset()).lastId(comments.stream().skip(comments.stream().count()).findFirst().get().getId()).comments(
-                comments.stream().map(comment -> RetrieveCommentDTO.of(comment, comment.getUser()))
-                    .toList()).build();
+    public static RetrieveCommentListResponse of(Slice<Comment> comments) {
+        return RetrieveCommentListResponse.builder()
+                .hasNext(comments.hasNext())
+                .comments(
+                        comments.stream()
+                                .map(comment -> RetrieveCommentDTO.of(comment, comment.getUser()))
+                                .toList())
+                .build();
     }
 }

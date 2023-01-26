@@ -8,6 +8,8 @@ import band.gosrock.api.common.UserUtils;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.comment.adaptor.CommentAdaptor;
 import band.gosrock.domain.domains.comment.domain.Comment;
+import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
+import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,12 +24,14 @@ public class CreateCommentUseCase {
 
     private final CommentAdaptor commentAdaptor;
 
+    private final EventAdaptor eventAdaptor;
+
     @Transactional
     public CreateCommentResponse execute(Long eventId, CreateCommentRequest createDTO) {
         User currentUser = userUtils.getCurrentUser();
+        Event event = eventAdaptor.findById(eventId);
         Comment comment =
-                commentAdaptor.save(
-                        commentMapper.toEntity(currentUser, eventId, createDTO));
+                commentAdaptor.save(commentMapper.toEntity(currentUser, event, createDTO));
         return commentMapper.toCreateCommentResponse(comment, currentUser);
     }
 }

@@ -40,9 +40,8 @@ public class CommentController {
 
     @Operation(summary = "응원글을 조회합니다.")
     @GetMapping
-    public RetrieveCommentListResponse getComments(@PathVariable Long eventId,
-        @RequestParam(required = false) Long lastId) {
+    public RetrieveCommentListResponse getComments(
+            @PathVariable Long eventId, @RequestParam(required = false) Long lastId) {
         return retrieveCommentUseCase.execute(eventId, lastId);
     }
-
 }
