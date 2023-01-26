@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class InviteHostRequest {
+public class ReadUserHostRequest {
     @Schema(defaultValue = "kls1998@naver.com", description = "초대할 유저 이메일 주소")
     @Email(message = "올바른 이메일을 입력해주세요")
     private String email;

@@ -9,10 +9,11 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum HostRole {
     // 슈퍼 호스트 (조회, 변경 가능)
-    SUPER_HOST("SUPER_HOST"),
+    SUPER_HOST("SUPER_HOST", "매니저"),
     // 일반 호스트 (조회만 가능)
-    HOST("HOST");
+    HOST("HOST", "게스트");
 
+    private final String name;
     private final String value;
 
     // Enum Validation 을 위한 코드, enum 에 속하지 않으면 null 리턴

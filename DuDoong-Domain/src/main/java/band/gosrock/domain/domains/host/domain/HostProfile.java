@@ -18,10 +18,6 @@ public class HostProfile {
     // 간단 소개
     private String introduce;
 
-    // 호스트 시작 연도
-    @Column(length = 10) // xxxx.xx.xx 까지 허용
-    private String since;
-
     // 프로필 이미지 url
     private String profileImageUrl;
 
@@ -32,17 +28,22 @@ public class HostProfile {
     @Column(length = 15)
     private String contactNumber;
 
+    protected void updateProfile(HostProfile hostProfile) {
+        this.profileImageUrl = hostProfile.getProfileImageUrl();
+        this.introduce = hostProfile.getIntroduce();
+        this.contactEmail = hostProfile.getContactEmail();
+        this.contactNumber = hostProfile.getContactNumber();
+    }
+
     @Builder
     public HostProfile(
             String name,
             String introduce,
-            String since,
             String profileImageUrl,
             String contactEmail,
             String contactNumber) {
         this.name = name;
         this.introduce = introduce;
-        this.since = since;
         this.profileImageUrl = profileImageUrl;
         this.contactEmail = contactEmail;
         this.contactNumber = contactNumber;

@@ -5,6 +5,7 @@ import band.gosrock.domain.common.aop.domainEvent.Events;
 import band.gosrock.domain.common.events.user.UserRegisterEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.UserInfoVo;
+import band.gosrock.domain.common.vo.UserProfileVo;
 import band.gosrock.domain.domains.user.exception.AlreadyDeletedUserException;
 import band.gosrock.domain.domains.user.exception.ForbiddenUserException;
 import javax.persistence.Column;
@@ -76,5 +77,9 @@ public class User extends BaseTimeEntity {
 
     public UserInfoVo toUserInfoVo() {
         return UserInfoVo.from(this);
+    }
+
+    public UserProfileVo toUserProfileVo() {
+        return UserProfileVo.from(this);
     }
 }

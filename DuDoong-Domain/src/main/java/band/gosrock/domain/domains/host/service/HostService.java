@@ -24,10 +24,6 @@ public class HostService {
         return hostRepository.save(host);
     }
 
-    public Host updateHost(Host host) {
-        return hostRepository.save(host);
-    }
-
     public Host addHostUser(Host host, HostUser hostUser) {
         if (host.hasHostUserId(hostUser.getUserId())) {
             throw AlreadyJoinedHostException.EXCEPTION;
@@ -42,13 +38,23 @@ public class HostService {
     }
 
     public Host updateHostProfile(Host host, HostProfile profile) {
-        host.setProfile(profile);
+        host.updateProfile(profile);
         return hostRepository.save(host);
     }
 
     public Host updateHostSlackUrl(Host host, String url) {
         host.setSlackUrl(url);
         return hostRepository.save(host);
+    }
+
+    public Host activateHostUser(Host host, Long userId) {
+        host.getHostUserByUserId(userId).activate();
+        return hostRepository.save(host);
+    }
+
+    /** 해당 유저가 호스트에 속하는지 확인하는 검증 로직입니다 */
+    public void validateHostUser(Host host, Long userId) {
+        host.validateHostUser(userId);
     }
 
     /** 해당 유저가 호스트의 마스터(담당자, 방장)인지 확인하는 검증 로직입니다 */
