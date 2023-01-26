@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.host.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException;
 import javax.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -28,12 +29,22 @@ public class HostUser extends BaseTimeEntity {
     @Column(name = "user_id")
     private Long userId;
 
+    // 초대 승락 여부
+    private Boolean active = false;
+
     // 유저의 권한
     @Enumerated(EnumType.STRING)
     private HostRole role = HostRole.HOST;
 
     public void setHostRole(HostRole role) {
         this.role = role;
+    }
+
+    public void activate() {
+        if (this.active) {
+            throw AlreadyJoinedHostException.EXCEPTION;
+        }
+        this.active = true;
     }
 
     @Builder

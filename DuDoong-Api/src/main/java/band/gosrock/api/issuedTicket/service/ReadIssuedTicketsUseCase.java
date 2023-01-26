@@ -6,7 +6,7 @@ import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketListRespon
 import band.gosrock.api.issuedTicket.mapper.IssuedTicketMapper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.event.service.EventService;
-import band.gosrock.domain.domains.issuedTicket.dto.condtion.IssuedTicketCondition;
+import band.gosrock.domain.domains.issuedTicket.dto.condition.IssuedTicketCondition;
 import band.gosrock.domain.domains.issuedTicket.service.IssuedTicketDomainService;
 import lombok.RequiredArgsConstructor;
 

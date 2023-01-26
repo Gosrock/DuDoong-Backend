@@ -7,11 +7,13 @@ import band.gosrock.api.host.model.dto.response.HostDetailResponse;
 import band.gosrock.common.annotation.Mapper;
 import band.gosrock.domain.common.vo.HostUserVo;
 import band.gosrock.domain.common.vo.UserInfoVo;
+import band.gosrock.domain.common.vo.UserProfileVo;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.host.domain.HostProfile;
 import band.gosrock.domain.domains.host.domain.HostRole;
 import band.gosrock.domain.domains.host.domain.HostUser;
+import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
 import java.util.HashSet;
@@ -37,25 +39,34 @@ public class HostMapper {
 
     public HostProfile toHostProfile(UpdateHostRequest updateHostRequest) {
         return HostProfile.builder()
-                .name(updateHostRequest.getName())
                 .introduce(updateHostRequest.getIntroduce())
-                .since(updateHostRequest.getSince())
                 .profileImageUrl(updateHostRequest.getProfileImageUrl())
                 .contactEmail(updateHostRequest.getContactEmail())
                 .contactNumber(updateHostRequest.getContactNumber())
                 .build();
     }
 
-    /** 기본 역할인 HOST 로 강제 주입하는 생성자 */
-    public HostUser toHostUser(Long hostId, Long userId) {
+    /** 호스트 역할을 지정하여 주입하는 생성자 */
+    public HostUser toHostUser(Long hostId, Long userId, HostRole role) {
         final Host host = hostAdaptor.findById(hostId);
-        return HostUser.builder().userId(userId).host(host).role(HostRole.HOST).build();
+        return HostUser.builder().userId(userId).host(host).role(role).build();
     }
 
     /** 역할 지정하여 주입하는 생성자 */
     public HostUser toSuperHostUser(Long hostId, Long userId) {
         final Host host = hostAdaptor.findById(hostId);
         return HostUser.builder().userId(userId).host(host).role(HostRole.SUPER_HOST).build();
+    }
+
+    @Transactional(readOnly = true)
+    public UserProfileVo toHostInviteUserList(Long hostId, String email) {
+        final Host host = hostAdaptor.findById(hostId);
+
+        final User inviteUser = userAdaptor.queryUserByEmail(email);
+        if (host.hasHostUserId(inviteUser.getId())) {
+            throw AlreadyJoinedHostException.EXCEPTION;
+        }
+        return inviteUser.toUserProfileVo();
     }
 
     @Transactional(readOnly = true)
@@ -85,8 +96,7 @@ public class HostMapper {
                                 userInfoVo ->
                                         HostUserVo.from(
                                                 userInfoVo,
-                                                host.getHostUserByUserId(userInfoVo.getUserId())
-                                                        .getRole()))
+                                                host.getHostUserByUserId(userInfoVo.getUserId())))
                         .collect(Collectors.toSet());
 
         return HostDetailResponse.of(host, hostUserVoSet);

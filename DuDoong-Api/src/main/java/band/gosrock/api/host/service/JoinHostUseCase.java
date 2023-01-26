@@ -7,7 +7,6 @@ import band.gosrock.api.host.model.mapper.HostMapper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
-import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException;
 import band.gosrock.domain.domains.host.service.HostService;
 import band.gosrock.domain.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
@@ -29,11 +28,8 @@ public class JoinHostUseCase {
         final Long userId = user.getId();
         final Host host = hostAdaptor.findById(hostId);
 
-        // 이 호스트에 이미 속함
-        if (host.hasHostUserId(userId)) {
-            throw AlreadyJoinedHostException.EXCEPTION;
-        }
-        hostService.addHostUser(host, hostMapper.toHostUser(hostId, userId));
-        return hostMapper.toHostDetailResponse(host);
+        // 이 호스트에 초대받지 않음
+        host.validateHostUser(userId);
+        return hostMapper.toHostDetailResponse(hostService.activateHostUser(host, userId));
     }
 }

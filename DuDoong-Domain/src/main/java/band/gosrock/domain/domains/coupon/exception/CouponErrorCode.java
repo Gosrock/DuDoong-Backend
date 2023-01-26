@@ -16,10 +16,14 @@ import lombok.Getter;
 public enum CouponErrorCode implements BaseErrorCode {
     DUPLICATE_COUPON_CODE(BAD_REQUEST, "Coupon_400_1", "동일한 쿠폰 코드가 이미 존재합니다."),
     WRONG_DISCOUNT_AMOUNT(BAD_REQUEST, "Coupon_400_2", "정률 할인은 100 이하 퍼센트만 할인 가능합니다."),
-    NOT_FOUND_COUPON_CAMPAIGN(NOT_FOUND, "Coupon_400_3", "존재하지 않는 쿠폰 캠페인입니다."),
+    NOT_FOUND_COUPON_CAMPAIGN(NOT_FOUND, "Coupon_404_1", "존재하지 않는 쿠폰 캠페인입니다."),
     ALREADY_ISSUED_COUPON(BAD_REQUEST, "Coupon_400_4", "이미 발급된 쿠폰입니다."),
     NO_COUPON_STOCK_LEFT(BAD_REQUEST, "Coupon_400_5", "쿠폰이 모두 소진됐습니다."),
-    NOT_COUPON_ISSUING_PERIOD(BAD_REQUEST, "Coupon_400_6", "쿠폰 발급 가능 시각이 아닙니다.");
+    NOT_COUPON_ISSUING_PERIOD(BAD_REQUEST, "Coupon_400_6", "쿠폰 발급 가능 시각이 아닙니다."),
+    NOT_FOUND_COUPON(NOT_FOUND, "Coupon_404_2", "존재하지 않는 쿠폰 입니다."),
+
+    NOT_MY_COUPON(BAD_REQUEST, "Coupon_400_7", "내 쿠폰이 아닙니다."),
+    ALREADY_USED_COUPON(BAD_REQUEST, "Coupon_400_8", "이미 사용한 쿠폰입니다.");
     private final Integer status;
     private final String code;
     private final String reason;

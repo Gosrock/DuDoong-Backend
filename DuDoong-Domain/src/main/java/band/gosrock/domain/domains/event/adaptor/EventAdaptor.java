@@ -20,9 +20,7 @@ public class EventAdaptor {
                 .orElseThrow(() -> EventNotFoundException.EXCEPTION);
     }
 
-    // Todo:: hostId 지정해서 뽑아오도록 변경하기 (임시)
     public List<Event> findAllByHostId(Long hostId) {
-        return eventRepository.findAll();
-        //        return eventRepository.findAllByHostId(hostId);
+        return eventRepository.findAllByHostId(hostId);
     }
 }

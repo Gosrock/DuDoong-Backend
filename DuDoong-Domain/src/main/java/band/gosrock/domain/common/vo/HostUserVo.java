@@ -2,6 +2,7 @@ package band.gosrock.domain.common.vo;
 
 
 import band.gosrock.domain.domains.host.domain.HostRole;
+import band.gosrock.domain.domains.host.domain.HostUser;
 import band.gosrock.domain.domains.user.domain.User;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import lombok.Builder;
@@ -14,11 +15,21 @@ public class HostUserVo {
 
     private final HostRole role;
 
-    public static HostUserVo from(User user, HostRole role) {
-        return HostUserVo.builder().userInfoVo(user.toUserInfoVo()).role(role).build();
+    private final Boolean active;
+
+    public static HostUserVo from(User user, HostUser hostUser) {
+        return HostUserVo.builder()
+                .userInfoVo(user.toUserInfoVo())
+                .active(hostUser.getActive())
+                .role(hostUser.getRole())
+                .build();
     }
 
-    public static HostUserVo from(UserInfoVo userInfoVo, HostRole role) {
-        return HostUserVo.builder().userInfoVo(userInfoVo).role(role).build();
+    public static HostUserVo from(UserInfoVo userInfoVo, HostUser hostUser) {
+        return HostUserVo.builder()
+                .userInfoVo(userInfoVo)
+                .active(hostUser.getActive())
+                .role(hostUser.getRole())
+                .build();
     }
 }
