@@ -53,8 +53,8 @@ public class Host extends BaseTimeEntity {
                 .orElse(null);
     }
 
-    public void setProfile(HostProfile hostProfile) {
-        this.profile = hostProfile;
+    public void updateProfile(HostProfile hostProfile) {
+        this.profile.updateProfile(hostProfile);
     }
 
     public void setSlackUrl(String slackUrl) {
@@ -99,7 +99,6 @@ public class Host extends BaseTimeEntity {
     public Host(
             String name,
             String introduce,
-            String since,
             String profileImageUrl,
             String contactEmail,
             String contactNumber,
@@ -109,7 +108,6 @@ public class Host extends BaseTimeEntity {
                 HostProfile.builder()
                         .name(name)
                         .introduce(introduce)
-                        .since(since)
                         .profileImageUrl(profileImageUrl)
                         .contactEmail(contactEmail)
                         .contactNumber(contactNumber)

@@ -42,7 +42,7 @@ public class HostService {
     }
 
     public Host updateHostProfile(Host host, HostProfile profile) {
-        host.setProfile(profile);
+        host.updateProfile(profile);
         return hostRepository.save(host);
     }
 

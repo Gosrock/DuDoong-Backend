@@ -37,9 +37,7 @@ public class HostMapper {
 
     public HostProfile toHostProfile(UpdateHostRequest updateHostRequest) {
         return HostProfile.builder()
-                .name(updateHostRequest.getName())
                 .introduce(updateHostRequest.getIntroduce())
-                .since(updateHostRequest.getSince())
                 .profileImageUrl(updateHostRequest.getProfileImageUrl())
                 .contactEmail(updateHostRequest.getContactEmail())
                 .contactNumber(updateHostRequest.getContactNumber())

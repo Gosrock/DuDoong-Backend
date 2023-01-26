@@ -7,6 +7,7 @@ import band.gosrock.api.host.model.dto.response.HostResponse;
 import band.gosrock.api.host.model.mapper.HostMapper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.host.domain.Host;
+import band.gosrock.domain.domains.host.domain.HostUser;
 import band.gosrock.domain.domains.host.service.HostService;
 import band.gosrock.domain.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
@@ -25,10 +26,9 @@ public class CreateHostUseCase {
         final User user = userUtils.getCurrentUser();
         final Long userId = user.getId();
         // 호스트 생성
-        final Host host = hostMapper.toEntity(createHostRequest, userId);
-        hostService.createHost(host);
-
-        return HostResponse.of(
-                hostService.addHostUser(host, hostMapper.toSuperHostUser(host.getId(), userId)));
+        final Host host = hostService.createHost(hostMapper.toEntity(createHostRequest, userId));
+        // 생성한 유저를 마스터로 + 슈퍼 호스트 권한으로 등록
+        final HostUser masterHostUser = hostMapper.toSuperHostUser(host.getId(), userId);
+        return HostResponse.of(hostService.addHostUser(host, masterHostUser));
     }
 }

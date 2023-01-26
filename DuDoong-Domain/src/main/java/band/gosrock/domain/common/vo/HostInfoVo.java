@@ -14,8 +14,6 @@ public class HostInfoVo {
 
     private final String introduce;
 
-    private final String since;
-
     private final String profileImageUrl;
 
     private final String contactEmail;
@@ -29,7 +27,6 @@ public class HostInfoVo {
                 .hostId(host.getId())
                 .name(host.getProfile().getName())
                 .introduce(host.getProfile().getIntroduce())
-                .since(host.getProfile().getSince())
                 .profileImageUrl(host.getProfile().getProfileImageUrl())
                 .contactEmail(host.getProfile().getContactEmail())
                 .contactNumber(host.getProfile().getContactNumber())
