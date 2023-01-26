@@ -9,7 +9,7 @@ import band.gosrock.domain.DisableDomainEvent;
 import band.gosrock.domain.DisableRedissonLock;
 import band.gosrock.domain.DomainIntegrateSpringBootTest;
 import band.gosrock.domain.common.vo.Money;
-import band.gosrock.domain.domains.coupon.domain.OrderCouponVo;
+import band.gosrock.domain.domains.order.domain.OrderCouponVo;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;

@@ -30,16 +30,16 @@ public class OrderOptionAnswer extends BaseTimeEntity {
     @Column(name = "order_option_answer_id")
     private Long id;
 
-    // 연관 관계로 만들면..? 가격정보 도메인 내부로 들일 수 있음
-    @JoinColumn(name = "option_id", updatable = false)
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Option option;
+    private Long optionId;
+
+    private Money additionalPrice = Money.ZERO;
 
     private String answer;
     /** ---------------------------- 생성 관련 메서드 ---------------------------------- */
     @Builder
     public OrderOptionAnswer(Option option, String answer) {
-        this.option = option;
+        this.optionId = option.getId();
+        this.additionalPrice = option.getAdditionalPrice();
         this.answer = answer;
     }
 
@@ -55,29 +55,25 @@ public class OrderOptionAnswer extends BaseTimeEntity {
     /** ---------------------------- 검증 메서드 ---------------------------------- */
 
     /** ---------------------------- 조회용 메서드 ---------------------------------- */
-    protected Money getOptionPrice() {
-        return option.getAdditionalPrice();
-    }
+//    protected String getQuestionDescription() {
+//        return option.getQuestionDescription();
+//    }
+//
+//    protected String getQuestionName() {
+//        return option.getQuestionName();
+//    }
+//
+//    protected OptionGroupType getQuestionType() {
+//        return option.getQuestionType();
+//    }
 
-    protected String getQuestionDescription() {
-        return option.getQuestionDescription();
-    }
-
-    protected String getQuestionName() {
-        return option.getQuestionName();
-    }
-
-    protected OptionGroupType getQuestionType() {
-        return option.getQuestionType();
-    }
-
-    public OptionAnswerVo getOptionAnswerVo() {
+    public OptionAnswerVo getOptionAnswerVo(Option option) {
         return OptionAnswerVo.builder()
-                .questionDescription(getQuestionDescription())
+                .questionDescription(option.getQuestionDescription())
                 .answer(answer)
-                .optionGroupType(getQuestionType())
-                .questionName(getQuestionName())
-                .additionalPrice(getOptionPrice())
+                .optionGroupType(option.getQuestionType())
+                .questionName(option.getQuestionName())
+                .additionalPrice(additionalPrice)
                 .build();
     }
 }

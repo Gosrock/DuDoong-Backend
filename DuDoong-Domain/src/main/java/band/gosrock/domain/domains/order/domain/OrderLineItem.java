@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -35,13 +36,9 @@ public class OrderLineItem extends BaseTimeEntity {
     @Column(name = "order_line_item_id")
     private Long id;
 
-    // 상품 이름
-    private String productName;
-
-    // 상품 아이디
-    @JoinColumn(name = "ticket_item_id", updatable = false)
-    @ManyToOne(fetch = FetchType.LAZY)
-    private TicketItem ticketItem;
+    // 상품 관련
+    @Embedded
+    private OrderItemVo orderItem;
     // 상품 수량
     private Long quantity;
 
@@ -52,8 +49,7 @@ public class OrderLineItem extends BaseTimeEntity {
     @Builder
     public OrderLineItem(
             TicketItem ticketItem, Long quantity, List<OrderOptionAnswer> orderOptionAnswer) {
-        this.productName = ticketItem.getName();
-        this.ticketItem = ticketItem;
+        this.orderItem = OrderItemVo.from(ticketItem);
         this.quantity = quantity;
         this.orderOptionAnswer.addAll(orderOptionAnswer);
     }
@@ -78,7 +74,7 @@ public class OrderLineItem extends BaseTimeEntity {
     /** 응답한 옵션들의 총 가격을 불러옵니다. */
     public Money getOptionAnswersPrice() {
         return orderOptionAnswer.stream()
-                .map(OrderOptionAnswer::getOptionPrice)
+                .map(OrderOptionAnswer::getAdditionalPrice)
                 .reduce(Money.ZERO, Money::plus);
     }
 
@@ -88,16 +84,16 @@ public class OrderLineItem extends BaseTimeEntity {
     }
     /** 상품의 가격을 가져옵니다. */
     public Money getItemPrice() {
-        return ticketItem.getPrice();
+        return orderItem.getPrice();
     }
     /** 환불 가능 정보를 불러옵니다. */
     public RefundInfoVo getRefundInfo() {
         return ticketItem.getRefundInfoVo();
     }
     /** 옵션응답의 정보 VO를 가져옵니다. */
-    public List<OptionAnswerVo> getOptionAnswerVos() {
-        return orderOptionAnswer.stream().map(OrderOptionAnswer::getOptionAnswerVo).toList();
-    }
+//    public List<OptionAnswerVo> getOptionAnswerVos() {
+//        return orderOptionAnswer.stream().map(OrderOptionAnswer::getOptionAnswerVo).toList();
+//    }
     /** 결제가 필요한 오더라인인지 가져옵니다. */
     public Boolean isNeedPaid() {
         Money totalOrderLinePrice = getTotalOrderLinePrice();
@@ -107,9 +103,5 @@ public class OrderLineItem extends BaseTimeEntity {
     /** 주문 철회 가능 여부를 반환합니다. */
     public Boolean canRefund() {
         return this.getRefundInfo().getAvailAble();
-    }
-    /** 아이템의 이벤트 정보를 불러옵니다. */
-    public Event getItemEvent() {
-        return this.ticketItem.getEvent();
     }
 }

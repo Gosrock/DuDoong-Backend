@@ -1,7 +1,6 @@
 package band.gosrock.domain.domains.order.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
@@ -9,7 +8,7 @@ import band.gosrock.domain.CunCurrencyExecutorService;
 import band.gosrock.domain.DisableDomainEvent;
 import band.gosrock.domain.DomainIntegrateSpringBootTest;
 import band.gosrock.domain.common.vo.Money;
-import band.gosrock.domain.domains.coupon.domain.OrderCouponVo;
+import band.gosrock.domain.domains.order.domain.OrderCouponVo;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;

@@ -1,9 +1,10 @@
-package band.gosrock.domain.domains.coupon.domain;
+package band.gosrock.domain.domains.order.domain;
 
 import static band.gosrock.common.consts.DuDoongStatic.MINIMUM_PAYMENT_WON;
 import static band.gosrock.common.consts.DuDoongStatic.ZERO;
 
 import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import band.gosrock.domain.domains.order.exception.LessThanMinmumPaymentOrderException;
 import javax.persistence.Embeddable;
 import lombok.Builder;
