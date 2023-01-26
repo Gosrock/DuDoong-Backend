@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.host.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException;
 import javax.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -40,6 +41,9 @@ public class HostUser extends BaseTimeEntity {
     }
 
     public void activate() {
+        if (this.active) {
+            throw AlreadyJoinedHostException.EXCEPTION;
+        }
         this.active = true;
     }
 

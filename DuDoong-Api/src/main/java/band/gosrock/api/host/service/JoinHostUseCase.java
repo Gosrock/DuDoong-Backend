@@ -7,7 +7,6 @@ import band.gosrock.api.host.model.mapper.HostMapper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
-import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException;
 import band.gosrock.domain.domains.host.service.HostService;
 import band.gosrock.domain.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
@@ -31,10 +30,6 @@ public class JoinHostUseCase {
 
         // 이 호스트에 초대받지 않음
         host.validateHostUser(userId);
-        // 이미 활성 상태임
-        if (host.isActiveHostUserId(userId)) {
-            throw AlreadyJoinedHostException.EXCEPTION;
-        }
         return hostMapper.toHostDetailResponse(hostService.activateHostUser(host, userId));
     }
 }
