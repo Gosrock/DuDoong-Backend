@@ -12,7 +12,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class WithDrawOrderHandler {
+public class WithDrawOrderCouponHandler {
     private final RecoveryCouponService recoveryCouponService;
 
     @TransactionalEventListener(
