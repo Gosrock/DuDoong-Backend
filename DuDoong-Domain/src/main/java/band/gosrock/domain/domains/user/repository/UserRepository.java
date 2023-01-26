@@ -3,7 +3,6 @@ package band.gosrock.domain.domains.user.repository;
 
 import band.gosrock.domain.domains.user.domain.OauthInfo;
 import band.gosrock.domain.domains.user.domain.User;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,7 +15,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     /** email 로 유저를 가져오는 쿼리 */
     Optional<User> findByProfileEmail(String email);
-
-    /** email string 이 포함된 유저를 모두 가져오는 쿼리 */
-    List<User> findByProfileEmailContains(String email);
 }

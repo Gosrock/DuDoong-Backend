@@ -48,7 +48,7 @@ public class HostController {
 
     @Operation(summary = "해당 호스트에 가입하지 않은 유저를 이메일로 검색합니다.")
     @GetMapping("/{hostId}/invite/users")
-    public List<UserProfileVo> getInviteUserListByEmail(
+    public UserProfileVo getInviteUserListByEmail(
             @PathVariable Long hostId, @RequestParam(value = "email") @Email String email) {
         return readInviteUserListUseCase.execute(hostId, email);
     }

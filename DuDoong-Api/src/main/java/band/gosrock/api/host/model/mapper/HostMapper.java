@@ -13,11 +13,10 @@ import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.host.domain.HostProfile;
 import band.gosrock.domain.domains.host.domain.HostRole;
 import band.gosrock.domain.domains.host.domain.HostUser;
+import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -60,19 +59,14 @@ public class HostMapper {
     }
 
     @Transactional(readOnly = true)
-    public List<UserProfileVo> toHostInviteUserList(Long hostId, String email) {
+    public UserProfileVo toHostInviteUserList(Long hostId, String email) {
         final Host host = hostAdaptor.findById(hostId);
 
-        final List<UserProfileVo> userProfileVoList = new ArrayList<>();
-        userAdaptor
-                .queryUserByEmailContains(email)
-                .forEach(
-                        queryUser -> {
-                            if (!host.hasHostUserId(queryUser.getId())) {
-                                userProfileVoList.add(queryUser.toUserProfileVo());
-                            }
-                        });
-        return userProfileVoList;
+        final User inviteUser = userAdaptor.queryUserByEmail(email);
+        if (host.hasHostUserId(inviteUser.getId())) {
+            throw AlreadyJoinedHostException.EXCEPTION;
+        }
+        return inviteUser.toUserProfileVo();
     }
 
     @Transactional(readOnly = true)
