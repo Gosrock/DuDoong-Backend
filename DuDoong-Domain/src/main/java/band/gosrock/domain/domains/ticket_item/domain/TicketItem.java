@@ -135,7 +135,7 @@ public class TicketItem extends BaseTimeEntity {
         this.quantity = this.quantity + quantity;
     }
 
-    public Long getEventId(){
+    public Long getEventId() {
         return event.getId();
     }
 }

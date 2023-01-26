@@ -6,15 +6,11 @@ import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.OptionAnswerVo;
 import band.gosrock.domain.domains.cart.domain.CartOptionAnswer;
 import band.gosrock.domain.domains.ticket_item.domain.Option;
-import band.gosrock.domain.domains.ticket_item.domain.OptionGroupType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -55,17 +51,17 @@ public class OrderOptionAnswer extends BaseTimeEntity {
     /** ---------------------------- 검증 메서드 ---------------------------------- */
 
     /** ---------------------------- 조회용 메서드 ---------------------------------- */
-//    protected String getQuestionDescription() {
-//        return option.getQuestionDescription();
-//    }
-//
-//    protected String getQuestionName() {
-//        return option.getQuestionName();
-//    }
-//
-//    protected OptionGroupType getQuestionType() {
-//        return option.getQuestionType();
-//    }
+    //    protected String getQuestionDescription() {
+    //        return option.getQuestionDescription();
+    //    }
+    //
+    //    protected String getQuestionName() {
+    //        return option.getQuestionName();
+    //    }
+    //
+    //    protected OptionGroupType getQuestionType() {
+    //        return option.getQuestionType();
+    //    }
 
     public OptionAnswerVo getOptionAnswerVo(Option option) {
         return OptionAnswerVo.builder()

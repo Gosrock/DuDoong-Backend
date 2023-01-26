@@ -18,8 +18,6 @@ import band.gosrock.domain.domains.order.exception.NotOwnerOrderException;
 import band.gosrock.domain.domains.order.exception.NotPaymentOrderException;
 import band.gosrock.domain.domains.order.exception.NotRefundAvailableDateOrderException;
 import band.gosrock.domain.domains.order.exception.OrderLineNotFountException;
-import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
-import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -346,19 +344,14 @@ public class Order extends BaseTimeEntity {
                 .orElseThrow(() -> OrderLineNotFountException.EXCEPTION);
     }
 
-    /** 주문에서 티켓 상품 반환합니다. - 민준 */
-    public TicketItem getItem() {
-        return getOrderLineItem().getTicketItem();
-    }
-
     public Long getItemId() {
-        return getOrderLineItem().getTicketItem().getId();
+        return getOrderLineItem().getItemId();
     }
 
     /** 주문에서 티켓 상품의 타입을 반환합니다. */
-    public TicketType getItemType() {
-        return getItem().getType();
-    }
+    //    public TicketType getItemType() {
+    //        return getItem().getType();
+    //    }
 
     /** 결제가 필요한 오더인지 반환합니다. */
     public Boolean isNeedPaid() {

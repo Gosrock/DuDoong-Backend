@@ -3,10 +3,8 @@ package band.gosrock.domain.domains.order.domain;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
-import band.gosrock.domain.common.vo.OptionAnswerVo;
 import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.cart.domain.CartLineItem;
-import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +17,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -37,8 +34,7 @@ public class OrderLineItem extends BaseTimeEntity {
     private Long id;
 
     // 상품 관련
-    @Embedded
-    private OrderItemVo orderItem;
+    @Embedded private OrderItemVo orderItem;
     // 상품 수량
     private Long quantity;
 
@@ -91,9 +87,9 @@ public class OrderLineItem extends BaseTimeEntity {
         return ticketItem.getRefundInfoVo();
     }
     /** 옵션응답의 정보 VO를 가져옵니다. */
-//    public List<OptionAnswerVo> getOptionAnswerVos() {
-//        return orderOptionAnswer.stream().map(OrderOptionAnswer::getOptionAnswerVo).toList();
-//    }
+    //    public List<OptionAnswerVo> getOptionAnswerVos() {
+    //        return orderOptionAnswer.stream().map(OrderOptionAnswer::getOptionAnswerVo).toList();
+    //    }
     /** 결제가 필요한 오더라인인지 가져옵니다. */
     public Boolean isNeedPaid() {
         Money totalOrderLinePrice = getTotalOrderLinePrice();
@@ -103,5 +99,15 @@ public class OrderLineItem extends BaseTimeEntity {
     /** 주문 철회 가능 여부를 반환합니다. */
     public Boolean canRefund() {
         return this.getRefundInfo().getAvailAble();
+    }
+
+    /** 아이템 아이디를 조회합니다. */
+    public Long getItemId() {
+        return orderItem.getItemId();
+    }
+
+    /** 아이템 그룹 아이디를 조회합니다 ( 이벤트 아이디 ) */
+    public Long getItemGroupId() {
+        return orderItem.getItemGroupId();
     }
 }
