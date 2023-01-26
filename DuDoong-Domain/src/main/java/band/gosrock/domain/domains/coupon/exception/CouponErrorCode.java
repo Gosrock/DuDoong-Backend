@@ -21,9 +21,9 @@ public enum CouponErrorCode implements BaseErrorCode {
     NO_COUPON_STOCK_LEFT(BAD_REQUEST, "Coupon_400_5", "쿠폰이 모두 소진됐습니다."),
     NOT_COUPON_ISSUING_PERIOD(BAD_REQUEST, "Coupon_400_6", "쿠폰 발급 가능 시각이 아닙니다."),
     NOT_FOUND_COUPON(NOT_FOUND, "Coupon_404_2", "존재하지 않는 쿠폰 입니다."),
-
     NOT_MY_COUPON(BAD_REQUEST, "Coupon_400_7", "내 쿠폰이 아닙니다."),
-    ALREADY_USED_COUPON(BAD_REQUEST, "Coupon_400_8", "이미 사용한 쿠폰입니다.");
+    ALREADY_USED_COUPON(BAD_REQUEST, "Coupon_400_8", "이미 사용한 쿠폰입니다."),
+    NOT_APPLICABLE_COUPON(BAD_REQUEST, "Coupon_400_9", "적용 불가 쿠폰입니다. 할인 금액이 결제 금액보다 큽니다.");
     private final Integer status;
     private final String code;
     private final String reason;

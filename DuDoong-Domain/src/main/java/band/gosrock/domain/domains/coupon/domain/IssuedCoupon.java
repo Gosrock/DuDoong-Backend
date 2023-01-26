@@ -4,6 +4,7 @@ package band.gosrock.domain.domains.coupon.domain;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.coupon.exception.AlreadyUsedCouponException;
+import band.gosrock.domain.domains.coupon.exception.NotApplicableCouponException;
 import band.gosrock.domain.domains.coupon.exception.NotMyCouponException;
 import java.util.Objects;
 import javax.persistence.*;
@@ -47,11 +48,10 @@ public class IssuedCoupon extends BaseTimeEntity {
     }
 
     public Money checkSupplyIsGreaterThenDiscount(Money supply, Long discount) {
-        if (supply.isGreaterThanOrEqual(Money.wons(discount))) {
-            return Money.wons(discount);
+        if (supply.isLessThan(Money.wons(discount))) {
+            throw NotApplicableCouponException.EXCEPTION;
         }
-        // TODO : 에러로 변경
-        return Money.ZERO;
+        return Money.wons(discount);
     }
 
     @Builder
