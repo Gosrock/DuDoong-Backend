@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 public class RecoveryCouponService {
     private final IssuedCouponAdaptor issuedCouponAdaptor;
 
-    @RedissonLock(LockName = "쿠폰회복", identifier = "couponId")
+    @RedissonLock(LockName = "쿠폰", identifier = "couponId")
     public Long execute(Long userId, Long couponId) {
         IssuedCoupon coupon = issuedCouponAdaptor.query(couponId);
         coupon.validMine(userId);
