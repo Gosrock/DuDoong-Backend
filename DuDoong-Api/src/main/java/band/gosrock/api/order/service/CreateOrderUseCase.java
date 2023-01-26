@@ -23,7 +23,7 @@ public class CreateOrderUseCase {
         Long cartId = createOrderRequest.getCartId();
         if (couponId == null) {
             return CreateOrderResponse.from(
-                    createOrderService.WithOutCoupon(cartId, user.getId()), user.getProfile());
+                    createOrderService.withOutCoupon(cartId, user.getId()), user.getProfile());
         }
         return CreateOrderResponse.from(
                 createOrderService.withCoupon(cartId, user.getId(), couponId), user.getProfile());
