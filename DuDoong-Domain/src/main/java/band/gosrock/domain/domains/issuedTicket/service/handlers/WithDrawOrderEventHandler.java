@@ -30,6 +30,5 @@ public class WithDrawOrderEventHandler {
                 issuedTicketAdaptor.findAllByOrderUuid(withDrawOrderEvent.getOrderUuid());
         issuedTicketDomainService.withDrawIssuedTicket(
                 withDrawOrderEvent.getItemId(), issuedTickets);
-        log.info(withDrawOrderEvent.getOrderUuid() + "주문 상태 완료, 티켓 철회 완료");
     }
 }
