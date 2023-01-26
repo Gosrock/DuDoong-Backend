@@ -47,7 +47,7 @@ public class HostController {
         return createHostUseCase.execute(createEventRequest);
     }
 
-    @Operation(summary = "기존 호스트에 가입합니다.")
+    @Operation(summary = "초대 받은 호스트에 가입합니다.")
     @PostMapping("/{hostId}/join")
     public HostDetailResponse joinHost(@PathVariable Long hostId) {
         return joinHostUseCase.execute(hostId);

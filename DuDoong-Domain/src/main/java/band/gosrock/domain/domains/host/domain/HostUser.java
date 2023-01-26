@@ -28,12 +28,19 @@ public class HostUser extends BaseTimeEntity {
     @Column(name = "user_id")
     private Long userId;
 
+    // 초대 승락 여부
+    private Boolean active = false;
+
     // 유저의 권한
     @Enumerated(EnumType.STRING)
     private HostRole role = HostRole.HOST;
 
     public void setHostRole(HostRole role) {
         this.role = role;
+    }
+
+    public void activate() {
+        this.active = true;
     }
 
     @Builder

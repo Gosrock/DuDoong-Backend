@@ -2,10 +2,7 @@ package band.gosrock.domain.domains.host.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
-import band.gosrock.domain.domains.host.exception.ForbiddenHostOperationException;
-import band.gosrock.domain.domains.host.exception.HostUserNotFoundException;
-import band.gosrock.domain.domains.host.exception.NotMasterHostException;
-import band.gosrock.domain.domains.host.exception.NotSuperHostException;
+import band.gosrock.domain.domains.host.exception.*;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.*;
@@ -29,7 +26,8 @@ public class Host extends BaseTimeEntity {
     private Long masterUserId;
 
     // 파트너 여부
-    private Boolean partner;
+    // 정책상 초기값 false 로 고정입니다
+    private Boolean partner = false;
 
     // 슬랙 웹훅 url
     private String slackUrl;
@@ -50,7 +48,7 @@ public class Host extends BaseTimeEntity {
         return this.hostUsers.stream()
                 .filter(hostUser -> hostUser.getUserId().equals(userId))
                 .findFirst()
-                .orElse(null);
+                .orElseThrow(() -> HostUserNotFoundException.EXCEPTION);
     }
 
     public void updateProfile(HostProfile hostProfile) {
@@ -69,6 +67,11 @@ public class Host extends BaseTimeEntity {
                                         && hostUser.getRole().equals(HostRole.SUPER_HOST));
     }
 
+    public Boolean isActiveHostUserId(Long userId) {
+        return this.hostUsers.stream()
+                .anyMatch(hostUser -> hostUser.getUserId().equals(userId) && hostUser.getActive());
+    }
+
     public void setHostUserRole(Long userId, HostRole role) {
         // 마스터의 역할은 수정할 수 없음
         if (this.getMasterUserId().equals(userId)) {
@@ -81,8 +84,24 @@ public class Host extends BaseTimeEntity {
                 .setHostRole(role);
     }
 
+    /** 해당 유저가 호스트에 속하는지 확인하는 검증 로직입니다 */
+    public void validateHostUser(Long userId) {
+        if (!this.hasHostUserId(userId)) {
+            throw ForbiddenHostException.EXCEPTION;
+        }
+    }
+
+    /** 해당 유저가 호스트에 속하며 가입 승인을 완료했는지 (활성상태) 확인하는 검증 로직입니다 */
+    public void validateActiveHostUser(Long userId) {
+        this.validateHostUser(userId);
+        if (!this.isActiveHostUserId(userId)) {
+            throw NotAcceptedHostException.EXCEPTION;
+        }
+    }
+
     /** 해당 유저가 슈퍼 호스트인지 확인하는 검증 로직입니다 */
     public void validateSuperHostUser(Long userId) {
+        this.validateActiveHostUser(userId);
         if (!this.isSuperHostUserId(userId)) {
             throw NotSuperHostException.EXCEPTION;
         }
@@ -90,6 +109,7 @@ public class Host extends BaseTimeEntity {
 
     /** 해당 유저가 호스트의 마스터(담당자, 방장)인지 확인하는 검증 로직입니다 */
     public void validateMasterHostUser(Long userId) {
+        this.validateActiveHostUser(userId);
         if (!this.getMasterUserId().equals(userId)) {
             throw NotMasterHostException.EXCEPTION;
         }
@@ -114,6 +134,5 @@ public class Host extends BaseTimeEntity {
                         .build();
         this.masterUserId = masterUserId;
         this.slackUrl = slackUrl;
-        this.partner = false; // 정책상 초기값 false 로 고정입니다
     }
 }

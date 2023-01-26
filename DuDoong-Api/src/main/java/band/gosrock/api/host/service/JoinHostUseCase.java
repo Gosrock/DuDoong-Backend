@@ -29,11 +29,12 @@ public class JoinHostUseCase {
         final Long userId = user.getId();
         final Host host = hostAdaptor.findById(hostId);
 
-        // 이 호스트에 이미 속함
-        if (host.hasHostUserId(userId)) {
+        // 이 호스트에 초대받지 않음
+        host.validateHostUser(userId);
+        // 이미 활성 상태임
+        if (host.isActiveHostUserId(userId)) {
             throw AlreadyJoinedHostException.EXCEPTION;
         }
-        hostService.addHostUser(host, hostMapper.toHostUser(hostId, userId));
-        return hostMapper.toHostDetailResponse(host);
+        return hostMapper.toHostDetailResponse(hostService.activateHostUser(host, userId));
     }
 }

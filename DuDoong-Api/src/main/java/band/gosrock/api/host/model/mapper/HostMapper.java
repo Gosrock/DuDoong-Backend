@@ -44,10 +44,10 @@ public class HostMapper {
                 .build();
     }
 
-    /** 기본 역할인 HOST 로 강제 주입하는 생성자 */
-    public HostUser toHostUser(Long hostId, Long userId) {
+    /** 호스트 역할을 지정하여 주입하는 생성자 */
+    public HostUser toHostUser(Long hostId, Long userId, HostRole role) {
         final Host host = hostAdaptor.findById(hostId);
-        return HostUser.builder().userId(userId).host(host).role(HostRole.HOST).build();
+        return HostUser.builder().userId(userId).host(host).role(role).build();
     }
 
     /** 역할 지정하여 주입하는 생성자 */
@@ -83,8 +83,7 @@ public class HostMapper {
                                 userInfoVo ->
                                         HostUserVo.from(
                                                 userInfoVo,
-                                                host.getHostUserByUserId(userInfoVo.getUserId())
-                                                        .getRole()))
+                                                host.getHostUserByUserId(userInfoVo.getUserId())))
                         .collect(Collectors.toSet());
 
         return HostDetailResponse.of(host, hostUserVoSet);
