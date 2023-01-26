@@ -9,6 +9,7 @@ import static org.mockito.Mockito.times;
 import band.gosrock.domain.common.events.order.WithDrawOrderEvent;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
+import band.gosrock.domain.domains.order.domain.OrderStatus;
 import band.gosrock.domain.domains.order.service.WithdrawPaymentService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,5 +38,19 @@ class WithDrawOrderHandlerTest {
         withDrawOrderHandler.handleWithDrawOrderEvent(withDrawOrderEvent);
         // then
         then(withdrawPaymentService).should(times(0)).execute(any(), any(), any());
+    }
+
+    @Test
+    public void 결제된_주문이면_토스로_철회요청을_보낸다() {
+        // given
+        WithDrawOrderHandler withDrawOrderHandler =
+                new WithDrawOrderHandler(withdrawPaymentService, orderAdaptor);
+        given(order.isPaid()).willReturn(Boolean.TRUE);
+        given(orderAdaptor.findByOrderUuid(any())).willReturn(order);
+        given(withDrawOrderEvent.getOrderStatus()).willReturn(OrderStatus.CANCELED);
+        // when
+        withDrawOrderHandler.handleWithDrawOrderEvent(withDrawOrderEvent);
+        // then
+        then(withdrawPaymentService).should(times(1)).execute(any(), any(), any());
     }
 }
