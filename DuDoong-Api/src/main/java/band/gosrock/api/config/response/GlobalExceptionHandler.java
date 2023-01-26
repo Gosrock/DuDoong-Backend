@@ -129,7 +129,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                                                     .split("\\."));
                             String path =
                                     propertyPath.stream()
-                                            .skip(propertyPath.size() - 1)
+                                            .skip(propertyPath.size() - 1L)
                                             .findFirst()
                                             .orElse(null);
                             bindingErrors.put(path, constraintViolation.getMessage());
