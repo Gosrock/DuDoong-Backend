@@ -51,18 +51,6 @@ public class OrderOptionAnswer extends BaseTimeEntity {
     /** ---------------------------- 검증 메서드 ---------------------------------- */
 
     /** ---------------------------- 조회용 메서드 ---------------------------------- */
-    //    protected String getQuestionDescription() {
-    //        return option.getQuestionDescription();
-    //    }
-    //
-    //    protected String getQuestionName() {
-    //        return option.getQuestionName();
-    //    }
-    //
-    //    protected OptionGroupType getQuestionType() {
-    //        return option.getQuestionType();
-    //    }
-
     public OptionAnswerVo getOptionAnswerVo(Option option) {
         return OptionAnswerVo.builder()
                 .questionDescription(option.getQuestionDescription())

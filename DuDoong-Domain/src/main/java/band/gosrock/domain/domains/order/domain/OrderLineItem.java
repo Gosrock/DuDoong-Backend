@@ -81,25 +81,12 @@ public class OrderLineItem extends BaseTimeEntity {
     public Money getItemPrice() {
         return orderItem.getPrice();
     }
-    /** 환불 가능 정보를 불러옵니다. */
-    //    public RefundInfoVo getRefundInfo(OrderLineValidator orderLineValidator) {
-    //        orderLineValidator.validCanRefund();
-    ////        return ticketItem.getRefundInfoVo();
-    //    }
-    /** 옵션응답의 정보 VO를 가져옵니다. */
-    //    public List<OptionAnswerVo> getOptionAnswerVos() {
-    //        return orderOptionAnswer.stream().map(OrderOptionAnswer::getOptionAnswerVo).toList();
-    //    }
     /** 결제가 필요한 오더라인인지 가져옵니다. */
     public Boolean isNeedPaid() {
         Money totalOrderLinePrice = getTotalOrderLinePrice();
         // 0 < totalOrderLinePrice
         return Money.ZERO.isLessThan(totalOrderLinePrice);
     }
-    /** 주문 철회 가능 여부를 반환합니다. */
-    //    public Boolean canRefund(OrderLineValidator orderLineValidator) {
-    //        return orderLineValidator.validCanRefund();
-    //    }
 
     /** 아이템 아이디를 조회합니다. */
     public Long getItemId() {

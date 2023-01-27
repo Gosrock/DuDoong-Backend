@@ -26,7 +26,7 @@ public class OrderValidator {
     private final EventAdaptor eventAdaptor;
 
     /** 승인 가능한 주문인지 검증합니다. */
-    public void validCanApprovalOrder(Order order) {
+    public void validCanApproveOrder(Order order) {
         if (order.getOrderMethod().isPayment()) {
             throw NotApprovalOrderException.EXCEPTION;
         }

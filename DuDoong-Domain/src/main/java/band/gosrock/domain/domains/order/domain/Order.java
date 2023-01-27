@@ -158,9 +158,7 @@ public class Order extends BaseTimeEntity {
 
     @NotNull
     private static List<OrderLineItem> getOrderLineItems(Cart cart) {
-        List<OrderLineItem> orderLineItems =
-                cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
-        return orderLineItems;
+        return cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
     }
 
     public static Order create(Long userId, Cart cart) {
@@ -198,7 +196,7 @@ public class Order extends BaseTimeEntity {
 
     /** 승인 방식의 주문을 승인합니다. */
     public void approve(OrderValidator orderValidator) {
-        orderValidator.validCanApprovalOrder(this);
+        orderValidator.validCanApproveOrder(this);
         this.approvedAt = LocalDateTime.now();
         this.orderStatus = OrderStatus.APPROVED;
         Events.raise(DoneOrderEvent.from(this));
@@ -269,16 +267,6 @@ public class Order extends BaseTimeEntity {
         return !orderCouponVo.isDefault();
     }
 
-    /**
-     * 상품의 환불 정보를 가져옵니다. 원래는 오더 라인 마다 쿠폰이 각각 적용되고, 환불 도 가능해야하지만 한이벤트에서만 주문이 가능한 현 기획에 따라 오더라인에 있는
-     * 환불정보(환불정보는 이벤트에 따름) 첫번째꺼를 환불 정보로 노출 시켰습니다.
-     *
-     * @return
-     */
-    //    public RefundInfoVo getTotalRefundInfo() {
-    //        return getOrderLineItem().getRefundInfo();
-    //    }
-
     private OrderLineItem getOrderLineItem() {
         return orderLineItems.stream()
                 .findFirst()
@@ -292,11 +280,6 @@ public class Order extends BaseTimeEntity {
     public Long getItemGroupId() {
         return getOrderLineItem().getItemGroupId();
     }
-
-    /** 주문에서 티켓 상품의 타입을 반환합니다. */
-    //    public TicketType getItemType() {
-    //        return getItem().getType();
-    //    }
 
     /** 결제가 필요한 오더인지 반환합니다. */
     public Boolean isNeedPaid() {

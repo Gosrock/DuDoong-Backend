@@ -3,6 +3,7 @@ package band.gosrock.domain.domains.order.service;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
 
 import band.gosrock.domain.CunCurrencyExecutorService;
 import band.gosrock.domain.DisableDomainEvent;
@@ -13,7 +14,7 @@ import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderCouponVo;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
-import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.domain.domains.order.domain.validator.OrderValidator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
@@ -32,10 +33,9 @@ class WithdrawOrderServiceTest {
 
     @MockBean OrderAdaptor orderAdaptor;
     @Mock OrderLineItem orderLineItem;
-    @Mock TicketItem ticketItem;
 
+    @MockBean OrderValidator orderValidator;
     Order order;
-
     static Long userId = 1L;
 
     @BeforeEach
@@ -49,11 +49,8 @@ class WithdrawOrderServiceTest {
                         .build();
         order.addUUID();
         given(orderAdaptor.findByOrderUuid(any())).willReturn(order);
-        given(orderLineItem.getTicketItem()).willReturn(ticketItem);
-        given(orderLineItem.canRefund()).willReturn(Boolean.TRUE);
         given(orderLineItem.getTotalOrderLinePrice()).willReturn(Money.ZERO);
-
-        given(ticketItem.getId()).willReturn(1L);
+        willDoNothing().given(orderValidator).validAvailableRefundDate(any());
     }
 
     @Test
