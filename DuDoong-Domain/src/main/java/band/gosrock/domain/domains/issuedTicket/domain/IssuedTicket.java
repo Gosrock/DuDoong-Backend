@@ -6,8 +6,6 @@ import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.domain.Event;
-import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketDTO;
-import band.gosrock.domain.domains.issuedTicket.dto.response.CreateIssuedTicketResponse;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelEntranceException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotEntranceException;

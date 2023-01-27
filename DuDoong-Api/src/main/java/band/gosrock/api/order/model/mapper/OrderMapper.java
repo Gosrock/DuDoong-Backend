@@ -103,8 +103,7 @@ public class OrderMapper {
         Integer size = issuedTicketNos.size();
         // 없을 경우긴 함 테스트를 위해서
         if (issuedTicketNos.isEmpty()) return "";
-        else if (size.equals(1))
-            return String.format("%s (%d매)", issuedTicketNos.get(0), size);
+        else if (size.equals(1)) return String.format("%s (%d매)", issuedTicketNos.get(0), size);
         else
             return String.format(
                     "%s ~ %s (%d매)", issuedTicketNos.get(0), issuedTicketNos.get(size - 1), size);
