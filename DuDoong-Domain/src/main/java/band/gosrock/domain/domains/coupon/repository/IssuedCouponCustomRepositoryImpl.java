@@ -14,20 +14,11 @@ public class IssuedCouponCustomRepositoryImpl implements IssuedCouponCustomRepos
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<IssuedCoupon> findAllByUserIdAndUsageStatus(Long userId, boolean usageStatus) {
-        return queryFactory
-                .selectFrom(issuedCoupon)
-                // .leftJoin(issuedCoupon.couponCampaign,couponCampaign)
-                //                        .fetchJoin()
-                .where(userIdEq(userId), usageStatusEq(usageStatus))
-                .fetch();
+    public List<IssuedCoupon> findAllByUserId(Long userId) {
+        return queryFactory.selectFrom(issuedCoupon).where(userIdEq(userId)).fetch();
     }
 
     private BooleanExpression userIdEq(Long userId) {
         return userId == null ? null : issuedCoupon.userId.eq(userId);
-    }
-
-    private BooleanExpression usageStatusEq(boolean usageStatus) {
-        return issuedCoupon.usageStatus.eq(usageStatus);
     }
 }
