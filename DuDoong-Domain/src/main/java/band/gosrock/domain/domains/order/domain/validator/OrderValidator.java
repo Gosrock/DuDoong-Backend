@@ -66,7 +66,7 @@ public class OrderValidator {
 
     /** 환불 가능한 시점인지 검증합니다. */
     public void validAvailableRefundDate(Order order) {
-        if (!canRefundDate(order)) {
+        if (!checkRefundDateNotPassed(order)) {
             throw NotRefundAvailableDateOrderException.EXCEPTION;
         }
     }
@@ -78,19 +78,21 @@ public class OrderValidator {
         }
     }
 
+    /** 취소할 수 있는 주문인지 검증합니다. */
     public void validCanCancel(Order order) {
         validAvailableRefundDate(order);
         order.getOrderStatus().validCanCancel();
     }
 
+    /** 환불 할 수 있는 주문인지 검증합니다. */
     public void validCanRefund(Order order) {
         validAvailableRefundDate(order);
         order.getOrderStatus().validCanRefund();
     }
 
-    public Boolean canRefundDate(Order order) {
-        List<Long> eventIds = getEventIds(order);
-        List<Event> events = eventAdaptor.findAllByIds(eventIds);
+    /** 환불 할 수 있는 주문인지 체크합니다. */
+    public Boolean checkRefundDateNotPassed(Order order) {
+        List<Event> events = eventAdaptor.findAllByIds(getEventIds(order));
         return reduceEventRefundAvailable(events);
     }
 

@@ -263,20 +263,24 @@ public class Order extends BaseTimeEntity {
         return orderCouponVo.getDiscountAmount();
     }
 
+    /** 쿠폰이 적용된 주문인지 조회합니다. */
     public Boolean hasCoupon() {
         return !orderCouponVo.isDefault();
     }
 
+    /** 오더라인목록의 한 요소를 가져옵니다. */
     private OrderLineItem getOrderLineItem() {
         return orderLineItems.stream()
                 .findFirst()
                 .orElseThrow(() -> OrderLineNotFountException.EXCEPTION);
     }
 
+    /** 아이템의 아이디를 가져옵니다. */
     public Long getItemId() {
         return getOrderLineItem().getItemId();
     }
 
+    /** 아이템의 그룹 아이디 ( 이벤트 아이디 ) 를 가져옵니다. */
     public Long getItemGroupId() {
         return getOrderLineItem().getItemGroupId();
     }
