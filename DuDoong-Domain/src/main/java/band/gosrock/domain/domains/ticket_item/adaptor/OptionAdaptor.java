@@ -7,6 +7,7 @@ import band.gosrock.domain.domains.ticket_item.domain.OptionGroup;
 import band.gosrock.domain.domains.ticket_item.exception.OptionNotFoundException;
 import band.gosrock.domain.domains.ticket_item.repository.OptionGroupRepository;
 import band.gosrock.domain.domains.ticket_item.repository.OptionRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 @Adaptor
@@ -24,5 +25,9 @@ public class OptionAdaptor {
 
     public OptionGroup save(OptionGroup optionGroup) {
         return optionGroupRepository.save(optionGroup);
+    }
+
+    public List<Option> findAllByIds(List<Long> ids) {
+        return optionRepository.findAllById(ids);
     }
 }
