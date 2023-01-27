@@ -3,7 +3,6 @@ package band.gosrock.domain.domains.order.domain;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
-import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.cart.domain.CartLineItem;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import java.util.ArrayList;
@@ -83,9 +82,10 @@ public class OrderLineItem extends BaseTimeEntity {
         return orderItem.getPrice();
     }
     /** 환불 가능 정보를 불러옵니다. */
-    public RefundInfoVo getRefundInfo() {
-        return ticketItem.getRefundInfoVo();
-    }
+//    public RefundInfoVo getRefundInfo(OrderLineValidator orderLineValidator) {
+//        orderLineValidator.validCanRefund();
+////        return ticketItem.getRefundInfoVo();
+//    }
     /** 옵션응답의 정보 VO를 가져옵니다. */
     //    public List<OptionAnswerVo> getOptionAnswerVos() {
     //        return orderOptionAnswer.stream().map(OrderOptionAnswer::getOptionAnswerVo).toList();
@@ -97,9 +97,9 @@ public class OrderLineItem extends BaseTimeEntity {
         return Money.ZERO.isLessThan(totalOrderLinePrice);
     }
     /** 주문 철회 가능 여부를 반환합니다. */
-    public Boolean canRefund() {
-        return this.getRefundInfo().getAvailAble();
-    }
+//    public Boolean canRefund(OrderLineValidator orderLineValidator) {
+//        return orderLineValidator.validCanRefund();
+//    }
 
     /** 아이템 아이디를 조회합니다. */
     public Long getItemId() {
@@ -109,5 +109,9 @@ public class OrderLineItem extends BaseTimeEntity {
     /** 아이템 그룹 아이디를 조회합니다 ( 이벤트 아이디 ) */
     public Long getItemGroupId() {
         return orderItem.getItemGroupId();
+    }
+
+    public String getItemName(){
+        return orderItem.getName();
     }
 }

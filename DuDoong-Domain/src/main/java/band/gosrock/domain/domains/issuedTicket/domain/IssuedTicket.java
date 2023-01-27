@@ -197,26 +197,27 @@ public class IssuedTicket extends BaseTimeEntity {
     public static CreateIssuedTicketResponse orderLineItemToIssuedTickets(
             CreateIssuedTicketDTO dto) {
         long quantity = dto.getOrderLineItem().getQuantity();
-        dto.getOrderLineItem().getTicketItem().reduceQuantity(quantity);
-        List<IssuedTicket> createIssuedTickets = new ArrayList<>();
-        List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers =
-                dto.getOrderLineItem().getOrderOptionAnswer().stream()
-                        .map(IssuedTicketOptionAnswer::orderOptionAnswerToIssuedTicketOptionAnswer)
-                        .toList();
-        for (long i = 1; i <= quantity; i++) {
-            createIssuedTickets.add(
-                    IssuedTicket.builder()
-                            .event(dto.getOrderLineItem().getTicketItem().getEvent())
-                            .orderUuid(dto.getOrder().getUuid())
-                            .orderLineId(dto.getOrderLineItem().getId())
-                            .user(dto.getUser())
-                            .price(dto.getOrderLineItem().getItemPrice())
-                            .ticketItem(dto.getOrderLineItem().getTicketItem())
-                            .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
-                            .issuedTicketOptionAnswers(issuedTicketOptionAnswers)
-                            .build());
-        }
-        return new CreateIssuedTicketResponse(createIssuedTickets, issuedTicketOptionAnswers);
+//        dto.getOrderLineItem().getTicketItem().reduceQuantity(quantity);
+//        List<IssuedTicket> createIssuedTickets = new ArrayList<>();
+//        List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers =
+//                dto.getOrderLineItem().getOrderOptionAnswer().stream()
+//                        .map(IssuedTicketOptionAnswer::orderOptionAnswerToIssuedTicketOptionAnswer)
+//                        .toList();
+//        for (long i = 1; i <= quantity; i++) {
+//            createIssuedTickets.add(
+//                    IssuedTicket.builder()
+//                            .event(dto.getOrderLineItem().getTicketItem().getEvent())
+//                            .orderUuid(dto.getOrder().getUuid())
+//                            .orderLineId(dto.getOrderLineItem().getId())
+//                            .user(dto.getUser())
+//                            .price(dto.getOrderLineItem().getItemPrice())
+//                            .ticketItem(dto.getOrderLineItem().getTicketItem())
+//                            .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
+//                            .issuedTicketOptionAnswers(issuedTicketOptionAnswers)
+//                            .build());
+//        }
+        return null;
+//        return new CreateIssuedTicketResponse(createIssuedTickets, issuedTicketOptionAnswers);
     }
 
     /** ---------------------------- 상태 변환 관련 메서드 ---------------------------------- */

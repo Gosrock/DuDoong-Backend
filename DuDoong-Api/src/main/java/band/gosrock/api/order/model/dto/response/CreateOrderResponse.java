@@ -46,7 +46,7 @@ public class CreateOrderResponse {
                 .amount(order.getTotalPaymentPrice())
                 .orderMethod(order.getOrderMethod())
                 .isNeedPayment(order.isNeedPaid())
-                .ticketType(order.getItemType())
+//                .ticketType(order.getItemType())
                 .build();
     }
 }

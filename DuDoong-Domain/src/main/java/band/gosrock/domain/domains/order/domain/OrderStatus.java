@@ -34,7 +34,7 @@ public enum OrderStatus {
 
     @JsonValue private String kr;
 
-    private boolean checkCanWithDraw() {
+    public boolean checkCanWithDraw() {
         return this.equals(OrderStatus.CONFIRM) || this.equals(OrderStatus.APPROVED);
     }
 

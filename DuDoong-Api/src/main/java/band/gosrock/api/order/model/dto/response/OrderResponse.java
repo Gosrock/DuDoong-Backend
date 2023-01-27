@@ -35,7 +35,7 @@ public class OrderResponse {
 
     public static OrderResponse of(Order order, List<OrderLineTicketResponse> tickets) {
         return OrderResponse.builder()
-                .refundInfo(order.getTotalRefundInfo())
+//                .refundInfo(order.getTotalRefundInfo())
                 .orderMethod(order.getOrderMethod())
                 .paymentInfo(OrderPaymentResponse.from(order))
                 .tickets(tickets)
