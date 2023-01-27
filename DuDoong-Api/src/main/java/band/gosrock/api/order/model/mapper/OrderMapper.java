@@ -1,7 +1,8 @@
 package band.gosrock.api.order.model.mapper;
 
 
-import band.gosrock.api.config.security.SecurityUtils;
+import band.gosrock.api.common.UserUtils;
+import band.gosrock.api.order.model.dto.response.CreateOrderResponse;
 import band.gosrock.api.order.model.dto.response.OrderLineTicketResponse;
 import band.gosrock.api.order.model.dto.response.OrderResponse;
 import band.gosrock.common.annotation.Mapper;
@@ -9,7 +10,8 @@ import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
-import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
+import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
+import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.user.domain.User;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -19,14 +21,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class OrderMapper {
     private final OrderAdaptor orderAdaptor;
-    private final UserAdaptor userAdaptor;
+    private final UserUtils userUtils;
     private final IssuedTicketAdaptor issuedTicketAdaptor;
+    private final TicketItemAdaptor ticketItemAdaptor;
 
     @Transactional(readOnly = true)
     public OrderResponse toOrderResponse(String orderUuid) {
-        Long currentUserId = SecurityUtils.getCurrentUserId();
         Order order = orderAdaptor.findByOrderUuid(orderUuid);
-        User user = userAdaptor.queryUser(currentUserId);
+        User user = userUtils.getCurrentUser();
         String name = user.getProfile().getName();
         List<OrderLineTicketResponse> orderLineTicketResponses =
                 order.getOrderLineItems().stream()
@@ -40,6 +42,14 @@ public class OrderMapper {
                         .toList();
 
         return OrderResponse.of(order, orderLineTicketResponses);
+    }
+
+    @Transactional(readOnly = true)
+    public CreateOrderResponse toCreateOrderResponse(String orderUuid) {
+        Order order = orderAdaptor.findByOrderUuid(orderUuid);
+        User user = userUtils.getCurrentUser();
+        TicketItem item = ticketItemAdaptor.queryTicketItem(order.getItemId());
+        return CreateOrderResponse.from(order, item, user.getProfile());
     }
 
     private String getTicketNoName(Long orderLineItemId) {

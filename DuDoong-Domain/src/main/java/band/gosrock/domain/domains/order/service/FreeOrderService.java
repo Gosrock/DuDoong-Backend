@@ -17,6 +17,7 @@ public class FreeOrderService {
     private final OrderAdaptor orderAdaptor;
 
     private final OrderValidator orderValidator;
+
     @RedissonLock(LockName = "주문", identifier = "orderUuid")
     public String execute(String orderUuid) {
         Order order = orderAdaptor.findByOrderUuid(orderUuid);

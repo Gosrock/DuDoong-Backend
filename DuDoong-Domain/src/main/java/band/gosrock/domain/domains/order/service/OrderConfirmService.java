@@ -30,13 +30,16 @@ public class OrderConfirmService {
     public String execute(ConfirmPaymentsRequest confirmPaymentsRequest, Long currentUserId) {
         Order order = orderAdaptor.findByOrderUuid(confirmPaymentsRequest.getOrderId());
         Money paymentWons = Money.wons(confirmPaymentsRequest.getAmount());
-        orderValidator.validOwner(order,currentUserId);
+        orderValidator.validOwner(order, currentUserId);
         orderValidator.validPaymentOrder(order);
-        orderValidator.validOrderAmountIsSame(order,paymentWons);
+        orderValidator.validOrderAmountIsSame(order, paymentWons);
         // 결제 승인요청
         PaymentsResponse paymentsResponse = paymentsConfirmClient.execute(confirmPaymentsRequest);
         // 결제 후처리 정보 업데이트
-        order.confirmPayment(paymentsResponse.getApprovedAt().toLocalDateTime(),PgPaymentInfo.from(paymentsResponse),orderValidator);
+        order.confirmPayment(
+                paymentsResponse.getApprovedAt().toLocalDateTime(),
+                PgPaymentInfo.from(paymentsResponse),
+                orderValidator);
         return order.getUuid();
     }
 }

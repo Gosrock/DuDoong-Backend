@@ -44,7 +44,7 @@ public class OrderLineTicketResponse {
     public static OrderLineTicketResponse of(
             Order order, OrderLineItem orderLineItem, String userName, String ticketNos) {
         return OrderLineTicketResponse.builder()
-//                .answers(orderLineItem.getOptionAnswerVos())
+                //                .answers(orderLineItem.getOptionAnswerVos())
                 .orderNo(order.getOrderNo() + "-" + orderLineItem.getId())
                 .ticketNos(ticketNos)
                 .ticketName(orderLineItem.getItemName())

@@ -5,9 +5,6 @@ import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.order.domain.Order;
-import band.gosrock.domain.domains.order.domain.OrderLineItem;
-import band.gosrock.domain.domains.order.exception.CanNotCancelOrderException;
-import band.gosrock.domain.domains.order.exception.CanNotRefundOrderException;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
 import band.gosrock.domain.domains.order.exception.NotApprovalOrderException;
 import band.gosrock.domain.domains.order.exception.NotFreeOrderException;
@@ -16,14 +13,11 @@ import band.gosrock.domain.domains.order.exception.NotPaymentOrderException;
 import band.gosrock.domain.domains.order.exception.NotRefundAvailableDateOrderException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
-
 /**
- * 주문 영역에 관한 검증용 메서드의 집합
- * 레퍼런스 : https://www.youtube.com/watch?v=dJ5C4qRqAgA&t=4691s 1시 19분쯤
- * 다른객체의 참조가 필요한 상황이므로 밸리데이터를 다른 객체로 뺌.
+ * 주문 영역에 관한 검증용 메서드의 집합 레퍼런스 : https://www.youtube.com/watch?v=dJ5C4qRqAgA&t=4691s 1시 19분쯤 다른객체의
+ * 참조가 필요한 상황이므로 밸리데이터를 다른 객체로 뺌.
  */
 @Component
 @RequiredArgsConstructor
@@ -40,7 +34,7 @@ public class OrderValidator {
     }
 
     /** 주문에대한 주인인지 검증합니다. */
-    public void validOwner(Order order,Long currentUserId) {
+    public void validOwner(Order order, Long currentUserId) {
         if (!order.getUserId().equals(currentUserId)) {
             throw NotOwnerOrderException.EXCEPTION;
         }
@@ -87,7 +81,6 @@ public class OrderValidator {
     public void validCanCancel(Order order) {
         validAvailableRefundDate(order);
         order.getOrderStatus().validCanCancel();
-
     }
 
     public void validCanRefund(Order order) {
@@ -102,12 +95,14 @@ public class OrderValidator {
     }
 
     private Boolean reduceEventRefundAvailable(List<Event> events) {
-        return events.stream().map(event -> event.getRefundInfoVo().getAvailAble())
-            .reduce(Boolean.TRUE, (Boolean::logicalAnd));
+        return events.stream()
+                .map(event -> event.getRefundInfoVo().getAvailAble())
+                .reduce(Boolean.TRUE, (Boolean::logicalAnd));
     }
 
     private List<Long> getEventIds(Order order) {
         return order.getOrderLineItems().stream()
-            .map(orderLineItem -> orderLineItem.getOrderItem().getItemGroupId()).toList();
+                .map(orderLineItem -> orderLineItem.getOrderItem().getItemGroupId())
+                .toList();
     }
 }

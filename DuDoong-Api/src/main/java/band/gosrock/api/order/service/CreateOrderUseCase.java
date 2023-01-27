@@ -4,6 +4,7 @@ package band.gosrock.api.order.service;
 import band.gosrock.api.common.UserUtils;
 import band.gosrock.api.order.model.dto.request.CreateOrderRequest;
 import band.gosrock.api.order.model.dto.response.CreateOrderResponse;
+import band.gosrock.api.order.model.mapper.OrderMapper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.order.service.CreateOrderService;
 import band.gosrock.domain.domains.user.domain.User;
@@ -17,15 +18,17 @@ public class CreateOrderUseCase {
 
     private final UserUtils userUtils;
 
+    private final OrderMapper orderMapper;
+
     public CreateOrderResponse execute(CreateOrderRequest createOrderRequest) {
         User user = userUtils.getCurrentUser();
         Long couponId = createOrderRequest.getCouponId();
         Long cartId = createOrderRequest.getCartId();
         if (couponId == null) {
-            return CreateOrderResponse.from(
-                    createOrderService.withOutCoupon(cartId, user.getId()), user.getProfile());
+            orderMapper.toCreateOrderResponse(
+                    createOrderService.withOutCoupon(cartId, user.getId()));
         }
-        return CreateOrderResponse.from(
-                createOrderService.withCoupon(cartId, user.getId(), couponId), user.getProfile());
+        return orderMapper.toCreateOrderResponse(
+                createOrderService.withCoupon(cartId, user.getId(), couponId));
     }
 }

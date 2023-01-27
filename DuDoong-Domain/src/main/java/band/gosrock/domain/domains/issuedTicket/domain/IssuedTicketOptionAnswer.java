@@ -47,9 +47,9 @@ public class IssuedTicketOptionAnswer extends BaseTimeEntity {
     }
 
     public static IssuedTicketOptionAnswer orderOptionAnswerToIssuedTicketOptionAnswer(
-            OrderOptionAnswer orderOptionAnswer , Option option) {
+            OrderOptionAnswer orderOptionAnswer, Option option) {
         return IssuedTicketOptionAnswer.builder()
-            // 고침
+                // 고침
                 .option(option)
                 .answer(orderOptionAnswer.getAnswer())
                 .build();

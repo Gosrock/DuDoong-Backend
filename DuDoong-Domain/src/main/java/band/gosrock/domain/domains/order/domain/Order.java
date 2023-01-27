@@ -188,7 +188,7 @@ public class Order extends BaseTimeEntity {
 
     /** 결제 방식의 주문을 승인 합니다. */
     public void confirmPayment(
-            LocalDateTime approvedAt, PgPaymentInfo pgPaymentInfo,OrderValidator orderValidator) {
+            LocalDateTime approvedAt, PgPaymentInfo pgPaymentInfo, OrderValidator orderValidator) {
         orderValidator.validCanConfirmPayment(this);
         orderStatus = OrderStatus.CONFIRM;
         this.approvedAt = approvedAt;
@@ -275,9 +275,9 @@ public class Order extends BaseTimeEntity {
      *
      * @return
      */
-//    public RefundInfoVo getTotalRefundInfo() {
-//        return getOrderLineItem().getRefundInfo();
-//    }
+    //    public RefundInfoVo getTotalRefundInfo() {
+    //        return getOrderLineItem().getRefundInfo();
+    //    }
 
     private OrderLineItem getOrderLineItem() {
         return orderLineItems.stream()
@@ -315,7 +315,6 @@ public class Order extends BaseTimeEntity {
     public String getReceiptUrl() {
         return this.pgPaymentInfo.getReceiptUrl();
     }
-
 
     /** PG 사를 통해 결제가 된 주문인지 반환합니다. */
     public Boolean isPaid() {
