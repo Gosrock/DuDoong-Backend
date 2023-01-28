@@ -120,7 +120,6 @@ class CartValidatorTest {
         given(optionOfGroup1.getOptionGroupId()).willReturn(optionGroup1Id);
         given(optionOfGroup2.getOptionGroupId()).willReturn(optionGroup2Id);
         given(item.getOptionGroupIds()).willReturn(List.of(optionGroup1Id, optionGroup2Id));
-        //        given(cartLineItem.getAnswerOptionIds())
         // when
         cartValidator.validAnswerToAllQuestion(cart, item);
         // then
@@ -158,7 +157,6 @@ class CartValidatorTest {
 
         given(optionOfGroup1.getOptionGroupId()).willReturn(optionGroup1Id);
         given(optionOfGroup2.getOptionGroupId()).willReturn(optionGroup2Id);
-        Long optionGroup3Id = 3L;
         given(item.getOptionGroupIds()).willReturn(List.of(optionGroup1Id));
         // when
         // then
