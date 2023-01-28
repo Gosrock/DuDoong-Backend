@@ -8,7 +8,6 @@ import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.coupon.adaptor.IssuedCouponAdaptor;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import band.gosrock.domain.domains.user.domain.User;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -33,14 +32,7 @@ public class ReadMyPageIssuedCouponUseCase {
                 issuedCoupons.stream()
                         .filter(
                                 issuedCoupon ->
-                                        !LocalDateTime.now()
-                                                        .isAfter(
-                                                                issuedCoupon
-                                                                        .getCreatedAt()
-                                                                        .plusDays(
-                                                                                issuedCoupon
-                                                                                        .getCouponCampaign()
-                                                                                        .getValidTerm()))
+                                        issuedCoupon.isAvailableTerm()
                                                 && !issuedCoupon.isUsageStatus())
                         .toList();
 
@@ -50,14 +42,7 @@ public class ReadMyPageIssuedCouponUseCase {
                     issuedCoupons.stream()
                             .filter(
                                     issuedCoupon ->
-                                            LocalDateTime.now()
-                                                            .isAfter(
-                                                                    issuedCoupon
-                                                                            .getCreatedAt()
-                                                                            .plusDays(
-                                                                                    issuedCoupon
-                                                                                            .getCouponCampaign()
-                                                                                            .getValidTerm()))
+                                            !issuedCoupon.isAvailableTerm()
                                                     || issuedCoupon.isUsageStatus())
                             .toList();
             return issuedCouponMapper.toReadIssuedCouponMyPageResponse(
