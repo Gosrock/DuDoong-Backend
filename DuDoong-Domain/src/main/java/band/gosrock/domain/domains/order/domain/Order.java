@@ -14,6 +14,7 @@ import band.gosrock.domain.domains.order.domain.validator.OrderValidator;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
 import band.gosrock.domain.domains.order.exception.NotPaymentOrderException;
 import band.gosrock.domain.domains.order.exception.OrderLineNotFountException;
+import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -112,48 +113,51 @@ public class Order extends BaseTimeEntity {
     }
 
     /** 카드, 간편결제등 토스 요청 과정이 필요한 결제를 생성합니다. */
-    public static Order createPaymentOrder(Long userId, Cart cart) {
+    public static Order createPaymentOrder(Long userId, Cart cart, TicketItem item) {
 
         return Order.builder()
                 .userId(userId)
                 .orderName(cart.getCartName())
-                .orderLineItems(getOrderLineItems(cart))
+                .orderLineItems(getOrderLineItems(cart, item))
                 .orderStatus(OrderStatus.PENDING_PAYMENT)
                 .orderMethod(OrderMethod.PAYMENT)
                 .build();
     }
 
     /** 승인 결제인 주문을 생성합니다. */
-    public static Order createApproveOrder(Long userId, Cart cart) {
+    public static Order createApproveOrder(Long userId, Cart cart, TicketItem item) {
         if (cart.isNeedPaid()) {
             throw InvalidOrderException.EXCEPTION;
         }
         return Order.builder()
                 .userId(userId)
                 .orderName(cart.getCartName())
-                .orderLineItems(getOrderLineItems(cart))
+                .orderLineItems(getOrderLineItems(cart, item))
                 .orderStatus(OrderStatus.PENDING_APPROVE)
                 .orderMethod(OrderMethod.APPROVAL)
                 .build();
     }
 
-    public static Order createPaymentOrderWithCoupon(Long userId, Cart cart, IssuedCoupon coupon) {
+    public static Order createPaymentOrderWithCoupon(
+            Long userId, Cart cart, TicketItem item, IssuedCoupon coupon) {
         // 선착순 결제라면 결제 가능한 금액이 있어야 쿠폰 적용이 가능하다.
-        if (!cart.isNeedPaid()) {
+        if (!item.isFCFS() || !cart.isNeedPaid()) {
             throw InvalidOrderException.EXCEPTION;
         }
 
         Money supplyAmount = cart.getTotalPrice();
         OrderCouponVo couponVo = OrderCouponVo.of(coupon, supplyAmount);
         couponVo.validMinimumPaymentAmount(supplyAmount);
-        Order order = createPaymentOrder(userId, cart);
+        Order order = createPaymentOrder(userId, cart, item);
         order.attachCoupon(couponVo);
         return order;
     }
 
     @NotNull
-    private static List<OrderLineItem> getOrderLineItems(Cart cart) {
-        return cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
+    private static List<OrderLineItem> getOrderLineItems(Cart cart, TicketItem item) {
+        return cart.getCartLineItems().stream()
+                .map(cartLineItem -> OrderLineItem.of(cartLineItem, item))
+                .toList();
     }
 
     /** ---------------------------- 커맨드 메서드 ---------------------------------- */

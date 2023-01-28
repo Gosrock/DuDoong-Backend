@@ -22,10 +22,10 @@ public class CartDomainService {
             identifier = "userId",
             needSameTransaction = true)
     public Long createCart(Cart cart, Long userId) {
-        cart.validItemKindPolicy(() -> cartPolicy);
+        //        cart.validItemKindPolicy(() -> cartPolicy);
         cartAdaptor.deleteByUserId(userId);
         Cart savedCart = cartAdaptor.save(cart);
-        savedCart.validCorrectAnswerToItems();
+        //        savedCart.validCorrectAnswerToItems();
         return savedCart.getId();
     }
 }

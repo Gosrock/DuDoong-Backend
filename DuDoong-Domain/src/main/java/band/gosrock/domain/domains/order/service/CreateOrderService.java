@@ -8,7 +8,6 @@ import band.gosrock.domain.domains.coupon.adaptor.IssuedCouponAdaptor;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
-import band.gosrock.domain.domains.order.exception.InvalidOrderException;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import lombok.RequiredArgsConstructor;
@@ -33,11 +32,11 @@ public class CreateOrderService {
         TicketItem ticketItem = itemAdaptor.queryTicketItem(cart.getItemId());
         // 결제 주문 생성
         if (ticketItem.isFCFS()) {
-            Order paymentOrder = Order.createPaymentOrder(userId, cart);
+            Order paymentOrder = Order.createPaymentOrder(userId, cart, ticketItem);
             return orderAdaptor.save(paymentOrder).getUuid();
         }
         // 승인 주문 생성
-        Order approveOrder = Order.createApproveOrder(userId, cart);
+        Order approveOrder = Order.createApproveOrder(userId, cart, ticketItem);
         return orderAdaptor.save(approveOrder).getUuid();
     }
 
@@ -46,11 +45,7 @@ public class CreateOrderService {
         IssuedCoupon coupon = issuedCouponAdaptor.query(couponId);
         Cart cart = cartAdaptor.queryCart(cartId, userId);
         TicketItem ticketItem = itemAdaptor.queryTicketItem(cart.getItemId());
-        // TODO : 리팩토링 예정
-        if (!ticketItem.isFCFS()) {
-            throw InvalidOrderException.EXCEPTION;
-        }
-        Order order = Order.createPaymentOrderWithCoupon(userId, cart, coupon);
+        Order order = Order.createPaymentOrderWithCoupon(userId, cart, ticketItem, coupon);
         order.calculatePaymentInfo();
         return orderAdaptor.save(order).getUuid();
     }

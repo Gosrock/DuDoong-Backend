@@ -50,13 +50,13 @@ public class OrderLineItem extends BaseTimeEntity {
     }
 
     @Builder
-    public static OrderLineItem from(CartLineItem cartLineItem) {
+    public static OrderLineItem of(CartLineItem cartLineItem, TicketItem ticketItem) {
         List<OrderOptionAnswer> orderOptionAnswers =
                 cartLineItem.getCartOptionAnswers().stream().map(OrderOptionAnswer::from).toList();
         return OrderLineItem.builder()
                 .orderOptionAnswer(orderOptionAnswers)
                 .quantity(cartLineItem.getQuantity())
-                .ticketItem(cartLineItem.getTicketItem())
+                .ticketItem(ticketItem)
                 .build();
     }
 
