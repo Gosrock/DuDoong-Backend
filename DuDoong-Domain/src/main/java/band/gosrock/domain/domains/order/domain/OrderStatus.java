@@ -1,9 +1,6 @@
 package band.gosrock.domain.domains.order.domain;
 
 
-import band.gosrock.domain.domains.order.exception.CanNotCancelOrderException;
-import band.gosrock.domain.domains.order.exception.CanNotRefundOrderException;
-import band.gosrock.domain.domains.order.exception.NotPendingOrderException;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -33,32 +30,4 @@ public enum OrderStatus {
     private String value;
 
     @JsonValue private String kr;
-
-    private boolean checkCanWithDraw() {
-        return this.equals(OrderStatus.CONFIRM) || this.equals(OrderStatus.APPROVED);
-    }
-
-    public void validCanCancel() {
-        if (!checkCanWithDraw()) {
-            throw CanNotCancelOrderException.EXCEPTION;
-        }
-    }
-
-    public void validCanRefund() {
-        if (!checkCanWithDraw()) {
-            throw CanNotRefundOrderException.EXCEPTION;
-        }
-    }
-
-    public void validCanPaymentConfirm() {
-        if (!this.equals(OrderStatus.PENDING_PAYMENT)) {
-            throw NotPendingOrderException.EXCEPTION;
-        }
-    }
-
-    public void validCanApprove() {
-        if (!this.equals(OrderStatus.PENDING_APPROVE)) {
-            throw NotPendingOrderException.EXCEPTION;
-        }
-    }
 }

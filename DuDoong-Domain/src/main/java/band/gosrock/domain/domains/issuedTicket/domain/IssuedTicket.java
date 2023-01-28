@@ -6,8 +6,6 @@ import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.domain.Event;
-import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketDTO;
-import band.gosrock.domain.domains.issuedTicket.dto.response.CreateIssuedTicketResponse;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelEntranceException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotEntranceException;
@@ -118,7 +116,6 @@ public class IssuedTicket extends BaseTimeEntity {
             Long orderLineId,
             TicketItem ticketItem,
             Money price,
-            IssuedTicketStatus issuedTicketStatus,
             List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers) {
         this.event = event;
         this.user = user;
@@ -126,7 +123,6 @@ public class IssuedTicket extends BaseTimeEntity {
         this.orderLineId = orderLineId;
         this.ticketItem = ticketItem;
         this.price = price;
-        this.issuedTicketStatus = issuedTicketStatus;
         this.issuedTicketOptionAnswers.addAll(issuedTicketOptionAnswers);
     }
 
@@ -150,7 +146,6 @@ public class IssuedTicket extends BaseTimeEntity {
                         .orderLineId(orderLineId)
                         .ticketItem(ticketItem)
                         .price(price)
-                        .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
                         .issuedTicketOptionAnswers(new ArrayList<>())
                         .build();
         createIssuedTicket.getIssuedTicketOptionAnswers().addAll(issuedTicketOptionAnswers);
@@ -189,34 +184,6 @@ public class IssuedTicket extends BaseTimeEntity {
      */
     public IssuedTicketInfoVo toIssuedTicketInfoVo() {
         return IssuedTicketInfoVo.from(this);
-    }
-
-    /*
-    orderLine -> issuedTicket 생성 메서드
-     */
-    public static CreateIssuedTicketResponse orderLineItemToIssuedTickets(
-            CreateIssuedTicketDTO dto) {
-        long quantity = dto.getOrderLineItem().getQuantity();
-        dto.getOrderLineItem().getTicketItem().reduceQuantity(quantity);
-        List<IssuedTicket> createIssuedTickets = new ArrayList<>();
-        List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers =
-                dto.getOrderLineItem().getOrderOptionAnswer().stream()
-                        .map(IssuedTicketOptionAnswer::orderOptionAnswerToIssuedTicketOptionAnswer)
-                        .toList();
-        for (long i = 1; i <= quantity; i++) {
-            createIssuedTickets.add(
-                    IssuedTicket.builder()
-                            .event(dto.getOrderLineItem().getTicketItem().getEvent())
-                            .orderUuid(dto.getOrder().getUuid())
-                            .orderLineId(dto.getOrderLineItem().getId())
-                            .user(dto.getUser())
-                            .price(dto.getOrderLineItem().getItemPrice())
-                            .ticketItem(dto.getOrderLineItem().getTicketItem())
-                            .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
-                            .issuedTicketOptionAnswers(issuedTicketOptionAnswers)
-                            .build());
-        }
-        return new CreateIssuedTicketResponse(createIssuedTickets, issuedTicketOptionAnswers);
     }
 
     /** ---------------------------- 상태 변환 관련 메서드 ---------------------------------- */

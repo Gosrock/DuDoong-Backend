@@ -11,4 +11,6 @@ public interface EventRepository extends CrudRepository<Event, Long> {
     List<Event> findAll();
 
     Page<Event> findAllByHostId(Long hostId, Pageable pageable);
+
+    List<Event> findAllByIdIn(List<Long> ids);
 }

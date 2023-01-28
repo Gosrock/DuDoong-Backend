@@ -5,6 +5,7 @@ import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.common.aop.redissonLock.RedissonLock;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
+import band.gosrock.domain.domains.order.domain.validator.OrderValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,20 +18,22 @@ public class WithdrawOrderService {
 
     private final OrderAdaptor orderAdaptor;
 
+    private final OrderValidator orderValidator;
+
     @RedissonLock(LockName = "주문", identifier = "orderUuid")
     public String cancelOrder(String orderUuid, Long userId) {
         Order order = orderAdaptor.findByOrderUuid(orderUuid);
         // TODO : 관리자 권환으로 치환.
-        order.validOwner(userId);
-        order.cancel();
+        orderValidator.validOwner(order, userId);
+        order.cancel(orderValidator);
         return orderUuid;
     }
 
     @RedissonLock(LockName = "주문", identifier = "orderUuid")
     public String refundOrder(String orderUuid, Long userId) {
         Order order = orderAdaptor.findByOrderUuid(orderUuid);
-        order.validOwner(userId);
-        order.refund();
+        orderValidator.validOwner(order, userId);
+        order.refund(orderValidator);
         return orderUuid;
     }
 }

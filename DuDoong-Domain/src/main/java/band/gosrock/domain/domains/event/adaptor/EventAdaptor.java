@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 @Adaptor
 @RequiredArgsConstructor
 public class EventAdaptor {
@@ -23,5 +25,9 @@ public class EventAdaptor {
 
     public Page<Event> findAllByHostId(Long hostId, Pageable pageable) {
         return eventRepository.findAllByHostId(hostId, pageable);
+    }
+
+    public List<Event> findAllByIds(List<Long> ids) {
+        return eventRepository.findAllByIdIn(ids);
     }
 }

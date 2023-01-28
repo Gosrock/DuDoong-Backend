@@ -9,6 +9,7 @@ import static org.mockito.Mockito.times;
 
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
+import band.gosrock.domain.domains.order.domain.validator.OrderValidator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,18 +23,21 @@ class OrderApproveServiceTest {
 
     @Mock private Order order;
 
+    @Mock private OrderValidator orderValidator;
+
     @Test
     @DisplayName("주문승인_승인로직_한번만_호출해야한다.")
     void 주문승인_승인로직_한번만_호출() {
         // given
-        willDoNothing().given(order).approve();
+        willDoNothing().given(order).approve(orderValidator);
         given(orderAdaptor.findByOrderUuid(any())).willReturn(order);
-        OrderApproveService orderApproveService = new OrderApproveService(orderAdaptor);
+        OrderApproveService orderApproveService =
+                new OrderApproveService(orderAdaptor, orderValidator);
 
         // when
         orderApproveService.execute("uuid");
 
         // then
-        then(order).should(times(1)).approve();
+        then(order).should(times(1)).approve(any());
     }
 }

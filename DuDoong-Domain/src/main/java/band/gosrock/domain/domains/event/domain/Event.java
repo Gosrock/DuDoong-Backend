@@ -97,6 +97,10 @@ public class Event extends BaseTimeEntity {
         return RefundInfoVo.from(getEndAt());
     }
 
+    public Boolean isRefundDateNotPassed() {
+        return getRefundInfoVo().getAvailAble();
+    }
+
     public EventInfoVo toEventInfoVo() {
         return EventInfoVo.from(this);
     }
