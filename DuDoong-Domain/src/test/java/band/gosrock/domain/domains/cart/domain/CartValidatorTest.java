@@ -100,4 +100,14 @@ class CartValidatorTest {
         assertThrows(
                 EventIsNotOpenStatusException.class, () -> cartValidator.validEventIsOpen(event));
     }
+
+    @Test
+    public void 카트_설문지_전부응답검증_성공() {
+        // given
+        willThrow(EventIsNotOpenStatusException.class).given(event).validStatusOpen();
+        // when
+        // then
+        assertThrows(
+            EventIsNotOpenStatusException.class, () -> cartValidator.validEventIsOpen(event));
+    }
 }
