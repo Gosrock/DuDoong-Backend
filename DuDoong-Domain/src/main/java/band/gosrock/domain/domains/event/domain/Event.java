@@ -85,7 +85,6 @@ public class Event extends BaseTimeEntity {
 
     public void setEventPlace(EventPlace eventPlace) {
         // 정보 한 번 등록시 변경 불가
-        this.updated = true;
         this.eventPlace = eventPlace;
     }
 

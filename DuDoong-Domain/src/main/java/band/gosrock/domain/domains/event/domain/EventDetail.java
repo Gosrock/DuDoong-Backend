@@ -21,7 +21,7 @@ public class EventDetail {
     // todo :: 디테일 이미지를 EventDetailImage 로 받기
 
     // 디테일 이미지
-    @ElementCollection(fetch = FetchType.LAZY)
+    @ElementCollection(fetch = FetchType.EAGER)
     private List<String> detailImages = new ArrayList<>();
 
     // (마크다운) 공연 상세 내용
