@@ -2,8 +2,7 @@ package band.gosrock.domain.domains.event.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
-import band.gosrock.domain.common.vo.EventInfoVo;
-import band.gosrock.domain.common.vo.RefundInfoVo;
+import band.gosrock.domain.common.vo.*;
 import band.gosrock.domain.domains.event.exception.CannotModifyEventBasicException;
 import band.gosrock.domain.domains.event.exception.EventCannotEndBeforeStartException;
 import java.time.LocalDateTime;
@@ -100,5 +99,21 @@ public class Event extends BaseTimeEntity {
 
     public EventInfoVo toEventInfoVo() {
         return EventInfoVo.from(this);
+    }
+
+    public EventDetailVo toEventDetailVo() {
+        return EventDetailVo.from(this);
+    }
+
+    public EventBasicVo toEventBasicVo() {
+        return EventBasicVo.from(this);
+    }
+
+    public EventProfileVo toEventProfileVo() {
+        return EventProfileVo.from(this);
+    }
+
+    public EventPlaceVo toEventPlaceVo() {
+        return EventPlaceVo.from(this);
     }
 }

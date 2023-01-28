@@ -1,27 +1,24 @@
 package band.gosrock.api.event.service;
 
 
-import band.gosrock.api.event.model.dto.response.EventResponse;
+import band.gosrock.api.common.page.PageResponse;
+import band.gosrock.api.event.model.dto.response.EventProfileResponse;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 @UseCase
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ReadEventListUseCase {
-    private final HostAdaptor hostAdaptor;
+public class ReadEventProfileListUseCase {
     private final EventAdaptor eventAdaptor;
 
-    public List<EventResponse> execute(Long hostId) {
-        final Host host = hostAdaptor.findById(hostId);
-        return eventAdaptor.findAllByHostId(hostId).stream()
-                .map(EventResponse::of)
-                .collect(Collectors.toList());
+    public PageResponse<EventProfileResponse> execute(Long hostId, Pageable pageable) {
+        return PageResponse.of(
+                eventAdaptor.findAllByHostId(hostId, pageable).map(EventProfileResponse::of));
     }
 }
