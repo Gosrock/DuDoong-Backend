@@ -5,12 +5,15 @@ import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.host.domain.HostUser;
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityException;
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLackException;
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLargeException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -62,8 +65,8 @@ public class TicketItem extends BaseTimeEntity {
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
-    @OneToMany(mappedBy = "item")
-    private List<ItemOptionGroup> itemOptionGroups = new ArrayList<>();
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private final Set<ItemOptionGroup> itemOptionGroups = new HashSet<>();
 
     @Builder
     public TicketItem(
@@ -77,8 +80,7 @@ public class TicketItem extends BaseTimeEntity {
             Boolean isSellable,
             LocalDateTime saleStartAt,
             LocalDateTime saleEndAt,
-            Event event,
-            List<ItemOptionGroup> itemOptionGroups) {
+            Event event) {
         this.type = type;
         this.name = name;
         this.description = description;
@@ -90,7 +92,14 @@ public class TicketItem extends BaseTimeEntity {
         this.saleStartAt = saleStartAt;
         this.saleEndAt = saleEndAt;
         this.event = event;
-        this.itemOptionGroups = itemOptionGroups;
+    }
+
+    public void addItemOptionGroup(ItemOptionGroup itemOptionGroup) {
+        this.itemOptionGroups.add(itemOptionGroup);
+    }
+
+    public Boolean hasItemOptionGroup(Long optionGroupId) {
+        return this.itemOptionGroups.stream().anyMatch(itemOptionGroup -> itemOptionGroup.getOptionGroup().getId().equals(optionGroupId));
     }
 
     public RefundInfoVo getRefundInfoVo() {
