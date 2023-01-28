@@ -108,6 +108,6 @@ class CartValidatorTest {
         // when
         // then
         assertThrows(
-            EventIsNotOpenStatusException.class, () -> cartValidator.validEventIsOpen(event));
+                EventIsNotOpenStatusException.class, () -> cartValidator.validEventIsOpen(event));
     }
 }
