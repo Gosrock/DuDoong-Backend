@@ -1,6 +1,7 @@
 package band.gosrock.api.host.controller;
 
 
+import band.gosrock.api.common.page.PageResponse;
 import band.gosrock.api.host.model.dto.request.*;
 import band.gosrock.api.host.model.dto.response.HostDetailResponse;
 import band.gosrock.api.host.model.dto.response.HostProfileResponse;
@@ -10,10 +11,12 @@ import band.gosrock.domain.common.vo.UserProfileVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.api.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,9 +27,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Validated
 public class HostController {
-
     private final ReadHostUseCase readHostUseCase;
-    private final ReadHostListUseCase readHostListUseCase;
+    private final ReadHostProfileListUseCase readHostListUseCase;
     private final ReadInviteUserListUseCase readInviteUserListUseCase;
     private final CreateHostUseCase createHostUseCase;
     private final UpdateHostProfileUseCase updateHostProfileUseCase;
@@ -37,8 +39,9 @@ public class HostController {
 
     @Operation(summary = "내가 속한 호스트 리스트를 가져옵니다.")
     @GetMapping
-    public List<HostProfileResponse> getAllHosts() {
-        return readHostListUseCase.execute();
+    public PageResponse<HostProfileResponse> getAllHosts(
+            @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
+        return readHostListUseCase.execute(pageable);
     }
 
     @Operation(summary = "고유 아이디에 해당하는 호스트 정보를 가져옵니다.")
