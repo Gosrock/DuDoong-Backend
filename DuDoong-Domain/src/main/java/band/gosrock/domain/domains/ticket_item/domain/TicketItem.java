@@ -5,12 +5,11 @@ import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.event.domain.Event;
-import band.gosrock.domain.domains.host.domain.HostUser;
+import band.gosrock.domain.domains.ticket_item.exception.InvalidTicketItemException;
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityException;
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLackException;
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLargeException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -94,12 +93,23 @@ public class TicketItem extends BaseTimeEntity {
         this.event = event;
     }
 
-    public void addItemOptionGroup(ItemOptionGroup itemOptionGroup) {
+    public void addItemOptionGroup(OptionGroup optionGroup) {
+        ItemOptionGroup itemOptionGroup =
+                ItemOptionGroup.builder().item(this).optionGroup(optionGroup).build();
         this.itemOptionGroups.add(itemOptionGroup);
     }
 
     public Boolean hasItemOptionGroup(Long optionGroupId) {
-        return this.itemOptionGroups.stream().anyMatch(itemOptionGroup -> itemOptionGroup.getOptionGroup().getId().equals(optionGroupId));
+        return this.itemOptionGroups.stream()
+                .anyMatch(
+                        itemOptionGroup ->
+                                itemOptionGroup.getOptionGroup().getId().equals(optionGroupId));
+    }
+
+    public void checkEventId(Long eventId) {
+        if (!this.getEvent().getId().equals(eventId)) {
+            throw InvalidTicketItemException.EXCEPTION;
+        }
     }
 
     public RefundInfoVo getRefundInfoVo() {
@@ -121,10 +131,8 @@ public class TicketItem extends BaseTimeEntity {
                 .toList();
     }
 
-    public void addOptionGroup(OptionGroup optionGroup) {
-        ItemOptionGroup itemOptionGroup =
-                ItemOptionGroup.builder().item(this).optionGroup(optionGroup).build();
-        this.itemOptionGroups.add(itemOptionGroup);
+    public Boolean isQuantityReduced() {
+        return !this.quantity.equals(this.supplyCount);
     }
 
     public void reduceQuantity(Long quantity) {

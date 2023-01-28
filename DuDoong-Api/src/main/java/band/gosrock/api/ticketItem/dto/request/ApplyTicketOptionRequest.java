@@ -2,9 +2,7 @@ package band.gosrock.api.ticketItem.dto.request;
 
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
-
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

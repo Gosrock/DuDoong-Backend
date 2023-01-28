@@ -5,6 +5,7 @@ import static band.gosrock.domain.domains.ticket_item.domain.OptionGroupType.*;
 
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.ticket_item.exception.InvalidOptionGroupException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.*;
@@ -41,7 +42,7 @@ public class OptionGroup {
     private Boolean isEssential;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "optionGroup")
-    private List<Option> options = new ArrayList<>();
+    private final List<Option> options = new ArrayList<>();
 
     @Builder
     public OptionGroup(
@@ -59,6 +60,12 @@ public class OptionGroup {
 
         this.options.addAll(options);
         options.forEach(option -> option.setOptionGroup(this));
+    }
+
+    public void checkEventId(Long eventId) {
+        if (!this.getEvent().getId().equals(eventId)) {
+            throw InvalidOptionGroupException.EXCEPTION;
+        }
     }
 
     public OptionGroup createTicketOption(Money additionalPrice) {
