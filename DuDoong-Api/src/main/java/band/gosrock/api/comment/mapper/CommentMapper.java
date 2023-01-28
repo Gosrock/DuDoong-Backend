@@ -35,4 +35,9 @@ public class CommentMapper {
         Slice<Comment> comments = commentAdaptor.searchComment(commentCondition);
         return RetrieveCommentListResponse.of(comments, currentUserId);
     }
+
+    @Transactional(readOnly = true)
+    public Comment retrieveComment(Long commentId) {
+        return commentAdaptor.queryComment(commentId);
+    }
 }

@@ -5,6 +5,7 @@ import band.gosrock.api.comment.model.request.CreateCommentRequest;
 import band.gosrock.api.comment.model.response.CreateCommentResponse;
 import band.gosrock.api.comment.model.response.RetrieveCommentListResponse;
 import band.gosrock.api.comment.service.CreateCommentUseCase;
+import band.gosrock.api.comment.service.DeleteCommentUseCase;
 import band.gosrock.api.comment.service.RetrieveCommentUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -31,6 +32,8 @@ public class CommentController {
 
     private final RetrieveCommentUseCase retrieveCommentUseCase;
 
+    private final DeleteCommentUseCase deleteCommentUseCase;
+
     @Operation(summary = "응원글을 생성합니다.")
     @PostMapping
     public CreateCommentResponse postComment(
@@ -48,7 +51,7 @@ public class CommentController {
 
     @Operation(summary = "[어드민 기능] 응원글을 삭제합니다.")
     @DeleteMapping(value = "/{commentId}")
-    public Void deleteComment(@PathVariable Long eventId, @PathVariable Long commentId) {
-
+    public void deleteComment(@PathVariable Long eventId, @PathVariable Long commentId) {
+        deleteCommentUseCase.execute(eventId, commentId);
     }
 }

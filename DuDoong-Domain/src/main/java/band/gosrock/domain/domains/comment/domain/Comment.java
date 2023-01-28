@@ -66,4 +66,8 @@ public class Comment extends BaseTimeEntity {
     public CommentInfoVo toCommentInfoVo() {
         return CommentInfoVo.from(this);
     }
+
+    public void delete() {
+        this.commentStatus = CommentStatus.INACTIVE;
+    }
 }
