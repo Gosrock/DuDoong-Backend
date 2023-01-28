@@ -57,7 +57,7 @@ public class Cart extends BaseTimeEntity {
     }
 
     /** ---------------------------- 커맨드 메서드 ---------------------------------- */
-    private void updateCartName(String name) {
+    public void updateCartName(String name) {
         cartName = name;
     }
 
