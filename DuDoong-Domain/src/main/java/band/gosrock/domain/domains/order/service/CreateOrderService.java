@@ -23,19 +23,19 @@ public class CreateOrderService {
     private final IssuedCouponAdaptor issuedCouponAdaptor;
 
     @Transactional
-    public Order withOutCoupon(Long cartId, Long userId) {
+    public String withOutCoupon(Long cartId, Long userId) {
         Cart cart = cartAdaptor.queryCart(cartId, userId);
         Order order = Order.create(userId, cart);
         order.calculatePaymentInfo();
-        return orderAdaptor.save(order);
+        return orderAdaptor.save(order).getUuid();
     }
 
     @Transactional
-    public Order withCoupon(Long cartId, Long userId, Long couponId) {
+    public String withCoupon(Long cartId, Long userId, Long couponId) {
         IssuedCoupon coupon = issuedCouponAdaptor.query(couponId);
         Cart cart = cartAdaptor.queryCart(cartId, userId);
         Order order = Order.createWithCoupon(userId, cart, coupon);
         order.calculatePaymentInfo();
-        return orderAdaptor.save(order);
+        return orderAdaptor.save(order).getUuid();
     }
 }

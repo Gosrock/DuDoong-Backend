@@ -23,4 +23,8 @@ public class EventAdaptor {
     public List<Event> findAllByHostId(Long hostId) {
         return eventRepository.findAllByHostId(hostId);
     }
+
+    public List<Event> findAllByIds(List<Long> ids) {
+        return eventRepository.findAllByIdIn(ids);
+    }
 }

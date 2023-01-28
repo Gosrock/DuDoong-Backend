@@ -1,8 +1,11 @@
 package band.gosrock.api.ticketItem.controller;
 
 
+import band.gosrock.api.ticketItem.dto.request.ApplyTicketOptionRequest;
 import band.gosrock.api.ticketItem.dto.request.CreateTicketItemRequest;
+import band.gosrock.api.ticketItem.dto.response.ApplyTicketOptionResponse;
 import band.gosrock.api.ticketItem.dto.response.CreateTicketItemResponse;
+import band.gosrock.api.ticketItem.service.ApplyTicketOptionUseCase;
 import band.gosrock.api.ticketItem.service.CreateTicketItemUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class TicketItemController {
 
     public final CreateTicketItemUseCase createTicketItemUseCase;
+    public final ApplyTicketOptionUseCase applyTicketOptionUseCase;
 
     @Operation(
             summary = "특정 이벤트에 속하는 티켓 상품을 생성합니다.",
@@ -27,5 +31,13 @@ public class TicketItemController {
     public CreateTicketItemResponse createTicketItem(
             @RequestBody @Valid CreateTicketItemRequest createTicketItemRequest) {
         return createTicketItemUseCase.execute(createTicketItemRequest);
+    }
+
+    @Operation(summary = "옵션을 티켓상품에 적용합니다.")
+    @PostMapping("/{eventId}/option")
+    public ApplyTicketOptionResponse createTicketOption(
+            @RequestBody @Valid ApplyTicketOptionRequest applyTicketOptionRequest,
+            @PathVariable Long eventId) {
+        return applyTicketOptionUseCase.execute(applyTicketOptionRequest, eventId);
     }
 }
