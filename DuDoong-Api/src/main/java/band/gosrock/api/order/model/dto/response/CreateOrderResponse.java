@@ -4,6 +4,7 @@ package band.gosrock.api.order.model.dto.response;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderMethod;
+import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import band.gosrock.domain.domains.user.domain.Profile;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -37,7 +38,7 @@ public class CreateOrderResponse {
     @Schema(description = "티켓의 타입. 승인 , 선착순 두가지입니다.")
     private final TicketType ticketType;
 
-    public static CreateOrderResponse from(Order order, Profile profile) {
+    public static CreateOrderResponse from(Order order, TicketItem item, Profile profile) {
         return CreateOrderResponse.builder()
                 .customerEmail(profile.getEmail())
                 .customerName(profile.getName())
@@ -46,7 +47,7 @@ public class CreateOrderResponse {
                 .amount(order.getTotalPaymentPrice())
                 .orderMethod(order.getOrderMethod())
                 .isNeedPayment(order.isNeedPaid())
-                .ticketType(order.getItemType())
+                .ticketType(item.getType())
                 .build();
     }
 }

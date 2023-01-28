@@ -1,6 +1,7 @@
 package band.gosrock.domain.domains.ticket_item.exception;
 
-import static band.gosrock.common.consts.DuDoongStatic.*;
+import static band.gosrock.common.consts.DuDoongStatic.BAD_REQUEST;
+import static band.gosrock.common.consts.DuDoongStatic.NOT_FOUND;
 
 import band.gosrock.common.annotation.ExplainError;
 import band.gosrock.common.dto.ErrorReason;
@@ -34,9 +35,7 @@ public enum TicketItemErrorCode implements BaseErrorCode {
     @ExplainError("옵션을 적용할 상품이 해당 이벤트 소속이 아닐 때 발생하는 오류입니다.")
     INVALID_TICKET_ITEM(BAD_REQUEST, "Ticket_Item_400_5", "해당 티켓상품에 적용할 수 없습니다."),
     @ExplainError("해당 티켓상품에 이미 적용된 옵션일 경우 발생하는 오류입니다.")
-    DUPLICATED_ITEM_OPTION_GROUP(BAD_REQUEST, "Item_Option_Group_400_1", "이미 적용된 옵션입니다."),
-    @ExplainError("이미 재고 감소된 티켓상품에 옵션을 변경하려고 할때 발생하는 오류입니다.")
-    FORBIDDEN_OPTION_CHANGE(FORBIDDEN, "Item_Option_Group_403_1", "옵션 변경이 불가능한 상태입니다.");
+    DUPLICATED_ITEM_OPTION_GROUP(BAD_REQUEST, "Item_Option_Group_400_1", "이미 적용된 옵션입니다.");
 
     private Integer status;
     private String code;

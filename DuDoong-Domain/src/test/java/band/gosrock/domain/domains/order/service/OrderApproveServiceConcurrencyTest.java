@@ -8,13 +8,11 @@ import band.gosrock.domain.CunCurrencyExecutorService;
 import band.gosrock.domain.DisableDomainEvent;
 import band.gosrock.domain.DomainIntegrateSpringBootTest;
 import band.gosrock.domain.common.vo.Money;
-import band.gosrock.domain.domains.coupon.domain.OrderCouponVo;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;
 import band.gosrock.domain.domains.order.domain.OrderMethod;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
-import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
@@ -38,21 +36,19 @@ class OrderApproveServiceConcurrencyTest {
     @Mock OrderLineItem orderLineItem;
     @MockBean private OrderAdaptor orderAdaptor;
 
-    @Mock TicketItem ticketItem;
     Order order;
 
     @BeforeEach
     void setUp() {
         given(orderLineItem.getTotalOrderLinePrice()).willReturn(Money.ZERO);
-        given(orderLineItem.getTicketItem()).willReturn(ticketItem);
-        given(ticketItem.getId()).willReturn(1L);
         order =
                 Order.builder()
                         .orderMethod(OrderMethod.APPROVAL)
                         .orderStatus(OrderStatus.PENDING_APPROVE)
                         .orderLineItems(List.of(orderLineItem))
-                        .orderCouponVo(OrderCouponVo.empty())
                         .build();
+        order.addUUID();
+        given(orderAdaptor.findByOrderUuid(any())).willReturn(order);
         order.addUUID();
         // https://stackoverflow.com/questions/11785498/simulate-first-call-fails-second-call-succeeds
         // 첫 요청엔 성공하도록

@@ -27,20 +27,21 @@ public class OrderResponse {
     @Schema(description = "주문 고유 uuid")
     private final String orderUuid;
 
-    @Schema(description = "주문 id")
-    private final Long orderId;
+    @Schema(description = "주문 번호 R------- 형식")
+    private final String orderNo;
 
     @Schema(description = "주문 방식 ( 결제 방식 , 승인 방식 )")
     private final OrderMethod orderMethod;
 
-    public static OrderResponse of(Order order, List<OrderLineTicketResponse> tickets) {
+    public static OrderResponse of(
+            Order order, RefundInfoVo refundInfo, List<OrderLineTicketResponse> tickets) {
         return OrderResponse.builder()
-                .refundInfo(order.getTotalRefundInfo())
+                .refundInfo(refundInfo)
                 .orderMethod(order.getOrderMethod())
                 .paymentInfo(OrderPaymentResponse.from(order))
                 .tickets(tickets)
                 .orderUuid(order.getUuid())
-                .orderId(order.getId())
+                .orderNo(order.getOrderNo())
                 .build();
     }
 }

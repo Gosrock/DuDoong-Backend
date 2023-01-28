@@ -14,8 +14,8 @@ import lombok.RequiredArgsConstructor;
 public class IssuedCouponAdaptor {
     private final IssuedCouponRepository issuedCouponRepository;
 
-    public List<IssuedCoupon> findAllByUserIdAndUsageStatus(Long userId) {
-        return issuedCouponRepository.findAllByUserIdAndUsageStatus(userId, false);
+    public List<IssuedCoupon> findAllByUserId(Long userId) {
+        return issuedCouponRepository.findAllByUserId(userId);
     }
 
     public IssuedCoupon save(IssuedCoupon issuedCoupon) {

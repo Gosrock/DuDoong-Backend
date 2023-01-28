@@ -1,5 +1,7 @@
 package band.gosrock.domain.domains.ticket_item.domain;
 
+import static band.gosrock.common.consts.DuDoongStatic.KR_NO;
+import static band.gosrock.common.consts.DuDoongStatic.KR_YES;
 import static band.gosrock.domain.common.vo.Money.ZERO;
 import static band.gosrock.domain.domains.ticket_item.domain.OptionGroupType.*;
 
@@ -71,8 +73,8 @@ public class OptionGroup {
     public OptionGroup createTicketOption(Money additionalPrice) {
         OptionGroupType type = this.getType();
         if (type == TRUE_FALSE) {
-            this.options.add(Option.create("YES", additionalPrice, this));
-            this.options.add(Option.create("NO", ZERO, this));
+            this.options.add(Option.create(KR_YES, additionalPrice, this));
+            this.options.add(Option.create(KR_NO, ZERO, this));
         } else if (type == SUBJECTIVE) {
             this.options.add(Option.create("", ZERO, this));
         }

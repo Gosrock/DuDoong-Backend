@@ -7,12 +7,8 @@ import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
 import band.gosrock.domain.domains.event.exception.HostNotAuthEventException;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
-import band.gosrock.domain.domains.issuedTicket.dto.request.CreateIssuedTicketDTO;
-import band.gosrock.domain.domains.issuedTicket.dto.response.CreateIssuedTicketResponse;
-import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
-import band.gosrock.domain.domains.order.domain.Order;
-import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
-import band.gosrock.domain.domains.user.domain.User;
+import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
+import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class IssuedTicketDomainService {
     private final IssuedTicketAdaptor issuedTicketAdaptor;
-    private final UserAdaptor userAdaptor;
-    private final OrderAdaptor orderAdaptor;
+    private final TicketItemAdaptor ticketItemAdaptor;
+
+    private final OrderToIssuedTicketService orderToIssuedTicketService;
 
     @RedissonLock(LockName = "티켓재고관리", identifier = "itemId")
     @Transactional
@@ -49,19 +46,10 @@ public class IssuedTicketDomainService {
 
     @RedissonLock(LockName = "티켓재고관리", identifier = "itemId")
     public void createIssuedTicket(Long itemId, String orderUuid, Long userId) {
-        User user = userAdaptor.queryUser(userId);
-        Order order = orderAdaptor.findByOrderUuid(orderUuid);
-
-        List<CreateIssuedTicketDTO> createIssuedTicketDTOS =
-                order.getOrderLineItems().stream()
-                        .map(orderLineItem -> new CreateIssuedTicketDTO(order, orderLineItem, user))
-                        .toList();
-
-        createIssuedTicketDTOS.forEach(
-                dto -> {
-                    CreateIssuedTicketResponse responseDTO =
-                            IssuedTicket.orderLineItemToIssuedTickets(dto);
-                    issuedTicketAdaptor.saveAll(responseDTO.getIssuedTickets());
-                });
+        TicketItem ticketItem = ticketItemAdaptor.queryTicketItem(itemId);
+        List<IssuedTicket> issuedTickets =
+                orderToIssuedTicketService.execute(ticketItem, orderUuid, userId);
+        issuedTicketAdaptor.saveAll(issuedTickets);
+        ticketItem.reduceQuantity((long) issuedTickets.size());
     }
 }
