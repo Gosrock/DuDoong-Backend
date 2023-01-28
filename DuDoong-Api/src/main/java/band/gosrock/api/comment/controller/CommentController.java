@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,5 +44,11 @@ public class CommentController {
     public RetrieveCommentListResponse getComments(
             @PathVariable Long eventId, @RequestParam(required = false) Long lastId) {
         return retrieveCommentUseCase.execute(eventId, lastId);
+    }
+
+    @Operation(summary = "[어드민 기능] 응원글을 삭제합니다.")
+    @DeleteMapping(value = "/{commentId}")
+    public Void deleteComment(@PathVariable Long eventId, @PathVariable Long commentId) {
+
     }
 }

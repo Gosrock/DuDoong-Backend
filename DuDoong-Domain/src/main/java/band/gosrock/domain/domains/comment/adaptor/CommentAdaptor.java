@@ -24,4 +24,8 @@ public class CommentAdaptor {
         PageRequest pageRequest = PageRequest.of(0, 20, Sort.by("createdAt").ascending());
         return commentRepository.searchToPage(commentCondition, pageRequest);
     }
+
+    public void delete(Comment comment) {
+
+    }
 }
