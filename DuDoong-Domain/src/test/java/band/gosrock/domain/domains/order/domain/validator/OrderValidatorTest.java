@@ -25,22 +25,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.function.Executable;
-import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class OrderValidatorTest {
 
-    @Mock
-    Order order;
+    @Mock Order order;
 
-    @Mock
-    Event availableRefundEvent;
-    @Mock
-    Event unavailableRefundEvent;
-    @Mock
-    EventAdaptor eventAdaptor;
+    @Mock Event availableRefundEvent;
+    @Mock Event unavailableRefundEvent;
+    @Mock EventAdaptor eventAdaptor;
 
     OrderValidator orderValidator;
 
@@ -55,7 +50,9 @@ class OrderValidatorTest {
         given(order.getOrderMethod()).willReturn(OrderMethod.PAYMENT);
         // when
         // then
-        assertThrows(NotApprovalOrderException.class, () ->  orderValidator.validMethodIsCanApprove(order));
+        assertThrows(
+                NotApprovalOrderException.class,
+                () -> orderValidator.validMethodIsCanApprove(order));
     }
 
     @Test
@@ -75,8 +72,7 @@ class OrderValidatorTest {
         given(order.getUserId()).willReturn(otherUserId);
         // when
         // then
-        assertThrows(NotOwnerOrderException.class,()->orderValidator.validOwner(order,userId)
-            );
+        assertThrows(NotOwnerOrderException.class, () -> orderValidator.validOwner(order, userId));
     }
 
     @Test
@@ -85,7 +81,7 @@ class OrderValidatorTest {
         long userId = 1L;
         given(order.getUserId()).willReturn(userId);
         // when
-        orderValidator.validOwner(order,userId);
+        orderValidator.validOwner(order, userId);
         // then
     }
 
@@ -95,7 +91,7 @@ class OrderValidatorTest {
         Money won3000 = Money.wons(3000L);
         given(order.getTotalPaymentPrice()).willReturn(won3000);
         // when
-        orderValidator.validAmountIsSameAsRequest(order,won3000);
+        orderValidator.validAmountIsSameAsRequest(order, won3000);
         // then
     }
 
@@ -107,9 +103,9 @@ class OrderValidatorTest {
         given(order.getTotalPaymentPrice()).willReturn(won3000);
         // when
         // then
-        assertThrows(InvalidOrderException.class, ()->
-                orderValidator.validAmountIsSameAsRequest(order,won2000)
-            );
+        assertThrows(
+                InvalidOrderException.class,
+                () -> orderValidator.validAmountIsSameAsRequest(order, won2000));
     }
 
     @Test
@@ -128,9 +124,9 @@ class OrderValidatorTest {
         given(order.getOrderMethod()).willReturn(OrderMethod.APPROVAL);
         // when
         // then
-        assertThrows(NotPaymentOrderException.class, ()->
-            orderValidator.validMethodIsPaymentOrder(order)
-        );
+        assertThrows(
+                NotPaymentOrderException.class,
+                () -> orderValidator.validMethodIsPaymentOrder(order));
     }
 
     @Test
@@ -138,12 +134,13 @@ class OrderValidatorTest {
         // given
         given(availableRefundEvent.isRefundDateNotPassed()).willReturn(Boolean.TRUE);
         given(unavailableRefundEvent.isRefundDateNotPassed()).willReturn(Boolean.FALSE);
-        given(eventAdaptor.findAllByIds(any())).willReturn(List.of(availableRefundEvent,unavailableRefundEvent));
+        given(eventAdaptor.findAllByIds(any()))
+                .willReturn(List.of(availableRefundEvent, unavailableRefundEvent));
         // when
         // then
-        assertThrows(NotRefundAvailableDateOrderException.class, ()->
-            orderValidator.validAvailableRefundDate(order)
-        );
+        assertThrows(
+                NotRefundAvailableDateOrderException.class,
+                () -> orderValidator.validAvailableRefundDate(order));
     }
 
     @Test
@@ -171,22 +168,22 @@ class OrderValidatorTest {
         given(order.isNeedPaid()).willReturn(Boolean.TRUE);
         // when
         // then
-        assertThrows(NotFreeOrderException.class, ()->
-                orderValidator.validAmountIsFree(order)
-            );
+        assertThrows(NotFreeOrderException.class, () -> orderValidator.validAmountIsFree(order));
     }
 
     @Test
     public void 주문취소_상태검증_실패() {
         // given
         List<Executable> executables =
-            Arrays.stream(OrderStatus.values())
-                .filter(orderStatus -> !orderValidator.isStatusWithDraw(orderStatus))
-                .<Executable>map(orderStatus -> () -> orderValidator.validStatusCanCancel(orderStatus))
-                .toList();
+                Arrays.stream(OrderStatus.values())
+                        .filter(orderStatus -> !orderValidator.isStatusWithDraw(orderStatus))
+                        .<Executable>map(
+                                orderStatus ->
+                                        () -> orderValidator.validStatusCanCancel(orderStatus))
+                        .toList();
         // then
         executables.forEach(
-            executable -> assertThrows(CanNotCancelOrderException.class, executable));
+                executable -> assertThrows(CanNotCancelOrderException.class, executable));
     }
 
     @Test
@@ -204,13 +201,15 @@ class OrderValidatorTest {
     public void 주문환불_상태검증_실패() {
         // given
         List<Executable> executables =
-            Arrays.stream(OrderStatus.values())
-                .filter(orderStatus -> !orderValidator.isStatusWithDraw(orderStatus))
-                .<Executable>map(orderStatus -> () -> orderValidator.validStatusCanRefund(orderStatus))
-                .toList();
+                Arrays.stream(OrderStatus.values())
+                        .filter(orderStatus -> !orderValidator.isStatusWithDraw(orderStatus))
+                        .<Executable>map(
+                                orderStatus ->
+                                        () -> orderValidator.validStatusCanRefund(orderStatus))
+                        .toList();
         // then
         executables.forEach(
-            executable -> assertThrows(CanNotRefundOrderException.class, executable));
+                executable -> assertThrows(CanNotRefundOrderException.class, executable));
     }
 
     @Test
@@ -238,13 +237,16 @@ class OrderValidatorTest {
         // given
         // when
         List<Executable> executables =
-            Arrays.stream(OrderStatus.values())
-                .filter(orderStatus -> !(OrderStatus.PENDING_PAYMENT == orderStatus))
-                .<Executable>map(orderStatus -> () -> orderValidator.validStatusCanPaymentConfirm(orderStatus))
-                .toList();
+                Arrays.stream(OrderStatus.values())
+                        .filter(orderStatus -> !(OrderStatus.PENDING_PAYMENT == orderStatus))
+                        .<Executable>map(
+                                orderStatus ->
+                                        () ->
+                                                orderValidator.validStatusCanPaymentConfirm(
+                                                        orderStatus))
+                        .toList();
         // then
-        executables.forEach(
-            executable -> assertThrows(NotPendingOrderException.class, executable));
+        executables.forEach(executable -> assertThrows(NotPendingOrderException.class, executable));
     }
 
     @Test
@@ -261,13 +263,13 @@ class OrderValidatorTest {
         // given
         // when
         List<Executable> executables =
-            Arrays.stream(OrderStatus.values())
-                .filter(orderStatus -> !(OrderStatus.PENDING_APPROVE == orderStatus))
-                .<Executable>map(orderStatus -> () -> orderValidator.validStatusCanApprove(orderStatus))
-                .toList();
+                Arrays.stream(OrderStatus.values())
+                        .filter(orderStatus -> !(OrderStatus.PENDING_APPROVE == orderStatus))
+                        .<Executable>map(
+                                orderStatus ->
+                                        () -> orderValidator.validStatusCanApprove(orderStatus))
+                        .toList();
         // then
-        executables.forEach(
-            executable -> assertThrows(NotPendingOrderException.class, executable));
+        executables.forEach(executable -> assertThrows(NotPendingOrderException.class, executable));
     }
-
 }

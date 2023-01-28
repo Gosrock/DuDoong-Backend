@@ -1,6 +1,7 @@
 package band.gosrock.domain.domains.order.domain.validator;
 
 
+import band.gosrock.common.annotation.Validator;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
@@ -18,13 +19,12 @@ import band.gosrock.domain.domains.order.exception.NotRefundAvailableDateOrderEx
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
 /**
  * 주문 영역에 관한 검증용 메서드의 집합 레퍼런스 : https://www.youtube.com/watch?v=dJ5C4qRqAgA&t=4691s 1시 19분쯤 다른객체의
  * 참조가 필요한 상황이므로 밸리데이터를 다른 객체로 뺌.
  */
-@Component
+@Validator
 @RequiredArgsConstructor
 public class OrderValidator {
 
@@ -47,7 +47,6 @@ public class OrderValidator {
         validAmountIsFree(order);
         validStatusCanPaymentConfirm(getOrderStatus(order));
     }
-
 
     /** 취소할 수 있는 주문인지 검증합니다. */
     public void validCanCancel(Order order) {
