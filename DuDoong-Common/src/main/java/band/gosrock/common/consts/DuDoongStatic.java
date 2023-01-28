@@ -9,6 +9,8 @@ public class DuDoongStatic {
     public static final String TOKEN_ISSUER = "DuDoong";
     public static final String ACCESS_TOKEN = "ACCESS_TOKEN";
     public static final String REFRESH_TOKEN = "REFRESH_TOKEN";
+    public static final String KR_YES = "예";
+    public static final String KR_NO = "아니요";
 
     public static final int MILLI_TO_SECOND = 1000;
     public static final int BAD_REQUEST = 400;

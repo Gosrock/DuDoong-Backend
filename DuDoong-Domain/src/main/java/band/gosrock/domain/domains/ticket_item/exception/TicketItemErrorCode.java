@@ -35,7 +35,9 @@ public enum TicketItemErrorCode implements BaseErrorCode {
     @ExplainError("옵션을 적용할 상품이 해당 이벤트 소속이 아닐 때 발생하는 오류입니다.")
     INVALID_TICKET_ITEM(BAD_REQUEST, "Ticket_Item_400_5", "해당 티켓상품에 적용할 수 없습니다."),
     @ExplainError("해당 티켓상품에 이미 적용된 옵션일 경우 발생하는 오류입니다.")
-    DUPLICATED_ITEM_OPTION_GROUP(BAD_REQUEST, "Item_Option_Group_400_1", "이미 적용된 옵션입니다.");
+    DUPLICATED_ITEM_OPTION_GROUP(BAD_REQUEST, "Item_Option_Group_400_1", "이미 적용된 옵션입니다."),
+    OPTION_ANSWER_NOT_CORRECT(
+            BAD_REQUEST, "Option_400_1", "옵션에 대한 답변이 올바르지 않습니다. T/F형일 경우 예 아니요 로 보내주세요.");
 
     private Integer status;
     private String code;

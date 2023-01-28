@@ -33,16 +33,17 @@ public class OrderOptionAnswer extends BaseTimeEntity {
     private String answer;
     /** ---------------------------- 생성 관련 메서드 ---------------------------------- */
     @Builder
-    public OrderOptionAnswer(Option option, String answer) {
-        this.optionId = option.getId();
-        this.additionalPrice = option.getAdditionalPrice();
+    public OrderOptionAnswer(Long optionId, Money additionalPrice, String answer) {
+        this.optionId = optionId;
+        this.additionalPrice = additionalPrice;
         this.answer = answer;
     }
 
     public static OrderOptionAnswer from(CartOptionAnswer cartOptionAnswer) {
         return OrderOptionAnswer.builder()
                 .answer(cartOptionAnswer.getAnswer())
-                .option(cartOptionAnswer.getOption())
+                .optionId(cartOptionAnswer.getOptionId())
+                .additionalPrice(cartOptionAnswer.getAdditionalPrice())
                 .build();
     }
 
