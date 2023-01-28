@@ -34,18 +34,18 @@ public class HostDetailResponse {
 
     public static HostDetailResponse of(Host host, Set<HostUserVo> hostUserVoSet) {
         HostDetailResponseBuilder builder = HostDetailResponse.builder();
-        Set<HostUserVo> userInfoVoList = new HashSet<>();
+        Set<HostUserVo> hostUserVoList = new HashSet<>();
         hostUserVoSet.forEach(
                 hostUserVo -> {
                     if (hostUserVo.getUserInfoVo().getUserId().equals(host.getMasterUserId())) {
                         builder.masterUser(hostUserVo);
                     } else {
-                        userInfoVoList.add(hostUserVo);
+                        hostUserVoList.add(hostUserVo);
                     }
                 });
 
         return builder.hostInfo(HostInfoVo.from(host))
-                .hostUsers(userInfoVoList)
+                .hostUsers(hostUserVoList)
                 .partner(host.getPartner())
                 .slackUrl(host.getSlackUrl())
                 .build();
