@@ -3,6 +3,7 @@ package band.gosrock.api.host.controller;
 
 import band.gosrock.api.host.model.dto.request.*;
 import band.gosrock.api.host.model.dto.response.HostDetailResponse;
+import band.gosrock.api.host.model.dto.response.HostProfileResponse;
 import band.gosrock.api.host.model.dto.response.HostResponse;
 import band.gosrock.api.host.service.*;
 import band.gosrock.domain.common.vo.UserProfileVo;
@@ -36,7 +37,7 @@ public class HostController {
 
     @Operation(summary = "내가 속한 호스트 리스트를 가져옵니다.")
     @GetMapping
-    public List<HostResponse> getAllHosts() {
+    public List<HostProfileResponse> getAllHosts() {
         return readHostListUseCase.execute();
     }
 
