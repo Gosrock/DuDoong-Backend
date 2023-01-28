@@ -125,6 +125,9 @@ public class Order extends BaseTimeEntity {
 
     /** 승인 결제인 주문을 생성합니다. */
     public static Order createApproveOrder(Long userId, Cart cart) {
+        if (cart.isNeedPaid()) {
+            throw InvalidOrderException.EXCEPTION;
+        }
         return Order.builder()
                 .userId(userId)
                 .orderName(cart.getCartName())
@@ -134,24 +137,16 @@ public class Order extends BaseTimeEntity {
                 .build();
     }
 
-    public static Order createWithCoupon(Long userId, Cart cart, IssuedCoupon coupon) {
+    public static Order createPaymentOrderWithCoupon(Long userId, Cart cart, IssuedCoupon coupon) {
         // 선착순 결제라면 결제 가능한 금액이 있어야 쿠폰 적용이 가능하다.
-        if (!cart.getItemType().isFCFS() || !cart.isNeedPaid()) {
+        if (!cart.isNeedPaid()) {
             throw InvalidOrderException.EXCEPTION;
         }
 
         Money supplyAmount = cart.getTotalPrice();
         OrderCouponVo couponVo = OrderCouponVo.of(coupon, supplyAmount);
         couponVo.validMinimumPaymentAmount(supplyAmount);
-
-        Order order =
-                Order.builder()
-                        .userId(userId)
-                        .orderName(cart.getCartName())
-                        .orderLineItems(getOrderLineItems(cart))
-                        .orderStatus(OrderStatus.PENDING_PAYMENT)
-                        .orderMethod(OrderMethod.PAYMENT)
-                        .build();
+        Order order = createPaymentOrder(userId, cart);
         order.attachCoupon(couponVo);
         return order;
     }
@@ -161,17 +156,6 @@ public class Order extends BaseTimeEntity {
         return cart.getCartLineItems().stream().map(OrderLineItem::from).toList();
     }
 
-    public static Order create(Long userId, Cart cart) {
-        // 선착순 결제라면
-        if (cart.getItemType().isFCFS()) {
-            return createPaymentOrder(userId, cart);
-        }
-        // 선착순이 아니라면? 승인 방식임. 승인방식의 결제가 필요한 상황은 지원하지않음.
-        if (cart.isNeedPaid()) {
-            throw InvalidOrderException.EXCEPTION;
-        }
-        return createApproveOrder(userId, cart);
-    }
     /** ---------------------------- 커맨드 메서드 ---------------------------------- */
 
     /** totalPaymentInfo 를 업데이트 합니다. */

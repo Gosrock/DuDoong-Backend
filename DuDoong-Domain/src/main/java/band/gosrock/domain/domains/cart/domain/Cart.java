@@ -4,12 +4,9 @@ package band.gosrock.domain.domains.cart.domain;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.cart.exception.CartLineItemNotFoundException;
-import band.gosrock.domain.domains.cart.policy.CartPolicy;
-import band.gosrock.domain.domains.ticket_item.domain.TicketType;
+import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.function.Supplier;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -44,10 +41,9 @@ public class Cart extends BaseTimeEntity {
     private List<CartLineItem> cartLineItems = new ArrayList<>();
     /** ---------------------------- 생성 관련 메서드 ---------------------------------- */
     @Builder
-    public Cart(Long userId, List<CartLineItem> cartLineItems) {
-        CartLineItem cartLineItem = cartLineItems.stream().findFirst().orElseThrow();
+    public Cart(Long userId, TicketItem item, List<CartLineItem> cartLineItems) {
         this.userId = userId;
-        this.cartName = cartLineItem.getTicketName();
+        this.cartName = item.getName();
         this.cartLineItems.addAll(cartLineItems);
     }
 
@@ -56,16 +52,16 @@ public class Cart extends BaseTimeEntity {
     /** ---------------------------- 검증 메서드 ---------------------------------- */
 
     /** 카트에 담을 수 있는 아이템의 정책이 올바른지 확인합니다. ( 한 카트에 한 아이템 ) */
-    public void validItemKindPolicy(Supplier<CartPolicy> supplier) {
-        Objects.requireNonNull(supplier);
-        CartPolicy cartPolicy = supplier.get();
-        cartPolicy.itemKindAvailableQuantity(this.getCartLineItemKindIds().size());
-    }
+    //    public void validItemKindPolicy(Supplier<CartPolicy> supplier) {
+    //        Objects.requireNonNull(supplier);
+    //        CartPolicy cartPolicy = supplier.get();
+    //        cartPolicy.itemKindAvailableQuantity(this.getCartLineItemKindIds().size());
+    //    }
 
     /** 아이템에 요구하는 답변을 올바르게 했는지 확인합니다. */
-    public void validCorrectAnswerToItems() {
-        this.cartLineItems.forEach(CartLineItem::validCorrectAnswer);
-    }
+    //    public void validCorrectAnswerToItems() {
+    //        this.cartLineItems.forEach(CartLineItem::validCorrectAnswer);
+    //    }
 
     /** ---------------------------- 조회용 메서드 ---------------------------------- */
     /** 결제가 필요한 오더인지 반환합니다. */
@@ -86,15 +82,15 @@ public class Cart extends BaseTimeEntity {
                 .reduce(Money.ZERO, Money::plus);
     }
 
-    private List<Long> getCartLineItemKindIds() {
-        return this.cartLineItems.stream()
-                .map(cartLineItem -> cartLineItem.getTicketItem().getId())
-                .distinct()
-                .toList();
-    }
+    //    private List<Long> getCartLineItemKindIds() {
+    //        return this.cartLineItems.stream()
+    //                .map(cartLineItem -> cartLineItem.getTicketItem().getId())
+    //                .distinct()
+    //                .toList();
+    //    }
 
-    public TicketType getItemType() {
-        return getCartLineItem().getTicketItem().getType();
+    public Long getItemId() {
+        return getCartLineItem().getItemId();
     }
 
     private CartLineItem getCartLineItem() {
