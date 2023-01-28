@@ -19,7 +19,6 @@ public enum CommentErrorCode implements BaseErrorCode {
     COMMENT_NOT_MATCH_EVENT(BAD_REQUEST, "Comment_400_1", "응원글과 이벤트가 맞지 않습니다."),
     COMMENT_ALREADY_DELETE(BAD_REQUEST, "Comment_400_2", "이미 삭제된 응원글입니다.");
 
-
     private Integer status;
     private String code;
     private String reason;

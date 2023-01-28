@@ -3,9 +3,11 @@ package band.gosrock.api.comment.controller;
 
 import band.gosrock.api.comment.model.request.CreateCommentRequest;
 import band.gosrock.api.comment.model.response.CreateCommentResponse;
+import band.gosrock.api.comment.model.response.RetrieveCommentCountResponse;
 import band.gosrock.api.comment.model.response.RetrieveCommentListResponse;
 import band.gosrock.api.comment.service.CreateCommentUseCase;
 import band.gosrock.api.comment.service.DeleteCommentUseCase;
+import band.gosrock.api.comment.service.RetrieveCommentCountUseCase;
 import band.gosrock.api.comment.service.RetrieveCommentUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -34,6 +36,8 @@ public class CommentController {
 
     private final DeleteCommentUseCase deleteCommentUseCase;
 
+    private final RetrieveCommentCountUseCase retrieveCommentCountUseCase;
+
     @Operation(summary = "응원글을 생성합니다.")
     @PostMapping
     public CreateCommentResponse postComment(
@@ -53,5 +57,11 @@ public class CommentController {
     @DeleteMapping(value = "/{commentId}")
     public void deleteComment(@PathVariable Long eventId, @PathVariable Long commentId) {
         deleteCommentUseCase.execute(eventId, commentId);
+    }
+
+    @Operation(summary = "응원글 개수를 카운팅합니다.")
+    @GetMapping(value = "/counts")
+    public RetrieveCommentCountResponse getCommentCounts(@PathVariable Long eventId) {
+        return retrieveCommentCountUseCase.execute(eventId);
     }
 }

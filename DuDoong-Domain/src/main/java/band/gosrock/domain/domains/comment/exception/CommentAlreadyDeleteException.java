@@ -1,5 +1,6 @@
 package band.gosrock.domain.domains.comment.exception;
 
+
 import band.gosrock.common.exception.DuDoongCodeException;
 
 public class CommentAlreadyDeleteException extends DuDoongCodeException {

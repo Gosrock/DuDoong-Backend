@@ -27,6 +27,12 @@ public class CommentAdaptor {
     }
 
     public Comment queryComment(Long commentId) {
-        return commentRepository.findById(commentId).orElseThrow(() -> CommentNotFoundException.EXCEPTION);
+        return commentRepository
+                .findById(commentId)
+                .orElseThrow(() -> CommentNotFoundException.EXCEPTION);
+    }
+
+    public Long queryCommentCount(Long eventId) {
+        return commentRepository.countComment(eventId);
     }
 }

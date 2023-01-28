@@ -1,5 +1,6 @@
 package band.gosrock.api.comment.service;
 
+
 import band.gosrock.api.comment.mapper.CommentMapper;
 import band.gosrock.api.common.UserUtils;
 import band.gosrock.common.annotation.UseCase;
@@ -29,5 +30,4 @@ public class DeleteCommentUseCase {
         Comment comment = commentMapper.retrieveComment(commentId);
         commentDomainService.deleteComment(comment, eventId);
     }
-
 }

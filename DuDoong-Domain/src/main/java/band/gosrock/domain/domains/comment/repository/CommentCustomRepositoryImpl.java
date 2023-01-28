@@ -29,8 +29,7 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
                         .where(
                                 eventIdEq(commentCondition.getEventId()),
                                 lastIdLessThanEqual(commentCondition.getLastId()),
-                                comment.commentStatus.eq(CommentStatus.ACTIVE)
-                        )
+                                comment.commentStatus.eq(CommentStatus.ACTIVE))
                         .orderBy(comment.id.desc())
                         .limit(pageable.getPageSize() + 1)
                         .fetch();
@@ -56,5 +55,14 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
         }
 
         return new SliceImpl<>(comments, pageable, hasNext);
+    }
+
+    @Override
+    public Long countComment(Long eventId) {
+        return queryFactory
+                .select(comment.count())
+                .from(comment)
+                .where(eventIdEq(eventId), comment.commentStatus.eq(CommentStatus.ACTIVE))
+                .fetchOne();
     }
 }

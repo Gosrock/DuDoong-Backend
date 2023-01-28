@@ -1,5 +1,6 @@
 package band.gosrock.domain.domains.comment.exception;
 
+
 import band.gosrock.common.exception.DuDoongCodeException;
 
 public class CommentNotFoundException extends DuDoongCodeException {
@@ -9,5 +10,4 @@ public class CommentNotFoundException extends DuDoongCodeException {
     private CommentNotFoundException() {
         super(CommentErrorCode.COMMENT_NOT_FOUND);
     }
-
 }

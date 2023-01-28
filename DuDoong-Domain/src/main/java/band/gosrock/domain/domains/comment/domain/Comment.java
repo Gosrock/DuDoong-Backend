@@ -48,7 +48,8 @@ public class Comment extends BaseTimeEntity {
     private CommentStatus commentStatus;
 
     @Builder
-    public Comment(String content, String nickName, User user, Long eventId, CommentStatus commentStatus) {
+    public Comment(
+            String content, String nickName, User user, Long eventId, CommentStatus commentStatus) {
         this.content = content;
         this.nickName = nickName;
         this.user = user;
@@ -62,7 +63,7 @@ public class Comment extends BaseTimeEntity {
                 .nickName(nickName)
                 .user(user)
                 .eventId(eventId)
-            .commentStatus(CommentStatus.ACTIVE)
+                .commentStatus(CommentStatus.ACTIVE)
                 .build();
     }
 

@@ -1,5 +1,6 @@
 package band.gosrock.domain.domains.comment.service;
 
+
 import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.domains.comment.domain.Comment;
 import lombok.RequiredArgsConstructor;
