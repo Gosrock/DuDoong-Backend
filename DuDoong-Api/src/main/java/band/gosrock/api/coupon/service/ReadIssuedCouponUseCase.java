@@ -29,8 +29,7 @@ public class ReadIssuedCouponUseCase {
         // 존재하는 유저인지 검증
         User user = userUtils.getCurrentUser();
 
-        List<IssuedCoupon> issuedCoupons =
-                issuedCouponAdaptor.findAllByUserIdAndUsageStatus(user.getId());
+        List<IssuedCoupon> issuedCoupons = issuedCouponAdaptor.findAllByUserId(user.getId());
 
         List<IssuedCoupon> validTermIssuedCoupons =
                 issuedCoupons.stream()

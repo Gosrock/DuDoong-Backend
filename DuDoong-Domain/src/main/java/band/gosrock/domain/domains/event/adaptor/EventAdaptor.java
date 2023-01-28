@@ -7,6 +7,8 @@ import band.gosrock.domain.domains.event.exception.EventNotFoundException;
 import band.gosrock.domain.domains.event.repository.EventRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Adaptor
 @RequiredArgsConstructor
@@ -20,8 +22,8 @@ public class EventAdaptor {
                 .orElseThrow(() -> EventNotFoundException.EXCEPTION);
     }
 
-    public List<Event> findAllByHostId(Long hostId) {
-        return eventRepository.findAllByHostId(hostId);
+    public Page<Event> findAllByHostId(Long hostId, Pageable pageable) {
+        return eventRepository.findAllByHostId(hostId, pageable);
     }
 
     public List<Event> findAllByIds(List<Long> ids) {

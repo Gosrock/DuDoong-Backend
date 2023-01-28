@@ -7,6 +7,7 @@ import band.gosrock.domain.domains.coupon.exception.AlreadyRecoveredCouponExcept
 import band.gosrock.domain.domains.coupon.exception.AlreadyUsedCouponException;
 import band.gosrock.domain.domains.coupon.exception.NotApplicableCouponException;
 import band.gosrock.domain.domains.coupon.exception.NotMyCouponException;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import javax.persistence.*;
 import lombok.AccessLevel;
@@ -84,5 +85,10 @@ public class IssuedCoupon extends BaseTimeEntity {
             throw AlreadyRecoveredCouponException.EXCEPTION;
         }
         usageStatus = false;
+    }
+
+    public Boolean isAvailableTerm() {
+        return !LocalDateTime.now()
+                .isAfter(this.getCreatedAt().plusDays(this.getCouponCampaign().getValidTerm()));
     }
 }

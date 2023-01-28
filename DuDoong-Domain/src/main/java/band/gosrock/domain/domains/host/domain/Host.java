@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.host.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.common.vo.HostInfoVo;
 import band.gosrock.domain.domains.host.exception.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -27,7 +28,7 @@ public class Host extends BaseTimeEntity {
 
     // 파트너 여부
     // 정책상 초기값 false 로 고정입니다
-    private Boolean partner = false;
+    private final Boolean partner = false;
 
     // 슬랙 웹훅 url
     private String slackUrl;
@@ -113,6 +114,10 @@ public class Host extends BaseTimeEntity {
         if (!this.getMasterUserId().equals(userId)) {
             throw NotMasterHostException.EXCEPTION;
         }
+    }
+
+    public HostInfoVo toHostInfoVo() {
+        return HostInfoVo.from(this);
     }
 
     @Builder
