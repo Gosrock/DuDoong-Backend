@@ -49,8 +49,7 @@ public class CartValidator {
 
     /** 카트에 담길때 아이템이 한 종류인지 확인합니다. */
     public void validItemKindIsOneType(Cart cart) {
-        List<Long> itemIds =
-                cart.getCartLineItems().stream().map(CartLineItem::getItemId).distinct().toList();
+        List<Long> itemIds = cart.getDistinctItemIds();
         if (itemIds.size() != 1) {
             throw CartInvalidItemKindPolicyException.EXCEPTION;
         }
@@ -59,7 +58,7 @@ public class CartValidator {
     /** 모든 질문지 ( 옵션그룹 )에 응답했는지 검증합니다. */
     public void validAnswerToAllQuestion(Cart cart, TicketItem item) {
         List<CartLineItem> cartLineItems = cart.getCartLineItems();
-        List<Long> itemsOptionGroupIds = getItemOptionGroupIds(item);
+        List<Long> itemsOptionGroupIds = item.getOptionGroupIds();
         cartLineItems.forEach(
                 cartLineItem -> {
                     if (!Objects.equals(
@@ -75,40 +74,30 @@ public class CartValidator {
         cartLineItems.forEach(
                 cartLineItem -> {
                     List<CartOptionAnswer> cartOptionAnswers = cartLineItem.getCartOptionAnswers();
-                    List<Option> options = getOptionFrom(cartLineItem);
+                    List<Option> options = getOptionsFrom(cartLineItem);
                     cartOptionAnswers.forEach(
                             cartOptionAnswer -> {
-                                Option findOption =
-                                        getOptionFromCartOptionAnswer(options, cartOptionAnswer);
-                                findOption.validCorrectAnswer(cartOptionAnswer.getAnswer());
+                                Long optionId = cartOptionAnswer.getOptionId();
+                                findOptionFromCartOptionAnswer(options, optionId)
+                                        .validCorrectAnswer(cartOptionAnswer.getAnswer());
                             });
                 });
     }
 
-    private List<Option> getOptionFrom(CartLineItem cartLineItem) {
-        return optionAdaptor.findAllByIds(getAnswerOptionIds(cartLineItem));
+    private List<Option> getOptionsFrom(CartLineItem cartLineItem) {
+        return optionAdaptor.findAllByIds(cartLineItem.getAnswerOptionIds());
     }
 
-    private Option getOptionFromCartOptionAnswer(
-            List<Option> options, CartOptionAnswer cartOptionAnswer) {
+    private Option findOptionFromCartOptionAnswer(List<Option> options, Long optionId) {
         return options.stream()
-                .filter(option -> option.getId().equals(cartOptionAnswer.getOptionId()))
+                .filter(option -> option.getId().equals(optionId))
                 .findFirst()
                 .orElseThrow();
     }
 
     private List<Long> getAnswerOptionGroupIds(CartLineItem cartLineItem) {
-        List<Option> answerOptions = getOptionFrom(cartLineItem);
+        List<Option> answerOptions = getOptionsFrom(cartLineItem);
         return answerOptions.stream().map(Option::getOptionGroupId).sorted().toList();
-    }
-
-    private List<Long> getItemOptionGroupIds(TicketItem item) {
-        return item.getOptionGroupIds().stream().sorted().toList();
-    }
-
-    private List<Long> getAnswerOptionIds(CartLineItem cartLineItem) {
-        List<CartOptionAnswer> cartOptionAnswers = cartLineItem.getCartOptionAnswers();
-        return cartOptionAnswers.stream().map(CartOptionAnswer::getOptionId).toList();
     }
 
     private TicketItem getItem(Cart cart) {

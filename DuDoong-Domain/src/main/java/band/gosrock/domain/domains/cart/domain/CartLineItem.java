@@ -73,4 +73,8 @@ public class CartLineItem extends BaseTimeEntity {
         // 0 < totalCartLinePrice
         return Money.ZERO.isLessThan(getTotalCartLinePrice());
     }
+
+    public List<Long> getAnswerOptionIds() {
+        return this.cartOptionAnswers.stream().map(CartOptionAnswer::getOptionId).toList();
+    }
 }

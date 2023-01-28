@@ -121,7 +121,7 @@ public class Event extends BaseTimeEntity {
         }
     }
 
-    private boolean isTimeBeforeStartAt() {
+    public boolean isTimeBeforeStartAt() {
         return LocalDateTime.now().isBefore(getStartAt());
     }
 }

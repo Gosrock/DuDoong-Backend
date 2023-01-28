@@ -109,6 +109,7 @@ public class TicketItem extends BaseTimeEntity {
     public List<Long> getOptionGroupIds() {
         return itemOptionGroups.stream()
                 .map(itemOptionGroup -> itemOptionGroup.getOptionGroup().getId())
+                .sorted()
                 .toList();
     }
 

@@ -90,4 +90,8 @@ public class Cart extends BaseTimeEntity {
                 .findFirst()
                 .orElseThrow(() -> CartLineItemNotFoundException.EXCEPTION);
     }
+
+    public List<Long> getDistinctItemIds() {
+        return this.cartLineItems.stream().map(CartLineItem::getItemId).distinct().toList();
+    }
 }
