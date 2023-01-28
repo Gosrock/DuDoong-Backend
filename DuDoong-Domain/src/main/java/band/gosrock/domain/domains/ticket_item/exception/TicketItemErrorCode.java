@@ -37,7 +37,7 @@ public enum TicketItemErrorCode implements BaseErrorCode {
     @ExplainError("해당 티켓상품에 이미 적용된 옵션일 경우 발생하는 오류입니다.")
     DUPLICATED_ITEM_OPTION_GROUP(BAD_REQUEST, "Item_Option_Group_400_1", "이미 적용된 옵션입니다."),
     OPTION_ANSWER_NOT_CORRECT(
-            BAD_REQUEST, "Option_400_1", "옵션에 대한 답변이 올바르지 않습니다. T/F형일 경우 예 아니오로 보내주세요.");
+            BAD_REQUEST, "Option_400_1", "옵션에 대한 답변이 올바르지 않습니다. T/F형일 경우 예 아니요 로 보내주세요.");
 
     private Integer status;
     private String code;

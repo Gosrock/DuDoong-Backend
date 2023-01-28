@@ -1,5 +1,7 @@
 package band.gosrock.domain.domains.ticket_item.domain;
 
+import static band.gosrock.common.consts.DuDoongStatic.KR_NO;
+import static band.gosrock.common.consts.DuDoongStatic.KR_YES;
 
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.ticket_item.exception.NotCorrectOptionAnswerException;
@@ -71,6 +73,6 @@ public class Option {
     }
 
     private Boolean isAnswerTrueFalse(String answer) {
-        return answer.equals("예") || answer.equals("아니오");
+        return answer.equals(KR_YES) || answer.equals(KR_NO);
     }
 }

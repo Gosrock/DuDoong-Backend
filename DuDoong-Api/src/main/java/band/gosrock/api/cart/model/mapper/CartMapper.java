@@ -12,11 +12,11 @@ import band.gosrock.domain.domains.cart.adaptor.CartAdaptor;
 import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.cart.domain.CartLineItem;
 import band.gosrock.domain.domains.cart.domain.CartOptionAnswer;
+import band.gosrock.domain.domains.cart.domain.CartValidator;
 import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
 import band.gosrock.domain.domains.ticket_item.domain.Option;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
-import band.gosrock.domain.domains.ticket_item.repository.OptionRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CartMapper {
     private final TicketItemAdaptor ticketItemAdaptor;
     private final OptionAdaptor optionAdaptor;
-    private final OptionRepository optionRepository;
+    private final CartValidator cartValidator;
 
     private final CartAdaptor cartAdaptor;
 
@@ -89,6 +89,7 @@ public class CartMapper {
 
     public Cart toEntity(AddCartRequest addCartRequest, Long currentUserId) {
         List<AddCartLineDto> addCartLineDtos = addCartRequest.getItems();
+        String itemName = getItemName(addCartLineDtos);
         List<CartLineItem> cartLineItems =
                 addCartLineDtos.stream()
                         .map(
@@ -100,7 +101,13 @@ public class CartMapper {
                                                 .quantity(addCartLineDto.getQuantity())
                                                 .build())
                         .toList();
-        return Cart.builder().cartLineItems(cartLineItems).userId(currentUserId).build();
+        return Cart.of(cartLineItems, itemName, currentUserId, cartValidator);
+    }
+
+    private String getItemName(List<AddCartLineDto> addCartLineDtos) {
+        Long itemId =
+                addCartLineDtos.stream().map(AddCartLineDto::getItemId).findFirst().orElseThrow();
+        return ticketItemAdaptor.queryTicketItem(itemId).getName();
     }
 
     private TicketItem getTicketItem(AddCartLineDto addCartLineDto) {
@@ -108,7 +115,7 @@ public class CartMapper {
     }
 
     private String generateCartLineName(String itemName, Long quantity) {
-        return String.format("%s (%d)매", itemName, quantity);
+        return String.format("%s %d매", itemName, quantity);
     }
 
     private List<CartOptionAnswer> getCartOptionAnswers(AddCartLineDto addCartLineDto) {

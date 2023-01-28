@@ -4,7 +4,6 @@ package band.gosrock.domain.domains.cart.domain;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.cart.exception.CartLineItemNotFoundException;
-import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.CascadeType;
@@ -41,23 +40,27 @@ public class Cart extends BaseTimeEntity {
     private List<CartLineItem> cartLineItems = new ArrayList<>();
     /** ---------------------------- 생성 관련 메서드 ---------------------------------- */
     @Builder
-    public Cart(Long userId, TicketItem item, List<CartLineItem> cartLineItems) {
+    public Cart(Long userId, List<CartLineItem> cartLineItems) {
         this.userId = userId;
-        this.cartName = item.getName();
         this.cartLineItems.addAll(cartLineItems);
     }
 
     public static Cart of(
             List<CartLineItem> cartLineItems,
-            TicketItem item,
+            String itemName,
             Long userId,
             CartValidator cartValidator) {
-        Cart cart = Cart.builder().cartLineItems(cartLineItems).item(item).userId(userId).build();
+        Cart cart = Cart.builder().cartLineItems(cartLineItems).userId(userId).build();
         cartValidator.validCanCreate(cart);
+        cart.updateCartName(itemName);
         return cart;
     }
 
     /** ---------------------------- 커맨드 메서드 ---------------------------------- */
+    private void updateCartName(String name) {
+        cartName = name;
+    }
+
     /** ---------------------------- 검증 메서드 ---------------------------------- */
     /** ---------------------------- 조회용 메서드 ---------------------------------- */
     /** 결제가 필요한 오더인지 반환합니다. */
