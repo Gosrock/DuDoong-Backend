@@ -45,7 +45,6 @@ class WithdrawOrderServiceTest {
                         .userId(userId)
                         .orderStatus(OrderStatus.CONFIRM)
                         .orderLineItems(List.of(orderLineItem))
-                        .orderCouponVo(OrderCouponVo.empty())
                         .build();
         order.addUUID();
         given(orderAdaptor.findByOrderUuid(any())).willReturn(order);

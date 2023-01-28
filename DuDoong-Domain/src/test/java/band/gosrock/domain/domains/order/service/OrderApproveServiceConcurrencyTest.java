@@ -47,7 +47,6 @@ class OrderApproveServiceConcurrencyTest {
                         .orderMethod(OrderMethod.APPROVAL)
                         .orderStatus(OrderStatus.PENDING_APPROVE)
                         .orderLineItems(List.of(orderLineItem))
-                        .orderCouponVo(OrderCouponVo.empty())
                         .build();
         order.addUUID();
         given(orderAdaptor.findByOrderUuid(any())).willReturn(order);

@@ -103,14 +103,12 @@ public class Order extends BaseTimeEntity {
             String orderName,
             List<OrderLineItem> orderLineItems,
             OrderStatus orderStatus,
-            OrderMethod orderMethod,
-            OrderCouponVo orderCouponVo) {
+            OrderMethod orderMethod) {
         this.userId = userId;
         this.orderName = orderName;
         this.orderLineItems.addAll(orderLineItems);
         this.orderStatus = orderStatus;
         this.orderMethod = orderMethod;
-        this.orderCouponVo = orderCouponVo;
     }
 
     /** 카드, 간편결제등 토스 요청 과정이 필요한 결제를 생성합니다. */
@@ -146,14 +144,16 @@ public class Order extends BaseTimeEntity {
         OrderCouponVo couponVo = OrderCouponVo.of(coupon, supplyAmount);
         couponVo.validMinimumPaymentAmount(supplyAmount);
 
-        return Order.builder()
-                .userId(userId)
-                .orderName(cart.getCartName())
-                .orderLineItems(getOrderLineItems(cart))
-                .orderStatus(OrderStatus.PENDING_PAYMENT)
-                .orderMethod(OrderMethod.PAYMENT)
-                .orderCouponVo(couponVo)
-                .build();
+        Order order =
+                Order.builder()
+                        .userId(userId)
+                        .orderName(cart.getCartName())
+                        .orderLineItems(getOrderLineItems(cart))
+                        .orderStatus(OrderStatus.PENDING_PAYMENT)
+                        .orderMethod(OrderMethod.PAYMENT)
+                        .build();
+        order.attachCoupon(couponVo);
+        return order;
     }
 
     @NotNull
@@ -227,6 +227,11 @@ public class Order extends BaseTimeEntity {
     /** 결제 실패 된 주문입니다 */
     public void fail() {
         this.orderStatus = OrderStatus.FAILED;
+    }
+
+    /** 쿠폰을 붙입니다. */
+    public void attachCoupon(OrderCouponVo orderCouponVo) {
+        this.orderCouponVo = orderCouponVo;
     }
 
     /** ---------------------------- 조회용 메서드 ---------------------------------- */

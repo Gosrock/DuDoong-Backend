@@ -34,7 +34,6 @@ class OrderTest {
                         .orderLineItems(List.of(orderLineItem1, orderLineItem2))
                         .orderStatus(OrderStatus.PENDING_APPROVE)
                         .orderMethod(OrderMethod.APPROVAL)
-                        .orderCouponVo(OrderCouponVo.empty())
                         .build();
         couponOrder =
                 Order.builder()
@@ -43,8 +42,8 @@ class OrderTest {
                         .orderLineItems(List.of(orderLineItem1, orderLineItem2))
                         .orderStatus(OrderStatus.PENDING_APPROVE)
                         .orderMethod(OrderMethod.APPROVAL)
-                        .orderCouponVo(orderCouponVo)
                         .build();
+        couponOrder.attachCoupon(orderCouponVo);
     }
 
     @Test

@@ -25,7 +25,7 @@ public class CreateOrderUseCase {
         Long couponId = createOrderRequest.getCouponId();
         Long cartId = createOrderRequest.getCartId();
         if (couponId == null) {
-            orderMapper.toCreateOrderResponse(
+            return orderMapper.toCreateOrderResponse(
                     createOrderService.withOutCoupon(cartId, user.getId()));
         }
         return orderMapper.toCreateOrderResponse(

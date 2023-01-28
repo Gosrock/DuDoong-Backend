@@ -31,8 +31,8 @@ public class OrderConfirmService {
         Order order = orderAdaptor.findByOrderUuid(confirmPaymentsRequest.getOrderId());
         Money paymentWons = Money.wons(confirmPaymentsRequest.getAmount());
         orderValidator.validOwner(order, currentUserId);
-        orderValidator.validPaymentOrder(order);
-        orderValidator.validOrderAmountIsSame(order, paymentWons);
+        orderValidator.validMethodIsPaymentOrder(order);
+        orderValidator.validAmountIsSameAsRequest(order, paymentWons);
         // 결제 승인요청
         PaymentsResponse paymentsResponse = paymentsConfirmClient.execute(confirmPaymentsRequest);
         // 결제 후처리 정보 업데이트
