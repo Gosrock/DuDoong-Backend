@@ -27,7 +27,7 @@ public class DeleteCommentUseCase {
         // 권한 검사
         eventService.checkEventHost(currentUserId, eventId);
         Comment comment = commentMapper.retrieveComment(commentId);
-        commentDomainService.deleteComment(comment);
+        commentDomainService.deleteComment(comment, eventId);
     }
 
 }

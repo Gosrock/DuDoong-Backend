@@ -4,6 +4,7 @@ import static band.gosrock.domain.domains.comment.domain.QComment.comment;
 import static band.gosrock.domain.domains.user.domain.QUser.user;
 
 import band.gosrock.domain.domains.comment.domain.Comment;
+import band.gosrock.domain.domains.comment.domain.CommentStatus;
 import band.gosrock.domain.domains.comment.dto.condition.CommentCondition;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -27,7 +28,9 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
                         .fetchJoin()
                         .where(
                                 eventIdEq(commentCondition.getEventId()),
-                                lastIdLessThanEqual(commentCondition.getLastId()))
+                                lastIdLessThanEqual(commentCondition.getLastId()),
+                                comment.commentStatus.eq(CommentStatus.ACTIVE)
+                        )
                         .orderBy(comment.id.desc())
                         .limit(pageable.getPageSize() + 1)
                         .fetch();

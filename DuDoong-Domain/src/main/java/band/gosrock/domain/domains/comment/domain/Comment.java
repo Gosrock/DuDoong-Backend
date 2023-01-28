@@ -3,7 +3,10 @@ package band.gosrock.domain.domains.comment.domain;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.CommentInfoVo;
+import band.gosrock.domain.domains.comment.exception.CommentAlreadyDeleteException;
+import band.gosrock.domain.domains.comment.exception.CommentNotMatchEventException;
 import band.gosrock.domain.domains.user.domain.User;
+import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -68,6 +71,15 @@ public class Comment extends BaseTimeEntity {
     }
 
     public void delete() {
+        if (this.commentStatus == CommentStatus.INACTIVE) {
+            throw CommentAlreadyDeleteException.EXCEPTION;
+        }
         this.commentStatus = CommentStatus.INACTIVE;
+    }
+
+    public void checkEvent(Long eventId) {
+        if (!Objects.equals(eventId, this.eventId)) {
+            throw CommentNotMatchEventException.EXCEPTION;
+        }
     }
 }

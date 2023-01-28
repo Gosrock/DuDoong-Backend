@@ -8,7 +8,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CommentDomainService {
 
-    public void deleteComment(Comment comment) {
+    public void deleteComment(Comment comment, Long eventId) {
+        comment.checkEvent(eventId);
         comment.delete();
     }
 }
