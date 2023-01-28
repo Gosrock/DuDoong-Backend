@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.ticket_item.domain;
 
 
 import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.domains.ticket_item.exception.NotCorrectOptionAnswerException;
 import javax.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -58,5 +59,18 @@ public class Option {
 
     public OptionGroupType getQuestionType() {
         return this.optionGroup.getType();
+    }
+
+    public void validCorrectAnswer(String answer) {
+        OptionGroupType type = optionGroup.getType();
+        if (type == OptionGroupType.TRUE_FALSE) {
+            if (!isAnswerTrueFalse(answer)) {
+                throw NotCorrectOptionAnswerException.EXCEPTION;
+            }
+        }
+    }
+
+    private Boolean isAnswerTrueFalse(String answer) {
+        return answer.equals("예") || answer.equals("아니오");
     }
 }

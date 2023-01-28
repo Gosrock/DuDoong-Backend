@@ -122,10 +122,14 @@ public class TicketItem extends BaseTimeEntity {
         if (this.quantity < 0) {
             throw TicketItemQuantityException.EXCEPTION;
         }
+        validEnoughQuantity(quantity);
+        this.quantity = this.quantity - quantity;
+    }
+
+    public void validEnoughQuantity(Long quantity) {
         if (this.quantity < quantity) {
             throw TicketItemQuantityLackException.EXCEPTION;
         }
-        this.quantity = this.quantity - quantity;
     }
 
     public void increaseQuantity(Long quantity) {

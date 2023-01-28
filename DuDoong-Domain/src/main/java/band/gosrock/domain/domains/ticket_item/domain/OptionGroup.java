@@ -64,8 +64,8 @@ public class OptionGroup {
     public OptionGroup createTicketOption(Money additionalPrice) {
         OptionGroupType type = this.getType();
         if (type == TRUE_FALSE) {
-            this.options.add(Option.create("YES", additionalPrice, this));
-            this.options.add(Option.create("NO", ZERO, this));
+            this.options.add(Option.create("네", additionalPrice, this));
+            this.options.add(Option.create("아니오", ZERO, this));
         } else if (type == SUBJECTIVE) {
             this.options.add(Option.create("", ZERO, this));
         }
