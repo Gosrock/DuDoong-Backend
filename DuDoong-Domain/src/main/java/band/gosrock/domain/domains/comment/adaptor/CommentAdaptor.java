@@ -35,4 +35,8 @@ public class CommentAdaptor {
     public Long queryCommentCount(Long eventId) {
         return commentRepository.countComment(eventId);
     }
+
+    public Comment queryRandomComment(Long eventId, Long countComment) {
+        return commentRepository.queryRandomComment(eventId, countComment);
+    }
 }

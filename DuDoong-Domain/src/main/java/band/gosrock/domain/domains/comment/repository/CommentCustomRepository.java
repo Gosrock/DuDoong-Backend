@@ -11,4 +11,6 @@ public interface CommentCustomRepository {
     Slice<Comment> searchToPage(CommentCondition commentCondition, Pageable pageable);
 
     Long countComment(Long eventId);
+
+    Comment queryRandomComment(Long eventId, Long count);
 }

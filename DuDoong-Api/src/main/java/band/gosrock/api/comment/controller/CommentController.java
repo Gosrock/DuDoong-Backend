@@ -5,10 +5,12 @@ import band.gosrock.api.comment.model.request.CreateCommentRequest;
 import band.gosrock.api.comment.model.response.CreateCommentResponse;
 import band.gosrock.api.comment.model.response.RetrieveCommentCountResponse;
 import band.gosrock.api.comment.model.response.RetrieveCommentListResponse;
+import band.gosrock.api.comment.model.response.RetrieveRandomCommentResponse;
 import band.gosrock.api.comment.service.CreateCommentUseCase;
 import band.gosrock.api.comment.service.DeleteCommentUseCase;
 import band.gosrock.api.comment.service.RetrieveCommentCountUseCase;
 import band.gosrock.api.comment.service.RetrieveCommentUseCase;
+import band.gosrock.api.comment.service.RetrieveRandomCommentUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -38,6 +40,8 @@ public class CommentController {
 
     private final RetrieveCommentCountUseCase retrieveCommentCountUseCase;
 
+    private final RetrieveRandomCommentUseCase retrieveRandomCommentUseCase;
+
     @Operation(summary = "응원글을 생성합니다.")
     @PostMapping
     public CreateCommentResponse postComment(
@@ -63,5 +67,11 @@ public class CommentController {
     @GetMapping(value = "/counts")
     public RetrieveCommentCountResponse getCommentCounts(@PathVariable Long eventId) {
         return retrieveCommentCountUseCase.execute(eventId);
+    }
+
+    @Operation(summary = "응원글을 랜덤으로 뽑아옵니다.")
+    @GetMapping(value = "/random")
+    public RetrieveRandomCommentResponse getRandomComment(@PathVariable Long eventId) {
+        return retrieveRandomCommentUseCase.execute(eventId);
     }
 }
