@@ -111,4 +111,20 @@ class OrderTest {
         assertEquals(totalPaymentPrice, Money.ZERO);
         assertFalse(couponOrder.isNeedPaid());
     }
+
+    @Test
+    void 주문번호생성_검증() {
+        // given
+        Money wons3000 = Money.wons(3000L);
+        Money wons4000 = Money.wons(4000L);
+        given(orderLineItem1.getTotalOrderLinePrice()).willReturn(wons3000);
+        given(orderLineItem2.getTotalOrderLinePrice()).willReturn(wons4000);
+        given(orderCouponVo.getDiscountAmount()).willReturn(wons4000.plus(wons3000));
+
+        // when
+        Money totalPaymentPrice = couponOrder.getTotalPaymentPrice();
+        // then
+        assertEquals(totalPaymentPrice, Money.ZERO);
+        assertFalse(couponOrder.isNeedPaid());
+    }
 }

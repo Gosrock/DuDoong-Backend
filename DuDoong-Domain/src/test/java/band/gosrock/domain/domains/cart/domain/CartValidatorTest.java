@@ -240,10 +240,19 @@ class CartValidatorTest {
     @Test
     public void 카트_아이템_구매갯수제한_실패() {
         // given
+        given(cart.getTotalQuantity()).willReturn(3L);
         willThrow(TicketPurchaseLimitException.EXCEPTION).given(item).validPurchaseLimit(any());
         // then
         assertThrows(
                 TicketPurchaseLimitException.class,
                 () -> cartValidator.validItemPurchaseLimit(cart, item));
+    }
+
+    @Test
+    public void 카트_아이템_한종류면_성공() {
+        // given
+        given(cart.getDistinctItemIds()).willReturn(List.of(2L));
+        // then
+        cartValidator.validItemKindIsOneType(cart);
     }
 }

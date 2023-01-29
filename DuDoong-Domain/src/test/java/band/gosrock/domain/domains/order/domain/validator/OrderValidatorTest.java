@@ -335,7 +335,7 @@ class OrderValidatorTest {
     }
 
     @Test
-    public void 카트_티켓팅_가능시간검증_실패() {
+    public void 주문_티켓팅_가능시간검증_실패() {
         // given
         given(event.isTimeBeforeStartAt()).willReturn(Boolean.FALSE);
         willCallRealMethod().given(event).validTicketingTime();
@@ -347,7 +347,7 @@ class OrderValidatorTest {
     }
 
     @Test
-    public void 카트_티켓팅_가능시간검증_성공() {
+    public void 주문_티켓팅_가능시간검증_성공() {
         // given
         given(event.isTimeBeforeStartAt()).willReturn(Boolean.TRUE);
         willCallRealMethod().given(event).validTicketingTime();
@@ -357,7 +357,7 @@ class OrderValidatorTest {
     }
 
     @Test
-    public void 카트_티켓팅_재고검증_실패() {
+    public void 주문_티켓팅_재고검증_실패() {
         // given
         willThrow(TicketItemQuantityLackException.class).given(item).validEnoughQuantity(any());
         // when
@@ -368,7 +368,7 @@ class OrderValidatorTest {
     }
 
     @Test
-    public void 카트_티켓팅_재고검증_성공() {
+    public void 주문_티켓팅_재고검증_성공() {
         // given
         willDoNothing().given(item).validEnoughQuantity(any());
         // when
@@ -377,7 +377,7 @@ class OrderValidatorTest {
     }
 
     @Test
-    public void 카트_티켓팅_이벤트_상태검증_성공() {
+    public void 주문_티켓팅_이벤트_상태검증_성공() {
         // given
         willDoNothing().given(event).validStatusOpen();
         // when
@@ -386,7 +386,7 @@ class OrderValidatorTest {
     }
 
     @Test
-    public void 카트_티켓팅_이벤트_상태검증_실패() {
+    public void 주문_티켓팅_이벤트_상태검증_실패() {
         // given
         willThrow(EventIsNotOpenStatusException.class).given(event).validStatusOpen();
         // when
@@ -396,7 +396,7 @@ class OrderValidatorTest {
     }
 
     @Test
-    public void 카트_아이템_한종류가아니면_실패() {
+    public void 주문_아이템_한종류가아니면_실패() {
         // given
         given(order.getDistinctItemIds()).willReturn(List.of(1L, 2L));
         // then
@@ -406,8 +406,17 @@ class OrderValidatorTest {
     }
 
     @Test
-    public void 카트_아이템_구매갯수제한_실패() {
+    public void 주문_아이템_한종류면_성공() {
         // given
+        given(order.getDistinctItemIds()).willReturn(List.of(2L));
+        // then
+        orderValidator.validItemKindIsOneType(order);
+    }
+
+    @Test
+    public void 주문_아이템_구매갯수제한_실패() {
+        // given
+        given(order.getTotalQuantity()).willReturn(3L);
         willThrow(TicketPurchaseLimitException.EXCEPTION).given(item).validPurchaseLimit(any());
         // then
         assertThrows(
