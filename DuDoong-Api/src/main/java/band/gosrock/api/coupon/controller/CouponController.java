@@ -5,7 +5,6 @@ import band.gosrock.api.coupon.dto.reqeust.*;
 import band.gosrock.api.coupon.dto.response.*;
 import band.gosrock.api.coupon.service.CreateCouponUseCase;
 import band.gosrock.api.coupon.service.CreateUserCouponUseCase;
-import band.gosrock.api.coupon.service.ReadIssuedCouponUseCase;
 import band.gosrock.api.coupon.service.ReadMyPageIssuedCouponUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -22,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 public class CouponController {
 
     private final CreateCouponUseCase createCouponUseCase;
-    private final ReadIssuedCouponUseCase readIssuedCouponUseCase;
     private final CreateUserCouponUseCase createUserCouponUseCase;
     private final ReadMyPageIssuedCouponUseCase readMyPageIssuedCouponUseCase;
 
@@ -31,13 +29,6 @@ public class CouponController {
     public CreateCouponCampaignResponse createCouponCampaign(
             @RequestBody @Valid CreateCouponCampaignRequest createCouponCampaignRequest) {
         return createCouponUseCase.execute(createCouponCampaignRequest);
-    }
-
-    @Deprecated
-    @Operation(summary = "주문시 쿠폰 조회 API(삭제 예정)")
-    @GetMapping("/issuedCoupons/orders")
-    public ReadIssuedCouponOrderResponse getAllIssuedCouponsUsedInOrders() {
-        return readIssuedCouponUseCase.execute();
     }
 
     @Operation(summary = "유저 쿠폰 발급 API")
