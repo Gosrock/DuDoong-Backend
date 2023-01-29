@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @SecurityRequirement(name = "access-token")
 @Tag(name = "티켓 상품 관련 컨트롤러")
 @RestController
-@RequestMapping("/v1/{eventId}/ticketItems")
+@RequestMapping("/v1/event/{eventId}/ticketItems")
 @RequiredArgsConstructor
 public class TicketItemController {
 
@@ -35,10 +35,11 @@ public class TicketItemController {
     }
 
     @Operation(summary = "옵션을 티켓상품에 적용합니다.")
-    @PostMapping("/option")
-    public ApplyTicketOptionResponse createTicketOption(
+    @PatchMapping("/{ticketItemId}/option")
+    public ApplyTicketOptionResponse applyTicketOption(
             @RequestBody @Valid ApplyTicketOptionRequest applyTicketOptionRequest,
-            @PathVariable Long eventId) {
-        return applyTicketOptionUseCase.execute(applyTicketOptionRequest, eventId);
+            @PathVariable Long eventId,
+            @PathVariable Long ticketItemId) {
+        return applyTicketOptionUseCase.execute(applyTicketOptionRequest, eventId, ticketItemId);
     }
 }
