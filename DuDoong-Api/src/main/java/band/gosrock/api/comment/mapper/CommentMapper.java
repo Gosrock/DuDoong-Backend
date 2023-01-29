@@ -3,7 +3,9 @@ package band.gosrock.api.comment.mapper;
 
 import band.gosrock.api.comment.model.request.CreateCommentRequest;
 import band.gosrock.api.comment.model.response.CreateCommentResponse;
+import band.gosrock.api.comment.model.response.RetrieveCommentCountResponse;
 import band.gosrock.api.comment.model.response.RetrieveCommentListResponse;
+import band.gosrock.api.comment.model.response.RetrieveRandomCommentResponse;
 import band.gosrock.common.annotation.Mapper;
 import band.gosrock.domain.domains.comment.adaptor.CommentAdaptor;
 import band.gosrock.domain.domains.comment.domain.Comment;
@@ -34,5 +36,18 @@ public class CommentMapper {
             CommentCondition commentCondition, Long currentUserId) {
         Slice<Comment> comments = commentAdaptor.searchComment(commentCondition);
         return RetrieveCommentListResponse.of(comments, currentUserId);
+    }
+
+    @Transactional(readOnly = true)
+    public Comment retrieveComment(Long commentId) {
+        return commentAdaptor.queryComment(commentId);
+    }
+
+    public RetrieveCommentCountResponse toRetrieveCommentCountResponse(Long commentCount) {
+        return RetrieveCommentCountResponse.of(commentCount);
+    }
+
+    public RetrieveRandomCommentResponse toRetrieveRandomCommentResponse(Comment comment) {
+        return RetrieveRandomCommentResponse.of(comment);
     }
 }
