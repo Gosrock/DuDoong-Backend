@@ -1,7 +1,6 @@
 package band.gosrock.api.coupon.dto.response;
 
 
-import band.gosrock.domain.domains.coupon.domain.CouponCampaign;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
@@ -16,12 +15,4 @@ public record CreateCouponCampaignResponse(
     나중에 디자인 나오고 더 필요한 리스폰스 값 있으면 추가할 예정입니다.
     */
 
-    public static CreateCouponCampaignResponse of(CouponCampaign couponCampaign, Long hostId) {
-        return CreateCouponCampaignResponse.builder()
-                .couponCampaignId(couponCampaign.getId())
-                .couponCode(couponCampaign.getCouponCode())
-                .issuedAmount(couponCampaign.getCouponStockInfo().getIssuedAmount())
-                .hostId(hostId)
-                .build();
-    }
 }
