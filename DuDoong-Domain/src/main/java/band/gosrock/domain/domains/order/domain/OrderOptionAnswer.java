@@ -6,15 +6,11 @@ import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.OptionAnswerVo;
 import band.gosrock.domain.domains.cart.domain.CartOptionAnswer;
 import band.gosrock.domain.domains.ticket_item.domain.Option;
-import band.gosrock.domain.domains.ticket_item.domain.OptionGroupType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -30,23 +26,24 @@ public class OrderOptionAnswer extends BaseTimeEntity {
     @Column(name = "order_option_answer_id")
     private Long id;
 
-    // 연관 관계로 만들면..? 가격정보 도메인 내부로 들일 수 있음
-    @JoinColumn(name = "option_id", updatable = false)
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Option option;
+    private Long optionId;
+
+    private Money additionalPrice = Money.ZERO;
 
     private String answer;
     /** ---------------------------- 생성 관련 메서드 ---------------------------------- */
     @Builder
-    public OrderOptionAnswer(Option option, String answer) {
-        this.option = option;
+    public OrderOptionAnswer(Long optionId, Money additionalPrice, String answer) {
+        this.optionId = optionId;
+        this.additionalPrice = additionalPrice;
         this.answer = answer;
     }
 
     public static OrderOptionAnswer from(CartOptionAnswer cartOptionAnswer) {
         return OrderOptionAnswer.builder()
                 .answer(cartOptionAnswer.getAnswer())
-                .option(cartOptionAnswer.getOption())
+                .optionId(cartOptionAnswer.getOptionId())
+                .additionalPrice(cartOptionAnswer.getAdditionalPrice())
                 .build();
     }
 
@@ -55,29 +52,13 @@ public class OrderOptionAnswer extends BaseTimeEntity {
     /** ---------------------------- 검증 메서드 ---------------------------------- */
 
     /** ---------------------------- 조회용 메서드 ---------------------------------- */
-    protected Money getOptionPrice() {
-        return option.getAdditionalPrice();
-    }
-
-    protected String getQuestionDescription() {
-        return option.getQuestionDescription();
-    }
-
-    protected String getQuestionName() {
-        return option.getQuestionName();
-    }
-
-    protected OptionGroupType getQuestionType() {
-        return option.getQuestionType();
-    }
-
-    public OptionAnswerVo getOptionAnswerVo() {
+    public OptionAnswerVo getOptionAnswerVo(Option option) {
         return OptionAnswerVo.builder()
-                .questionDescription(getQuestionDescription())
+                .questionDescription(option.getQuestionDescription())
                 .answer(answer)
-                .optionGroupType(getQuestionType())
-                .questionName(getQuestionName())
-                .additionalPrice(getOptionPrice())
+                .optionGroupType(option.getQuestionType())
+                .questionName(option.getQuestionName())
+                .additionalPrice(additionalPrice)
                 .build();
     }
 }

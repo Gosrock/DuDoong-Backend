@@ -42,12 +42,16 @@ public class OrderLineTicketResponse {
     private final Money eachOptionPrice;
 
     public static OrderLineTicketResponse of(
-            Order order, OrderLineItem orderLineItem, String userName, String ticketNos) {
+            Order order,
+            OrderLineItem orderLineItem,
+            List<OptionAnswerVo> optionAnswerVos,
+            String userName,
+            String ticketNos) {
         return OrderLineTicketResponse.builder()
-                .answers(orderLineItem.getOptionAnswerVos())
+                .answers(optionAnswerVos)
                 .orderNo(order.getOrderNo() + "-" + orderLineItem.getId())
                 .ticketNos(ticketNos)
-                .ticketName(orderLineItem.getProductName())
+                .ticketName(orderLineItem.getItemName())
                 .paymentAt(order.getApprovedAt())
                 .userName(userName)
                 .orderLinePrice(orderLineItem.getTotalOrderLinePrice())

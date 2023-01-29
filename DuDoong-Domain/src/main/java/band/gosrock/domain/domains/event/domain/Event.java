@@ -2,10 +2,11 @@ package band.gosrock.domain.domains.event.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
-import band.gosrock.domain.common.vo.EventInfoVo;
-import band.gosrock.domain.common.vo.RefundInfoVo;
+import band.gosrock.domain.common.vo.*;
 import band.gosrock.domain.domains.event.exception.CannotModifyEventBasicException;
 import band.gosrock.domain.domains.event.exception.EventCannotEndBeforeStartException;
+import band.gosrock.domain.domains.event.exception.EventIsNotOpenStatusException;
+import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
 import java.time.LocalDateTime;
 import javax.persistence.*;
 import lombok.AccessLevel;
@@ -85,7 +86,6 @@ public class Event extends BaseTimeEntity {
 
     public void setEventPlace(EventPlace eventPlace) {
         // 정보 한 번 등록시 변경 불가
-        this.updated = true;
         this.eventPlace = eventPlace;
     }
 
@@ -99,7 +99,43 @@ public class Event extends BaseTimeEntity {
         return RefundInfoVo.from(getEndAt());
     }
 
+    public Boolean isRefundDateNotPassed() {
+        return getRefundInfoVo().getAvailAble();
+    }
+
     public EventInfoVo toEventInfoVo() {
         return EventInfoVo.from(this);
+    }
+
+    public void validStatusOpen() {
+        if (status != EventStatus.OPEN) {
+            throw EventIsNotOpenStatusException.EXCEPTION;
+        }
+    }
+
+    public void validTicketingTime() {
+        if (!isTimeBeforeStartAt()) {
+            throw EventTicketingTimeIsPassedException.EXCEPTION;
+        }
+    }
+
+    public boolean isTimeBeforeStartAt() {
+        return LocalDateTime.now().isBefore(getStartAt());
+    }
+
+    public EventDetailVo toEventDetailVo() {
+        return EventDetailVo.from(this);
+    }
+
+    public EventBasicVo toEventBasicVo() {
+        return EventBasicVo.from(this);
+    }
+
+    public EventProfileVo toEventProfileVo() {
+        return EventProfileVo.from(this);
+    }
+
+    public EventPlaceVo toEventPlaceVo() {
+        return EventPlaceVo.from(this);
     }
 }

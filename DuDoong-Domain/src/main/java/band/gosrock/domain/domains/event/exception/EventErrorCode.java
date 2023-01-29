@@ -20,7 +20,9 @@ public enum EventErrorCode implements BaseErrorCode {
     EVENT_CANNOT_END_BEFORE_START(BAD_REQUEST, "Event_400_2", "시작 시각은 종료 시각보다 빨라야 합니다."),
 
     EVENT_URL_NAME_ALREADY_EXIST(BAD_REQUEST, "Event_400_3", "중복된 URL 표시 이름입니다."),
-    CANNOT_MODIFY_EVENT_BASIC(BAD_REQUEST, "Event_400_4", "이벤트 기본 정보는 수정할 수 없습니다.");
+    CANNOT_MODIFY_EVENT_BASIC(BAD_REQUEST, "Event_400_4", "이벤트 기본 정보는 수정할 수 없습니다."),
+    EVENT_NOT_OPEN(BAD_REQUEST, "Event_400_5", "이벤트가 열려있는 상태가 아닙니다."),
+    EVENT_TICKETING_TIME_IS_PASSED(BAD_REQUEST, "Event_400_6", "이벤트 시작시간이 지나 티켓팅을 할 수 없습니다.");
     private Integer status;
     private String code;
     private String reason;

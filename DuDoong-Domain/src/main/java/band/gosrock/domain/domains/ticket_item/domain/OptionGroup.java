@@ -1,10 +1,13 @@
 package band.gosrock.domain.domains.ticket_item.domain;
 
+import static band.gosrock.common.consts.DuDoongStatic.KR_NO;
+import static band.gosrock.common.consts.DuDoongStatic.KR_YES;
 import static band.gosrock.domain.common.vo.Money.ZERO;
 import static band.gosrock.domain.domains.ticket_item.domain.OptionGroupType.*;
 
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.ticket_item.exception.InvalidOptionGroupException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.*;
@@ -41,7 +44,7 @@ public class OptionGroup {
     private Boolean isEssential;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "optionGroup")
-    private List<Option> options = new ArrayList<>();
+    private final List<Option> options = new ArrayList<>();
 
     @Builder
     public OptionGroup(
@@ -61,11 +64,17 @@ public class OptionGroup {
         options.forEach(option -> option.setOptionGroup(this));
     }
 
+    public void checkEventId(Long eventId) {
+        if (!this.getEvent().getId().equals(eventId)) {
+            throw InvalidOptionGroupException.EXCEPTION;
+        }
+    }
+
     public OptionGroup createTicketOption(Money additionalPrice) {
         OptionGroupType type = this.getType();
         if (type == TRUE_FALSE) {
-            this.options.add(Option.create("YES", additionalPrice, this));
-            this.options.add(Option.create("NO", ZERO, this));
+            this.options.add(Option.create(KR_YES, additionalPrice, this));
+            this.options.add(Option.create(KR_NO, ZERO, this));
         } else if (type == SUBJECTIVE) {
             this.options.add(Option.create("", ZERO, this));
         }

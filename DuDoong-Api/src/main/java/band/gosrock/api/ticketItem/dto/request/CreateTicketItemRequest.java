@@ -20,7 +20,7 @@ public class CreateTicketItemRequest {
     private Long eventId;
 
     @NotNull
-    @Schema(nullable = false, defaultValue = "FIRST_COME_FIRST_SERVED")
+    @Schema(nullable = false, defaultValue = "선착순")
     private TicketType type;
 
     @NotNull

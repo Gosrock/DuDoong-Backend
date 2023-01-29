@@ -7,6 +7,8 @@ import band.gosrock.domain.domains.host.exception.HostNotFoundException;
 import band.gosrock.domain.domains.host.repository.HostRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Adaptor
 @RequiredArgsConstructor
@@ -23,7 +25,7 @@ public class HostAdaptor {
     }
 
     /** 자신이 속해있는 호스트 리스트를 가져오는 쿼리 요청 */
-    public List<Host> findAllByHostUsers_UserId(Long userId) {
-        return hostRepository.findAllByHostUsers_UserId(userId);
+    public Page<Host> findAllByHostUsers_UserId(Long userId, Pageable pageable) {
+        return hostRepository.findAllByHostUsers_UserId(userId, pageable);
     }
 }

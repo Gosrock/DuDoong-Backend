@@ -13,8 +13,8 @@ import lombok.Getter;
 @Builder
 public class CartItemResponse {
 
-    // 일반티켓(1/3) - 4000원
-    @Schema(description = "카트라인의 이름입니다.", defaultValue = "일반티켓(1/3) - 4000원")
+    // 일반 티켓 2매 이름
+    @Schema(description = "카트라인의 이름입니다.", defaultValue = "일반티켓 2매")
     private String name;
     // 응답 목록
     private List<OptionAnswerVo> answers;
@@ -30,13 +30,18 @@ public class CartItemResponse {
     @Schema(description = "담은 상품의 개수입니다.", defaultValue = "1")
     private Long packedQuantity;
 
-    public static CartItemResponse of(String name, CartLineItem cartLineItem) {
+    @Schema(description = "각 옵션 가격")
+    private final Money eachOptionPrice;
+
+    public static CartItemResponse of(
+            CartLineItem cartLineItem, String itemName, List<OptionAnswerVo> answers) {
         return CartItemResponse.builder()
-                .answers(cartLineItem.getOptionAnswerVos())
-                .name(name)
+                .answers(answers)
+                .name(itemName)
                 .cartLinePrice(cartLineItem.getTotalCartLinePrice())
                 .itemPrice(cartLineItem.getItemPrice())
                 .packedQuantity(cartLineItem.getQuantity())
+                .eachOptionPrice(cartLineItem.getTotalOptionsPrice())
                 .build();
     }
 }
