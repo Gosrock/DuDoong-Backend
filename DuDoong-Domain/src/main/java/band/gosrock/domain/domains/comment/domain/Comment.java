@@ -3,9 +3,14 @@ package band.gosrock.domain.domains.comment.domain;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.CommentInfoVo;
+import band.gosrock.domain.domains.comment.exception.CommentAlreadyDeleteException;
+import band.gosrock.domain.domains.comment.exception.CommentNotMatchEventException;
 import band.gosrock.domain.domains.user.domain.User;
+import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -39,12 +44,17 @@ public class Comment extends BaseTimeEntity {
 
     private Long eventId;
 
+    @Enumerated(EnumType.STRING)
+    private CommentStatus commentStatus;
+
     @Builder
-    public Comment(String content, String nickName, User user, Long eventId) {
+    public Comment(
+            String content, String nickName, User user, Long eventId, CommentStatus commentStatus) {
         this.content = content;
         this.nickName = nickName;
         this.user = user;
         this.eventId = eventId;
+        this.commentStatus = commentStatus;
     }
 
     public static Comment create(String content, String nickName, User user, Long eventId) {
@@ -53,10 +63,24 @@ public class Comment extends BaseTimeEntity {
                 .nickName(nickName)
                 .user(user)
                 .eventId(eventId)
+                .commentStatus(CommentStatus.ACTIVE)
                 .build();
     }
 
     public CommentInfoVo toCommentInfoVo() {
         return CommentInfoVo.from(this);
+    }
+
+    public void delete() {
+        if (this.commentStatus == CommentStatus.INACTIVE) {
+            throw CommentAlreadyDeleteException.EXCEPTION;
+        }
+        this.commentStatus = CommentStatus.INACTIVE;
+    }
+
+    public void checkEvent(Long eventId) {
+        if (!Objects.equals(eventId, this.eventId)) {
+            throw CommentNotMatchEventException.EXCEPTION;
+        }
     }
 }

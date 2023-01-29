@@ -4,14 +4,21 @@ import static band.gosrock.domain.domains.comment.domain.QComment.comment;
 import static band.gosrock.domain.domains.user.domain.QUser.user;
 
 import band.gosrock.domain.domains.comment.domain.Comment;
+import band.gosrock.domain.domains.comment.domain.CommentStatus;
 import band.gosrock.domain.domains.comment.dto.condition.CommentCondition;
+import band.gosrock.domain.domains.comment.exception.RetrieveRandomCommentNotFoundException;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.security.SecureRandom;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
+import org.springframework.data.support.PageableExecutionUtils;
 
 @RequiredArgsConstructor
 public class CommentCustomRepositoryImpl implements CommentCustomRepository {
@@ -27,7 +34,8 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
                         .fetchJoin()
                         .where(
                                 eventIdEq(commentCondition.getEventId()),
-                                lastIdLessThanEqual(commentCondition.getLastId()))
+                                lastIdLessThanEqual(commentCondition.getLastId()),
+                                comment.commentStatus.eq(CommentStatus.ACTIVE))
                         .orderBy(comment.id.desc())
                         .limit(pageable.getPageSize() + 1)
                         .fetch();
@@ -53,5 +61,43 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
         }
 
         return new SliceImpl<>(comments, pageable, hasNext);
+    }
+
+    @Override
+    public Long countComment(Long eventId) {
+        return queryFactory
+                .select(comment.count())
+                .from(comment)
+                .where(eventIdEq(eventId), comment.commentStatus.eq(CommentStatus.ACTIVE))
+                .fetchOne();
+    }
+
+    @Override
+    public Comment queryRandomComment(Long eventId, Long countComment) {
+        SecureRandom secureRandom = new SecureRandom();
+        int idx = (int) (secureRandom.nextFloat(1) * countComment);
+
+        PageRequest pageRequest = PageRequest.of(idx, 1);
+        List<Comment> comments =
+                queryFactory
+                        .selectFrom(comment)
+                        .where(eventIdEq(eventId), comment.commentStatus.eq(CommentStatus.ACTIVE))
+                        .offset(pageRequest.getOffset())
+                        .limit(1)
+                        .fetch();
+
+        JPAQuery<Long> countQuery =
+                queryFactory
+                        .select(comment.count())
+                        .from(comment)
+                        .where(eventIdEq(eventId), comment.commentStatus.eq(CommentStatus.ACTIVE));
+
+        Page<Comment> commentOfPage =
+                PageableExecutionUtils.getPage(comments, pageRequest, countQuery::fetchOne);
+
+        if (commentOfPage.hasContent()) {
+            return commentOfPage.getContent().get(0);
+        }
+        throw RetrieveRandomCommentNotFoundException.EXCEPTION;
     }
 }
