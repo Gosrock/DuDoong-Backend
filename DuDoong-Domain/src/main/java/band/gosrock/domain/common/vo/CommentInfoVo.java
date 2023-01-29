@@ -19,6 +19,8 @@ public class CommentInfoVo {
 
     @DateFormat private final LocalDateTime createdAt;
 
+    private final Long eventId;
+
     private final Long userId;
 
     public static CommentInfoVo from(Comment comment) {
@@ -27,6 +29,7 @@ public class CommentInfoVo {
                 .nickName(comment.getNickName())
                 .content(comment.getContent())
                 .createdAt(comment.getCreatedAt())
+                .eventId(comment.getEventId())
                 .userId(comment.getUser().getId())
                 .build();
     }

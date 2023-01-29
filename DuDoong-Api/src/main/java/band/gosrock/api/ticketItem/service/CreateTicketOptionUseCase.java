@@ -11,6 +11,7 @@ import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
+import band.gosrock.domain.domains.host.service.HostService;
 import band.gosrock.domain.domains.ticket_item.domain.OptionGroup;
 import band.gosrock.domain.domains.ticket_item.service.TicketOptionService;
 import band.gosrock.domain.domains.user.domain.User;
@@ -26,6 +27,7 @@ public class CreateTicketOptionUseCase {
     private final HostAdaptor hostAdaptor;
     private final TicketOptionMapper ticketOptionMapper;
     private final TicketOptionService ticketOptionService;
+    private final HostService hostService;
 
     @Transactional
     public CreateTicketOptionResponse execute(
@@ -35,7 +37,7 @@ public class CreateTicketOptionUseCase {
 
         Host host = hostAdaptor.findById(event.getHostId());
         // 권한 체크 ( 해당 이벤트의 호스트인지 )
-        host.hasHostUserId(user.getId());
+        hostService.validateHostUser(host, user.getId());
         OptionGroup ticketOption =
                 ticketOptionMapper
                         .toOptionGroup(createTicketOptionRequest, event)
