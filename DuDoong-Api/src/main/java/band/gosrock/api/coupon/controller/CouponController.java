@@ -5,7 +5,7 @@ import band.gosrock.api.coupon.dto.reqeust.*;
 import band.gosrock.api.coupon.dto.response.*;
 import band.gosrock.api.coupon.service.CreateCouponUseCase;
 import band.gosrock.api.coupon.service.CreateUserCouponUseCase;
-import band.gosrock.api.coupon.service.ReadMyPageIssuedCouponUseCase;
+import band.gosrock.api.coupon.service.ReadIssuedCouponUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,7 +22,7 @@ public class CouponController {
 
     private final CreateCouponUseCase createCouponUseCase;
     private final CreateUserCouponUseCase createUserCouponUseCase;
-    private final ReadMyPageIssuedCouponUseCase readMyPageIssuedCouponUseCase;
+    private final ReadIssuedCouponUseCase readIssuedCouponUseCase;
 
     @Operation(summary = "쿠폰 캠페인 생성 API")
     @PostMapping("/campaigns")
@@ -42,6 +42,6 @@ public class CouponController {
     @GetMapping("")
     public ReadIssuedCouponResponse getAllMyIssuedCoupons(
             @RequestParam(required = false, defaultValue = "false") Boolean expired) {
-        return readMyPageIssuedCouponUseCase.execute(expired);
+        return readIssuedCouponUseCase.execute(expired);
     }
 }

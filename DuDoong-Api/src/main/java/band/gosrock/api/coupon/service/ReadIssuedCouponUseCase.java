@@ -15,10 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 @UseCase
 @RequiredArgsConstructor
-public class ReadMyPageIssuedCouponUseCase {
+public class ReadIssuedCouponUseCase {
     private final UserUtils userUtils;
     private final IssuedCouponAdaptor issuedCouponAdaptor;
-
     private final IssuedCouponMapper issuedCouponMapper;
 
     @Transactional(readOnly = true)
