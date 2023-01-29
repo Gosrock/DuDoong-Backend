@@ -37,7 +37,7 @@ public enum TicketItemErrorCode implements BaseErrorCode {
     DUPLICATED_ITEM_OPTION_GROUP(BAD_REQUEST, "Item_Option_Group_400_1", "이미 적용된 옵션입니다."),
     OPTION_ANSWER_NOT_CORRECT(
             BAD_REQUEST, "Option_400_1", "옵션에 대한 답변이 올바르지 않습니다. T/F형일 경우 예 아니요 로 보내주세요."),
-    FORBIDDEN_OPTION_CHANGE(FORBIDDEN, "Item_Option_Group_403_1", "옵션 변경이 불가능한 상태입니다.");
+    FORBIDDEN_OPTION_CHANGE(BAD_REQUEST, "Item_Option_Group_400_2", "옵션 변경이 불가능한 상태입니다.");
     private Integer status;
     private String code;
     private String reason;

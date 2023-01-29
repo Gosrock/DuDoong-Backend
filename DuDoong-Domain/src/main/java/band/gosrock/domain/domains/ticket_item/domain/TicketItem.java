@@ -5,10 +5,7 @@ import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.event.domain.Event;
-import band.gosrock.domain.domains.ticket_item.exception.InvalidTicketItemException;
-import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityException;
-import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLackException;
-import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLargeException;
+import band.gosrock.domain.domains.ticket_item.exception.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -94,6 +91,15 @@ public class TicketItem extends BaseTimeEntity {
     }
 
     public void addItemOptionGroup(OptionGroup optionGroup) {
+        // 재고 감소된 티켓상품은 옵션적용 변경 불가
+        if (this.isQuantityReduced()) {
+            throw ForbiddenOptionChangeException.EXCEPTION;
+        }
+
+        // 중복 체크
+        if (this.hasItemOptionGroup(optionGroup.getId())) {
+            throw DuplicatedItemOptionGroupException.EXCEPTION;
+        }
         ItemOptionGroup itemOptionGroup =
                 ItemOptionGroup.builder().item(this).optionGroup(optionGroup).build();
         this.itemOptionGroups.add(itemOptionGroup);

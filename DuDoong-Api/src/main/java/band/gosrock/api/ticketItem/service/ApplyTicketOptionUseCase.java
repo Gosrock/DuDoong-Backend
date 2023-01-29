@@ -37,7 +37,7 @@ public class ApplyTicketOptionUseCase {
         Long optionGroupId = applyTicketOptionRequest.getOptionGroupId();
 
         TicketItem ticketItem =
-                itemOptionGroupService.createItemOptionGroup(ticketItemId, optionGroupId, eventId);
+                itemOptionGroupService.addItemOptionGroup(ticketItemId, optionGroupId, eventId);
         return ApplyTicketOptionResponse.from(ticketItem);
     }
 }
