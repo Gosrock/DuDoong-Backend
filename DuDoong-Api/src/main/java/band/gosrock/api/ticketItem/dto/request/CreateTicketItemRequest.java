@@ -1,11 +1,10 @@
 package band.gosrock.api.ticketItem.dto.request;
 
 
-import band.gosrock.domain.common.vo.Money;
-import band.gosrock.domain.domains.event.domain.Event;
-import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.common.annotation.Enum;
 import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -15,15 +14,11 @@ import org.springframework.lang.Nullable;
 @RequiredArgsConstructor
 public class CreateTicketItemRequest {
 
-    @NotNull
-    @Schema(nullable = false, example = "1")
-    private Long eventId;
-
-    @NotNull
     @Schema(nullable = false, defaultValue = "선착순")
+    @Enum(message = "선착순, 승인만 허용됩니다")
     private TicketType type;
 
-    @NotNull
+    @NotEmpty(message = "티켓상품 이름을 입력해주세요")
     @Schema(nullable = false, example = "일반 티켓")
     private String name;
 
@@ -32,7 +27,7 @@ public class CreateTicketItemRequest {
     private String description;
 
     @NotNull
-    @Schema(nullable = false, example = "4000")
+    @Schema(defaultValue = "0", nullable = false, example = "4000")
     private Long price;
 
     @NotNull
@@ -42,19 +37,4 @@ public class CreateTicketItemRequest {
     @NotNull
     @Schema(nullable = false, example = "1")
     private Long purchaseLimit;
-
-    public TicketItem toEntity(Event event) {
-
-        return TicketItem.builder()
-                .type(type)
-                .name(name)
-                .description(description)
-                .price(Money.wons(price))
-                .quantity(supplyCount)
-                .supplyCount(supplyCount)
-                .purchaseLimit(purchaseLimit)
-                .isSellable(true)
-                .event(event)
-                .build();
-    }
 }

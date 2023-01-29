@@ -4,8 +4,8 @@ package band.gosrock.api.ticketItem.service;
 import band.gosrock.api.common.UserUtils;
 import band.gosrock.api.ticketItem.dto.request.CreateTicketItemRequest;
 import band.gosrock.api.ticketItem.dto.response.CreateTicketItemResponse;
+import band.gosrock.api.ticketItem.mapper.TicketItemMapper;
 import band.gosrock.common.annotation.UseCase;
-import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
@@ -26,20 +26,22 @@ public class CreateTicketItemUseCase {
     private final UserUtils userUtils;
     private final HostService hostService;
     private final TicketItemService ticketItemService;
+    private final TicketItemMapper ticketItemMapper;
 
     @Transactional
-    public CreateTicketItemResponse execute(CreateTicketItemRequest createTicketItemRequest) {
+    public CreateTicketItemResponse execute(
+            CreateTicketItemRequest createTicketItemRequest, Long eventId) {
         User user = userUtils.getCurrentUser();
-        Event event = eventAdaptor.findById(createTicketItemRequest.getEventId());
+        Event event = eventAdaptor.findById(eventId);
         Host host = hostAdaptor.findById(event.getHostId());
         // 권한 체크 ( 해당 이벤트의 호스트인지 )
-        host.hasHostUserId(user.getId());
-        // 호스트 제휴 여부에 따른 가격 체크
-        if (!host.getPartner()) {
-            ticketItemService.checkTicketPrice(Money.wons(createTicketItemRequest.getPrice()));
-        }
+        hostService.validateHostUser(host, user.getId());
+        // 호스트 제휴 여부
+        Boolean isPartner = host.getPartner();
         TicketItem ticketItem =
-                ticketItemService.createTicketItem(createTicketItemRequest.toEntity(event));
+                ticketItemService.createTicketItem(
+                        ticketItemMapper.toTicketItem(createTicketItemRequest, event), isPartner);
+
         return CreateTicketItemResponse.from(ticketItem);
     }
 }

@@ -118,6 +118,12 @@ public class TicketItem extends BaseTimeEntity {
         }
     }
 
+    public void checkTicketPrice() {
+        if (!Money.ZERO.equals(this.price)) {
+            throw InvalidTicketPriceException.EXCEPTION;
+        }
+    }
+
     public RefundInfoVo getRefundInfoVo() {
         return event.getRefundInfoVo();
     }
