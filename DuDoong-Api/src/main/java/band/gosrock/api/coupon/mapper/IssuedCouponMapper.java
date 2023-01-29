@@ -28,7 +28,7 @@ public class IssuedCouponMapper {
                 .issuedCouponId(issuedCoupon.getId())
                 .couponCampaignId(couponCampaign.getId())
                 .couponCode(couponCampaign.getCouponCode())
-                .validTerm(issuedCoupon.getCreatedAt().plusDays(couponCampaign.getValidTerm()))
+                .validTerm(issuedCoupon.calculateValidTerm())
                 .discountType(couponCampaign.getDiscountType())
                 .discountAmount(couponCampaign.getDiscountAmount())
                 .build();

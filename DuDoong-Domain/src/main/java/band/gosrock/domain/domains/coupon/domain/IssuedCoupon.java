@@ -87,4 +87,8 @@ public class IssuedCoupon extends BaseTimeEntity {
         return !LocalDateTime.now()
                 .isAfter(this.getCreatedAt().plusDays(this.getCouponCampaign().getValidTerm()));
     }
+
+    public LocalDateTime calculateValidTerm() {
+        return this.getCreatedAt().plusDays(this.getCouponCampaign().getValidTerm());
+    }
 }
