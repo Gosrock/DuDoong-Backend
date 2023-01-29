@@ -9,10 +9,8 @@ import band.gosrock.domain.domains.event.exception.EventIsNotOpenStatusException
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
 import band.gosrock.domain.domains.order.exception.OrderInvalidItemKindPolicyException;
-import band.gosrock.domain.domains.order.exception.OrderNotFoundException;
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLackException;
 import band.gosrock.domain.domains.ticket_item.exception.TicketPurchaseLimitException;
-import band.gosrock.domain.domains.user.exception.UserNotFoundException;
 
 @ExceptionDoc
 public class CreateOrderExceptionDocs implements SwaggerExampleExceptions {

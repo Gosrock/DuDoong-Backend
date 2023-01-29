@@ -7,7 +7,6 @@ import band.gosrock.common.exception.DuDoongCodeException;
 import band.gosrock.common.interfaces.SwaggerExampleExceptions;
 import band.gosrock.domain.domains.event.exception.EventIsNotOpenStatusException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
-import band.gosrock.domain.domains.order.exception.InvalidOrderException;
 import band.gosrock.domain.domains.order.exception.NotPaymentOrderException;
 import band.gosrock.domain.domains.order.exception.NotPendingOrderException;
 import band.gosrock.domain.domains.order.exception.OrderInvalidItemKindPolicyException;

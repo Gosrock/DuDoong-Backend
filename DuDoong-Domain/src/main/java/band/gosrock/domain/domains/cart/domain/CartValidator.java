@@ -3,7 +3,7 @@ package band.gosrock.domain.domains.cart.domain;
 
 import band.gosrock.common.annotation.Validator;
 import band.gosrock.domain.domains.cart.exception.CartInvalidItemKindPolicyException;
-import band.gosrock.domain.domains.cart.exception.CartInvalidOptionAnswerException;
+import band.gosrock.domain.domains.cart.exception.CartNotAnswerAllOptionGroupException;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
@@ -69,7 +69,7 @@ public class CartValidator {
                 cartLineItem -> {
                     if (!Objects.equals(
                             getAnswerOptionGroupIds(cartLineItem), itemsOptionGroupIds)) {
-                        throw CartInvalidOptionAnswerException.EXCEPTION;
+                        throw CartNotAnswerAllOptionGroupException.EXCEPTION;
                     }
                 });
     }

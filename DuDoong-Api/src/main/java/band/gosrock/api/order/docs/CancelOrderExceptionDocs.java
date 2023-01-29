@@ -8,7 +8,6 @@ import band.gosrock.common.interfaces.SwaggerExampleExceptions;
 import band.gosrock.domain.domains.event.exception.EventIsNotOpenStatusException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
 import band.gosrock.domain.domains.order.exception.CanNotCancelOrderException;
-import band.gosrock.domain.domains.order.exception.CanNotRefundOrderException;
 import band.gosrock.domain.domains.order.exception.NotRefundAvailableDateOrderException;
 
 @ExceptionDoc
@@ -25,5 +24,4 @@ public class CancelOrderExceptionDocs implements SwaggerExampleExceptions {
 
     @ExplainError("이벤트 티켓팅 시간이 지났을때.")
     public DuDoongCodeException 티켓팅_시간지남 = EventTicketingTimeIsPassedException.EXCEPTION;
-
 }

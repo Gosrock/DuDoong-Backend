@@ -8,7 +8,6 @@ import band.gosrock.common.interfaces.SwaggerExampleExceptions;
 import band.gosrock.domain.domains.event.exception.EventIsNotOpenStatusException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
 import band.gosrock.domain.domains.order.exception.NotApprovalOrderException;
-import band.gosrock.domain.domains.order.exception.NotPaymentOrderException;
 import band.gosrock.domain.domains.order.exception.NotPendingOrderException;
 import band.gosrock.domain.domains.order.exception.OrderInvalidItemKindPolicyException;
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLackException;

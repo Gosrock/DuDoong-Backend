@@ -8,12 +8,7 @@ import band.gosrock.common.interfaces.SwaggerExampleExceptions;
 import band.gosrock.domain.domains.event.exception.EventIsNotOpenStatusException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
 import band.gosrock.domain.domains.order.exception.CanNotRefundOrderException;
-import band.gosrock.domain.domains.order.exception.NotApprovalOrderException;
-import band.gosrock.domain.domains.order.exception.NotPendingOrderException;
 import band.gosrock.domain.domains.order.exception.NotRefundAvailableDateOrderException;
-import band.gosrock.domain.domains.order.exception.OrderInvalidItemKindPolicyException;
-import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLackException;
-import band.gosrock.domain.domains.ticket_item.exception.TicketPurchaseLimitException;
 
 @ExceptionDoc
 public class RefundOrderExceptionDocs implements SwaggerExampleExceptions {
@@ -29,5 +24,4 @@ public class RefundOrderExceptionDocs implements SwaggerExampleExceptions {
 
     @ExplainError("이벤트 티켓팅 시간이 지났을때.")
     public DuDoongCodeException 티켓팅_시간지남 = EventTicketingTimeIsPassedException.EXCEPTION;
-
 }

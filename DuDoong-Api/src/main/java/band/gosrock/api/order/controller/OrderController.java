@@ -1,7 +1,6 @@
 package band.gosrock.api.order.controller;
 
 
-import band.gosrock.api.example.docs.ExampleExceptionDocs;
 import band.gosrock.api.order.docs.ApproveOrderExceptionDocs;
 import band.gosrock.api.order.docs.CancelOrderExceptionDocs;
 import band.gosrock.api.order.docs.ConfirmOrderExceptionDocs;
