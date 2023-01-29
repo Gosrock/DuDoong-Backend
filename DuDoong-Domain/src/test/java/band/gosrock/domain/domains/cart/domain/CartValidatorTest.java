@@ -7,7 +7,7 @@ import static org.mockito.BDDMockito.willCallRealMethod;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.BDDMockito.willThrow;
 
-import band.gosrock.domain.domains.cart.exception.CartInvalidOptionAnswerException;
+import band.gosrock.domain.domains.cart.exception.CartNotAnswerAllOptionGroupException;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.exception.EventIsNotOpenStatusException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
@@ -142,7 +142,7 @@ class CartValidatorTest {
         // when
         // then
         assertThrows(
-                CartInvalidOptionAnswerException.class,
+                CartNotAnswerAllOptionGroupException.class,
                 () -> cartValidator.validAnswerToAllQuestion(cart, item));
     }
 
@@ -161,7 +161,7 @@ class CartValidatorTest {
         // when
         // then
         assertThrows(
-                CartInvalidOptionAnswerException.class,
+                CartNotAnswerAllOptionGroupException.class,
                 () -> cartValidator.validAnswerToAllQuestion(cart, item));
     }
 
@@ -181,7 +181,7 @@ class CartValidatorTest {
         // when
         // then
         assertThrows(
-                CartInvalidOptionAnswerException.class,
+                CartNotAnswerAllOptionGroupException.class,
                 () -> cartValidator.validAnswerToAllQuestion(cart, item));
     }
 
