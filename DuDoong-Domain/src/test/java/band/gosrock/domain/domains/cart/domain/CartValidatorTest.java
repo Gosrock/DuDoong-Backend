@@ -7,7 +7,8 @@ import static org.mockito.BDDMockito.willCallRealMethod;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.BDDMockito.willThrow;
 
-import band.gosrock.domain.domains.cart.exception.CartInvalidOptionAnswerException;
+import band.gosrock.domain.domains.cart.exception.CartItemNotOneTypeException;
+import band.gosrock.domain.domains.cart.exception.CartNotAnswerAllOptionGroupException;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.exception.EventIsNotOpenStatusException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
@@ -17,6 +18,7 @@ import band.gosrock.domain.domains.ticket_item.domain.Option;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.ticket_item.exception.NotCorrectOptionAnswerException;
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLackException;
+import band.gosrock.domain.domains.ticket_item.exception.TicketPurchaseLimitException;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +39,6 @@ class CartValidatorTest {
     @Mock Option optionOfGroup1;
     @Mock Option optionOfGroup2;
     @Mock Event event;
-
     @Mock TicketItem item;
 
     CartValidator cartValidator;
@@ -142,7 +143,7 @@ class CartValidatorTest {
         // when
         // then
         assertThrows(
-                CartInvalidOptionAnswerException.class,
+                CartNotAnswerAllOptionGroupException.class,
                 () -> cartValidator.validAnswerToAllQuestion(cart, item));
     }
 
@@ -161,7 +162,7 @@ class CartValidatorTest {
         // when
         // then
         assertThrows(
-                CartInvalidOptionAnswerException.class,
+                CartNotAnswerAllOptionGroupException.class,
                 () -> cartValidator.validAnswerToAllQuestion(cart, item));
     }
 
@@ -181,7 +182,7 @@ class CartValidatorTest {
         // when
         // then
         assertThrows(
-                CartInvalidOptionAnswerException.class,
+                CartNotAnswerAllOptionGroupException.class,
                 () -> cartValidator.validAnswerToAllQuestion(cart, item));
     }
 
@@ -224,5 +225,34 @@ class CartValidatorTest {
         // when
         cartValidator.validCorrectAnswer(cart);
         // then
+    }
+
+    @Test
+    public void 카트_아이템_한종류가아니면_실패() {
+        // given
+        given(cart.getDistinctItemIds()).willReturn(List.of(1L, 2L));
+        // then
+        assertThrows(
+                CartItemNotOneTypeException.class,
+                () -> cartValidator.validItemKindIsOneType(cart));
+    }
+
+    @Test
+    public void 카트_아이템_구매갯수제한_실패() {
+        // given
+        given(cart.getTotalQuantity()).willReturn(3L);
+        willThrow(TicketPurchaseLimitException.EXCEPTION).given(item).validPurchaseLimit(any());
+        // then
+        assertThrows(
+                TicketPurchaseLimitException.class,
+                () -> cartValidator.validItemPurchaseLimit(cart, item));
+    }
+
+    @Test
+    public void 카트_아이템_한종류면_성공() {
+        // given
+        given(cart.getDistinctItemIds()).willReturn(List.of(2L));
+        // then
+        cartValidator.validItemKindIsOneType(cart);
     }
 }

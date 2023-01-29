@@ -14,7 +14,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 
 @DynamicInsert
@@ -30,8 +29,7 @@ public class IssuedCoupon extends BaseTimeEntity {
 
     private Long userId;
 
-    @ColumnDefault("'false'")
-    private boolean usageStatus = false;
+    private Boolean usageStatus = Boolean.FALSE;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coupon_campaign_id", nullable = false)

@@ -16,7 +16,7 @@ public class IssuedCouponInfoVo {
     private final Long issuedCouponId;
 
     // 사용여부
-    private final boolean usageStatus;
+    private final Boolean usageStatus;
 
     private final ApplyTarget applyTarget;
 
@@ -33,7 +33,7 @@ public class IssuedCouponInfoVo {
     public static IssuedCouponInfoVo of(IssuedCoupon issuedCoupon) {
         return IssuedCouponInfoVo.builder()
                 .issuedCouponId(issuedCoupon.getId())
-                .usageStatus(issuedCoupon.isUsageStatus())
+                .usageStatus(issuedCoupon.getUsageStatus())
                 .applyTarget(issuedCoupon.getCouponCampaign().getApplyTarget())
                 .couponCode(issuedCoupon.getCouponCampaign().getCouponCode())
                 .discountType(issuedCoupon.getCouponCampaign().getDiscountType())

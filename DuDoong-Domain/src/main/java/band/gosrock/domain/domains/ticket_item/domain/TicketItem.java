@@ -162,6 +162,12 @@ public class TicketItem extends BaseTimeEntity {
         }
     }
 
+    public void validPurchaseLimit(Long quantity) {
+        if (this.purchaseLimit < quantity) {
+            throw TicketPurchaseLimitException.EXCEPTION;
+        }
+    }
+
     public void increaseQuantity(Long quantity) {
         if (this.quantity + quantity > supplyCount) {
             throw TicketItemQuantityLargeException.EXCEPTION;

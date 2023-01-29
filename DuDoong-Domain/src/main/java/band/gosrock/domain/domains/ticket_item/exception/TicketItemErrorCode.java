@@ -37,6 +37,8 @@ public enum TicketItemErrorCode implements BaseErrorCode {
     DUPLICATED_ITEM_OPTION_GROUP(BAD_REQUEST, "Item_Option_Group_400_1", "이미 적용된 옵션입니다."),
     OPTION_ANSWER_NOT_CORRECT(
             BAD_REQUEST, "Option_400_1", "옵션에 대한 답변이 올바르지 않습니다. T/F형일 경우 예 아니요 로 보내주세요."),
+    TICKET_ITEM_PURCHASE_LIMIT(BAD_REQUEST, "Ticket_Item_400_6", "해당 티켓상품 최대 구매 가능 갯수를 넘었습니다."),
+
     FORBIDDEN_OPTION_CHANGE(BAD_REQUEST, "Item_Option_Group_400_2", "옵션 변경이 불가능한 상태입니다.");
     private Integer status;
     private String code;

@@ -39,14 +39,14 @@ public class OrderLineItem extends BaseTimeEntity {
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "order_line_item_id")
-    private List<OrderOptionAnswer> orderOptionAnswer = new ArrayList<>();
+    private List<OrderOptionAnswer> orderOptionAnswers = new ArrayList<>();
     /** ---------------------------- 생성 관련 메서드 ---------------------------------- */
     @Builder
     public OrderLineItem(
-            TicketItem ticketItem, Long quantity, List<OrderOptionAnswer> orderOptionAnswer) {
-        this.orderItem = OrderItemVo.from(ticketItem);
+            OrderItemVo orderItemVo, Long quantity, List<OrderOptionAnswer> orderOptionAnswer) {
+        this.orderItem = orderItemVo;
         this.quantity = quantity;
-        this.orderOptionAnswer.addAll(orderOptionAnswer);
+        this.orderOptionAnswers.addAll(orderOptionAnswer);
     }
 
     @Builder
@@ -56,7 +56,7 @@ public class OrderLineItem extends BaseTimeEntity {
         return OrderLineItem.builder()
                 .orderOptionAnswer(orderOptionAnswers)
                 .quantity(cartLineItem.getQuantity())
-                .ticketItem(ticketItem)
+                .orderItemVo(OrderItemVo.from(ticketItem))
                 .build();
     }
 
@@ -68,7 +68,7 @@ public class OrderLineItem extends BaseTimeEntity {
 
     /** 응답한 옵션들의 총 가격을 불러옵니다. */
     public Money getOptionAnswersPrice() {
-        return orderOptionAnswer.stream()
+        return orderOptionAnswers.stream()
                 .map(OrderOptionAnswer::getAdditionalPrice)
                 .reduce(Money.ZERO, Money::plus);
     }
@@ -100,5 +100,9 @@ public class OrderLineItem extends BaseTimeEntity {
 
     public String getItemName() {
         return orderItem.getName();
+    }
+
+    public List<Long> getAnswerOptionIds() {
+        return this.orderOptionAnswers.stream().map(OrderOptionAnswer::getOptionId).toList();
     }
 }
