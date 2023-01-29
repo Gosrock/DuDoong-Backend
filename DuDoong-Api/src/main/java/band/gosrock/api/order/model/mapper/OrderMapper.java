@@ -74,7 +74,7 @@ public class OrderMapper {
     }
 
     private List<Long> getOptionIds(OrderLineItem orderLineItem) {
-        return orderLineItem.getOrderOptionAnswer().stream()
+        return orderLineItem.getOrderOptionAnswers().stream()
                 .map(OrderOptionAnswer::getOptionId)
                 .toList();
     }
@@ -83,7 +83,7 @@ public class OrderMapper {
         List<Long> optionIds = getOptionIds(orderLineItem);
         List<Option> options = optionAdaptor.findAllByIds(optionIds);
 
-        return orderLineItem.getOrderOptionAnswer().stream()
+        return orderLineItem.getOrderOptionAnswers().stream()
                 .map(
                         orderOptionAnswer ->
                                 orderOptionAnswer.getOptionAnswerVo(

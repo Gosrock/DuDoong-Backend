@@ -6,6 +6,7 @@ import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.order.domain.Order;
+import band.gosrock.domain.domains.order.domain.OrderLineItem;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
 import band.gosrock.domain.domains.order.exception.CanNotCancelOrderException;
 import band.gosrock.domain.domains.order.exception.CanNotRefundOrderException;
@@ -17,7 +18,10 @@ import band.gosrock.domain.domains.order.exception.NotPaymentOrderException;
 import band.gosrock.domain.domains.order.exception.NotPendingOrderException;
 import band.gosrock.domain.domains.order.exception.NotRefundAvailableDateOrderException;
 import band.gosrock.domain.domains.order.exception.OrderInvalidItemKindPolicyException;
+import band.gosrock.domain.domains.order.exception.OrderItemOptionChangedException;
+import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
+import band.gosrock.domain.domains.ticket_item.domain.Option;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import java.util.List;
 import java.util.Objects;
@@ -34,6 +38,8 @@ public class OrderValidator {
     private final EventAdaptor eventAdaptor;
     private final TicketItemAdaptor itemAdaptor;
 
+    private final OptionAdaptor optionAdaptor;
+
     /** 주문을 생성할 수 있는지에 대한검증 */
     public void validCanCreate(Order order) {
         TicketItem item = getItem(order);
@@ -48,6 +54,21 @@ public class OrderValidator {
         validItemKindIsOneType(order);
         // 아이템 구매 가능 갯수를 넘지 않았는지.
         validItemPurchaseLimit(order, item);
+        // 오더 생성시에 아이템의 옵션이 변화가 일어났는지 체크합니다.
+        validOptionNotChange(order, item);
+    }
+
+    /** 모든 질문지 ( 옵션그룹 )에 응답했는지 검증합니다. ( 변화 했는지 검증 ) */
+    public void validOptionNotChange(Order order, TicketItem item) {
+        List<OrderLineItem> orderLineItems = order.getOrderLineItems();
+        List<Long> itemsOptionGroupIds = item.getOptionGroupIds();
+        orderLineItems.forEach(
+                orderLineItem -> {
+                    if (!Objects.equals(
+                            getAnswerOptionGroupIds(orderLineItem), itemsOptionGroupIds)) {
+                        throw OrderItemOptionChangedException.EXCEPTION;
+                    }
+                });
     }
 
     /** 승인 가능한 주문인지 검증합니다. */
@@ -100,6 +121,8 @@ public class OrderValidator {
         validItemStockEnough(order, item);
         // 아이템 구매 가능 횟수를 넘지 않는지.
         validItemPurchaseLimit(order, item);
+        // 옵션이 변했는지 검증
+        validOptionNotChange(order, item);
     }
 
     /** 주문을 철회할 수 있는 상태인지에대한 공통 검증 */
@@ -249,5 +272,14 @@ public class OrderValidator {
     private TicketItem getItem(Order order) {
         Long itemId = order.getItemId();
         return itemAdaptor.queryTicketItem(itemId);
+    }
+
+    private List<Long> getAnswerOptionGroupIds(OrderLineItem orderLineItem) {
+        List<Option> answerOptions = getOptionsFrom(orderLineItem);
+        return answerOptions.stream().map(Option::getOptionGroupId).sorted().toList();
+    }
+
+    private List<Option> getOptionsFrom(OrderLineItem orderLineItem) {
+        return optionAdaptor.findAllByIds(orderLineItem.getAnswerOptionIds());
     }
 }

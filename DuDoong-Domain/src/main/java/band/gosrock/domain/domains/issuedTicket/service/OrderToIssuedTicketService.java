@@ -75,7 +75,7 @@ public class OrderToIssuedTicketService {
 
     private List<IssuedTicketOptionAnswer> getIssuedTicketOptionAnswers(
             OrderLineItem orderLineItem) {
-        List<OrderOptionAnswer> orderOptionAnswers = orderLineItem.getOrderOptionAnswer();
+        List<OrderOptionAnswer> orderOptionAnswers = orderLineItem.getOrderOptionAnswers();
         List<Option> options = getOptionsFromOptionAnswers(orderOptionAnswers);
 
         return orderOptionAnswers.stream()

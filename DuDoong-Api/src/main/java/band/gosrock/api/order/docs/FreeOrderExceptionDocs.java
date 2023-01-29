@@ -11,6 +11,7 @@ import band.gosrock.domain.domains.order.exception.NotFreeOrderException;
 import band.gosrock.domain.domains.order.exception.NotPaymentOrderException;
 import band.gosrock.domain.domains.order.exception.NotPendingOrderException;
 import band.gosrock.domain.domains.order.exception.OrderInvalidItemKindPolicyException;
+import band.gosrock.domain.domains.order.exception.OrderItemOptionChangedException;
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLackException;
 import band.gosrock.domain.domains.ticket_item.exception.TicketPurchaseLimitException;
 
@@ -40,4 +41,7 @@ public class FreeOrderExceptionDocs implements SwaggerExampleExceptions {
 
     @ExplainError("티켓당 1인당 구매갯수 제한을 넘었을때")
     public DuDoongCodeException 티켓팅_구매갯수제한 = TicketPurchaseLimitException.EXCEPTION;
+
+    @ExplainError("주문 과정속에서 아이템의 옵션이 변화했을때 오류")
+    public DuDoongCodeException 아이템_옵션_변화 = OrderItemOptionChangedException.EXCEPTION;
 }
