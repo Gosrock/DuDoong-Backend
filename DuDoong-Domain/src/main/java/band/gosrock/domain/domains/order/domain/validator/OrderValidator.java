@@ -3,8 +3,6 @@ package band.gosrock.domain.domains.order.domain.validator;
 
 import band.gosrock.common.annotation.Validator;
 import band.gosrock.domain.common.vo.Money;
-import band.gosrock.domain.domains.cart.domain.Cart;
-import band.gosrock.domain.domains.cart.exception.CartInvalidItemKindPolicyException;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.order.domain.Order;
@@ -37,7 +35,7 @@ public class OrderValidator {
     private final TicketItemAdaptor itemAdaptor;
 
     /** 주문을 생성할 수 있는지에 대한검증 */
-    public void validCanCreate(Order order){
+    public void validCanCreate(Order order) {
         TicketItem item = getItem(order);
         Event event = getEvent(order);
         // 이벤트가 열려있는 상태인지
@@ -45,11 +43,11 @@ public class OrderValidator {
         // 티켓 예매 가능 시간이 아직 안지났는지
         validTicketingTime(event);
         // 재고가 충분히 있는지 ( 추후 티켓 발급하면서도 2차로 검증함 )
-        validItemStockEnough(order,item);
+        validItemStockEnough(order, item);
         // 아이템의 종류가 1종류인지
         validItemKindIsOneType(order);
         // 아이템 구매 가능 갯수를 넘지 않았는지.
-        validItemPurchaseLimit(order,item);
+        validItemPurchaseLimit(order, item);
     }
 
     /** 승인 가능한 주문인지 검증합니다. */
@@ -90,7 +88,7 @@ public class OrderValidator {
     /** ----------------------재료가 될 검증 메서드 ---------------------------- */
 
     /** 주문을 완료할 수 있는지에 대한 공통검증 */
-    public void validCanDone(Order order){
+    public void validCanDone(Order order) {
         TicketItem item = getItem(order);
         Event event = getEvent(order);
 
@@ -99,14 +97,13 @@ public class OrderValidator {
         // 티켓 예매 가능 시간이 아직 안지났는지
         validTicketingTime(event);
         // 재고가 충분히 있는지 ( 추후 티켓 발급하면서도 2차로 검증함 )
-        validItemStockEnough(order,item);
+        validItemStockEnough(order, item);
         // 아이템 구매 가능 횟수를 넘지 않는지.
-        validItemPurchaseLimit(order,item);
+        validItemPurchaseLimit(order, item);
     }
 
     /** 주문을 철회할 수 있는 상태인지에대한 공통 검증 */
-
-    public void validCanWithDraw(Order order){
+    public void validCanWithDraw(Order order) {
         Event event = getEvent(order);
         // 이벤트가 열려있는 상태인지
         validEventIsOpen(event);
@@ -243,6 +240,7 @@ public class OrderValidator {
     private OrderStatus getOrderStatus(Order order) {
         return order.getOrderStatus();
     }
+
     private Event getEvent(Order order) {
         Long itemGroupId = order.getItemGroupId();
         return eventAdaptor.findById(itemGroupId);
@@ -252,5 +250,4 @@ public class OrderValidator {
         Long itemId = order.getItemId();
         return itemAdaptor.queryTicketItem(itemId);
     }
-
 }

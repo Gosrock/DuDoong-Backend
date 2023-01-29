@@ -9,7 +9,6 @@ import band.gosrock.domain.common.events.order.WithDrawOrderEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.cart.domain.Cart;
-import band.gosrock.domain.domains.cart.domain.CartLineItem;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import band.gosrock.domain.domains.order.domain.validator.OrderValidator;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
@@ -114,38 +113,46 @@ public class Order extends BaseTimeEntity {
     }
 
     /** 카드, 간편결제등 토스 요청 과정이 필요한 결제를 생성합니다. */
-    public static Order createPaymentOrder(Long userId, Cart cart, TicketItem item,OrderValidator orderValidator) {
+    public static Order createPaymentOrder(
+            Long userId, Cart cart, TicketItem item, OrderValidator orderValidator) {
 
-        Order order = Order.builder()
-            .userId(userId)
-            .orderName(cart.getCartName())
-            .orderLineItems(getOrderLineItems(cart, item))
-            .orderStatus(OrderStatus.PENDING_PAYMENT)
-            .orderMethod(OrderMethod.PAYMENT)
-            .build();
+        Order order =
+                Order.builder()
+                        .userId(userId)
+                        .orderName(cart.getCartName())
+                        .orderLineItems(getOrderLineItems(cart, item))
+                        .orderStatus(OrderStatus.PENDING_PAYMENT)
+                        .orderMethod(OrderMethod.PAYMENT)
+                        .build();
         orderValidator.validCanCreate(order);
         return order;
     }
 
     /** 승인 결제인 주문을 생성합니다. */
-    public static Order createApproveOrder(Long userId, Cart cart, TicketItem item,OrderValidator orderValidator) {
+    public static Order createApproveOrder(
+            Long userId, Cart cart, TicketItem item, OrderValidator orderValidator) {
         // TODO : 생성 팩터리 리팩터링
         if (cart.isNeedPaid()) {
             throw InvalidOrderException.EXCEPTION;
         }
-        Order order = Order.builder()
-            .userId(userId)
-            .orderName(cart.getCartName())
-            .orderLineItems(getOrderLineItems(cart, item))
-            .orderStatus(OrderStatus.PENDING_APPROVE)
-            .orderMethod(OrderMethod.APPROVAL)
-            .build();
+        Order order =
+                Order.builder()
+                        .userId(userId)
+                        .orderName(cart.getCartName())
+                        .orderLineItems(getOrderLineItems(cart, item))
+                        .orderStatus(OrderStatus.PENDING_APPROVE)
+                        .orderMethod(OrderMethod.APPROVAL)
+                        .build();
         orderValidator.validCanCreate(order);
         return order;
     }
 
     public static Order createPaymentOrderWithCoupon(
-            Long userId, Cart cart, TicketItem item, IssuedCoupon coupon,OrderValidator orderValidator) {
+            Long userId,
+            Cart cart,
+            TicketItem item,
+            IssuedCoupon coupon,
+            OrderValidator orderValidator) {
         // 선착순 결제라면 결제 가능한 금액이 있어야 쿠폰 적용이 가능하다.
         // TODO : 생성 팩터리 리팩터링
         if (!item.isFCFS() || !cart.isNeedPaid()) {
@@ -155,8 +162,9 @@ public class Order extends BaseTimeEntity {
         Money supplyAmount = cart.getTotalPrice();
         OrderCouponVo couponVo = OrderCouponVo.of(coupon, supplyAmount);
         couponVo.validMinimumPaymentAmount(supplyAmount);
-        Order order = createPaymentOrder(userId, cart, item,orderValidator);
+        Order order = createPaymentOrder(userId, cart, item, orderValidator);
         order.attachCoupon(couponVo);
+        order.calculatePaymentInfo();
         return order;
     }
 
@@ -198,7 +206,8 @@ public class Order extends BaseTimeEntity {
     }
 
     /** 선착순 방식의 0원 결제입니다. */
-    public void freeConfirm(OrderValidator orderValidator) {
+    public void freeConfirm(Long currentUserId, OrderValidator orderValidator) {
+        orderValidator.validOwner(this, currentUserId);
         orderValidator.validCanFreeConfirm(this);
         this.approvedAt = LocalDateTime.now();
         this.orderStatus = OrderStatus.APPROVED;
@@ -213,7 +222,8 @@ public class Order extends BaseTimeEntity {
     }
 
     /** 사용자가 주문을 환불 시킵니다. */
-    public void refund(OrderValidator orderValidator) {
+    public void refund(Long currentUserId, OrderValidator orderValidator) {
+        orderValidator.validOwner(this, currentUserId);
         orderValidator.validCanRefund(this);
         this.orderStatus = OrderStatus.REFUND;
         Events.raise(WithDrawOrderEvent.from(this));

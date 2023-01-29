@@ -35,11 +35,11 @@ public class CreateOrderService {
         TicketItem ticketItem = itemAdaptor.queryTicketItem(cart.getItemId());
         // 결제 주문 생성
         if (ticketItem.isFCFS()) {
-            Order paymentOrder = Order.createPaymentOrder(userId, cart, ticketItem,orderValidator);
+            Order paymentOrder = Order.createPaymentOrder(userId, cart, ticketItem, orderValidator);
             return orderAdaptor.save(paymentOrder).getUuid();
         }
         // 승인 주문 생성
-        Order approveOrder = Order.createApproveOrder(userId, cart, ticketItem,orderValidator);
+        Order approveOrder = Order.createApproveOrder(userId, cart, ticketItem, orderValidator);
         return orderAdaptor.save(approveOrder).getUuid();
     }
 
@@ -48,8 +48,9 @@ public class CreateOrderService {
         IssuedCoupon coupon = issuedCouponAdaptor.query(couponId);
         Cart cart = cartAdaptor.queryCart(cartId, userId);
         TicketItem ticketItem = itemAdaptor.queryTicketItem(cart.getItemId());
-        Order order = Order.createPaymentOrderWithCoupon(userId, cart, ticketItem, coupon,orderValidator);
-        order.calculatePaymentInfo();
+        Order order =
+                Order.createPaymentOrderWithCoupon(
+                        userId, cart, ticketItem, coupon, orderValidator);
         return orderAdaptor.save(order).getUuid();
     }
 }

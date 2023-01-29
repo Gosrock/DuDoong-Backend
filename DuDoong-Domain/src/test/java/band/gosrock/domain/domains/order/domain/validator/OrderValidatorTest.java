@@ -37,14 +37,13 @@ class OrderValidatorTest {
     @Mock Event availableRefundEvent;
     @Mock Event unavailableRefundEvent;
     @Mock EventAdaptor eventAdaptor;
-    @Mock
-    TicketItemAdaptor ticketItemAdaptor;
+    @Mock TicketItemAdaptor ticketItemAdaptor;
 
     OrderValidator orderValidator;
 
     @BeforeEach
     void setUp() {
-        orderValidator = new OrderValidator(eventAdaptor,ticketItemAdaptor);
+        orderValidator = new OrderValidator(eventAdaptor, ticketItemAdaptor);
     }
 
     @Test
