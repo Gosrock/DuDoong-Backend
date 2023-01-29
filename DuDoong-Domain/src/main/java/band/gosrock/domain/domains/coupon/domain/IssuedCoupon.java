@@ -32,7 +32,8 @@ public class IssuedCoupon extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coupon_campaign_id", nullable = false)
     private CouponCampaign couponCampaign;
-    /** 주문에서 사용하는 할인 금액 계산 함수, 할인 금액보다 결제 금액이 작을 경우 할인 불가로 Money.ZERO 리턴 */
+
+    /** 주문에서 사용하는 할인 금액 계산 함수, 할인 금액보다 결제 금액이 작을 경우 할인 불가로 에러 발생 */
     public Money getDiscountAmount(Money supplyAmount) {
         if (couponCampaign.getDiscountType().equals(DiscountType.AMOUNT)) { // 정액 할인
             return checkSupplyIsGreaterThenDiscount(
