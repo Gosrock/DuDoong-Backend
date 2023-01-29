@@ -8,7 +8,7 @@ import band.gosrock.common.interfaces.SwaggerExampleExceptions;
 import band.gosrock.domain.domains.event.exception.EventIsNotOpenStatusException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
-import band.gosrock.domain.domains.order.exception.OrderInvalidItemKindPolicyException;
+import band.gosrock.domain.domains.order.exception.OrdeItemNotOneTypeException;
 import band.gosrock.domain.domains.order.exception.OrderItemOptionChangedException;
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLackException;
 import band.gosrock.domain.domains.ticket_item.exception.TicketPurchaseLimitException;
@@ -26,7 +26,7 @@ public class CreateOrderExceptionDocs implements SwaggerExampleExceptions {
     public DuDoongCodeException 티켓팅_시간지남 = EventTicketingTimeIsPassedException.EXCEPTION;
 
     @ExplainError("티켓 아이템이 한 종류가 아닐 떄")
-    public DuDoongCodeException 아이템은_한종류여야함 = OrderInvalidItemKindPolicyException.EXCEPTION;
+    public DuDoongCodeException 아이템은_한종류여야함 = OrdeItemNotOneTypeException.EXCEPTION;
 
     @ExplainError("아이템의 재고가 부족한 상태일 때")
     public DuDoongCodeException 티켓팅_재고부족 = TicketItemQuantityLackException.EXCEPTION;

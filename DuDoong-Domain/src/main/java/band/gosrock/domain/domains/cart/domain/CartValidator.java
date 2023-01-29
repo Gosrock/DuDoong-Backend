@@ -2,7 +2,7 @@ package band.gosrock.domain.domains.cart.domain;
 
 
 import band.gosrock.common.annotation.Validator;
-import band.gosrock.domain.domains.cart.exception.CartInvalidItemKindPolicyException;
+import band.gosrock.domain.domains.cart.exception.CartItemNotOneTypeException;
 import band.gosrock.domain.domains.cart.exception.CartNotAnswerAllOptionGroupException;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor;
@@ -57,7 +57,7 @@ public class CartValidator {
     public void validItemKindIsOneType(Cart cart) {
         List<Long> itemIds = cart.getDistinctItemIds();
         if (itemIds.size() != 1) {
-            throw CartInvalidItemKindPolicyException.EXCEPTION;
+            throw CartItemNotOneTypeException.EXCEPTION;
         }
     }
 

@@ -17,7 +17,7 @@ import band.gosrock.domain.domains.order.exception.NotOwnerOrderException;
 import band.gosrock.domain.domains.order.exception.NotPaymentOrderException;
 import band.gosrock.domain.domains.order.exception.NotPendingOrderException;
 import band.gosrock.domain.domains.order.exception.NotRefundAvailableDateOrderException;
-import band.gosrock.domain.domains.order.exception.OrderInvalidItemKindPolicyException;
+import band.gosrock.domain.domains.order.exception.OrdeItemNotOneTypeException;
 import band.gosrock.domain.domains.order.exception.OrderItemOptionChangedException;
 import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
@@ -148,7 +148,7 @@ public class OrderValidator {
     public void validItemKindIsOneType(Order order) {
         List<Long> itemIds = order.getDistinctItemIds();
         if (itemIds.size() != 1) {
-            throw OrderInvalidItemKindPolicyException.EXCEPTION;
+            throw OrdeItemNotOneTypeException.EXCEPTION;
         }
     }
 

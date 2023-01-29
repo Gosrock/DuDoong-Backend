@@ -5,8 +5,8 @@ import band.gosrock.common.annotation.ExceptionDoc;
 import band.gosrock.common.annotation.ExplainError;
 import band.gosrock.common.exception.DuDoongCodeException;
 import band.gosrock.common.interfaces.SwaggerExampleExceptions;
-import band.gosrock.domain.domains.cart.exception.CartInvalidItemKindPolicyException;
 import band.gosrock.domain.domains.cart.exception.CartInvalidOptionAnswerException;
+import band.gosrock.domain.domains.cart.exception.CartItemNotOneTypeException;
 import band.gosrock.domain.domains.cart.exception.CartNotAnswerAllOptionGroupException;
 import band.gosrock.domain.domains.event.exception.EventIsNotOpenStatusException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
@@ -29,7 +29,7 @@ public class CreateCartExceptionDocs implements SwaggerExampleExceptions {
     public DuDoongCodeException 티켓팅_시간지남 = EventTicketingTimeIsPassedException.EXCEPTION;
 
     @ExplainError("티켓 아이템이 한 종류가 아닐 떄")
-    public DuDoongCodeException 아이템은_한종류여야함 = CartInvalidItemKindPolicyException.EXCEPTION;
+    public DuDoongCodeException 아이템은_한종류여야함 = CartItemNotOneTypeException.EXCEPTION;
 
     @ExplainError("아이템의 재고가 부족한 상태일 때")
     public DuDoongCodeException 티켓팅_재고부족 = TicketItemQuantityLackException.EXCEPTION;

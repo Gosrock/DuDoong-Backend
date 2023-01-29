@@ -19,6 +19,7 @@ import band.gosrock.domain.domains.order.exception.NotOwnerOrderException;
 import band.gosrock.domain.domains.order.exception.NotPaymentOrderException;
 import band.gosrock.domain.domains.order.exception.NotPendingOrderException;
 import band.gosrock.domain.domains.order.exception.NotRefundAvailableDateOrderException;
+import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
 import java.util.Arrays;
 import java.util.List;
@@ -38,12 +39,13 @@ class OrderValidatorTest {
     @Mock Event unavailableRefundEvent;
     @Mock EventAdaptor eventAdaptor;
     @Mock TicketItemAdaptor ticketItemAdaptor;
+    @Mock OptionAdaptor optionAdaptor;
 
     OrderValidator orderValidator;
 
     @BeforeEach
     void setUp() {
-        orderValidator = new OrderValidator(eventAdaptor, ticketItemAdaptor);
+        orderValidator = new OrderValidator(eventAdaptor, ticketItemAdaptor, optionAdaptor);
     }
 
     @Test
