@@ -9,6 +9,7 @@ import band.gosrock.domain.common.events.order.WithDrawOrderEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.cart.domain.Cart;
+import band.gosrock.domain.domains.cart.domain.CartLineItem;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import band.gosrock.domain.domains.order.domain.validator.OrderValidator;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
@@ -113,34 +114,40 @@ public class Order extends BaseTimeEntity {
     }
 
     /** 카드, 간편결제등 토스 요청 과정이 필요한 결제를 생성합니다. */
-    public static Order createPaymentOrder(Long userId, Cart cart, TicketItem item) {
+    public static Order createPaymentOrder(Long userId, Cart cart, TicketItem item,OrderValidator orderValidator) {
 
-        return Order.builder()
-                .userId(userId)
-                .orderName(cart.getCartName())
-                .orderLineItems(getOrderLineItems(cart, item))
-                .orderStatus(OrderStatus.PENDING_PAYMENT)
-                .orderMethod(OrderMethod.PAYMENT)
-                .build();
+        Order order = Order.builder()
+            .userId(userId)
+            .orderName(cart.getCartName())
+            .orderLineItems(getOrderLineItems(cart, item))
+            .orderStatus(OrderStatus.PENDING_PAYMENT)
+            .orderMethod(OrderMethod.PAYMENT)
+            .build();
+        orderValidator.validCanCreate(order);
+        return order;
     }
 
     /** 승인 결제인 주문을 생성합니다. */
-    public static Order createApproveOrder(Long userId, Cart cart, TicketItem item) {
+    public static Order createApproveOrder(Long userId, Cart cart, TicketItem item,OrderValidator orderValidator) {
+        // TODO : 생성 팩터리 리팩터링
         if (cart.isNeedPaid()) {
             throw InvalidOrderException.EXCEPTION;
         }
-        return Order.builder()
-                .userId(userId)
-                .orderName(cart.getCartName())
-                .orderLineItems(getOrderLineItems(cart, item))
-                .orderStatus(OrderStatus.PENDING_APPROVE)
-                .orderMethod(OrderMethod.APPROVAL)
-                .build();
+        Order order = Order.builder()
+            .userId(userId)
+            .orderName(cart.getCartName())
+            .orderLineItems(getOrderLineItems(cart, item))
+            .orderStatus(OrderStatus.PENDING_APPROVE)
+            .orderMethod(OrderMethod.APPROVAL)
+            .build();
+        orderValidator.validCanCreate(order);
+        return order;
     }
 
     public static Order createPaymentOrderWithCoupon(
-            Long userId, Cart cart, TicketItem item, IssuedCoupon coupon) {
+            Long userId, Cart cart, TicketItem item, IssuedCoupon coupon,OrderValidator orderValidator) {
         // 선착순 결제라면 결제 가능한 금액이 있어야 쿠폰 적용이 가능하다.
+        // TODO : 생성 팩터리 리팩터링
         if (!item.isFCFS() || !cart.isNeedPaid()) {
             throw InvalidOrderException.EXCEPTION;
         }
@@ -148,7 +155,7 @@ public class Order extends BaseTimeEntity {
         Money supplyAmount = cart.getTotalPrice();
         OrderCouponVo couponVo = OrderCouponVo.of(coupon, supplyAmount);
         couponVo.validMinimumPaymentAmount(supplyAmount);
-        Order order = createPaymentOrder(userId, cart, item);
+        Order order = createPaymentOrder(userId, cart, item,orderValidator);
         order.attachCoupon(couponVo);
         return order;
     }
@@ -303,5 +310,13 @@ public class Order extends BaseTimeEntity {
     /** PG 사를 통해 결제가 된 주문인지 반환합니다. */
     public Boolean isPaid() {
         return isNeedPaid();
+    }
+
+    public List<Long> getDistinctItemIds() {
+        return this.orderLineItems.stream().map(OrderLineItem::getItemId).distinct().toList();
+    }
+
+    public Long getTotalQuantity() {
+        return orderLineItems.stream().map(OrderLineItem::getQuantity).reduce(0L, Long::sum);
     }
 }

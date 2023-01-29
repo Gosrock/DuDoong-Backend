@@ -30,6 +30,12 @@ public class CartValidator {
         validEventIsOpen(event);
         validTicketingTime(event);
         validItemStockEnough(cart, item);
+        validItemPurchaseLimit(cart,item);
+    }
+
+    /** 아이템의 구매갯수 제한을 넘지 않았는지 */
+    public void validItemPurchaseLimit(Cart cart, TicketItem item) {
+        item.validPurchaseLimit(cart.getTotalQuantity());
     }
 
     /** 티켓팅을 할 수 있는 시간을 안지났는지 검증합니다. */

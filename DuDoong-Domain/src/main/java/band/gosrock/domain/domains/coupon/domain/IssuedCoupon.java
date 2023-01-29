@@ -30,8 +30,7 @@ public class IssuedCoupon extends BaseTimeEntity {
 
     private Long userId;
 
-    @ColumnDefault("'false'")
-    private boolean usageStatus = false;
+    private Boolean usageStatus = Boolean.FALSE;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coupon_campaign_id", nullable = false)

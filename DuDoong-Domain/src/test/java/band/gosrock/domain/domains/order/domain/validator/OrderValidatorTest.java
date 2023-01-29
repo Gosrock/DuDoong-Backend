@@ -19,6 +19,7 @@ import band.gosrock.domain.domains.order.exception.NotOwnerOrderException;
 import band.gosrock.domain.domains.order.exception.NotPaymentOrderException;
 import band.gosrock.domain.domains.order.exception.NotPendingOrderException;
 import band.gosrock.domain.domains.order.exception.NotRefundAvailableDateOrderException;
+import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,12 +37,14 @@ class OrderValidatorTest {
     @Mock Event availableRefundEvent;
     @Mock Event unavailableRefundEvent;
     @Mock EventAdaptor eventAdaptor;
+    @Mock
+    TicketItemAdaptor ticketItemAdaptor;
 
     OrderValidator orderValidator;
 
     @BeforeEach
     void setUp() {
-        orderValidator = new OrderValidator(eventAdaptor);
+        orderValidator = new OrderValidator(eventAdaptor,ticketItemAdaptor);
     }
 
     @Test

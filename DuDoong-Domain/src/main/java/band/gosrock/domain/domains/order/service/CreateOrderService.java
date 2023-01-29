@@ -8,6 +8,7 @@ import band.gosrock.domain.domains.coupon.adaptor.IssuedCouponAdaptor;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
+import band.gosrock.domain.domains.order.domain.validator.OrderValidator;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import lombok.RequiredArgsConstructor;
@@ -26,17 +27,19 @@ public class CreateOrderService {
 
     private final IssuedCouponAdaptor issuedCouponAdaptor;
 
+    private final OrderValidator orderValidator;
+
     @Transactional
     public String withOutCoupon(Long cartId, Long userId) {
         Cart cart = cartAdaptor.queryCart(cartId, userId);
         TicketItem ticketItem = itemAdaptor.queryTicketItem(cart.getItemId());
         // 결제 주문 생성
         if (ticketItem.isFCFS()) {
-            Order paymentOrder = Order.createPaymentOrder(userId, cart, ticketItem);
+            Order paymentOrder = Order.createPaymentOrder(userId, cart, ticketItem,orderValidator);
             return orderAdaptor.save(paymentOrder).getUuid();
         }
         // 승인 주문 생성
-        Order approveOrder = Order.createApproveOrder(userId, cart, ticketItem);
+        Order approveOrder = Order.createApproveOrder(userId, cart, ticketItem,orderValidator);
         return orderAdaptor.save(approveOrder).getUuid();
     }
 
@@ -45,7 +48,7 @@ public class CreateOrderService {
         IssuedCoupon coupon = issuedCouponAdaptor.query(couponId);
         Cart cart = cartAdaptor.queryCart(cartId, userId);
         TicketItem ticketItem = itemAdaptor.queryTicketItem(cart.getItemId());
-        Order order = Order.createPaymentOrderWithCoupon(userId, cart, ticketItem, coupon);
+        Order order = Order.createPaymentOrderWithCoupon(userId, cart, ticketItem, coupon,orderValidator);
         order.calculatePaymentInfo();
         return orderAdaptor.save(order).getUuid();
     }

@@ -33,7 +33,7 @@ public class ReadMyPageIssuedCouponUseCase {
                         .filter(
                                 issuedCoupon ->
                                         issuedCoupon.isAvailableTerm()
-                                                && !issuedCoupon.isUsageStatus())
+                                                && !issuedCoupon.getUsageStatus())
                         .toList();
 
         // 만료된 쿠폰 조회(사용 완료, 유효 기간 만료)
@@ -43,7 +43,7 @@ public class ReadMyPageIssuedCouponUseCase {
                             .filter(
                                     issuedCoupon ->
                                             !issuedCoupon.isAvailableTerm()
-                                                    || issuedCoupon.isUsageStatus())
+                                                    || issuedCoupon.getUsageStatus())
                             .toList();
             return issuedCouponMapper.toReadIssuedCouponMyPageResponse(
                     validTermAvailableIssuedCoupons, expiredValidTermIssuedCoupons);

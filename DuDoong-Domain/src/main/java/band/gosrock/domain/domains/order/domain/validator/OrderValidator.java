@@ -3,6 +3,8 @@ package band.gosrock.domain.domains.order.domain.validator;
 
 import band.gosrock.common.annotation.Validator;
 import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.domains.cart.domain.Cart;
+import band.gosrock.domain.domains.cart.exception.CartInvalidItemKindPolicyException;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.order.domain.Order;
@@ -16,6 +18,9 @@ import band.gosrock.domain.domains.order.exception.NotOwnerOrderException;
 import band.gosrock.domain.domains.order.exception.NotPaymentOrderException;
 import band.gosrock.domain.domains.order.exception.NotPendingOrderException;
 import band.gosrock.domain.domains.order.exception.NotRefundAvailableDateOrderException;
+import band.gosrock.domain.domains.order.exception.OrderInvalidItemKindPolicyException;
+import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
+import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -29,35 +34,112 @@ import lombok.RequiredArgsConstructor;
 public class OrderValidator {
 
     private final EventAdaptor eventAdaptor;
+    private final TicketItemAdaptor itemAdaptor;
+
+    /** 주문을 생성할 수 있는지에 대한검증 */
+    public void validCanCreate(Order order){
+        TicketItem item = getItem(order);
+        Event event = getEvent(order);
+        // 이벤트가 열려있는 상태인지
+        validEventIsOpen(event);
+        // 티켓 예매 가능 시간이 아직 안지났는지
+        validTicketingTime(event);
+        // 재고가 충분히 있는지 ( 추후 티켓 발급하면서도 2차로 검증함 )
+        validItemStockEnough(order,item);
+        // 아이템의 종류가 1종류인지
+        validItemKindIsOneType(order);
+        // 아이템 구매 가능 갯수를 넘지 않았는지.
+        validItemPurchaseLimit(order,item);
+    }
 
     /** 승인 가능한 주문인지 검증합니다. */
     public void validCanApproveOrder(Order order) {
         validMethodIsCanApprove(order);
         validStatusCanApprove(getOrderStatus(order));
+        validCanDone(order);
     }
 
     /** 결제 방식의 주문을 승인할수있는지 확인합니다. */
     public void validCanConfirmPayment(Order order) {
         validMethodIsPaymentOrder(order);
         validStatusCanPaymentConfirm(getOrderStatus(order));
+        validCanDone(order);
     }
 
     /** 선착순 방식 , 무료 주문을 바로 승인 할 수 있는 지 검증합니다 */
     public void validCanFreeConfirm(Order order) {
         validAmountIsFree(order);
         validStatusCanPaymentConfirm(getOrderStatus(order));
+        validCanDone(order);
     }
 
     /** 취소할 수 있는 주문인지 검증합니다. */
     public void validCanCancel(Order order) {
         validAvailableRefundDate(order);
         validStatusCanCancel(getOrderStatus(order));
+        validCanWithDraw(order);
     }
 
     /** 환불 할 수 있는 주문인지 검증합니다. */
     public void validCanRefund(Order order) {
         validAvailableRefundDate(order);
         validStatusCanRefund(getOrderStatus(order));
+        validCanWithDraw(order);
+    }
+
+    /** ----------------------재료가 될 검증 메서드 ---------------------------- */
+
+    /** 주문을 완료할 수 있는지에 대한 공통검증 */
+    public void validCanDone(Order order){
+        TicketItem item = getItem(order);
+        Event event = getEvent(order);
+
+        // 이벤트가 열려있는 상태인지
+        validEventIsOpen(event);
+        // 티켓 예매 가능 시간이 아직 안지났는지
+        validTicketingTime(event);
+        // 재고가 충분히 있는지 ( 추후 티켓 발급하면서도 2차로 검증함 )
+        validItemStockEnough(order,item);
+        // 아이템 구매 가능 횟수를 넘지 않는지.
+        validItemPurchaseLimit(order,item);
+    }
+
+    /** 주문을 철회할 수 있는 상태인지에대한 공통 검증 */
+
+    public void validCanWithDraw(Order order){
+        Event event = getEvent(order);
+        // 이벤트가 열려있는 상태인지
+        validEventIsOpen(event);
+        // 티켓 예매 가능 시간이 아직 안지났는지
+        validTicketingTime(event);
+    }
+
+    /** 아이템의 구매갯수 제한을 넘지 않았는지 */
+    public void validItemPurchaseLimit(Order order, TicketItem item) {
+        item.validPurchaseLimit(order.getTotalQuantity());
+    }
+
+    /** 이벤트가 열려있는 상태인지 */
+    public void validEventIsOpen(Event event) {
+        event.validStatusOpen();
+    }
+
+    /** 아이템의 종류가 1종류인지. */
+    public void validItemKindIsOneType(Order order) {
+        List<Long> itemIds = order.getDistinctItemIds();
+        if (itemIds.size() != 1) {
+            throw OrderInvalidItemKindPolicyException.EXCEPTION;
+        }
+    }
+
+    /** 티켓 예매 가능 시간이 아직 안지났는지. */
+    public void validTicketingTime(Event event) {
+        event.validTicketingTime();
+    }
+
+    /** 아이템의 재고가 충분한지 확인합니다. */
+    public void validItemStockEnough(Order order, TicketItem item) {
+        item.validEnoughQuantity(order.getTotalQuantity());
     }
 
     /** 주문 방식이 승인 주문인지 검증합니다 */
@@ -161,4 +243,14 @@ public class OrderValidator {
     private OrderStatus getOrderStatus(Order order) {
         return order.getOrderStatus();
     }
+    private Event getEvent(Order order) {
+        Long itemGroupId = order.getItemGroupId();
+        return eventAdaptor.findById(itemGroupId);
+    }
+
+    private TicketItem getItem(Order order) {
+        Long itemId = order.getItemId();
+        return itemAdaptor.queryTicketItem(itemId);
+    }
+
 }
