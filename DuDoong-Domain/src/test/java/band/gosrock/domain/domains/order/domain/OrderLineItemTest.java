@@ -33,6 +33,7 @@ class OrderLineItemTest {
 
     @BeforeEach
     void setUp() {
+
         orderLineItem =
                 OrderLineItem.builder()
                         .orderOptionAnswer(List.of(orderOptionAnswer1, orderOptionAnswer2))
@@ -44,7 +45,7 @@ class OrderLineItemTest {
     @Test
     void 아이템_가격_조회_검증() {
         // given
-        given(ticketItem.getPrice()).willReturn(money3000);
+        given(orderItem.getPrice()).willReturn(money3000);
         // when
         Money itemPrice = orderLineItem.getItemPrice();
 
@@ -73,7 +74,7 @@ class OrderLineItemTest {
         given(orderOptionAnswer1.getAdditionalPrice()).willReturn(optionAnswerPrice1);
         Money optionAnswerPrice2 = Money.wons(2000L);
         given(orderOptionAnswer2.getAdditionalPrice()).willReturn(optionAnswerPrice2);
-
+        given(orderItem.getPrice()).willReturn(money3000);
         // when
         Money totalOrderLinePrice = orderLineItem.getTotalOrderLinePrice();
         // then
@@ -84,6 +85,7 @@ class OrderLineItemTest {
     @Test
     void 옵션에_가격이_붙으면_결제가_필요한_오더라인이다() {
         // given
+        given(orderItem.getPrice()).willReturn(money3000);
         Money optionAnswerPrice1 = Money.wons(1000L);
         given(orderOptionAnswer1.getAdditionalPrice()).willReturn(optionAnswerPrice1);
         Money optionAnswerPrice2 = Money.wons(2000L);
@@ -97,6 +99,7 @@ class OrderLineItemTest {
     @Test
     void 아이템에_가격이_있으면_결제가_필요한_오더라인이다() {
         // given
+        given(orderItem.getPrice()).willReturn(money3000);
         given(orderOptionAnswer1.getAdditionalPrice()).willReturn(Money.ZERO);
         given(orderOptionAnswer2.getAdditionalPrice()).willReturn(Money.ZERO);
         // when
@@ -108,7 +111,7 @@ class OrderLineItemTest {
     @Test
     void 가격이없는_오더라인이면_결제가_필요하지않다() {
         // given
-        given(ticketItem.getPrice()).willReturn(Money.ZERO);
+        given(orderItem.getPrice()).willReturn(Money.ZERO);
 
         orderLineItem =
                 OrderLineItem.builder()
@@ -161,7 +164,6 @@ class OrderLineItemTest {
     @Test
     public void 주문라인_정적팩터리_메서드_검증() {
         // given
-        String name = "아이템이름";
         List<CartOptionAnswer> emptyCartOptionAnswer = List.of();
         List<OrderOptionAnswer> emptyOrderOptionAnswers =
                 emptyCartOptionAnswer.stream().map(OrderOptionAnswer::from).toList();
