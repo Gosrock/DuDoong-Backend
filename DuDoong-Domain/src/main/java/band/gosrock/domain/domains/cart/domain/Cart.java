@@ -85,7 +85,7 @@ public class Cart extends BaseTimeEntity {
         return getCartLineItem().getItemId();
     }
 
-    private CartLineItem getCartLineItem() {
+    public CartLineItem getCartLineItem() {
         return cartLineItems.stream()
                 .findFirst()
                 .orElseThrow(() -> CartLineItemNotFoundException.EXCEPTION);

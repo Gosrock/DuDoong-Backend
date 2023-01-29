@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 
 import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.domains.cart.domain.CartLineItem;
+import band.gosrock.domain.domains.cart.domain.CartOptionAnswer;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,9 +20,11 @@ class OrderLineItemTest {
     @Mock OrderOptionAnswer orderOptionAnswer1;
 
     @Mock OrderOptionAnswer orderOptionAnswer2;
+    @Mock CartLineItem cartLineItem;
     Long quantity = 2L;
 
     @Mock TicketItem ticketItem;
+    @Mock OrderItemVo orderItem;
 
     Money money3000 = Money.wons(3000L);
 
@@ -29,19 +33,18 @@ class OrderLineItemTest {
 
     @BeforeEach
     void setUp() {
-        given(ticketItem.getPrice()).willReturn(money3000);
-
         orderLineItem =
                 OrderLineItem.builder()
                         .orderOptionAnswer(List.of(orderOptionAnswer1, orderOptionAnswer2))
                         .quantity(quantity)
-                        .ticketItem(ticketItem)
+                        .orderItemVo(orderItem)
                         .build();
     }
 
     @Test
     void 아이템_가격_조회_검증() {
         // given
+        given(ticketItem.getPrice()).willReturn(money3000);
         // when
         Money itemPrice = orderLineItem.getItemPrice();
 
@@ -111,7 +114,7 @@ class OrderLineItemTest {
                 OrderLineItem.builder()
                         .orderOptionAnswer(List.of(orderOptionAnswer1, orderOptionAnswer2))
                         .quantity(quantity)
-                        .ticketItem(ticketItem)
+                        .orderItemVo(orderItem)
                         .build();
 
         given(orderOptionAnswer1.getAdditionalPrice()).willReturn(Money.ZERO);
@@ -120,5 +123,54 @@ class OrderLineItemTest {
         Boolean needPayment = orderLineItem.isNeedPaid();
 
         assertFalse(needPayment);
+    }
+
+    @Test
+    public void 주문라인_아이템아이디_조회_검증() {
+        // given
+        long itemId = 1L;
+        given(orderItem.getItemId()).willReturn(itemId);
+        // when
+        Long findItemId = orderLineItem.getItemId();
+        // then
+        assertEquals(findItemId, itemId);
+    }
+
+    @Test
+    public void 주문라인_아이템그룹아이디_조회_검증() {
+        // given
+        long itemGroupId = 1L;
+        given(orderItem.getItemGroupId()).willReturn(itemGroupId);
+        // when
+        Long findItemGroupId = orderLineItem.getItemGroupId();
+        // then
+        assertEquals(findItemGroupId, itemGroupId);
+    }
+
+    @Test
+    public void 주문라인_아이템이름_조회_검증() {
+        // given
+        String name = "아이템이름";
+        given(orderItem.getName()).willReturn(name);
+        // when
+        String itemName = orderLineItem.getItemName();
+        // then
+        assertEquals(itemName, name);
+    }
+
+    @Test
+    public void 주문라인_정적팩터리_메서드_검증() {
+        // given
+        String name = "아이템이름";
+        List<CartOptionAnswer> emptyCartOptionAnswer = List.of();
+        List<OrderOptionAnswer> emptyOrderOptionAnswers =
+                emptyCartOptionAnswer.stream().map(OrderOptionAnswer::from).toList();
+        given(cartLineItem.getCartOptionAnswers()).willReturn(emptyCartOptionAnswer);
+        given(cartLineItem.getQuantity()).willReturn(quantity);
+        // when
+        OrderLineItem build = OrderLineItem.of(cartLineItem, ticketItem);
+        // then
+        assertEquals(build.getOrderOptionAnswers(), emptyOrderOptionAnswers);
+        assertEquals(build.getQuantity(), quantity);
     }
 }

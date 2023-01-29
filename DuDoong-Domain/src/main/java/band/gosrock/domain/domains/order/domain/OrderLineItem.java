@@ -43,8 +43,8 @@ public class OrderLineItem extends BaseTimeEntity {
     /** ---------------------------- 생성 관련 메서드 ---------------------------------- */
     @Builder
     public OrderLineItem(
-            TicketItem ticketItem, Long quantity, List<OrderOptionAnswer> orderOptionAnswer) {
-        this.orderItem = OrderItemVo.from(ticketItem);
+            OrderItemVo orderItemVo, Long quantity, List<OrderOptionAnswer> orderOptionAnswer) {
+        this.orderItem = orderItemVo;
         this.quantity = quantity;
         this.orderOptionAnswers.addAll(orderOptionAnswer);
     }
@@ -56,7 +56,7 @@ public class OrderLineItem extends BaseTimeEntity {
         return OrderLineItem.builder()
                 .orderOptionAnswer(orderOptionAnswers)
                 .quantity(cartLineItem.getQuantity())
-                .ticketItem(ticketItem)
+                .orderItemVo(OrderItemVo.from(ticketItem))
                 .build();
     }
 
