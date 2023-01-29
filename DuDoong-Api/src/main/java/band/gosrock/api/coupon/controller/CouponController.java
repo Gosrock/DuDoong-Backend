@@ -41,7 +41,7 @@ public class CouponController {
     @Operation(summary = "내 쿠폰 조회 API")
     @GetMapping("")
     public ReadIssuedCouponResponse getAllMyIssuedCoupons(
-            @RequestParam(required = false, defaultValue = "false") Boolean expired) {
+            @RequestParam(required = false, defaultValue = "true") Boolean expired) {
         return readIssuedCouponUseCase.execute(expired);
     }
 }
