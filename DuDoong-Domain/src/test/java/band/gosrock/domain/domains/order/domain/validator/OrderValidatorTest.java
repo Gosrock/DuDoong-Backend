@@ -178,7 +178,7 @@ class OrderValidatorTest {
         // given
         List<Executable> executables =
                 Arrays.stream(OrderStatus.values())
-                        .filter(orderStatus -> !orderValidator.isStatusWithDraw(orderStatus))
+                        .filter(orderStatus -> !orderValidator.isStatusCanWithDraw(orderStatus))
                         .<Executable>map(
                                 orderStatus ->
                                         () -> orderValidator.validStatusCanCancel(orderStatus))
@@ -204,7 +204,7 @@ class OrderValidatorTest {
         // given
         List<Executable> executables =
                 Arrays.stream(OrderStatus.values())
-                        .filter(orderStatus -> !orderValidator.isStatusWithDraw(orderStatus))
+                        .filter(orderStatus -> !orderValidator.isStatusCanWithDraw(orderStatus))
                         .<Executable>map(
                                 orderStatus ->
                                         () -> orderValidator.validStatusCanRefund(orderStatus))

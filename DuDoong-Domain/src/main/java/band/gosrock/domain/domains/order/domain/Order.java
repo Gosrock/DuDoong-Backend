@@ -115,7 +115,6 @@ public class Order extends BaseTimeEntity {
     /** 카드, 간편결제등 토스 요청 과정이 필요한 결제를 생성합니다. */
     public static Order createPaymentOrder(
             Long userId, Cart cart, TicketItem item, OrderValidator orderValidator) {
-
         Order order =
                 Order.builder()
                         .userId(userId)
@@ -131,7 +130,6 @@ public class Order extends BaseTimeEntity {
     /** 승인 결제인 주문을 생성합니다. */
     public static Order createApproveOrder(
             Long userId, Cart cart, TicketItem item, OrderValidator orderValidator) {
-        // TODO : 생성 팩터리 리팩터링
         if (cart.isNeedPaid()) {
             throw InvalidOrderException.EXCEPTION;
         }
@@ -154,7 +152,6 @@ public class Order extends BaseTimeEntity {
             IssuedCoupon coupon,
             OrderValidator orderValidator) {
         // 선착순 결제라면 결제 가능한 금액이 있어야 쿠폰 적용이 가능하다.
-        // TODO : 생성 팩터리 리팩터링
         if (!item.isFCFS() || !cart.isNeedPaid()) {
             throw InvalidOrderException.EXCEPTION;
         }

@@ -8,6 +8,7 @@ import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityException;
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLackException;
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLargeException;
+import band.gosrock.domain.domains.ticket_item.exception.TicketPurchaseLimitException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -135,7 +136,7 @@ public class TicketItem extends BaseTimeEntity {
 
     public void validPurchaseLimit(Long quantity) {
         if (this.purchaseLimit < quantity) {
-            throw TicketItemQuantityLackException.EXCEPTION;
+            throw TicketPurchaseLimitException.EXCEPTION;
         }
     }
 

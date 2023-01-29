@@ -204,21 +204,21 @@ public class OrderValidator {
     }
 
     /** 주문상태가 철회가능한 상태인지를 반환합니다. */
-    public Boolean isStatusWithDraw(OrderStatus orderStatus) {
+    public Boolean isStatusCanWithDraw(OrderStatus orderStatus) {
         return Objects.equals(orderStatus, OrderStatus.CONFIRM)
                 || Objects.equals(orderStatus, OrderStatus.APPROVED);
     }
 
     /** 주문 상태가 취소가능한 상태인지 검증합니다. */
     public void validStatusCanCancel(OrderStatus orderStatus) {
-        if (!isStatusWithDraw(orderStatus)) {
+        if (!isStatusCanWithDraw(orderStatus)) {
             throw CanNotCancelOrderException.EXCEPTION;
         }
     }
 
     /** 주문 상태가 환불가능한 상태인지 검증합니다. */
     public void validStatusCanRefund(OrderStatus orderStatus) {
-        if (!isStatusWithDraw(orderStatus)) {
+        if (!isStatusCanWithDraw(orderStatus)) {
             throw CanNotRefundOrderException.EXCEPTION;
         }
     }
