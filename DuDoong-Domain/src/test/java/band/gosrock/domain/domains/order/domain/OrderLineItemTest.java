@@ -175,4 +175,18 @@ class OrderLineItemTest {
         assertEquals(build.getOrderOptionAnswers(), emptyOrderOptionAnswers);
         assertEquals(build.getQuantity(), quantity);
     }
+
+    @Test
+    public void 주문라인_옵션아이디조회_검증() {
+        // given
+        long optionId1 = 1L;
+        given(orderOptionAnswer1.getOptionId()).willReturn(optionId1);
+        long optionId2 = 2L;
+        given(orderOptionAnswer2.getOptionId()).willReturn(optionId2);
+        List<Long> optionIds = List.of(optionId1, optionId2);
+        // when
+        List<Long> answerOptionIds = orderLineItem.getAnswerOptionIds();
+        // then
+        assertEquals(answerOptionIds, optionIds);
+    }
 }
