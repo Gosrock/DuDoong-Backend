@@ -42,6 +42,12 @@ public class EventController {
         return readHostEventListUseCase.execute(hostId, pageable);
     }
 
+    @Operation(summary = "test")
+    @GetMapping("/asd")
+    public void getAllEventByHostId() throws Exception {
+        throw new Exception();
+    }
+
     @Operation(summary = "공연 기본 정보를 등록하여, 새로운 이벤트(공연)를 생성합니다")
     @PostMapping
     public EventResponse createEvent(@RequestBody @Valid CreateEventRequest createEventRequest) {
