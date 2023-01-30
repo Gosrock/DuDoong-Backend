@@ -1,6 +1,7 @@
 package band.gosrock.api.order.controller;
 
 
+import band.gosrock.api.common.page.PageResponse;
 import band.gosrock.api.order.docs.ApproveOrderExceptionDocs;
 import band.gosrock.api.order.docs.CancelOrderExceptionDocs;
 import band.gosrock.api.order.docs.ConfirmOrderExceptionDocs;
@@ -28,6 +29,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.api.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -115,5 +119,11 @@ public class OrderController {
     @GetMapping("/recent")
     public OrderBriefElement getRecentOrder() {
         return readOrderUseCase.getRecentOrder();
+    }
+
+    @Operation(summary = "최근 예매내역 조회")
+    @GetMapping("")
+    public PageResponse<OrderBriefElement> getMyOrders( @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
+        return readOrderUseCase.getMyOrders(pageable);
     }
 }

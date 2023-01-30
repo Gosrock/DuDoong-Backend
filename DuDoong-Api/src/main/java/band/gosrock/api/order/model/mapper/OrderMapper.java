@@ -24,6 +24,7 @@ import band.gosrock.domain.domains.user.domain.User;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
 
 @Mapper
@@ -114,5 +115,10 @@ public class OrderMapper {
         IssuedTickets orderIssuedTickets =
                 issuedTicketAdaptor.findOrderIssuedTickets(order.getUuid());
         return OrderBriefElement.of(order, getEvent(order), orderIssuedTickets);
+    }
+
+    public Page<OrderBriefElement> toOrderBriefsResponse(Page<Order> ordersWithPagination) {
+        Page<OrderBriefElement> orderBriefElements = ordersWithPagination.map(this::toOrderBriefElement);
+        return orderBriefElements;
     }
 }

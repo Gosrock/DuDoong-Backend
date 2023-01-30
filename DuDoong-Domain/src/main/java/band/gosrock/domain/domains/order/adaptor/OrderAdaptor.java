@@ -7,6 +7,8 @@ import band.gosrock.domain.domains.order.exception.OrderNotFoundException;
 import band.gosrock.domain.domains.order.repository.OrderRepository;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Adaptor
 @RequiredArgsConstructor
@@ -30,5 +32,9 @@ public class OrderAdaptor {
 
     public Optional<Order> findRecentOrderByUserId(Long userId) {
         return orderRepository.findFirstByUserIdOrderByIdDesc(userId);
+    }
+
+    public Page<Order> findOrdersWithPagination(Long userId, Pageable pageable) {
+        return orderRepository.getOrdersWithPage(userId,pageable);
     }
 }

@@ -2,6 +2,7 @@ package band.gosrock.api.order.service;
 
 
 import band.gosrock.api.common.UserUtils;
+import band.gosrock.api.common.page.PageResponse;
 import band.gosrock.api.order.model.dto.response.OrderBriefElement;
 import band.gosrock.api.order.model.dto.response.OrderResponse;
 import band.gosrock.api.order.model.mapper.OrderMapper;
@@ -11,6 +12,8 @@ import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.validator.OrderValidator;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 @UseCase
@@ -34,5 +37,14 @@ public class ReadOrderUseCase {
         Long currentUserId = userUtils.getCurrentUserId();
         Optional<Order> recentOrder = orderAdaptor.findRecentOrderByUserId(currentUserId);
         return recentOrder.map(orderMapper::toOrderBriefElement).orElse(null);
+    }
+
+    public PageResponse<OrderBriefElement> getMyOrders(Pageable pageable) {
+        Long currentUserId = userUtils.getCurrentUserId();
+        Page<Order> ordersWithPagination = orderAdaptor.findOrdersWithPagination(currentUserId,
+            pageable);
+        Page<OrderBriefElement> orderBriefElements = orderMapper.toOrderBriefsResponse(
+            ordersWithPagination);
+        return PageResponse.of(orderBriefElements);
     }
 }
