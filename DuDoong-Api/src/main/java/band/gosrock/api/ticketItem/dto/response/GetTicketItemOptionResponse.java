@@ -11,9 +11,9 @@ import lombok.Getter;
 public class GetTicketItemOptionResponse {
 
     @Schema(description = "옵션그룹 리스트")
-    private List<TicketOptionResponse> optionGroups;
+    private List<OptionGroupResponse> optionGroups;
 
-    public static GetTicketItemOptionResponse from(List<TicketOptionResponse> optionGroups) {
+    public static GetTicketItemOptionResponse from(List<OptionGroupResponse> optionGroups) {
 
         return GetTicketItemOptionResponse.builder().optionGroups(optionGroups).build();
     }

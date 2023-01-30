@@ -3,10 +3,9 @@ package band.gosrock.api.ticketItem.mapper;
 
 import band.gosrock.api.ticketItem.dto.request.CreateTicketOptionRequest;
 import band.gosrock.api.ticketItem.dto.response.GetTicketItemOptionResponse;
-import band.gosrock.api.ticketItem.dto.response.TicketOptionResponse;
+import band.gosrock.api.ticketItem.dto.response.OptionGroupResponse;
 import band.gosrock.common.annotation.Mapper;
 import band.gosrock.domain.domains.event.domain.Event;
-import band.gosrock.domain.domains.ticket_item.adaptor.OptionGroupAdaptor;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
 import band.gosrock.domain.domains.ticket_item.domain.ItemOptionGroup;
 import band.gosrock.domain.domains.ticket_item.domain.OptionGroup;
@@ -21,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class TicketOptionMapper {
 
     private final TicketItemAdaptor ticketItemAdaptor;
-    private final OptionGroupAdaptor optionGroupAdaptor;
 
     public OptionGroup toOptionGroup(
             CreateTicketOptionRequest createTicketOptionRequest, Event event) {
@@ -47,6 +45,6 @@ public class TicketOptionMapper {
                         .toList();
 
         return GetTicketItemOptionResponse.from(
-                optionGroups.stream().map(TicketOptionResponse::from).toList());
+                optionGroups.stream().map(OptionGroupResponse::from).toList());
     }
 }
