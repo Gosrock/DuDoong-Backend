@@ -123,7 +123,8 @@ public class OrderController {
 
     @Operation(summary = "최근 예매내역 조회")
     @GetMapping("")
-    public PageResponse<OrderBriefElement> getMyOrders( @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
+    public PageResponse<OrderBriefElement> getMyOrders(
+            @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
         return readOrderUseCase.getMyOrders(pageable);
     }
 }

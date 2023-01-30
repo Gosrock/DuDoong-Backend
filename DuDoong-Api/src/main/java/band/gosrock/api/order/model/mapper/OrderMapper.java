@@ -118,7 +118,8 @@ public class OrderMapper {
     }
 
     public Page<OrderBriefElement> toOrderBriefsResponse(Page<Order> ordersWithPagination) {
-        Page<OrderBriefElement> orderBriefElements = ordersWithPagination.map(this::toOrderBriefElement);
+        Page<OrderBriefElement> orderBriefElements =
+                ordersWithPagination.map(this::toOrderBriefElement);
         return orderBriefElements;
     }
 }

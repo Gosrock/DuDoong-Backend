@@ -35,6 +35,6 @@ public class OrderAdaptor {
     }
 
     public Page<Order> findOrdersWithPagination(Long userId, Pageable pageable) {
-        return orderRepository.getOrdersWithPage(userId,pageable);
+        return orderRepository.getOrdersWithPage(userId, pageable);
     }
 }

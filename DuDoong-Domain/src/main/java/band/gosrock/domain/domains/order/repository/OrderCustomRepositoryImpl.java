@@ -1,23 +1,16 @@
 package band.gosrock.domain.domains.order.repository;
 
 import static band.gosrock.domain.domains.event.domain.QEvent.event;
-import static band.gosrock.domain.domains.issuedTicket.domain.QIssuedTicket.issuedTicket;
-import static band.gosrock.domain.domains.issuedTicket.domain.QIssuedTicketOptionAnswer.issuedTicketOptionAnswer;
 import static band.gosrock.domain.domains.order.domain.QOrder.order;
-import static band.gosrock.domain.domains.ticket_item.domain.QTicketItem.ticketItem;
-import static band.gosrock.domain.domains.user.domain.QUser.user;
 
-import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
-import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus;
-import band.gosrock.domain.domains.issuedTicket.dto.condition.IssuedTicketCondition;
-import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketCustomRepository;
 import band.gosrock.domain.domains.order.domain.Order;
-import band.gosrock.domain.domains.order.domain.QOrder;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.DateTemplate;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,13 +22,22 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Page<Order> getOrdersWithPage(Long userId , Pageable pageable) {
+    public Page<Order> getOrdersWithPage(Long userId, Pageable pageable) {
+
+        DateTemplate<LocalDateTime> localDateTimeDateTemplate =
+                Expressions.dateTemplate(
+                        LocalDateTime.class,
+                        "TIMESTAMPADD(MINUTE,{0}, {1}) ",
+                        event.eventBasic.runTime,
+                        event.eventBasic.startAt);
         List<Order> issuedTickets =
                 queryFactory
                         .selectFrom(order)
+                        .join(event)
+                        .on(order.eventId.eq(event.id))
                         .where(
-                                userIdEq(userId)
-                            )
+                                userIdEq(userId),
+                                localDateTimeDateTemplate.after(LocalDateTime.now()))
                         .orderBy(order.id.desc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize())
@@ -46,11 +48,11 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
                         .select(order.count())
                         .from(order)
                         .where(
-                            userIdEq(userId));
+                                userIdEq(userId),
+                                localDateTimeDateTemplate.before(LocalDateTime.now()));
 
         return PageableExecutionUtils.getPage(issuedTickets, pageable, countQuery::fetchOne);
     }
-
 
     private BooleanExpression userIdEq(Long userId) {
         return userId == null ? null : order.userId.eq(userId);

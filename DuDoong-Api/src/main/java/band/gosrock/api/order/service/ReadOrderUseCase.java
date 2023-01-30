@@ -41,10 +41,10 @@ public class ReadOrderUseCase {
 
     public PageResponse<OrderBriefElement> getMyOrders(Pageable pageable) {
         Long currentUserId = userUtils.getCurrentUserId();
-        Page<Order> ordersWithPagination = orderAdaptor.findOrdersWithPagination(currentUserId,
-            pageable);
-        Page<OrderBriefElement> orderBriefElements = orderMapper.toOrderBriefsResponse(
-            ordersWithPagination);
+        Page<Order> ordersWithPagination =
+                orderAdaptor.findOrdersWithPagination(currentUserId, pageable);
+        Page<OrderBriefElement> orderBriefElements =
+                orderMapper.toOrderBriefsResponse(ordersWithPagination);
         return PageResponse.of(orderBriefElements);
     }
 }
