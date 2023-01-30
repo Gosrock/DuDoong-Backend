@@ -10,6 +10,7 @@ import band.gosrock.api.order.docs.RefundOrderExceptionDocs;
 import band.gosrock.api.order.model.dto.request.ConfirmOrderRequest;
 import band.gosrock.api.order.model.dto.request.CreateOrderRequest;
 import band.gosrock.api.order.model.dto.response.CreateOrderResponse;
+import band.gosrock.api.order.model.dto.response.OrderBriefElement;
 import band.gosrock.api.order.model.dto.response.OrderResponse;
 import band.gosrock.api.order.service.ApproveOrderUseCase;
 import band.gosrock.api.order.service.CancelOrderUseCase;
@@ -106,7 +107,13 @@ public class OrderController {
 
     @Operation(summary = "결제 조회. 결제 조회 권한은 주문 본인")
     @GetMapping("/{order_uuid}")
-    public OrderResponse readOrder(@PathVariable("order_uuid") String orderUuid) {
-        return readOrderUseCase.execute(orderUuid);
+    public OrderResponse getOrderDetail(@PathVariable("order_uuid") String orderUuid) {
+        return readOrderUseCase.getOrderDetail(orderUuid);
+    }
+
+    @Operation(summary = "최근 예매내역 조회")
+    @GetMapping("/recent")
+    public OrderBriefElement getRecentOrder() {
+        return readOrderUseCase.getRecentOrder();
     }
 }

@@ -29,10 +29,6 @@ public class IssuedTicketAdaptor {
         issuedTicketRepository.saveAll(issuedTickets);
     }
 
-    public List<IssuedTicket> findAllByOrderLineId(Long orderLineId) {
-        return issuedTicketRepository.findAllByOrderLineId(orderLineId);
-    }
-
     public IssuedTicket findForUser(Long currentUserId, Long issuedTicketId) {
         IssuedTicket issuedTicket =
                 issuedTicketRepository
@@ -66,5 +62,9 @@ public class IssuedTicketAdaptor {
 
     public IssuedTickets findOrderLineIssuedTickets(Long orderLineId) {
         return IssuedTickets.from(issuedTicketRepository.findAllByOrderLineId(orderLineId));
+    }
+
+    public IssuedTickets findOrderIssuedTickets(String orderUuid) {
+        return IssuedTickets.from(issuedTicketRepository.findAllByOrderUuid(orderUuid));
     }
 }

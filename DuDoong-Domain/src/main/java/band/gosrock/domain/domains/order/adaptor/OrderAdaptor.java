@@ -5,6 +5,7 @@ import band.gosrock.common.annotation.Adaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.exception.OrderNotFoundException;
 import band.gosrock.domain.domains.order.repository.OrderRepository;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 
 @Adaptor
@@ -25,5 +26,9 @@ public class OrderAdaptor {
 
     public Order findByOrderUuid(String uuid) {
         return orderRepository.findByUuid(uuid).orElseThrow(() -> OrderNotFoundException.EXCEPTION);
+    }
+
+    public Optional<Order> findRecentOrderByUserId(Long userId) {
+        return orderRepository.findFirstByUserIdOrderByIdDesc(userId);
     }
 }
