@@ -18,4 +18,16 @@ public enum IssuedTicketStatus {
     private final String value;
 
     @JsonValue private final String kr;
+
+    public Boolean isCanceled(){
+        return this == IssuedTicketStatus.CANCELED;
+    }
+
+    public Boolean isBeforeEntrance(){
+        return this == IssuedTicketStatus.ENTRANCE_INCOMPLETE;
+    }
+
+    public Boolean isAfterEntrance(){
+        return this == IssuedTicketStatus.ENTRANCE_COMPLETED;
+    }
 }

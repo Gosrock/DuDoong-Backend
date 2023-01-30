@@ -3,6 +3,7 @@ package band.gosrock.domain.domains.issuedTicket.adaptor;
 
 import band.gosrock.common.annotation.Adaptor;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
+import band.gosrock.domain.domains.issuedTicket.domain.IssuedTickets;
 import band.gosrock.domain.domains.issuedTicket.dto.condition.IssuedTicketCondition;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketNotFoundException;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketUserNotMatchedException;
@@ -61,5 +62,9 @@ public class IssuedTicketAdaptor {
 
     public List<IssuedTicket> findAllByOrderUuid(String orderUuid) {
         return issuedTicketRepository.findAllByOrderUuid(orderUuid);
+    }
+
+    public IssuedTickets findOrderLineIssuedTickets(Long orderLineId) {
+        return IssuedTickets.from(issuedTicketRepository.findAllByOrderLineId(orderLineId));
     }
 }

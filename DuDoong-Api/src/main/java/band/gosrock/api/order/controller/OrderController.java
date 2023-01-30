@@ -104,7 +104,7 @@ public class OrderController {
         return refundOrderUseCase.execute(orderUuid);
     }
 
-    @Operation(summary = "결제 조회. 결제 조회 권한은 주문 본인,  호스트 관리자.")
+    @Operation(summary = "결제 조회. 결제 조회 권한은 주문 본인")
     @GetMapping("/{order_uuid}")
     public OrderResponse readOrder(@PathVariable("order_uuid") String orderUuid) {
         return readOrderUseCase.execute(orderUuid);

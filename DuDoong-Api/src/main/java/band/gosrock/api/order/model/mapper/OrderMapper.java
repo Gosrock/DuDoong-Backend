@@ -43,7 +43,15 @@ public class OrderMapper {
 
         List<OrderLineTicketResponse> orderLineTicketResponses = getOrderLineTicketResponses(order);
 
-        return OrderResponse.of(order, event.getRefundInfoVo(), orderLineTicketResponses);
+        return OrderResponse.of(order, event, orderLineTicketResponses);
+    }
+
+    @Transactional(readOnly = true)
+    public OrderResponse toOrderResponse(Order order) {
+        Event event = eventAdaptor.findById(order.getItemGroupId());
+        List<OrderLineTicketResponse> orderLineTicketResponses = getOrderLineTicketResponses(order);
+
+        return OrderResponse.of(order, event, orderLineTicketResponses);
     }
 
     @Transactional(readOnly = true)
@@ -73,15 +81,10 @@ public class OrderMapper {
         return user.getProfile().getName();
     }
 
-    private List<Long> getOptionIds(OrderLineItem orderLineItem) {
-        return orderLineItem.getOrderOptionAnswers().stream()
-                .map(OrderOptionAnswer::getOptionId)
-                .toList();
-    }
 
     private List<OptionAnswerVo> getOptionAnswerVos(OrderLineItem orderLineItem) {
-        List<Long> optionIds = getOptionIds(orderLineItem);
-        List<Option> options = optionAdaptor.findAllByIds(optionIds);
+        //TODO  : options 일급 컬렉션으로 리팩터링
+        List<Option> options = optionAdaptor.findAllByIds(orderLineItem.getAnswerOptionIds());
 
         return orderLineItem.getOrderOptionAnswers().stream()
                 .map(
@@ -92,6 +95,7 @@ public class OrderMapper {
     }
 
     private Option getOption(List<Option> options, OrderOptionAnswer orderOptionAnswer) {
+        //TODO  : options 일급 컬렉션으로 리팩터링
         return options.stream()
                 .filter(option -> option.getId().equals(orderOptionAnswer.getOptionId()))
                 .findFirst()
@@ -99,19 +103,6 @@ public class OrderMapper {
     }
 
     private String getTicketNoName(Long orderLineItemId) {
-        List<String> issuedTicketNos = getIssuedTicketNos(orderLineItemId);
-        Integer size = issuedTicketNos.size();
-        // 없을 경우긴 함 테스트를 위해서
-        if (issuedTicketNos.isEmpty()) return "";
-        else if (size.equals(1)) return String.format("%s (%d매)", issuedTicketNos.get(0), size);
-        else
-            return String.format(
-                    "%s ~ %s (%d매)", issuedTicketNos.get(0), issuedTicketNos.get(size - 1), size);
-    }
-
-    private List<String> getIssuedTicketNos(Long orderLineItemId) {
-        return issuedTicketAdaptor.findAllByOrderLineId(orderLineItemId).stream()
-                .map(IssuedTicket::getIssuedTicketNo)
-                .toList();
+        return issuedTicketAdaptor.findOrderLineIssuedTickets(orderLineItemId).getTicketNoName();
     }
 }
