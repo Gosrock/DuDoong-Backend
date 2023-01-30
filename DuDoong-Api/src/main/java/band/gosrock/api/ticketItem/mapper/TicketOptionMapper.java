@@ -2,7 +2,7 @@ package band.gosrock.api.ticketItem.mapper;
 
 
 import band.gosrock.api.ticketItem.dto.request.CreateTicketOptionRequest;
-import band.gosrock.api.ticketItem.dto.response.GetTicketItemOptionResponse;
+import band.gosrock.api.ticketItem.dto.response.GetTicketItemOptionsResponse;
 import band.gosrock.api.ticketItem.dto.response.OptionGroupResponse;
 import band.gosrock.common.annotation.Mapper;
 import band.gosrock.domain.domains.event.domain.Event;
@@ -34,7 +34,7 @@ public class TicketOptionMapper {
     }
 
     @Transactional(readOnly = true)
-    public GetTicketItemOptionResponse toGetTicketItemOptionResponse(
+    public GetTicketItemOptionsResponse toGetTicketItemOptionResponse(
             Long eventId, Long ticketItemId) {
 
         TicketItem ticketItem = ticketItemAdaptor.queryTicketItem(ticketItemId);
@@ -44,7 +44,7 @@ public class TicketOptionMapper {
                         .map(ItemOptionGroup::getOptionGroup)
                         .toList();
 
-        return GetTicketItemOptionResponse.from(
+        return GetTicketItemOptionsResponse.from(
                 optionGroups.stream().map(OptionGroupResponse::from).toList());
     }
 }

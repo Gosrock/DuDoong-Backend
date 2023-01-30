@@ -8,13 +8,13 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class GetTicketItemOptionResponse {
+public class GetTicketItemOptionsResponse {
 
     @Schema(description = "옵션그룹 리스트")
     private List<OptionGroupResponse> optionGroups;
 
-    public static GetTicketItemOptionResponse from(List<OptionGroupResponse> optionGroups) {
+    public static GetTicketItemOptionsResponse from(List<OptionGroupResponse> optionGroups) {
 
-        return GetTicketItemOptionResponse.builder().optionGroups(optionGroups).build();
+        return GetTicketItemOptionsResponse.builder().optionGroups(optionGroups).build();
     }
 }

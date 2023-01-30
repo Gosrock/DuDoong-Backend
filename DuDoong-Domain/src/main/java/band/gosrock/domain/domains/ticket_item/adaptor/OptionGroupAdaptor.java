@@ -5,7 +5,6 @@ import band.gosrock.common.annotation.Adaptor;
 import band.gosrock.domain.domains.ticket_item.domain.OptionGroup;
 import band.gosrock.domain.domains.ticket_item.exception.OptionGroupNotFoundException;
 import band.gosrock.domain.domains.ticket_item.repository.OptionGroupRepository;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 @Adaptor
@@ -22,9 +21,5 @@ public class OptionGroupAdaptor {
 
     public OptionGroup save(OptionGroup optionGroup) {
         return optionGroupRepository.save(optionGroup);
-    }
-
-    public List<OptionGroup> findAllByIds(List<Long> ids) {
-        return optionGroupRepository.findAllById(ids);
     }
 }
