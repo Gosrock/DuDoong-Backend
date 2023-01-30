@@ -29,12 +29,12 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
         List<IssuedTicket> issuedTickets =
                 queryFactory
                         .selectFrom(issuedTicket)
-                        .leftJoin(issuedTicket.event, event)
-                        .fetchJoin()
-                        .leftJoin(issuedTicket.user, user)
-                        .fetchJoin()
-                        .leftJoin(issuedTicket.ticketItem, ticketItem)
-                        .fetchJoin()
+//                        .leftJoin(issuedTicket.eventId, event)
+//                        .fetchJoin()
+//                        .leftJoin(issuedTicket.user, user)
+//                        .fetchJoin()
+//                        .leftJoin(issuedTicket.ticketItem, ticketItem)
+//                        .fetchJoin()
                         .where(
                                 eventIdEq(condition.getEventId()),
                                 userNameContains(condition.getUserName()),
@@ -65,12 +65,12 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
         IssuedTicket findIssuedTicket =
                 queryFactory
                         .selectFrom(issuedTicket)
-                        .leftJoin(issuedTicket.event, event)
-                        .fetchJoin()
-                        .leftJoin(issuedTicket.user, user)
-                        .fetchJoin()
-                        .leftJoin(issuedTicket.ticketItem, ticketItem)
-                        .fetchJoin()
+//                        .leftJoin(issuedTicket.event, event)
+//                        .fetchJoin()
+//                        .leftJoin(issuedTicket.user, user)
+//                        .fetchJoin()
+//                        .leftJoin(issuedTicket.ticketItem, ticketItem)
+//                        .fetchJoin()
                         .leftJoin(issuedTicket.issuedTicketOptionAnswers, issuedTicketOptionAnswer)
                         .fetchJoin()
                         .where(
@@ -87,16 +87,16 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
     }
 
     private BooleanExpression eventIdEq(Long eventId) {
-        return eventId == null ? null : issuedTicket.event.id.eq(eventId);
+        return eventId == null ? null : issuedTicket.eventId.eq(eventId);
     }
 
     private BooleanExpression userNameContains(String userName) {
-        return userName == null ? null : issuedTicket.user.profile.name.contains(userName);
+        return userName == null ? null : issuedTicket.userInfo.userName.contains(userName);
     }
 
     private BooleanExpression phoneNumberContains(String phoneNumber) {
         return phoneNumber == null
                 ? null
-                : issuedTicket.user.profile.phoneNumber.contains(phoneNumber);
+                : issuedTicket.userInfo.phoneNumber.contains(phoneNumber);
     }
 }

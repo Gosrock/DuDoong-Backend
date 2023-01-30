@@ -3,6 +3,7 @@ package band.gosrock.api.issuedTicket.dto.response;
 
 import band.gosrock.domain.common.vo.EventInfoVo;
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
+import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import lombok.Builder;
 import lombok.Getter;
@@ -28,11 +29,11 @@ public class RetrieveIssuedTicketDetailResponse {
      */
     private final String userName;
 
-    public static RetrieveIssuedTicketDetailResponse of(IssuedTicket issuedTicket) {
+    public static RetrieveIssuedTicketDetailResponse of(IssuedTicket issuedTicket, Event event) {
         return RetrieveIssuedTicketDetailResponse.builder()
                 .issuedTicketInfo(issuedTicket.toIssuedTicketInfoVo())
-                .eventInfo(issuedTicket.getEvent().toEventInfoVo())
-                .userName(issuedTicket.getUser().getProfile().getName())
+            .eventInfo(event.toEventInfoVo())
+                .userName(issuedTicket.getUserInfo().getUserName())
                 .build();
     }
 }

@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = "access-token")
 @Tag(name = "발급 티켓 관련 어드민 컨트롤러")
 @RestController
-@RequestMapping("/v1/admin/issuedTickets")
+@RequestMapping("/v1/event/{eventId}/issuedTickets")
 @RequiredArgsConstructor
 public class AdminIssuedTicketController {
 
@@ -30,8 +30,8 @@ public class AdminIssuedTicketController {
     @Operation(summary = "[어드민 기능] 발급 티켓 리스트 가져오기 API 입니다.")
     @GetMapping
     public RetrieveIssuedTicketListResponse getIssuedTickets(
+            @PathVariable Long eventId,
             @RequestParam Long page,
-            @RequestParam Long eventId,
             @RequestParam(required = false) String userName,
             @RequestParam(required = false) String phoneNumber) {
         return readIssuedTicketsUseCase.execute(page, eventId, userName, phoneNumber);
@@ -39,7 +39,7 @@ public class AdminIssuedTicketController {
 
     @Operation(summary = "[어드민 기능] 발급 티켓 입장 처리 API 입니다.")
     @PatchMapping(value = "/{issuedTicketId}")
-    public IssuedTicketInfoVo patchIssuedTicketStatus(@PathVariable Long issuedTicketId) {
-        return entranceIssuedTicketUseCase.execute(issuedTicketId);
+    public IssuedTicketInfoVo patchIssuedTicketStatus(@PathVariable Long eventId, @PathVariable Long issuedTicketId) {
+        return entranceIssuedTicketUseCase.execute(eventId, issuedTicketId);
     }
 }

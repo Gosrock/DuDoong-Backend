@@ -1,8 +1,10 @@
 package band.gosrock.domain.common.vo;
 
 
+import band.gosrock.common.annotation.DateFormat;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus;
+import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketUserInfoVo;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 import lombok.Builder;
@@ -40,10 +42,7 @@ public class IssuedTicketInfoVo {
     /*
     티켓 발급 시간
      */
-    @JsonFormat(
-            shape = JsonFormat.Shape.STRING,
-            pattern = "yyyy-MM-dd HH:mm:ss",
-            timezone = "Asia/Seoul")
+    @DateFormat
     private final LocalDateTime createdAt;
 
     /*
@@ -56,16 +55,19 @@ public class IssuedTicketInfoVo {
      */
     private final Money optionPrice;
 
+    private final IssuedTicketUserInfoVo userInfo;
+
     public static IssuedTicketInfoVo from(IssuedTicket issuedTicket) {
         return IssuedTicketInfoVo.builder()
                 .issuedTicketId(issuedTicket.getId())
                 .issuedTicketNo(issuedTicket.getIssuedTicketNo())
                 .uuid(issuedTicket.getUuid())
-                .ticketName(issuedTicket.getTicketItem().getName())
+                .ticketName(issuedTicket.getItemInfo().getTicketName())
                 .ticketPrice(issuedTicket.getPrice())
                 .createdAt(issuedTicket.getCreatedAt())
                 .issuedTicketStatus(issuedTicket.getIssuedTicketStatus())
                 .optionPrice(issuedTicket.sumOptionPrice())
+            .userInfo(issuedTicket.getUserInfo())
                 .build();
     }
 }

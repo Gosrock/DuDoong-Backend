@@ -17,14 +17,13 @@ public class RetrieveIssuedTicketDTO {
 
     private final IssuedTicketInfoVo issuedTicketInfo;
 
-    private final UserInfoVo userInfo;
+//    private final UserInfoVo userInfo;
 
     private final List<IssuedTicketOptionAnswerVo> issuedTicketOptionAnswers;
 
-    public static RetrieveIssuedTicketDTO of(IssuedTicket issuedTicket, User user) {
+    public static RetrieveIssuedTicketDTO of(IssuedTicket issuedTicket) {
         return RetrieveIssuedTicketDTO.builder()
                 .issuedTicketInfo(issuedTicket.toIssuedTicketInfoVo())
-                .userInfo(user.toUserInfoVo())
                 .issuedTicketOptionAnswers(
                         issuedTicket.getIssuedTicketOptionAnswers().stream()
                                 .map(IssuedTicketOptionAnswer::toIssuedTicketOptionAnswerVo)

@@ -12,6 +12,7 @@ import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelEntranceEx
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotEntranceException;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketAlreadyEntranceException;
+import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.user.domain.User;
 import java.util.ArrayList;
@@ -48,16 +49,9 @@ public class IssuedTicket extends BaseTimeEntity {
 
     private String issuedTicketNo;
 
-    /*
-    발급 티켓의 이벤트 (양방향)
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id")
-    private Event event;
-
     private Long eventId;
 
-    private Long userId;
+    @Embedded private IssuedTicketUserInfoVo userInfo;
 
     @Embedded private IssuedTicketItemInfoVo itemInfo;
 
@@ -70,20 +64,6 @@ public class IssuedTicket extends BaseTimeEntity {
     발급 티켓의 주문 행 (단방향)
      */
     private Long orderLineId;
-
-    /*
-    티켓 발급 유저 id
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "userId")
-    private User user;
-
-    /*
-    발급 티켓의 item (양방향)
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ticket_item_id")
-    private TicketItem ticketItem;
 
     /*
     발급 티켓의 옵션들 (단방향)
@@ -105,7 +85,7 @@ public class IssuedTicket extends BaseTimeEntity {
     /*
     발급 티켓 가격
      */
-    private Money price;
+    @Embedded private Money price;
 
     /*
     발급 티켓 상태
@@ -128,14 +108,11 @@ public class IssuedTicket extends BaseTimeEntity {
             TicketItem ticketItem,
             Money price,
             List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers) {
-        this.event = event;
         this.eventId = event.getId();
-        this.userId = user.getId();
+        this.userInfo = IssuedTicketUserInfoVo.from(user);
         this.itemInfo = IssuedTicketItemInfoVo.from(ticketItem);
-        this.user = user;
         this.orderUuid = orderUuid;
         this.orderLineId = orderLineId;
-        this.ticketItem = ticketItem;
         this.price = price;
         this.issuedTicketOptionAnswers.addAll(issuedTicketOptionAnswers);
     }

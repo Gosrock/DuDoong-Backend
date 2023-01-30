@@ -37,13 +37,13 @@ public class IssuedTicketAdaptor {
                 issuedTicketRepository
                         .find(issuedTicketId)
                         .orElseThrow(() -> IssuedTicketNotFoundException.EXCEPTION);
-        if (!Objects.equals(issuedTicket.getUser().getId(), currentUserId)) {
+        if (!Objects.equals(issuedTicket.getUserInfo().getUserId(), currentUserId)) {
             throw IssuedTicketUserNotMatchedException.EXCEPTION;
         }
         return issuedTicket;
     }
 
-    public IssuedTicket find(Long issuedTicketId) {
+    public IssuedTicket queryIssuedTicket(Long issuedTicketId) {
         return issuedTicketRepository
                 .find(issuedTicketId)
                 .orElseThrow(() -> IssuedTicketNotFoundException.EXCEPTION);

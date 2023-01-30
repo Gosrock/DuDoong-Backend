@@ -33,7 +33,7 @@ public class CreateIssuedTicketUseCase {
     private final OptionAdaptor optionAdaptor;
 
     @Transactional
-    public RetrieveIssuedTicketDetailResponse executeForDev(CreateIssuedTicketForDevDTO body) {
+    public void executeForDev(CreateIssuedTicketForDevDTO body) {
         Long currentUserId = SecurityUtils.getCurrentUserId();
         User user = getUser(currentUserId);
         Event event = getEvent(body.getEventId());
@@ -58,11 +58,6 @@ public class CreateIssuedTicketUseCase {
                                 ticketItem,
                                 Money.wons(body.getAmount()),
                                 issuedTicketOptionAnswers));
-
-        return new RetrieveIssuedTicketDetailResponse(
-                issuedTicket.toIssuedTicketInfoVo(),
-                issuedTicket.getEvent().toEventInfoVo(),
-                issuedTicket.getUser().getProfile().getName());
     }
 
     private Event getEvent(Long eventId) {

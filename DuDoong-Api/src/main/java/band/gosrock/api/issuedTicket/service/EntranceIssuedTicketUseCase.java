@@ -18,9 +18,9 @@ public class EntranceIssuedTicketUseCase {
 
     private final UserUtils userUtils;
 
-    public IssuedTicketInfoVo execute(Long issuedTicketId) {
+    public IssuedTicketInfoVo execute(Long eventId, Long issuedTicketId) {
         Long currentUserId = userUtils.getCurrentUserId();
-        return issuedTicketDomainService.processingEntranceIssuedTicket(
+        return issuedTicketDomainService.processingEntranceIssuedTicket(eventId,
                 currentUserId, issuedTicketId);
     }
 }

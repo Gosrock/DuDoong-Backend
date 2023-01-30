@@ -24,9 +24,7 @@ public class RetrieveIssuedTicketListResponse {
                 .issuedTickets(
                         issuedTickets.stream()
                                 .map(
-                                        issuedTicket ->
-                                                RetrieveIssuedTicketDTO.of(
-                                                        issuedTicket, issuedTicket.getUser()))
+                                    RetrieveIssuedTicketDTO::of)
                                 .toList())
                 .build();
     }
