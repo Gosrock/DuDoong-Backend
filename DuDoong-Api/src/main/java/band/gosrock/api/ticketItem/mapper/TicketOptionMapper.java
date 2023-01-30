@@ -8,6 +8,7 @@ import band.gosrock.common.annotation.Mapper;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.adaptor.OptionGroupAdaptor;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
+import band.gosrock.domain.domains.ticket_item.domain.ItemOptionGroup;
 import band.gosrock.domain.domains.ticket_item.domain.OptionGroup;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import java.util.ArrayList;
@@ -40,8 +41,10 @@ public class TicketOptionMapper {
 
         TicketItem ticketItem = ticketItemAdaptor.queryTicketItem(ticketItemId);
         ticketItem.checkEventId(eventId);
-        List<Long> optionGroupIds = ticketItem.getOptionGroupIds();
-        List<OptionGroup> optionGroups = optionGroupAdaptor.findAllByIds(optionGroupIds);
+        List<OptionGroup> optionGroups =
+                ticketItem.getItemOptionGroups().stream()
+                        .map(ItemOptionGroup::getOptionGroup)
+                        .toList();
 
         return GetTicketItemOptionResponse.from(
                 optionGroups.stream().map(TicketOptionResponse::from).toList());
