@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
 
 import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.domains.cart.exception.CartLineItemNotFoundException;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -112,5 +113,25 @@ class CartTest {
         freeCart.updateCartName(cartName);
         // then
         assertEquals(freeCart.getCartName(), cartName);
+    }
+
+    @Test
+    public void 카트_아이템아이디_조회_검증() {
+        // given
+        long itemId = 1L;
+        given(cartLineItem2.getItemId()).willReturn(itemId);
+        // when
+        Long findItemId = freeCart.getItemId();
+        // then
+        assertEquals(findItemId, itemId);
+    }
+
+    @Test
+    public void 카트_카트라인_한개조회시_없으면_에러발생() {
+        // given
+        Cart emptyLineCart = Cart.builder().cartLineItems(List.of()).build();
+        // when
+        // then
+        assertThrows(CartLineItemNotFoundException.class, emptyLineCart::getCartLineItem);
     }
 }

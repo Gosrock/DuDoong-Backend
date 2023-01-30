@@ -3,11 +3,17 @@ package band.gosrock.domain.domains.order.domain.validator;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willCallRealMethod;
+import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.BDDMockito.willThrow;
 
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.event.exception.EventIsNotOpenStatusException;
+import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
 import band.gosrock.domain.domains.order.domain.Order;
+import band.gosrock.domain.domains.order.domain.OrderLineItem;
 import band.gosrock.domain.domains.order.domain.OrderMethod;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
 import band.gosrock.domain.domains.order.exception.CanNotCancelOrderException;
@@ -19,6 +25,14 @@ import band.gosrock.domain.domains.order.exception.NotOwnerOrderException;
 import band.gosrock.domain.domains.order.exception.NotPaymentOrderException;
 import band.gosrock.domain.domains.order.exception.NotPendingOrderException;
 import band.gosrock.domain.domains.order.exception.NotRefundAvailableDateOrderException;
+import band.gosrock.domain.domains.order.exception.OrdeItemNotOneTypeException;
+import band.gosrock.domain.domains.order.exception.OrderItemOptionChangedException;
+import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor;
+import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
+import band.gosrock.domain.domains.ticket_item.domain.Option;
+import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLackException;
+import band.gosrock.domain.domains.ticket_item.exception.TicketPurchaseLimitException;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,15 +47,23 @@ class OrderValidatorTest {
 
     @Mock Order order;
 
+    @Mock Event event;
     @Mock Event availableRefundEvent;
     @Mock Event unavailableRefundEvent;
     @Mock EventAdaptor eventAdaptor;
+    @Mock TicketItemAdaptor ticketItemAdaptor;
+    @Mock OptionAdaptor optionAdaptor;
+    @Mock Option optionOfGroup1;
+    @Mock Option optionOfGroup2;
+    @Mock OrderLineItem orderLineItem;
+
+    @Mock TicketItem item;
 
     OrderValidator orderValidator;
 
     @BeforeEach
     void setUp() {
-        orderValidator = new OrderValidator(eventAdaptor);
+        orderValidator = new OrderValidator(eventAdaptor, ticketItemAdaptor, optionAdaptor);
     }
 
     @Test
@@ -176,7 +198,7 @@ class OrderValidatorTest {
         // given
         List<Executable> executables =
                 Arrays.stream(OrderStatus.values())
-                        .filter(orderStatus -> !orderValidator.isStatusWithDraw(orderStatus))
+                        .filter(orderStatus -> !orderValidator.isStatusCanWithDraw(orderStatus))
                         .<Executable>map(
                                 orderStatus ->
                                         () -> orderValidator.validStatusCanCancel(orderStatus))
@@ -202,7 +224,7 @@ class OrderValidatorTest {
         // given
         List<Executable> executables =
                 Arrays.stream(OrderStatus.values())
-                        .filter(orderStatus -> !orderValidator.isStatusWithDraw(orderStatus))
+                        .filter(orderStatus -> !orderValidator.isStatusCanWithDraw(orderStatus))
                         .<Executable>map(
                                 orderStatus ->
                                         () -> orderValidator.validStatusCanRefund(orderStatus))
@@ -271,5 +293,134 @@ class OrderValidatorTest {
                         .toList();
         // then
         executables.forEach(executable -> assertThrows(NotPendingOrderException.class, executable));
+    }
+
+    @Test
+    public void 주문과정중_상품옵션이_변하면_실패() {
+        // given
+        given(order.getOrderLineItems()).willReturn(List.of(orderLineItem));
+        given(optionAdaptor.findAllByIds(any()))
+                .willReturn(List.of(optionOfGroup1, optionOfGroup2));
+        Long optionGroup1Id = 1L;
+        Long optionGroup2Id = 2L;
+
+        given(optionOfGroup1.getOptionGroupId()).willReturn(optionGroup1Id);
+        given(optionOfGroup2.getOptionGroupId()).willReturn(optionGroup2Id);
+        Long optionGroup3Id = 3L;
+        given(item.getOptionGroupIds())
+                .willReturn(List.of(optionGroup1Id, optionGroup2Id, optionGroup3Id));
+        // when
+        // then
+        assertThrows(
+                OrderItemOptionChangedException.class,
+                () -> orderValidator.validOptionNotChange(order, item));
+    }
+
+    @Test
+    public void 주문과정중_상품옵션이_그대로면_성공() {
+        // given
+        given(order.getOrderLineItems()).willReturn(List.of(orderLineItem));
+        given(optionAdaptor.findAllByIds(any()))
+                .willReturn(List.of(optionOfGroup1, optionOfGroup2));
+
+        Long optionGroup1Id = 1L;
+        Long optionGroup2Id = 2L;
+        given(optionOfGroup1.getOptionGroupId()).willReturn(optionGroup1Id);
+        given(optionOfGroup2.getOptionGroupId()).willReturn(optionGroup2Id);
+
+        given(item.getOptionGroupIds()).willReturn(List.of(optionGroup1Id, optionGroup2Id));
+        // when
+        orderValidator.validOptionNotChange(order, item);
+        // then
+    }
+
+    @Test
+    public void 주문_티켓팅_가능시간검증_실패() {
+        // given
+        given(event.isTimeBeforeStartAt()).willReturn(Boolean.FALSE);
+        willCallRealMethod().given(event).validTicketingTime();
+        // when
+        // then
+        assertThrows(
+                EventTicketingTimeIsPassedException.class,
+                () -> orderValidator.validTicketingTime(event));
+    }
+
+    @Test
+    public void 주문_티켓팅_가능시간검증_성공() {
+        // given
+        given(event.isTimeBeforeStartAt()).willReturn(Boolean.TRUE);
+        willCallRealMethod().given(event).validTicketingTime();
+        // when
+        orderValidator.validTicketingTime(event);
+        // then
+    }
+
+    @Test
+    public void 주문_티켓팅_재고검증_실패() {
+        // given
+        willThrow(TicketItemQuantityLackException.class).given(item).validEnoughQuantity(any());
+        // when
+        // then
+        assertThrows(
+                TicketItemQuantityLackException.class,
+                () -> orderValidator.validItemStockEnough(order, item));
+    }
+
+    @Test
+    public void 주문_티켓팅_재고검증_성공() {
+        // given
+        willDoNothing().given(item).validEnoughQuantity(any());
+        // when
+        orderValidator.validItemStockEnough(order, item);
+        // then
+    }
+
+    @Test
+    public void 주문_티켓팅_이벤트_상태검증_성공() {
+        // given
+        willDoNothing().given(event).validStatusOpen();
+        // when
+        orderValidator.validEventIsOpen(event);
+        // then
+    }
+
+    @Test
+    public void 주문_티켓팅_이벤트_상태검증_실패() {
+        // given
+        willThrow(EventIsNotOpenStatusException.class).given(event).validStatusOpen();
+        // when
+        // then
+        assertThrows(
+                EventIsNotOpenStatusException.class, () -> orderValidator.validEventIsOpen(event));
+    }
+
+    @Test
+    public void 주문_아이템_한종류가아니면_실패() {
+        // given
+        given(order.getDistinctItemIds()).willReturn(List.of(1L, 2L));
+        // then
+        assertThrows(
+                OrdeItemNotOneTypeException.class,
+                () -> orderValidator.validItemKindIsOneType(order));
+    }
+
+    @Test
+    public void 주문_아이템_한종류면_성공() {
+        // given
+        given(order.getDistinctItemIds()).willReturn(List.of(2L));
+        // then
+        orderValidator.validItemKindIsOneType(order);
+    }
+
+    @Test
+    public void 주문_아이템_구매갯수제한_실패() {
+        // given
+        given(order.getTotalQuantity()).willReturn(3L);
+        willThrow(TicketPurchaseLimitException.EXCEPTION).given(item).validPurchaseLimit(any());
+        // then
+        assertThrows(
+                TicketPurchaseLimitException.class,
+                () -> orderValidator.validItemPurchaseLimit(order, item));
     }
 }

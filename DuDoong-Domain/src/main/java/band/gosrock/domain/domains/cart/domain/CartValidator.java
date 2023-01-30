@@ -2,8 +2,8 @@ package band.gosrock.domain.domains.cart.domain;
 
 
 import band.gosrock.common.annotation.Validator;
-import band.gosrock.domain.domains.cart.exception.CartInvalidItemKindPolicyException;
-import band.gosrock.domain.domains.cart.exception.CartInvalidOptionAnswerException;
+import band.gosrock.domain.domains.cart.exception.CartItemNotOneTypeException;
+import band.gosrock.domain.domains.cart.exception.CartNotAnswerAllOptionGroupException;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
@@ -30,6 +30,12 @@ public class CartValidator {
         validEventIsOpen(event);
         validTicketingTime(event);
         validItemStockEnough(cart, item);
+        validItemPurchaseLimit(cart, item);
+    }
+
+    /** 아이템의 구매갯수 제한을 넘지 않았는지 */
+    public void validItemPurchaseLimit(Cart cart, TicketItem item) {
+        item.validPurchaseLimit(cart.getTotalQuantity());
     }
 
     /** 티켓팅을 할 수 있는 시간을 안지났는지 검증합니다. */
@@ -51,7 +57,7 @@ public class CartValidator {
     public void validItemKindIsOneType(Cart cart) {
         List<Long> itemIds = cart.getDistinctItemIds();
         if (itemIds.size() != 1) {
-            throw CartInvalidItemKindPolicyException.EXCEPTION;
+            throw CartItemNotOneTypeException.EXCEPTION;
         }
     }
 
@@ -63,7 +69,7 @@ public class CartValidator {
                 cartLineItem -> {
                     if (!Objects.equals(
                             getAnswerOptionGroupIds(cartLineItem), itemsOptionGroupIds)) {
-                        throw CartInvalidOptionAnswerException.EXCEPTION;
+                        throw CartNotAnswerAllOptionGroupException.EXCEPTION;
                     }
                 });
     }

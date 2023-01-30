@@ -16,7 +16,7 @@ public class IssuedCouponInfoVo {
     private final Long issuedCouponId;
 
     // 사용여부
-    private final boolean usageStatus;
+    private final Boolean usageStatus;
 
     private final ApplyTarget applyTarget;
 

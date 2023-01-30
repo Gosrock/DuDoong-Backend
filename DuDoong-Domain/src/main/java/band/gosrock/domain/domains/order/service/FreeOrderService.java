@@ -19,9 +19,9 @@ public class FreeOrderService {
     private final OrderValidator orderValidator;
 
     @RedissonLock(LockName = "주문", identifier = "orderUuid")
-    public String execute(String orderUuid) {
+    public String execute(String orderUuid, Long currentUserId) {
         Order order = orderAdaptor.findByOrderUuid(orderUuid);
-        order.freeConfirm(orderValidator);
+        order.freeConfirm(currentUserId, orderValidator);
         return orderUuid;
     }
 }

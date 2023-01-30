@@ -11,10 +11,6 @@ import lombok.RequiredArgsConstructor;
 public class ApplyTicketOptionRequest {
 
     @Schema(nullable = false, example = "1")
-    @Positive(message = "올바른 티켓상품 고유 아이디를 입력해주세요")
-    private Long ticketItemId;
-
-    @Schema(nullable = false, example = "1")
     @Positive(message = "올바른 옵션그룹 고유 아이디를 입력해주세요")
     private Long optionGroupId;
 }

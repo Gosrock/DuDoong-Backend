@@ -2,7 +2,7 @@ package band.gosrock.domain.domains.ticket_item.service;
 
 
 import band.gosrock.common.annotation.DomainService;
-import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor;
+import band.gosrock.domain.domains.ticket_item.adaptor.OptionGroupAdaptor;
 import band.gosrock.domain.domains.ticket_item.domain.OptionGroup;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,10 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class TicketOptionService {
 
-    private final OptionAdaptor optionAdaptor;
+    private final OptionGroupAdaptor optionGroupAdaptor;
 
     @Transactional
     public OptionGroup createTicketOption(OptionGroup optionGroup) {
-        return optionAdaptor.save(optionGroup);
+        return optionGroupAdaptor.save(optionGroup);
     }
 }
