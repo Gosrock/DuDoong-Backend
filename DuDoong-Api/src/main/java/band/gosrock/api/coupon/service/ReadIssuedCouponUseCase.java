@@ -28,27 +28,33 @@ public class ReadIssuedCouponUseCase {
         List<IssuedCoupon> issuedCoupons = issuedCouponAdaptor.findAllByUserId(user.getId());
         // 사용 가능 쿠폰 조회 (사용 이전, 유효 기간 이전)
         List<IssuedCoupon> validTermAvailableIssuedCoupons =
-                issuedCoupons.stream()
-                        .filter(
-                                issuedCoupon ->
-                                        issuedCoupon.isAvailableTerm()
-                                                && !issuedCoupon.getUsageStatus())
-                        .toList();
+                filterAvailableCouponList(issuedCoupons);
 
         // 만료된 쿠폰 조회(사용 완료, 유효 기간 만료)
         if (expired) {
             List<IssuedCoupon> expiredValidTermIssuedCoupons =
-                    issuedCoupons.stream()
-                            .filter(
-                                    issuedCoupon ->
-                                            !issuedCoupon.isAvailableTerm()
-                                                    || issuedCoupon.getUsageStatus())
-                            .toList();
+                    filterExpiredCouponList(issuedCoupons);
             return issuedCouponMapper.toReadIssuedCouponMyPageResponse(
                     validTermAvailableIssuedCoupons, expiredValidTermIssuedCoupons);
         }
 
         return issuedCouponMapper.toReadIssuedCouponMyPageResponse(
                 validTermAvailableIssuedCoupons, new ArrayList<>());
+    }
+
+    public List<IssuedCoupon> filterAvailableCouponList(List<IssuedCoupon> issuedCoupons) {
+        return issuedCoupons.stream()
+                .filter(
+                        issuedCoupon ->
+                                issuedCoupon.isAvailableTerm() && !issuedCoupon.getUsageStatus())
+                .toList();
+    }
+
+    public List<IssuedCoupon> filterExpiredCouponList(List<IssuedCoupon> issuedCoupons) {
+        return issuedCoupons.stream()
+                .filter(
+                        issuedCoupon ->
+                                !issuedCoupon.isAvailableTerm() || issuedCoupon.getUsageStatus())
+                .toList();
     }
 }

@@ -7,6 +7,7 @@ import band.gosrock.common.annotation.Mapper;
 import band.gosrock.domain.common.vo.DateTimePeriod;
 import band.gosrock.domain.domains.coupon.domain.CouponCampaign;
 import band.gosrock.domain.domains.coupon.domain.CouponStockInfo;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 
 @Mapper
@@ -23,18 +24,25 @@ public class CouponCampaignMapper {
                 .build();
     }
 
+    public static CouponStockInfo toCouponStockInfo(Long IssuedAmount) {
+        return CouponStockInfo.builder()
+                .issuedAmount(IssuedAmount)
+                .remainingAmount(IssuedAmount)
+                .build();
+    }
+
+    public static DateTimePeriod toDateTimePeriod(LocalDateTime startAt, LocalDateTime endAt) {
+        return DateTimePeriod.builder().startAt(startAt).endAt(endAt).build();
+    }
+
     public CouponCampaign toEntity(CreateCouponCampaignRequest createCouponCampaignRequest) {
 
         CouponStockInfo couponStockInfo =
-                CouponStockInfo.builder()
-                        .issuedAmount(createCouponCampaignRequest.getIssuedAmount())
-                        .remainingAmount(createCouponCampaignRequest.getIssuedAmount())
-                        .build();
+                toCouponStockInfo(createCouponCampaignRequest.getIssuedAmount());
         DateTimePeriod dateTimePeriod =
-                DateTimePeriod.builder()
-                        .startAt(createCouponCampaignRequest.getStartAt())
-                        .endAt(createCouponCampaignRequest.getEndAt())
-                        .build();
+                toDateTimePeriod(
+                        createCouponCampaignRequest.getStartAt(),
+                        createCouponCampaignRequest.getEndAt());
 
         return CouponCampaign.builder()
                 .hostId(createCouponCampaignRequest.getHostId())
