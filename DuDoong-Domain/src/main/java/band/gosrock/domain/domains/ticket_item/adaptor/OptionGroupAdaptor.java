@@ -3,6 +3,7 @@ package band.gosrock.domain.domains.ticket_item.adaptor;
 
 import band.gosrock.common.annotation.Adaptor;
 import band.gosrock.domain.domains.ticket_item.domain.OptionGroup;
+import band.gosrock.domain.domains.ticket_item.domain.OptionGroupStatus;
 import band.gosrock.domain.domains.ticket_item.exception.OptionGroupNotFoundException;
 import band.gosrock.domain.domains.ticket_item.repository.OptionGroupRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,7 @@ public class OptionGroupAdaptor {
 
     public OptionGroup queryOptionGroup(Long optionGroupId) {
         return optionGroupRepository
-                .findById(optionGroupId)
+                .findByIdAndOptionGroupStatus(optionGroupId, OptionGroupStatus.VALID)
                 .orElseThrow(() -> OptionGroupNotFoundException.EXCEPTION);
     }
 
