@@ -10,6 +10,7 @@ import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.validator.OrderValidator;
+import band.gosrock.domain.domains.order.repository.condition.FindMyPageOrderCondition;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -39,10 +40,16 @@ public class ReadOrderUseCase {
         return recentOrder.map(orderMapper::toOrderBriefElement).orElse(null);
     }
 
-    public PageResponse<OrderBriefElement> getMyOrders(Pageable pageable) {
+    public PageResponse<OrderBriefElement> getMyOrders(Boolean showing, Pageable pageable) {
         Long currentUserId = userUtils.getCurrentUserId();
+
+        FindMyPageOrderCondition condition =
+                showing == Boolean.TRUE
+                        ? FindMyPageOrderCondition.onShowing(currentUserId)
+                        : FindMyPageOrderCondition.notShowing(currentUserId);
+
         Page<Order> ordersWithPagination =
-                orderAdaptor.findOrdersWithPagination(currentUserId, pageable);
+                orderAdaptor.findOrdersWithPagination(condition, pageable);
         Page<OrderBriefElement> orderBriefElements =
                 orderMapper.toOrderBriefsResponse(ordersWithPagination);
         return PageResponse.of(orderBriefElements);

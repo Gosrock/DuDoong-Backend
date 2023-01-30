@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @SecurityRequirement(name = "access-token")
@@ -121,10 +122,11 @@ public class OrderController {
         return readOrderUseCase.getRecentOrder();
     }
 
-    @Operation(summary = "최근 예매내역 조회")
-    @GetMapping("")
+    @Operation(summary = "마이페이지 내 예매목록 조회")
+    @GetMapping
     public PageResponse<OrderBriefElement> getMyOrders(
+            @ParameterObject @RequestParam Boolean showing,
             @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
-        return readOrderUseCase.getMyOrders(pageable);
+        return readOrderUseCase.getMyOrders(showing, pageable);
     }
 }
