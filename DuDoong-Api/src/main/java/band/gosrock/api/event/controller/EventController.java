@@ -14,12 +14,13 @@ import band.gosrock.api.event.service.UpdateEventDetailUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 @SecurityRequirement(name = "access-token")
 @Tag(name = "이벤트(공연) 관련 컨트롤러")
@@ -40,12 +41,6 @@ public class EventController {
             @RequestParam Long hostId,
             @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
         return readHostEventListUseCase.execute(hostId, pageable);
-    }
-
-    @Operation(summary = "test")
-    @GetMapping("/asd")
-    public void getAllEventByHostId() throws Exception {
-        throw new Exception();
     }
 
     @Operation(summary = "공연 기본 정보를 등록하여, 새로운 이벤트(공연)를 생성합니다")
