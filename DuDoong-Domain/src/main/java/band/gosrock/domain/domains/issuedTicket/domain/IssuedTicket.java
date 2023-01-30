@@ -3,8 +3,10 @@ package band.gosrock.domain.domains.issuedTicket.domain;
 import static band.gosrock.common.consts.DuDoongStatic.NO_START_NUMBER;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.common.vo.EventInfoVo;
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
 import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.common.vo.UserInfoVo;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelEntranceException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelException;
@@ -17,6 +19,7 @@ import java.util.List;
 import java.util.UUID;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -51,6 +54,12 @@ public class IssuedTicket extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id")
     private Event event;
+
+    private Long eventId;
+
+    private Long userId;
+
+    @Embedded private IssuedTicketItemInfoVo itemInfo;
 
     /*
     발급 티켓 주문 id (단방향)
@@ -104,6 +113,8 @@ public class IssuedTicket extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private IssuedTicketStatus issuedTicketStatus = IssuedTicketStatus.ENTRANCE_INCOMPLETE;
 
+
+
     /*
     빌더를 통해 객체 생성 시 List는 큰 의미를 두지 않지만
     new ArrayList<>()로 한 번 초기화 시켜주면 NPE를 방지 할 수 있음
@@ -118,6 +129,9 @@ public class IssuedTicket extends BaseTimeEntity {
             Money price,
             List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers) {
         this.event = event;
+        this.eventId = event.getId();
+        this.userId = user.getId();
+        this.itemInfo = IssuedTicketItemInfoVo.from(ticketItem);
         this.user = user;
         this.orderUuid = orderUuid;
         this.orderLineId = orderLineId;
