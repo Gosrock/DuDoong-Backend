@@ -38,10 +38,7 @@ public class IssuedCouponInfoVo {
                 .couponCode(issuedCoupon.getCouponCampaign().getCouponCode())
                 .discountType(issuedCoupon.getCouponCampaign().getDiscountType())
                 .discountAmount(issuedCoupon.getCouponCampaign().getDiscountAmount())
-                .validDateTime(
-                        issuedCoupon
-                                .getCreatedAt()
-                                .plusDays(issuedCoupon.getCouponCampaign().getValidTerm()))
+                .validDateTime(issuedCoupon.calculateValidTerm())
                 .build();
     }
 }
