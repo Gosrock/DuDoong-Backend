@@ -10,6 +10,7 @@ import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.service.EventService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @UseCase
 @RequiredArgsConstructor
@@ -18,6 +19,7 @@ public class UpdateEventDetailUseCase {
     private final EventAdaptor eventAdaptor;
     private final EventMapper eventMapper;
 
+    @Transactional
     @HostRolesAllowed("MANAGER")
     public EventResponse execute(Long eventId, UpdateEventDetailRequest updateEventDetailRequest) {
         final Event event = eventAdaptor.findById(eventId);
