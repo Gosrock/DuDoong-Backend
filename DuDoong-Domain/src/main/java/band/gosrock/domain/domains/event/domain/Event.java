@@ -138,4 +138,9 @@ public class Event extends BaseTimeEntity {
     public EventPlaceVo toEventPlaceVo() {
         return EventPlaceVo.from(this);
     }
+
+    public void open() {
+        // TODO : 오픈할수 있는 상태인지 검증필요함.
+        this.status = EventStatus.OPEN;
+    }
 }

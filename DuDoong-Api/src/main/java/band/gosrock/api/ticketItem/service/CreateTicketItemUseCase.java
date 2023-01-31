@@ -3,7 +3,7 @@ package band.gosrock.api.ticketItem.service;
 
 import band.gosrock.api.common.UserUtils;
 import band.gosrock.api.ticketItem.dto.request.CreateTicketItemRequest;
-import band.gosrock.api.ticketItem.dto.response.CreateTicketItemResponse;
+import band.gosrock.api.ticketItem.dto.response.TicketItemResponse;
 import band.gosrock.api.ticketItem.mapper.TicketItemMapper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
@@ -29,7 +29,7 @@ public class CreateTicketItemUseCase {
     private final TicketItemMapper ticketItemMapper;
 
     @Transactional
-    public CreateTicketItemResponse execute(
+    public TicketItemResponse execute(
             CreateTicketItemRequest createTicketItemRequest, Long eventId) {
         User user = userUtils.getCurrentUser();
         Event event = eventAdaptor.findById(eventId);
@@ -42,6 +42,6 @@ public class CreateTicketItemUseCase {
                 ticketItemService.createTicketItem(
                         ticketItemMapper.toTicketItem(createTicketItemRequest, event), isPartner);
 
-        return CreateTicketItemResponse.from(ticketItem);
+        return TicketItemResponse.from(ticketItem);
     }
 }

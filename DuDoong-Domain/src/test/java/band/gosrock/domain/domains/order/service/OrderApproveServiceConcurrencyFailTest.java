@@ -3,6 +3,8 @@ package band.gosrock.domain.domains.order.service;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willCallRealMethod;
+import static org.mockito.BDDMockito.willDoNothing;
 
 import band.gosrock.domain.CunCurrencyExecutorService;
 import band.gosrock.domain.DisableDomainEvent;
@@ -14,6 +16,7 @@ import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;
 import band.gosrock.domain.domains.order.domain.OrderMethod;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
+import band.gosrock.domain.domains.order.domain.validator.OrderValidator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +37,7 @@ class OrderApproveServiceConcurrencyFailTest {
     @Mock OrderLineItem orderLineItem;
 
     @MockBean OrderAdaptor orderAdaptor;
+    @MockBean OrderValidator orderValidator;
 
     Order order;
 
@@ -47,6 +51,9 @@ class OrderApproveServiceConcurrencyFailTest {
                         .orderLineItems(List.of(orderLineItem))
                         .build();
         order.addUUID();
+        willDoNothing().given(orderValidator).validCanDone(any());
+        willCallRealMethod().given(orderValidator).validCanApproveOrder(any());
+        willCallRealMethod().given(orderValidator).validStatusCanApprove(any());
         given(orderAdaptor.findByOrderUuid(any())).willReturn(order);
     }
 

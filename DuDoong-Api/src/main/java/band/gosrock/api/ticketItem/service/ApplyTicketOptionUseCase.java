@@ -26,14 +26,13 @@ public class ApplyTicketOptionUseCase {
     private final HostService hostService;
 
     public ApplyTicketOptionResponse execute(
-            ApplyTicketOptionRequest applyTicketOptionRequest, Long eventId) {
+            ApplyTicketOptionRequest applyTicketOptionRequest, Long eventId, Long ticketItemId) {
         User user = userUtils.getCurrentUser();
         Event event = eventAdaptor.findById(eventId);
         Host host = hostAdaptor.findById(event.getHostId());
         // 권한 체크 ( 해당 이벤트의 호스트인지 )
         hostService.validateHostUser(host, user.getId());
 
-        Long ticketItemId = applyTicketOptionRequest.getTicketItemId();
         Long optionGroupId = applyTicketOptionRequest.getOptionGroupId();
 
         TicketItem ticketItem =

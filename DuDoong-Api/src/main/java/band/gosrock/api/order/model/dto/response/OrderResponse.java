@@ -1,7 +1,9 @@
 package band.gosrock.api.order.model.dto.response;
 
 
+import band.gosrock.domain.common.vo.EventProfileVo;
 import band.gosrock.domain.common.vo.RefundInfoVo;
+import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderMethod;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -24,6 +26,9 @@ public class OrderResponse {
     @Schema(description = "예매 취소 정보")
     private final RefundInfoVo refundInfo;
 
+    @Schema(description = "이벤트 프로필 정보")
+    private final EventProfileVo eventProfile;
+
     @Schema(description = "주문 고유 uuid")
     private final String orderUuid;
 
@@ -34,14 +39,15 @@ public class OrderResponse {
     private final OrderMethod orderMethod;
 
     public static OrderResponse of(
-            Order order, RefundInfoVo refundInfo, List<OrderLineTicketResponse> tickets) {
+            Order order, Event event, List<OrderLineTicketResponse> tickets) {
         return OrderResponse.builder()
-                .refundInfo(refundInfo)
+                .refundInfo(event.getRefundInfoVo())
                 .orderMethod(order.getOrderMethod())
                 .paymentInfo(OrderPaymentResponse.from(order))
                 .tickets(tickets)
                 .orderUuid(order.getUuid())
                 .orderNo(order.getOrderNo())
+                .eventProfile(event.toEventProfileVo())
                 .build();
     }
 }

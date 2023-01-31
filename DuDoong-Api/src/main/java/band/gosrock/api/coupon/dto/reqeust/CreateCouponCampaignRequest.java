@@ -2,7 +2,6 @@ package band.gosrock.api.coupon.dto.reqeust;
 
 
 import band.gosrock.common.annotation.DateFormat;
-import band.gosrock.domain.common.vo.DateTimePeriod;
 import band.gosrock.domain.domains.coupon.domain.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
@@ -55,25 +54,4 @@ public class CreateCouponCampaignRequest {
 
     @NotBlank(message = "couponCode를 입력해주세요.")
     private String couponCode;
-
-    public CouponCampaign toOnceEntity() {
-        CouponStockInfo couponStockInfo =
-                CouponStockInfo.builder()
-                        .issuedAmount(issuedAmount)
-                        .remainingAmount(issuedAmount)
-                        .build();
-        DateTimePeriod dateTimePeriod =
-                DateTimePeriod.builder().startAt(startAt).endAt(endAt).build();
-
-        return CouponCampaign.builder()
-                .hostId(hostId)
-                .discountType(discountType)
-                .applyTarget(applyTarget)
-                .validTerm(validTerm)
-                .dateTimePeriod(dateTimePeriod)
-                .couponStockInfo(couponStockInfo)
-                .discountAmount(discountAmount)
-                .couponCode(couponCode)
-                .build();
-    }
 }

@@ -1,7 +1,8 @@
 package band.gosrock.domain.common.vo;
 
 
-import band.gosrock.domain.domains.event.domain.*;
+import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.event.domain.EventStatus;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,6 +17,8 @@ public class EventProfileVo {
     private String name;
 
     private LocalDateTime startAt;
+
+    private LocalDateTime endAt;
 
     private String placeName;
 
@@ -33,6 +36,7 @@ public class EventProfileVo {
                 .startAt(eventBasicVo.getStartAt())
                 .placeName(eventPlaceVo.getPlaceName())
                 .status(event.getStatus())
+                .endAt(event.getEndAt())
                 .build();
     }
 }

@@ -3,7 +3,7 @@ package band.gosrock.api.ticketItem.service;
 
 import band.gosrock.api.common.UserUtils;
 import band.gosrock.api.ticketItem.dto.request.CreateTicketOptionRequest;
-import band.gosrock.api.ticketItem.dto.response.CreateTicketOptionResponse;
+import band.gosrock.api.ticketItem.dto.response.OptionGroupResponse;
 import band.gosrock.api.ticketItem.mapper.TicketOptionMapper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.common.vo.Money;
@@ -30,7 +30,7 @@ public class CreateTicketOptionUseCase {
     private final HostService hostService;
 
     @Transactional
-    public CreateTicketOptionResponse execute(
+    public OptionGroupResponse execute(
             CreateTicketOptionRequest createTicketOptionRequest, Long eventId) {
         User user = userUtils.getCurrentUser();
         Event event = eventAdaptor.findById(eventId);
@@ -44,6 +44,6 @@ public class CreateTicketOptionUseCase {
                         .createTicketOption(
                                 Money.wons(createTicketOptionRequest.getAdditionalPrice()));
         OptionGroup ticketOptionResult = ticketOptionService.createTicketOption(ticketOption);
-        return CreateTicketOptionResponse.from(ticketOptionResult);
+        return OptionGroupResponse.from(ticketOptionResult);
     }
 }
