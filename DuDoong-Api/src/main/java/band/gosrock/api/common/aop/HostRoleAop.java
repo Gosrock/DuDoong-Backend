@@ -32,7 +32,7 @@ public class HostRoleAop {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         HostRolesAllowed annotation = method.getAnnotation(HostRolesAllowed.class);
-        String role = annotation.role();
+        String role = annotation.value();
 
         // 제공된 호스트의 role 이 정의된 세개의 롤과 같은지 확인한다.
         // 없으면 IllegalArgumentException 발생

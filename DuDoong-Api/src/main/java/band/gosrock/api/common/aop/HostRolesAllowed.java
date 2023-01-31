@@ -15,7 +15,7 @@ public @interface HostRolesAllowed {
      *
      * @see HostRoleAop
      */
-    String role();
+    String value();
 
     /** 이벤트 아이디의 식별자. */
     String eventIdIdentifier() default "eventId";

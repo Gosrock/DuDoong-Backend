@@ -18,7 +18,7 @@ public class UpdateEventDetailUseCase {
     private final EventAdaptor eventAdaptor;
     private final EventMapper eventMapper;
 
-    @HostRolesAllowed(role = "MANAGER")
+    @HostRolesAllowed("MANAGER")
     public EventResponse execute(Long eventId, UpdateEventDetailRequest updateEventDetailRequest) {
         final Event event = eventAdaptor.findById(eventId);
         return EventResponse.of(
