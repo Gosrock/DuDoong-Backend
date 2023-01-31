@@ -3,18 +3,16 @@ package band.gosrock.domain.domains.issuedTicket.domain;
 import static band.gosrock.common.consts.DuDoongStatic.NO_START_NUMBER;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
-import band.gosrock.domain.common.vo.EventInfoVo;
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
 import band.gosrock.domain.common.vo.Money;
-import band.gosrock.domain.common.vo.UserInfoVo;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelEntranceException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotEntranceException;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketAlreadyEntranceException;
-import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.user.domain.User;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -29,7 +27,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.PostPersist;
 import javax.persistence.PrePersist;
@@ -93,7 +90,7 @@ public class IssuedTicket extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private IssuedTicketStatus issuedTicketStatus = IssuedTicketStatus.ENTRANCE_INCOMPLETE;
 
-
+    @Embedded private IssuedTicketCancelInfoVo cancelInfo;
 
     /*
     빌더를 통해 객체 생성 시 List는 큰 의미를 두지 않지만
@@ -115,6 +112,7 @@ public class IssuedTicket extends BaseTimeEntity {
         this.orderLineId = orderLineId;
         this.price = price;
         this.issuedTicketOptionAnswers.addAll(issuedTicketOptionAnswers);
+        this.cancelInfo = null;
     }
 
     /** ---------------------------- 생성 관련 메서드 ---------------------------------- */
@@ -188,6 +186,18 @@ public class IssuedTicket extends BaseTimeEntity {
             throw CanNotCancelException.EXCEPTION;
         }
         this.issuedTicketStatus = IssuedTicketStatus.CANCELED;
+        this.cancelInfo =
+                IssuedTicketCancelInfoVo.of(LocalDateTime.now(), IssuedTicketCancelReason.REFUND);
+    }
+
+    public void adminCancel() {
+        if (this.issuedTicketStatus != IssuedTicketStatus.ENTRANCE_INCOMPLETE) {
+            throw CanNotCancelException.EXCEPTION;
+        }
+        this.issuedTicketStatus = IssuedTicketStatus.CANCELED;
+        this.cancelInfo =
+                IssuedTicketCancelInfoVo.of(
+                        LocalDateTime.now(), IssuedTicketCancelReason.ADMIN_CANCEL);
     }
 
     /*

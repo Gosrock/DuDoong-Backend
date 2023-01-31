@@ -32,7 +32,11 @@ public class IssuedTicketMapper {
             Long currentUserId, Long issuedTicketId) {
         IssuedTicket issuedTicket = issuedTicketAdaptor.findForUser(currentUserId, issuedTicketId);
         Event event = eventAdaptor.findById(issuedTicket.getEventId());
-        return RetrieveIssuedTicketDetailResponse.of(
-            issuedTicket, event);
+        return RetrieveIssuedTicketDetailResponse.of(issuedTicket, event);
+    }
+
+    @Transactional(readOnly = true)
+    public IssuedTicket getIssuedTicket(Long issuedTicketId) {
+        return issuedTicketAdaptor.queryIssuedTicket(issuedTicketId);
     }
 }

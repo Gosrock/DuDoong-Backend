@@ -20,7 +20,7 @@ public class EntranceIssuedTicketUseCase {
 
     public IssuedTicketInfoVo execute(Long eventId, Long issuedTicketId) {
         Long currentUserId = userUtils.getCurrentUserId();
-        return issuedTicketDomainService.processingEntranceIssuedTicket(eventId,
-                currentUserId, issuedTicketId);
+        return issuedTicketDomainService.processingEntranceIssuedTicket(
+                eventId, currentUserId, issuedTicketId);
     }
 }

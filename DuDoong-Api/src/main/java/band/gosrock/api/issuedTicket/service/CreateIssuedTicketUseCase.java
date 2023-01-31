@@ -2,7 +2,6 @@ package band.gosrock.api.issuedTicket.service;
 
 
 import band.gosrock.api.config.security.SecurityUtils;
-import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketDetailResponse;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;

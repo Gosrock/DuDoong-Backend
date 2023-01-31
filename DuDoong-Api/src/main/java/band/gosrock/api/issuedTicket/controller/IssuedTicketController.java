@@ -36,8 +36,7 @@ public class IssuedTicketController {
     @Operation(summary = "개발용 발급 티켓 생성 API 입니다.")
     @DevelopOnlyApi
     @PostMapping(value = "/develop")
-    public void postIssuedTicket(
-            @RequestBody CreateIssuedTicketForDevDTO body) {
+    public void postIssuedTicket(@RequestBody CreateIssuedTicketForDevDTO body) {
         createIssuedTicketUseCase.executeForDev(body);
     }
 }

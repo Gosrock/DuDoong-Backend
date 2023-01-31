@@ -1,5 +1,6 @@
 package band.gosrock.domain.domains.issuedTicket.validator;
 
+
 import band.gosrock.common.annotation.Validator;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
@@ -17,8 +18,7 @@ public class IssuedTicketValidator {
     private final EventAdaptor eventAdaptor;
     private final HostAdaptor hostAdaptor;
 
-    public void validCanProcessingEntranceIssuedTicket(IssuedTicket issuedTicket,
-        Long currentUserId) {
+    public void validCanModifyIssuedTicketUser(IssuedTicket issuedTicket, Long currentUserId) {
         Event event = eventAdaptor.findById(issuedTicket.getEventId());
         Host host = hostAdaptor.findById(event.getHostId());
         host.validateHostUser(currentUserId);

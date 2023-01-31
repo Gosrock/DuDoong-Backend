@@ -3,9 +3,9 @@ package band.gosrock.domain.common.vo;
 
 import band.gosrock.common.annotation.DateFormat;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
+import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketCancelInfoVo;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketUserInfoVo;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
@@ -42,8 +42,7 @@ public class IssuedTicketInfoVo {
     /*
     티켓 발급 시간
      */
-    @DateFormat
-    private final LocalDateTime createdAt;
+    @DateFormat private final LocalDateTime createdAt;
 
     /*
     발급 티켓 상태
@@ -57,6 +56,11 @@ public class IssuedTicketInfoVo {
 
     private final IssuedTicketUserInfoVo userInfo;
 
+    /*
+    발급 티켓 철회 시간
+     */
+    private final IssuedTicketCancelInfoVo cancelInfo;
+
     public static IssuedTicketInfoVo from(IssuedTicket issuedTicket) {
         return IssuedTicketInfoVo.builder()
                 .issuedTicketId(issuedTicket.getId())
@@ -67,7 +71,8 @@ public class IssuedTicketInfoVo {
                 .createdAt(issuedTicket.getCreatedAt())
                 .issuedTicketStatus(issuedTicket.getIssuedTicketStatus())
                 .optionPrice(issuedTicket.sumOptionPrice())
-            .userInfo(issuedTicket.getUserInfo())
+                .userInfo(issuedTicket.getUserInfo())
+                .cancelInfo(issuedTicket.getCancelInfo())
                 .build();
     }
 }

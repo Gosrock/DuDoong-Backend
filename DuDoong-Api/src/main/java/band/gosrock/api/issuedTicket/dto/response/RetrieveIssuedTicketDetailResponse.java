@@ -27,7 +27,7 @@ public class RetrieveIssuedTicketDetailResponse {
     public static RetrieveIssuedTicketDetailResponse of(IssuedTicket issuedTicket, Event event) {
         return RetrieveIssuedTicketDetailResponse.builder()
                 .issuedTicketInfo(issuedTicket.toIssuedTicketInfoVo())
-            .eventInfo(event.toEventInfoVo())
+                .eventInfo(event.toEventInfoVo())
                 .build();
     }
 }
