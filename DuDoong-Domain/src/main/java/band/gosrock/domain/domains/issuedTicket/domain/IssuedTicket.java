@@ -118,30 +118,6 @@ public class IssuedTicket extends BaseTimeEntity {
     /** ---------------------------- 생성 관련 메서드 ---------------------------------- */
 
     /*
-    개발 및 테스트 용도로 사용되는 티켓 발급 정적 메서드
-     */
-    public static IssuedTicket createForDev(
-            Event event,
-            User user,
-            Long orderLineId,
-            TicketItem ticketItem,
-            Money price,
-            List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers) {
-        IssuedTicket createIssuedTicket =
-                IssuedTicket.builder()
-                        .event(event)
-                        .user(user)
-                        .orderUuid("test")
-                        .orderLineId(orderLineId)
-                        .ticketItem(ticketItem)
-                        .price(price)
-                        .issuedTicketOptionAnswers(new ArrayList<>())
-                        .build();
-        createIssuedTicket.getIssuedTicketOptionAnswers().addAll(issuedTicketOptionAnswers);
-        return createIssuedTicket;
-    }
-
-    /*
     issuedTicket 생성하면서 UUID 생성
      */
     @PrePersist
