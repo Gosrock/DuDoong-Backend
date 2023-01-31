@@ -4,6 +4,7 @@ package band.gosrock.api.order.service;
 import band.gosrock.api.common.UserUtils;
 import band.gosrock.api.common.page.PageResponse;
 import band.gosrock.api.order.model.dto.request.AdminOrderTableQueryRequest;
+import band.gosrock.api.order.model.dto.response.OrderAdminTableElement;
 import band.gosrock.api.order.model.dto.response.OrderBriefElement;
 import band.gosrock.api.order.model.dto.response.OrderResponse;
 import band.gosrock.api.order.model.mapper.OrderMapper;
@@ -15,7 +16,6 @@ import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.validator.OrderValidator;
-import band.gosrock.domain.domains.order.repository.condition.FindEventOrdersCondition;
 import band.gosrock.domain.domains.order.repository.condition.FindMyPageOrderCondition;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -61,7 +61,7 @@ public class ReadOrderUseCase {
         return PageResponse.of(orderBriefElements);
     }
 
-    public PageResponse<OrderResponse> getEventOrders(
+    public PageResponse<OrderAdminTableElement> getEventOrders(
             Long eventId,
             AdminOrderTableQueryRequest adminOrderTableQueryRequest,
             Pageable pageable) {
@@ -71,9 +71,9 @@ public class ReadOrderUseCase {
         Long userId = userUtils.getCurrentUserId();
         host.validateHostUser(userId);
 
-        FindEventOrdersCondition condition = adminOrderTableQueryRequest.toCondition(eventId);
-        Page<Order> orders = orderAdaptor.findEventOrders(condition, pageable);
-        Page<OrderResponse> orderResponses = orderMapper.toOrderResponses(orders);
-        return PageResponse.of(orderResponses);
+        Page<Order> orders =
+                orderAdaptor.findEventOrders(
+                        adminOrderTableQueryRequest.toCondition(eventId), pageable);
+        return PageResponse.of(orderMapper.toOrderAdminTableElement(orders));
     }
 }

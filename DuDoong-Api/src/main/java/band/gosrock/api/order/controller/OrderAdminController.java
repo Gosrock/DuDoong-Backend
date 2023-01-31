@@ -3,7 +3,7 @@ package band.gosrock.api.order.controller;
 
 import band.gosrock.api.common.page.PageResponse;
 import band.gosrock.api.order.model.dto.request.AdminOrderTableQueryRequest;
-import band.gosrock.api.order.model.dto.response.OrderResponse;
+import band.gosrock.api.order.model.dto.response.OrderAdminTableElement;
 import band.gosrock.api.order.service.ApproveOrderUseCase;
 import band.gosrock.api.order.service.ReadOrderUseCase;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,7 +31,7 @@ public class OrderAdminController {
     // TODO : 어프로브 주문 이동처리
     @Operation(summary = "어드민 목록 내 테이블 조회 OrderStage 는 꼭 보내주삼!")
     @GetMapping
-    public PageResponse<OrderResponse> getEventOrders(
+    public PageResponse<OrderAdminTableElement> getEventOrders(
             @ParameterObject @Valid AdminOrderTableQueryRequest adminOrderTableQueryRequest,
             @ParameterObject Pageable pageable,
             @PathVariable Long eventId) {

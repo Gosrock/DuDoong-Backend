@@ -58,6 +58,8 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
         List<Order> orders =
                 queryFactory
                         .selectFrom(order)
+                        .join(user)
+                        .on(user.id.eq(order.userId))
                         .where(
                                 eqEventId(condition.getEventId()),
                                 condition.getOrderStatusFilter(),
