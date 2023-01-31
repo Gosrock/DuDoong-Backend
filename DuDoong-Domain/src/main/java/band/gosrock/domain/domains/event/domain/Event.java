@@ -7,13 +7,12 @@ import band.gosrock.domain.domains.event.exception.CannotModifyEventBasicExcepti
 import band.gosrock.domain.domains.event.exception.EventCannotEndBeforeStartException;
 import band.gosrock.domain.domains.event.exception.EventNotOpenException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
+import java.time.LocalDateTime;
+import javax.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import javax.persistence.*;
-import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -106,10 +105,6 @@ public class Event extends BaseTimeEntity {
         this.eventPlace = eventPlace;
     }
 
-    public void setStatus(EventStatus status) {
-        this.status = status;
-    }
-
     @Builder
     public Event(Long hostId, String name, LocalDateTime startAt, Long runTime) {
         this.hostId = hostId;
@@ -160,7 +155,17 @@ public class Event extends BaseTimeEntity {
         return EventPlaceVo.from(this);
     }
 
+    public void prepare() {
+        // TODO : 오픈할수 있는 상태인지 검증필요함.
+        this.status = EventStatus.PREPARING;
+    }
+
     public void open() {
+        // TODO : 오픈할수 있는 상태인지 검증필요함.
+        this.status = EventStatus.OPEN;
+    }
+
+    public void close() {
         // TODO : 오픈할수 있는 상태인지 검증필요함.
         this.status = EventStatus.OPEN;
     }
