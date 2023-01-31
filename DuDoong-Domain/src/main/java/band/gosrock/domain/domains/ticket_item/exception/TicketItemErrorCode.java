@@ -30,9 +30,9 @@ public enum TicketItemErrorCode implements BaseErrorCode {
     @ExplainError("요청에서 보내준 옵션그룹 id 값이 올바르지 않을 때 발생하는 오류입니다.")
     OPTION_GROUP_NOT_FOUND(NOT_FOUND, "Option_Group_404_1", "옵션그룹을 찾을 수 없습니다."),
     @ExplainError("적용할 옵션이 해당 이벤트 소속이 아닐 때 발생하는 오류입니다.")
-    INVALID_OPTION_GROUP(BAD_REQUEST, "Option_Group_400_1", "해당 옵션을 적용할 수 없습니다."),
+    INVALID_OPTION_GROUP(BAD_REQUEST, "Option_Group_400_1", "해당 이벤트 소속 옵션그룹이 아닙니다."),
     @ExplainError("옵션을 적용할 상품이 해당 이벤트 소속이 아닐 때 발생하는 오류입니다.")
-    INVALID_TICKET_ITEM(BAD_REQUEST, "Ticket_Item_400_5", "해당 티켓상품에 적용할 수 없습니다."),
+    INVALID_TICKET_ITEM(BAD_REQUEST, "Ticket_Item_400_5", "해당 이벤트 소속 티켓상품이 아닙니다."),
     @ExplainError("해당 티켓상품에 이미 적용된 옵션일 경우 발생하는 오류입니다.")
     DUPLICATED_ITEM_OPTION_GROUP(BAD_REQUEST, "Item_Option_Group_400_1", "이미 적용된 옵션입니다."),
     OPTION_ANSWER_NOT_CORRECT(

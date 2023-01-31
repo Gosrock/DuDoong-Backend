@@ -1,6 +1,7 @@
 package band.gosrock.api.order.controller;
 
 
+import band.gosrock.api.common.page.PageResponse;
 import band.gosrock.api.order.docs.ApproveOrderExceptionDocs;
 import band.gosrock.api.order.docs.CancelOrderExceptionDocs;
 import band.gosrock.api.order.docs.ConfirmOrderExceptionDocs;
@@ -10,6 +11,7 @@ import band.gosrock.api.order.docs.RefundOrderExceptionDocs;
 import band.gosrock.api.order.model.dto.request.ConfirmOrderRequest;
 import band.gosrock.api.order.model.dto.request.CreateOrderRequest;
 import band.gosrock.api.order.model.dto.response.CreateOrderResponse;
+import band.gosrock.api.order.model.dto.response.OrderBriefElement;
 import band.gosrock.api.order.model.dto.response.OrderResponse;
 import band.gosrock.api.order.service.ApproveOrderUseCase;
 import band.gosrock.api.order.service.CancelOrderUseCase;
@@ -27,11 +29,15 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.api.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @SecurityRequirement(name = "access-token")
@@ -104,9 +110,23 @@ public class OrderController {
         return refundOrderUseCase.execute(orderUuid);
     }
 
-    @Operation(summary = "결제 조회. 결제 조회 권한은 주문 본인,  호스트 관리자.")
+    @Operation(summary = "결제 조회. 결제 조회 권한은 주문 본인")
     @GetMapping("/{order_uuid}")
-    public OrderResponse readOrder(@PathVariable("order_uuid") String orderUuid) {
-        return readOrderUseCase.execute(orderUuid);
+    public OrderResponse getOrderDetail(@PathVariable("order_uuid") String orderUuid) {
+        return readOrderUseCase.getOrderDetail(orderUuid);
+    }
+
+    @Operation(summary = "최근 예매내역 조회")
+    @GetMapping("/recent")
+    public OrderBriefElement getRecentOrder() {
+        return readOrderUseCase.getRecentOrder();
+    }
+
+    @Operation(summary = "마이페이지 내 예매목록 조회")
+    @GetMapping
+    public PageResponse<OrderBriefElement> getMyOrders(
+            @ParameterObject @RequestParam Boolean showing,
+            @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
+        return readOrderUseCase.getMyOrders(showing, pageable);
     }
 }
