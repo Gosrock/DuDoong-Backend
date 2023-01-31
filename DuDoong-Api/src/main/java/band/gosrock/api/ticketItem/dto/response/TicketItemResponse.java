@@ -10,7 +10,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class CreateTicketItemResponse {
+public class TicketItemResponse {
     @Schema(description = "티켓상품 id")
     private final Long ticketItemId;
 
@@ -35,9 +35,9 @@ public class CreateTicketItemResponse {
     @Schema(description = "재고")
     private final Long quantity;
 
-    public static CreateTicketItemResponse from(TicketItem ticketItem) {
+    public static TicketItemResponse from(TicketItem ticketItem) {
 
-        return CreateTicketItemResponse.builder()
+        return TicketItemResponse.builder()
                 .ticketItemId(ticketItem.getId())
                 .ticketName(ticketItem.getName())
                 .description(ticketItem.getDescription())

@@ -15,6 +15,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -42,6 +43,11 @@ public class OptionGroup {
 
     // 필수 응답 여부
     private Boolean isEssential;
+
+    // 상태
+    @Enumerated(EnumType.STRING)
+    @ColumnDefault(value = "'VALID'")
+    private OptionGroupStatus optionGroupStatus = OptionGroupStatus.VALID;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "optionGroup")
     private final List<Option> options = new ArrayList<>();
