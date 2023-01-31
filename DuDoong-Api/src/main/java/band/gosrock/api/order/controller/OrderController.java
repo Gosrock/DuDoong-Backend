@@ -2,7 +2,6 @@ package band.gosrock.api.order.controller;
 
 
 import band.gosrock.api.common.page.PageResponse;
-import band.gosrock.api.order.docs.ApproveOrderExceptionDocs;
 import band.gosrock.api.order.docs.CancelOrderExceptionDocs;
 import band.gosrock.api.order.docs.ConfirmOrderExceptionDocs;
 import band.gosrock.api.order.docs.CreateOrderExceptionDocs;
@@ -80,13 +79,6 @@ public class OrderController {
             @PathVariable("order_uuid") String orderUuid,
             @RequestBody ConfirmOrderRequest confirmOrderRequest) {
         return confirmOrderUseCase.execute(orderUuid, confirmOrderRequest);
-    }
-
-    @Operation(summary = "주문 승인하기 . 호스트 관리자가 티켓 주문을 승인합니다. ( 어드민 이벤트쪽으로 이동예정 )")
-    @ApiErrorExceptionsExample(ApproveOrderExceptionDocs.class)
-    @PostMapping("/{order_uuid}/approve")
-    public OrderResponse confirmOrder(@PathVariable("order_uuid") String orderUuid) {
-        return approveOrderUseCase.execute(orderUuid);
     }
 
     @Operation(summary = "주문을 무료로 결제합니다. 선착순 방식 결제 0원일 때 지원")
