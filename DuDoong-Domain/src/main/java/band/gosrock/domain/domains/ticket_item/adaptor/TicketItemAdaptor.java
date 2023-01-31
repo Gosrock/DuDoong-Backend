@@ -26,6 +26,10 @@ public class TicketItemAdaptor {
                 eventId, TicketItemStatus.VALID);
     }
 
+    public Boolean existsByEventId(Long eventId) {
+        return ticketItemRepository.existsByEvent_Id(eventId);
+    }
+
     public TicketItem save(TicketItem ticketItem) {
         return ticketItemRepository.save(ticketItem);
     }

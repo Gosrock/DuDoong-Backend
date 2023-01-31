@@ -29,6 +29,10 @@ public class EventDetail {
     @Column(columnDefinition = "TEXT", length = 300)
     private String content;
 
+    protected Boolean isValid() {
+        return this.posterImage != null && this.content != null && !this.detailImages.isEmpty();
+    }
+
     @Builder
     public EventDetail(String posterImage, List<String> detailImages, String content) {
         this.posterImage = posterImage;

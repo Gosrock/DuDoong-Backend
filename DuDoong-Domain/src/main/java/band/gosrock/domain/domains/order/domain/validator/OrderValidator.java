@@ -141,7 +141,7 @@ public class OrderValidator {
 
     /** 이벤트가 열려있는 상태인지 */
     public void validEventIsOpen(Event event) {
-        event.validStatusOpen();
+        event.validateStatusOpen();
     }
 
     /** 아이템의 종류가 1종류인지. */
@@ -154,7 +154,7 @@ public class OrderValidator {
 
     /** 티켓 예매 가능 시간이 아직 안지났는지. */
     public void validTicketingTime(Event event) {
-        event.validTicketingTime();
+        event.validateTicketingTime();
     }
 
     /** 아이템의 재고가 충분한지 확인합니다. */

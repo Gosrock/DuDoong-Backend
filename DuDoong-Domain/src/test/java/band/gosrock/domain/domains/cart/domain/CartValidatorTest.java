@@ -52,7 +52,7 @@ class CartValidatorTest {
     public void 카트_티켓팅_가능시간검증_실패() {
         // given
         given(event.isTimeBeforeStartAt()).willReturn(Boolean.FALSE);
-        willCallRealMethod().given(event).validTicketingTime();
+        willCallRealMethod().given(event).validateTicketingTime();
         // when
         // then
         assertThrows(
@@ -64,7 +64,7 @@ class CartValidatorTest {
     public void 카트_티켓팅_가능시간검증_성공() {
         // given
         given(event.isTimeBeforeStartAt()).willReturn(Boolean.TRUE);
-        willCallRealMethod().given(event).validTicketingTime();
+        willCallRealMethod().given(event).validateTicketingTime();
         // when
         cartValidator.validTicketingTime(event);
         // then
@@ -93,7 +93,7 @@ class CartValidatorTest {
     @Test
     public void 카트_티켓팅_이벤트_상태검증_성공() {
         // given
-        willDoNothing().given(event).validStatusOpen();
+        willDoNothing().given(event).validateStatusOpen();
         // when
         cartValidator.validEventIsOpen(event);
         // then
@@ -102,7 +102,7 @@ class CartValidatorTest {
     @Test
     public void 카트_티켓팅_이벤트_상태검증_실패() {
         // given
-        willThrow(EventNotOpenException.class).given(event).validStatusOpen();
+        willThrow(EventNotOpenException.class).given(event).validateStatusOpen();
         // when
         // then
         assertThrows(EventNotOpenException.class, () -> cartValidator.validEventIsOpen(event));

@@ -62,6 +62,18 @@ public class Event extends BaseTimeEntity {
         return this.getEventBasic().getStartAt().plusMinutes(getEventBasic().getRunTime());
     }
 
+    public Boolean hasEventBasic() {
+        return this.eventBasic != null && this.eventBasic.isValid();
+    }
+
+    public Boolean hasEventPlace() {
+        return this.eventPlace != null && this.eventPlace.isValid();
+    }
+
+    public Boolean hasEventDetail() {
+        return this.eventDetail != null && this.eventDetail.isValid();
+    }
+
     /** 티켓팅 시작과 종료 시간을 지정 */
     public void setTicketingTime(LocalDateTime startAt, LocalDateTime endAt) {
         // 이벤트 종료가 시작보다 빠르면 안됨
@@ -99,32 +111,32 @@ public class Event extends BaseTimeEntity {
         this.eventBasic = EventBasic.builder().name(name).startAt(startAt).runTime(runTime).build();
     }
 
-    public RefundInfoVo getRefundInfoVo() {
-        return RefundInfoVo.from(getEndAt());
-    }
-
-    public Boolean isRefundDateNotPassed() {
-        return getRefundInfoVo().getAvailAble();
-    }
-
-    public EventInfoVo toEventInfoVo() {
-        return EventInfoVo.from(this);
-    }
-
-    public void validStatusOpen() {
+    public void validateStatusOpen() {
         if (status != EventStatus.OPEN) {
             throw EventNotOpenException.EXCEPTION;
         }
     }
 
-    public void validTicketingTime() {
+    public void validateTicketingTime() {
         if (!isTimeBeforeStartAt()) {
             throw EventTicketingTimeIsPassedException.EXCEPTION;
         }
     }
 
+    public Boolean isRefundDateNotPassed() {
+        return toRefundInfoVo().getAvailAble();
+    }
+
     public boolean isTimeBeforeStartAt() {
         return LocalDateTime.now().isBefore(getStartAt());
+    }
+
+    public RefundInfoVo toRefundInfoVo() {
+        return RefundInfoVo.from(getEndAt());
+    }
+
+    public EventInfoVo toEventInfoVo() {
+        return EventInfoVo.from(this);
     }
 
     public EventDetailVo toEventDetailVo() {
