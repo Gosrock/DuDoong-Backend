@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-// Todo: default constructor 고치기
 @Getter
 @Embeddable
 @NoArgsConstructor
