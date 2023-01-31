@@ -4,6 +4,7 @@ import static band.gosrock.domain.domains.issuedTicket.domain.QIssuedTicket.issu
 import static band.gosrock.domain.domains.issuedTicket.domain.QIssuedTicketOptionAnswer.issuedTicketOptionAnswer;
 
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
+import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus;
 import band.gosrock.domain.domains.issuedTicket.dto.condition.IssuedTicketCondition;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -28,7 +29,8 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
                         .where(
                                 eventIdEq(condition.getEventId()),
                                 userNameContains(condition.getUserName()),
-                                phoneNumberContains(condition.getPhoneNumber()))
+                                phoneNumberContains(condition.getPhoneNumber()),
+                                issuedTicketStatusNotCanceled())
                         .orderBy(issuedTicket.id.desc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize())
@@ -41,7 +43,8 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
                         .where(
                                 eventIdEq(condition.getEventId()),
                                 userNameContains(condition.getUserName()),
-                                phoneNumberContains(condition.getPhoneNumber()));
+                                phoneNumberContains(condition.getPhoneNumber()),
+                                issuedTicketStatusNotCanceled());
 
         return PageableExecutionUtils.getPage(issuedTickets, pageable, countQuery::fetchOne);
     }
@@ -53,7 +56,7 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
                         .selectFrom(issuedTicket)
                         .leftJoin(issuedTicket.issuedTicketOptionAnswers, issuedTicketOptionAnswer)
                         .fetchJoin()
-                        .where(issuedTicket.id.eq(issuedTicketId))
+                        .where(issuedTicket.id.eq(issuedTicketId), issuedTicketStatusNotCanceled())
                         .fetchOne();
         return Optional.ofNullable(findIssuedTicket);
     }
@@ -68,5 +71,9 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
 
     private BooleanExpression phoneNumberContains(String phoneNumber) {
         return phoneNumber == null ? null : issuedTicket.userInfo.phoneNumber.contains(phoneNumber);
+    }
+
+    private BooleanExpression issuedTicketStatusNotCanceled() {
+        return issuedTicket.issuedTicketStatus.eq(IssuedTicketStatus.CANCELED).not();
     }
 }

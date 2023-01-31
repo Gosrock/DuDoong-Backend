@@ -14,7 +14,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum IssuedTicketErrorCode implements BaseErrorCode {
-    ISSUED_TICKET_NOT_FOUND(NOT_FOUND, "IssuedTicket_404_1", "IssuedTicket Not Found"),
+    ISSUED_TICKET_NOT_FOUND(NOT_FOUND, "IssuedTicket_404_1", "티켓을 찾을 수 없습니다."),
     ISSUED_TICKET_NOT_MATCHED_USER(
             BAD_REQUEST, "IssuedTicket_400_1", "IssuedTicket User Not Matched"),
     CAN_NOT_CANCEL(BAD_REQUEST, "IssuedTicket_400_2", "티켓을 취소 할 수 있는 상태가 아닙니다."),

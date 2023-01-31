@@ -12,7 +12,6 @@ import band.gosrock.domain.domains.issuedTicket.exception.CanNotEntranceExceptio
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketAlreadyEntranceException;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.user.domain.User;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -90,8 +89,6 @@ public class IssuedTicket extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private IssuedTicketStatus issuedTicketStatus = IssuedTicketStatus.ENTRANCE_INCOMPLETE;
 
-    @Embedded private IssuedTicketCancelInfoVo cancelInfo;
-
     /*
     빌더를 통해 객체 생성 시 List는 큰 의미를 두지 않지만
     new ArrayList<>()로 한 번 초기화 시켜주면 NPE를 방지 할 수 있음
@@ -112,7 +109,6 @@ public class IssuedTicket extends BaseTimeEntity {
         this.orderLineId = orderLineId;
         this.price = price;
         this.issuedTicketOptionAnswers.addAll(issuedTicketOptionAnswers);
-        this.cancelInfo = null;
     }
 
     /** ---------------------------- 생성 관련 메서드 ---------------------------------- */
@@ -162,8 +158,6 @@ public class IssuedTicket extends BaseTimeEntity {
             throw CanNotCancelException.EXCEPTION;
         }
         this.issuedTicketStatus = IssuedTicketStatus.CANCELED;
-        this.cancelInfo =
-                IssuedTicketCancelInfoVo.of(LocalDateTime.now(), IssuedTicketCancelReason.REFUND);
     }
 
     /*
