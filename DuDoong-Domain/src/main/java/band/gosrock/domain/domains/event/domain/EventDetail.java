@@ -1,16 +1,17 @@
 package band.gosrock.domain.domains.event.domain;
 
 
-import java.util.ArrayList;
-import java.util.List;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Embeddable;
-import javax.persistence.FetchType;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Embeddable;
+import javax.persistence.FetchType;
+import java.util.ArrayList;
+import java.util.List;
 
 @Embeddable
 @Getter
@@ -26,7 +27,7 @@ public class EventDetail {
     private List<String> detailImages = new ArrayList<>();
 
     // (마크다운) 공연 상세 내용
-    @Column(columnDefinition = "TEXT", length = 300)
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     protected Boolean isValid() {
