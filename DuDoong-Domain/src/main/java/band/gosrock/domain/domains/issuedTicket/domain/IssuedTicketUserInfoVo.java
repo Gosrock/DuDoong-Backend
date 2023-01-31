@@ -4,20 +4,28 @@ import band.gosrock.domain.domains.user.domain.User;
 import javax.persistence.Embeddable;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
 //Todo: default constructor 고치기
 @Getter
 @Embeddable
-@Builder
-@RequiredArgsConstructor
+@NoArgsConstructor
 public class IssuedTicketUserInfoVo {
 
-    private final Long userId;
+    private Long userId;
 
-    private final String userName;
+    private String userName;
 
-    private final String phoneNumber;
+    private String phoneNumber;
+
+    @Builder
+    public IssuedTicketUserInfoVo(Long userId, String userName, String phoneNumber) {
+        this.userId = userId;
+        this.userName = userName;
+        this.phoneNumber = phoneNumber;
+    }
+
 
     public static IssuedTicketUserInfoVo from(User user) {
         return IssuedTicketUserInfoVo.builder().userId(user.getId())

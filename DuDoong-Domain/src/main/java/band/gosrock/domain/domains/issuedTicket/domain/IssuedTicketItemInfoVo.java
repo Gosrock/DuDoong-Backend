@@ -6,23 +6,33 @@ import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import javax.persistence.Embeddable;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
 @Getter
 @Embeddable
-@Builder
-@RequiredArgsConstructor
+@NoArgsConstructor
 public class IssuedTicketItemInfoVo {
 
-    private final Long ticketItemId;
+    private Long ticketItemId;
 
-    private final TicketType ticketType;
+    private TicketType ticketType;
 
-    private final String ticketName;
+    private String ticketName;
 
-    private final Long quantity;
+    private Long quantity;
 
-    private final Long supplyCount;
+    private Long supplyCount;
+
+    @Builder
+    public IssuedTicketItemInfoVo(Long ticketItemId, TicketType ticketType, String ticketName,
+        Long quantity, Long supplyCount) {
+        this.ticketItemId = ticketItemId;
+        this.ticketType = ticketType;
+        this.ticketName = ticketName;
+        this.quantity = quantity;
+        this.supplyCount = supplyCount;
+    }
 
     public static IssuedTicketItemInfoVo from(TicketItem item) {
         return IssuedTicketItemInfoVo.builder().ticketItemId(item.getId())
