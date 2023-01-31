@@ -3,6 +3,7 @@ package band.gosrock.api.order.service;
 
 import band.gosrock.api.common.UserUtils;
 import band.gosrock.api.common.page.PageResponse;
+import band.gosrock.api.order.model.dto.request.AdminOrderTableQueryRequest;
 import band.gosrock.api.order.model.dto.response.OrderBriefElement;
 import band.gosrock.api.order.model.dto.response.OrderResponse;
 import band.gosrock.api.order.model.mapper.OrderMapper;
@@ -53,5 +54,10 @@ public class ReadOrderUseCase {
         Page<OrderBriefElement> orderBriefElements =
                 orderMapper.toOrderBriefsResponse(ordersWithPagination);
         return PageResponse.of(orderBriefElements);
+    }
+
+    public PageResponse<OrderResponse> getEventOrders(AdminOrderTableQueryRequest adminOrderTableQueryRequest, Pageable pageable) {
+        return null;
+
     }
 }
