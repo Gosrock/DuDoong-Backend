@@ -1,4 +1,4 @@
-package band.gosrock.common.annotation.validator;
+package band.gosrock.common.validator;
 
 
 import band.gosrock.common.annotation.Phone;
