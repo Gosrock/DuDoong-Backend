@@ -9,7 +9,6 @@ import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
-import band.gosrock.domain.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,8 +24,7 @@ public class ReadEventChecklistUseCase {
     public EventChecklistResponse execute(Long eventId) {
         final Event event = eventAdaptor.findById(eventId);
         final Host host = hostAdaptor.findById(event.getHostId());
-        final User user = userUtils.getCurrentUser();
-        final Long userId = user.getId();
+        final Long userId = userUtils.getCurrentUserId();
         host.validateHostUser(userId);
 
         return eventMapper.toEventChecklistResponse(event);

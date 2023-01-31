@@ -7,12 +7,13 @@ import band.gosrock.domain.domains.event.exception.CannotModifyEventBasicExcepti
 import band.gosrock.domain.domains.event.exception.EventCannotEndBeforeStartException;
 import band.gosrock.domain.domains.event.exception.EventNotOpenException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
-import java.time.LocalDateTime;
-import javax.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -72,6 +73,10 @@ public class Event extends BaseTimeEntity {
 
     public Boolean hasEventDetail() {
         return this.eventDetail != null && this.eventDetail.isUpdated();
+    }
+
+    public Boolean isPreparing() {
+        return this.status == EventStatus.PREPARING;
     }
 
     /** 티켓팅 시작과 종료 시간을 지정 */

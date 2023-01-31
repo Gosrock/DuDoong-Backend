@@ -7,11 +7,9 @@ import band.gosrock.api.event.model.mapper.EventMapper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
-import band.gosrock.domain.domains.event.domain.EventStatus;
 import band.gosrock.domain.domains.event.exception.EventNotOpenException;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
-import band.gosrock.domain.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,13 +23,12 @@ public class ReadEventDetailUseCase {
     private final HostAdaptor hostAdaptor;
 
     public EventDetailResponse execute(Long eventId) {
-        Event event = eventAdaptor.findById(eventId);
-        Host host = hostAdaptor.findById(event.getHostId());
-        User user = userUtils.getCurrentUser();
-        Long userId = user.getId();
+        final Event event = eventAdaptor.findById(eventId);
+        final Host host = hostAdaptor.findById(event.getHostId());
+        final Long userId = userUtils.getCurrentUserId();
 
         // 호스트 유저가 아닐 경우 준비 상태일 때 조회할 수 없음
-        if (event.getStatus() == EventStatus.PREPARING && !host.hasHostUserId(userId)) {
+        if (event.isPreparing() && !host.hasHostUserId(userId)) {
             throw EventNotOpenException.EXCEPTION;
         }
         return eventMapper.toEventDetailResponse(host, event);
