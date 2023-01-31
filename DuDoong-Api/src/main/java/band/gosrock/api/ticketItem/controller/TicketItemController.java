@@ -37,7 +37,7 @@ public class TicketItemController {
 
     @Operation(summary = "옵션을 티켓상품에 적용합니다.")
     @PatchMapping("/{ticketItemId}/option")
-    public ApplyTicketOptionResponse applyTicketOption(
+    public GetTicketItemOptionsResponse applyTicketOption(
             @RequestBody @Valid ApplyTicketOptionRequest applyTicketOptionRequest,
             @PathVariable Long eventId,
             @PathVariable Long ticketItemId) {
