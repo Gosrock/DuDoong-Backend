@@ -4,6 +4,7 @@ package band.gosrock.api.event.model.mapper;
 import band.gosrock.api.event.model.dto.request.CreateEventRequest;
 import band.gosrock.api.event.model.dto.request.UpdateEventBasicRequest;
 import band.gosrock.api.event.model.dto.request.UpdateEventDetailRequest;
+import band.gosrock.api.event.model.dto.response.EventDetailResponse;
 import band.gosrock.api.event.model.dto.response.EventProfileResponse;
 import band.gosrock.common.annotation.Mapper;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
@@ -59,6 +60,10 @@ public class EventMapper {
                 .latitude(updateEventBasicRequest.getLatitude())
                 .longitude(updateEventBasicRequest.getLongitude())
                 .build();
+    }
+
+    public EventDetailResponse toEventDetailResponse(Host host, Event event) {
+        return EventDetailResponse.of(host, event);
     }
 
     public Page<EventProfileResponse> toEventProfileResponsePage(Long userId, Pageable pageable) {

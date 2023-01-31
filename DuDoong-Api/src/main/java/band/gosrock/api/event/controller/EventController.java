@@ -5,12 +5,10 @@ import band.gosrock.api.common.page.PageResponse;
 import band.gosrock.api.event.model.dto.request.CreateEventRequest;
 import band.gosrock.api.event.model.dto.request.UpdateEventBasicRequest;
 import band.gosrock.api.event.model.dto.request.UpdateEventDetailRequest;
+import band.gosrock.api.event.model.dto.response.EventDetailResponse;
 import band.gosrock.api.event.model.dto.response.EventProfileResponse;
 import band.gosrock.api.event.model.dto.response.EventResponse;
-import band.gosrock.api.event.service.CreateEventUseCase;
-import band.gosrock.api.event.service.ReadUserEventProfilesUseCase;
-import band.gosrock.api.event.service.UpdateEventBasicUseCase;
-import band.gosrock.api.event.service.UpdateEventDetailUseCase;
+import band.gosrock.api.event.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 public class EventController {
 
     private final ReadUserEventProfilesUseCase readUserHostEventListUseCase;
+    private final ReadEventDetailUseCase readEventDetailUseCase;
     private final CreateEventUseCase createEventUseCase;
     private final UpdateEventBasicUseCase updateEventBasicUseCase;
     private final UpdateEventDetailUseCase updateEventDetailUseCase;
@@ -44,6 +43,12 @@ public class EventController {
     @PostMapping
     public EventResponse createEvent(@RequestBody @Valid CreateEventRequest createEventRequest) {
         return createEventUseCase.execute(createEventRequest);
+    }
+
+    @Operation(summary = "공연 상세 정보를 가져옵니다.")
+    @GetMapping("/{eventId}")
+    public EventDetailResponse getEventDetailById(@PathVariable Long eventId) {
+        return readEventDetailUseCase.execute(eventId);
     }
 
     @Operation(summary = "공연 기본 정보를 등록하여, 새로운 이벤트(공연)를 생성합니다")

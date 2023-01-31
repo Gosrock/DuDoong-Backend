@@ -3,6 +3,7 @@ package band.gosrock.domain.domains.event.domain;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
@@ -25,6 +26,7 @@ public class EventDetail {
     private List<String> detailImages = new ArrayList<>();
 
     // (마크다운) 공연 상세 내용
+    @Column(columnDefinition = "TEXT", length = 300)
     private String content;
 
     @Builder
