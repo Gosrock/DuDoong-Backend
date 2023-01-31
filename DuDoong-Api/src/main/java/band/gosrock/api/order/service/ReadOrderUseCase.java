@@ -56,8 +56,8 @@ public class ReadOrderUseCase {
         return PageResponse.of(orderBriefElements);
     }
 
-    public PageResponse<OrderResponse> getEventOrders(AdminOrderTableQueryRequest adminOrderTableQueryRequest, Pageable pageable) {
+    public PageResponse<OrderResponse> getEventOrders(
+            AdminOrderTableQueryRequest adminOrderTableQueryRequest, Pageable pageable) {
         return null;
-
     }
 }
