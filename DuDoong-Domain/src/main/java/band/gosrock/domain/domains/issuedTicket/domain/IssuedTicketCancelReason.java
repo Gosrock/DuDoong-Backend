@@ -8,8 +8,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum IssuedTicketCancelReason {
-    REFUND("REFUND", "사용자에 의한 환불"),
-    ADMIN_CANCEL("ADMIN_CANCEL", "관리자에 의한 취소");
+    REFUND("REFUND", "사용자에 의한 환불");
 
     private final String value;
 

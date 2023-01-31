@@ -166,16 +166,6 @@ public class IssuedTicket extends BaseTimeEntity {
                 IssuedTicketCancelInfoVo.of(LocalDateTime.now(), IssuedTicketCancelReason.REFUND);
     }
 
-    public void adminCancel() {
-        if (this.issuedTicketStatus != IssuedTicketStatus.ENTRANCE_INCOMPLETE) {
-            throw CanNotCancelException.EXCEPTION;
-        }
-        this.issuedTicketStatus = IssuedTicketStatus.CANCELED;
-        this.cancelInfo =
-                IssuedTicketCancelInfoVo.of(
-                        LocalDateTime.now(), IssuedTicketCancelReason.ADMIN_CANCEL);
-    }
-
     /*
     발급 티켓으로 입장 시 상태 변환 메서드
     티켓이 입장 미완료 상태가 아니면 입장 할 수 없음

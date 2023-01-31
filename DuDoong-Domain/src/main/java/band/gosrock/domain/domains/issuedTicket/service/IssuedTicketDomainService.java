@@ -57,11 +57,4 @@ public class IssuedTicketDomainService {
         issuedTicketAdaptor.saveAll(issuedTickets);
         ticketItem.reduceQuantity((long) issuedTickets.size());
     }
-
-    @RedissonLock(LockName = "티켓관리", identifier = "itemId")
-    public void adminCancelIssuedTicket(IssuedTicket issuedTicket, Long itemId) {
-        TicketItem ticketItem = ticketItemAdaptor.queryTicketItem(itemId);
-        ticketItem.increaseQuantity(1L);
-        issuedTicket.adminCancel();
-    }
 }
