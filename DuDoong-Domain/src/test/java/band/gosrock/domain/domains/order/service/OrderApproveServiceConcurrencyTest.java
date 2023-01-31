@@ -3,6 +3,8 @@ package band.gosrock.domain.domains.order.service;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willCallRealMethod;
+import static org.mockito.BDDMockito.willDoNothing;
 
 import band.gosrock.domain.CunCurrencyExecutorService;
 import band.gosrock.domain.DisableDomainEvent;
@@ -13,6 +15,7 @@ import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;
 import band.gosrock.domain.domains.order.domain.OrderMethod;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
+import band.gosrock.domain.domains.order.domain.validator.OrderValidator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +38,7 @@ class OrderApproveServiceConcurrencyTest {
 
     @Mock OrderLineItem orderLineItem;
     @MockBean private OrderAdaptor orderAdaptor;
+    @MockBean private OrderValidator orderValidator;
 
     Order order;
 
@@ -48,16 +52,9 @@ class OrderApproveServiceConcurrencyTest {
                         .orderLineItems(List.of(orderLineItem))
                         .build();
         order.addUUID();
-        given(orderAdaptor.findByOrderUuid(any())).willReturn(order);
-        order.addUUID();
-        // https://stackoverflow.com/questions/11785498/simulate-first-call-fails-second-call-succeeds
-        // 첫 요청엔 성공하도록
-        // 그 이후 두번째부턴 실패하도록 하고싶다면? ( 그냥 예시로 남긴거임 )
-        //        BDDStubber bddStubber = willDoNothing();
-        //        for(int i =0 ; i <= numberOfThreads ; i++){
-        //            bddStubber.willThrow(new
-        // DuDoongCodeException(OrderErrorCode.ORDER_NOT_PENDING));
-        //        }
+        willDoNothing().given(orderValidator).validCanDone(any());
+        willCallRealMethod().given(orderValidator).validCanApproveOrder(any());
+        willCallRealMethod().given(orderValidator).validStatusCanApprove(any());
         given(orderAdaptor.findByOrderUuid(any())).willReturn(order);
     }
 

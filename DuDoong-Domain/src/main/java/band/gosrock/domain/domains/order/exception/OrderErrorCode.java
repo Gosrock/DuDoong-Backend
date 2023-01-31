@@ -31,7 +31,10 @@ public enum OrderErrorCode implements BaseErrorCode {
     ORDER_LINE_NOT_FOUND(NOT_FOUND, "Order_404_2", "주문 라인을 찾을 수 없습니다."),
     ORDER_NOT_FREE(BAD_REQUEST, "Order_400_10", "무료 주문이 아닙니다."),
 
-    ORDER_LESS_THAN_MINIMUM(BAD_REQUEST, "Order_400_11", "최소 결제금액인 1000원보다 낮은 주문입니다.");
+    ORDER_LESS_THAN_MINIMUM(BAD_REQUEST, "Order_400_11", "최소 결제금액인 1000원보다 낮은 주문입니다."),
+    @ExplainError("한 장바구니엔 관련된 한 아이템만 올수 있음")
+    ORDER_INVALID_ITEM_KIND_POLICY(BAD_REQUEST, "Order_400_12", "장바구니에 아이템을 담는 정책을 위반하였습니다."),
+    ORDER_OPTION_CHANGED(BAD_REQUEST, "Order_400_13", "주문 과정중 아이템의 옵션이 변화했습니다.");
 
     private Integer status;
     private String code;

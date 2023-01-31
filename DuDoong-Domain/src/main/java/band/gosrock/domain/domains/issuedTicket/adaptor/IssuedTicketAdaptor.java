@@ -3,6 +3,7 @@ package band.gosrock.domain.domains.issuedTicket.adaptor;
 
 import band.gosrock.common.annotation.Adaptor;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
+import band.gosrock.domain.domains.issuedTicket.domain.IssuedTickets;
 import band.gosrock.domain.domains.issuedTicket.dto.condition.IssuedTicketCondition;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketNotFoundException;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketUserNotMatchedException;
@@ -26,10 +27,6 @@ public class IssuedTicketAdaptor {
 
     public void saveAll(List<IssuedTicket> issuedTickets) {
         issuedTicketRepository.saveAll(issuedTickets);
-    }
-
-    public List<IssuedTicket> findAllByOrderLineId(Long orderLineId) {
-        return issuedTicketRepository.findAllByOrderLineId(orderLineId);
     }
 
     public IssuedTicket findForUser(Long currentUserId, Long issuedTicketId) {
@@ -61,5 +58,13 @@ public class IssuedTicketAdaptor {
 
     public List<IssuedTicket> findAllByOrderUuid(String orderUuid) {
         return issuedTicketRepository.findAllByOrderUuid(orderUuid);
+    }
+
+    public IssuedTickets findOrderLineIssuedTickets(Long orderLineId) {
+        return IssuedTickets.from(issuedTicketRepository.findAllByOrderLineId(orderLineId));
+    }
+
+    public IssuedTickets findOrderIssuedTickets(String orderUuid) {
+        return IssuedTickets.from(issuedTicketRepository.findAllByOrderUuid(orderUuid));
     }
 }

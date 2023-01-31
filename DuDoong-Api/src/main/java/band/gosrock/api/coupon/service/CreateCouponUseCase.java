@@ -4,6 +4,7 @@ package band.gosrock.api.coupon.service;
 import band.gosrock.api.common.UserUtils;
 import band.gosrock.api.coupon.dto.reqeust.CreateCouponCampaignRequest;
 import band.gosrock.api.coupon.dto.response.CreateCouponCampaignResponse;
+import band.gosrock.api.coupon.mapper.CouponCampaignMapper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.coupon.domain.CouponCampaign;
 import band.gosrock.domain.domains.coupon.service.CreateCouponCampaignDomainService;
@@ -19,6 +20,7 @@ public class CreateCouponUseCase {
     private final UserUtils userUtils;
     private final CreateCouponCampaignDomainService createCouponCampaignDomainService;
     private final HostService hostService;
+    private final CouponCampaignMapper couponCampaignMapper;
 
     @Transactional
     public CreateCouponCampaignResponse execute(
@@ -33,7 +35,8 @@ public class CreateCouponUseCase {
         // 쿠폰 생성
         CouponCampaign couponCampaign =
                 createCouponCampaignDomainService.createCouponCampaign(
-                        createCouponCampaignRequest.toOnceEntity());
-        return CreateCouponCampaignResponse.of(couponCampaign, couponCampaign.getHostId());
+                        couponCampaignMapper.toEntity(createCouponCampaignRequest));
+        return CouponCampaignMapper.toCreateCouponCampaignResponse(
+                couponCampaign, couponCampaign.getHostId());
     }
 }

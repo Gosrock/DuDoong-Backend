@@ -92,4 +92,15 @@ class CartLineItemTest {
         // then
         assertFalse(needPaid);
     }
+
+    @Test
+    public void 카트라인_옵션아이디목록_조회_검증() {
+        // given
+        long optionId = 1L;
+        given(cartOptionAnswer.getOptionId()).willReturn(optionId);
+        // when
+        List<Long> answerOptionIds = freeCartLineItem.getAnswerOptionIds();
+        // then
+        assertEquals(answerOptionIds, List.of(optionId));
+    }
 }
