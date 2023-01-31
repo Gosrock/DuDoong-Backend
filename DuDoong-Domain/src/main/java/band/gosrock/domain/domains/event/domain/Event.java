@@ -89,6 +89,10 @@ public class Event extends BaseTimeEntity {
         this.eventPlace = eventPlace;
     }
 
+    public void setStatus(EventStatus status) {
+        this.status = status;
+    }
+
     @Builder
     public Event(Long hostId, String name, LocalDateTime startAt, Long runTime) {
         this.hostId = hostId;

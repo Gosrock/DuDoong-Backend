@@ -3,10 +3,7 @@ package band.gosrock.domain.domains.event.service;
 
 import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
-import band.gosrock.domain.domains.event.domain.Event;
-import band.gosrock.domain.domains.event.domain.EventBasic;
-import band.gosrock.domain.domains.event.domain.EventDetail;
-import band.gosrock.domain.domains.event.domain.EventPlace;
+import band.gosrock.domain.domains.event.domain.*;
 import band.gosrock.domain.domains.event.exception.HostNotAuthEventException;
 import band.gosrock.domain.domains.event.repository.EventRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +33,11 @@ public class EventService {
 
     public Event updateEventPlace(Event event, EventPlace eventPlace) {
         event.setEventPlace(eventPlace);
+        return eventRepository.save(event);
+    }
+
+    public Event updateEventStatus(Event event, EventStatus status) {
+        event.setStatus(status);
         return eventRepository.save(event);
     }
 

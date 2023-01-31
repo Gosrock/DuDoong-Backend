@@ -6,6 +6,7 @@ import band.gosrock.domain.common.vo.EventBasicVo;
 import band.gosrock.domain.common.vo.EventDetailVo;
 import band.gosrock.domain.common.vo.EventPlaceVo;
 import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.event.domain.EventStatus;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import java.time.LocalDateTime;
 import lombok.Builder;
@@ -28,6 +29,8 @@ public class EventResponse {
     @DateFormat private LocalDateTime ticketingEndAt;
     /************* 미확정된 정보 ******************/
 
+    private EventStatus status;
+
     public static EventResponse of(Event event) {
         return EventResponse.builder()
                 .eventId(event.getId())
@@ -37,6 +40,7 @@ public class EventResponse {
                 .eventPlace(EventPlaceVo.from(event))
                 .ticketingStartAt(event.getTicketingStartAt())
                 .ticketingEndAt(event.getTicketingEndAt())
+                .status(event.getStatus())
                 .build();
     }
 }
