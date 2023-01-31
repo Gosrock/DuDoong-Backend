@@ -24,7 +24,7 @@ public class EventPlace {
     // 공연 상세 주소
     private String placeAddress;
 
-    protected Boolean isValid() {
+    protected Boolean isUpdated() {
         return this.latitude != null
                 && this.longitude != null
                 && this.placeName != null

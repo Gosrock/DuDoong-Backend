@@ -36,7 +36,7 @@ public class Event extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private EventStatus status = EventStatus.PREPARING;
 
-    private Boolean updated = false;
+    private Boolean isUpdated = false;
 
     /*********** 미확정된 정보 ***********/
     // 공연 진행 시간
@@ -63,15 +63,15 @@ public class Event extends BaseTimeEntity {
     }
 
     public Boolean hasEventBasic() {
-        return this.eventBasic != null && this.eventBasic.isValid();
+        return this.eventBasic != null && this.eventBasic.isUpdated();
     }
 
     public Boolean hasEventPlace() {
-        return this.eventPlace != null && this.eventPlace.isValid();
+        return this.eventPlace != null && this.eventPlace.isUpdated();
     }
 
     public Boolean hasEventDetail() {
-        return this.eventDetail != null && this.eventDetail.isValid();
+        return this.eventDetail != null && this.eventDetail.isUpdated();
     }
 
     /** 티켓팅 시작과 종료 시간을 지정 */
@@ -85,10 +85,10 @@ public class Event extends BaseTimeEntity {
     }
 
     public void setEventBasic(EventBasic eventBasic) {
-        if (updated) {
+        if (isUpdated) {
             throw CannotModifyEventBasicException.EXCEPTION;
         }
-        this.updated = true;
+        this.isUpdated = true;
         this.eventBasic = eventBasic;
     }
 
