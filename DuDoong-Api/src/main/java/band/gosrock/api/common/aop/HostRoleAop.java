@@ -11,6 +11,9 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 
+/**
+ * 호스트 관리자 인가를 위한 aop 입니다 메소드 레벨에서 작동하며 권한 정보를 어노테이션으로 받고 eventId를 인자에서 찾아와 호스트 정보를 불러온뒤 권한 검증을 합니다.
+ */
 @Aspect
 @Component
 @RequiredArgsConstructor
@@ -29,7 +32,7 @@ public class HostRoleAop {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         HostRolesAllowed annotation = method.getAnnotation(HostRolesAllowed.class);
-        String role = annotation.value();
+        String role = annotation.role();
 
         // 제공된 호스트의 role 이 정의된 세개의 롤과 같은지 확인한다.
         // 없으면 IllegalArgumentException 발생

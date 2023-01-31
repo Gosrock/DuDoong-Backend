@@ -12,6 +12,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+/** 호스트 정보를 트랜잭션 안에서 조회하기 위해서 만든 클래스입니다. 트랜잭션 내에서 캐시 할수 있으면 좋으니 이렇게 만들었습니다. - 이찬진 */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -19,7 +20,6 @@ public class HostRoleTransaction {
 
     private final UserUtils userUtils;
     private final EventAdaptor eventAdaptor;
-
     private final HostAdaptor hostAdaptor;
 
     @Transactional(readOnly = true)
@@ -29,7 +29,6 @@ public class HostRoleTransaction {
         Event event = eventAdaptor.findById(eventId);
         Host host = hostAdaptor.findById(event.getHostId());
         role.validQualification(currentUserId, host);
-
         return joinPoint.proceed();
     }
 }
