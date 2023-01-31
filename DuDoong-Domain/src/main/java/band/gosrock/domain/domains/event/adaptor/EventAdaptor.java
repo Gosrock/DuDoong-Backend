@@ -26,6 +26,10 @@ public class EventAdaptor {
         return eventRepository.findAllByHostId(hostId, pageable);
     }
 
+    public Page<Event> findAllByHostIdIn(List<Long> hostId, Pageable pageable) {
+        return eventRepository.findAllByHostIdIn(hostId, pageable);
+    }
+
     public List<Event> findAllByIds(List<Long> ids) {
         return eventRepository.findAllByIdIn(ids);
     }

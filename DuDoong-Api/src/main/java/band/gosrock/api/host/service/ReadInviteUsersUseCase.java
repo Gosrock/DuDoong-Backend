@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 @UseCase
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ReadInviteUserListUseCase {
+public class ReadInviteUsersUseCase {
     private final UserUtils userUtils;
     private final HostMapper hostMapper;
 

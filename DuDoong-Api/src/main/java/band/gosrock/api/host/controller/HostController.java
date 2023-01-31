@@ -4,6 +4,7 @@ package band.gosrock.api.host.controller;
 import band.gosrock.api.common.page.PageResponse;
 import band.gosrock.api.host.model.dto.request.*;
 import band.gosrock.api.host.model.dto.response.HostDetailResponse;
+import band.gosrock.api.host.model.dto.response.HostEventProfileResponse;
 import band.gosrock.api.host.model.dto.response.HostProfileResponse;
 import band.gosrock.api.host.model.dto.response.HostResponse;
 import band.gosrock.api.host.service.*;
@@ -11,14 +12,15 @@ import band.gosrock.domain.common.vo.UserProfileVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import javax.validation.Valid;
-import javax.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+import javax.validation.constraints.Email;
 
 @SecurityRequirement(name = "access-token")
 @Tag(name = "호스트 관련 컨트롤러")
@@ -28,8 +30,9 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class HostController {
     private final ReadHostUseCase readHostUseCase;
-    private final ReadHostProfileListUseCase readHostListUseCase;
-    private final ReadInviteUserListUseCase readInviteUserListUseCase;
+    private final ReadHostProfilesUseCase readHostsUseCase;
+    private final ReadHostEventsUseCase readHostEventsUseCase;
+    private final ReadInviteUsersUseCase readInviteUsersUseCase;
     private final CreateHostUseCase createHostUseCase;
     private final UpdateHostProfileUseCase updateHostProfileUseCase;
     private final UpdateHostSlackUrlUseCase updateHostSlackUrlUseCase;
@@ -41,7 +44,7 @@ public class HostController {
     @GetMapping
     public PageResponse<HostProfileResponse> getAllHosts(
             @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
-        return readHostListUseCase.execute(pageable);
+        return readHostsUseCase.execute(pageable);
     }
 
     @Operation(summary = "고유 아이디에 해당하는 호스트 정보를 가져옵니다.")
@@ -54,7 +57,15 @@ public class HostController {
     @GetMapping("/{hostId}/invite/users")
     public UserProfileVo getInviteUserListByEmail(
             @PathVariable Long hostId, @RequestParam(value = "email") @Email String email) {
-        return readInviteUserListUseCase.execute(hostId, email);
+        return readInviteUsersUseCase.execute(hostId, email);
+    }
+
+    @Operation(summary = "해당 호스트가 관리중인 이벤트 리스트를 가져옵니다.")
+    @GetMapping("/{hostId}/events")
+    public PageResponse<HostEventProfileResponse> getHostEventsById(
+            @PathVariable Long hostId,
+            @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
+        return readHostEventsUseCase.execute(hostId, pageable);
     }
 
     @Operation(summary = "호스트 간편 생성. 호스트를 생성한 유저 자신은 마스터 호스트가 됩니다.")

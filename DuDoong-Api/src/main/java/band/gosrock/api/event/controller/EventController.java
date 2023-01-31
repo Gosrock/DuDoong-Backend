@@ -7,10 +7,7 @@ import band.gosrock.api.event.model.dto.request.UpdateEventBasicRequest;
 import band.gosrock.api.event.model.dto.request.UpdateEventDetailRequest;
 import band.gosrock.api.event.model.dto.response.EventProfileResponse;
 import band.gosrock.api.event.model.dto.response.EventResponse;
-import band.gosrock.api.event.service.CreateEventUseCase;
-import band.gosrock.api.event.service.ReadEventProfileListUseCase;
-import band.gosrock.api.event.service.UpdateEventBasicUseCase;
-import band.gosrock.api.event.service.UpdateEventDetailUseCase;
+import band.gosrock.api.event.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,15 +26,23 @@ import org.springframework.web.bind.annotation.*;
 public class EventController {
 
     private final ReadEventProfileListUseCase readHostEventListUseCase;
+    private final ReadUserEventProfilesUseCase readUserHostEventListUseCase;
     private final CreateEventUseCase createEventUseCase;
     private final UpdateEventBasicUseCase updateEventBasicUseCase;
     private final UpdateEventDetailUseCase updateEventDetailUseCase;
 
-    // todo :: querydsl + 검색 기능 작동하도록 만들기
-    @Operation(summary = "특정 호스트가 관리 중인 이벤트 리스트를 가져옵니다")
+    @Operation(summary = "자신이 관리 중인 이벤트 리스트를 가져옵니다.")
     @GetMapping
+    public PageResponse<EventProfileResponse> getAllEventByUser(
+            @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
+        return readUserHostEventListUseCase.execute(pageable);
+    }
+
+    // todo :: 호스트로 기능 빼기
+    @Operation(summary = "특정 호스트가 관리 중인 이벤트 리스트를 가져옵니다.")
+    @GetMapping("/host/{hostId}")
     public PageResponse<EventProfileResponse> getAllEventByHostId(
-            @RequestParam Long hostId,
+            @PathVariable Long hostId,
             @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
         return readHostEventListUseCase.execute(hostId, pageable);
     }

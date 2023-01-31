@@ -10,5 +10,7 @@ import org.springframework.data.repository.CrudRepository;
 public interface HostRepository extends CrudRepository<Host, Long> {
     List<Host> findAllByMasterUserId(Long userId);
 
+    List<Host> findAllByHostUsers_UserId(Long userId);
+
     Page<Host> findAllByHostUsers_UserId(Long userId, Pageable pageable);
 }

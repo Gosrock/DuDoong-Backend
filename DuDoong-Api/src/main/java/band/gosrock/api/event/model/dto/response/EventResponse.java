@@ -22,7 +22,7 @@ public class EventResponse {
     @JsonUnwrapped private EventDetailVo eventDetail;
     @JsonUnwrapped private EventPlaceVo eventPlace;
 
-    /*************** 미확정된 정보 ******************/
+    /** todo : ************* 미확정된 정보 ***************** */
     @DateFormat private LocalDateTime ticketingStartAt;
 
     @DateFormat private LocalDateTime ticketingEndAt;
