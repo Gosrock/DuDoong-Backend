@@ -29,20 +29,10 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
         List<IssuedTicket> issuedTickets =
                 queryFactory
                         .selectFrom(issuedTicket)
-//                        .leftJoin(issuedTicket.eventId, event)
-//                        .fetchJoin()
-//                        .leftJoin(issuedTicket.user, user)
-//                        .fetchJoin()
-//                        .leftJoin(issuedTicket.ticketItem, ticketItem)
-//                        .fetchJoin()
                         .where(
                                 eventIdEq(condition.getEventId()),
                                 userNameContains(condition.getUserName()),
-                                phoneNumberContains(condition.getPhoneNumber()),
-                                issuedTicket
-                                        .issuedTicketStatus
-                                        .eq(IssuedTicketStatus.CANCELED)
-                                        .not())
+                                phoneNumberContains(condition.getPhoneNumber()))
                         .orderBy(issuedTicket.id.desc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize())
@@ -65,12 +55,6 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
         IssuedTicket findIssuedTicket =
                 queryFactory
                         .selectFrom(issuedTicket)
-//                        .leftJoin(issuedTicket.event, event)
-//                        .fetchJoin()
-//                        .leftJoin(issuedTicket.user, user)
-//                        .fetchJoin()
-//                        .leftJoin(issuedTicket.ticketItem, ticketItem)
-//                        .fetchJoin()
                         .leftJoin(issuedTicket.issuedTicketOptionAnswers, issuedTicketOptionAnswer)
                         .fetchJoin()
                         .where(

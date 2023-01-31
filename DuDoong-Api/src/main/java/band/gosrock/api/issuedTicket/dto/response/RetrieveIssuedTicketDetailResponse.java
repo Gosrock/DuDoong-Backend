@@ -24,16 +24,10 @@ public class RetrieveIssuedTicketDetailResponse {
      */
     private final EventInfoVo eventInfo;
 
-    /*
-    발급 유저 이름
-     */
-    private final String userName;
-
     public static RetrieveIssuedTicketDetailResponse of(IssuedTicket issuedTicket, Event event) {
         return RetrieveIssuedTicketDetailResponse.builder()
                 .issuedTicketInfo(issuedTicket.toIssuedTicketInfoVo())
             .eventInfo(event.toEventInfoVo())
-                .userName(issuedTicket.getUserInfo().getUserName())
                 .build();
     }
 }
