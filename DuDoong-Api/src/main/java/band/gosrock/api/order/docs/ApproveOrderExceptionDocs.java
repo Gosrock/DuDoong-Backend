@@ -5,7 +5,7 @@ import band.gosrock.common.annotation.ExceptionDoc;
 import band.gosrock.common.annotation.ExplainError;
 import band.gosrock.common.exception.DuDoongCodeException;
 import band.gosrock.common.interfaces.SwaggerExampleExceptions;
-import band.gosrock.domain.domains.event.exception.EventIsNotOpenStatusException;
+import band.gosrock.domain.domains.event.exception.EventNotOpenException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
 import band.gosrock.domain.domains.order.exception.NotApprovalOrderException;
 import band.gosrock.domain.domains.order.exception.NotPendingOrderException;
@@ -24,7 +24,7 @@ public class ApproveOrderExceptionDocs implements SwaggerExampleExceptions {
     public DuDoongCodeException 주문상태_검증 = NotPendingOrderException.EXCEPTION;
 
     @ExplainError("이벤트가 열린 상태가 아닐때")
-    public DuDoongCodeException 이벤트_닫힘 = EventIsNotOpenStatusException.EXCEPTION;
+    public DuDoongCodeException 이벤트_닫힘 = EventNotOpenException.EXCEPTION;
 
     @ExplainError("이벤트 티켓팅 시간이 지났을때.")
     public DuDoongCodeException 티켓팅_시간지남 = EventTicketingTimeIsPassedException.EXCEPTION;

@@ -10,7 +10,7 @@ import static org.mockito.BDDMockito.willThrow;
 import band.gosrock.domain.domains.cart.exception.CartItemNotOneTypeException;
 import band.gosrock.domain.domains.cart.exception.CartNotAnswerAllOptionGroupException;
 import band.gosrock.domain.domains.event.domain.Event;
-import band.gosrock.domain.domains.event.exception.EventIsNotOpenStatusException;
+import band.gosrock.domain.domains.event.exception.EventNotOpenException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
 import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
@@ -52,7 +52,7 @@ class CartValidatorTest {
     public void 카트_티켓팅_가능시간검증_실패() {
         // given
         given(event.isTimeBeforeStartAt()).willReturn(Boolean.FALSE);
-        willCallRealMethod().given(event).validTicketingTime();
+        willCallRealMethod().given(event).validateTicketingTime();
         // when
         // then
         assertThrows(
@@ -64,7 +64,7 @@ class CartValidatorTest {
     public void 카트_티켓팅_가능시간검증_성공() {
         // given
         given(event.isTimeBeforeStartAt()).willReturn(Boolean.TRUE);
-        willCallRealMethod().given(event).validTicketingTime();
+        willCallRealMethod().given(event).validateTicketingTime();
         // when
         cartValidator.validTicketingTime(event);
         // then
@@ -93,7 +93,7 @@ class CartValidatorTest {
     @Test
     public void 카트_티켓팅_이벤트_상태검증_성공() {
         // given
-        willDoNothing().given(event).validStatusOpen();
+        willDoNothing().given(event).validateStatusOpen();
         // when
         cartValidator.validEventIsOpen(event);
         // then
@@ -102,11 +102,10 @@ class CartValidatorTest {
     @Test
     public void 카트_티켓팅_이벤트_상태검증_실패() {
         // given
-        willThrow(EventIsNotOpenStatusException.class).given(event).validStatusOpen();
+        willThrow(EventNotOpenException.class).given(event).validateStatusOpen();
         // when
         // then
-        assertThrows(
-                EventIsNotOpenStatusException.class, () -> cartValidator.validEventIsOpen(event));
+        assertThrows(EventNotOpenException.class, () -> cartValidator.validEventIsOpen(event));
     }
 
     @Test

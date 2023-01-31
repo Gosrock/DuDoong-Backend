@@ -4,6 +4,8 @@ package band.gosrock.api.event.model.mapper;
 import band.gosrock.api.event.model.dto.request.CreateEventRequest;
 import band.gosrock.api.event.model.dto.request.UpdateEventBasicRequest;
 import band.gosrock.api.event.model.dto.request.UpdateEventDetailRequest;
+import band.gosrock.api.event.model.dto.response.EventChecklistResponse;
+import band.gosrock.api.event.model.dto.response.EventDetailResponse;
 import band.gosrock.api.event.model.dto.response.EventProfileResponse;
 import band.gosrock.common.annotation.Mapper;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
@@ -13,6 +15,7 @@ import band.gosrock.domain.domains.event.domain.EventDetail;
 import band.gosrock.domain.domains.event.domain.EventPlace;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
+import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,6 +28,7 @@ public class EventMapper {
 
     private final HostAdaptor hostAdaptor;
     private final EventAdaptor eventAdaptor;
+    private final TicketItemAdaptor ticketItemAdaptor;
 
     @Transactional(readOnly = true)
     public Event toEntity(CreateEventRequest createEventRequest) {
@@ -59,6 +63,15 @@ public class EventMapper {
                 .latitude(updateEventBasicRequest.getLatitude())
                 .longitude(updateEventBasicRequest.getLongitude())
                 .build();
+    }
+
+    public EventDetailResponse toEventDetailResponse(Host host, Event event) {
+        return EventDetailResponse.of(host, event);
+    }
+
+    public EventChecklistResponse toEventChecklistResponse(Event event) {
+        final Boolean hasTicketItem = ticketItemAdaptor.existsByEventId(event.getId());
+        return EventChecklistResponse.of(event, hasTicketItem);
     }
 
     public Page<EventProfileResponse> toEventProfileResponsePage(Long userId, Pageable pageable) {

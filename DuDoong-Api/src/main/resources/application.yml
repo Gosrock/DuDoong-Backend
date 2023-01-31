@@ -21,7 +21,7 @@ server:
 
 slack:
   webhook:
-    id: ${SLACK_WEBHOOK_ID}
+    id: ${SLACK_WEBHOOK_ID:}
 ---
 spring:
   config:
