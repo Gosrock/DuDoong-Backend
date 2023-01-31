@@ -8,9 +8,14 @@ import band.gosrock.api.order.model.dto.response.OrderBriefElement;
 import band.gosrock.api.order.model.dto.response.OrderResponse;
 import band.gosrock.api.order.model.mapper.OrderMapper;
 import band.gosrock.common.annotation.UseCase;
+import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
+import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
+import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.validator.OrderValidator;
+import band.gosrock.domain.domains.order.repository.condition.FindEventOrdersCondition;
 import band.gosrock.domain.domains.order.repository.condition.FindMyPageOrderCondition;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +31,8 @@ public class ReadOrderUseCase {
     private final OrderAdaptor orderAdaptor;
 
     private final OrderValidator orderValidator;
-
+    private final HostAdaptor hostAdaptor;
+    private final EventAdaptor eventAdaptor;
     private final UserUtils userUtils;
 
     public OrderResponse getOrderDetail(String orderUuid) {
@@ -49,15 +55,25 @@ public class ReadOrderUseCase {
                         ? FindMyPageOrderCondition.onShowing(currentUserId)
                         : FindMyPageOrderCondition.notShowing(currentUserId);
 
-        Page<Order> ordersWithPagination =
-                orderAdaptor.findOrdersWithPagination(condition, pageable);
+        Page<Order> ordersWithPagination = orderAdaptor.findMyOrders(condition, pageable);
         Page<OrderBriefElement> orderBriefElements =
                 orderMapper.toOrderBriefsResponse(ordersWithPagination);
         return PageResponse.of(orderBriefElements);
     }
 
     public PageResponse<OrderResponse> getEventOrders(
-            AdminOrderTableQueryRequest adminOrderTableQueryRequest, Pageable pageable) {
-        return null;
+            Long eventId,
+            AdminOrderTableQueryRequest adminOrderTableQueryRequest,
+            Pageable pageable) {
+
+        Event event = eventAdaptor.findById(eventId);
+        Host host = hostAdaptor.findById(event.getHostId());
+        Long userId = userUtils.getCurrentUserId();
+        host.validateHostUser(userId);
+
+        FindEventOrdersCondition condition = adminOrderTableQueryRequest.toCondition(eventId);
+        Page<Order> orders = orderAdaptor.findEventOrders(condition, pageable);
+        Page<OrderResponse> orderResponses = orderMapper.toOrderResponses(orders);
+        return PageResponse.of(orderResponses);
     }
 }

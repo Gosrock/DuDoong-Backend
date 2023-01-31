@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,7 +33,8 @@ public class OrderAdminController {
     @GetMapping
     public PageResponse<OrderResponse> getEventOrders(
             @ParameterObject @Valid AdminOrderTableQueryRequest adminOrderTableQueryRequest,
-            @ParameterObject Pageable pageable) {
-        return readOrderUseCase.getEventOrders(adminOrderTableQueryRequest, pageable);
+            @ParameterObject Pageable pageable,
+            @PathVariable Long eventId) {
+        return readOrderUseCase.getEventOrders(eventId, adminOrderTableQueryRequest, pageable);
     }
 }

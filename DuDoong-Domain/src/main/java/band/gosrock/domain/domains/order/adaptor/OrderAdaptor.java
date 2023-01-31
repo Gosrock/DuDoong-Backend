@@ -5,6 +5,7 @@ import band.gosrock.common.annotation.Adaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.exception.OrderNotFoundException;
 import band.gosrock.domain.domains.order.repository.OrderRepository;
+import band.gosrock.domain.domains.order.repository.condition.FindEventOrdersCondition;
 import band.gosrock.domain.domains.order.repository.condition.FindMyPageOrderCondition;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -35,8 +36,11 @@ public class OrderAdaptor {
         return orderRepository.findFirstByUserIdOrderByIdDesc(userId);
     }
 
-    public Page<Order> findOrdersWithPagination(
-            FindMyPageOrderCondition condition, Pageable pageable) {
-        return orderRepository.getMyPageOrders(condition, pageable);
+    public Page<Order> findMyOrders(FindMyPageOrderCondition condition, Pageable pageable) {
+        return orderRepository.findMyOrders(condition, pageable);
+    }
+
+    public Page<Order> findEventOrders(FindEventOrdersCondition condition, Pageable pageable) {
+        return orderRepository.findEventOrders(condition, pageable);
     }
 }
