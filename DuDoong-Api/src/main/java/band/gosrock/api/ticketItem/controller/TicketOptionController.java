@@ -2,7 +2,7 @@ package band.gosrock.api.ticketItem.controller;
 
 
 import band.gosrock.api.ticketItem.dto.request.CreateTicketOptionRequest;
-import band.gosrock.api.ticketItem.dto.response.TicketOptionResponse;
+import band.gosrock.api.ticketItem.dto.response.OptionGroupResponse;
 import band.gosrock.api.ticketItem.service.CreateTicketOptionUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -22,7 +22,7 @@ public class TicketOptionController {
 
     @Operation(summary = "특정 이벤트에 속하는 티켓옵션을 생성합니다.")
     @PostMapping
-    public TicketOptionResponse createTicketOption(
+    public OptionGroupResponse createTicketOption(
             @RequestBody @Valid CreateTicketOptionRequest createTicketOptionRequest,
             @PathVariable Long eventId) {
         return createTicketOptionUseCase.execute(createTicketOptionRequest, eventId);

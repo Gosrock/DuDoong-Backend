@@ -10,11 +10,11 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class TicketOptionResponse {
+public class OptionGroupResponse {
     @Schema(description = "옵션그룹 id")
     private final Long optionGroupId;
 
-    @Schema(description = "티켓 타입")
+    @Schema(description = "옵션그룹 타입")
     private final OptionGroupType type;
 
     @Schema(description = "이름")
@@ -25,9 +25,9 @@ public class TicketOptionResponse {
 
     private final List<OptionResponse> options;
 
-    public static TicketOptionResponse from(OptionGroup optionGroup) {
+    public static OptionGroupResponse from(OptionGroup optionGroup) {
 
-        return TicketOptionResponse.builder()
+        return OptionGroupResponse.builder()
                 .optionGroupId(optionGroup.getId())
                 .type(optionGroup.getType())
                 .name(optionGroup.getName())

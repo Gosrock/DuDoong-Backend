@@ -15,6 +15,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -56,6 +57,11 @@ public class TicketItem extends BaseTimeEntity {
 
     // 판매 종료 시간
     private LocalDateTime saleEndAt;
+
+    // 상태
+    @Enumerated(EnumType.STRING)
+    @ColumnDefault(value = "'VALID'")
+    private TicketItemStatus ticketItemStatus = TicketItemStatus.VALID;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
