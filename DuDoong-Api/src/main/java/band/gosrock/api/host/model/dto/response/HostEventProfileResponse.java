@@ -1,4 +1,4 @@
-package band.gosrock.api.event.model.dto.response;
+package band.gosrock.api.host.model.dto.response;
 
 
 import band.gosrock.domain.common.vo.EventProfileVo;
@@ -8,18 +8,17 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import lombok.Builder;
 import lombok.Getter;
 
-/** 이벤트 프로필만 표시하는 응답 DTO */
 @Getter
 @Builder
-public class EventProfileResponse {
+public class HostEventProfileResponse {
     private Long hostId;
 
     private String hostName;
 
     @JsonUnwrapped private EventProfileVo eventProfileVo;
 
-    public static EventProfileResponse of(Host host, Event event) {
-        return EventProfileResponse.builder()
+    public static HostEventProfileResponse of(Host host, Event event) {
+        return HostEventProfileResponse.builder()
                 .hostId(host.getId())
                 .hostName(host.getProfile().getName())
                 .eventProfileVo(event.toEventProfileVo())

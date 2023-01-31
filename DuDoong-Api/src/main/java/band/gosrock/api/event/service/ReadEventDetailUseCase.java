@@ -12,11 +12,14 @@ import org.springframework.transaction.annotation.Transactional;
 @UseCase
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ReadEventProfileListUseCase {
+public class ReadEventDetailUseCase {
     private final EventAdaptor eventAdaptor;
 
+    @Deprecated
     public PageResponse<EventProfileResponse> execute(Long hostId, Pageable pageable) {
-        return PageResponse.of(
-                eventAdaptor.findAllByHostId(hostId, pageable).map(EventProfileResponse::of));
+        return null;
+        //                PageResponse.of(
+        //                eventAdaptor.findAllByHostId(hostId,
+        // pageable).map(EventProfileResponse::of));
     }
 }

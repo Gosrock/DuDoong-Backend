@@ -28,4 +28,8 @@ public class HostAdaptor {
     public Page<Host> findAllByHostUsers_UserId(Long userId, Pageable pageable) {
         return hostRepository.findAllByHostUsers_UserId(userId, pageable);
     }
+
+    public List<Host> findAllByHostUsers_UserId(Long userId) {
+        return hostRepository.findAllByHostUsers_UserId(userId);
+    }
 }
