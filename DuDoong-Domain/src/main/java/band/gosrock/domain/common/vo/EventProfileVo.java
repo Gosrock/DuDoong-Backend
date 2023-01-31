@@ -17,6 +17,8 @@ public class EventProfileVo {
 
     private LocalDateTime startAt;
 
+    private LocalDateTime endAt;
+
     private String placeName;
 
     private EventStatus status;
@@ -33,6 +35,7 @@ public class EventProfileVo {
                 .startAt(eventBasicVo.getStartAt())
                 .placeName(eventPlaceVo.getPlaceName())
                 .status(event.getStatus())
+                .endAt(event.getEndAt())
                 .build();
     }
 }

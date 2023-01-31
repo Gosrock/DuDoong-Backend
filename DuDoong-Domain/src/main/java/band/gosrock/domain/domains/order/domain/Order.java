@@ -53,6 +53,10 @@ public class Order extends BaseTimeEntity {
     @Column(nullable = false)
     private Long userId;
 
+    // 관리자에서 주문 목록 불러올려면 event 아이디 저장 필요
+    @Column(nullable = false)
+    private Long eventId;
+
     // 토스페이먼츠용 주문번호
     @Column(nullable = false)
     private String uuid;
@@ -104,12 +108,14 @@ public class Order extends BaseTimeEntity {
             String orderName,
             List<OrderLineItem> orderLineItems,
             OrderStatus orderStatus,
-            OrderMethod orderMethod) {
+            OrderMethod orderMethod,
+            Long eventId) {
         this.userId = userId;
         this.orderName = orderName;
         this.orderLineItems.addAll(orderLineItems);
         this.orderStatus = orderStatus;
         this.orderMethod = orderMethod;
+        this.eventId = eventId;
     }
 
     /** 카드, 간편결제등 토스 요청 과정이 필요한 결제를 생성합니다. */
@@ -122,6 +128,7 @@ public class Order extends BaseTimeEntity {
                         .orderLineItems(getOrderLineItems(cart, item))
                         .orderStatus(OrderStatus.PENDING_PAYMENT)
                         .orderMethod(OrderMethod.PAYMENT)
+                        .eventId(item.getEventId())
                         .build();
         orderValidator.validCanCreate(order);
         return order;
@@ -140,6 +147,7 @@ public class Order extends BaseTimeEntity {
                         .orderLineItems(getOrderLineItems(cart, item))
                         .orderStatus(OrderStatus.PENDING_APPROVE)
                         .orderMethod(OrderMethod.APPROVAL)
+                        .eventId(item.getEventId())
                         .build();
         orderValidator.validCanCreate(order);
         return order;
