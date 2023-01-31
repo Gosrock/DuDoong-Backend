@@ -1,6 +1,8 @@
 package band.gosrock.api.config.response;
 
 
+import band.gosrock.api.config.security.SecurityUtils;
+import band.gosrock.api.config.slack.SlackApiProvider;
 import band.gosrock.common.dto.ErrorReason;
 import band.gosrock.common.dto.ErrorResponse;
 import band.gosrock.common.exception.BaseErrorCode;
@@ -37,6 +39,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RequiredArgsConstructor
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+    private final SlackApiProvider slackApiProvider;
     //    /** Json 날짜 형식 파싱에 대한 에러 핸들러 */
     //    @ExceptionHandler({ InvalidFormatException.class, DateTimeParseException.class})
     //    public ResponseEntity<ErrorResponse> JsonParseExceptionHandler(
@@ -163,6 +166,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<ErrorResponse> handleException(Exception e, HttpServletRequest request)
             throws IOException {
         final ContentCachingRequestWrapper cachingRequest = (ContentCachingRequestWrapper) request;
+        final Long userId = SecurityUtils.getCurrentUserId();
         String url =
                 UriComponentsBuilder.fromHttpRequest(new ServletServerHttpRequest(request))
                         .build()
@@ -176,8 +180,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                         internalServerError.getCode(),
                         internalServerError.getReason(),
                         url);
-        // TODO : 슬랙 오류 발송
-        //        slackProvider.sendError(url, cachingRequest, e);
+
+        slackApiProvider.sendError(cachingRequest, e, userId);
         return ResponseEntity.status(HttpStatus.valueOf(internalServerError.getStatus()))
                 .body(errorResponse);
     }
