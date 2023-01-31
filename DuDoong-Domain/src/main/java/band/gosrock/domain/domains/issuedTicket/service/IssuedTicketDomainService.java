@@ -26,7 +26,7 @@ public class IssuedTicketDomainService {
 
     private final OrderToIssuedTicketService orderToIssuedTicketService;
 
-    @RedissonLock(LockName = "티켓재고관리", identifier = "itemId")
+    @RedissonLock(LockName = "티켓관리", identifier = "itemId")
     public void withdrawIssuedTicket(Long itemId, List<IssuedTicket> issuedTickets) {
         // itemId로 티켓 아이템 찾아서 (해당 락에선 ticketItem이 하나로 정해지기 때문에)
         TicketItem ticketItem = ticketItemAdaptor.queryTicketItem(itemId);
@@ -49,7 +49,7 @@ public class IssuedTicketDomainService {
         return issuedTicket.toIssuedTicketInfoVo();
     }
 
-    @RedissonLock(LockName = "티켓재고관리", identifier = "itemId")
+    @RedissonLock(LockName = "티켓관리", identifier = "itemId")
     public void createIssuedTicket(Long itemId, String orderUuid, Long userId) {
         TicketItem ticketItem = ticketItemAdaptor.queryTicketItem(itemId);
         List<IssuedTicket> issuedTickets =

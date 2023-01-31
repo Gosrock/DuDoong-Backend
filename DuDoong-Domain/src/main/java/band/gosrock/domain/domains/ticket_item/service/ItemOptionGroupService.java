@@ -20,7 +20,7 @@ public class ItemOptionGroupService {
     private final OptionAdaptor optionAdaptor;
     private final TicketItemRepository ticketItemRepository;
 
-    @RedissonLock(LockName = "티켓재고관리", identifier = "ticketItemId")
+    @RedissonLock(LockName = "티켓관리", identifier = "ticketItemId")
     @Transactional
     public TicketItem addItemOptionGroup(Long ticketItemId, Long optionGroupId, Long eventId) {
 
