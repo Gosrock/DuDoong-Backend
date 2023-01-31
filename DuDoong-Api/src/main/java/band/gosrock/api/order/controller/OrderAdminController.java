@@ -32,7 +32,6 @@ public class OrderAdminController {
     private final ApproveOrderUseCase approveOrderUseCase;
     private final ReadOrderUseCase readOrderUseCase;
 
-    // TODO : 어프로브 주문 이동처리
     @Operation(summary = "어드민 목록 내 테이블 조회 OrderStage 는 꼭 보내주삼!")
     @GetMapping
     public PageResponse<OrderAdminTableElement> getEventOrders(
