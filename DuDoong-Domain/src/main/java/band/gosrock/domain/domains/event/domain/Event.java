@@ -5,7 +5,7 @@ import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.*;
 import band.gosrock.domain.domains.event.exception.CannotModifyEventBasicException;
 import band.gosrock.domain.domains.event.exception.EventCannotEndBeforeStartException;
-import band.gosrock.domain.domains.event.exception.EventIsNotOpenStatusException;
+import band.gosrock.domain.domains.event.exception.EventNotOpenException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
 import java.time.LocalDateTime;
 import javax.persistence.*;
@@ -109,7 +109,7 @@ public class Event extends BaseTimeEntity {
 
     public void validStatusOpen() {
         if (status != EventStatus.OPEN) {
-            throw EventIsNotOpenStatusException.EXCEPTION;
+            throw EventNotOpenException.EXCEPTION;
         }
     }
 

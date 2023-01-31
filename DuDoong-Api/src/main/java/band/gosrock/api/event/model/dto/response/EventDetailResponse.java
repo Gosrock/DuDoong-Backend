@@ -20,16 +20,12 @@ import lombok.Getter;
 public class EventDetailResponse {
 
     private String name;
-
     @DateFormat private LocalDateTime startAt;
-
     private Long runTime;
-
-    @JsonUnwrapped private EventDetailVo eventDetailVo;
-    @JsonUnwrapped private EventPlaceVo eventPlaceVo;
-
-    private HostInfoVo host;
     private EventStatus status;
+    private HostInfoVo host;
+    private EventPlaceVo place;
+    @JsonUnwrapped private EventDetailVo eventDetailVo;
 
     public static EventDetailResponse of(Host host, Event event) {
         EventBasicVo eventBasicVo = event.toEventBasicVo();
@@ -38,7 +34,7 @@ public class EventDetailResponse {
                 .startAt(eventBasicVo.getStartAt())
                 .runTime(eventBasicVo.getRunTime())
                 .eventDetailVo(event.toEventDetailVo())
-                .eventPlaceVo(event.toEventPlaceVo())
+                .place(event.toEventPlaceVo())
                 .host(host.toHostInfoVo())
                 .status(event.getStatus())
                 .build();

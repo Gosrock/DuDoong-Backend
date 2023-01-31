@@ -10,7 +10,7 @@ import static org.mockito.BDDMockito.willThrow;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
-import band.gosrock.domain.domains.event.exception.EventIsNotOpenStatusException;
+import band.gosrock.domain.domains.event.exception.EventNotOpenException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;
@@ -388,11 +388,10 @@ class OrderValidatorTest {
     @Test
     public void 주문_티켓팅_이벤트_상태검증_실패() {
         // given
-        willThrow(EventIsNotOpenStatusException.class).given(event).validStatusOpen();
+        willThrow(EventNotOpenException.class).given(event).validStatusOpen();
         // when
         // then
-        assertThrows(
-                EventIsNotOpenStatusException.class, () -> orderValidator.validEventIsOpen(event));
+        assertThrows(EventNotOpenException.class, () -> orderValidator.validEventIsOpen(event));
     }
 
     @Test
