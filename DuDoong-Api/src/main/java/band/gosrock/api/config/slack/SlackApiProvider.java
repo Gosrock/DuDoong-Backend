@@ -19,8 +19,10 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
 @Component
@@ -30,8 +32,9 @@ public class SlackApiProvider {
     private final MethodsClient methodsClient;
     private final ObjectMapper objectMapper;
 
-    @Value("${spring.profiles.active}")
-    private String ACTIVE_PROFILE;
+    private final Environment env;
+
+    private final List<String> sendAlarmProfiles = List.of("staging", "prod");
 
     @Value("${slack.webhook.id}")
     private String CHANNEL_ID;
@@ -41,7 +44,9 @@ public class SlackApiProvider {
     @Async
     public void sendError(ContentCachingRequestWrapper cachingRequest, Exception e, Long userId)
             throws IOException {
-        if (Arrays.asList("staging", "prod").contains(ACTIVE_PROFILE)) {
+        String[] activeProfiles = env.getActiveProfiles();
+        List<String> currentProfile = Arrays.stream(activeProfiles).toList();
+        if (CollectionUtils.containsAny(sendAlarmProfiles, currentProfile)) {
             executeSendError(cachingRequest, e, userId);
         }
     }

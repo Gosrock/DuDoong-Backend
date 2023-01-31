@@ -10,7 +10,7 @@ import static org.mockito.BDDMockito.willThrow;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
-import band.gosrock.domain.domains.event.exception.EventIsNotOpenStatusException;
+import band.gosrock.domain.domains.event.exception.EventNotOpenException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;
@@ -338,7 +338,7 @@ class OrderValidatorTest {
     public void 주문_티켓팅_가능시간검증_실패() {
         // given
         given(event.isTimeBeforeStartAt()).willReturn(Boolean.FALSE);
-        willCallRealMethod().given(event).validTicketingTime();
+        willCallRealMethod().given(event).validateTicketingTime();
         // when
         // then
         assertThrows(
@@ -350,7 +350,7 @@ class OrderValidatorTest {
     public void 주문_티켓팅_가능시간검증_성공() {
         // given
         given(event.isTimeBeforeStartAt()).willReturn(Boolean.TRUE);
-        willCallRealMethod().given(event).validTicketingTime();
+        willCallRealMethod().given(event).validateTicketingTime();
         // when
         orderValidator.validTicketingTime(event);
         // then
@@ -379,7 +379,7 @@ class OrderValidatorTest {
     @Test
     public void 주문_티켓팅_이벤트_상태검증_성공() {
         // given
-        willDoNothing().given(event).validStatusOpen();
+        willDoNothing().given(event).validateStatusOpen();
         // when
         orderValidator.validEventIsOpen(event);
         // then
@@ -388,11 +388,10 @@ class OrderValidatorTest {
     @Test
     public void 주문_티켓팅_이벤트_상태검증_실패() {
         // given
-        willThrow(EventIsNotOpenStatusException.class).given(event).validStatusOpen();
+        willThrow(EventNotOpenException.class).given(event).validateStatusOpen();
         // when
         // then
-        assertThrows(
-                EventIsNotOpenStatusException.class, () -> orderValidator.validEventIsOpen(event));
+        assertThrows(EventNotOpenException.class, () -> orderValidator.validEventIsOpen(event));
     }
 
     @Test

@@ -11,5 +11,7 @@ public interface TicketItemRepository extends JpaRepository<TicketItem, Long> {
 
     List<TicketItem> findAllByEvent_IdAndTicketItemStatus(Long eventId, TicketItemStatus status);
 
+    Boolean existsByEvent_Id(Long eventId);
+
     Optional<TicketItem> findByIdAndTicketItemStatus(Long ticketItemId, TicketItemStatus status);
 }

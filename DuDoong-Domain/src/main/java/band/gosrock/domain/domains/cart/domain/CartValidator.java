@@ -40,7 +40,7 @@ public class CartValidator {
 
     /** 티켓팅을 할 수 있는 시간을 안지났는지 검증합니다. */
     public void validTicketingTime(Event event) {
-        event.validTicketingTime();
+        event.validateTicketingTime();
     }
 
     /** 아이템의 재고가 충분한지 확인합니다. */
@@ -50,7 +50,7 @@ public class CartValidator {
 
     /** 이벤트가 현재 열려있는 상태인지 확인합니다. */
     public void validEventIsOpen(Event event) {
-        event.validStatusOpen();
+        event.validateStatusOpen();
     }
 
     /** 카트에 담길때 아이템이 한 종류인지 확인합니다. */
