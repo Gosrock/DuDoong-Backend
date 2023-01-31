@@ -24,6 +24,13 @@ public class EventPlace {
     // 공연 상세 주소
     private String placeAddress;
 
+    protected Boolean isUpdated() {
+        return this.latitude != null
+                && this.longitude != null
+                && this.placeName != null
+                && this.placeAddress != null;
+    }
+
     @Builder
     public EventPlace(Double latitude, Double longitude, String placeName, String placeAddress) {
         this.latitude = latitude;

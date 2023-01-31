@@ -1,15 +1,11 @@
 package band.gosrock;
 
 
+import band.gosrock.api.supports.ApiIntegrateSpringBootTest;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.test.context.ActiveProfiles;
 
-@ActiveProfiles("test")
-@ComponentScan(basePackages = "band.gosrock")
-@SpringBootTest
-class DuDoongApiServerApplication {
+@ApiIntegrateSpringBootTest
+public class DuDoongApiServerApplication {
     @Test
     void contextLoads() {}
 }

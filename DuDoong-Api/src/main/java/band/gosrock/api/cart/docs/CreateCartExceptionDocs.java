@@ -8,7 +8,7 @@ import band.gosrock.common.interfaces.SwaggerExampleExceptions;
 import band.gosrock.domain.domains.cart.exception.CartInvalidOptionAnswerException;
 import band.gosrock.domain.domains.cart.exception.CartItemNotOneTypeException;
 import band.gosrock.domain.domains.cart.exception.CartNotAnswerAllOptionGroupException;
-import band.gosrock.domain.domains.event.exception.EventIsNotOpenStatusException;
+import band.gosrock.domain.domains.event.exception.EventNotOpenException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLackException;
 import band.gosrock.domain.domains.ticket_item.exception.TicketPurchaseLimitException;
@@ -23,7 +23,7 @@ public class CreateCartExceptionDocs implements SwaggerExampleExceptions {
     public DuDoongCodeException 응답_다대답_안했을때 = CartNotAnswerAllOptionGroupException.EXCEPTION;
 
     @ExplainError("이벤트가 열린 상태가 아닐때")
-    public DuDoongCodeException 이벤트_닫힘 = EventIsNotOpenStatusException.EXCEPTION;
+    public DuDoongCodeException 이벤트_닫힘 = EventNotOpenException.EXCEPTION;
 
     @ExplainError("이벤트 티켓팅 시간이 지났을때.")
     public DuDoongCodeException 티켓팅_시간지남 = EventTicketingTimeIsPassedException.EXCEPTION;
