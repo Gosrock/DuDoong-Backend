@@ -3,14 +3,8 @@ package band.gosrock.api.ticketItem.controller;
 
 import band.gosrock.api.ticketItem.dto.request.ApplyTicketOptionRequest;
 import band.gosrock.api.ticketItem.dto.request.CreateTicketItemRequest;
-import band.gosrock.api.ticketItem.dto.response.ApplyTicketOptionResponse;
-import band.gosrock.api.ticketItem.dto.response.GetEventTicketItemsResponse;
-import band.gosrock.api.ticketItem.dto.response.GetTicketItemOptionsResponse;
-import band.gosrock.api.ticketItem.dto.response.TicketItemResponse;
-import band.gosrock.api.ticketItem.service.ApplyTicketOptionUseCase;
-import band.gosrock.api.ticketItem.service.CreateTicketItemUseCase;
-import band.gosrock.api.ticketItem.service.GetEventTicketItemsUseCase;
-import band.gosrock.api.ticketItem.service.GetTicketOptionsUseCase;
+import band.gosrock.api.ticketItem.dto.response.*;
+import band.gosrock.api.ticketItem.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,6 +23,7 @@ public class TicketItemController {
     public final ApplyTicketOptionUseCase applyTicketOptionUseCase;
     public final GetTicketOptionsUseCase getTicketOptionsUseCase;
     public final GetEventTicketItemsUseCase getEventTicketItemsUseCase;
+    public final GetAppliedOptionGroupsUseCase getAppliedOptionGroupsUseCase;
 
     @Operation(
             summary = "특정 이벤트에 속하는 티켓 상품을 생성합니다.",
@@ -60,5 +55,11 @@ public class TicketItemController {
     public GetTicketItemOptionsResponse getTicketItemOptions(
             @PathVariable Long eventId, @PathVariable Long ticketItemId) {
         return getTicketOptionsUseCase.execute(eventId, ticketItemId);
+    }
+
+    @Operation(summary = "해당 이벤트의 티켓상품 옵션 적용 현황을 모두 조회합니다.")
+    @GetMapping("/appliedOptionGroups")
+    public GetAppliedOptionGroupsResponse getAppliedOptionGroups(@PathVariable Long eventId) {
+        return getAppliedOptionGroupsUseCase.execute(eventId);
     }
 }

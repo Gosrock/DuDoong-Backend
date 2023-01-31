@@ -2,14 +2,15 @@ package band.gosrock.api.ticketItem.mapper;
 
 
 import band.gosrock.api.ticketItem.dto.request.CreateTicketItemRequest;
-import band.gosrock.api.ticketItem.dto.response.GetEventTicketItemsResponse;
-import band.gosrock.api.ticketItem.dto.response.TicketItemResponse;
+import band.gosrock.api.ticketItem.dto.response.*;
 import band.gosrock.common.annotation.Mapper;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
+import band.gosrock.domain.domains.ticket_item.domain.ItemOptionGroup;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,5 +44,25 @@ public class TicketItemMapper {
         List<TicketItem> ticketItems = ticketItemAdaptor.findAllByEventId(event.getId());
         return GetEventTicketItemsResponse.from(
                 ticketItems.stream().map(TicketItemResponse::from).toList());
+    }
+
+    @Transactional(readOnly = true)
+    public GetAppliedOptionGroupsResponse toGetAppliedOptionGroupsResponse(Long eventId) {
+
+        Event event = eventAdaptor.findById(eventId);
+        List<TicketItem> ticketItems = ticketItemAdaptor.findAllByEventId(event.getId());
+        List<AppliedOptionGroupResponse> appliedOptionGroups = new ArrayList<>();
+        ticketItems.forEach(
+                ticketItem ->
+                        appliedOptionGroups.add(
+                                AppliedOptionGroupResponse.from(
+                                        ticketItem,
+                                        ticketItem.getItemOptionGroups().stream()
+                                                .map(ItemOptionGroup::getOptionGroup)
+                                                .toList()
+                                                .stream()
+                                                .map(OptionGroupResponse::from)
+                                                .toList())));
+        return GetAppliedOptionGroupsResponse.from(appliedOptionGroups);
     }
 }
