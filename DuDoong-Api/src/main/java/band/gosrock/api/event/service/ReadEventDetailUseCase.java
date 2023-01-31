@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 @UseCase
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ReadEventProfileListUseCase {
+public class ReadEventDetailUseCase {
     private final EventAdaptor eventAdaptor;
 
     @Deprecated
