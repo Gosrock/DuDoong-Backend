@@ -28,8 +28,8 @@ public class S3UploadPresignedUrlService {
     @Value("${aws.s3.base-url}")
     private String baseUrl;
 
-    public ImageUrlDto forUser(Long userId, String fileExtension) {
-        String fixedFileExtension = getFixedFileExtension(fileExtension);
+    public ImageUrlDto forUser(Long userId, ImageFileExtension fileExtension) {
+        String fixedFileExtension = fileExtension.getUploadExtension();
         String fileName = getForUserFileName(userId, fixedFileExtension);
         log.info(fileName);
         URL url =
@@ -38,8 +38,8 @@ public class S3UploadPresignedUrlService {
         return ImageUrlDto.of(url.toString(), fileName);
     }
 
-    public ImageUrlDto forHost(Long hostId, String fileExtension) {
-        String fixedFileExtension = getFixedFileExtension(fileExtension);
+    public ImageUrlDto forHost(Long hostId, ImageFileExtension fileExtension) {
+        String fixedFileExtension = fileExtension.getUploadExtension();
         String fileName = getForHostFileName(hostId, fixedFileExtension);
         log.info(fileName);
         URL url =
@@ -48,19 +48,14 @@ public class S3UploadPresignedUrlService {
         return ImageUrlDto.of(url.toString(), fileName);
     }
 
-    public ImageUrlDto forEvent(Long eventId, String fileExtension) {
-        String fixedFileExtension = getFixedFileExtension(fileExtension);
+    public ImageUrlDto forEvent(Long eventId, ImageFileExtension fileExtension) {
+        String fixedFileExtension = fileExtension.getUploadExtension();
         String fileName = getForEventFileName(eventId, fixedFileExtension);
         log.info(fileName);
         URL url =
                 amazonS3.generatePresignedUrl(
                         getGeneratePreSignedUrlRequest(bucket, fileName, fixedFileExtension));
         return ImageUrlDto.of(url.toString(), fileName);
-    }
-
-    private String getFixedFileExtension(String fileExtension) {
-        validFileExtension(fileExtension);
-        return changeJpgToJpeg(fileExtension);
     }
 
     private String getForUserFileName(Long userId, String fileExtension) {
