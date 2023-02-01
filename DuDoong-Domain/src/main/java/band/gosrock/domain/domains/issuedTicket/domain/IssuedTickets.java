@@ -23,7 +23,7 @@ public class IssuedTickets {
 
     public String getItemName() {
         IssuedTicket issuedTicket = issuedTickets.stream().findFirst().orElseThrow();
-        return issuedTicket.getTicketItem().getName();
+        return issuedTicket.getItemInfo().getTicketName();
     }
 
     public int getTotalQuantity() {

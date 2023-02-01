@@ -1,7 +1,7 @@
 package band.gosrock.common.annotation;
 
 
-import band.gosrock.common.annotation.validator.EnumValidator;
+import band.gosrock.common.validator.EnumValidator;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

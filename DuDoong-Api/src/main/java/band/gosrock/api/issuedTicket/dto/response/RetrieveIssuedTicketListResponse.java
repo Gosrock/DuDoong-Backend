@@ -21,13 +21,7 @@ public class RetrieveIssuedTicketListResponse {
         return RetrieveIssuedTicketListResponse.builder()
                 .page(issuedTickets.getPageable().getPageNumber())
                 .totalPage(issuedTickets.getTotalPages())
-                .issuedTickets(
-                        issuedTickets.stream()
-                                .map(
-                                        issuedTicket ->
-                                                RetrieveIssuedTicketDTO.of(
-                                                        issuedTicket, issuedTicket.getUser()))
-                                .toList())
+                .issuedTickets(issuedTickets.stream().map(RetrieveIssuedTicketDTO::of).toList())
                 .build();
     }
 }
