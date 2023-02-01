@@ -1,5 +1,6 @@
 package band.gosrock.api.config;
 
+
 import javax.servlet.Filter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -18,7 +19,9 @@ public class ServletFilterConfig implements WebMvcConfigurer {
     private final ForwardedHeaderFilter forwardedHeaderFilter;
 
     @Bean
-    public FilterRegistrationBean securityFilterChain(@Qualifier(AbstractSecurityWebApplicationInitializer.DEFAULT_FILTER_NAME) Filter securityFilter) {
+    public FilterRegistrationBean securityFilterChain(
+            @Qualifier(AbstractSecurityWebApplicationInitializer.DEFAULT_FILTER_NAME)
+                    Filter securityFilter) {
         FilterRegistrationBean registration = new FilterRegistrationBean(securityFilter);
         registration.setOrder(Integer.MAX_VALUE - 2);
         registration.setName(AbstractSecurityWebApplicationInitializer.DEFAULT_FILTER_NAME);
@@ -26,21 +29,18 @@ public class ServletFilterConfig implements WebMvcConfigurer {
     }
 
     @Bean
-    public FilterRegistrationBean afsd() {
+    public FilterRegistrationBean setForwardedHeaderFilterOrder() {
         FilterRegistrationBean registrationBean = new FilterRegistrationBean();
-//        ForwardedHeaderFilter forwardedHeaderFilter = new ForwardedHeaderFilter();
         registrationBean.setFilter(forwardedHeaderFilter);
         registrationBean.setOrder(Integer.MAX_VALUE - 1);
         return registrationBean;
     }
 
     @Bean
-    public FilterRegistrationBean userInsertingMdcFilterRegistrationBean() {
+    public FilterRegistrationBean setHttpContentCacheFilterOrder() {
         FilterRegistrationBean registrationBean = new FilterRegistrationBean();
-//        HttpContentCacheFilter httpContentCacheFilter = new HttpContentCacheFilter();
         registrationBean.setFilter(httpContentCacheFilter);
         registrationBean.setOrder(Integer.MAX_VALUE);
         return registrationBean;
     }
-
 }
