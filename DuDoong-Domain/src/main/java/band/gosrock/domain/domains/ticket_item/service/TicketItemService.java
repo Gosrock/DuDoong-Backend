@@ -23,7 +23,7 @@ public class TicketItemService {
         return ticketItemAdaptor.save(ticketItem);
     }
 
-    @RedissonLock(LockName = "티켓재고관리", identifier = "ticketItemId")
+    @RedissonLock(LockName = "티켓관리", identifier = "ticketItemId")
     public void softDeleteTicketItem(Long eventId, Long ticketItemId) {
 
         TicketItem ticketItem = ticketItemAdaptor.queryTicketItem(ticketItemId);
