@@ -12,7 +12,7 @@ import lombok.Getter;
 public class EventProfileVo {
     private Long eventId;
 
-    private String posterImage;
+    private ImageVo posterImage;
 
     private String name;
 

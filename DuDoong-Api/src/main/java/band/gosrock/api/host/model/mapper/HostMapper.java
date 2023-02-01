@@ -40,7 +40,7 @@ public class HostMapper {
     public HostProfile toHostProfile(UpdateHostRequest updateHostRequest) {
         return HostProfile.builder()
                 .introduce(updateHostRequest.getIntroduce())
-                .profileImageUrl(updateHostRequest.getProfileImageUrl())
+                .profileImageKey(updateHostRequest.getProfileImageKey())
                 .contactEmail(updateHostRequest.getContactEmail())
                 .contactNumber(updateHostRequest.getContactNumber())
                 .build();

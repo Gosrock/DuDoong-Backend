@@ -4,6 +4,7 @@ package band.gosrock.api.host.model.dto.request;
 import band.gosrock.common.annotation.Phone;
 import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.constraints.Email;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -13,9 +14,9 @@ import org.hibernate.validator.constraints.URL;
 @Getter
 @RequiredArgsConstructor
 public class UpdateHostRequest {
-    @Schema(defaultValue = "https://s3.dudoong.com/img", description = "호스트 프로필 이미지")
-    @URL(message = "올바른 형식의 URL 을 입력해주세요")
-    private String profileImageUrl;
+    @Schema(defaultValue = "test/host/5/aa.jpg", description = "호스트 프로필 이미지")
+    @NotEmpty
+    private String profileImageKey;
 
     @Schema(defaultValue = "고슬고슬고스락", description = "호스트 간단 소개")
     @NotNull(message = "간단 소개를 입력해주세요")

@@ -8,6 +8,7 @@ import band.gosrock.api.event.model.dto.response.EventChecklistResponse;
 import band.gosrock.api.event.model.dto.response.EventDetailResponse;
 import band.gosrock.api.event.model.dto.response.EventProfileResponse;
 import band.gosrock.common.annotation.Mapper;
+import band.gosrock.domain.common.vo.ImageVo;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.domain.EventBasic;
@@ -50,7 +51,7 @@ public class EventMapper {
 
     public EventDetail toEventDetail(UpdateEventDetailRequest updateEventDetailRequest) {
         return EventDetail.builder()
-                .posterImage(updateEventDetailRequest.getPosterImage())
+                .posterImageKey(updateEventDetailRequest.getPosterImageKey())
                 .detailImages(updateEventDetailRequest.getDetailImages())
                 .content(updateEventDetailRequest.getContent())
                 .build();

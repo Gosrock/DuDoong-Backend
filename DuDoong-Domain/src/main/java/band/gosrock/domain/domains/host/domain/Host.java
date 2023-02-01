@@ -124,7 +124,7 @@ public class Host extends BaseTimeEntity {
     public Host(
             String name,
             String introduce,
-            String profileImageUrl,
+            String profileImageKey,
             String contactEmail,
             String contactNumber,
             String slackUrl,
@@ -133,7 +133,7 @@ public class Host extends BaseTimeEntity {
                 HostProfile.builder()
                         .name(name)
                         .introduce(introduce)
-                        .profileImageUrl(profileImageUrl)
+                        .profileImageKey(profileImageKey)
                         .contactEmail(contactEmail)
                         .contactNumber(contactNumber)
                         .build();
