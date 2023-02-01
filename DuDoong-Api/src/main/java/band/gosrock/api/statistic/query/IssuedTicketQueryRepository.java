@@ -29,7 +29,7 @@ public class IssuedTicketQueryRepository {
                                 issuedCountEx(eventId),
                                 enteredCountEx(eventId)))
                 .from(issuedTicket)
-                .fetchOne();
+                .fetchFirst();
     }
 
     private Expression<Long> enteredCountEx(Long eventId) {

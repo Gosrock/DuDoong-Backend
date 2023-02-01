@@ -48,6 +48,7 @@ public class OrderQueryRepository {
     }
 
     public OrderStatistic statistic(Long eventId) {
+
         return queryFactory
                 .select(
                         Projections.constructor(
@@ -56,7 +57,7 @@ public class OrderQueryRepository {
                                 notApprovedCountEx(eventId),
                                 sellAmount(eventId)))
                 .from(order)
-                .fetchOne();
+                .fetchFirst();
     }
 
     private BooleanExpression eventIdEq(Long eventId) {
