@@ -19,8 +19,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class EventDetail {
     // 포스터 이미지
-    @Embedded
-    private ImageVo posterImage;
+    @Embedded private ImageVo posterImage;
 
     // todo :: 디테일 이미지를 EventDetailImage 로 받기
 

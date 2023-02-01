@@ -12,7 +12,6 @@ import java.util.Date;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -33,24 +32,30 @@ public class S3UploadPresignedUrlService {
         String fixedFileExtension = getFixedFileExtension(fileExtension);
         String fileName = getForUserFileName(userId, fixedFileExtension);
         log.info(fileName);
-        URL url = amazonS3.generatePresignedUrl(getGeneratePreSignedUrlRequest(bucket, fileName, fixedFileExtension));
-        return ImageUrlDto.of(url.toString(),fileName);
+        URL url =
+                amazonS3.generatePresignedUrl(
+                        getGeneratePreSignedUrlRequest(bucket, fileName, fixedFileExtension));
+        return ImageUrlDto.of(url.toString(), fileName);
     }
 
     public ImageUrlDto forHost(Long hostId, String fileExtension) {
         String fixedFileExtension = getFixedFileExtension(fileExtension);
         String fileName = getForHostFileName(hostId, fixedFileExtension);
         log.info(fileName);
-        URL url = amazonS3.generatePresignedUrl(getGeneratePreSignedUrlRequest(bucket, fileName, fixedFileExtension));
-        return ImageUrlDto.of(url.toString(),fileName);
+        URL url =
+                amazonS3.generatePresignedUrl(
+                        getGeneratePreSignedUrlRequest(bucket, fileName, fixedFileExtension));
+        return ImageUrlDto.of(url.toString(), fileName);
     }
 
     public ImageUrlDto forEvent(Long eventId, String fileExtension) {
         String fixedFileExtension = getFixedFileExtension(fileExtension);
         String fileName = getForEventFileName(eventId, fixedFileExtension);
         log.info(fileName);
-        URL url = amazonS3.generatePresignedUrl(getGeneratePreSignedUrlRequest(bucket, fileName, fixedFileExtension));
-        return ImageUrlDto.of(url.toString(),fileName);
+        URL url =
+                amazonS3.generatePresignedUrl(
+                        getGeneratePreSignedUrlRequest(bucket, fileName, fixedFileExtension));
+        return ImageUrlDto.of(url.toString(), fileName);
     }
 
     private String getFixedFileExtension(String fileExtension) {
@@ -70,22 +75,22 @@ public class S3UploadPresignedUrlService {
 
     private String getForHostFileName(Long hostId, String fileExtension) {
         return baseUrl
-            + "/host/"
-            + hostId.toString()
-            + "/"
-            + UUID.randomUUID()
-            + "."
-            + fileExtension;
+                + "/host/"
+                + hostId.toString()
+                + "/"
+                + UUID.randomUUID()
+                + "."
+                + fileExtension;
     }
 
     private String getForEventFileName(Long eventId, String fileExtension) {
         return baseUrl
-            + "/event/"
-            + eventId.toString()
-            + "/"
-            + UUID.randomUUID()
-            + "."
-            + fileExtension;
+                + "/event/"
+                + eventId.toString()
+                + "/"
+                + UUID.randomUUID()
+                + "."
+                + fileExtension;
     }
 
     private String changeJpgToJpeg(String fileExtension) {

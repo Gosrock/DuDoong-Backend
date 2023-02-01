@@ -12,8 +12,13 @@ public class ImageUrlResponse {
 
     private final String presignedUrl;
     private final String key;
+    private final ImageVo url;
 
-    public static ImageUrlResponse from(ImageUrlDto urlDto){
-        return ImageUrlResponse.builder().presignedUrl(urlDto.getUrl()).key(urlDto.getKey()).build();
+    public static ImageUrlResponse from(ImageUrlDto urlDto) {
+        return ImageUrlResponse.builder()
+                .presignedUrl(urlDto.getUrl())
+                .key(urlDto.getKey())
+                .url(ImageVo.valueOf(urlDto.getKey()))
+                .build();
     }
 }

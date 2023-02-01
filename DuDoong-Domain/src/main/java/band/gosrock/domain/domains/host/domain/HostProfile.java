@@ -21,8 +21,7 @@ public class HostProfile {
     private String introduce;
 
     // 프로필 이미지 url
-    @Embedded
-    private ImageVo profileImage;
+    @Embedded private ImageVo profileImage;
 
     // 대표자 이메일
     private String contactEmail;

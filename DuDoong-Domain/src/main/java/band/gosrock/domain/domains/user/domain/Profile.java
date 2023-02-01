@@ -17,8 +17,7 @@ public class Profile {
     private String email;
 
     private String phoneNumber;
-    @Embedded
-    private ImageVo profileImage;
+    @Embedded private ImageVo profileImage;
 
     @Builder
     public Profile(String name, String email, String phoneNumber, String profileImage) {

@@ -23,15 +23,13 @@ public class ImageController {
 
     @Operation(summary = "이벤트 관련 이미지 업로드 url 요청할수 있는 api 입니다.")
     @PostMapping(value = "/events/{eventId}/images")
-    public ImageUrlResponse getIssuedTickets(
-            @PathVariable Long eventId) {
+    public ImageUrlResponse getIssuedTickets(@PathVariable Long eventId) {
         return getImageUploadUrlUseCase.forEvent(eventId);
     }
 
     @Operation(summary = "호스트 관련 이미지 업로드 url 요청할수 있는 api 입니다.")
     @PostMapping(value = "/hosts/{hostId}/images")
-    public ImageUrlResponse patchIssuedTicketStatus(
-            @PathVariable Long hostId) {
+    public ImageUrlResponse patchIssuedTicketStatus(@PathVariable Long hostId) {
         return getImageUploadUrlUseCase.forHost(hostId);
     }
 }

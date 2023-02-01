@@ -8,7 +8,6 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.validator.constraints.URL;
 
 /** 호스트 정보 변경 요청 DTO */
 @Getter

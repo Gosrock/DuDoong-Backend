@@ -21,7 +21,7 @@ public class UpdateEventDetailRequest {
     @NotEmpty
     private String posterImageKey;
 
-    //TODO : 기획에서 제거 예정?
+    // TODO : 기획에서 제거 예정?
     @ArraySchema(
             arraySchema =
                     @Schema(
