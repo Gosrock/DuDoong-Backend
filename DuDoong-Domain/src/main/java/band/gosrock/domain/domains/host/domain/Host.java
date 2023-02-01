@@ -60,12 +60,12 @@ public class Host extends BaseTimeEntity {
         this.slackUrl = slackUrl;
     }
 
-    public Boolean isSuperHostUserId(Long userId) {
+    public Boolean isManagerHostUserId(Long userId) {
         return this.hostUsers.stream()
                 .anyMatch(
                         hostUser ->
                                 hostUser.getUserId().equals(userId)
-                                        && hostUser.getRole().equals(HostRole.SUPER_HOST));
+                                        && hostUser.getRole().equals(HostRole.MANAGER));
     }
 
     public Boolean isActiveHostUserId(Long userId) {
@@ -100,11 +100,11 @@ public class Host extends BaseTimeEntity {
         }
     }
 
-    /** 해당 유저가 슈퍼 호스트인지 확인하는 검증 로직입니다 */
-    public void validateSuperHostUser(Long userId) {
+    /** 해당 유저가 매니저 이상인지 확인하는 검증 로직입니다 */
+    public void validateManagerHostUser(Long userId) {
         this.validateActiveHostUser(userId);
-        if (!this.isSuperHostUserId(userId)) {
-            throw NotSuperHostException.EXCEPTION;
+        if (!this.isManagerHostUserId(userId) && !this.getMasterUserId().equals(userId)) {
+            throw NotManagerHostException.EXCEPTION;
         }
     }
 
@@ -124,7 +124,7 @@ public class Host extends BaseTimeEntity {
     public Host(
             String name,
             String introduce,
-            String profileImageUrl,
+            String profileImageKey,
             String contactEmail,
             String contactNumber,
             String slackUrl,
@@ -133,7 +133,7 @@ public class Host extends BaseTimeEntity {
                 HostProfile.builder()
                         .name(name)
                         .introduce(introduce)
-                        .profileImageUrl(profileImageUrl)
+                        .profileImageKey(profileImageKey)
                         .contactEmail(contactEmail)
                         .contactNumber(contactNumber)
                         .build();

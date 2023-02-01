@@ -4,20 +4,31 @@ package band.gosrock.api.event.model.mapper;
 import band.gosrock.api.event.model.dto.request.CreateEventRequest;
 import band.gosrock.api.event.model.dto.request.UpdateEventBasicRequest;
 import band.gosrock.api.event.model.dto.request.UpdateEventDetailRequest;
+import band.gosrock.api.event.model.dto.response.EventChecklistResponse;
+import band.gosrock.api.event.model.dto.response.EventDetailResponse;
+import band.gosrock.api.event.model.dto.response.EventProfileResponse;
 import band.gosrock.common.annotation.Mapper;
+import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.domain.EventBasic;
 import band.gosrock.domain.domains.event.domain.EventDetail;
 import band.gosrock.domain.domains.event.domain.EventPlace;
-import band.gosrock.domain.domains.event.service.EventService;
+import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
+import band.gosrock.domain.domains.host.domain.Host;
+import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 @Mapper
 @RequiredArgsConstructor
 public class EventMapper {
 
-    private final EventService eventService;
+    private final HostAdaptor hostAdaptor;
+    private final EventAdaptor eventAdaptor;
+    private final TicketItemAdaptor ticketItemAdaptor;
 
     @Transactional(readOnly = true)
     public Event toEntity(CreateEventRequest createEventRequest) {
@@ -39,7 +50,7 @@ public class EventMapper {
 
     public EventDetail toEventDetail(UpdateEventDetailRequest updateEventDetailRequest) {
         return EventDetail.builder()
-                .posterImage(updateEventDetailRequest.getPosterImage())
+                .posterImageKey(updateEventDetailRequest.getPosterImageKey())
                 .detailImages(updateEventDetailRequest.getDetailImages())
                 .content(updateEventDetailRequest.getContent())
                 .build();
@@ -54,5 +65,26 @@ public class EventMapper {
                 .build();
     }
 
-    // todo :: 공연 장소
+    public EventDetailResponse toEventDetailResponse(Host host, Event event) {
+        return EventDetailResponse.of(host, event);
+    }
+
+    public EventChecklistResponse toEventChecklistResponse(Event event) {
+        final Boolean hasTicketItem = ticketItemAdaptor.existsByEventId(event.getId());
+        return EventChecklistResponse.of(event, hasTicketItem);
+    }
+
+    public Page<EventProfileResponse> toEventProfileResponsePage(Long userId, Pageable pageable) {
+        List<Host> hostList = hostAdaptor.findAllByHostUsers_UserId(userId);
+        List<Long> hostIds = hostList.stream().map(Host::getId).toList();
+        Page<Event> eventList = eventAdaptor.findAllByHostIdIn(hostIds, pageable);
+        return eventList.map(event -> this.toEventProfileResponse(hostList, event));
+    }
+
+    private EventProfileResponse toEventProfileResponse(List<Host> hostList, Event event) {
+        for (Host host : hostList) {
+            if (host.getId().equals(event.getHostId())) return EventProfileResponse.of(host, event);
+        }
+        return null;
+    }
 }

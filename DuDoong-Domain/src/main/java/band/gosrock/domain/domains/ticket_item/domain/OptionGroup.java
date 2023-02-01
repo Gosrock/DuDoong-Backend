@@ -7,6 +7,7 @@ import static band.gosrock.domain.domains.ticket_item.domain.OptionGroupType.*;
 
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.ticket_item.exception.ForbiddenOptionGroupDeleteException;
 import band.gosrock.domain.domains.ticket_item.exception.InvalidOptionGroupException;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,10 +71,16 @@ public class OptionGroup {
         options.forEach(option -> option.setOptionGroup(this));
     }
 
-    public void checkEventId(Long eventId) {
+    public void validateEventId(Long eventId) {
         if (!this.getEvent().getId().equals(eventId)) {
             throw InvalidOptionGroupException.EXCEPTION;
         }
+    }
+
+    public Boolean hasApplication(List<TicketItem> ticketItems) {
+        return ticketItems.stream()
+                .map(ticketItem -> ticketItem.hasItemOptionGroup(this.id))
+                .reduce(Boolean.FALSE, Boolean::logicalOr);
     }
 
     public OptionGroup createTicketOption(Money additionalPrice) {
@@ -85,5 +92,13 @@ public class OptionGroup {
             this.options.add(Option.create("", ZERO, this));
         }
         return this;
+    }
+
+    public void softDeleteOptionGroup(List<TicketItem> ticketItems) {
+        // 적용된 옵션은 삭제 불가
+        if (this.hasApplication(ticketItems)) {
+            throw ForbiddenOptionGroupDeleteException.EXCEPTION;
+        }
+        this.optionGroupStatus = OptionGroupStatus.DELETED;
     }
 }

@@ -2,10 +2,13 @@ package band.gosrock.api.ticketItem.mapper;
 
 
 import band.gosrock.api.ticketItem.dto.request.CreateTicketOptionRequest;
+import band.gosrock.api.ticketItem.dto.response.GetEventOptionsResponse;
 import band.gosrock.api.ticketItem.dto.response.GetTicketItemOptionsResponse;
 import band.gosrock.api.ticketItem.dto.response.OptionGroupResponse;
 import band.gosrock.common.annotation.Mapper;
+import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.ticket_item.adaptor.OptionGroupAdaptor;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
 import band.gosrock.domain.domains.ticket_item.domain.ItemOptionGroup;
 import band.gosrock.domain.domains.ticket_item.domain.OptionGroup;
@@ -20,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class TicketOptionMapper {
 
     private final TicketItemAdaptor ticketItemAdaptor;
+    private final EventAdaptor eventAdaptor;
+    private final OptionGroupAdaptor optionGroupAdaptor;
 
     public OptionGroup toOptionGroup(
             CreateTicketOptionRequest createTicketOptionRequest, Event event) {
@@ -38,13 +43,24 @@ public class TicketOptionMapper {
             Long eventId, Long ticketItemId) {
 
         TicketItem ticketItem = ticketItemAdaptor.queryTicketItem(ticketItemId);
-        ticketItem.checkEventId(eventId);
+        ticketItem.validateEventId(eventId);
         List<OptionGroup> optionGroups =
                 ticketItem.getItemOptionGroups().stream()
                         .map(ItemOptionGroup::getOptionGroup)
                         .toList();
 
         return GetTicketItemOptionsResponse.from(
+                optionGroups.stream().map(OptionGroupResponse::from).toList());
+    }
+
+    @Transactional(readOnly = true)
+    public GetEventOptionsResponse toGetEventOptionResponse(Long eventId) {
+
+        Event event = eventAdaptor.findById(eventId);
+
+        List<OptionGroup> optionGroups = optionGroupAdaptor.findAllByEventId(event.getId());
+
+        return GetEventOptionsResponse.from(
                 optionGroups.stream().map(OptionGroupResponse::from).toList());
     }
 }

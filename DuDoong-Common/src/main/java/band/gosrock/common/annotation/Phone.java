@@ -1,7 +1,7 @@
 package band.gosrock.common.annotation;
 
 
-import band.gosrock.common.annotation.validator.PhoneValidator;
+import band.gosrock.common.validator.PhoneValidator;
 import java.lang.annotation.*;
 import javax.validation.Constraint;
 

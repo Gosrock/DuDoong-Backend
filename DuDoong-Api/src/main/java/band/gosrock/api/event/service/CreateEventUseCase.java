@@ -26,7 +26,7 @@ public class CreateEventUseCase {
         final User user = userUtils.getCurrentUser();
         final Long userId = user.getId();
         // 슈퍼 호스트 이상만 공연 생성 가능
-        hostService.validateSuperHostUser(createEventRequest.getHostId(), userId);
+        hostService.validateManagerHostUser(createEventRequest.getHostId(), userId);
         final Event event = eventMapper.toEntity(createEventRequest);
         return EventResponse.of(eventService.createEvent(event));
     }

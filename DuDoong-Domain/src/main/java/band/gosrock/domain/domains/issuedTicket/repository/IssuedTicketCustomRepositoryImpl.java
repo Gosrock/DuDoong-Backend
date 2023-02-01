@@ -1,10 +1,7 @@
 package band.gosrock.domain.domains.issuedTicket.repository;
 
-import static band.gosrock.domain.domains.event.domain.QEvent.event;
 import static band.gosrock.domain.domains.issuedTicket.domain.QIssuedTicket.issuedTicket;
 import static band.gosrock.domain.domains.issuedTicket.domain.QIssuedTicketOptionAnswer.issuedTicketOptionAnswer;
-import static band.gosrock.domain.domains.ticket_item.domain.QTicketItem.ticketItem;
-import static band.gosrock.domain.domains.user.domain.QUser.user;
 
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus;
@@ -29,20 +26,11 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
         List<IssuedTicket> issuedTickets =
                 queryFactory
                         .selectFrom(issuedTicket)
-                        .leftJoin(issuedTicket.event, event)
-                        .fetchJoin()
-                        .leftJoin(issuedTicket.user, user)
-                        .fetchJoin()
-                        .leftJoin(issuedTicket.ticketItem, ticketItem)
-                        .fetchJoin()
                         .where(
                                 eventIdEq(condition.getEventId()),
                                 userNameContains(condition.getUserName()),
                                 phoneNumberContains(condition.getPhoneNumber()),
-                                issuedTicket
-                                        .issuedTicketStatus
-                                        .eq(IssuedTicketStatus.CANCELED)
-                                        .not())
+                                issuedTicketStatusNotCanceled())
                         .orderBy(issuedTicket.id.desc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize())
@@ -55,7 +43,8 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
                         .where(
                                 eventIdEq(condition.getEventId()),
                                 userNameContains(condition.getUserName()),
-                                phoneNumberContains(condition.getPhoneNumber()));
+                                phoneNumberContains(condition.getPhoneNumber()),
+                                issuedTicketStatusNotCanceled());
 
         return PageableExecutionUtils.getPage(issuedTickets, pageable, countQuery::fetchOne);
     }
@@ -65,38 +54,26 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
         IssuedTicket findIssuedTicket =
                 queryFactory
                         .selectFrom(issuedTicket)
-                        .leftJoin(issuedTicket.event, event)
-                        .fetchJoin()
-                        .leftJoin(issuedTicket.user, user)
-                        .fetchJoin()
-                        .leftJoin(issuedTicket.ticketItem, ticketItem)
-                        .fetchJoin()
                         .leftJoin(issuedTicket.issuedTicketOptionAnswers, issuedTicketOptionAnswer)
                         .fetchJoin()
-                        .where(
-                                issuedTicket
-                                        .id
-                                        .eq(issuedTicketId)
-                                        .and(
-                                                issuedTicket
-                                                        .issuedTicketStatus
-                                                        .eq(IssuedTicketStatus.CANCELED)
-                                                        .not()))
+                        .where(issuedTicket.id.eq(issuedTicketId), issuedTicketStatusNotCanceled())
                         .fetchOne();
         return Optional.ofNullable(findIssuedTicket);
     }
 
     private BooleanExpression eventIdEq(Long eventId) {
-        return eventId == null ? null : issuedTicket.event.id.eq(eventId);
+        return eventId == null ? null : issuedTicket.eventId.eq(eventId);
     }
 
     private BooleanExpression userNameContains(String userName) {
-        return userName == null ? null : issuedTicket.user.profile.name.contains(userName);
+        return userName == null ? null : issuedTicket.userInfo.userName.contains(userName);
     }
 
     private BooleanExpression phoneNumberContains(String phoneNumber) {
-        return phoneNumber == null
-                ? null
-                : issuedTicket.user.profile.phoneNumber.contains(phoneNumber);
+        return phoneNumber == null ? null : issuedTicket.userInfo.phoneNumber.contains(phoneNumber);
+    }
+
+    private BooleanExpression issuedTicketStatusNotCanceled() {
+        return issuedTicket.issuedTicketStatus.eq(IssuedTicketStatus.CANCELED).not();
     }
 }

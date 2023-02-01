@@ -15,7 +15,7 @@ public class UserProfileVo {
 
     private final String email;
 
-    private final String profileImage;
+    private final ImageVo profileImage;
 
     public static UserProfileVo from(User user) {
         return UserProfileVo.builder()

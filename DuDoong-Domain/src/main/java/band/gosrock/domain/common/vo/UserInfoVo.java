@@ -2,6 +2,7 @@ package band.gosrock.domain.common.vo;
 
 
 import band.gosrock.domain.domains.user.domain.User;
+import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -17,7 +18,9 @@ public class UserInfoVo {
 
     private final String phoneNumber;
 
-    private final String profileImage;
+    private final ImageVo profileImage;
+
+    private final LocalDateTime createdAt;
 
     public static UserInfoVo from(User user) {
         return UserInfoVo.builder()
@@ -26,6 +29,7 @@ public class UserInfoVo {
                 .email(user.getProfile().getEmail())
                 .profileImage(user.getProfile().getProfileImage())
                 .phoneNumber(user.getProfile().getPhoneNumber())
+                .createdAt(user.getCreatedAt())
                 .build();
     }
 }

@@ -5,7 +5,7 @@ import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.*;
 import band.gosrock.domain.domains.event.exception.CannotModifyEventBasicException;
 import band.gosrock.domain.domains.event.exception.EventCannotEndBeforeStartException;
-import band.gosrock.domain.domains.event.exception.EventIsNotOpenStatusException;
+import band.gosrock.domain.domains.event.exception.EventNotOpenException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
 import java.time.LocalDateTime;
 import javax.persistence.*;
@@ -36,7 +36,7 @@ public class Event extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private EventStatus status = EventStatus.PREPARING;
 
-    private Boolean updated = false;
+    private Boolean isUpdated = false;
 
     /*********** 미확정된 정보 ***********/
     // 공연 진행 시간
@@ -62,6 +62,22 @@ public class Event extends BaseTimeEntity {
         return this.getEventBasic().getStartAt().plusMinutes(getEventBasic().getRunTime());
     }
 
+    public Boolean hasEventBasic() {
+        return this.eventBasic != null && this.eventBasic.isUpdated();
+    }
+
+    public Boolean hasEventPlace() {
+        return this.eventPlace != null && this.eventPlace.isUpdated();
+    }
+
+    public Boolean hasEventDetail() {
+        return this.eventDetail != null && this.eventDetail.isUpdated();
+    }
+
+    public Boolean isPreparing() {
+        return this.status == EventStatus.PREPARING;
+    }
+
     /** 티켓팅 시작과 종료 시간을 지정 */
     public void setTicketingTime(LocalDateTime startAt, LocalDateTime endAt) {
         // 이벤트 종료가 시작보다 빠르면 안됨
@@ -73,10 +89,10 @@ public class Event extends BaseTimeEntity {
     }
 
     public void setEventBasic(EventBasic eventBasic) {
-        if (updated) {
+        if (isUpdated) {
             throw CannotModifyEventBasicException.EXCEPTION;
         }
-        this.updated = true;
+        this.isUpdated = true;
         this.eventBasic = eventBasic;
     }
 
@@ -95,32 +111,32 @@ public class Event extends BaseTimeEntity {
         this.eventBasic = EventBasic.builder().name(name).startAt(startAt).runTime(runTime).build();
     }
 
-    public RefundInfoVo getRefundInfoVo() {
-        return RefundInfoVo.from(getEndAt());
-    }
-
-    public Boolean isRefundDateNotPassed() {
-        return getRefundInfoVo().getAvailAble();
-    }
-
-    public EventInfoVo toEventInfoVo() {
-        return EventInfoVo.from(this);
-    }
-
-    public void validStatusOpen() {
+    public void validateStatusOpen() {
         if (status != EventStatus.OPEN) {
-            throw EventIsNotOpenStatusException.EXCEPTION;
+            throw EventNotOpenException.EXCEPTION;
         }
     }
 
-    public void validTicketingTime() {
+    public void validateTicketingTime() {
         if (!isTimeBeforeStartAt()) {
             throw EventTicketingTimeIsPassedException.EXCEPTION;
         }
     }
 
+    public Boolean isRefundDateNotPassed() {
+        return toRefundInfoVo().getAvailAble();
+    }
+
     public boolean isTimeBeforeStartAt() {
         return LocalDateTime.now().isBefore(getStartAt());
+    }
+
+    public RefundInfoVo toRefundInfoVo() {
+        return RefundInfoVo.from(getEndAt());
+    }
+
+    public EventInfoVo toEventInfoVo() {
+        return EventInfoVo.from(this);
     }
 
     public EventDetailVo toEventDetailVo() {
@@ -139,7 +155,17 @@ public class Event extends BaseTimeEntity {
         return EventPlaceVo.from(this);
     }
 
+    public void prepare() {
+        // TODO : 오픈할수 있는 상태인지 검증필요함.
+        this.status = EventStatus.PREPARING;
+    }
+
     public void open() {
+        // TODO : 오픈할수 있는 상태인지 검증필요함.
+        this.status = EventStatus.OPEN;
+    }
+
+    public void close() {
         // TODO : 오픈할수 있는 상태인지 검증필요함.
         this.status = EventStatus.OPEN;
     }

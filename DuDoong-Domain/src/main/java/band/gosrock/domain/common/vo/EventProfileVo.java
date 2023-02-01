@@ -1,7 +1,8 @@
 package band.gosrock.domain.common.vo;
 
 
-import band.gosrock.domain.domains.event.domain.*;
+import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.event.domain.EventStatus;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,7 +12,7 @@ import lombok.Getter;
 public class EventProfileVo {
     private Long eventId;
 
-    private String posterImage;
+    private ImageVo posterImage;
 
     private String name;
 

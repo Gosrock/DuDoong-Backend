@@ -40,7 +40,7 @@ public class HostMapper {
     public HostProfile toHostProfile(UpdateHostRequest updateHostRequest) {
         return HostProfile.builder()
                 .introduce(updateHostRequest.getIntroduce())
-                .profileImageUrl(updateHostRequest.getProfileImageUrl())
+                .profileImageKey(updateHostRequest.getProfileImageKey())
                 .contactEmail(updateHostRequest.getContactEmail())
                 .contactNumber(updateHostRequest.getContactNumber())
                 .build();
@@ -52,10 +52,16 @@ public class HostMapper {
         return HostUser.builder().userId(userId).host(host).role(role).build();
     }
 
-    /** 역할 지정하여 주입하는 생성자 */
-    public HostUser toSuperHostUser(Long hostId, Long userId) {
+    /** 매니저로 주입하는 생성자 */
+    public HostUser toManagerHostUser(Long hostId, Long userId) {
         final Host host = hostAdaptor.findById(hostId);
-        return HostUser.builder().userId(userId).host(host).role(HostRole.SUPER_HOST).build();
+        return HostUser.builder().userId(userId).host(host).role(HostRole.MANAGER).build();
+    }
+
+    /** 마스터 주입하는 생성자 */
+    public HostUser toMasterHostUser(Long hostId, Long userId) {
+        final Host host = hostAdaptor.findById(hostId);
+        return HostUser.builder().userId(userId).host(host).role(HostRole.MASTER).build();
     }
 
     @Transactional(readOnly = true)
@@ -87,8 +93,6 @@ public class HostMapper {
                 userAdaptor.queryUserListByIdIn(userIdList).stream()
                         .map(User::toUserInfoVo)
                         .collect(Collectors.toSet());
-
-        // todo :: 유저 리스트에 역할까지 추가하기
 
         final Set<HostUserVo> hostUserVoSet =
                 userInfoVoSet.stream()
