@@ -4,7 +4,10 @@ package band.gosrock.api.issuedTicket.mapper;
 import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketDetailResponse;
 import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketListResponse;
 import band.gosrock.common.annotation.Mapper;
+import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
+import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
+import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.dto.condition.IssuedTicketCondition;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class IssuedTicketMapper {
 
     private final IssuedTicketAdaptor issuedTicketAdaptor;
+
+    private final EventAdaptor eventAdaptor;
 
     @Transactional(readOnly = true)
     public RetrieveIssuedTicketListResponse toIssuedTicketPageResponse(
@@ -25,7 +30,13 @@ public class IssuedTicketMapper {
     @Transactional(readOnly = true)
     public RetrieveIssuedTicketDetailResponse toIssuedTicketDetailResponse(
             Long currentUserId, Long issuedTicketId) {
-        return RetrieveIssuedTicketDetailResponse.of(
-                issuedTicketAdaptor.findForUser(currentUserId, issuedTicketId));
+        IssuedTicket issuedTicket = issuedTicketAdaptor.findForUser(currentUserId, issuedTicketId);
+        Event event = eventAdaptor.findById(issuedTicket.getEventId());
+        return RetrieveIssuedTicketDetailResponse.of(issuedTicket, event);
+    }
+
+    @Transactional(readOnly = true)
+    public IssuedTicket getIssuedTicket(Long issuedTicketId) {
+        return issuedTicketAdaptor.queryIssuedTicket(issuedTicketId);
     }
 }

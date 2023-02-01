@@ -24,11 +24,11 @@ public class WithDrawOrderEventHandler {
     @TransactionalEventListener(
             classes = WithDrawOrderEvent.class,
             phase = TransactionPhase.BEFORE_COMMIT)
-    public void handleWithDrawOrderEvent(WithDrawOrderEvent withDrawOrderEvent) {
+    public void handleWithdrawOrderEvent(WithDrawOrderEvent withDrawOrderEvent) {
         log.info(withDrawOrderEvent.getOrderUuid() + "주문 상태 철회 , 티켓 철회 필요");
         List<IssuedTicket> issuedTickets =
                 issuedTicketAdaptor.findAllByOrderUuid(withDrawOrderEvent.getOrderUuid());
-        issuedTicketDomainService.withDrawIssuedTicket(
+        issuedTicketDomainService.withdrawIssuedTicket(
                 withDrawOrderEvent.getItemId(), issuedTickets);
     }
 }

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.UUID;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -25,7 +26,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.PostPersist;
 import javax.persistence.PrePersist;
@@ -45,12 +45,11 @@ public class IssuedTicket extends BaseTimeEntity {
 
     private String issuedTicketNo;
 
-    /*
-    발급 티켓의 이벤트 (양방향)
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id")
-    private Event event;
+    private Long eventId;
+
+    @Embedded private IssuedTicketUserInfoVo userInfo;
+
+    @Embedded private IssuedTicketItemInfoVo itemInfo;
 
     /*
     발급 티켓 주문 id (단방향)
@@ -61,20 +60,6 @@ public class IssuedTicket extends BaseTimeEntity {
     발급 티켓의 주문 행 (단방향)
      */
     private Long orderLineId;
-
-    /*
-    티켓 발급 유저 id
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "userId")
-    private User user;
-
-    /*
-    발급 티켓의 item (양방향)
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ticket_item_id")
-    private TicketItem ticketItem;
 
     /*
     발급 티켓의 옵션들 (단방향)
@@ -96,7 +81,7 @@ public class IssuedTicket extends BaseTimeEntity {
     /*
     발급 티켓 가격
      */
-    private Money price;
+    @Embedded private Money price;
 
     /*
     발급 티켓 상태
@@ -117,40 +102,16 @@ public class IssuedTicket extends BaseTimeEntity {
             TicketItem ticketItem,
             Money price,
             List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers) {
-        this.event = event;
-        this.user = user;
+        this.eventId = event.getId();
+        this.userInfo = IssuedTicketUserInfoVo.from(user);
+        this.itemInfo = IssuedTicketItemInfoVo.from(ticketItem);
         this.orderUuid = orderUuid;
         this.orderLineId = orderLineId;
-        this.ticketItem = ticketItem;
         this.price = price;
         this.issuedTicketOptionAnswers.addAll(issuedTicketOptionAnswers);
     }
 
     /** ---------------------------- 생성 관련 메서드 ---------------------------------- */
-
-    /*
-    개발 및 테스트 용도로 사용되는 티켓 발급 정적 메서드
-     */
-    public static IssuedTicket createForDev(
-            Event event,
-            User user,
-            Long orderLineId,
-            TicketItem ticketItem,
-            Money price,
-            List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers) {
-        IssuedTicket createIssuedTicket =
-                IssuedTicket.builder()
-                        .event(event)
-                        .user(user)
-                        .orderUuid("test")
-                        .orderLineId(orderLineId)
-                        .ticketItem(ticketItem)
-                        .price(price)
-                        .issuedTicketOptionAnswers(new ArrayList<>())
-                        .build();
-        createIssuedTicket.getIssuedTicketOptionAnswers().addAll(issuedTicketOptionAnswers);
-        return createIssuedTicket;
-    }
 
     /*
     issuedTicket 생성하면서 UUID 생성
