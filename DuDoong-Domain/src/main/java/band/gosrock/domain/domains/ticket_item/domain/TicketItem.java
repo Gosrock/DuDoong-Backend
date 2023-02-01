@@ -118,7 +118,7 @@ public class TicketItem extends BaseTimeEntity {
                                 itemOptionGroup.getOptionGroup().getId().equals(optionGroupId));
     }
 
-    public void patchTicketItemStatusToDeleted() {
+    public void softDeleteTicketItem() {
         // 재고 감소된 티켓상품은 삭제 불가
         if (this.isQuantityReduced()) {
             throw ForbiddenTicketItemDeleteException.EXCEPTION;
@@ -126,13 +126,13 @@ public class TicketItem extends BaseTimeEntity {
         this.ticketItemStatus = TicketItemStatus.DELETED;
     }
 
-    public void checkEventId(Long eventId) {
+    public void validEventId(Long eventId) {
         if (!this.getEvent().getId().equals(eventId)) {
             throw InvalidTicketItemException.EXCEPTION;
         }
     }
 
-    public void checkTicketPrice() {
+    public void validTicketPrice() {
         if (!Money.ZERO.equals(this.price)) {
             throw InvalidTicketPriceException.EXCEPTION;
         }

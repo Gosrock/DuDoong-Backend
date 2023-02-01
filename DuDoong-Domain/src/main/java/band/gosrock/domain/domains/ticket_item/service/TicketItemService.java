@@ -18,19 +18,19 @@ public class TicketItemService {
     @Transactional
     public TicketItem createTicketItem(TicketItem ticketItem, Boolean isPartner) {
         if (!isPartner) {
-            ticketItem.checkTicketPrice();
+            ticketItem.validTicketPrice();
         }
         return ticketItemAdaptor.save(ticketItem);
     }
 
     @RedissonLock(LockName = "티켓재고관리", identifier = "ticketItemId")
-    public void patchTicketItemStatusToDeleted(Long eventId, Long ticketItemId) {
+    public void softDeleteTicketItem(Long eventId, Long ticketItemId) {
 
         TicketItem ticketItem = ticketItemAdaptor.queryTicketItem(ticketItemId);
         // 해당 eventId에 속해 있는 티켓 아이템이 맞는지 확인
-        ticketItem.checkEventId(eventId);
+        ticketItem.validEventId(eventId);
 
-        ticketItem.patchTicketItemStatusToDeleted();
+        ticketItem.softDeleteTicketItem();
         ticketItemAdaptor.save(ticketItem);
     }
 }

@@ -38,7 +38,7 @@ public class TicketOptionMapper {
             Long eventId, Long ticketItemId) {
 
         TicketItem ticketItem = ticketItemAdaptor.queryTicketItem(ticketItemId);
-        ticketItem.checkEventId(eventId);
+        ticketItem.validEventId(eventId);
         List<OptionGroup> optionGroups =
                 ticketItem.getItemOptionGroups().stream()
                         .map(ItemOptionGroup::getOptionGroup)

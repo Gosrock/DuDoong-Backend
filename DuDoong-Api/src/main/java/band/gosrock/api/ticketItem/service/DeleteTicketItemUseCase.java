@@ -32,7 +32,7 @@ public class DeleteTicketItemUseCase {
         Host host = hostAdaptor.findById(event.getHostId());
         hostService.validateHostUser(host, user.getId());
 
-        ticketItemService.patchTicketItemStatusToDeleted(eventId, ticketItemId);
+        ticketItemService.softDeleteTicketItem(eventId, ticketItemId);
 
         return ticketItemMapper.toGetEventTicketItemsResponse(eventId);
     }
