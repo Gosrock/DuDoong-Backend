@@ -11,7 +11,6 @@ import band.gosrock.domain.domains.ticket_item.exception.ForbiddenOptionGroupDel
 import band.gosrock.domain.domains.ticket_item.exception.InvalidOptionGroupException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javax.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -79,14 +78,9 @@ public class OptionGroup {
     }
 
     public Boolean hasApplication(List<TicketItem> ticketItems) {
-        AtomicBoolean result = new AtomicBoolean(false);
-        ticketItems.forEach(
-                ticketItem -> {
-                    if (ticketItem.hasItemOptionGroup(this.id)) {
-                        result.set(true);
-                    }
-                });
-        return result.get();
+        return ticketItems.stream()
+                .map(ticketItem -> ticketItem.hasItemOptionGroup(this.id))
+                .reduce(Boolean.FALSE, Boolean::logicalOr);
     }
 
     public OptionGroup createTicketOption(Money additionalPrice) {
