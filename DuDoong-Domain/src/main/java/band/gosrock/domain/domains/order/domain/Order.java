@@ -72,6 +72,9 @@ public class Order extends BaseTimeEntity {
     // 결제 완료 된시간 승인 결제등.
     private LocalDateTime approvedAt;
 
+    // 철회된 시간
+    private LocalDateTime withDrawAt;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderMethod orderMethod;
@@ -223,6 +226,7 @@ public class Order extends BaseTimeEntity {
     public void cancel(OrderValidator orderValidator) {
         orderValidator.validCanCancel(this);
         this.orderStatus = OrderStatus.CANCELED;
+        this.withDrawAt = LocalDateTime.now();
         Events.raise(WithDrawOrderEvent.from(this));
     }
 
@@ -231,6 +235,7 @@ public class Order extends BaseTimeEntity {
         orderValidator.validOwner(this, currentUserId);
         orderValidator.validCanRefund(this);
         this.orderStatus = OrderStatus.REFUND;
+        this.withDrawAt = LocalDateTime.now();
         Events.raise(WithDrawOrderEvent.from(this));
     }
 

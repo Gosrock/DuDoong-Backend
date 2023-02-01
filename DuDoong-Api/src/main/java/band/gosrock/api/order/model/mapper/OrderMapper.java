@@ -3,6 +3,7 @@ package band.gosrock.api.order.model.mapper;
 
 import band.gosrock.api.common.UserUtils;
 import band.gosrock.api.order.model.dto.response.CreateOrderResponse;
+import band.gosrock.api.order.model.dto.response.OrderAdminTableElement;
 import band.gosrock.api.order.model.dto.response.OrderBriefElement;
 import band.gosrock.api.order.model.dto.response.OrderLineTicketResponse;
 import band.gosrock.api.order.model.dto.response.OrderResponse;
@@ -56,8 +57,11 @@ public class OrderMapper {
         return OrderResponse.of(order, event, orderLineTicketResponses);
     }
 
-    private Event getEvent(Order order) {
-        return eventAdaptor.findById(order.getItemGroupId());
+    @Transactional(readOnly = true)
+    public OrderAdminTableElement toOrderAdminTableElement(Order order) {
+        Event event = getEvent(order);
+        User currentUser = userUtils.getCurrentUser();
+        return OrderAdminTableElement.of(order, event, currentUser);
     }
 
     @Transactional(readOnly = true)
@@ -118,8 +122,18 @@ public class OrderMapper {
     }
 
     public Page<OrderBriefElement> toOrderBriefsResponse(Page<Order> ordersWithPagination) {
-        Page<OrderBriefElement> orderBriefElements =
-                ordersWithPagination.map(this::toOrderBriefElement);
-        return orderBriefElements;
+        return ordersWithPagination.map(this::toOrderBriefElement);
+    }
+
+    public Page<OrderResponse> toOrderResponses(Page<Order> orders) {
+        return orders.map(this::toOrderResponse);
+    }
+
+    public Page<OrderAdminTableElement> toOrderAdminTableElement(Page<Order> orders) {
+        return orders.map(this::toOrderAdminTableElement);
+    }
+
+    private Event getEvent(Order order) {
+        return eventAdaptor.findById(order.getItemGroupId());
     }
 }
