@@ -134,6 +134,7 @@ public class Order extends BaseTimeEntity {
                         .eventId(item.getEventId())
                         .build();
         orderValidator.validCanCreate(order);
+        order.calculatePaymentInfo();
         return order;
     }
 
