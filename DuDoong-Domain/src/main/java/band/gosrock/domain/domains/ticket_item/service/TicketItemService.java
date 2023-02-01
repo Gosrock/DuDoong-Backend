@@ -18,7 +18,7 @@ public class TicketItemService {
     @Transactional
     public TicketItem createTicketItem(TicketItem ticketItem, Boolean isPartner) {
         if (!isPartner) {
-            ticketItem.validTicketPrice();
+            ticketItem.validateTicketPrice();
         }
         return ticketItemAdaptor.save(ticketItem);
     }
@@ -28,7 +28,7 @@ public class TicketItemService {
 
         TicketItem ticketItem = ticketItemAdaptor.queryTicketItem(ticketItemId);
         // 해당 eventId에 속해 있는 티켓 아이템이 맞는지 확인
-        ticketItem.validEventId(eventId);
+        ticketItem.validateEventId(eventId);
 
         ticketItem.softDeleteTicketItem();
         ticketItemAdaptor.save(ticketItem);

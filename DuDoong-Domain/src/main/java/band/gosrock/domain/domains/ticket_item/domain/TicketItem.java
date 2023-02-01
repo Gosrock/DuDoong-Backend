@@ -126,13 +126,13 @@ public class TicketItem extends BaseTimeEntity {
         this.ticketItemStatus = TicketItemStatus.DELETED;
     }
 
-    public void validEventId(Long eventId) {
+    public void validateEventId(Long eventId) {
         if (!this.getEvent().getId().equals(eventId)) {
             throw InvalidTicketItemException.EXCEPTION;
         }
     }
 
-    public void validTicketPrice() {
+    public void validateTicketPrice() {
         if (!Money.ZERO.equals(this.price)) {
             throw InvalidTicketPriceException.EXCEPTION;
         }

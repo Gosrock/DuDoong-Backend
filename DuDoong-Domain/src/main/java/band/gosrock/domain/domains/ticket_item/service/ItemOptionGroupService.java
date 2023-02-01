@@ -28,8 +28,8 @@ public class ItemOptionGroupService {
         OptionGroup optionGroup = optionGroupAdaptor.queryOptionGroup(optionGroupId);
 
         // 해당 eventId에 속해 있는 티켓 아이템, 옵션그룹이 맞는지 확인
-        ticketItem.validEventId(eventId);
-        optionGroup.validEventId(eventId);
+        ticketItem.validateEventId(eventId);
+        optionGroup.validateEventId(eventId);
 
         ticketItem.addItemOptionGroup(optionGroup);
         return ticketItemRepository.save(ticketItem);
