@@ -3,11 +3,11 @@ package band.gosrock.api.ticketItem.controller;
 
 import band.gosrock.api.ticketItem.dto.request.ApplyTicketOptionRequest;
 import band.gosrock.api.ticketItem.dto.request.CreateTicketItemRequest;
-import band.gosrock.api.ticketItem.service.*;
-import band.gosrock.api.ticketItem.dto.response.ApplyTicketOptionResponse;
+import band.gosrock.api.ticketItem.dto.response.GetAppliedOptionGroupsResponse;
 import band.gosrock.api.ticketItem.dto.response.GetEventTicketItemsResponse;
 import band.gosrock.api.ticketItem.dto.response.GetTicketItemOptionsResponse;
 import band.gosrock.api.ticketItem.dto.response.TicketItemResponse;
+import band.gosrock.api.ticketItem.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -41,7 +41,7 @@ public class TicketItemController {
 
     @Operation(summary = "옵션을 티켓상품에 적용합니다.")
     @PatchMapping("/{ticketItemId}/option")
-    public ApplyTicketOptionResponse applyTicketOption(
+    public GetTicketItemOptionsResponse applyTicketOption(
             @RequestBody @Valid ApplyTicketOptionRequest applyTicketOptionRequest,
             @PathVariable Long eventId,
             @PathVariable Long ticketItemId) {
