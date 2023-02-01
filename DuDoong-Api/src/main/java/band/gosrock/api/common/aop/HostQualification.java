@@ -7,7 +7,7 @@ import java.util.function.BiConsumer;
 /** 각 권한에 맞춰서 host 도메인의 검증메소드를 실행시킵니다. 검증 메소드이므로 biConsumer 를 통해 실행 시킬 함수를 미리 생성해 둡니다. -이찬진 */
 public enum HostQualification {
     MASTER((userId, host) -> host.validateMasterHostUser(userId)),
-    MANAGER((userId, host) -> host.validateSuperHostUser(userId)),
+    MANAGER((userId, host) -> host.validateManagerHostUser(userId)),
     GUEST((userId, host) -> host.validateActiveHostUser(userId));
     private final BiConsumer<Long, Host> consumer;
 

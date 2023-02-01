@@ -18,7 +18,7 @@ public class UpdateHostUserRoleRequest {
     @Positive(message = "올바른 유저 고유 아이디를 입력해주세요")
     private Long userId;
 
-    @Schema(defaultValue = "HOST", description = "호스트 유저 역할")
-    @Enum(message = "HOST 또는 SUPER_HOST 만 허용됩니다")
+    @Schema(defaultValue = "MANAGER", description = "호스트 유저 역할")
+    @Enum(message = "GUEST, MANAGER, MASTER 만 허용됩니다")
     private HostRole role;
 }

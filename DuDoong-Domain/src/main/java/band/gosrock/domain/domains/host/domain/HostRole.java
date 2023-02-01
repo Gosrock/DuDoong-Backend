@@ -8,10 +8,12 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum HostRole {
+    // 마스터 (모든 권한)
+    MASTER("MASTER", "마스터"),
     // 슈퍼 호스트 (조회, 변경 가능)
-    SUPER_HOST("SUPER_HOST", "매니저"),
+    MANAGER("MANAGER", "매니저"),
     // 일반 호스트 (조회만 가능)
-    HOST("HOST", "게스트");
+    GUEST("GUEST", "게스트");
 
     private final String name;
     private final String value;

@@ -27,9 +27,9 @@ public class CreateHostUseCase {
         final Long userId = user.getId();
         // 호스트 생성
         final Host host = hostService.createHost(hostMapper.toEntity(createHostRequest, userId));
-        // 생성한 유저를 마스터로 + 슈퍼 호스트 권한으로 등록
-        final HostUser masterHostUser = hostMapper.toSuperHostUser(host.getId(), userId);
-        // 초대 보류 없이 즉시 활성화
+        // 생성한 유저를 마스터 권한으로 등록
+        final HostUser masterHostUser = hostMapper.toMasterHostUser(host.getId(), userId);
+        // 초대 보류 없이로 즉시 활성화
         masterHostUser.activate();
         return HostResponse.of(hostService.addHostUser(host, masterHostUser));
     }

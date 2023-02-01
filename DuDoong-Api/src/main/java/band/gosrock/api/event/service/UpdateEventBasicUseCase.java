@@ -30,7 +30,7 @@ public class UpdateEventBasicUseCase {
         final User user = userUtils.getCurrentUser();
         final Long userId = user.getId();
         final Event event = eventAdaptor.findById(eventId);
-        hostService.validateSuperHostUser(event.getHostId(), userId);
+        hostService.validateManagerHostUser(event.getHostId(), userId);
 
         EventBasic eventBasic = eventMapper.toEventBasic(updateEventBasicRequest);
         EventPlace eventPlace = eventMapper.toEventPlace(updateEventBasicRequest);

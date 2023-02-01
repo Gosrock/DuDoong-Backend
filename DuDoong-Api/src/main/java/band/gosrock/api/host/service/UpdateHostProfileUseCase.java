@@ -29,7 +29,7 @@ public class UpdateHostProfileUseCase {
 
         final Host host = hostAdaptor.findById(hostId);
         // 슈퍼 호스트 검증
-        host.validateSuperHostUser(userId);
+        host.validateManagerHostUser(userId);
 
         return hostMapper.toHostDetailResponse(
                 hostService.updateHostProfile(host, hostMapper.toHostProfile(updateHostRequest)));

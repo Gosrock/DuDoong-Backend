@@ -7,6 +7,6 @@ public class ForbiddenHostOperationException extends DuDoongCodeException {
     public static final DuDoongCodeException EXCEPTION = new ForbiddenHostOperationException();
 
     private ForbiddenHostOperationException() {
-        super(HostErrorCode.FORBIDDEN_HOST_OPERATION);
+        super(HostErrorCode.CANNOT_MODIFY_MASTER_HOST_ROLE);
     }
 }
