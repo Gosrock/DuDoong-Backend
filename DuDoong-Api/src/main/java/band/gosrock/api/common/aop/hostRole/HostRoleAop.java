@@ -35,7 +35,7 @@ public class HostRoleAop {
         HostQualification hostQualification = annotation.role();
         // 제공된 호스트의 role 이 정의된 세개의 롤과 같은지 확인한다.
         // 없으면 IllegalArgumentException 발생
-        FindHostFrom findHostFrom = annotation.findhostFrom();
+        FindHostFrom findHostFrom = annotation.findHostFrom();
         String identifier = findHostFrom.getIdentifier();
 
         String[] parameterNames = signature.getParameterNames();

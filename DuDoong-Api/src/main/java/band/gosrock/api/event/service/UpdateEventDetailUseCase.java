@@ -22,7 +22,7 @@ public class UpdateEventDetailUseCase {
     private final EventMapper eventMapper;
 
     @Transactional
-    @HostRolesAllowed(role = MANAGER, findhostFrom = EVENT_ID)
+    @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID)
     public EventResponse execute(Long eventId, UpdateEventDetailRequest updateEventDetailRequest) {
         final Event event = eventAdaptor.findById(eventId);
         return EventResponse.of(

@@ -22,7 +22,7 @@ public class UpdateHostSlackUrlUseCase {
     private final HostMapper hostMapper;
 
     @Transactional
-    @HostRolesAllowed(role = MANAGER, findhostFrom = HOST_ID)
+    @HostRolesAllowed(role = MANAGER, findHostFrom = HOST_ID)
     public HostDetailResponse execute(Long hostId, UpdateHostSlackRequest updateHostSlackRequest) {
         final Host host = hostAdaptor.findById(hostId);
         final String slackUrl = updateHostSlackRequest.getSlackUrl();

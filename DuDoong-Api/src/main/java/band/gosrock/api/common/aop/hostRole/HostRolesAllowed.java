@@ -17,5 +17,5 @@ public @interface HostRolesAllowed {
      */
     HostQualification role();
 
-    FindHostFrom findhostFrom();
+    FindHostFrom findHostFrom();
 }
