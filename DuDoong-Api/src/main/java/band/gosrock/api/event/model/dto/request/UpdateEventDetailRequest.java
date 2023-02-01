@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.Getter;
@@ -16,10 +17,11 @@ import org.hibernate.validator.constraints.URL;
 public class UpdateEventDetailRequest {
 
     // 포스터 이미지 url
-    @Schema(defaultValue = "https://s3.dudoong.com/image", description = "포스터 이미지 url")
-    @URL(message = "올바른 url 형식을 입력하세요")
-    private String posterImage;
+    @Schema(defaultValue = "test/event/5/aa.jpeg", description = "포스터 이미지 key")
+    @NotEmpty
+    private String posterImageKey;
 
+    // TODO : 기획에서 제거 예정?
     @ArraySchema(
             arraySchema =
                     @Schema(

@@ -17,7 +17,7 @@ public class UserInfoVo {
 
     private final String phoneNumber;
 
-    private final String profileImage;
+    private final ImageVo profileImage;
 
     public static UserInfoVo from(User user) {
         return UserInfoVo.builder()

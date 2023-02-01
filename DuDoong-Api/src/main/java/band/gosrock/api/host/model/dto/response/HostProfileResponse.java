@@ -1,6 +1,7 @@
 package band.gosrock.api.host.model.dto.response;
 
 
+import band.gosrock.domain.common.vo.ImageVo;
 import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.host.domain.HostRole;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -21,7 +22,7 @@ public class HostProfileResponse {
     private final String introduce;
 
     @Schema(description = "호스트 프로필 이미지")
-    private final String profileImageUrl;
+    private final ImageVo profileImageUrl;
 
     @Schema(description = "속한 호스트에서의 역할")
     private HostRole role;
@@ -34,7 +35,7 @@ public class HostProfileResponse {
                 .hostId(host.getId())
                 .name(host.getProfile().getName())
                 .introduce(host.getProfile().getIntroduce())
-                .profileImageUrl(host.getProfile().getProfileImageUrl())
+                .profileImageUrl(host.getProfile().getProfileImage())
                 .role(host.getHostUserByUserId(userId).getRole())
                 .isMaster(host.getMasterUserId().equals(userId))
                 .build();

@@ -50,7 +50,7 @@ public class EventMapper {
 
     public EventDetail toEventDetail(UpdateEventDetailRequest updateEventDetailRequest) {
         return EventDetail.builder()
-                .posterImage(updateEventDetailRequest.getPosterImage())
+                .posterImageKey(updateEventDetailRequest.getPosterImageKey())
                 .detailImages(updateEventDetailRequest.getDetailImages())
                 .content(updateEventDetailRequest.getContent())
                 .build();

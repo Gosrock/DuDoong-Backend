@@ -11,7 +11,7 @@ import lombok.Getter;
 @Builder
 public class EventDetailVo {
     // 포스터 이미지
-    private String posterImage;
+    private ImageVo posterImage;
 
     // todo :: 디테일 이미지를 EventDetailImage 로 받기
 
