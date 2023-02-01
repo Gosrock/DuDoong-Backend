@@ -70,7 +70,7 @@ public class OptionGroup {
         options.forEach(option -> option.setOptionGroup(this));
     }
 
-    public void checkEventId(Long eventId) {
+    public void validateEventId(Long eventId) {
         if (!this.getEvent().getId().equals(eventId)) {
             throw InvalidOptionGroupException.EXCEPTION;
         }

@@ -15,7 +15,6 @@ import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.ticket_item.service.ItemOptionGroupService;
 import band.gosrock.domain.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
-import org.springframework.transaction.annotation.Transactional;
 
 @UseCase
 @RequiredArgsConstructor
@@ -28,7 +27,6 @@ public class ApplyTicketOptionUseCase {
     private final HostService hostService;
     private final TicketOptionMapper ticketOptionMapper;
 
-    @Transactional
     public GetTicketItemOptionsResponse execute(
             ApplyTicketOptionRequest applyTicketOptionRequest, Long eventId, Long ticketItemId) {
         User user = userUtils.getCurrentUser();

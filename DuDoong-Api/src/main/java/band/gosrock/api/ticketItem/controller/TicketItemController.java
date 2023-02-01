@@ -3,7 +3,10 @@ package band.gosrock.api.ticketItem.controller;
 
 import band.gosrock.api.ticketItem.dto.request.ApplyTicketOptionRequest;
 import band.gosrock.api.ticketItem.dto.request.CreateTicketItemRequest;
-import band.gosrock.api.ticketItem.dto.response.*;
+import band.gosrock.api.ticketItem.dto.response.GetAppliedOptionGroupsResponse;
+import band.gosrock.api.ticketItem.dto.response.GetEventTicketItemsResponse;
+import band.gosrock.api.ticketItem.dto.response.GetTicketItemOptionsResponse;
+import band.gosrock.api.ticketItem.dto.response.TicketItemResponse;
 import band.gosrock.api.ticketItem.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -23,6 +26,7 @@ public class TicketItemController {
     public final ApplyTicketOptionUseCase applyTicketOptionUseCase;
     public final GetTicketOptionsUseCase getTicketOptionsUseCase;
     public final GetEventTicketItemsUseCase getEventTicketItemsUseCase;
+    public final DeleteTicketItemUseCase deleteTicketItemUseCase;
     public final GetAppliedOptionGroupsUseCase getAppliedOptionGroupsUseCase;
 
     @Operation(
@@ -61,5 +65,12 @@ public class TicketItemController {
     @GetMapping("/appliedOptionGroups")
     public GetAppliedOptionGroupsResponse getAppliedOptionGroups(@PathVariable Long eventId) {
         return getAppliedOptionGroupsUseCase.execute(eventId);
+    }
+
+    @Operation(summary = "해당 티켓상품을 삭제합니다.")
+    @PatchMapping("/{ticketItemId}")
+    public GetEventTicketItemsResponse deleteTicketItem(
+            @PathVariable Long eventId, @PathVariable Long ticketItemId) {
+        return deleteTicketItemUseCase.execute(eventId, ticketItemId);
     }
 }
