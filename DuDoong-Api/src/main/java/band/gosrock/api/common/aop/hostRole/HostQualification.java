@@ -1,4 +1,4 @@
-package band.gosrock.api.common.aop;
+package band.gosrock.api.common.aop.hostRole;
 
 
 import band.gosrock.domain.domains.host.domain.Host;

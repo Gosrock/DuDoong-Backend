@@ -1,4 +1,4 @@
-package band.gosrock.api.common.aop;
+package band.gosrock.api.common.aop.hostRole;
 
 
 import band.gosrock.api.common.UserUtils;
@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class HostRoleTransaction {
+public class HostRoleEventTransaction implements HostRoleCallTransaction {
 
     private final UserUtils userUtils;
     private final EventAdaptor eventAdaptor;
