@@ -29,8 +29,8 @@ public class UpdateHostUserRoleUseCase {
         final User user = userUtils.getCurrentUser();
         final Long userId = user.getId();
         final Host host = hostAdaptor.findById(hostId);
-        // 슈퍼 호스트 검증
-        host.validateSuperHostUser(userId);
+        // 매니저 호스트 검증
+        host.validateManagerHostUser(userId);
 
         final Long updateUserId = updateHostUserRoleRequest.getUserId();
         final HostRole updateUserRole = updateHostUserRoleRequest.getRole();

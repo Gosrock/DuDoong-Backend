@@ -34,7 +34,7 @@ public class HostUser extends BaseTimeEntity {
 
     // 유저의 권한
     @Enumerated(EnumType.STRING)
-    private HostRole role = HostRole.HOST;
+    private HostRole role = HostRole.GUEST;
 
     public void setHostRole(HostRole role) {
         this.role = role;

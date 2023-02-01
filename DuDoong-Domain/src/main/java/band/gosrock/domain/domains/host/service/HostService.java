@@ -63,8 +63,8 @@ public class HostService {
     }
 
     /** 해당 유저가 슈퍼 호스트인지 확인하는 검증 로직입니다 */
-    public void validateSuperHostUser(Long hostId, Long userId) {
+    public void validateManagerHostUser(Long hostId, Long userId) {
         Host host = hostAdaptor.findById(hostId);
-        host.validateSuperHostUser(userId);
+        host.validateManagerHostUser(userId);
     }
 }

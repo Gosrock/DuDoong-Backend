@@ -27,7 +27,7 @@ public class UpdateEventStatusUseCase {
         final User user = userUtils.getCurrentUser();
         final Long userId = user.getId();
         final Event event = eventAdaptor.findById(eventId);
-        hostService.validateSuperHostUser(event.getHostId(), userId);
+        hostService.validateManagerHostUser(event.getHostId(), userId);
         final EventStatus status = updateEventStatusRequest.getStatus();
 
         return EventResponse.of(eventService.updateEventStatus(event, status));
