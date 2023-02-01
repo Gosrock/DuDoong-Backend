@@ -76,7 +76,7 @@ public class Host extends BaseTimeEntity {
     public void setHostUserRole(Long userId, HostRole role) {
         // 마스터의 역할은 수정할 수 없음
         if (this.getMasterUserId().equals(userId)) {
-            throw ForbiddenHostOperationException.EXCEPTION;
+            throw CannotModifyMasterHostRoleException.EXCEPTION;
         }
         this.hostUsers.stream()
                 .filter(hostUser -> hostUser.getUserId().equals(userId))
