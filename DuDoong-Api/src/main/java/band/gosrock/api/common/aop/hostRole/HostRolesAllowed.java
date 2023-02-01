@@ -1,4 +1,4 @@
-package band.gosrock.api.common.aop;
+package band.gosrock.api.common.aop.hostRole;
 
 
 import java.lang.annotation.ElementType;
@@ -15,8 +15,7 @@ public @interface HostRolesAllowed {
      *
      * @see HostRoleAop
      */
-    String value();
+    HostQualification role();
 
-    /** 이벤트 아이디의 식별자. */
-    String eventIdIdentifier() default "eventId";
+    FindHostFrom findhostFrom();
 }
