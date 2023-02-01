@@ -4,13 +4,14 @@ package band.gosrock.domain.domains.host.domain;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.HostInfoVo;
 import band.gosrock.domain.domains.host.exception.*;
-import java.util.HashSet;
-import java.util.Set;
-import javax.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import javax.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -60,7 +61,7 @@ public class Host extends BaseTimeEntity {
         this.slackUrl = slackUrl;
     }
 
-    public Boolean isManagerUserId(Long userId) {
+    public Boolean isManagerHostUserId(Long userId) {
         return this.hostUsers.stream()
                 .anyMatch(
                         hostUser ->
@@ -103,7 +104,7 @@ public class Host extends BaseTimeEntity {
     /** 해당 유저가 매니저 이상인지 확인하는 검증 로직입니다 */
     public void validateManagerHostUser(Long userId) {
         this.validateActiveHostUser(userId);
-        if (!this.isManagerUserId(userId) && !this.getMasterUserId().equals(userId)) {
+        if (!this.isManagerHostUserId(userId) && !this.getMasterUserId().equals(userId)) {
             throw NotManagerHostException.EXCEPTION;
         }
     }
