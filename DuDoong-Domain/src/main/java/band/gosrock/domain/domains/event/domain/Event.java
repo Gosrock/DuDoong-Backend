@@ -59,7 +59,7 @@ public class Event extends BaseTimeEntity {
         if (this.eventBasic == null) {
             return null;
         }
-        return this.getEventBasic().getStartAt().plusMinutes(getEventBasic().getRunTime());
+        return this.getEventBasic().endAt();
     }
 
     public Boolean hasEventBasic() {
