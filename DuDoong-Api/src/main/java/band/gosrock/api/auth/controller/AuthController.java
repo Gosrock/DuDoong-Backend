@@ -16,10 +16,12 @@ import band.gosrock.api.auth.service.WithDrawUseCase;
 import band.gosrock.api.auth.service.helper.CookieGenerateHelper;
 import band.gosrock.common.annotation.ApiErrorCodeExample;
 import band.gosrock.common.annotation.DevelopOnlyApi;
+import band.gosrock.infrastructure.config.ses.AwsSesUtils;
 import band.gosrock.infrastructure.outer.api.oauth.exception.KakaoKauthErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.concurrent.ExecutionException;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.thymeleaf.context.Context;
 
 @RestController
 @RequestMapping("/v1/auth")
@@ -53,10 +56,15 @@ public class AuthController {
 
     private final CookieGenerateHelper cookieGenerateHelper;
 
+    private final AwsSesUtils awsSesUtils;
+
     @Operation(summary = "kakao oauth 링크발급 (백엔드용 )", description = "kakao 링크를 받아볼수 있습니다.")
     @Tag(name = "카카오 oauth")
     @GetMapping("/oauth/kakao/link/test")
     public OauthLoginLinkResponse getKakaoOauthLinkTest() {
+//        Context context = new Context();
+//        context.setVariable("test", "규진아 데이트는 잘 하고 있냐?");
+//        awsSesUtils.singleEmailRequest("rbwls0218@gmail.com","규진아 데이트는 잘 하고 있냐?", "signUp",context);
         return registerUseCase.getKaKaoOauthLinkTest();
     }
 
