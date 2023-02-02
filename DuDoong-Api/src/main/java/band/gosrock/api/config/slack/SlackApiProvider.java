@@ -42,19 +42,19 @@ public class SlackApiProvider {
     private final int MAX_LEN = 500;
 
     @Async
-    public void sendError(ContentCachingRequestWrapper cachingRequest, Exception e, Long userId)
+    public void sendError(
+            ContentCachingRequestWrapper cachingRequest, Exception e, Long userId, String url)
             throws IOException {
         String[] activeProfiles = env.getActiveProfiles();
         List<String> currentProfile = Arrays.stream(activeProfiles).toList();
         if (CollectionUtils.containsAny(sendAlarmProfiles, currentProfile)) {
-            executeSendError(cachingRequest, e, userId);
+            executeSendError(cachingRequest, e, userId, url);
         }
     }
 
     private void executeSendError(
-            ContentCachingRequestWrapper cachingRequest, Exception e, Long userId)
+            ContentCachingRequestWrapper cachingRequest, Exception e, Long userId, String url)
             throws IOException {
-        final String url = cachingRequest.getRequestURL().toString();
         final String method = cachingRequest.getMethod();
         final String body =
                 objectMapper.readTree(cachingRequest.getContentAsByteArray()).toString();

@@ -181,7 +181,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                         internalServerError.getReason(),
                         url);
 
-        slackApiProvider.sendError(cachingRequest, e, userId);
+        slackApiProvider.sendError(cachingRequest, e, userId, url);
         return ResponseEntity.status(HttpStatus.valueOf(internalServerError.getStatus()))
                 .body(errorResponse);
     }
