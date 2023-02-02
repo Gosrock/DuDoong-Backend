@@ -1,7 +1,6 @@
-package band.gosrock.api.common.aop.hostRole;
+package band.gosrock.api.common.aop.hostPartner;
 
 
-import band.gosrock.api.common.UserUtils;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
@@ -16,19 +15,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-class HostRoleEventTransaction implements HostRoleCallTransaction {
+class HostPartnerEventTransaction implements HostPartnerCallTransaction {
 
-    private final UserUtils userUtils;
     private final EventAdaptor eventAdaptor;
     private final HostAdaptor hostAdaptor;
 
     @Transactional(readOnly = true)
-    public Object proceed(Long eventId, HostQualification role, final ProceedingJoinPoint joinPoint)
-            throws Throwable {
-        Long currentUserId = userUtils.getCurrentUserId();
+    public Object proceed(Long eventId, final ProceedingJoinPoint joinPoint) throws Throwable {
         Event event = eventAdaptor.findById(eventId);
         Host host = hostAdaptor.findById(event.getHostId());
-        role.validQualification(currentUserId, host);
+        host.validatePartnerHost();
         return joinPoint.proceed();
     }
 }
