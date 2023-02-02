@@ -20,7 +20,7 @@ public class HostCustomRepositoryImpl implements HostCustomRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Slice<Host> querySliceHostByUserId(Long userId, Long lastId, Pageable pageable) {
+    public Slice<Host> querySliceHostsByUserId(Long userId, Long lastId, Pageable pageable) {
         OrderSpecifier[] orders = QueryDslUtil.getOrderSpecifiers(Host.class, pageable);
         List<Host> comments =
                 queryFactory

@@ -6,5 +6,5 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 
 public interface HostCustomRepository {
-    Slice<Host> querySliceHostByUserId(Long id, Long lastId, Pageable pageable);
+    Slice<Host> querySliceHostsByUserId(Long id, Long lastId, Pageable pageable);
 }

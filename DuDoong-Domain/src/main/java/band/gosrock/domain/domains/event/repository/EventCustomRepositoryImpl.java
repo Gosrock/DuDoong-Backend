@@ -19,7 +19,7 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Slice<Event> querySliceEventByHostIdIn(
+    public Slice<Event> querySliceEventsByHostIdIn(
             List<Long> hostId, Long lastId, Pageable pageable) {
         OrderSpecifier[] orders = QueryDslUtil.getOrderSpecifiers(Event.class, pageable);
         List<Event> events =
