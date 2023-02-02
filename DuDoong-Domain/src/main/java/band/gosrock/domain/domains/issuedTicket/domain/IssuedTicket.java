@@ -5,13 +5,10 @@ import static band.gosrock.common.consts.DuDoongStatic.NO_START_NUMBER;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
 import band.gosrock.domain.common.vo.Money;
-import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelEntranceException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotEntranceException;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketAlreadyEntranceException;
-import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
-import band.gosrock.domain.domains.user.domain.User;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -95,19 +92,21 @@ public class IssuedTicket extends BaseTimeEntity {
      */
     @Builder
     public IssuedTicket(
-            Event event,
-            User user,
+            Long eventId,
+            IssuedTicketUserInfoVo userInfo,
             String orderUuid,
             Long orderLineId,
-            TicketItem ticketItem,
+            IssuedTicketItemInfoVo itemInfo,
             Money price,
+            IssuedTicketStatus issuedTicketStatus,
             List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers) {
-        this.eventId = event.getId();
-        this.userInfo = IssuedTicketUserInfoVo.from(user);
-        this.itemInfo = IssuedTicketItemInfoVo.from(ticketItem);
+        this.eventId = eventId;
+        this.userInfo = userInfo;
+        this.itemInfo = itemInfo;
         this.orderUuid = orderUuid;
         this.orderLineId = orderLineId;
         this.price = price;
+        this.issuedTicketStatus = issuedTicketStatus;
         this.issuedTicketOptionAnswers.addAll(issuedTicketOptionAnswers);
     }
 
@@ -134,9 +133,7 @@ public class IssuedTicket extends BaseTimeEntity {
      */
     public Money sumOptionPrice() {
         return issuedTicketOptionAnswers.stream()
-                .map(
-                        issuedTicketOptionAnswer ->
-                                issuedTicketOptionAnswer.getOption().getAdditionalPrice())
+                .map(IssuedTicketOptionAnswer::getAdditionalPrice)
                 .reduce(Money.ZERO, Money::plus);
     }
 
