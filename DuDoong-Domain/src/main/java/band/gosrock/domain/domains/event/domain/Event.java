@@ -165,6 +165,11 @@ public class Event extends BaseTimeEntity {
         this.status = EventStatus.OPEN;
     }
 
+    public void calculate() {
+        // TODO : 오픈할수 있는 상태인지 검증필요함.
+        this.status = EventStatus.CALCULATING;
+    }
+
     public void close() {
         // TODO : 오픈할수 있는 상태인지 검증필요함.
         this.status = EventStatus.OPEN;
