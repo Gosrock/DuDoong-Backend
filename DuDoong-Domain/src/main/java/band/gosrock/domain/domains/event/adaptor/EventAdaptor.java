@@ -33,9 +33,8 @@ public class EventAdaptor {
     }
 
     @Transactional(readOnly = true)
-    public Slice<Event> querySliceEventsByHostIdIn(
-            List<Long> hostId, Long lastId, Pageable pageable) {
-        return eventRepository.querySliceEventsByHostIdIn(hostId, lastId, pageable);
+    public Slice<Event> querySliceEventsByHostIdIn(List<Long> hostId, Pageable pageable) {
+        return eventRepository.querySliceEventsByHostIdIn(hostId, pageable);
     }
 
     public List<Event> findAllByIds(List<Long> ids) {

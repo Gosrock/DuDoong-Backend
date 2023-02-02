@@ -3,7 +3,6 @@ package band.gosrock.domain.domains.host.repository;
 import band.gosrock.domain.common.util.QueryDslUtil;
 import band.gosrock.domain.domains.host.domain.Host;
 import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -21,25 +20,19 @@ public class HostCustomRepositoryImpl implements HostCustomRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Slice<Host> querySliceHostsByUserId(Long userId, Long lastId, Pageable pageable) {
+    public Slice<Host> querySliceHostsByUserId(Long userId, Pageable pageable) {
         OrderSpecifier[] orders = QueryDslUtil.getOrderSpecifiers(Host.class, pageable);
         List<Host> comments =
                 queryFactory
                         .select(host)
                         .from(host, hostUser)
-                        .where(
-                                hostUser.userId.eq(userId),
-                                host.hostUsers.contains(hostUser),
-                                lastIdLessThan(lastId))
+                        .where(hostUser.userId.eq(userId), host.hostUsers.contains(hostUser))
+                        .offset(pageable.getOffset())
                         .orderBy(orders)
                         .limit(pageable.getPageSize() + 1)
                         .fetch();
 
         return checkLastPage(comments, pageable);
-    }
-
-    private BooleanExpression lastIdLessThan(Long lastId) {
-        return lastId == null ? null : host.id.lt(lastId);
     }
 
     private Slice<Host> checkLastPage(List<Host> hosts, Pageable pageable) {

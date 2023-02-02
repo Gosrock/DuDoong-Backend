@@ -24,8 +24,7 @@ public class ReadHostProfilesUseCase {
 
         return SliceResponse.of(
                 hostAdaptor
-                        .querySliceHostsByUserId(
-                                userId, sliceParam.getLastId(), sliceParam.toPageable())
+                        .querySliceHostsByUserId(userId, sliceParam.toPageable())
                         .map(host -> HostProfileResponse.of(host, userId)));
     }
 }

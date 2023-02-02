@@ -5,7 +5,6 @@ import static band.gosrock.domain.domains.event.domain.QEvent.event;
 import band.gosrock.domain.common.util.QueryDslUtil;
 import band.gosrock.domain.domains.event.domain.Event;
 import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -19,21 +18,17 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Slice<Event> querySliceEventsByHostIdIn(
-            List<Long> hostId, Long lastId, Pageable pageable) {
+    public Slice<Event> querySliceEventsByHostIdIn(List<Long> hostId, Pageable pageable) {
         OrderSpecifier[] orders = QueryDslUtil.getOrderSpecifiers(Event.class, pageable);
         List<Event> events =
                 queryFactory
                         .selectFrom(event)
-                        .where(event.hostId.in(hostId), lastIdLessThan(lastId))
+                        .where(event.hostId.in(hostId))
                         .orderBy(orders)
+                        .offset(pageable.getOffset())
                         .limit(pageable.getPageSize() + 1)
                         .fetch();
         return checkLastPage(events, pageable);
-    }
-
-    private BooleanExpression lastIdLessThan(Long lastId) {
-        return lastId == null ? null : event.id.lt(lastId);
     }
 
     private Slice<Event> checkLastPage(List<Event> events, Pageable pageable) {

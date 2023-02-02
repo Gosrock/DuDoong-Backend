@@ -21,8 +21,8 @@ public class HostAdaptor {
     }
 
     /** 자신이 속해있는 호스트 리스트를 무한스크롤로 가져오는 쿼리 요청 */
-    public Slice<Host> querySliceHostsByUserId(Long userId, Long lastId, Pageable pageable) {
-        return hostRepository.querySliceHostsByUserId(userId, lastId, pageable);
+    public Slice<Host> querySliceHostsByUserId(Long userId, Pageable pageable) {
+        return hostRepository.querySliceHostsByUserId(userId, pageable);
     }
 
     /** 자신이 마스터인 호스트 리스트를 가져오는 쿼리 요청 */
