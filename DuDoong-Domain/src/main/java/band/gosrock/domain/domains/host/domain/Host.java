@@ -116,6 +116,13 @@ public class Host extends BaseTimeEntity {
         }
     }
 
+    /** 해당 호스트가 파트너 인지 검증합니다. */
+    public void validatePartnerHost() {
+        if (!partner) {
+            throw NotPartnerHostException.EXCEPTION;
+        }
+    }
+
     public HostInfoVo toHostInfoVo() {
         return HostInfoVo.from(this);
     }

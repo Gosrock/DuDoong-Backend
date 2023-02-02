@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
 @Component
-public class HostCallTransactionFactory {
+class HostCallTransactionFactory {
 
     private final HostRoleEventTransaction hostRoleEventTransaction;
     private final HostRoleHostTransaction hostRoleHostTransaction;

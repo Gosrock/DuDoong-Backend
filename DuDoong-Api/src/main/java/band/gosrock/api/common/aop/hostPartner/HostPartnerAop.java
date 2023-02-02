@@ -1,6 +1,7 @@
-package band.gosrock.api.common.aop.hostRole;
+package band.gosrock.api.common.aop.hostPartner;
 
 
+import band.gosrock.api.common.aop.hostRole.FindHostFrom;
 import java.lang.reflect.Method;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,23 +19,20 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@ConditionalOnExpression("${ableHostRoleAop:true}")
-class HostRoleAop {
-    private final HostCallTransactionFactory hostCallTransactionFactory;
+@ConditionalOnExpression("${ableHostPartnerAop:true}")
+class HostPartnerAop {
+    private final HostPartnerCallTransactionFactory hostPartnerCallTransactionFactory;
 
     /**
      * master 호스트의 마스터 manager 호스트의 수정,조회 ( 호스트유저도메인의 슈퍼 호스트 ) guest 호스트의 조회권한 (호스트유저도메인의 호스트 )
      *
      * @see band.gosrock.domain.domains.host.domain.HostRole
      */
-    @Around("@annotation(band.gosrock.api.common.aop.hostRole.HostRolesAllowed)")
+    @Around("@annotation(band.gosrock.api.common.aop.hostPartner.HostPartnerAllowed)")
     public Object aop(final ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
-        HostRolesAllowed annotation = method.getAnnotation(HostRolesAllowed.class);
-        HostQualification hostQualification = annotation.role();
-        // 제공된 호스트의 role 이 정의된 세개의 롤과 같은지 확인한다.
-        // 없으면 IllegalArgumentException 발생
+        HostPartnerAllowed annotation = method.getAnnotation(HostPartnerAllowed.class);
         FindHostFrom findHostFrom = annotation.findHostFrom();
         String identifier = findHostFrom.getIdentifier();
 
@@ -43,9 +41,9 @@ class HostRoleAop {
 
         Long id = getId(parameterNames, args, identifier);
 
-        return hostCallTransactionFactory
+        return hostPartnerCallTransactionFactory
                 .getCallTransaction(findHostFrom)
-                .proceed(id, hostQualification, joinPoint);
+                .proceed(id, joinPoint);
     }
 
     public Long getId(String[] parameterNames, Object[] args, String paramName) {
