@@ -1,18 +1,17 @@
 package band.gosrock.domain.domains.host.repository;
 
+import static band.gosrock.domain.domains.host.domain.QHost.host;
+import static band.gosrock.domain.domains.host.domain.QHostUser.hostUser;
+
 import band.gosrock.domain.common.util.QueryDslUtil;
 import band.gosrock.domain.domains.host.domain.Host;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
-
-import java.util.List;
-
-import static band.gosrock.domain.domains.host.domain.QHost.host;
-import static band.gosrock.domain.domains.host.domain.QHostUser.hostUser;
 
 @RequiredArgsConstructor
 public class HostCustomRepositoryImpl implements HostCustomRepository {
