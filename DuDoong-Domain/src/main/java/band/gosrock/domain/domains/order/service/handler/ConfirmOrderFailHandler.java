@@ -32,7 +32,11 @@ public class ConfirmOrderFailHandler {
 
         Order order = orderAdaptor.findByOrderUuid(doneOrderEvent.getOrderUuid());
         order.fail();
-        if (doneOrderEvent.getOrderMethod().isPayment()) {
+        // TODO : 쿠폰을 함께한 결제라면 쿠폰 원상 복구
+
+        // TODO : 티켓 취소
+
+        if (order.isPaid()) {
             log.info(
                     doneOrderEvent.getOrderUuid()
                             + ":"
