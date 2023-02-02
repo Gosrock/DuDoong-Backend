@@ -1,7 +1,6 @@
 package band.gosrock.api.email.handler;
 
 
-import band.gosrock.api.common.UserUtils;
 import band.gosrock.api.email.service.SendRegisterEmailService;
 import band.gosrock.domain.common.events.user.UserRegisterEvent;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
@@ -22,6 +21,7 @@ public class RegisterUserEventHandler {
     private final UserAdaptor userAdaptor;
 
     private final SendRegisterEmailService sendRegisterEmailService;
+
     @Async
     @TransactionalEventListener(
             classes = UserRegisterEvent.class,

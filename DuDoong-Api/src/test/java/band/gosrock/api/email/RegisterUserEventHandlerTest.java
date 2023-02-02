@@ -17,8 +17,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 class RegisterUserEventHandlerTest {
 
     @Autowired UserDomainService userDomainService;
-    @MockBean
-    RegisterUserEventHandler registerUserEventHandler;
+    @MockBean RegisterUserEventHandler registerUserEventHandler;
 
     @Test
     void 유저등록시도메인이벤트가발생해야한다() {
