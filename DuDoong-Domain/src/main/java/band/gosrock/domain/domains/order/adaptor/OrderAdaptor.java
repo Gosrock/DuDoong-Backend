@@ -11,6 +11,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 
 @Adaptor
 @RequiredArgsConstructor
@@ -36,7 +37,7 @@ public class OrderAdaptor {
         return orderRepository.findFirstByUserIdOrderByIdDesc(userId);
     }
 
-    public Page<Order> findMyOrders(FindMyPageOrderCondition condition, Pageable pageable) {
+    public Slice<Order> findMyOrders(FindMyPageOrderCondition condition, Pageable pageable) {
         return orderRepository.findMyOrders(condition, pageable);
     }
 

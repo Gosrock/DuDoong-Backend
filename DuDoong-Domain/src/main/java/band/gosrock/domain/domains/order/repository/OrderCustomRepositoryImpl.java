@@ -17,6 +17,8 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.support.PageableExecutionUtils;
 
 @RequiredArgsConstructor
@@ -25,8 +27,9 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Page<Order> findMyOrders(FindMyPageOrderCondition condition, Pageable pageable) {
-
+    public Slice<Order> findMyOrders(FindMyPageOrderCondition condition, Pageable pageable) {
+        //        OrderSpecifier[] orderBy = QueryDslUtil.getOrderSpecifiers(Order.class, pageable);
+        // 오류남
         List<Order> orders =
                 queryFactory
                         .selectFrom(order)
@@ -35,22 +38,20 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
                         .where(
                                 eqUserId(condition.getUserId()),
                                 openingState(condition.getShowing()))
-                        .orderBy(order.id.desc())
+                        .orderBy(order.id.desc()) // 여기서 적용하면 오류 남
                         .offset(pageable.getOffset())
-                        .limit(pageable.getPageSize())
+                        .limit(pageable.getPageSize() + 1)
                         .fetch();
 
-        JPAQuery<Long> countQuery =
-                queryFactory
-                        .select(order.count())
-                        .join(event)
-                        .on(order.eventId.eq(event.id))
-                        .from(order)
-                        .where(
-                                eqUserId(condition.getUserId()),
-                                openingState(condition.getShowing()));
+        return new SliceImpl<>(orders, pageable, hasNext(orders, pageable));
+    }
 
-        return PageableExecutionUtils.getPage(orders, pageable, countQuery::fetchOne);
+    private Boolean hasNext(List<Order> orders, Pageable pageable) {
+        if (orders.size() > pageable.getPageSize()) {
+            orders.remove(pageable.getPageSize());
+            return Boolean.TRUE;
+        }
+        return Boolean.FALSE;
     }
 
     @Override
