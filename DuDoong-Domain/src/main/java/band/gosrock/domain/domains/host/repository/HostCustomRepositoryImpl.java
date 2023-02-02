@@ -38,12 +38,12 @@ public class HostCustomRepositoryImpl implements HostCustomRepository {
         return lastId == null ? null : host.id.loe(lastId);
     }
 
-    private Slice<Host> checkLastPage(List<Host> comments, Pageable pageable) {
+    private Slice<Host> checkLastPage(List<Host> hosts, Pageable pageable) {
         boolean hasNext = false;
-        if (comments.size() > pageable.getPageSize()) {
+        if (hosts.size() > pageable.getPageSize()) {
             hasNext = true;
-            comments.remove(pageable.getPageSize());
+            hosts.remove(pageable.getPageSize());
         }
-        return new SliceImpl<>(comments, pageable, hasNext);
+        return new SliceImpl<>(hosts, pageable, hasNext);
     }
 }

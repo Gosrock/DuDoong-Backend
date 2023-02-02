@@ -1,7 +1,8 @@
 package band.gosrock.api.event.controller;
 
 
-import band.gosrock.api.common.page.PageResponse;
+import band.gosrock.api.common.slice.SliceParam;
+import band.gosrock.api.common.slice.SliceResponse;
 import band.gosrock.api.event.model.dto.request.CreateEventRequest;
 import band.gosrock.api.event.model.dto.request.UpdateEventBasicRequest;
 import band.gosrock.api.event.model.dto.request.UpdateEventDetailRequest;
@@ -17,8 +18,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.api.annotations.ParameterObject;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 @SecurityRequirement(name = "access-token")
@@ -36,11 +35,18 @@ public class EventController {
     private final UpdateEventDetailUseCase updateEventDetailUseCase;
     private final UpdateEventStatusUseCase updateEventStatusUseCase;
 
+    //    @Operation(summary = "자신이 관리 중인 이벤트 리스트를 가져옵니다.")
+    //    @GetMapping
+    //    public PageResponse<EventProfileResponse> getAllEventByUser(
+    //            @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
+    //        return readUserHostEventListUseCase.execute(pageable);
+    //    }
+
     @Operation(summary = "자신이 관리 중인 이벤트 리스트를 가져옵니다.")
     @GetMapping
-    public PageResponse<EventProfileResponse> getAllEventByUser(
-            @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
-        return readUserHostEventListUseCase.execute(pageable);
+    public SliceResponse<EventProfileResponse> getAllEventByUser(
+            @ParameterObject SliceParam sliceParam) {
+        return readUserHostEventListUseCase.execute(sliceParam);
     }
 
     @Operation(summary = "공연 기본 정보를 등록하여, 새로운 이벤트(공연)를 생성합니다")
