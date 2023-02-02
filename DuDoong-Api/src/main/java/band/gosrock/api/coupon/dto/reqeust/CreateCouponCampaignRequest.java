@@ -32,13 +32,13 @@ public class CreateCouponCampaignRequest {
     private Long validTerm;
 
     // 쿠폰 발행 시작 시각
-    @Schema(type = "string", pattern = "yyyy-MM-dd HH:mm", description = "쿠폰 발행 시작 시간")
+    @Schema(type = "string", pattern = "yyyy.MM.dd HH:mm", description = "쿠폰 발행 시작 시간")
     @NotNull(message = "startAt을 입력해주세요.")
     @DateFormat
     private LocalDateTime startAt;
 
     // 쿠폰 발행 마감 시각
-    @Schema(type = "string", pattern = "yyyy-MM-dd HH:mm", description = "쿠폰 발행 마감 시간")
+    @Schema(type = "string", pattern = "yyyy.MM.dd HH:mm", description = "쿠폰 발행 마감 시간")
     @NotNull(message = "endAt을 입력해주세요.")
     @Future(message = "endAt은 값이 미래여야합니다.")
     @DateFormat

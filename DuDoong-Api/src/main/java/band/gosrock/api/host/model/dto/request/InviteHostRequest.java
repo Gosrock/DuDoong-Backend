@@ -18,7 +18,7 @@ public class InviteHostRequest {
     @Email(message = "올바른 이메일을 입력해주세요")
     private String email;
 
-    @Schema(defaultValue = "HOST", description = "호스트 유저 역할")
-    @Enum(message = "HOST 또는 SUPER_HOST 만 허용됩니다")
+    @Schema(defaultValue = "MANAGER", description = "호스트 유저 역할")
+    @Enum(message = "MANAGER 또는 GUEST 만 허용됩니다")
     private HostRole role;
 }

@@ -1,6 +1,7 @@
 package band.gosrock.domain.common.vo;
 
 
+import band.gosrock.common.annotation.DateFormat;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.domain.EventStatus;
 import java.time.LocalDateTime;
@@ -16,9 +17,9 @@ public class EventProfileVo {
 
     private String name;
 
-    private LocalDateTime startAt;
+    @DateFormat private LocalDateTime startAt;
 
-    private LocalDateTime endAt;
+    @DateFormat private LocalDateTime endAt;
 
     private String placeName;
 

@@ -1,6 +1,7 @@
 package band.gosrock.domain.common.vo;
 
 
+import band.gosrock.common.annotation.DateFormat;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.domain.EventBasic;
 import java.time.LocalDateTime;
@@ -11,7 +12,7 @@ import lombok.Getter;
 @Builder
 public class EventBasicVo {
     private String name;
-    private LocalDateTime startAt;
+    @DateFormat private LocalDateTime startAt;
     private Long runTime;
 
     public static EventBasicVo from(Event event) {
