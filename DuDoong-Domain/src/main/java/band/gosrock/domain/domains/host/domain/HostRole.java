@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.host.domain;
 
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -16,7 +17,7 @@ public enum HostRole {
     GUEST("GUEST", "게스트");
 
     private final String name;
-    private final String value;
+    @JsonValue private final String value;
 
     // Enum Validation 을 위한 코드, enum 에 속하지 않으면 null 리턴
     @JsonCreator
