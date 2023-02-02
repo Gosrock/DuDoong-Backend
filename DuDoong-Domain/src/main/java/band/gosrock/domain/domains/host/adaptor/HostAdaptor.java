@@ -9,6 +9,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 
 @Adaptor
 @RequiredArgsConstructor
@@ -17,6 +18,11 @@ public class HostAdaptor {
 
     public Host findById(Long hostId) {
         return hostRepository.findById(hostId).orElseThrow(() -> HostNotFoundException.EXCEPTION);
+    }
+
+    /** 자신이 속해있는 호스트 리스트를 무한스크롤로 가져오는 쿼리 요청 */
+    public Slice<Host> querySliceHostsByUserId(Long userId, Pageable pageable) {
+        return hostRepository.querySliceHostsByUserId(userId, pageable);
     }
 
     /** 자신이 마스터인 호스트 리스트를 가져오는 쿼리 요청 */
