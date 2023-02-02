@@ -12,4 +12,6 @@ public interface IssuedTicketCustomRepository {
     Page<IssuedTicket> searchToPage(IssuedTicketCondition condition, Pageable pageable);
 
     Optional<IssuedTicket> find(Long issuedTicketId);
+
+    Long countPaidTicket(Long userId, Long issuedTicketId);
 }
