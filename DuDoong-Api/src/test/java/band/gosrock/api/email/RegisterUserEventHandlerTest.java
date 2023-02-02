@@ -1,8 +1,9 @@
-package band.gosrock.api.eventHandlers;
+package band.gosrock.api.email;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 
+import band.gosrock.api.email.handler.RegisterUserEventHandler;
 import band.gosrock.api.supports.ApiIntegrateSpringBootTest;
 import band.gosrock.domain.domains.user.domain.OauthInfo;
 import band.gosrock.domain.domains.user.domain.Profile;
@@ -16,7 +17,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 class RegisterUserEventHandlerTest {
 
     @Autowired UserDomainService userDomainService;
-    @MockBean RegisterUserEventHandler registerUserEventHandler;
+    @MockBean
+    RegisterUserEventHandler registerUserEventHandler;
 
     @Test
     void 유저등록시도메인이벤트가발생해야한다() {

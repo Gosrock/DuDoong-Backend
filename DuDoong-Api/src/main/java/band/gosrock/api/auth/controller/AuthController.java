@@ -14,6 +14,7 @@ import band.gosrock.api.auth.service.RefreshUseCase;
 import band.gosrock.api.auth.service.RegisterUseCase;
 import band.gosrock.api.auth.service.WithDrawUseCase;
 import band.gosrock.api.auth.service.helper.CookieGenerateHelper;
+import band.gosrock.api.email.service.SendRegisterEmailService;
 import band.gosrock.common.annotation.ApiErrorCodeExample;
 import band.gosrock.common.annotation.DevelopOnlyApi;
 import band.gosrock.infrastructure.config.ses.AwsSesUtils;
@@ -56,15 +57,12 @@ public class AuthController {
 
     private final CookieGenerateHelper cookieGenerateHelper;
 
-    private final AwsSesUtils awsSesUtils;
-
+    private final SendRegisterEmailService service;
     @Operation(summary = "kakao oauth 링크발급 (백엔드용 )", description = "kakao 링크를 받아볼수 있습니다.")
     @Tag(name = "카카오 oauth")
     @GetMapping("/oauth/kakao/link/test")
     public OauthLoginLinkResponse getKakaoOauthLinkTest() {
-//        Context context = new Context();
-//        context.setVariable("test", "규진아 데이트는 잘 하고 있냐?");
-//        awsSesUtils.singleEmailRequest("rbwls0218@gmail.com","규진아 데이트는 잘 하고 있냐?", "signUp",context);
+        service.execute();
         return registerUseCase.getKaKaoOauthLinkTest();
     }
 

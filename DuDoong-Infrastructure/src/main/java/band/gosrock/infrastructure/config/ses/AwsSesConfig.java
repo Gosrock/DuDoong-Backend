@@ -12,6 +12,7 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.ses.SesAsyncClient;
+import software.amazon.awssdk.services.ses.SesClient;
 
 @Configuration
 public class AwsSesConfig {
@@ -23,10 +24,10 @@ public class AwsSesConfig {
     private String secretKey;
 
     @Bean
-    public SesAsyncClient sesAsyncClient() {
+    public SesClient sesClient() {
         AwsBasicCredentials awsBasicCredentials = AwsBasicCredentials.create(this.accessKey,
             this.secretKey);
-        return SesAsyncClient.builder()
+        return SesClient.builder()
             .credentialsProvider(StaticCredentialsProvider.create(awsBasicCredentials))
             .region(Region.US_WEST_2)
             .build();
