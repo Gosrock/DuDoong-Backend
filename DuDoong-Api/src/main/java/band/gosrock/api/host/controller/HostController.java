@@ -41,14 +41,6 @@ public class HostController {
     private final InviteHostUseCase inviteHostUseCase;
     private final JoinHostUseCase joinHostUseCase;
 
-    // todo :: 제거
-    //    @Operation(summary = "내가 속한 호스트 리스트를 가져옵니다.")
-    //    @GetMapping
-    //    public PageResponse<HostProfileResponse> getAllHosts(
-    //            @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
-    //        return readHostsUseCase.execute(pageable);
-    //    }
-
     @Operation(summary = "내가 속한 호스트 리스트를 가져옵니다.")
     @GetMapping
     public SliceResponse<HostProfileResponse> getAllHosts(@ParameterObject SliceParam sliceParam) {
