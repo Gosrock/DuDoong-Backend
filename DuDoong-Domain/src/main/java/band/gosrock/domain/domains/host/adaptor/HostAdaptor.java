@@ -5,10 +5,12 @@ import band.gosrock.common.annotation.Adaptor;
 import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.host.exception.HostNotFoundException;
 import band.gosrock.domain.domains.host.repository.HostRepository;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+
+import java.util.List;
 
 @Adaptor
 @RequiredArgsConstructor
@@ -17,6 +19,11 @@ public class HostAdaptor {
 
     public Host findById(Long hostId) {
         return hostRepository.findById(hostId).orElseThrow(() -> HostNotFoundException.EXCEPTION);
+    }
+
+    /** 자신이 속해있는 호스트 리스트를 무한스크롤로 가져오는 쿼리 요청 */
+    public Slice<Host> querySliceHostByUserId(Long userId, Long lastId, Pageable pageable) {
+        return hostRepository.querySliceHostByUserId(userId, lastId, pageable);
     }
 
     /** 자신이 마스터인 호스트 리스트를 가져오는 쿼리 요청 */

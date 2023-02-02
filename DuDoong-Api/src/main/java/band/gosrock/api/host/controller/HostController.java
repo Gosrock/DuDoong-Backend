@@ -2,6 +2,8 @@ package band.gosrock.api.host.controller;
 
 
 import band.gosrock.api.common.page.PageResponse;
+import band.gosrock.api.common.slice.SliceParam;
+import band.gosrock.api.common.slice.SliceResponse;
 import band.gosrock.api.host.model.dto.request.*;
 import band.gosrock.api.host.model.dto.response.HostDetailResponse;
 import band.gosrock.api.host.model.dto.response.HostEventProfileResponse;
@@ -39,11 +41,18 @@ public class HostController {
     private final InviteHostUseCase inviteHostUseCase;
     private final JoinHostUseCase joinHostUseCase;
 
+    // todo :: 제거
+    //    @Operation(summary = "내가 속한 호스트 리스트를 가져옵니다.")
+    //    @GetMapping
+    //    public PageResponse<HostProfileResponse> getAllHosts(
+    //            @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
+    //        return readHostsUseCase.execute(pageable);
+    //    }
+
     @Operation(summary = "내가 속한 호스트 리스트를 가져옵니다.")
     @GetMapping
-    public PageResponse<HostProfileResponse> getAllHosts(
-            @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
-        return readHostsUseCase.execute(pageable);
+    public SliceResponse<HostProfileResponse> getAllHosts(@ParameterObject SliceParam sliceParam) {
+        return readHostsUseCase.execute(sliceParam);
     }
 
     @Operation(summary = "고유 아이디에 해당하는 호스트 정보를 가져옵니다.")
