@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = "access-token")
 @Tag(name = "발급 티켓 관련 어드민 컨트롤러")
 @RestController
-@RequestMapping("/v1/event/{eventId}/issuedTickets")
+@RequestMapping("/v1/events/{eventId}/issuedTickets")
 @RequiredArgsConstructor
 public class AdminIssuedTicketController {
 

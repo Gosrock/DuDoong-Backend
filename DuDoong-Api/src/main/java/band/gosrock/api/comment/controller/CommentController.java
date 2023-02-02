@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = "access-token")
 @Tag(name = "응원톡 컨트롤러")
 @RestController
-@RequestMapping("/v1/event/{eventId}/comments")
+@RequestMapping("/v1/events/{eventId}/comments")
 @RequiredArgsConstructor
 public class CommentController {
 
