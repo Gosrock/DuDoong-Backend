@@ -25,16 +25,15 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
         List<Event> events =
                 queryFactory
                         .selectFrom(event)
-                        .where(event.hostId.in(hostId), lastIdLessThanEqual(lastId))
+                        .where(event.hostId.in(hostId), lastIdLessThan(lastId))
                         .orderBy(orders)
                         .limit(pageable.getPageSize() + 1)
                         .fetch();
-
         return checkLastPage(events, pageable);
     }
 
-    private BooleanExpression lastIdLessThanEqual(Long lastId) {
-        return lastId == null ? null : event.id.loe(lastId);
+    private BooleanExpression lastIdLessThan(Long lastId) {
+        return lastId == null ? null : event.id.lt(lastId);
     }
 
     private Slice<Event> checkLastPage(List<Event> events, Pageable pageable) {
