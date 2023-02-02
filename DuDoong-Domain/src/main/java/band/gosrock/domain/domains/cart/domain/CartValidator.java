@@ -5,6 +5,7 @@ import band.gosrock.common.annotation.Validator;
 import band.gosrock.domain.domains.cart.exception.CartItemNotOneTypeException;
 import band.gosrock.domain.domains.cart.exception.CartNotAnswerAllOptionGroupException;
 import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
 import band.gosrock.domain.domains.ticket_item.domain.Option;
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 public class CartValidator {
 
     private final TicketItemAdaptor itemAdaptor;
+    private final IssuedTicketAdaptor issuedTicketAdaptor;
 
     private final OptionAdaptor optionAdaptor;
 
@@ -35,7 +37,9 @@ public class CartValidator {
 
     /** 아이템의 구매갯수 제한을 넘지 않았는지 */
     public void validItemPurchaseLimit(Cart cart, TicketItem item) {
-        item.validPurchaseLimit(cart.getTotalQuantity());
+        Long paidTicketCount = issuedTicketAdaptor.countPaidTicket(cart.getUserId(), item.getId());
+        Long totalIssuedCount = paidTicketCount + cart.getTotalQuantity();
+        item.validPurchaseLimit(totalIssuedCount);
     }
 
     /** 티켓팅을 할 수 있는 시간을 안지났는지 검증합니다. */
