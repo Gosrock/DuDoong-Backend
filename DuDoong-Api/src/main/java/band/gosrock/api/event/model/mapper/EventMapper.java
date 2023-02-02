@@ -1,7 +1,6 @@
 package band.gosrock.api.event.model.mapper;
 
 
-import band.gosrock.api.common.slice.SliceParam;
 import band.gosrock.api.event.model.dto.request.CreateEventRequest;
 import band.gosrock.api.event.model.dto.request.UpdateEventBasicRequest;
 import band.gosrock.api.event.model.dto.request.UpdateEventDetailRequest;
@@ -83,12 +82,10 @@ public class EventMapper {
         return eventList.map(event -> this.toEventProfileResponse(hostList, event));
     }
 
-    public Slice<EventProfileResponse> toEventProfileResponseSlice(
-            Long userId, SliceParam sliceParam) {
+    public Slice<EventProfileResponse> toEventProfileResponseSlice(Long userId, Pageable pageable) {
         List<Host> hosts = hostAdaptor.findAllByHostUsers_UserId(userId);
         List<Long> hostIds = hosts.stream().map(Host::getId).toList();
-        Slice<Event> events =
-                eventAdaptor.querySliceEventsByHostIdIn(hostIds, sliceParam.toPageable());
+        Slice<Event> events = eventAdaptor.querySliceEventsByHostIdIn(hostIds, pageable);
         return events.map(event -> this.toEventProfileResponse(hosts, event));
     }
 
