@@ -57,12 +57,10 @@ public class AuthController {
 
     private final CookieGenerateHelper cookieGenerateHelper;
 
-    private final SendRegisterEmailService service;
     @Operation(summary = "kakao oauth 링크발급 (백엔드용 )", description = "kakao 링크를 받아볼수 있습니다.")
     @Tag(name = "카카오 oauth")
     @GetMapping("/oauth/kakao/link/test")
     public OauthLoginLinkResponse getKakaoOauthLinkTest() {
-        service.execute();
         return registerUseCase.getKaKaoOauthLinkTest();
     }
 

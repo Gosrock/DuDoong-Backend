@@ -10,9 +10,9 @@ import org.thymeleaf.context.Context;
 public class SendRegisterEmailService {
     private final AwsSesUtils awsSesUtils;
 
-    public void execute(){
+    public void execute(String userName,String to){
         Context context = new Context();
-        context.setVariable("test", "testest");
-        awsSesUtils.singleEmailRequest("water0641@naver.com","zzz", "signUp",context);
+        context.setVariable("username", userName);
+        awsSesUtils.singleEmailRequest(to,"두둥에 회원가입하신것을 축하드립니다!", "signUp",context);
     }
 }
