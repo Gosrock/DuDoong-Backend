@@ -18,8 +18,8 @@ import lombok.Getter;
 public class EventDetailResponse {
     private EventStatus status;
     private HostInfoVo host;
-    private EventPlaceVo place;
     @JsonUnwrapped private EventBasicVo eventBasicVo;
+    private EventPlaceVo place;
     @JsonUnwrapped private EventDetailVo eventDetailVo;
 
     public static EventDetailResponse of(Host host, Event event) {
