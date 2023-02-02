@@ -12,6 +12,7 @@ import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.exception.EventNotOpenException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
+import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;
 import band.gosrock.domain.domains.order.domain.OrderMethod;
@@ -52,6 +53,7 @@ class OrderValidatorTest {
     @Mock Event unavailableRefundEvent;
     @Mock EventAdaptor eventAdaptor;
     @Mock TicketItemAdaptor ticketItemAdaptor;
+    @Mock IssuedTicketAdaptor issuedTicketAdaptor;
     @Mock OptionAdaptor optionAdaptor;
     @Mock Option optionOfGroup1;
     @Mock Option optionOfGroup2;
@@ -63,7 +65,9 @@ class OrderValidatorTest {
 
     @BeforeEach
     void setUp() {
-        orderValidator = new OrderValidator(eventAdaptor, ticketItemAdaptor, optionAdaptor);
+        orderValidator =
+                new OrderValidator(
+                        eventAdaptor, ticketItemAdaptor, issuedTicketAdaptor, optionAdaptor);
     }
 
     @Test

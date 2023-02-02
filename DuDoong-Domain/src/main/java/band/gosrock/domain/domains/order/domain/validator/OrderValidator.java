@@ -140,7 +140,7 @@ public class OrderValidator {
     public void validItemPurchaseLimit(Order order, TicketItem item) {
         Long paidTicketCount = issuedTicketAdaptor.countPaidTicket(order.getUserId(), item.getId());
         Long totalIssuedCount = paidTicketCount + order.getTotalQuantity();
-        item.validPurchaseLimit(order.getTotalQuantity());
+        item.validPurchaseLimit(totalIssuedCount);
     }
 
     /** 이벤트가 열려있는 상태인지 */
