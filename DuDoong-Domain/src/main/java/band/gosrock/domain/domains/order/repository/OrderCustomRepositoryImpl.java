@@ -4,6 +4,7 @@ import static band.gosrock.domain.domains.event.domain.QEvent.event;
 import static band.gosrock.domain.domains.order.domain.QOrder.order;
 import static band.gosrock.domain.domains.user.domain.QUser.user;
 
+import band.gosrock.domain.common.util.SliceUtil;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.repository.condition.FindEventOrdersCondition;
 import band.gosrock.domain.domains.order.repository.condition.FindMyPageOrderCondition;
@@ -18,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.support.PageableExecutionUtils;
 
 @RequiredArgsConstructor
@@ -28,8 +28,6 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
 
     @Override
     public Slice<Order> findMyOrders(FindMyPageOrderCondition condition, Pageable pageable) {
-        //        OrderSpecifier[] orderBy = QueryDslUtil.getOrderSpecifiers(Order.class, pageable);
-        // 오류남
         List<Order> orders =
                 queryFactory
                         .selectFrom(order)
@@ -38,20 +36,12 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
                         .where(
                                 eqUserId(condition.getUserId()),
                                 openingState(condition.getShowing()))
-                        .orderBy(order.id.desc()) // 여기서 적용하면 오류 남
+                        .orderBy(order.id.desc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize() + 1)
                         .fetch();
 
-        return new SliceImpl<>(orders, pageable, hasNext(orders, pageable));
-    }
-
-    private Boolean hasNext(List<Order> orders, Pageable pageable) {
-        if (orders.size() > pageable.getPageSize()) {
-            orders.remove(pageable.getPageSize());
-            return Boolean.TRUE;
-        }
-        return Boolean.FALSE;
+        return SliceUtil.valueOf(orders, pageable);
     }
 
     @Override
