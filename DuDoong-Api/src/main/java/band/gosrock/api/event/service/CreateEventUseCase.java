@@ -9,7 +9,6 @@ import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.service.EventService;
 import band.gosrock.domain.domains.host.service.HostService;
-import band.gosrock.domain.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,8 +22,7 @@ public class CreateEventUseCase {
 
     @Transactional
     public EventResponse execute(CreateEventRequest createEventRequest) {
-        final User user = userUtils.getCurrentUser();
-        final Long userId = user.getId();
+        final Long userId = userUtils.getCurrentUserId();
         // 슈퍼 호스트 이상만 공연 생성 가능
         hostService.validateManagerHostUser(createEventRequest.getHostId(), userId);
         final Event event = eventMapper.toEntity(createEventRequest);
