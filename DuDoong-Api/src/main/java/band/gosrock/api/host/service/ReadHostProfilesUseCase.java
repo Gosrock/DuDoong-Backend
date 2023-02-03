@@ -13,11 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 @UseCase
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class ReadHostProfilesUseCase {
     private final UserUtils userUtils;
     private final HostAdaptor hostAdaptor;
 
+    @Transactional(readOnly = true)
     public SliceResponse<HostProfileResponse> execute(Pageable pageable) {
         final User user = userUtils.getCurrentUser();
         final Long userId = user.getId();

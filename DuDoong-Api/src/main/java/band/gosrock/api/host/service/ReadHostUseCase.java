@@ -11,11 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 @UseCase
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class ReadHostUseCase {
     private final UserUtils userUtils;
     private final HostMapper hostMapper;
 
+    @Transactional(readOnly = true)
     public HostDetailResponse execute(Long hostId) {
         final User user = userUtils.getCurrentUser();
         final Long userId = user.getId();
