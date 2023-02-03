@@ -37,8 +37,6 @@ public class SecurityConfig {
                 .permitAll()
                 .mvcMatchers(HttpMethod.GET, "/v1/events/*/ticketItems")
                 .permitAll()
-                .mvcMatchers(HttpMethod.GET, "/v1/events/*/ticketItems/*/options")
-                .permitAll()
                 .anyRequest()
                 .authenticated();
         http.apply(filterConfig);
