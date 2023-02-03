@@ -20,6 +20,10 @@ public class EventBasic {
         return this.name != null && this.startAt != null && this.runTime != null;
     }
 
+    protected LocalDateTime endAt() {
+        return this.runTime == null ? null : this.startAt.plusMinutes(this.runTime);
+    }
+
     @Builder
     public EventBasic(String name, LocalDateTime startAt, Long runTime) {
         this.name = name;

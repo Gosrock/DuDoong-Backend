@@ -1,8 +1,9 @@
-package band.gosrock.api.eventHandlers;
+package band.gosrock.api.email;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 
+import band.gosrock.api.email.handler.RegisterUserEventHandler;
 import band.gosrock.api.supports.ApiIntegrateSpringBootTest;
 import band.gosrock.domain.domains.user.domain.OauthInfo;
 import band.gosrock.domain.domains.user.domain.Profile;
