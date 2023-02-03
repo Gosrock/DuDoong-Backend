@@ -44,14 +44,14 @@ public class IssuedTicketDomainService {
     이미 발급된 티켓 취소 로직
      */
     @RedissonLock(LockName = "티켓관리", identifier = "itemId")
-    public void doneOrderEventAfterRollBackWithdrawIssuedTickets(Long itemId,
-        String orderUuid) {
+    public void doneOrderEventAfterRollBackWithdrawIssuedTickets(Long itemId, String orderUuid) {
         List<IssuedTicket> failIssuedTickets = issuedTicketAdaptor.findAllByOrderUuid(orderUuid);
         TicketItem ticketItem = ticketItemAdaptor.queryTicketItem(itemId);
-        failIssuedTickets.forEach(issuedTicket -> {
-            ticketItem.increaseQuantity(1L);
-            issuedTicket.cancel();
-        });
+        failIssuedTickets.forEach(
+                issuedTicket -> {
+                    ticketItem.increaseQuantity(1L);
+                    issuedTicket.cancel();
+                });
     }
 
     @Transactional
