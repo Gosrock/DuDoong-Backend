@@ -22,8 +22,7 @@ public class CommentAdaptor {
     }
 
     public Slice<Comment> searchComment(CommentCondition commentCondition) {
-        PageRequest pageRequest = PageRequest.of(0, 20, Sort.by("createdAt").ascending());
-        return commentRepository.searchToPage(commentCondition, pageRequest);
+        return commentRepository.searchToPage(commentCondition);
     }
 
     public Comment queryComment(Long commentId) {

@@ -4,8 +4,10 @@ package band.gosrock.api.comment.mapper;
 import band.gosrock.api.comment.model.request.CreateCommentRequest;
 import band.gosrock.api.comment.model.response.CreateCommentResponse;
 import band.gosrock.api.comment.model.response.RetrieveCommentCountResponse;
+import band.gosrock.api.comment.model.response.RetrieveCommentDTO;
 import band.gosrock.api.comment.model.response.RetrieveCommentListResponse;
 import band.gosrock.api.comment.model.response.RetrieveRandomCommentResponse;
+import band.gosrock.api.common.slice.SliceResponse;
 import band.gosrock.common.annotation.Mapper;
 import band.gosrock.domain.domains.comment.adaptor.CommentAdaptor;
 import band.gosrock.domain.domains.comment.domain.Comment;
@@ -32,10 +34,11 @@ public class CommentMapper {
     }
 
     @Transactional(readOnly = true)
-    public RetrieveCommentListResponse toRetrieveCommentListResponse(
+    public SliceResponse<RetrieveCommentDTO> toRetrieveCommentListResponse(
             CommentCondition commentCondition, Long currentUserId) {
         Slice<Comment> comments = commentAdaptor.searchComment(commentCondition);
-        return RetrieveCommentListResponse.of(comments, currentUserId);
+        return SliceResponse.of(
+            comments.map(comment -> toRetrieveCommentDTO(comment, currentUserId)));
     }
 
     @Transactional(readOnly = true)
@@ -49,5 +52,9 @@ public class CommentMapper {
 
     public RetrieveRandomCommentResponse toRetrieveRandomCommentResponse(Comment comment) {
         return RetrieveRandomCommentResponse.of(comment);
+    }
+
+    private RetrieveCommentDTO toRetrieveCommentDTO(Comment comment, Long currentUserId) {
+        return RetrieveCommentDTO.of(comment, currentUserId);
     }
 }

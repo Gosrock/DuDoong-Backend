@@ -2,13 +2,16 @@ package band.gosrock.api.comment.service;
 
 
 import band.gosrock.api.comment.mapper.CommentMapper;
+import band.gosrock.api.comment.model.response.RetrieveCommentDTO;
 import band.gosrock.api.comment.model.response.RetrieveCommentListResponse;
 import band.gosrock.api.common.UserUtils;
+import band.gosrock.api.common.slice.SliceResponse;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.comment.dto.condition.CommentCondition;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 
 @UseCase
 @RequiredArgsConstructor
@@ -20,10 +23,10 @@ public class RetrieveCommentUseCase {
 
     private final UserUtils userUtils;
 
-    public RetrieveCommentListResponse execute(Long eventId, Long lastId) {
+    public SliceResponse<RetrieveCommentDTO> execute(Long eventId, Pageable pageable) {
         Event event = eventAdaptor.findById(eventId);
         Long currentUserId = userUtils.getCurrentUserId();
-        CommentCondition commentCondition = new CommentCondition(event.getId(), lastId);
+        CommentCondition commentCondition = new CommentCondition(event.getId(), pageable);
         return commentMapper.toRetrieveCommentListResponse(commentCondition, currentUserId);
     }
 }

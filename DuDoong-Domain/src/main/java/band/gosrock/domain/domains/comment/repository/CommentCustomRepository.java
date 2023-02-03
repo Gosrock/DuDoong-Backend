@@ -8,7 +8,7 @@ import org.springframework.data.domain.Slice;
 
 public interface CommentCustomRepository {
 
-    Slice<Comment> searchToPage(CommentCondition commentCondition, Pageable pageable);
+    Slice<Comment> searchToPage(CommentCondition commentCondition);
 
     Long countComment(Long eventId);
 
