@@ -40,6 +40,7 @@ public class EventService {
         // todo :: 이벤트 상태 변경시 검증 필요
         if (status == EventStatus.OPEN) event.open();
         else if (status == EventStatus.CLOSED) event.close();
+        else if (status == EventStatus.CALCULATING) event.calculate();
         else if (status == EventStatus.PREPARING) event.prepare();
         return eventRepository.save(event);
     }

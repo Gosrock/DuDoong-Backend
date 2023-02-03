@@ -1,6 +1,7 @@
 package band.gosrock.domain.common.vo;
 
 
+import band.gosrock.common.annotation.DateFormat;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.domain.EventStatus;
 import java.time.LocalDateTime;
@@ -16,9 +17,11 @@ public class EventProfileVo {
 
     private String name;
 
-    private LocalDateTime startAt;
+    @DateFormat private LocalDateTime startAt;
 
-    private LocalDateTime endAt;
+    @DateFormat private LocalDateTime endAt;
+
+    private Long runTime;
 
     private String placeName;
 
@@ -34,9 +37,10 @@ public class EventProfileVo {
                 .posterImage(eventDetailVo.getPosterImage())
                 .name(eventBasicVo.getName())
                 .startAt(eventBasicVo.getStartAt())
+                .endAt(event.getEndAt())
+                .runTime(eventBasicVo.getRunTime())
                 .placeName(eventPlaceVo.getPlaceName())
                 .status(event.getStatus())
-                .endAt(event.getEndAt())
                 .build();
     }
 }
