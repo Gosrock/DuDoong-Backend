@@ -7,7 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.CrudRepository;
 
-public interface EventRepository extends CrudRepository<Event, Long> {
+public interface EventRepository extends CrudRepository<Event, Long>, EventCustomRepository {
     List<Event> findAll();
 
     Page<Event> findAllByHostId(Long hostId, Pageable pageable);

@@ -12,6 +12,7 @@ import band.gosrock.domain.domains.cart.exception.CartNotAnswerAllOptionGroupExc
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.exception.EventNotOpenException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
+import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
 import band.gosrock.domain.domains.ticket_item.domain.Option;
@@ -41,11 +42,13 @@ class CartValidatorTest {
     @Mock Event event;
     @Mock TicketItem item;
 
+    @Mock IssuedTicketAdaptor issuedTicketAdaptor;
+
     CartValidator cartValidator;
 
     @BeforeEach
     void setUp() {
-        cartValidator = new CartValidator(ticketItemAdaptor, optionAdaptor);
+        cartValidator = new CartValidator(ticketItemAdaptor, issuedTicketAdaptor, optionAdaptor);
     }
 
     @Test

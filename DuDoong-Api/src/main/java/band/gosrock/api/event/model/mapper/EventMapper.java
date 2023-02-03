@@ -20,6 +20,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.transaction.annotation.Transactional;
 
 @Mapper
@@ -79,6 +80,13 @@ public class EventMapper {
         List<Long> hostIds = hostList.stream().map(Host::getId).toList();
         Page<Event> eventList = eventAdaptor.findAllByHostIdIn(hostIds, pageable);
         return eventList.map(event -> this.toEventProfileResponse(hostList, event));
+    }
+
+    public Slice<EventProfileResponse> toEventProfileResponseSlice(Long userId, Pageable pageable) {
+        List<Host> hosts = hostAdaptor.findAllByHostUsers_UserId(userId);
+        List<Long> hostIds = hosts.stream().map(Host::getId).toList();
+        Slice<Event> events = eventAdaptor.querySliceEventsByHostIdIn(hostIds, pageable);
+        return events.map(event -> this.toEventProfileResponse(hosts, event));
     }
 
     private EventProfileResponse toEventProfileResponse(List<Host> hostList, Event event) {

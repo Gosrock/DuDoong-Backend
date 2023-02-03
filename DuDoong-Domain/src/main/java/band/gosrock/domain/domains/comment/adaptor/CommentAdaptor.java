@@ -7,9 +7,7 @@ import band.gosrock.domain.domains.comment.dto.condition.CommentCondition;
 import band.gosrock.domain.domains.comment.exception.CommentNotFoundException;
 import band.gosrock.domain.domains.comment.repository.CommentRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
 
 @Adaptor
 @RequiredArgsConstructor
@@ -22,8 +20,7 @@ public class CommentAdaptor {
     }
 
     public Slice<Comment> searchComment(CommentCondition commentCondition) {
-        PageRequest pageRequest = PageRequest.of(0, 20, Sort.by("createdAt").ascending());
-        return commentRepository.searchToPage(commentCondition, pageRequest);
+        return commentRepository.searchToPage(commentCondition);
     }
 
     public Comment queryComment(Long commentId) {

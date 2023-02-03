@@ -19,8 +19,8 @@ public class UpdateEventBasicRequest {
 
     @Schema(
             type = "string",
-            pattern = "yyyy-MM-dd HH:mm",
-            defaultValue = "2023-03-20 12:00",
+            pattern = "yyyy.MM.dd HH:mm",
+            defaultValue = "2023.03.20 12:00",
             description = "공연 시작 시각")
     @NotNull(message = "공연 시작 시각을 입력하세요")
     @DateFormat
@@ -53,8 +53,8 @@ public class UpdateEventBasicRequest {
     // 예매 시작 시각
     @Schema(
             type = "string",
-            pattern = "yyyy-MM-dd HH:mm",
-            defaultValue = "2023-03-10 12:00",
+            pattern = "yyyy.MM.dd HH:mm",
+            defaultValue = "2023.03.10 12:00",
             description = "예매 시작 시간")
     @NotNull(message = "예매 시작 시간을 입력하세요")
     @DateFormat
@@ -63,8 +63,8 @@ public class UpdateEventBasicRequest {
     // 예매 종료 시각
     @Schema(
             type = "string",
-            pattern = "yyyy-MM-dd HH:mm",
-            defaultValue = "2023-03-24 18:00",
+            pattern = "yyyy.MM.dd HH:mm",
+            defaultValue = "2023.03.24 18:00",
             description = "예매 종료 시간")
     @NotNull(message = "예매 종료 시간을 입력하세요")
     @DateFormat

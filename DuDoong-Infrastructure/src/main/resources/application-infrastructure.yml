@@ -15,6 +15,11 @@ spring:
 slack:
   webhook:
     token: ${SLACK_WEBHOOK_TOKEN:}
+
+
+
+
+
 ---
 spring:
   config:

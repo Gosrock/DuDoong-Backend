@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class HostRoleHostTransaction implements HostRoleCallTransaction {
+class HostRoleHostTransaction implements HostRoleCallTransaction {
 
     private final UserUtils userUtils;
     private final HostAdaptor hostAdaptor;

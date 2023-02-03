@@ -5,6 +5,7 @@ import band.gosrock.common.annotation.Validator;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
@@ -38,6 +39,7 @@ public class OrderValidator {
     private final EventAdaptor eventAdaptor;
     private final TicketItemAdaptor itemAdaptor;
 
+    private final IssuedTicketAdaptor issuedTicketAdaptor;
     private final OptionAdaptor optionAdaptor;
 
     /** 주문을 생성할 수 있는지에 대한검증 */
@@ -136,7 +138,9 @@ public class OrderValidator {
 
     /** 아이템의 구매갯수 제한을 넘지 않았는지 */
     public void validItemPurchaseLimit(Order order, TicketItem item) {
-        item.validPurchaseLimit(order.getTotalQuantity());
+        Long paidTicketCount = issuedTicketAdaptor.countPaidTicket(order.getUserId(), item.getId());
+        Long totalIssuedCount = paidTicketCount + order.getTotalQuantity();
+        item.validPurchaseLimit(totalIssuedCount);
     }
 
     /** 이벤트가 열려있는 상태인지 */

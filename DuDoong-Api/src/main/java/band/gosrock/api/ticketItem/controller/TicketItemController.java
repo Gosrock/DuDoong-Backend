@@ -8,6 +8,7 @@ import band.gosrock.api.ticketItem.dto.response.GetEventTicketItemsResponse;
 import band.gosrock.api.ticketItem.dto.response.GetTicketItemOptionsResponse;
 import band.gosrock.api.ticketItem.dto.response.TicketItemResponse;
 import band.gosrock.api.ticketItem.service.*;
+import band.gosrock.common.annotation.DisableSwaggerSecurity;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -49,6 +50,7 @@ public class TicketItemController {
     }
 
     @Operation(summary = "해당 이벤트의 티켓상품을 모두 조회합니다.")
+    @DisableSwaggerSecurity
     @GetMapping
     public GetEventTicketItemsResponse getEventTicketItems(@PathVariable Long eventId) {
         return getEventTicketItemsUseCase.execute(eventId);

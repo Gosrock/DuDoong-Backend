@@ -1,7 +1,7 @@
 package band.gosrock.api.event.controller;
 
 
-import band.gosrock.api.common.page.PageResponse;
+import band.gosrock.api.common.slice.SliceResponse;
 import band.gosrock.api.event.model.dto.request.CreateEventRequest;
 import band.gosrock.api.event.model.dto.request.UpdateEventBasicRequest;
 import band.gosrock.api.event.model.dto.request.UpdateEventDetailRequest;
@@ -11,6 +11,7 @@ import band.gosrock.api.event.model.dto.response.EventDetailResponse;
 import band.gosrock.api.event.model.dto.response.EventProfileResponse;
 import band.gosrock.api.event.model.dto.response.EventResponse;
 import band.gosrock.api.event.service.*;
+import band.gosrock.common.annotation.DisableSwaggerSecurity;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -38,7 +39,7 @@ public class EventController {
 
     @Operation(summary = "자신이 관리 중인 이벤트 리스트를 가져옵니다.")
     @GetMapping
-    public PageResponse<EventProfileResponse> getAllEventByUser(
+    public SliceResponse<EventProfileResponse> getAllEventByUser(
             @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
         return readUserHostEventListUseCase.execute(pageable);
     }
@@ -50,6 +51,7 @@ public class EventController {
     }
 
     @Operation(summary = "공연 상세 정보를 가져옵니다.")
+    @DisableSwaggerSecurity
     @GetMapping("/{eventId}")
     public EventDetailResponse getEventDetailById(@PathVariable Long eventId) {
         return readEventDetailUseCase.execute(eventId);

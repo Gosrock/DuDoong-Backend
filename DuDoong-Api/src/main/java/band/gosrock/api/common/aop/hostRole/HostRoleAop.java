@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 @ConditionalOnExpression("${ableHostRoleAop:true}")
-public class HostRoleAop {
+class HostRoleAop {
     private final HostCallTransactionFactory hostCallTransactionFactory;
 
     /**
