@@ -11,6 +11,7 @@ import band.gosrock.api.event.model.dto.response.EventDetailResponse;
 import band.gosrock.api.event.model.dto.response.EventProfileResponse;
 import band.gosrock.api.event.model.dto.response.EventResponse;
 import band.gosrock.api.event.service.*;
+import band.gosrock.common.annotation.DisableSwaggerSecurity;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -50,6 +51,7 @@ public class EventController {
     }
 
     @Operation(summary = "공연 상세 정보를 가져옵니다.")
+    @DisableSwaggerSecurity
     @GetMapping("/{eventId}")
     public EventDetailResponse getEventDetailById(@PathVariable Long eventId) {
         return readEventDetailUseCase.execute(eventId);
