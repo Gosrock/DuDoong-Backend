@@ -21,7 +21,7 @@ public class CreateUserCouponResponse {
     @Schema(description = "쿠폰 코드")
     private final String couponCode;
 
-    @Schema(type = "string", pattern = "yyyy-MM-dd HH:mm", description = "쿠폰 유효 기간")
+    @Schema(type = "string", pattern = "yyyy.MM.dd HH:mm", description = "쿠폰 유효 기간")
     @DateFormat
     private final LocalDateTime validTerm;
 
