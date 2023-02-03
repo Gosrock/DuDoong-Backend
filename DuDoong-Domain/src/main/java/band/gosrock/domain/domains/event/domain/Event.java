@@ -59,7 +59,7 @@ public class Event extends BaseTimeEntity {
         if (this.eventBasic == null) {
             return null;
         }
-        return this.getEventBasic().getStartAt().plusMinutes(getEventBasic().getRunTime());
+        return this.getEventBasic().endAt();
     }
 
     public Boolean hasEventBasic() {
@@ -163,6 +163,11 @@ public class Event extends BaseTimeEntity {
     public void open() {
         // TODO : 오픈할수 있는 상태인지 검증필요함.
         this.status = EventStatus.OPEN;
+    }
+
+    public void calculate() {
+        // TODO : 오픈할수 있는 상태인지 검증필요함.
+        this.status = EventStatus.CALCULATING;
     }
 
     public void close() {

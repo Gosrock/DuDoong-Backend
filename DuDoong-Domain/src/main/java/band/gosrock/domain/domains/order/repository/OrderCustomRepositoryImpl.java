@@ -4,6 +4,7 @@ import static band.gosrock.domain.domains.event.domain.QEvent.event;
 import static band.gosrock.domain.domains.order.domain.QOrder.order;
 import static band.gosrock.domain.domains.user.domain.QUser.user;
 
+import band.gosrock.domain.common.util.SliceUtil;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.repository.condition.FindEventOrdersCondition;
 import band.gosrock.domain.domains.order.repository.condition.FindMyPageOrderCondition;
@@ -17,6 +18,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.support.PageableExecutionUtils;
 
 @RequiredArgsConstructor
@@ -25,8 +27,7 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Page<Order> findMyOrders(FindMyPageOrderCondition condition, Pageable pageable) {
-
+    public Slice<Order> findMyOrders(FindMyPageOrderCondition condition, Pageable pageable) {
         List<Order> orders =
                 queryFactory
                         .selectFrom(order)
@@ -37,20 +38,10 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
                                 openingState(condition.getShowing()))
                         .orderBy(order.id.desc())
                         .offset(pageable.getOffset())
-                        .limit(pageable.getPageSize())
+                        .limit(pageable.getPageSize() + 1)
                         .fetch();
 
-        JPAQuery<Long> countQuery =
-                queryFactory
-                        .select(order.count())
-                        .join(event)
-                        .on(order.eventId.eq(event.id))
-                        .from(order)
-                        .where(
-                                eqUserId(condition.getUserId()),
-                                openingState(condition.getShowing()));
-
-        return PageableExecutionUtils.getPage(orders, pageable, countQuery::fetchOne);
+        return SliceUtil.valueOf(orders, pageable);
     }
 
     @Override

@@ -13,6 +13,7 @@ import lombok.Getter;
 public class EventBasicVo {
     private String name;
     @DateFormat private LocalDateTime startAt;
+    @DateFormat private LocalDateTime endAt;
     private Long runTime;
 
     public static EventBasicVo from(Event event) {
@@ -23,6 +24,7 @@ public class EventBasicVo {
         return EventBasicVo.builder()
                 .name(eventBasic.getName())
                 .startAt(eventBasic.getStartAt())
+                .endAt(event.getEndAt())
                 .runTime(eventBasic.getRunTime())
                 .build();
     }

@@ -6,10 +6,11 @@ import band.gosrock.domain.domains.order.repository.condition.FindEventOrdersCon
 import band.gosrock.domain.domains.order.repository.condition.FindMyPageOrderCondition;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 
 public interface OrderCustomRepository {
 
-    Page<Order> findMyOrders(FindMyPageOrderCondition condition, Pageable pageable);
+    Slice<Order> findMyOrders(FindMyPageOrderCondition condition, Pageable pageable);
 
     Page<Order> findEventOrders(FindEventOrdersCondition condition, Pageable pageable);
 }

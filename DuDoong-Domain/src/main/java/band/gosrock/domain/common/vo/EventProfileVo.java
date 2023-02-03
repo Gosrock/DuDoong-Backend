@@ -21,6 +21,8 @@ public class EventProfileVo {
 
     @DateFormat private LocalDateTime endAt;
 
+    private Long runTime;
+
     private String placeName;
 
     private EventStatus status;
@@ -35,9 +37,10 @@ public class EventProfileVo {
                 .posterImage(eventDetailVo.getPosterImage())
                 .name(eventBasicVo.getName())
                 .startAt(eventBasicVo.getStartAt())
+                .endAt(event.getEndAt())
+                .runTime(eventBasicVo.getRunTime())
                 .placeName(eventPlaceVo.getPlaceName())
                 .status(event.getStatus())
-                .endAt(event.getEndAt())
                 .build();
     }
 }

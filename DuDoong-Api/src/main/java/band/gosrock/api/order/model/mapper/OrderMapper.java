@@ -26,6 +26,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Slice;
 import org.springframework.transaction.annotation.Transactional;
 
 @Mapper
@@ -121,7 +122,7 @@ public class OrderMapper {
         return OrderBriefElement.of(order, getEvent(order), orderIssuedTickets);
     }
 
-    public Page<OrderBriefElement> toOrderBriefsResponse(Page<Order> ordersWithPagination) {
+    public Slice<OrderBriefElement> toOrderBriefsResponse(Slice<Order> ordersWithPagination) {
         return ordersWithPagination.map(this::toOrderBriefElement);
     }
 
