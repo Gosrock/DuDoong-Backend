@@ -3,6 +3,7 @@ package band.gosrock.api.config.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -31,6 +32,12 @@ public class SecurityConfig {
                 .mvcMatchers("/v1/auth/oauth/**")
                 .permitAll()
                 .mvcMatchers("/v1/auth/token/refresh")
+                .permitAll()
+                .mvcMatchers(HttpMethod.GET, "/v1/events/*")
+                .permitAll()
+                .mvcMatchers(HttpMethod.GET, "/v1/events/*/ticketItems")
+                .permitAll()
+                .mvcMatchers(HttpMethod.GET, "/v1/events/*/ticketItems/*/options")
                 .permitAll()
                 .anyRequest()
                 .authenticated();
