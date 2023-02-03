@@ -5,7 +5,6 @@ import band.gosrock.api.comment.model.request.CreateCommentRequest;
 import band.gosrock.api.comment.model.response.CreateCommentResponse;
 import band.gosrock.api.comment.model.response.RetrieveCommentCountResponse;
 import band.gosrock.api.comment.model.response.RetrieveCommentDTO;
-import band.gosrock.api.comment.model.response.RetrieveCommentListResponse;
 import band.gosrock.api.comment.model.response.RetrieveRandomCommentResponse;
 import band.gosrock.api.common.slice.SliceResponse;
 import band.gosrock.common.annotation.Mapper;
@@ -38,7 +37,7 @@ public class CommentMapper {
             CommentCondition commentCondition, Long currentUserId) {
         Slice<Comment> comments = commentAdaptor.searchComment(commentCondition);
         return SliceResponse.of(
-            comments.map(comment -> toRetrieveCommentDTO(comment, currentUserId)));
+                comments.map(comment -> toRetrieveCommentDTO(comment, currentUserId)));
     }
 
     @Transactional(readOnly = true)

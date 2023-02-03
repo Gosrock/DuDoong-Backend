@@ -3,7 +3,6 @@ package band.gosrock.api.comment.service;
 
 import band.gosrock.api.comment.mapper.CommentMapper;
 import band.gosrock.api.comment.model.response.RetrieveCommentDTO;
-import band.gosrock.api.comment.model.response.RetrieveCommentListResponse;
 import band.gosrock.api.common.UserUtils;
 import band.gosrock.api.common.slice.SliceResponse;
 import band.gosrock.common.annotation.UseCase;

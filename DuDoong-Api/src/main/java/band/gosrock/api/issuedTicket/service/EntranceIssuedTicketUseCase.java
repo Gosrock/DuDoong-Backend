@@ -1,7 +1,10 @@
 package band.gosrock.api.issuedTicket.service;
 
+import static band.gosrock.api.common.aop.hostRole.FindHostFrom.EVENT_ID;
+import static band.gosrock.api.common.aop.hostRole.HostQualification.MANAGER;
 
 import band.gosrock.api.common.UserUtils;
+import band.gosrock.api.common.aop.hostRole.HostRolesAllowed;
 import band.gosrock.api.issuedTicket.mapper.IssuedTicketMapper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
@@ -18,9 +21,8 @@ public class EntranceIssuedTicketUseCase {
 
     private final UserUtils userUtils;
 
+    @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID)
     public IssuedTicketInfoVo execute(Long eventId, Long issuedTicketId) {
-        Long currentUserId = userUtils.getCurrentUserId();
-        return issuedTicketDomainService.processingEntranceIssuedTicket(
-                eventId, currentUserId, issuedTicketId);
+        return issuedTicketDomainService.processingEntranceIssuedTicket(eventId, issuedTicketId);
     }
 }

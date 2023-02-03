@@ -16,9 +16,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.support.PageableExecutionUtils;
 
 @RequiredArgsConstructor
@@ -37,7 +35,7 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
                                 eventIdEq(commentCondition.getEventId()),
                                 comment.commentStatus.eq(CommentStatus.ACTIVE))
                         .orderBy(comment.id.desc())
-                    .offset(commentCondition.getPageable().getOffset())
+                        .offset(commentCondition.getPageable().getOffset())
                         .limit(commentCondition.getPageable().getPageSize() + 1)
                         .fetch();
 
@@ -48,21 +46,21 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
         return eventId == null ? null : comment.eventId.eq(eventId);
     }
 
-//    private BooleanExpression lastIdLessThan(Long lastId) {
-//        return lastId == null ? null : comment.id.lt(lastId);
-//    }
-//
-//    private Slice<Comment> checkLastPage(Pageable pageable, List<Comment> comments) {
-//
-//        boolean hasNext = false;
-//
-//        if (comments.size() > pageable.getPageSize()) {
-//            hasNext = true;
-//            comments.remove(pageable.getPageSize());
-//        }
-//
-//        return new SliceImpl<>(comments, pageable, hasNext);
-//    }
+    //    private BooleanExpression lastIdLessThan(Long lastId) {
+    //        return lastId == null ? null : comment.id.lt(lastId);
+    //    }
+    //
+    //    private Slice<Comment> checkLastPage(Pageable pageable, List<Comment> comments) {
+    //
+    //        boolean hasNext = false;
+    //
+    //        if (comments.size() > pageable.getPageSize()) {
+    //            hasNext = true;
+    //            comments.remove(pageable.getPageSize());
+    //        }
+    //
+    //        return new SliceImpl<>(comments, pageable, hasNext);
+    //    }
 
     @Override
     public Long countComment(Long eventId) {

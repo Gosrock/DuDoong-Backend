@@ -40,11 +40,9 @@ public class IssuedTicketDomainService {
     }
 
     @Transactional
-    public IssuedTicketInfoVo processingEntranceIssuedTicket(
-            Long eventId, Long currentUserId, Long issuedTicketId) {
+    public IssuedTicketInfoVo processingEntranceIssuedTicket(Long eventId, Long issuedTicketId) {
         IssuedTicket issuedTicket = issuedTicketAdaptor.queryIssuedTicket(issuedTicketId);
         issuedTicketValidator.validIssuedTicketEventIdEqualEvent(issuedTicket, eventId);
-        issuedTicketValidator.validCanModifyIssuedTicketUser(issuedTicket, currentUserId);
         issuedTicket.entrance();
         return issuedTicket.toIssuedTicketInfoVo();
     }

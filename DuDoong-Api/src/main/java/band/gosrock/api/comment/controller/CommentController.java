@@ -5,7 +5,6 @@ import band.gosrock.api.comment.model.request.CreateCommentRequest;
 import band.gosrock.api.comment.model.response.CreateCommentResponse;
 import band.gosrock.api.comment.model.response.RetrieveCommentCountResponse;
 import band.gosrock.api.comment.model.response.RetrieveCommentDTO;
-import band.gosrock.api.comment.model.response.RetrieveCommentListResponse;
 import band.gosrock.api.comment.model.response.RetrieveRandomCommentResponse;
 import band.gosrock.api.comment.service.CreateCommentUseCase;
 import band.gosrock.api.comment.service.DeleteCommentUseCase;
@@ -27,7 +26,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @SecurityRequirement(name = "access-token")
@@ -58,7 +56,8 @@ public class CommentController {
     @Operation(summary = "응원글을 조회합니다.")
     @GetMapping
     public SliceResponse<RetrieveCommentDTO> getComments(
-            @PathVariable Long eventId,  @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
+            @PathVariable Long eventId,
+            @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
         return retrieveCommentUseCase.execute(eventId, pageable);
     }
 

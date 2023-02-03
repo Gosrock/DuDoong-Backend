@@ -7,9 +7,7 @@ import band.gosrock.domain.domains.comment.dto.condition.CommentCondition;
 import band.gosrock.domain.domains.comment.exception.CommentNotFoundException;
 import band.gosrock.domain.domains.comment.repository.CommentRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
 
 @Adaptor
 @RequiredArgsConstructor
