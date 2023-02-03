@@ -40,10 +40,8 @@ public class ConfirmOrderFailHandler {
         order.fail();
         // TODO : 쿠폰을 함께한 결제라면 쿠폰 원상 복구
 
-        List<IssuedTicket> failIssuedTickets =
-                issuedTicketAdaptor.findAllByOrderUuid(doneOrderEvent.getOrderUuid());
-        issuedTicketDomainService.withdrawIssuedTicket(
-                doneOrderEvent.getItemId(), failIssuedTickets);
+        issuedTicketDomainService.doneOrderEventAfterRollBackWithdrawIssuedTickets(
+            doneOrderEvent.getItemId(), doneOrderEvent.getOrderUuid());
 
         if (order.isPaid()) {
             log.info(
