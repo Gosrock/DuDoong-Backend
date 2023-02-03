@@ -2,9 +2,13 @@ package band.gosrock.domain.domains.order.service.handler;
 
 
 import band.gosrock.domain.common.events.order.DoneOrderEvent;
+import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
+import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
+import band.gosrock.domain.domains.issuedTicket.service.IssuedTicketDomainService;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.service.WithdrawPaymentService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -19,8 +23,10 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class ConfirmOrderFailHandler {
 
     private final WithdrawPaymentService cancelPaymentService;
+    private final IssuedTicketDomainService issuedTicketDomainService;
 
     private final OrderAdaptor orderAdaptor;
+    private final IssuedTicketAdaptor issuedTicketAdaptor;
 
     @Async
     @TransactionalEventListener(
@@ -34,7 +40,10 @@ public class ConfirmOrderFailHandler {
         order.fail();
         // TODO : 쿠폰을 함께한 결제라면 쿠폰 원상 복구
 
-        // TODO : 티켓 취소
+        List<IssuedTicket> failIssuedTickets =
+                issuedTicketAdaptor.findAllByOrderUuid(doneOrderEvent.getOrderUuid());
+        issuedTicketDomainService.withdrawIssuedTicket(
+                doneOrderEvent.getItemId(), failIssuedTickets);
 
         if (order.isPaid()) {
             log.info(
