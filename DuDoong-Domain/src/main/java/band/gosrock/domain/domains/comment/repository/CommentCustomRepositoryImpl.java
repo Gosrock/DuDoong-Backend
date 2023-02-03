@@ -34,7 +34,7 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
                         .fetchJoin()
                         .where(
                                 eventIdEq(commentCondition.getEventId()),
-                                lastIdLessThanEqual(commentCondition.getLastId()),
+                                lastIdLessThan(commentCondition.getLastId()),
                                 comment.commentStatus.eq(CommentStatus.ACTIVE))
                         .orderBy(comment.id.desc())
                         .limit(pageable.getPageSize() + 1)
@@ -47,8 +47,8 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
         return eventId == null ? null : comment.eventId.eq(eventId);
     }
 
-    private BooleanExpression lastIdLessThanEqual(Long lastId) {
-        return lastId == null ? null : comment.id.loe(lastId);
+    private BooleanExpression lastIdLessThan(Long lastId) {
+        return lastId == null ? null : comment.id.lt(lastId);
     }
 
     private Slice<Comment> checkLastPage(Pageable pageable, List<Comment> comments) {

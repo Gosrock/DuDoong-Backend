@@ -21,9 +21,8 @@ public class IssuedTicketOptionAnswerVo {
             IssuedTicketOptionAnswer issuedTicketOptionAnswer) {
         return IssuedTicketOptionAnswerVo.builder()
                 .issuedTicketOptionAnswerId(issuedTicketOptionAnswer.getId())
-                .optionQuestion(issuedTicketOptionAnswer.getOption().getOptionGroup().getName())
-                .answer(issuedTicketOptionAnswer.getOption().getAnswer())
-                .additionalPrice(issuedTicketOptionAnswer.getOption().getAdditionalPrice())
+                .answer(issuedTicketOptionAnswer.getAnswer())
+                .additionalPrice(issuedTicketOptionAnswer.getAdditionalPrice())
                 .build();
     }
 }
