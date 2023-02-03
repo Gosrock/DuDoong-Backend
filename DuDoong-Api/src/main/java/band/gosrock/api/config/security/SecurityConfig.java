@@ -33,9 +33,9 @@ public class SecurityConfig {
                 .permitAll()
                 .mvcMatchers("/v1/auth/token/refresh")
                 .permitAll()
-                .mvcMatchers(HttpMethod.GET, "/v1/events/*")
+                .mvcMatchers(HttpMethod.GET, "/v1/events/{eventId:[\\d+]}")
                 .permitAll()
-                .mvcMatchers(HttpMethod.GET, "/v1/events/*/ticketItems")
+                .mvcMatchers(HttpMethod.GET, "/v1/events/{eventId:[\\d+]}/ticketItems")
                 .permitAll()
                 .anyRequest()
                 .authenticated();
