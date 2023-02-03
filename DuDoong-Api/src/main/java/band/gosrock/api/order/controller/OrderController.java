@@ -1,7 +1,7 @@
 package band.gosrock.api.order.controller;
 
 
-import band.gosrock.api.common.page.PageResponse;
+import band.gosrock.api.common.slice.SliceResponse;
 import band.gosrock.api.order.docs.CancelOrderExceptionDocs;
 import band.gosrock.api.order.docs.ConfirmOrderExceptionDocs;
 import band.gosrock.api.order.docs.CreateOrderExceptionDocs;
@@ -116,9 +116,9 @@ public class OrderController {
 
     @Operation(summary = "마이페이지 내 예매목록 조회")
     @GetMapping
-    public PageResponse<OrderBriefElement> getMyOrders(
+    public SliceResponse<OrderBriefElement> getMyOrders(
             @ParameterObject @RequestParam Boolean showing,
-            @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
+            @ParameterObject @PageableDefault Pageable pageable) {
         return readOrderUseCase.getMyOrders(showing, pageable);
     }
 }

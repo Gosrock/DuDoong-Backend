@@ -3,6 +3,7 @@ package band.gosrock.api.order.service;
 
 import band.gosrock.api.common.UserUtils;
 import band.gosrock.api.common.page.PageResponse;
+import band.gosrock.api.common.slice.SliceResponse;
 import band.gosrock.api.order.model.dto.request.AdminOrderTableQueryRequest;
 import band.gosrock.api.order.model.dto.response.OrderAdminTableElement;
 import band.gosrock.api.order.model.dto.response.OrderBriefElement;
@@ -21,6 +22,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.transaction.annotation.Transactional;
 
 @UseCase
@@ -47,7 +49,7 @@ public class ReadOrderUseCase {
         return recentOrder.map(orderMapper::toOrderBriefElement).orElse(null);
     }
 
-    public PageResponse<OrderBriefElement> getMyOrders(Boolean showing, Pageable pageable) {
+    public SliceResponse<OrderBriefElement> getMyOrders(Boolean showing, Pageable pageable) {
         Long currentUserId = userUtils.getCurrentUserId();
 
         FindMyPageOrderCondition condition =
@@ -55,10 +57,10 @@ public class ReadOrderUseCase {
                         ? FindMyPageOrderCondition.onShowing(currentUserId)
                         : FindMyPageOrderCondition.notShowing(currentUserId);
 
-        Page<Order> ordersWithPagination = orderAdaptor.findMyOrders(condition, pageable);
-        Page<OrderBriefElement> orderBriefElements =
+        Slice<Order> ordersWithPagination = orderAdaptor.findMyOrders(condition, pageable);
+        Slice<OrderBriefElement> orderBriefElements =
                 orderMapper.toOrderBriefsResponse(ordersWithPagination);
-        return PageResponse.of(orderBriefElements);
+        return SliceResponse.of(orderBriefElements);
     }
 
     public PageResponse<OrderAdminTableElement> getEventOrders(
