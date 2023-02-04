@@ -30,64 +30,34 @@
       border="0"
       cellpadding="0"
       cellspacing="0"
-      style="
-          overflow: hidden;
-          margin: 0px auto;
-          padding: 0px;
-          width: 100%;
-          max-width: 630px;
-          clear: both;
-          background: none;
-          border: 0;
-        "
+      style="padding: 10px 5px"
       width="100%"
   >
     <tbody>
     <tr>
       <td
-          style="
-                padding: 0px 0 15px 0;
-                line-height: 1.8;
-                border-width: 0px;
-                font-size: 14px;
-              "
+          style="padding: 0px 15px; font-size: 14px; color: #2b2d36"
+          width="100%"
       >
-        <table
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
-            style="padding: 0px 5px"
-            width="100%"
-        >
-          <tbody>
-          <tr>
-            <td
-                style="padding: 0px 15px; font-size: 14px; color: #2b2d36"
-                width="100%"
-            >
-              <div style="text-align: center">
-                        <span
-                            style="
-                            color: rgb(43, 45, 54);
-                            font-size: 20px;
-                            font-weight: bold;
-                          "
-                            th:text="${username}"
-                        >이름</span
-                        >
-                <span style="color: rgb(43, 45, 54); font-size: 20px"
-                ><span style="font-weight: bold">님,</span>
-                          &nbsp;
-                        </span>
-                <span style="color: rgb(43, 45, 54); font-size: 20px"
-                >두둥에 가입하신 것을 환영합니다!</span
+        <div style="text-align: center">
+                <span
+                    style="
+                    color: rgb(43, 45, 54);
+                    font-size: 20px;
+                    font-weight: bold;
+                  "
+                    th:text="${username}"
+                >이름</span
                 >
-                <br />
-              </div>
-            </td>
-          </tr>
-          </tbody>
-        </table>
+          <span style="color: rgb(43, 45, 54); font-size: 20px"
+          ><span style="font-weight: bold">님,</span>
+                  &nbsp;
+                </span>
+          <span style="color: rgb(43, 45, 54); font-size: 20px"
+          >두둥에 가입하신 것을 환영합니다!</span
+          >
+          <br />
+        </div>
       </td>
     </tr>
     </tbody>
@@ -96,74 +66,69 @@
       border="0"
       cellpadding="0"
       cellspacing="0"
-      style="
-          overflow: hidden;
-          margin: 0px auto;
-          padding: 0px;
-          width: 100%;
-          max-width: 630px;
-          clear: both;
-          background: none;
-          border: 0;
-        "
+      style="padding: 0px 5px"
       width="100%"
   >
     <tbody>
     <tr>
       <td
-          style="
-                padding: 0px 0 20px 0;
-                line-height: 1.8;
-                border-width: 0px;
-                font-size: 14px;
-              "
+          style="padding: 0px 15px; font-size: 14px; color: #2b2d36"
+          width="100%"
       >
-        <table
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
-            style="padding: 0px 5px"
-            width="100%"
-        >
-          <tbody>
-          <tr>
-            <td
-                style="padding: 0px 15px; font-size: 14px; color: #2b2d36"
-                width="100%"
-            >
-              <div style="text-align: center; color: rgb(82, 84, 99)">
-                <div>두둥은 누구나 자유롭게</div>
-                <div>
-                  공연을 홍보하고 인원을 모집할 수 있는 서비스 입니다.
-                </div>
-                <div>
-                  호스트가 되어 밴드, 뮤지컬 , 버스킹등 공연을 열고
-                  홍보하세요!
-                </div>
-              </div>
-            </td>
-          </tr>
-          </tbody>
-        </table>
+        <div style="text-align: center; color: rgb(82, 84, 99)">
+          <div>두둥은 누구나 자유롭게</div>
+          <div>공연을 홍보하고 인원을 모집할 수 있는 서비스 입니다.</div>
+          <div>
+            호스트가 되어 밴드, 뮤지컬 , 버스킹등 공연을 열고 홍보하세요!
+          </div>
+        </div>
       </td>
     </tr>
     </tbody>
   </table>
-  <div th:replace = "fragments/divider :: divider">divider</div>
+  <div th:replace="fragments/divider :: divider">divider</div>
 
   <table
       border="0"
       cellpadding="0"
       cellspacing="0"
+      style="padding: 0px 5px"
+      width="100%"
+  >
+    <tbody>
+    <tr>
+      <td
+          style="padding: 0px 15px; font-size: 14px; color: #2b2d36"
+          width="100%"
+      >
+        <div style="text-align: center">
+                <span
+                    style="
+                    color: rgb(43, 45, 54);
+                    font-weight: bold;
+                    font-size: 20px;
+                  "
+                >두둥 서비스</span
+                ><span style="color: rgb(43, 45, 54); font-size: 20px"
+        >를 소개합니다&nbsp;😀</span
+        ><br />
+        </div>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+  <table
+      border="0"
+      cellpadding="0"
+      cellspacing="0"
       style="
-          overflow: hidden;
-          margin: 0px auto;
-          padding: 0px;
-          width: 100%;
-          max-width: 630px;
-          clear: both;
-          background: none;
-          border: 0;
+          padding: 0px 5px;
+          border-collapse: collapse;
+          mso-table-lspace: 0pt;
+          mso-table-rspace: 0pt;
+          -ms-text-size-adjust: 100%;
+          -webkit-text-size-adjust: 100%;
+          table-layout: fixed;
         "
       width="100%"
   >
@@ -171,233 +136,141 @@
     <tr>
       <td
           style="
-                padding: 15px 0 20px 0;
-                line-height: 1.8;
-                border-width: 0px;
-                font-size: 14px;
+                text-align: center;
+                overflow: hidden;
+                clear: both;
+                padding: 0 5px;
+                font-size: 0;
               "
       >
-        <table
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
-            style="padding: 0px 5px"
-            width="100%"
+        <div
+            style="
+                  width: 305px;
+                  margin: 0px;
+                  vertical-align: top;
+                  border-collapse: collapse;
+                  padding: 0px 0px 0px 0px;
+                  display: inline-block;
+                "
         >
-          <tbody>
-          <tr>
-            <td
-                style="padding: 0px 15px; font-size: 14px; color: #2b2d36"
-                width="100%"
+          <div
+              style="
+                    padding: 0 10px;
+                    text-align: justify;
+                    margin: 0px;
+                    width: 100%;
+                    box-sizing: border-box;
+                  "
+          >
+            <a
+                href="https://dudoong.com"
+                target="_blank"
+                style="display: inline"
+                rel="noreferrer noopener"
+            ><img
+                src="https://asset.dudoong.com/common/banner-short-black.png"
+                style="
+                        display: inline;
+                        vertical-align: middle;
+                        max-width: 100%;
+                        border-width: 0px;
+                        border-image: initial;
+                        text-align: justify;
+                      "
+                width="285"
+                loading="lazy"
+            /></a>
+          </div>
+          <div
+              style="
+                    padding: 5px 10px;
+                    text-align: left;
+                    margin: 0px;
+                    mso-line-height-rule: exactly;
+                    line-height: 1.8;
+                    -ms-text-size-adjust: 100%;
+                    -webkit-text-size-adjust: 100%;
+                    word-break: break-word;
+                    font-size: 14px;
+                  "
+          >
+            <div style="text-align: center">
+                    <span style="color: rgb(82, 84, 99)"
+                    >본인의 속한 그룹을 </span
+                    ><span style="font-size: 12px">&nbsp;</span
+            ><span style="color: rgb(43, 45, 54); font-weight: bold"
+            >호스트</span
             >
-              <div style="text-align: center">
-                        <span
-                            style="
-                            color: rgb(43, 45, 54);
-                            font-weight: bold;
-                            font-size: 20px;
-                          "
-                        >두둥 서비스</span
-                        ><span style="color: rgb(43, 45, 54); font-size: 20px"
-              >를 소개합니다&nbsp;😀</span
+              <span style="color: rgb(82, 84, 99)"
+              >로 만들어 보세요! </span
               ><br />
-              </div>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-      </td>
-    </tr>
-    </tbody>
-  </table>
-  <table
-      border="0"
-      cellpadding="0"
-      cellspacing="0"
-      style="
-          overflow: hidden;
-          margin: 0px auto;
-          padding: 0px;
-          max-width: 630px;
-          clear: both;
-          background: none;
-          border: 0;
-        "
-      width="100%"
-  >
-    <tbody>
-    <tr>
-      <td
-          style="
-                padding: 0px 0 5px 0;
-                text-align: left;
-                line-height: 1.8;
-                border-width: 0px;
-                mso-line-height-rule: exactly;
-                -ms-text-size-adjust: 100%;
-                -webkit-text-size-adjust: 100%;
-              "
-      >
-        <table
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
+            </div>
+          </div>
+        </div>
+        <div
             style="
-                  padding: 0px 5px;
+                  width: 305px;
+                  margin: 0px;
+                  vertical-align: top;
                   border-collapse: collapse;
-                  mso-table-lspace: 0pt;
-                  mso-table-rspace: 0pt;
-                  -ms-text-size-adjust: 100%;
-                  -webkit-text-size-adjust: 100%;
-                  table-layout: fixed;
+                  padding: 0px 0px 0px 0px;
+                  display: inline-block;
                 "
-            width="100%"
         >
-          <tbody>
-          <tr>
-            <td
+          <div
+              style="
+                    padding: 0 10px;
+                    text-align: justify;
+                    margin: 0px;
+                    width: 100%;
+                    box-sizing: border-box;
+                  "
+          >
+            <a
+                href="https://dudoong.com"
+                target="_blank"
+                style="display: inline"
+                rel="noreferrer noopener"
+            ><img
+                src="https://asset.dudoong.com/common/banner-short-black.png"
                 style="
-                        text-align: center;
-                        overflow: hidden;
-                        clear: both;
-                        padding: 0 5px;
-                        font-size: 0;
+                        display: inline;
+                        vertical-align: middle;
+                        max-width: 100%;
+                        border-width: 0px;
+                        border-image: initial;
+                        text-align: justify;
                       "
-            >
-              <div
-                  style="
-                          width: 305px;
-                          margin: 0px;
-                          vertical-align: top;
-                          border-collapse: collapse;
-                          padding: 0px 0px 0px 0px;
-                          display: inline-block;
-                        "
-              >
-                <div
-                    style="
-                            padding: 0 10px;
-                            text-align: justify;
-                            margin: 0px;
-                            width: 100%;
-                            box-sizing: border-box;
-                          "
-                >
-                  <a
-                      href="https://dudoong.com"
-                      target="_blank"
-                      style="display: inline"
-                      rel="noreferrer noopener"
-                  ><img
-                      src="https://asset.dudoong.com/common/banner-short-black.png"
-                      style="
-                                display: inline;
-                                vertical-align: middle;
-                                max-width: 100%;
-                                border-width: 0px;
-                                border-image: initial;
-                                text-align: justify;
-                              "
-                      width="285"
-                      loading="lazy"
-                  /></a>
-                </div>
-                <div
-                    style="
-                            padding: 5px 10px;
-                            text-align: left;
-                            margin: 0px;
-                            mso-line-height-rule: exactly;
-                            line-height: 1.8;
-                            -ms-text-size-adjust: 100%;
-                            -webkit-text-size-adjust: 100%;
-                            word-break: break-word;
-                            font-size: 14px;
-                          "
-                >
-                  <div style="text-align: center">
-                            <span style="color: rgb(82, 84, 99)"
-                            >본인의 속한 그룹을 </span
-                            ><span style="font-size: 12px">&nbsp;</span
-                  ><span
-                      style="color: rgb(43, 45, 54); font-weight: bold"
-                  >호스트</span
-                  >
-                    <span style="color: rgb(82, 84, 99)"
-                    >로 만들어 보세요! </span
-                    ><br />
-                  </div>
-                </div>
-              </div>
-              <div
-                  style="
-                          width: 305px;
-                          margin: 0px;
-                          vertical-align: top;
-                          border-collapse: collapse;
-                          padding: 0px 0px 0px 0px;
-                          display: inline-block;
-                        "
-              >
-                <div
-                    style="
-                            padding: 0 10px;
-                            text-align: justify;
-                            margin: 0px;
-                            width: 100%;
-                            box-sizing: border-box;
-                          "
-                >
-                  <a
-                      href="https://dudoong.com"
-                      target="_blank"
-                      style="display: inline"
-                      rel="noreferrer noopener"
-                  ><img
-                      src="https://asset.dudoong.com/common/banner-short-black.png"
-                      style="
-                                display: inline;
-                                vertical-align: middle;
-                                max-width: 100%;
-                                border-width: 0px;
-                                border-image: initial;
-                                text-align: justify;
-                              "
-                      width="285"
-                      loading="lazy"
-                  /></a>
-                </div>
-                <div
-                    style="
-                            padding: 5px 10px;
-                            text-align: left;
-                            margin: 0px;
-                            mso-line-height-rule: exactly;
-                            line-height: 1.8;
-                            -ms-text-size-adjust: 100%;
-                            -webkit-text-size-adjust: 100%;
-                            word-break: break-word;
-                            font-size: 14px;
-                          "
-                >
-                  <div style="text-align: center">
-                            <span
-                                style="color: rgb(43, 45, 54); font-weight: bold"
-                            >이벤트</span
-                            >
-                    <span style="color: rgb(82, 84, 99)"
-                    >를 열어 공연을 홍보 할 수 있어요<span
-                        style="font-size: 12px"
-                    >&nbsp;</span
-                    ></span
-                    ><br />
-                  </div>
-                </div>
-              </div>
-            </td>
-          </tr>
-          </tbody>
-        </table>
+                width="285"
+                loading="lazy"
+            /></a>
+          </div>
+          <div
+              style="
+                    padding: 5px 10px;
+                    text-align: left;
+                    margin: 0px;
+                    mso-line-height-rule: exactly;
+                    line-height: 1.8;
+                    -ms-text-size-adjust: 100%;
+                    -webkit-text-size-adjust: 100%;
+                    word-break: break-word;
+                    font-size: 14px;
+                  "
+          >
+            <div style="text-align: center">
+                    <span style="color: rgb(43, 45, 54); font-weight: bold"
+                    >이벤트</span
+                    >
+              <span style="color: rgb(82, 84, 99)"
+              >를 열어 공연을 홍보 할 수 있어요<span
+                  style="font-size: 12px"
+              >&nbsp;</span
+              ></span
+              ><br />
+            </div>
+          </div>
+        </div>
       </td>
     </tr>
     </tbody>
@@ -407,13 +280,13 @@
       cellpadding="0"
       cellspacing="0"
       style="
-          overflow: hidden;
-          margin: 0px auto;
-          padding: 0px;
-          max-width: 630px;
-          clear: both;
-          background: none;
-          border: 0;
+          padding: 0px 5px;
+          border-collapse: collapse;
+          mso-table-lspace: 0pt;
+          mso-table-rspace: 0pt;
+          -ms-text-size-adjust: 100%;
+          -webkit-text-size-adjust: 100%;
+          table-layout: fixed;
         "
       width="100%"
   >
@@ -421,380 +294,154 @@
     <tr>
       <td
           style="
-                padding: 15px 0 5px 0;
-                text-align: left;
-                line-height: 1.8;
-                border-width: 0px;
-                mso-line-height-rule: exactly;
-                -ms-text-size-adjust: 100%;
-                -webkit-text-size-adjust: 100%;
+                text-align: center;
+                overflow: hidden;
+                clear: both;
+                padding: 0 5px;
+                font-size: 0;
               "
       >
-        <table
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
+        <div
             style="
-                  padding: 0px 5px;
+                  width: 305px;
+                  margin: 0px;
+                  vertical-align: top;
                   border-collapse: collapse;
-                  mso-table-lspace: 0pt;
-                  mso-table-rspace: 0pt;
-                  -ms-text-size-adjust: 100%;
-                  -webkit-text-size-adjust: 100%;
-                  table-layout: fixed;
+                  padding: 0px 0px 0px 0px;
+                  display: inline-block;
                 "
-            width="100%"
         >
-          <tbody>
-          <tr>
-            <td
+          <div
+              style="
+                    padding: 0 10px;
+                    text-align: justify;
+                    margin: 0px;
+                    width: 100%;
+                    box-sizing: border-box;
+                  "
+          >
+            <a
+                href="https://dudoong.com"
+                target="_blank"
+                style="display: inline"
+                rel="noreferrer noopener"
+            ><img
+                src="https://asset.dudoong.com/common/banner-short-black.png"
                 style="
-                        text-align: center;
-                        overflow: hidden;
-                        clear: both;
-                        padding: 0 5px;
-                        font-size: 0;
+                        display: inline;
+                        vertical-align: middle;
+                        max-width: 100%;
+                        border-width: 0px;
+                        border-image: initial;
+                        text-align: justify;
                       "
-            >
-              <div
-                  style="
-                          width: 305px;
-                          margin: 0px;
-                          vertical-align: top;
-                          border-collapse: collapse;
-                          padding: 0px 0px 0px 0px;
-                          display: inline-block;
-                        "
-              >
-                <div
-                    style="
-                            padding: 0 10px;
-                            text-align: justify;
-                            margin: 0px;
-                            width: 100%;
-                            box-sizing: border-box;
-                          "
-                >
-                  <a
-                      href="https://dudoong.com"
-                      target="_blank"
-                      style="display: inline"
-                      rel="noreferrer noopener"
-                  ><img
-                      src="https://asset.dudoong.com/common/banner-short-black.png"
-                      style="
-                                display: inline;
-                                vertical-align: middle;
-                                max-width: 100%;
-                                border-width: 0px;
-                                border-image: initial;
-                                text-align: justify;
-                              "
-                      width="285"
-                      loading="lazy"
-                  /></a>
-                </div>
-                <div
-                    style="
-                            padding: 5px 10px;
-                            text-align: left;
-                            margin: 0px;
-                            mso-line-height-rule: exactly;
-                            line-height: 1.8;
-                            -ms-text-size-adjust: 100%;
-                            -webkit-text-size-adjust: 100%;
-                            word-break: break-word;
-                            font-size: 14px;
-                          "
-                >
-                  <div style="text-align: center">
-                            <span
-                                style="color: rgb(43, 45, 54); font-weight: bold"
-                            >티켓</span
-                            >
-                    <span style="color: rgb(82, 84, 99)"
-                    >을 만들어 판매하세요!<span
-                        style="font-size: 12px"
-                    >&nbsp;</span
-                    ></span
-                    ><br />
-                  </div>
-                </div>
-              </div>
-              <div
-                  style="
-                          width: 305px;
-                          margin: 0px;
-                          vertical-align: top;
-                          border-collapse: collapse;
-                          padding: 0px 0px 0px 0px;
-                          display: inline-block;
-                        "
-              >
-                <div
-                    style="
-                            padding: 0 10px;
-                            text-align: justify;
-                            margin: 0px;
-                            width: 100%;
-                            box-sizing: border-box;
-                          "
-                >
-                  <a
-                      href="https://dudoong.com"
-                      target="_blank"
-                      style="display: inline"
-                      rel="noreferrer noopener"
-                  ><img
-                      src="https://asset.dudoong.com/common/banner-short-black.png"
-                      style="
-                                display: inline;
-                                vertical-align: middle;
-                                max-width: 100%;
-                                border-width: 0px;
-                                border-image: initial;
-                                text-align: justify;
-                              "
-                      width="285"
-                      loading="lazy"
-                  /></a>
-                </div>
-                <div
-                    style="
-                            padding: 5px 10px;
-                            text-align: left;
-                            margin: 0px;
-                            mso-line-height-rule: exactly;
-                            line-height: 1.8;
-                            -ms-text-size-adjust: 100%;
-                            -webkit-text-size-adjust: 100%;
-                            word-break: break-word;
-                            font-size: 14px;
-                          "
-                >
-                  <div style="text-align: center">
-                            <span style="color: rgb(82, 84, 99)"
-                            >예약한 사람의 </span><span
-                                style="color: rgb(43, 45, 54); font-weight: bold"
-                            >명단</span
-                            ><span style="color: rgb(82, 84, 99)"
-                            >을 손쉽게 조회할 수 있어요 </span
-                            >
-                            <br />
-                  </div>
-                </div>
-              </div>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-      </td>
-    </tr>
-    </tbody>
-  </table>
-  <table
-      border="0"
-      cellpadding="0"
-      cellspacing="0"
-      style="
-        overflow: hidden;
-        margin: 0px auto;
-        padding: 0px;
-        max-width: 630px;
-        clear: both;
-        background: none;
-        border: 0;
-      "
-      width="100%"
-  >
-    <tbody>
-    <tr>
-      <td
-          style="
-              padding: 15px 0 5px 0;
-              text-align: left;
-              line-height: 1.8;
-              border-width: 0px;
-              mso-line-height-rule: exactly;
-              -ms-text-size-adjust: 100%;
-              -webkit-text-size-adjust: 100%;
-            "
-      >
-        <table
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
+                width="285"
+                loading="lazy"
+            /></a>
+          </div>
+          <div
+              style="
+                    padding: 5px 10px;
+                    text-align: left;
+                    margin: 0px;
+                    mso-line-height-rule: exactly;
+                    line-height: 1.8;
+                    -ms-text-size-adjust: 100%;
+                    -webkit-text-size-adjust: 100%;
+                    word-break: break-word;
+                    font-size: 14px;
+                  "
+          >
+            <div style="text-align: center">
+                    <span style="color: rgb(43, 45, 54); font-weight: bold"
+                    >티켓</span
+                    >
+              <span style="color: rgb(82, 84, 99)"
+              >을 만들어 판매하세요!<span style="font-size: 12px"
+              >&nbsp;</span
+              ></span
+              ><br />
+            </div>
+          </div>
+        </div>
+        <div
             style="
-                padding: 0px 5px;
-                border-collapse: collapse;
-                mso-table-lspace: 0pt;
-                mso-table-rspace: 0pt;
-                -ms-text-size-adjust: 100%;
-                -webkit-text-size-adjust: 100%;
-                table-layout: fixed;
-              "
-            width="100%"
+                  width: 305px;
+                  margin: 0px;
+                  vertical-align: top;
+                  border-collapse: collapse;
+                  padding: 0px 0px 0px 0px;
+                  display: inline-block;
+                "
         >
-          <tbody>
-          <tr>
-            <td
+          <div
+              style="
+                    padding: 0 10px;
+                    text-align: justify;
+                    margin: 0px;
+                    width: 100%;
+                    box-sizing: border-box;
+                  "
+          >
+            <a
+                href="https://dudoong.com"
+                target="_blank"
+                style="display: inline"
+                rel="noreferrer noopener"
+            ><img
+                src="https://asset.dudoong.com/common/banner-short-black.png"
                 style="
-                      text-align: center;
-                      overflow: hidden;
-                      clear: both;
-                      padding: 0 5px;
-                      font-size: 0;
-                    "
-            >
-              <div
-                  style="
-                        width: 305px;
-                        margin: 0px;
-                        vertical-align: top;
-                        border-collapse: collapse;
-                        padding: 0px 0px 0px 0px;
-                        display: inline-block;
+                        display: inline;
+                        vertical-align: middle;
+                        max-width: 100%;
+                        border-width: 0px;
+                        border-image: initial;
+                        text-align: justify;
                       "
-              >
-                <div
-                    style="
-                          padding: 0 10px;
-                          text-align: justify;
-                          margin: 0px;
-                          width: 100%;
-                          box-sizing: border-box;
-                        "
-                >
-                  <a
-                      href="https://dudoong.com"
-                      target="_blank"
-                      style="display: inline"
-                      rel="noreferrer noopener"
-                  ><img
-                      src="https://asset.dudoong.com/common/banner-short-black.png"
-                      style="
-                              display: inline;
-                              vertical-align: middle;
-                              max-width: 100%;
-                              border-width: 0px;
-                              border-image: initial;
-                              text-align: justify;
-                            "
-                      width="285"
-                      loading="lazy"
-                  /></a>
-                </div>
-                <div
-                    style="
-                          padding: 5px 10px;
-                          text-align: left;
-                          margin: 0px;
-                          mso-line-height-rule: exactly;
-                          line-height: 1.8;
-                          -ms-text-size-adjust: 100%;
-                          -webkit-text-size-adjust: 100%;
-                          word-break: break-word;
-                          font-size: 14px;
-                        "
-                >
-                  <div style="text-align: center">
-                          <span
-                              style="color: rgb(43, 45, 54); font-weight: bold"
-                          >옵션</span
-                          >
-                    <span style="color: rgb(82, 84, 99)"
-                    >을 만들어 설문을 받아보세요<span
-                        style="font-size: 12px"
-                    >&nbsp;</span
-                    ></span
-                    ><br />
-                  </div>
-                </div>
-              </div>
-              <div
-                  style="
-                        width: 305px;
-                        margin: 0px;
-                        vertical-align: top;
-                        border-collapse: collapse;
-                        padding: 0px 0px 0px 0px;
-                        display: inline-block;
-                      "
-              >
-                <div
-                    style="
-                          padding: 0 10px;
-                          text-align: justify;
-                          margin: 0px;
-                          width: 100%;
-                          box-sizing: border-box;
-                        "
-                >
-                  <a
-                      href="https://dudoong.com"
-                      target="_blank"
-                      style="display: inline"
-                      rel="noreferrer noopener"
-                  ><img
-                      src="https://asset.dudoong.com/common/banner-short-black.png"
-                      style="
-                              display: inline;
-                              vertical-align: middle;
-                              max-width: 100%;
-                              border-width: 0px;
-                              border-image: initial;
-                              text-align: justify;
-                            "
-                      width="285"
-                      loading="lazy"
-                  /></a>
-                </div>
-                <div
-                    style="
-                          padding: 5px 10px;
-                          text-align: left;
-                          margin: 0px;
-                          mso-line-height-rule: exactly;
-                          line-height: 1.8;
-                          -ms-text-size-adjust: 100%;
-                          -webkit-text-size-adjust: 100%;
-                          word-break: break-word;
-                          font-size: 14px;
-                        "
-                >
-                  <div style="text-align: center">
-                          <span
-                              style="color: rgb(43, 45, 54); font-weight: bold"
-                          >QR코드</span
-                          >
-                    <span style="color: rgb(82, 84, 99)"
-                    >로 손쉽게 티켓을 체크해보세요</span>
-                    <br />
-                  </div>
-                </div>
-              </div>
-            </td>
-          </tr>
-          </tbody>
-        </table>
+                width="285"
+                loading="lazy"
+            /></a>
+          </div>
+          <div
+              style="
+                    padding: 5px 10px;
+                    text-align: left;
+                    margin: 0px;
+                    mso-line-height-rule: exactly;
+                    line-height: 1.8;
+                    -ms-text-size-adjust: 100%;
+                    -webkit-text-size-adjust: 100%;
+                    word-break: break-word;
+                    font-size: 14px;
+                  "
+          >
+            <div style="text-align: center">
+                    <span style="color: rgb(82, 84, 99)">예약한 사람의 </span
+                    ><span style="color: rgb(43, 45, 54); font-weight: bold"
+            >명단</span
+            ><span style="color: rgb(82, 84, 99)"
+            >을 손쉽게 조회할 수 있어요
+                    </span>
+              <br />
+            </div>
+          </div>
+        </div>
       </td>
     </tr>
     </tbody>
   </table>
-  <div th:replace = "fragments/divider :: divider">divider</div>
   <table
       border="0"
       cellpadding="0"
       cellspacing="0"
       style="
-          overflow: hidden;
-          margin: 0px auto;
-          padding: 0px;
-          width: 100%;
-          max-width: 630px;
-          clear: both;
-          background: none;
-          border: 0;
+          padding: 0px 5px;
+          border-collapse: collapse;
+          mso-table-lspace: 0pt;
+          mso-table-rspace: 0pt;
+          -ms-text-size-adjust: 100%;
+          -webkit-text-size-adjust: 100%;
+          table-layout: fixed;
         "
       width="100%"
   >
@@ -802,47 +449,176 @@
     <tr>
       <td
           style="
-                padding: 15px 0 20px 0;
-                line-height: 1.8;
-                border-width: 0px;
-                font-size: 14px;
+                text-align: center;
+                overflow: hidden;
+                clear: both;
+                padding: 0 5px;
+                font-size: 0;
               "
       >
-        <table
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
-            style="padding: 0px 5px"
-            width="100%"
+        <div
+            style="
+                  width: 305px;
+                  margin: 0px;
+                  vertical-align: top;
+                  border-collapse: collapse;
+                  padding: 0px 0px 0px 0px;
+                  display: inline-block;
+                "
         >
-          <tbody>
-          <tr>
-            <td
-                style="padding: 0px 15px; font-size: 14px; color: #2b2d36"
-                width="100%"
-            >
-              <div style="text-align: center">
-                        <span
-                            style="
-                            color: rgb(43, 45, 54);
-                            font-weight: bold;
-                            font-size: 20px;
-                          "
-                        >지금 바로! 이벤트를 만들어 관객들을
-                          모집하세요!&nbsp;</span
-                        >
-              </div>
-            </td>
-          </tr>
-          </tbody>
-        </table>
+          <div
+              style="
+                    padding: 0 10px;
+                    text-align: justify;
+                    margin: 0px;
+                    width: 100%;
+                    box-sizing: border-box;
+                  "
+          >
+            <a
+                href="https://dudoong.com"
+                target="_blank"
+                style="display: inline"
+                rel="noreferrer noopener"
+            ><img
+                src="https://asset.dudoong.com/common/banner-short-black.png"
+                style="
+                        display: inline;
+                        vertical-align: middle;
+                        max-width: 100%;
+                        border-width: 0px;
+                        border-image: initial;
+                        text-align: justify;
+                      "
+                width="285"
+                loading="lazy"
+            /></a>
+          </div>
+          <div
+              style="
+                    padding: 5px 10px;
+                    text-align: left;
+                    margin: 0px;
+                    mso-line-height-rule: exactly;
+                    line-height: 1.8;
+                    -ms-text-size-adjust: 100%;
+                    -webkit-text-size-adjust: 100%;
+                    word-break: break-word;
+                    font-size: 14px;
+                  "
+          >
+            <div style="text-align: center">
+                    <span style="color: rgb(43, 45, 54); font-weight: bold"
+                    >옵션</span
+                    >
+              <span style="color: rgb(82, 84, 99)"
+              >을 만들어 설문을 받아보세요<span style="font-size: 12px"
+              >&nbsp;</span
+              ></span
+              ><br />
+            </div>
+          </div>
+        </div>
+        <div
+            style="
+                  width: 305px;
+                  margin: 0px;
+                  vertical-align: top;
+                  border-collapse: collapse;
+                  padding: 0px 0px 0px 0px;
+                  display: inline-block;
+                "
+        >
+          <div
+              style="
+                    padding: 0 10px;
+                    text-align: justify;
+                    margin: 0px;
+                    width: 100%;
+                    box-sizing: border-box;
+                  "
+          >
+            <a
+                href="https://dudoong.com"
+                target="_blank"
+                style="display: inline"
+                rel="noreferrer noopener"
+            ><img
+                src="https://asset.dudoong.com/common/banner-short-black.png"
+                style="
+                        display: inline;
+                        vertical-align: middle;
+                        max-width: 100%;
+                        border-width: 0px;
+                        border-image: initial;
+                        text-align: justify;
+                      "
+                width="285"
+                loading="lazy"
+            /></a>
+          </div>
+          <div
+              style="
+                    padding: 5px 10px;
+                    text-align: left;
+                    margin: 0px;
+                    mso-line-height-rule: exactly;
+                    line-height: 1.8;
+                    -ms-text-size-adjust: 100%;
+                    -webkit-text-size-adjust: 100%;
+                    word-break: break-word;
+                    font-size: 14px;
+                  "
+          >
+            <div style="text-align: center">
+                    <span style="color: rgb(43, 45, 54); font-weight: bold"
+                    >QR코드</span
+                    >
+              <span style="color: rgb(82, 84, 99)"
+              >로 손쉽게 티켓을 체크해보세요</span
+              >
+              <br />
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+  <div th:replace="fragments/divider :: divider">divider</div>
+  <table
+      border="0"
+      cellpadding="0"
+      cellspacing="0"
+      style="padding: 0px 5px"
+      width="100%"
+  >
+    <tbody>
+    <tr>
+      <td
+          style="padding: 0px 15px; font-size: 14px; color: #2b2d36"
+          width="100%"
+      >
+        <div style="text-align: center">
+                <span
+                    style="
+                    color: rgb(43, 45, 54);
+                    font-weight: bold;
+                    font-size: 20px;
+                  "
+                >지금 바로! 이벤트를 만들어 관객들을 모집하세요!&nbsp;</span
+                >
+        </div>
       </td>
     </tr>
     </tbody>
   </table>
 
-  <div th:replace = "fragments/button :: button(href='https://dudoong.com' , text='이벤트 만들기')">button</div>
-
+  <div
+      th:replace="fragments/button :: button(href='https://dudoong.com' , text='이벤트 만들기')"
+  >
+    button
+  </div>
 </div>
 </body>
 </html>
