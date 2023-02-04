@@ -1,6 +1,10 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns="http://www.w3.org/1999/xhtml"
-      layout:decorate="~{layouts/mailFormat}">
+<html
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns="http://www.w3.org/1999/xhtml"
+    layout:decorate="~{layouts/mailFormat}"
+>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,6 +12,15 @@
   <style>
     * {
       line-height: 150%;
+      font-family: AppleSDGothic, apple sd gothic neo, noto sans korean,
+      noto sans korean regular, noto sans cjk kr, noto sans cjk,
+      nanum gothic, malgun gothic, dotum, arial, helvetica, MS Gothic,
+      sans-serif !important;
+      mso-line-height-rule: exactly;
+      line-height: 1.8;
+      -ms-text-size-adjust: 100%;
+      -webkit-text-size-adjust: 100%;
+      word-break: break-word;
     }
   </style>
 </head>
@@ -18,26 +31,26 @@
       cellpadding="0"
       cellspacing="0"
       style="
-                        overflow: hidden;
-                        margin: 0px auto;
-                        padding: 0px;
-                        width: 100%;
-                        max-width: 630px;
-                        clear: both;
-                        background: none;
-                        border: 0;
-                      "
+          overflow: hidden;
+          margin: 0px auto;
+          padding: 0px;
+          width: 100%;
+          max-width: 630px;
+          clear: both;
+          background: none;
+          border: 0;
+        "
       width="100%"
   >
     <tbody>
     <tr>
       <td
           style="
-                              padding: 0px 0 15px 0;
-                              line-height: 1.8;
-                              border-width: 0px;
-                              font-size: 14px;
-                            "
+                padding: 0px 0 15px 0;
+                line-height: 1.8;
+                border-width: 0px;
+                font-size: 14px;
+              "
       >
         <table
             border="0"
@@ -49,48 +62,24 @@
           <tbody>
           <tr>
             <td
-                style="
-                                      padding: 0px 15px;
-                                      mso-line-height-rule: exactly;
-                                      line-height: 1.8;
-                                      -ms-text-size-adjust: 100%;
-                                      -webkit-text-size-adjust: 100%;
-                                      word-break: break-word;
-                                      font-size: 14px;
-                                      font-family: AppleSDGothic,
-                                        apple sd gothic neo, noto sans korean,
-                                        noto sans korean regular,
-                                        noto sans cjk kr, noto sans cjk,
-                                        nanum gothic, malgun gothic, dotum,
-                                        arial, helvetica, MS Gothic, sans-serif !important;
-                                      color: #2b2d36;
-                                    "
+                style="padding: 0px 15px; font-size: 14px; color: #2b2d36"
                 width="100%"
             >
               <div style="text-align: center">
-                                      <span
-                                          style="
-                                          color: rgb(43, 45, 54);
-                                          font-size: 20px;
-                                          font-weight: bold;
-                                        " th:text="${username}"
-                                      >이름</span
-                                      >
-                <span
-                    style="
-                                          color: rgb(43, 45, 54);
-                                          font-size: 20px;
-                                        "
-                ><span style="font-weight: bold"
-                >님,</span
-                >
-                                        &nbsp;
-                                      </span>
-                <span
-                    style="
-                                          color: rgb(43, 45, 54);
-                                          font-size: 20px;
-                                        "
+                        <span
+                            style="
+                            color: rgb(43, 45, 54);
+                            font-size: 20px;
+                            font-weight: bold;
+                          "
+                            th:text="${username}"
+                        >이름</span
+                        >
+                <span style="color: rgb(43, 45, 54); font-size: 20px"
+                ><span style="font-weight: bold">님,</span>
+                          &nbsp;
+                        </span>
+                <span style="color: rgb(43, 45, 54); font-size: 20px"
                 >두둥에 가입하신 것을 환영합니다!</span
                 >
                 <br />
@@ -108,26 +97,26 @@
       cellpadding="0"
       cellspacing="0"
       style="
-                        overflow: hidden;
-                        margin: 0px auto;
-                        padding: 0px;
-                        width: 100%;
-                        max-width: 630px;
-                        clear: both;
-                        background: none;
-                        border: 0;
-                      "
+          overflow: hidden;
+          margin: 0px auto;
+          padding: 0px;
+          width: 100%;
+          max-width: 630px;
+          clear: both;
+          background: none;
+          border: 0;
+        "
       width="100%"
   >
     <tbody>
     <tr>
       <td
           style="
-                              padding: 0px 0 20px 0;
-                              line-height: 1.8;
-                              border-width: 0px;
-                              font-size: 14px;
-                            "
+                padding: 0px 0 20px 0;
+                line-height: 1.8;
+                border-width: 0px;
+                font-size: 14px;
+              "
       >
         <table
             border="0"
@@ -139,38 +128,17 @@
           <tbody>
           <tr>
             <td
-                style="
-                                      padding: 0px 15px;
-                                      mso-line-height-rule: exactly;
-                                      line-height: 1.8;
-                                      -ms-text-size-adjust: 100%;
-                                      -webkit-text-size-adjust: 100%;
-                                      word-break: break-word;
-                                      font-size: 14px;
-                                      font-family: AppleSDGothic,
-                                        apple sd gothic neo, noto sans korean,
-                                        noto sans korean regular,
-                                        noto sans cjk kr, noto sans cjk,
-                                        nanum gothic, malgun gothic, dotum,
-                                        arial, helvetica, MS Gothic, sans-serif !important;
-                                      color: #2b2d36;
-                                    "
+                style="padding: 0px 15px; font-size: 14px; color: #2b2d36"
                 width="100%"
             >
-              <div style="text-align: center">
+              <div style="text-align: center; color: rgb(82, 84, 99)">
+                <div>두둥은 누구나 자유롭게</div>
                 <div>
-                                        <span style="color: rgb(82, 84, 99)"
-                                        >회원가입 기념으로 아래와 같이 구름EDU
-                                          서비스를 이용하실 수 있는 쿠폰을
-                                          드립니다.</span
-                                        >
-                  <br />
+                  공연을 홍보하고 인원을 모집할 수 있는 서비스 입니다.
                 </div>
                 <div>
-                                        <span style="color: rgb(82, 84, 99)"
-                                        >구름을 통해 개발자 개인의 성장과 팀의
-                                          성장을 경험하세요.</span
-                                        >
+                  호스트가 되어 밴드, 뮤지컬 , 버스킹등 공연을 열고
+                  홍보하세요!
                 </div>
               </div>
             </td>
@@ -181,31 +149,33 @@
     </tr>
     </tbody>
   </table>
+  <div th:replace = "fragments/divider :: divider">divider</div>
+
   <table
       border="0"
       cellpadding="0"
       cellspacing="0"
       style="
-                        overflow: hidden;
-                        margin: 0px auto;
-                        padding: 0px;
-                        width: 100%;
-                        max-width: 630px;
-                        clear: both;
-                        background: none;
-                        border: 0;
-                      "
+          overflow: hidden;
+          margin: 0px auto;
+          padding: 0px;
+          width: 100%;
+          max-width: 630px;
+          clear: both;
+          background: none;
+          border: 0;
+        "
       width="100%"
   >
     <tbody>
     <tr>
       <td
           style="
-                              padding: 0px 0 0px 0;
-                              line-height: 1.8;
-                              border-width: 0px;
-                              font-size: 14px;
-                            "
+                padding: 15px 0 20px 0;
+                line-height: 1.8;
+                border-width: 0px;
+                font-size: 14px;
+              "
       >
         <table
             border="0"
@@ -217,334 +187,18 @@
           <tbody>
           <tr>
             <td
-                style="
-                                      padding: 0px 15px;
-                                      mso-line-height-rule: exactly;
-                                      line-height: 1.8;
-                                      -ms-text-size-adjust: 100%;
-                                      -webkit-text-size-adjust: 100%;
-                                      word-break: break-word;
-                                      font-size: 14px;
-                                      font-family: AppleSDGothic,
-                                        apple sd gothic neo, noto sans korean,
-                                        noto sans korean regular,
-                                        noto sans cjk kr, noto sans cjk,
-                                        nanum gothic, malgun gothic, dotum,
-                                        arial, helvetica, MS Gothic, sans-serif !important;
-                                      color: #2b2d36;
-                                    "
+                style="padding: 0px 15px; font-size: 14px; color: #2b2d36"
                 width="100%"
             >
               <div style="text-align: center">
-                <div>
-                                        <span style="color: rgb(82, 84, 99)"
-                                        >쿠폰코드 :</span
-                                        >
-                  <br />
-                </div>
-                <div>
-                  <div>
-                                          <span
-                                              style="
-                                              color: rgb(80, 148, 250);
-                                              font-size: 18px;
-                                              font-weight: bold;
-                                            "
-                                          >WELCOMEGOORMEDU</span
-                                          >
-                  </div>
-                </div>
-              </div>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-      </td>
-    </tr>
-    </tbody>
-  </table>
-  <table
-      border="0"
-      cellpadding="0"
-      cellspacing="0"
-      style="
-                        overflow: hidden;
-                        margin: 0px auto;
-                        padding: 0px 10px;
-                        max-width: 630px;
-                        clear: both;
-                        background: none;
-                        border: 0;
-                      "
-      width="100%"
-  >
-    <tbody>
-    <tr>
-      <td
-          style="
-                              padding: 0px 0 15px 0;
-                              text-align: center;
-                              line-height: 1.8;
-                              border: 0px;
-                            "
-          width="100%"
-      >
-        <div style="padding: 10px 10px">
-          <table
-              align="center"
-              border="0"
-              cellpadding="0"
-              cellspacing="0"
-              style="
-                                  border-collapse: separate !important;
-                                  background: #5094fa;
-                                  border-radius: 3px;
-                                  border: 0;
-                                  mso-table-lspace: 0pt;
-                                  mso-table-rspace: 0pt;
-                                  -ms-text-size-adjust: 100%;
-                                  -webkit-text-size-adjust: 100%;
-                                  margin: 0 auto;
-                                  table-layout: fixed;
-                                "
-          >
-            <tbody>
-            <tr>
-              <td
-                  align="center"
-                  style="
-                                        line-height: 1.5;
-                                        padding: 14px 20px 11px;
-                                      "
-              >
-                <a
-                    href="https://event.stibee.com/v1/click/NTc3MTcvMjEzNjExL3dhdGVyMDY0MUBuYXZlci5jb20v/aHR0cHM6Ly9lZHUuZ29vcm0uaW8vc2VhcmNoP3Byb21vdGlvbj0wOWJkZWVhMC01MmZjLTExZWEtYmFkNC1lNzBkNTAzMjQ2ZDQ"
-                    style="
-                                          font-size: 14px;
-                                          display: inline;
-                                          color: rgb(255, 255, 255);
-                                          background: rgb(80, 148, 250);
-                                          border-radius: 3px;
-                                          text-decoration: none;
-                                          outline: 0px;
-                                          font-family: AppleSDGothic,
-                                            apple sd gothic neo,
-                                            noto sans korean,
-                                            noto sans korean regular,
-                                            noto sans cjk kr, noto sans cjk,
-                                            nanum gothic, malgun gothic, dotum,
-                                            arial, helvetica, MS Gothic,
-                                            sans-serif;
-                                          text-align: center;
-                                        "
-                    target="_blank"
-                    rel="noreferrer noopener"
-                >프로모션 강좌 보기</a
-                >
-              </td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </td>
-    </tr>
-    </tbody>
-  </table>
-  <table
-      border="0"
-      cellpadding="0"
-      cellspacing="0"
-      style="
-                        overflow: hidden;
-                        margin: 0px auto;
-                        padding: 0px;
-                        width: 100%;
-                        max-width: 630px;
-                        clear: both;
-                        background: none;
-                        border: 0;
-                      "
-      width="100%"
-  >
-    <tbody>
-    <tr>
-      <td
-          style="
-                              padding: 5px 0 15px 0;
-                              line-height: 1.8;
-                              border-width: 0px;
-                              font-size: 14px;
-                            "
-      >
-        <table
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
-            style="padding: 0px 5px"
-            width="100%"
-        >
-          <tbody>
-          <tr>
-            <td
-                style="
-                                      padding: 0px 15px;
-                                      mso-line-height-rule: exactly;
-                                      line-height: 1.8;
-                                      -ms-text-size-adjust: 100%;
-                                      -webkit-text-size-adjust: 100%;
-                                      word-break: break-word;
-                                      font-size: 14px;
-                                      font-family: AppleSDGothic,
-                                        apple sd gothic neo, noto sans korean,
-                                        noto sans korean regular,
-                                        noto sans cjk kr, noto sans cjk,
-                                        nanum gothic, malgun gothic, dotum,
-                                        arial, helvetica, MS Gothic, sans-serif !important;
-                                      color: #2b2d36;
-                                    "
-                width="100%"
-            >
-              <div style="text-align: center">
-                                      <span
-                                          style="
-                                          font-size: 12px;
-                                          color: rgb(153, 153, 153);
-                                        "
-                                      ><span style="text-align: left">※</span
-                                      >구름EDU 쿠폰은 모든 강좌가 아닌
-                                        프로모션 강좌에 한해서
-                                        할인적용됩니다.</span
-                                      ><br />
-              </div>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-      </td>
-    </tr>
-    </tbody>
-  </table>
-  <table
-      border="0"
-      cellpadding="0"
-      cellspacing="0"
-      style="
-                        overflow: hidden;
-                        margin: 0px auto;
-                        padding: 0px;
-                        width: 100%;
-                        max-width: 630px;
-                        clear: both;
-                        background: none;
-                        border: 0;
-                      "
-      width="100%"
-  >
-    <tbody>
-    <tr>
-      <td
-          style="
-                              padding: 15px 0 15px 0;
-                              line-height: 1.8;
-                              border-width: 0px;
-                            "
-      >
-        <table
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
-            style="padding: 0px 0"
-            width="100%"
-        >
-          <tbody>
-          <tr>
-            <td style="padding: 0 0">
-              <div
-                  style="
-                                        height: 0;
-                                        background: none;
-                                        padding: 0px;
-                                        border-top-width: 1px;
-                                        border-top-style: solid;
-                                        border-top-color: #f0f0f0;
-                                        margin: 0 15px;
-                                      "
-              ></div>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-      </td>
-    </tr>
-    </tbody>
-  </table>
-  <table
-      border="0"
-      cellpadding="0"
-      cellspacing="0"
-      style="
-                        overflow: hidden;
-                        margin: 0px auto;
-                        padding: 0px;
-                        width: 100%;
-                        max-width: 630px;
-                        clear: both;
-                        background: none;
-                        border: 0;
-                      "
-      width="100%"
-  >
-    <tbody>
-    <tr>
-      <td
-          style="
-                              padding: 15px 0 20px 0;
-                              line-height: 1.8;
-                              border-width: 0px;
-                              font-size: 14px;
-                            "
-      >
-        <table
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
-            style="padding: 0px 5px"
-            width="100%"
-        >
-          <tbody>
-          <tr>
-            <td
-                style="
-                                      padding: 0px 15px;
-                                      mso-line-height-rule: exactly;
-                                      line-height: 1.8;
-                                      -ms-text-size-adjust: 100%;
-                                      -webkit-text-size-adjust: 100%;
-                                      word-break: break-word;
-                                      font-size: 14px;
-                                      font-family: AppleSDGothic,
-                                        apple sd gothic neo, noto sans korean,
-                                        noto sans korean regular,
-                                        noto sans cjk kr, noto sans cjk,
-                                        nanum gothic, malgun gothic, dotum,
-                                        arial, helvetica, MS Gothic, sans-serif !important;
-                                      color: #2b2d36;
-                                    "
-                width="100%"
-            >
-              <div style="text-align: center">
-                                      <span
-                                          style="
-                                          color: rgb(43, 45, 54);
-                                          font-weight: bold;
-                                          font-size: 20px;
-                                        "
-                                      >구름 서비스</span
-                                      ><span
-                  style="
-                                          color: rgb(43, 45, 54);
-                                          font-size: 20px;
-                                        "
+                        <span
+                            style="
+                            color: rgb(43, 45, 54);
+                            font-weight: bold;
+                            font-size: 20px;
+                          "
+                        >두둥 서비스</span
+                        ><span style="color: rgb(43, 45, 54); font-size: 20px"
               >를 소개합니다&nbsp;😀</span
               ><br />
               </div>
@@ -561,202 +215,182 @@
       cellpadding="0"
       cellspacing="0"
       style="
-                        overflow: hidden;
-                        margin: 0px auto;
-                        padding: 0px;
-                        max-width: 630px;
-                        clear: both;
-                        background: none;
-                        border: 0;
-                      "
+          overflow: hidden;
+          margin: 0px auto;
+          padding: 0px;
+          max-width: 630px;
+          clear: both;
+          background: none;
+          border: 0;
+        "
       width="100%"
   >
     <tbody>
     <tr>
       <td
           style="
-                              padding: 0px 0 5px 0;
-                              text-align: left;
-                              line-height: 1.8;
-                              border-width: 0px;
-                              mso-line-height-rule: exactly;
-                              -ms-text-size-adjust: 100%;
-                              -webkit-text-size-adjust: 100%;
-                            "
+                padding: 0px 0 5px 0;
+                text-align: left;
+                line-height: 1.8;
+                border-width: 0px;
+                mso-line-height-rule: exactly;
+                -ms-text-size-adjust: 100%;
+                -webkit-text-size-adjust: 100%;
+              "
       >
         <table
             border="0"
             cellpadding="0"
             cellspacing="0"
             style="
-                                padding: 0px 5px;
-                                border-collapse: collapse;
-                                mso-table-lspace: 0pt;
-                                mso-table-rspace: 0pt;
-                                -ms-text-size-adjust: 100%;
-                                -webkit-text-size-adjust: 100%;
-                                table-layout: fixed;
-                              "
+                  padding: 0px 5px;
+                  border-collapse: collapse;
+                  mso-table-lspace: 0pt;
+                  mso-table-rspace: 0pt;
+                  -ms-text-size-adjust: 100%;
+                  -webkit-text-size-adjust: 100%;
+                  table-layout: fixed;
+                "
             width="100%"
         >
           <tbody>
           <tr>
             <td
                 style="
-                                      text-align: center;
-                                      overflow: hidden;
-                                      clear: both;
-                                      padding: 0 5px;
-                                      font-size: 0;
-                                    "
+                        text-align: center;
+                        overflow: hidden;
+                        clear: both;
+                        padding: 0 5px;
+                        font-size: 0;
+                      "
             >
               <div
                   style="
-                                        width: 305px;
-                                        margin: 0px;
-                                        vertical-align: top;
-                                        border-collapse: collapse;
-                                        padding: 0px 0px 0px 0px;
-                                        display: inline-block;
-                                      "
+                          width: 305px;
+                          margin: 0px;
+                          vertical-align: top;
+                          border-collapse: collapse;
+                          padding: 0px 0px 0px 0px;
+                          display: inline-block;
+                        "
               >
                 <div
                     style="
-                                          padding: 0 10px;
-                                          text-align: justify;
-                                          margin: 0px;
-                                          width: 100%;
-                                          box-sizing: border-box;
-                                        "
+                            padding: 0 10px;
+                            text-align: justify;
+                            margin: 0px;
+                            width: 100%;
+                            box-sizing: border-box;
+                          "
                 >
                   <a
-                      href="https://event.stibee.com/v1/click/NTc3MTcvMjEzNjExL3dhdGVyMDY0MUBuYXZlci5jb20v/aHR0cHM6Ly9pZGUuZ29vcm0uaW8"
+                      href="https://dudoong.com"
                       target="_blank"
                       style="display: inline"
                       rel="noreferrer noopener"
                   ><img
-                      src="./이찬진님, 구름에 가입하신것을 환영합니다! 🎉_files/23600_1580960092.png"
+                      src="https://asset.dudoong.com/common/banner-short-black.png"
                       style="
-                                              display: inline;
-                                              vertical-align: middle;
-                                              max-width: 100%;
-                                              border-width: 0px;
-                                              border-image: initial;
-                                              text-align: justify;
-                                            "
+                                display: inline;
+                                vertical-align: middle;
+                                max-width: 100%;
+                                border-width: 0px;
+                                border-image: initial;
+                                text-align: justify;
+                              "
                       width="285"
                       loading="lazy"
                   /></a>
                 </div>
                 <div
                     style="
-                                          padding: 5px 10px;
-                                          text-align: left;
-                                          margin: 0px;
-                                          mso-line-height-rule: exactly;
-                                          line-height: 1.8;
-                                          -ms-text-size-adjust: 100%;
-                                          -webkit-text-size-adjust: 100%;
-                                          word-break: break-word;
-                                          font-size: 14px;
-                                          font-family: AppleSDGothic,
-                                            apple sd gothic neo,
-                                            noto sans korean,
-                                            noto sans korean regular,
-                                            noto sans cjk kr, noto sans cjk,
-                                            nanum gothic, malgun gothic, dotum,
-                                            arial, helvetica, MS Gothic,
-                                            sans-serif !important;
-                                        "
+                            padding: 5px 10px;
+                            text-align: left;
+                            margin: 0px;
+                            mso-line-height-rule: exactly;
+                            line-height: 1.8;
+                            -ms-text-size-adjust: 100%;
+                            -webkit-text-size-adjust: 100%;
+                            word-break: break-word;
+                            font-size: 14px;
+                          "
                 >
                   <div style="text-align: center">
-                                          <span style="color: rgb(82, 84, 99)"
-                                          >클라우드 통합 개발환경
-                                            서비스,</span
-                                          ><span style="font-size: 12px"
-                  >&nbsp;</span
+                            <span style="color: rgb(82, 84, 99)"
+                            >본인의 속한 그룹을 </span
+                            ><span style="font-size: 12px">&nbsp;</span
                   ><span
-                      style="
-                                              color: rgb(43, 45, 54);
-                                              font-weight: bold;
-                                            "
-                  >구름IDE</span
-                  ><br />
+                      style="color: rgb(43, 45, 54); font-weight: bold"
+                  >호스트</span
+                  >
+                    <span style="color: rgb(82, 84, 99)"
+                    >로 만들어 보세요! </span
+                    ><br />
                   </div>
                 </div>
               </div>
               <div
                   style="
-                                        width: 305px;
-                                        margin: 0px;
-                                        vertical-align: top;
-                                        border-collapse: collapse;
-                                        padding: 0px 0px 0px 0px;
-                                        display: inline-block;
-                                      "
+                          width: 305px;
+                          margin: 0px;
+                          vertical-align: top;
+                          border-collapse: collapse;
+                          padding: 0px 0px 0px 0px;
+                          display: inline-block;
+                        "
               >
                 <div
                     style="
-                                          padding: 0 10px;
-                                          text-align: justify;
-                                          margin: 0px;
-                                          width: 100%;
-                                          box-sizing: border-box;
-                                        "
+                            padding: 0 10px;
+                            text-align: justify;
+                            margin: 0px;
+                            width: 100%;
+                            box-sizing: border-box;
+                          "
                 >
                   <a
-                      href="https://event.stibee.com/v1/click/NTc3MTcvMjEzNjExL3dhdGVyMDY0MUBuYXZlci5jb20v/aHR0cHM6Ly9lZHUuZ29vcm0uaW8"
+                      href="https://dudoong.com"
                       target="_blank"
                       style="display: inline"
                       rel="noreferrer noopener"
                   ><img
-                      src="./이찬진님, 구름에 가입하신것을 환영합니다! 🎉_files/23600_1580960096.png"
+                      src="https://asset.dudoong.com/common/banner-short-black.png"
                       style="
-                                              display: inline;
-                                              vertical-align: middle;
-                                              max-width: 100%;
-                                              border-width: 0px;
-                                              border-image: initial;
-                                              text-align: justify;
-                                            "
+                                display: inline;
+                                vertical-align: middle;
+                                max-width: 100%;
+                                border-width: 0px;
+                                border-image: initial;
+                                text-align: justify;
+                              "
                       width="285"
                       loading="lazy"
                   /></a>
                 </div>
                 <div
                     style="
-                                          padding: 5px 10px;
-                                          text-align: left;
-                                          margin: 0px;
-                                          mso-line-height-rule: exactly;
-                                          line-height: 1.8;
-                                          -ms-text-size-adjust: 100%;
-                                          -webkit-text-size-adjust: 100%;
-                                          word-break: break-word;
-                                          font-size: 14px;
-                                          font-family: AppleSDGothic,
-                                            apple sd gothic neo,
-                                            noto sans korean,
-                                            noto sans korean regular,
-                                            noto sans cjk kr, noto sans cjk,
-                                            nanum gothic, malgun gothic, dotum,
-                                            arial, helvetica, MS Gothic,
-                                            sans-serif !important;
-                                        "
+                            padding: 5px 10px;
+                            text-align: left;
+                            margin: 0px;
+                            mso-line-height-rule: exactly;
+                            line-height: 1.8;
+                            -ms-text-size-adjust: 100%;
+                            -webkit-text-size-adjust: 100%;
+                            word-break: break-word;
+                            font-size: 14px;
+                          "
                 >
                   <div style="text-align: center">
-                                          <span style="color: rgb(82, 84, 99)"
-                                          >온라인 프로그래밍 교육 서비스,<span
-                                              style="font-size: 12px"
-                                          >&nbsp;</span
-                                          ></span
-                                          ><span
-                      style="
-                                              color: rgb(43, 45, 54);
-                                              font-weight: bold;
-                                            "
-                  >구름EDU</span
-                  ><br />
+                            <span
+                                style="color: rgb(43, 45, 54); font-weight: bold"
+                            >이벤트</span
+                            >
+                    <span style="color: rgb(82, 84, 99)"
+                    >를 열어 공연을 홍보 할 수 있어요<span
+                        style="font-size: 12px"
+                    >&nbsp;</span
+                    ></span
+                    ><br />
                   </div>
                 </div>
               </div>
@@ -773,202 +407,180 @@
       cellpadding="0"
       cellspacing="0"
       style="
-                        overflow: hidden;
-                        margin: 0px auto;
-                        padding: 0px;
-                        max-width: 630px;
-                        clear: both;
-                        background: none;
-                        border: 0;
-                      "
+          overflow: hidden;
+          margin: 0px auto;
+          padding: 0px;
+          max-width: 630px;
+          clear: both;
+          background: none;
+          border: 0;
+        "
       width="100%"
   >
     <tbody>
     <tr>
       <td
           style="
-                              padding: 15px 0 5px 0;
-                              text-align: left;
-                              line-height: 1.8;
-                              border-width: 0px;
-                              mso-line-height-rule: exactly;
-                              -ms-text-size-adjust: 100%;
-                              -webkit-text-size-adjust: 100%;
-                            "
+                padding: 15px 0 5px 0;
+                text-align: left;
+                line-height: 1.8;
+                border-width: 0px;
+                mso-line-height-rule: exactly;
+                -ms-text-size-adjust: 100%;
+                -webkit-text-size-adjust: 100%;
+              "
       >
         <table
             border="0"
             cellpadding="0"
             cellspacing="0"
             style="
-                                padding: 0px 5px;
-                                border-collapse: collapse;
-                                mso-table-lspace: 0pt;
-                                mso-table-rspace: 0pt;
-                                -ms-text-size-adjust: 100%;
-                                -webkit-text-size-adjust: 100%;
-                                table-layout: fixed;
+                  padding: 0px 5px;
+                  border-collapse: collapse;
+                  mso-table-lspace: 0pt;
+                  mso-table-rspace: 0pt;
+                  -ms-text-size-adjust: 100%;
+                  -webkit-text-size-adjust: 100%;
+                  table-layout: fixed;
+                "
+            width="100%"
+        >
+          <tbody>
+          <tr>
+            <td
+                style="
+                        text-align: center;
+                        overflow: hidden;
+                        clear: both;
+                        padding: 0 5px;
+                        font-size: 0;
+                      "
+            >
+              <div
+                  style="
+                          width: 305px;
+                          margin: 0px;
+                          vertical-align: top;
+                          border-collapse: collapse;
+                          padding: 0px 0px 0px 0px;
+                          display: inline-block;
+                        "
+              >
+                <div
+                    style="
+                            padding: 0 10px;
+                            text-align: justify;
+                            margin: 0px;
+                            width: 100%;
+                            box-sizing: border-box;
+                          "
+                >
+                  <a
+                      href="https://dudoong.com"
+                      target="_blank"
+                      style="display: inline"
+                      rel="noreferrer noopener"
+                  ><img
+                      src="https://asset.dudoong.com/common/banner-short-black.png"
+                      style="
+                                display: inline;
+                                vertical-align: middle;
+                                max-width: 100%;
+                                border-width: 0px;
+                                border-image: initial;
+                                text-align: justify;
                               "
-            width="100%"
-        >
-          <tbody>
-          <tr>
-            <td
-                style="
-                                      text-align: center;
-                                      overflow: hidden;
-                                      clear: both;
-                                      padding: 0 5px;
-                                      font-size: 0;
-                                    "
-            >
-              <div
-                  style="
-                                        width: 305px;
-                                        margin: 0px;
-                                        vertical-align: top;
-                                        border-collapse: collapse;
-                                        padding: 0px 0px 0px 0px;
-                                        display: inline-block;
-                                      "
-              >
-                <div
-                    style="
-                                          padding: 0 10px;
-                                          text-align: justify;
-                                          margin: 0px;
-                                          width: 100%;
-                                          box-sizing: border-box;
-                                        "
-                >
-                  <a
-                      href="https://event.stibee.com/v1/click/NTc3MTcvMjEzNjExL3dhdGVyMDY0MUBuYXZlci5jb20v/aHR0cHM6Ly9kZXZ0aC5nb29ybS5pbw"
-                      target="_blank"
-                      style="display: inline"
-                      rel="noreferrer noopener"
-                  ><img
-                      src="./이찬진님, 구름에 가입하신것을 환영합니다! 🎉_files/23600_1580960147.png"
-                      style="
-                                              display: inline;
-                                              vertical-align: middle;
-                                              max-width: 100%;
-                                              border-width: 0px;
-                                              border-image: initial;
-                                              text-align: justify;
-                                            "
                       width="285"
                       loading="lazy"
                   /></a>
                 </div>
                 <div
                     style="
-                                          padding: 5px 10px;
-                                          text-align: left;
-                                          margin: 0px;
-                                          mso-line-height-rule: exactly;
-                                          line-height: 1.8;
-                                          -ms-text-size-adjust: 100%;
-                                          -webkit-text-size-adjust: 100%;
-                                          word-break: break-word;
-                                          font-size: 14px;
-                                          font-family: AppleSDGothic,
-                                            apple sd gothic neo,
-                                            noto sans korean,
-                                            noto sans korean regular,
-                                            noto sans cjk kr, noto sans cjk,
-                                            nanum gothic, malgun gothic, dotum,
-                                            arial, helvetica, MS Gothic,
-                                            sans-serif !important;
-                                        "
+                            padding: 5px 10px;
+                            text-align: left;
+                            margin: 0px;
+                            mso-line-height-rule: exactly;
+                            line-height: 1.8;
+                            -ms-text-size-adjust: 100%;
+                            -webkit-text-size-adjust: 100%;
+                            word-break: break-word;
+                            font-size: 14px;
+                          "
                 >
                   <div style="text-align: center">
-                                          <span style="color: rgb(82, 84, 99)"
-                                          >개발 역량 평가 및 채용 서비스,<span
-                                              style="font-size: 12px"
-                                          >&nbsp;</span
-                                          ></span
-                                          ><span
-                      style="
-                                              color: rgb(43, 45, 54);
-                                              font-weight: bold;
-                                            "
-                  >구름DEVTH</span
-                  ><br />
+                            <span
+                                style="color: rgb(43, 45, 54); font-weight: bold"
+                            >티켓</span
+                            >
+                    <span style="color: rgb(82, 84, 99)"
+                    >을 만들어 판매하세요!<span
+                        style="font-size: 12px"
+                    >&nbsp;</span
+                    ></span
+                    ><br />
                   </div>
                 </div>
               </div>
               <div
                   style="
-                                        width: 305px;
-                                        margin: 0px;
-                                        vertical-align: top;
-                                        border-collapse: collapse;
-                                        padding: 0px 0px 0px 0px;
-                                        display: inline-block;
-                                      "
+                          width: 305px;
+                          margin: 0px;
+                          vertical-align: top;
+                          border-collapse: collapse;
+                          padding: 0px 0px 0px 0px;
+                          display: inline-block;
+                        "
               >
                 <div
                     style="
-                                          padding: 0 10px;
-                                          text-align: justify;
-                                          margin: 0px;
-                                          width: 100%;
-                                          box-sizing: border-box;
-                                        "
+                            padding: 0 10px;
+                            text-align: justify;
+                            margin: 0px;
+                            width: 100%;
+                            box-sizing: border-box;
+                          "
                 >
                   <a
-                      href="https://event.stibee.com/v1/click/NTc3MTcvMjEzNjExL3dhdGVyMDY0MUBuYXZlci5jb20v/aHR0cHM6Ly9sZXZlbC5nb29ybS5pbw"
+                      href="https://dudoong.com"
                       target="_blank"
                       style="display: inline"
                       rel="noreferrer noopener"
                   ><img
-                      src="./이찬진님, 구름에 가입하신것을 환영합니다! 🎉_files/23600_1580960150.png"
+                      src="https://asset.dudoong.com/common/banner-short-black.png"
                       style="
-                                              display: inline;
-                                              vertical-align: middle;
-                                              max-width: 100%;
-                                              border-width: 0px;
-                                              border-image: initial;
-                                              text-align: justify;
-                                            "
+                                display: inline;
+                                vertical-align: middle;
+                                max-width: 100%;
+                                border-width: 0px;
+                                border-image: initial;
+                                text-align: justify;
+                              "
                       width="285"
                       loading="lazy"
                   /></a>
                 </div>
                 <div
                     style="
-                                          padding: 5px 10px;
-                                          text-align: left;
-                                          margin: 0px;
-                                          mso-line-height-rule: exactly;
-                                          line-height: 1.8;
-                                          -ms-text-size-adjust: 100%;
-                                          -webkit-text-size-adjust: 100%;
-                                          word-break: break-word;
-                                          font-size: 14px;
-                                          font-family: AppleSDGothic,
-                                            apple sd gothic neo,
-                                            noto sans korean,
-                                            noto sans korean regular,
-                                            noto sans cjk kr, noto sans cjk,
-                                            nanum gothic, malgun gothic, dotum,
-                                            arial, helvetica, MS Gothic,
-                                            sans-serif !important;
-                                        "
+                            padding: 5px 10px;
+                            text-align: left;
+                            margin: 0px;
+                            mso-line-height-rule: exactly;
+                            line-height: 1.8;
+                            -ms-text-size-adjust: 100%;
+                            -webkit-text-size-adjust: 100%;
+                            word-break: break-word;
+                            font-size: 14px;
+                          "
                 >
                   <div style="text-align: center">
-                                          <span style="color: rgb(82, 84, 99)"
-                                          >프로그래밍 문제 풀이 서비스,<span
-                                              style="font-size: 12px"
-                                          >&nbsp;</span
-                                          ></span
-                                          ><span
-                      style="
-                                              color: rgb(43, 45, 54);
-                                              font-weight: bold;
-                                            "
-                  >구름LEVEL</span
-                  ><br />
+                            <span style="color: rgb(82, 84, 99)"
+                            >예약한 사람의 </span><span
+                                style="color: rgb(43, 45, 54); font-weight: bold"
+                            >명단</span
+                            ><span style="color: rgb(82, 84, 99)"
+                            >을 손쉽게 조회할 수 있어요 </span
+                            >
+                            <br />
                   </div>
                 </div>
               </div>
@@ -985,203 +597,181 @@
       cellpadding="0"
       cellspacing="0"
       style="
-                        overflow: hidden;
-                        margin: 0px auto;
-                        padding: 0px;
-                        width: 100%;
-                        max-width: 630px;
-                        clear: both;
-                        background: none;
-                        border: 0;
-                      "
+        overflow: hidden;
+        margin: 0px auto;
+        padding: 0px;
+        max-width: 630px;
+        clear: both;
+        background: none;
+        border: 0;
+      "
       width="100%"
   >
     <tbody>
     <tr>
       <td
           style="
-                              padding: 15px 0 15px 0;
-                              line-height: 1.8;
-                              border-width: 0px;
-                            "
+              padding: 15px 0 5px 0;
+              text-align: left;
+              line-height: 1.8;
+              border-width: 0px;
+              mso-line-height-rule: exactly;
+              -ms-text-size-adjust: 100%;
+              -webkit-text-size-adjust: 100%;
+            "
       >
         <table
             border="0"
             cellpadding="0"
             cellspacing="0"
-            style="padding: 0px 0"
-            width="100%"
-        >
-          <tbody>
-          <tr>
-            <td style="padding: 0 0">
-              <div
-                  style="
-                                        height: 0;
-                                        background: none;
-                                        padding: 0px;
-                                        border-top-width: 1px;
-                                        border-top-style: solid;
-                                        border-top-color: #f0f0f0;
-                                        margin: 0 15px;
-                                      "
-              ></div>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-      </td>
-    </tr>
-    </tbody>
-  </table>
-  <table
-      border="0"
-      cellpadding="0"
-      cellspacing="0"
-      style="
-                        overflow: hidden;
-                        margin: 0px auto;
-                        padding: 0px;
-                        width: 100%;
-                        max-width: 630px;
-                        clear: both;
-                        background: none;
-                        border: 0;
-                      "
-      width="100%"
-  >
-    <tbody>
-    <tr>
-      <td
-          style="
-                              padding: 15px 0 20px 0;
-                              line-height: 1.8;
-                              border-width: 0px;
-                              font-size: 14px;
-                            "
-      >
-        <table
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
-            style="padding: 0px 5px"
+            style="
+                padding: 0px 5px;
+                border-collapse: collapse;
+                mso-table-lspace: 0pt;
+                mso-table-rspace: 0pt;
+                -ms-text-size-adjust: 100%;
+                -webkit-text-size-adjust: 100%;
+                table-layout: fixed;
+              "
             width="100%"
         >
           <tbody>
           <tr>
             <td
                 style="
-                                      padding: 0px 15px;
-                                      mso-line-height-rule: exactly;
-                                      line-height: 1.8;
-                                      -ms-text-size-adjust: 100%;
-                                      -webkit-text-size-adjust: 100%;
-                                      word-break: break-word;
-                                      font-size: 14px;
-                                      font-family: AppleSDGothic,
-                                        apple sd gothic neo, noto sans korean,
-                                        noto sans korean regular,
-                                        noto sans cjk kr, noto sans cjk,
-                                        nanum gothic, malgun gothic, dotum,
-                                        arial, helvetica, MS Gothic, sans-serif !important;
-                                      color: #2b2d36;
-                                    "
-                width="100%"
+                      text-align: center;
+                      overflow: hidden;
+                      clear: both;
+                      padding: 0 5px;
+                      font-size: 0;
+                    "
             >
-              <div style="text-align: center">
-                                      <span
-                                          style="
-                                          color: rgb(43, 45, 54);
-                                          font-weight: bold;
-                                          font-size: 20px;
-                                        "
-                                      >무료로 배송받자!&nbsp;</span
-                                      ><span
+              <div
                   style="
-                                          color: rgb(51, 51, 51);
-                                          font-size: 20px;
-                                        "
-              >상큼한 알고리즘 퀴즈&nbsp;</span
-              ><span
-                  style="
-                                          color: rgb(51, 51, 51);
-                                          font-size: 20px;
-                                        "
-              >🍋</span
-              ><br />
-              </div>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-      </td>
-    </tr>
-    </tbody>
-  </table>
-  <table
-      border="0"
-      cellpadding="0"
-      cellspacing="0"
-      style="
-                        overflow: hidden;
-                        margin: 0px auto;
-                        padding: 0px;
-                        width: 100%;
-                        max-width: 630px;
-                        clear: both;
-                        background: none;
-                        border: 0;
+                        width: 305px;
+                        margin: 0px;
+                        vertical-align: top;
+                        border-collapse: collapse;
+                        padding: 0px 0px 0px 0px;
+                        display: inline-block;
                       "
-      width="100%;"
-  >
-    <tbody>
-    <tr>
-      <td
-          style="
-                              padding: 0px 0 0px 0;
-                              line-height: 1.8;
-                              border-width: 0px;
-                            "
-      >
-        <table
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
-            style="table-layout: fixed; padding: 0px 5px"
-            width="100%"
-        >
-          <tbody>
-          <tr>
-            <td style="padding: 0px 15px" width="100%">
-              <div>
-                <p
+              >
+                <div
                     style="
-                                          text-align: justify;
-                                          margin: 0px;
-                                          width: 100%;
-                                        "
+                          padding: 0 10px;
+                          text-align: justify;
+                          margin: 0px;
+                          width: 100%;
+                          box-sizing: border-box;
+                        "
                 >
                   <a
-                      href="https://event.stibee.com/v1/click/NTc3MTcvMjEzNjExL3dhdGVyMDY0MUBuYXZlci5jb20v/aHR0cHM6Ly9lZHUuZ29vcm0uaW8vbGVhcm4vbGVjdHVyZS8xNTU1MS8lRUIlQTclQTQlRUMlQTMlQkMtJUVCJUIwJUIwJUVDJTg2JUExJUVCJUIwJTlCJUVCJThBJTk0LSVFQyU5NSU4QyVFQSVCMyVBMCVFQiVBNiVBQyVFQyVBNiU5OC0lRUQlOTQlODQlRUIlQTYlQUMlRUIlQUYlQjglRUMlOTclODQtJUVDJTk1JThDJUVBJUIzJUEwJUVCJUE2JUFDJUVDJUE2JTk4LSVFQyU5QyU4NCVFRCU4MSVCNCVFQiVBNiVBQy0lRUIlQjklODQlRUQlODMlODAlRUMlOTUlOEMlRUElQjMlQTAtJUVDJThCJTlDJUVDJUE2JThDMg"
+                      href="https://dudoong.com"
                       target="_blank"
                       style="display: inline"
                       rel="noreferrer noopener"
                   ><img
-                      src="./이찬진님, 구름에 가입하신것을 환영합니다! 🎉_files/23600_1580960606.png"
+                      src="https://asset.dudoong.com/common/banner-short-black.png"
                       style="
-                                              width: 100%;
-                                              display: inline;
-                                              vertical-align: middle;
-                                              max-width: 100%;
-                                              border-width: 0px;
-                                              border-color: initial;
-                                              border-image: initial;
-                                              text-align: justify;
-                                            "
-                      width="610"
+                              display: inline;
+                              vertical-align: middle;
+                              max-width: 100%;
+                              border-width: 0px;
+                              border-image: initial;
+                              text-align: justify;
+                            "
+                      width="285"
                       loading="lazy"
                   /></a>
-                </p>
+                </div>
+                <div
+                    style="
+                          padding: 5px 10px;
+                          text-align: left;
+                          margin: 0px;
+                          mso-line-height-rule: exactly;
+                          line-height: 1.8;
+                          -ms-text-size-adjust: 100%;
+                          -webkit-text-size-adjust: 100%;
+                          word-break: break-word;
+                          font-size: 14px;
+                        "
+                >
+                  <div style="text-align: center">
+                          <span
+                              style="color: rgb(43, 45, 54); font-weight: bold"
+                          >옵션</span
+                          >
+                    <span style="color: rgb(82, 84, 99)"
+                    >을 만들어 설문을 받아보세요<span
+                        style="font-size: 12px"
+                    >&nbsp;</span
+                    ></span
+                    ><br />
+                  </div>
+                </div>
+              </div>
+              <div
+                  style="
+                        width: 305px;
+                        margin: 0px;
+                        vertical-align: top;
+                        border-collapse: collapse;
+                        padding: 0px 0px 0px 0px;
+                        display: inline-block;
+                      "
+              >
+                <div
+                    style="
+                          padding: 0 10px;
+                          text-align: justify;
+                          margin: 0px;
+                          width: 100%;
+                          box-sizing: border-box;
+                        "
+                >
+                  <a
+                      href="https://dudoong.com"
+                      target="_blank"
+                      style="display: inline"
+                      rel="noreferrer noopener"
+                  ><img
+                      src="https://asset.dudoong.com/common/banner-short-black.png"
+                      style="
+                              display: inline;
+                              vertical-align: middle;
+                              max-width: 100%;
+                              border-width: 0px;
+                              border-image: initial;
+                              text-align: justify;
+                            "
+                      width="285"
+                      loading="lazy"
+                  /></a>
+                </div>
+                <div
+                    style="
+                          padding: 5px 10px;
+                          text-align: left;
+                          margin: 0px;
+                          mso-line-height-rule: exactly;
+                          line-height: 1.8;
+                          -ms-text-size-adjust: 100%;
+                          -webkit-text-size-adjust: 100%;
+                          word-break: break-word;
+                          font-size: 14px;
+                        "
+                >
+                  <div style="text-align: center">
+                          <span
+                              style="color: rgb(43, 45, 54); font-weight: bold"
+                          >QR코드</span
+                          >
+                    <span style="color: rgb(82, 84, 99)"
+                    >로 손쉽게 티켓을 체크해보세요</span>
+                    <br />
+                  </div>
+                </div>
               </div>
             </td>
           </tr>
@@ -1191,31 +781,32 @@
     </tr>
     </tbody>
   </table>
+  <div th:replace = "fragments/divider :: divider">divider</div>
   <table
       border="0"
       cellpadding="0"
       cellspacing="0"
       style="
-                        overflow: hidden;
-                        margin: 0px auto;
-                        padding: 0px;
-                        width: 100%;
-                        max-width: 630px;
-                        clear: both;
-                        background: none;
-                        border: 0;
-                      "
+          overflow: hidden;
+          margin: 0px auto;
+          padding: 0px;
+          width: 100%;
+          max-width: 630px;
+          clear: both;
+          background: none;
+          border: 0;
+        "
       width="100%"
   >
     <tbody>
     <tr>
       <td
           style="
-                              padding: 15px 0 15px 0;
-                              line-height: 1.8;
-                              border-width: 0px;
-                              font-size: 14px;
-                            "
+                padding: 15px 0 20px 0;
+                line-height: 1.8;
+                border-width: 0px;
+                font-size: 14px;
+              "
       >
         <table
             border="0"
@@ -1227,51 +818,19 @@
           <tbody>
           <tr>
             <td
-                style="
-                                      padding: 0px 15px;
-                                      mso-line-height-rule: exactly;
-                                      line-height: 1.8;
-                                      -ms-text-size-adjust: 100%;
-                                      -webkit-text-size-adjust: 100%;
-                                      word-break: break-word;
-                                      font-size: 14px;
-                                      font-family: AppleSDGothic,
-                                        apple sd gothic neo, noto sans korean,
-                                        noto sans korean regular,
-                                        noto sans cjk kr, noto sans cjk,
-                                        nanum gothic, malgun gothic, dotum,
-                                        arial, helvetica, MS Gothic, sans-serif !important;
-                                      color: #2b2d36;
-                                    "
+                style="padding: 0px 15px; font-size: 14px; color: #2b2d36"
                 width="100%"
             >
               <div style="text-align: center">
-                <div>
-                                        <span
-                                            style="
-                                            color: rgb(82, 84, 99);
-                                            font-size: 14px;
-                                          "
-                                        >공부 의지만 가지고 시작하세요! 매주
-                                          잊지 않고 영양만점 알고리즘 비타민을
-                                          배송해드립니다.</span
-                                        >
-                </div>
-                <div>
-                                        <span style="font-size: 14px"
-                                        ><span
-                                            style="
-                                              color: rgb(43, 45, 54);
-                                              font-weight: bold;
-                                            "
-                                        >새로운 문제, 꼼꼼한 해설, 예시
-                                            코드</span
-                                        ><span style="color: rgb(82, 84, 99)"
-                                        >까지 한 번에 받는 스페셜
-                                            패키지!</span
-                                        ></span
-                                        >
-                </div>
+                        <span
+                            style="
+                            color: rgb(43, 45, 54);
+                            font-weight: bold;
+                            font-size: 20px;
+                          "
+                        >지금 바로! 이벤트를 만들어 관객들을
+                          모집하세요!&nbsp;</span
+                        >
               </div>
             </td>
           </tr>
@@ -1281,6 +840,9 @@
     </tr>
     </tbody>
   </table>
+
+  <div th:replace = "fragments/button :: button(href='https://dudoong.com' , text='이벤트 만들기')">button</div>
+
 </div>
 </body>
 </html>

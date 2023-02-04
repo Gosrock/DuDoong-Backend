@@ -1,10 +1,96 @@
-<!DOCTYPE html>
-<html lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <title>Title</title>
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title></title>
+  <style>
+    * {
+      line-height: 150%;
+    }
+  </style>
 </head>
-<body>
-
-</body>
-</html>
+<div th:fragment="button(href , text)">
+<table
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+          overflow: hidden;
+          margin: 0px auto;
+          padding: 0px 10px;
+          max-width: 630px;
+          clear: both;
+          background: none;
+          border: 0;
+        "
+    width="100%"
+>
+  <tbody>
+  <tr>
+    <td
+        style="
+                padding: 0px 0 15px 0;
+                text-align: center;
+                line-height: 1.8;
+                border: 0px;
+              "
+        width="100%"
+    >
+      <div style="padding: 10px 10px">
+        <table
+            align="center"
+            border="0"
+            cellpadding="0"
+            cellspacing="0"
+            style="
+                    border-collapse: separate !important;
+                    background: #25F3CF;
+                    border-radius: 3px;
+                    border: 0;
+                    mso-table-lspace: 0pt;
+                    mso-table-rspace: 0pt;
+                    -ms-text-size-adjust: 100%;
+                    -webkit-text-size-adjust: 100%;
+                    margin: 0 auto;
+                    table-layout: fixed;
+                  "
+        >
+          <tbody>
+          <tr>
+            <td
+                align="center"
+                style="line-height: 1.5; padding: 14px 100px 11px"
+            >
+              <a
+                  href="https://dudoong.com"
+                  th:href="${href}"
+                  style="
+                            font-size: 14px;
+                            display: inline;
+                            color: rgb(0, 0, 0);
+                            /*background: rgb(80, 148, 250);*/
+                            border-radius: 3px;
+                            text-decoration: none;
+                            outline: 0px;
+                            font-family: AppleSDGothic, apple sd gothic neo,
+                              noto sans korean, noto sans korean regular,
+                              noto sans cjk kr, noto sans cjk, nanum gothic,
+                              malgun gothic, dotum, arial, helvetica, MS Gothic,
+                              sans-serif;
+                            text-align: center;
+                           font-weight: bold;
+                          "
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  th:text="${text}"
+              >두둥 바로가기</a>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </td>
+  </tr>
+  </tbody>
+</table>
+</div>
