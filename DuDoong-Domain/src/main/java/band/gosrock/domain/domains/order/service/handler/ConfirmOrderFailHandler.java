@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.order.service.handler;
 
 
 import band.gosrock.domain.common.events.order.DoneOrderEvent;
+import band.gosrock.domain.domains.coupon.service.RecoveryCouponService;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.issuedTicket.service.IssuedTicketDomainService;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
@@ -22,6 +23,7 @@ public class ConfirmOrderFailHandler {
 
     private final WithdrawPaymentService cancelPaymentService;
     private final IssuedTicketDomainService issuedTicketDomainService;
+    private final RecoveryCouponService recoveryCouponService;
 
     private final OrderAdaptor orderAdaptor;
     private final IssuedTicketAdaptor issuedTicketAdaptor;
@@ -36,7 +38,11 @@ public class ConfirmOrderFailHandler {
 
         Order order = orderAdaptor.findByOrderUuid(doneOrderEvent.getOrderUuid());
         order.fail();
-        // TODO : 쿠폰을 함께한 결제라면 쿠폰 원상 복구
+
+        if (order.hasCoupon()) { // 쿠폰 사용했을 시 쿠폰 복구
+            recoveryCouponService.execute(
+                    order.getUserId(), order.getOrderCouponVo().getCouponId());
+        }
 
         issuedTicketDomainService.doneOrderEventAfterRollBackWithdrawIssuedTickets(
                 doneOrderEvent.getItemId(), doneOrderEvent.getOrderUuid());
