@@ -15,12 +15,12 @@ import lombok.RequiredArgsConstructor;
 public class CouponCampaignMapper {
 
     public static CreateCouponCampaignResponse toCreateCouponCampaignResponse(
-            CouponCampaign couponCampaign, Long hostId) {
+            CouponCampaign couponCampaign, Long userId) {
         return CreateCouponCampaignResponse.builder()
                 .couponCampaignId(couponCampaign.getId())
                 .couponCode(couponCampaign.getCouponCode())
                 .issuedAmount(couponCampaign.getCouponStockInfo().getIssuedAmount())
-                .hostId(hostId)
+                .userId(userId)
                 .build();
     }
 
@@ -35,7 +35,7 @@ public class CouponCampaignMapper {
         return DateTimePeriod.builder().startAt(startAt).endAt(endAt).build();
     }
 
-    public CouponCampaign toEntity(CreateCouponCampaignRequest createCouponCampaignRequest) {
+    public CouponCampaign toEntity(CreateCouponCampaignRequest createCouponCampaignRequest,Long userId) {
 
         CouponStockInfo couponStockInfo =
                 toCouponStockInfo(createCouponCampaignRequest.getIssuedAmount());
@@ -45,7 +45,7 @@ public class CouponCampaignMapper {
                         createCouponCampaignRequest.getEndAt());
 
         return CouponCampaign.builder()
-                .hostId(createCouponCampaignRequest.getHostId())
+                .userId(userId)
                 .discountType(createCouponCampaignRequest.getDiscountType())
                 .applyTarget(createCouponCampaignRequest.getApplyTarget())
                 .validTerm(createCouponCampaignRequest.getValidTerm())

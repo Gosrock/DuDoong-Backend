@@ -27,7 +27,7 @@ public class CouponCampaign extends BaseTimeEntity {
     @Column(name = "coupon_campaign_id")
     private Long id;
 
-    private Long hostId;
+    private Long userId;
 
     @Enumerated(EnumType.STRING)
     private DiscountType discountType;
@@ -54,7 +54,7 @@ public class CouponCampaign extends BaseTimeEntity {
 
     @Builder
     public CouponCampaign(
-            Long hostId,
+            Long userId,
             DiscountType discountType,
             ApplyTarget applyTarget,
             Long validTerm,
@@ -62,7 +62,7 @@ public class CouponCampaign extends BaseTimeEntity {
             CouponStockInfo couponStockInfo,
             Long discountAmount,
             String couponCode) {
-        this.hostId = hostId;
+        this.userId = userId;
         this.discountType = discountType;
         this.applyTarget = applyTarget;
         this.validTerm = validTerm;

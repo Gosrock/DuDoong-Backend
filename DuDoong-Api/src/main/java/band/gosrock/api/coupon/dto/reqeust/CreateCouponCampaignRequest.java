@@ -17,9 +17,6 @@ import org.springframework.lang.Nullable;
 @RequiredArgsConstructor
 public class CreateCouponCampaignRequest {
 
-    @NotNull(message = "host Id를 입력해주세요.")
-    private Long hostId;
-
     @NotNull(message = "discountType을 입력해주세요.")
     private DiscountType discountType;
 
