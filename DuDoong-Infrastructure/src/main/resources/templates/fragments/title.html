@@ -1,10 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <title>Title</title>
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title></title>
+  <style>
+    * {
+      line-height: 150%;
+    }
+  </style>
 </head>
-<body>
-
-</body>
+<div th:fragment="title(title)"
+     style="
+      overflow: hidden;
+      padding: 0px;
+      margin-top: 20px;
+      border: 0;
+      font-weight: bold;
+      font-size: 24px;
+      font-family: 'Gmarket Sans' , AppleSDGothic, apple sd gothic neo, noto sans korean,
+        noto sans korean regular, noto sans cjk kr, noto sans cjk, nanum gothic,
+        malgun gothic, dotum, arial, helvetica, MS Gothic, sans-serif !important;
+    "
+>
+  <div>두둥</div>
+  <div th:text="${title}"
+  style="color: #6B36DC">타이틀</div>
+  <div th:replace="fragments/divider :: divider">divider</div>
+</div>
 </html>
