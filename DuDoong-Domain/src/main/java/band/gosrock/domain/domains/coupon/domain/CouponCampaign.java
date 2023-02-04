@@ -49,6 +49,8 @@ public class CouponCampaign extends BaseTimeEntity {
 
     private String couponCode;
 
+    private Long minimumCost=10000L;
+
     @OneToMany(mappedBy = "couponCampaign", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<IssuedCoupon> issuedCoupons = new ArrayList<>();
 
@@ -61,7 +63,8 @@ public class CouponCampaign extends BaseTimeEntity {
             DateTimePeriod dateTimePeriod,
             CouponStockInfo couponStockInfo,
             Long discountAmount,
-            String couponCode) {
+            String couponCode,
+            Long minimumCost) {
         this.userId = userId;
         this.discountType = discountType;
         this.applyTarget = applyTarget;
@@ -70,6 +73,7 @@ public class CouponCampaign extends BaseTimeEntity {
         this.couponStockInfo = couponStockInfo;
         this.discountAmount = discountAmount;
         this.couponCode = couponCode;
+        this.minimumCost = minimumCost;
     }
 
     // 정률 할인시 discountAmount 값이 100 이하인지 검증
