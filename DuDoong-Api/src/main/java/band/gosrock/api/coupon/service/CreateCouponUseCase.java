@@ -33,8 +33,7 @@ public class CreateCouponUseCase {
         // 쿠폰 생성
         CouponCampaign couponCampaign =
                 createCouponCampaignDomainService.createCouponCampaign(
-                        couponCampaignMapper.toEntity(createCouponCampaignRequest,user.getId()));
-        return CouponCampaignMapper.toCreateCouponCampaignResponse(
-                couponCampaign, user.getId());
+                        couponCampaignMapper.toEntity(createCouponCampaignRequest, user.getId()));
+        return CouponCampaignMapper.toCreateCouponCampaignResponse(couponCampaign, user.getId());
     }
 }

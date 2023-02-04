@@ -35,7 +35,8 @@ public class CouponCampaignMapper {
         return DateTimePeriod.builder().startAt(startAt).endAt(endAt).build();
     }
 
-    public CouponCampaign toEntity(CreateCouponCampaignRequest createCouponCampaignRequest,Long userId) {
+    public CouponCampaign toEntity(
+            CreateCouponCampaignRequest createCouponCampaignRequest, Long userId) {
 
         CouponStockInfo couponStockInfo =
                 toCouponStockInfo(createCouponCampaignRequest.getIssuedAmount());
