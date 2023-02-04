@@ -26,109 +26,66 @@
 </head>
 <body style="margin: 0; padding: 0">
 <div layout:fragment="content">
-  <table
-      border="0"
-      cellpadding="0"
-      cellspacing="0"
-      style="padding: 10px 5px"
+  <div
+      style="padding: 0px 15px; font-size: 14px; color: #2b2d36"
       width="100%"
   >
-    <tbody>
-    <tr>
-      <td
-          style="padding: 0px 15px; font-size: 14px; color: #2b2d36"
-          width="100%"
-      >
-        <div style="text-align: center">
-                <span
-                    style="
-                    color: rgb(43, 45, 54);
-                    font-size: 20px;
-                    font-weight: bold;
-                  "
-                    th:text="${username}"
-                >이름</span
-                >
-          <span style="color: rgb(43, 45, 54); font-size: 20px"
-          ><span style="font-weight: bold">님,</span>
-                  &nbsp;
-                </span>
-          <span style="color: rgb(43, 45, 54); font-size: 20px"
-          >두둥에 가입하신 것을 환영합니다!</span
+    <div style="text-align: center">
+          <span
+              style="color: rgb(43, 45, 54); font-size: 20px; font-weight: bold"
+              th:text="${username}"
+          >이름</span
           >
-          <br />
-        </div>
-      </td>
-    </tr>
-    </tbody>
-  </table>
-  <table
-      border="0"
-      cellpadding="0"
-      cellspacing="0"
-      style="padding: 0px 5px"
+      <span style="color: rgb(43, 45, 54); font-size: 20px"
+      ><span style="font-weight: bold">님,</span>
+            &nbsp;
+          </span>
+      <span style="color: rgb(43, 45, 54); font-size: 20px"
+      >두둥에 가입하신 것을 환영합니다!</span
+      >
+      <br />
+    </div>
+  </div>
+
+  <div
+      style="padding: 0px 15px; font-size: 14px; color: #2b2d36"
       width="100%"
   >
-    <tbody>
-    <tr>
-      <td
-          style="padding: 0px 15px; font-size: 14px; color: #2b2d36"
-          width="100%"
-      >
-        <div style="text-align: center; color: rgb(82, 84, 99)">
-          <div>두둥은 누구나 자유롭게</div>
-          <div>공연을 홍보하고 인원을 모집할 수 있는 서비스 입니다.</div>
-          <div>
-            호스트가 되어 밴드, 뮤지컬 , 버스킹등 공연을 열고 홍보하세요!
-          </div>
-        </div>
-      </td>
-    </tr>
-    </tbody>
-  </table>
+    <div style="text-align: center; color: rgb(82, 84, 99)">
+      <div>두둥은 누구나 자유롭게</div>
+      <div>공연을 홍보하고 인원을 모집할 수 있는 서비스 입니다.</div>
+      <div>
+        호스트가 되어 밴드, 뮤지컬 , 버스킹등 공연을 열고 홍보하세요!
+      </div>
+    </div>
+  </div>
   <div th:replace="fragments/divider :: divider">divider</div>
 
-  <table
-      border="0"
-      cellpadding="0"
-      cellspacing="0"
-      style="padding: 0px 5px"
+  <div
+      style="padding: 0px 15px; font-size: 14px; color: #2b2d36"
       width="100%"
   >
-    <tbody>
-    <tr>
-      <td
-          style="padding: 0px 15px; font-size: 14px; color: #2b2d36"
-          width="100%"
-      >
-        <div style="text-align: center">
-                <span
-                    style="
-                    color: rgb(43, 45, 54);
-                    font-weight: bold;
-                    font-size: 20px;
-                  "
-                >두둥 서비스</span
-                ><span style="color: rgb(43, 45, 54); font-size: 20px"
-        >를 소개합니다&nbsp;😀</span
-        ><br />
-        </div>
-      </td>
-    </tr>
-    </tbody>
-  </table>
+    <div style="text-align: center">
+          <span
+              style="color: rgb(43, 45, 54); font-weight: bold; font-size: 20px"
+          >두둥 서비스</span
+          ><span style="color: rgb(43, 45, 54); font-size: 20px"
+    >를 소개합니다&nbsp;😀</span
+    ><br />
+    </div>
+  </div>
   <table
       border="0"
       cellpadding="0"
       cellspacing="0"
       style="
-          padding: 0px 5px;
           border-collapse: collapse;
           mso-table-lspace: 0pt;
           mso-table-rspace: 0pt;
           -ms-text-size-adjust: 100%;
           -webkit-text-size-adjust: 100%;
           table-layout: fixed;
+          margin-top: 15px;
         "
       width="100%"
   >
@@ -280,7 +237,6 @@
       cellpadding="0"
       cellspacing="0"
       style="
-          padding: 0px 5px;
           border-collapse: collapse;
           mso-table-lspace: 0pt;
           mso-table-rspace: 0pt;
@@ -435,7 +391,6 @@
       cellpadding="0"
       cellspacing="0"
       style="
-          padding: 0px 5px;
           border-collapse: collapse;
           mso-table-lspace: 0pt;
           mso-table-rspace: 0pt;
@@ -586,34 +541,17 @@
     </tbody>
   </table>
   <div th:replace="fragments/divider :: divider">divider</div>
-  <table
-      border="0"
-      cellpadding="0"
-      cellspacing="0"
-      style="padding: 0px 5px"
+  <div
+      style="padding: 0px 15px; font-size: 14px; color: #2b2d36"
       width="100%"
   >
-    <tbody>
-    <tr>
-      <td
-          style="padding: 0px 15px; font-size: 14px; color: #2b2d36"
-          width="100%"
-      >
-        <div style="text-align: center">
-                <span
-                    style="
-                    color: rgb(43, 45, 54);
-                    font-weight: bold;
-                    font-size: 20px;
-                  "
-                >지금 바로! 이벤트를 만들어 관객들을 모집하세요!&nbsp;</span
-                >
-        </div>
-      </td>
-    </tr>
-    </tbody>
-  </table>
-
+    <div style="text-align: center">
+          <span
+              style="color: rgb(43, 45, 54); font-weight: bold; font-size: 20px"
+          >지금 바로! 이벤트를 만들어 관객들을 모집하세요!&nbsp;</span
+          >
+    </div>
+  </div>
   <div
       th:replace="fragments/button :: button(href='https://dudoong.com' , text='이벤트 만들기')"
   >
