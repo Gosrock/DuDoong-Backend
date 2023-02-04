@@ -22,6 +22,26 @@
               margin: 0 auto;
             "
       >
+        <table
+            style="
+        overflow: hidden;
+        margin: 0px auto;
+        width: 100%;
+        max-width: 630px;
+        clear: both;
+        background: none;
+        border: 0;
+      "
+        >
+          <tbody>
+          <tr>
+            <td
+                style="
+              line-height: 1.8;
+              border-width: 0px;
+              font-size: 14px;
+            "
+            >
         <div th:replace = "fragments/header :: header">
           header
         </div>
@@ -30,6 +50,10 @@
         <div th:replace = "fragments/footer :: footer">
           footer
         </div>
+            </td>
+          </tr>
+          </tbody>
+        </table>
     </div>
   </div>
 </div>
