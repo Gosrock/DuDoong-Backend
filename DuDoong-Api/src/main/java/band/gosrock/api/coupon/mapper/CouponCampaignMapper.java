@@ -54,6 +54,7 @@ public class CouponCampaignMapper {
                 .couponStockInfo(couponStockInfo)
                 .discountAmount(createCouponCampaignRequest.getDiscountAmount())
                 .couponCode(createCouponCampaignRequest.getCouponCode())
+                .minimumCost(createCouponCampaignRequest.getMinimumCost())
                 .build();
     }
 }

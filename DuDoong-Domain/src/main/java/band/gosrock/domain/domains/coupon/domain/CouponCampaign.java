@@ -49,7 +49,7 @@ public class CouponCampaign extends BaseTimeEntity {
 
     private String couponCode;
 
-    private Long minimumCost=10000L;
+    private Long minimumCost = 10000L;
 
     @OneToMany(mappedBy = "couponCampaign", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<IssuedCoupon> issuedCoupons = new ArrayList<>();
