@@ -14,10 +14,10 @@ public class UseCouponService {
     private final IssuedCouponAdaptor issuedCouponAdaptor;
 
     @RedissonLock(LockName = "쿠폰", identifier = "couponId")
-    public Long execute(Long userId, Long couponId) {
-        IssuedCoupon coupon = issuedCouponAdaptor.query(couponId);
+    public Long execute(Long userId, Long issuedCouponId) {
+        IssuedCoupon coupon = issuedCouponAdaptor.query(issuedCouponId);
         coupon.validMine(userId);
         coupon.use();
-        return couponId;
+        return issuedCouponId;
     }
 }

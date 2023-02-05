@@ -5,9 +5,8 @@ import band.gosrock.domain.common.events.order.DoneOrderEvent;
 import band.gosrock.domain.domains.issuedTicket.service.IssuedTicketDomainService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
 @RequiredArgsConstructor
@@ -16,9 +15,7 @@ public class OrderEventHandler {
 
     private final IssuedTicketDomainService issuedTicketDomainService;
 
-    @TransactionalEventListener(
-            classes = DoneOrderEvent.class,
-            phase = TransactionPhase.BEFORE_COMMIT)
+    @EventListener(classes = DoneOrderEvent.class)
     public void handleDoneOrderEvent(DoneOrderEvent doneOrderEvent) {
         log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 티켓 생성작업 진행");
         issuedTicketDomainService.createIssuedTicket(

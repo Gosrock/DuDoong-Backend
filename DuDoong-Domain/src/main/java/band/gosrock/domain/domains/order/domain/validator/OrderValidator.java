@@ -63,6 +63,7 @@ public class OrderValidator {
     /** 모든 질문지 ( 옵션그룹 )에 응답했는지 검증합니다. ( 변화 했는지 검증 ) */
     public void validOptionNotChange(Order order, TicketItem item) {
         List<OrderLineItem> orderLineItems = order.getOrderLineItems();
+
         List<Long> itemsOptionGroupIds = item.getOptionGroupIds();
         orderLineItems.forEach(
                 orderLineItem -> {
@@ -71,6 +72,11 @@ public class OrderValidator {
                         throw OrderItemOptionChangedException.EXCEPTION;
                     }
                 });
+    }
+
+    public void validOptionNotChangeAfterDoneOrderEvent(Order order) {
+        TicketItem item = getItem(order);
+        validOptionNotChange(order, item);
     }
 
     /** 승인 가능한 주문인지 검증합니다. */
@@ -107,7 +113,6 @@ public class OrderValidator {
         validStatusCanRefund(getOrderStatus(order));
         validCanWithDraw(order);
     }
-
     /** ----------------------재료가 될 검증 메서드 ---------------------------- */
 
     /** 주문을 완료할 수 있는지에 대한 공통검증 */
