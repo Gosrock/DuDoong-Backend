@@ -1,0 +1,64 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns="http://www.w3.org/1999/xhtml"
+    layout:decorate="~{layouts/mailFormat}"
+>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title></title>
+  <style>
+    * {
+      line-height: 150%;
+      font-family: Pretendard ,AppleSDGothic, apple sd gothic neo, noto sans korean,
+      noto sans korean regular, noto sans cjk kr, noto sans cjk,
+      nanum gothic, malgun gothic, dotum, arial, helvetica, MS Gothic,
+      sans-serif !important;
+      mso-line-height-rule: exactly;
+      line-height: 1.8;
+      -ms-text-size-adjust: 100%;
+      -webkit-text-size-adjust: 100%;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0">
+<div layout:fragment="content">
+  <div th:replace="fragments/title :: title(title)">divider</div>
+
+    <div >
+      <span >안녕하세요</span>
+      <span  th:text="${userInfo.name}" >이름</span>
+      <span >님</span>
+      <br />
+    </div>
+  <div th:replace="fragments/eventInfo :: eventInfo(eventInfo=${eventInfo})">
+    이벤트 정보
+  </div>
+  <div th:replace="fragments/orderInfo :: orderInfo(orderInfo=${orderInfo})">
+    주문 정보
+  </div>
+  <div style="margin-top: 10px ; margin-bottom: 10px">
+    <div>
+      호스트 관리자가 주문을 승인 할 때 까지 기다려주세요!
+    </div>
+    <div>
+      승인이 완료되면 알림 메일을 보내 드립니다.
+    </div>
+    <div>
+      장기간 승인이 이루어지지 않는다면, 호스트 연락처를 통해 주문을 확인해 보세요!
+    </div>
+  </div>
+
+  <div align="right">
+    <img width="163" style="" src="https://asset.dudoong.com/common/duduongs.png"/>
+  </div>
+
+  <div th:replace="fragments/button :: button(href='https://dudoong.com' , text='두둥 바로가기')">
+    button
+  </div>
+</div>
+</body>
+</html>

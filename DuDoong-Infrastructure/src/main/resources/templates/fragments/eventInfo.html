@@ -1,0 +1,33 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title></title>
+  <style>
+    * {
+      line-height: 150%;
+    }
+  </style>
+</head>
+<div th:fragment="eventInfo(eventInfo)"
+     style="
+      overflow: hidden;
+      padding: 0px;
+      margin-top: 20px;
+      border: 0;
+      font-weight: bold;
+      font-size: 24px;
+      font-family: Pretendard , AppleSDGothic, apple sd gothic neo, noto sans korean,
+        noto sans korean regular, noto sans cjk kr, noto sans cjk, nanum gothic,
+        malgun gothic, dotum, arial, helvetica, MS Gothic, sans-serif !important;
+    "
+>
+  <div >
+    <span  th:text="${eventInfo.hostName}" >호스트이름</span>
+    <span  > </span>
+    <span  th:text="${eventInfo.eventName}" >이벤트 이름</span>
+    <span > 주문 승인 요청이 완료 되었습니다.</span>
+    <br />
+  </div>
+</div>
+</html>
