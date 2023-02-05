@@ -14,7 +14,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class CreateOrderHandler {
+public class CreateOrderEventEmailHandler {
 
     private final OrderApproveRequestEmailService orderApproveRequestEmailService;
 

@@ -16,7 +16,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class DoneOrderEventHandler {
+public class DoneOrderEventEmailHandler {
 
     private final OrderMailInfoHelper orderMailInfoHelper;
 

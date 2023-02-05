@@ -17,7 +17,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class WithDrawOrderHandler {
+public class WithDrawOrderEventEmailHandler {
 
     private final OrderWithDrawRefundEmailService orderWithDrawRefundEmailService;
     private final OrderWithDrawCancelEmailService orderWithDrawCancelEmailService;

@@ -34,18 +34,17 @@
       <span >님</span>
       <br />
     </div>
-  <div th:replace="fragments/subTilte :: host(hostName=${hostName},text='호스트 관리자 초대가 되어 안내 메일 드립니다.')">
+  <div th:replace="fragments/subTilte :: host(hostName=${hostName},text='관리자 초대가 되어 안내 메일 드립니다.')">
     이벤트 정보
   </div>
   <div style="font-weight: bold; background: #F8F8FA; padding: 10px ; margin-top: 10px;margin-bottom: 10px">
     <div >
       <span  >대상 계정 : </span>
-      <span  th:text="${userInfo.name}" >호스트이름</span>
+      <span  th:text="${userInfo.email}" >대상계정 이메일</span>
     </div>
     <div >
       <span  >권한 : </span>
-      <span  th:text="${role}" >수량</span>
-      <span  >매 </span>
+      <span  th:text="${role}" >권한</span>
     </div>
   </div>
 

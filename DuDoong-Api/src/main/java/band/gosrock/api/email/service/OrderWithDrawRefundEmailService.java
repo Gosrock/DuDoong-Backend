@@ -20,6 +20,6 @@ public class OrderWithDrawRefundEmailService {
         context.setVariable("orderInfo", orderMailDto.getOrderInfo());
         context.setVariable("eventInfo", orderMailDto.getEventInfo());
         awsSesUtils.singleEmailRequest(
-                userInfo.getEmail(), "두둥 주문 철회 알림 드립니다.", "orderWithdrawCancel", context);
+                userInfo.getEmail(), "두둥 주문 철회 알림 드립니다.", "orderWithdrawRefund", context);
     }
 }

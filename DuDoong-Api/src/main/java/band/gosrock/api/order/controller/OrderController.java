@@ -12,7 +12,6 @@ import band.gosrock.api.order.model.dto.request.CreateOrderRequest;
 import band.gosrock.api.order.model.dto.response.CreateOrderResponse;
 import band.gosrock.api.order.model.dto.response.OrderBriefElement;
 import band.gosrock.api.order.model.dto.response.OrderResponse;
-import band.gosrock.api.order.service.ApproveOrderUseCase;
 import band.gosrock.api.order.service.CancelOrderUseCase;
 import band.gosrock.api.order.service.ConfirmOrderUseCase;
 import band.gosrock.api.order.service.CreateOrderUseCase;
@@ -48,7 +47,6 @@ public class OrderController {
 
     private final CreateOrderUseCase createOrderUseCase;
     private final ConfirmOrderUseCase confirmOrderUseCase;
-    private final ApproveOrderUseCase approveOrderUseCase;
     private final FreeOrderUseCase freeOrderUseCase;
     private final CancelOrderUseCase cancelOrderUseCase;
 
