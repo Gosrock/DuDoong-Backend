@@ -199,8 +199,9 @@ public class Order extends BaseTimeEntity {
     /** 결제 방식의 주문을 승인 합니다. */
     public void confirmPayment(
             LocalDateTime approvedAt, PgPaymentInfo pgPaymentInfo, OrderValidator orderValidator) {
-        Events.raise(DoneOrderEvent.from(this));
         orderValidator.validCanConfirmPayment(this);
+        Events.raise(DoneOrderEvent.from(this));
+        orderValidator.validOptionNotChangeAfterDoneOrderEvent(this);
         orderStatus = OrderStatus.CONFIRM;
         this.approvedAt = approvedAt;
         this.pgPaymentInfo = pgPaymentInfo;
@@ -208,8 +209,9 @@ public class Order extends BaseTimeEntity {
 
     /** 승인 방식의 주문을 승인합니다. */
     public void approve(OrderValidator orderValidator) {
-        Events.raise(DoneOrderEvent.from(this));
         orderValidator.validCanApproveOrder(this);
+        Events.raise(DoneOrderEvent.from(this));
+        orderValidator.validOptionNotChangeAfterDoneOrderEvent(this);
         this.approvedAt = LocalDateTime.now();
         this.orderStatus = OrderStatus.APPROVED;
     }
@@ -217,8 +219,9 @@ public class Order extends BaseTimeEntity {
     /** 선착순 방식의 0원 결제입니다. */
     public void freeConfirm(Long currentUserId, OrderValidator orderValidator) {
         orderValidator.validOwner(this, currentUserId);
-        Events.raise(DoneOrderEvent.from(this));
         orderValidator.validCanFreeConfirm(this);
+        Events.raise(DoneOrderEvent.from(this));
+        orderValidator.validOptionNotChangeAfterDoneOrderEvent(this);
         this.approvedAt = LocalDateTime.now();
         this.orderStatus = OrderStatus.APPROVED;
     }
