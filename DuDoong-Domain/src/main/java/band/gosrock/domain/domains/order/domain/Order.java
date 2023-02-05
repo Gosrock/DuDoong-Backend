@@ -15,6 +15,8 @@ import band.gosrock.domain.domains.order.exception.InvalidOrderException;
 import band.gosrock.domain.domains.order.exception.NotPaymentOrderException;
 import band.gosrock.domain.domains.order.exception.OrderLineNotFountException;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.infrastructure.config.mail.dto.EmailEventInfo;
+import band.gosrock.infrastructure.config.mail.dto.EmailOrderInfo;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -339,5 +341,9 @@ public class Order extends BaseTimeEntity {
 
     public Long getTotalQuantity() {
         return orderLineItems.stream().map(OrderLineItem::getQuantity).reduce(0L, Long::sum);
+    }
+
+    public EmailOrderInfo toEmailOrderInfo(){
+        return new EmailOrderInfo(orderName,getTotalQuantity(),getTotalPaymentPrice().toString(),getCreatedAt());
     }
 }

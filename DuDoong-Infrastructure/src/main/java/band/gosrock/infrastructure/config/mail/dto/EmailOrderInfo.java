@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class OrderInfoView {
+public class EmailOrderInfo {
     private final String name;
     private final Long quantity;
     private final String money;

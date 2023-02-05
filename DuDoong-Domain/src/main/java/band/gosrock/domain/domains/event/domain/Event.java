@@ -7,6 +7,7 @@ import band.gosrock.domain.domains.event.exception.CannotModifyEventBasicExcepti
 import band.gosrock.domain.domains.event.exception.EventCannotEndBeforeStartException;
 import band.gosrock.domain.domains.event.exception.EventNotOpenException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
+import band.gosrock.infrastructure.config.mail.dto.EmailEventInfo;
 import java.time.LocalDateTime;
 import javax.persistence.*;
 import lombok.AccessLevel;

@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class HostAndEventView {
+public class EmailEventInfo {
     private final String hostName;
     private final String eventName;
 }
