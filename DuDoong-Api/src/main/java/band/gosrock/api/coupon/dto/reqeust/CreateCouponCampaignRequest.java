@@ -5,10 +5,7 @@ import band.gosrock.common.annotation.DateFormat;
 import band.gosrock.domain.domains.coupon.domain.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
-import javax.validation.constraints.Future;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
+import javax.validation.constraints.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
@@ -16,9 +13,6 @@ import org.springframework.lang.Nullable;
 @Getter
 @RequiredArgsConstructor
 public class CreateCouponCampaignRequest {
-
-    @NotNull(message = "host Id를 입력해주세요.")
-    private Long hostId;
 
     @NotNull(message = "discountType을 입력해주세요.")
     private DiscountType discountType;
@@ -54,4 +48,9 @@ public class CreateCouponCampaignRequest {
 
     @NotBlank(message = "couponCode를 입력해주세요.")
     private String couponCode;
+
+    @Schema(description = "쿠폰 사용 가능한 최소 결제 금액(원단위, 10000원 이상부터 입력 가능)")
+    @NotNull(message = "minimumCost(원 단위)를 입력해주세요.")
+    @Min(value = 10000, message = "10000원 이상부터 입력 가능합니다.")
+    private Long minimumCost;
 }
