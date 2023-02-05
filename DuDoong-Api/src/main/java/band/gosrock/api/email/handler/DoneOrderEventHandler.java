@@ -6,7 +6,6 @@ import band.gosrock.api.email.service.OrderApproveConfirmEmailService;
 import band.gosrock.api.email.service.OrderMailInfoHelper;
 import band.gosrock.api.email.service.OrderPaymentDoneEmailService;
 import band.gosrock.domain.common.events.order.DoneOrderEvent;
-import band.gosrock.domain.domains.issuedTicket.service.IssuedTicketDomainService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -21,9 +20,9 @@ public class DoneOrderEventHandler {
 
     private final OrderMailInfoHelper orderMailInfoHelper;
 
-
     private final OrderApproveConfirmEmailService orderApproveConfirmEmailService;
     private final OrderPaymentDoneEmailService orderPaymentDoneEmailService;
+
     @Async
     @TransactionalEventListener(
             classes = DoneOrderEvent.class,
@@ -33,7 +32,7 @@ public class DoneOrderEventHandler {
         OrderMailDto orderMailDto = orderMailInfoHelper.execute(doneOrderEvent.getOrderUuid());
 
         // 결제용
-        if(doneOrderEvent.getOrderMethod().isPayment()){
+        if (doneOrderEvent.getOrderMethod().isPayment()) {
             orderPaymentDoneEmailService.execute(orderMailDto);
             return;
         }

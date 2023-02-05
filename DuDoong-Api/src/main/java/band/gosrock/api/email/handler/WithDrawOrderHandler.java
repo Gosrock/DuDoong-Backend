@@ -6,15 +6,11 @@ import band.gosrock.api.email.service.OrderMailInfoHelper;
 import band.gosrock.api.email.service.OrderWithDrawCancelEmailService;
 import band.gosrock.api.email.service.OrderWithDrawRefundEmailService;
 import band.gosrock.domain.common.events.order.WithDrawOrderEvent;
-import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
-import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
-import band.gosrock.domain.domains.order.service.WithdrawPaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -35,12 +31,12 @@ public class WithDrawOrderHandler {
         OrderStatus orderStatus = withDrawOrderEvent.getOrderStatus();
         OrderMailDto orderMailDto = orderMailInfoHelper.execute(withDrawOrderEvent.getOrderUuid());
 
-        //관리자에 의한 취소
+        // 관리자에 의한 취소
         if (orderStatus == OrderStatus.CANCELED) {
             orderWithDrawCancelEmailService.execute(orderMailDto);
             return;
         }
-        //구매자에의한 환불 요청
+        // 구매자에의한 환불 요청
         orderWithDrawRefundEmailService.execute(orderMailDto);
     }
 }

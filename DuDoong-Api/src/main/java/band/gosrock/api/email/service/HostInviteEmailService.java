@@ -1,7 +1,7 @@
 package band.gosrock.api.email.service;
 
 
-import band.gosrock.api.email.dto.OrderMailDto;
+import band.gosrock.domain.domains.host.domain.HostRole;
 import band.gosrock.infrastructure.config.mail.dto.EmailUserInfo;
 import band.gosrock.infrastructure.config.ses.AwsSesUtils;
 import lombok.RequiredArgsConstructor;
@@ -13,13 +13,12 @@ import org.thymeleaf.context.Context;
 public class HostInviteEmailService {
     private final AwsSesUtils awsSesUtils;
 
-    public void execute(OrderMailDto orderMailDto) {
+    public void execute(EmailUserInfo userInfo, String hostName, HostRole hostRole) {
         Context context = new Context();
-        EmailUserInfo userInfo = orderMailDto.getUserInfo();
         context.setVariable("userInfo", userInfo);
-        context.setVariable("hostName", orderMailDto.getOrderInfo());
-        context.setVariable("role", orderMailDto.getEventInfo());
+        context.setVariable("hostName", hostName);
+        context.setVariable("role", hostRole.getValue());
         awsSesUtils.singleEmailRequest(
-                userInfo.getEmail(), "두둥 주문 철회 알림 드립니다.", "orderWithdrawCancel", context);
+                userInfo.getEmail(), "두둥" + hostName + " 호스트 초대 알림 드립니다.", "hostInvite", context);
     }
 }
