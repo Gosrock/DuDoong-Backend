@@ -9,7 +9,7 @@
     }
   </style>
 </head>
-<div th:fragment="eventInfo(eventInfo)"
+<div th:fragment="hostAndEvent(eventInfo,text)"
      style="
       overflow: hidden;
       padding: 0px;
@@ -24,7 +24,26 @@
     <span  th:text="${eventInfo.hostName}" >호스트이름</span>
     <span  > </span>
     <span  th:text="${eventInfo.eventName}" >이벤트 이름</span>
-    <span > 주문 승인 요청이 완료 되었습니다.</span>
+    <span th:text="${text}"> 텍스트 </span>
+    <br />
+  </div>
+</div>
+
+<div th:fragment="host(hostName,text)"
+     style="
+      overflow: hidden;
+      padding: 0px;
+      border: 0;
+      font-size: 14px;
+      font-family: Pretendard , AppleSDGothic, apple sd gothic neo, noto sans korean,
+        noto sans korean regular, noto sans cjk kr, noto sans cjk, nanum gothic,
+        malgun gothic, dotum, arial, helvetica, MS Gothic, sans-serif !important;
+    "
+>
+  <div >
+    <span  th:text="${hostName}" >호스트이름</span>
+    <span > 호스트 </span>
+    <span th:text="${text}"> 텍스트 </span>
     <br />
   </div>
 </div>

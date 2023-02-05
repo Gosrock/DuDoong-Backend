@@ -26,7 +26,7 @@
 </head>
 <body style="margin: 0; padding: 0">
 <div layout:fragment="content">
-  <div th:replace="fragments/title :: title(title='주문 승인 요청 안내')">divider</div>
+  <div th:replace="fragments/title :: title(title='호스트 초대 알림')">divider</div>
 
     <div >
       <span >안녕하세요</span>
@@ -34,22 +34,34 @@
       <span >님</span>
       <br />
     </div>
-  <div th:replace="fragments/subTilte :: hostAndEvent(eventInfo=${eventInfo},text=' 주문 승인 요청이 완료 되었습니다.')">
+  <div th:replace="fragments/subTilte :: host(hostName=${hostName},text='호스트 관리자 초대가 되어 안내 메일 드립니다.')">
     이벤트 정보
   </div>
-  <div th:replace="fragments/orderInfo :: orderInfo(orderInfo=${orderInfo})">
-    주문 정보
+  <div style="font-weight: bold; background: #F8F8FA; padding: 10px ; margin-top: 10px;margin-bottom: 10px">
+    <div >
+      <span  >대상 계정 : </span>
+      <span  th:text="${userInfo.name}" >호스트이름</span>
+    </div>
+    <div >
+      <span  >권한 : </span>
+      <span  th:text="${role}" >수량</span>
+      <span  >매 </span>
+    </div>
   </div>
 
-  <div style="margin-top: 10px ; margin-bottom: 10px">
+
+  <div style="margin-top: 10px ; margin-bottom: 10px ;">
     <div>
-      호스트 관리자가 주문을 승인 할 때 까지 기다려주세요!
+      권한은 마스터, 매니저 , 게스트로 나누어집니다.
     </div>
     <div>
-      승인이 완료되면 알림 메일을 보내 드립니다.
+      게스트는 관리자 공연에서 조회의 권한을 가집니다.
     </div>
     <div>
-      장기간 승인이 이루어지지 않는다면, 호스트 연락처를 통해 주문을 확인해 보세요!
+      매니저는 게스트의 권한과 , 관리자 공연에서 수정과 생성 권한을 가집니다.
+    </div>
+    <div>
+      마스터는 매니저의 권한과 ,  호스트의 멤버관리 권한을 가지고 있습니다.
     </div>
   </div>
 

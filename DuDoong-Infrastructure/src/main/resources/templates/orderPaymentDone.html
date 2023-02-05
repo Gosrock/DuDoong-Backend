@@ -26,7 +26,7 @@
 </head>
 <body style="margin: 0; padding: 0">
 <div layout:fragment="content">
-  <div th:replace="fragments/title :: title(title='주문 승인 요청 안내')">divider</div>
+  <div th:replace="fragments/title :: title(title='주문 완료 안내')">divider</div>
 
     <div >
       <span >안녕하세요</span>
@@ -34,7 +34,7 @@
       <span >님</span>
       <br />
     </div>
-  <div th:replace="fragments/subTilte :: hostAndEvent(eventInfo=${eventInfo},text=' 주문 승인 요청이 완료 되었습니다.')">
+  <div th:replace="fragments/subTilte :: hostAndEvent(eventInfo=${eventInfo},text=' 주문 완료 되었습니다.')">
     이벤트 정보
   </div>
   <div th:replace="fragments/orderInfo :: orderInfo(orderInfo=${orderInfo})">
@@ -42,14 +42,32 @@
   </div>
 
   <div style="margin-top: 10px ; margin-bottom: 10px">
+  <div>
+    원할한 입장을 위해 QR코드를 미리 준비해 주세요
+  </div>
+  <div>
+    마이페이지 -> 내 예매 내역 -> 예매확인 -> QR 코드 보기
+  </div>
+  <div>
+    에서 각 티켓의 QR코드를 확인 할 수 있습니다.
+  </div>
+</div>
+
+  <div style="margin-top: 10px ; margin-bottom: 10px ;color: #7A7A80">
     <div>
-      호스트 관리자가 주문을 승인 할 때 까지 기다려주세요!
+      철회기한 이전까지 수수료 없이 환불 가능합니다.
     </div>
     <div>
-      승인이 완료되면 알림 메일을 보내 드립니다.
+      공연 입장확인이 된 티켓이 있을경우 환불이 불가합니다.
     </div>
     <div>
-      장기간 승인이 이루어지지 않는다면, 호스트 연락처를 통해 주문을 확인해 보세요!
+      환불 방법 : 티켓 예매 상세내역 > 예매취소
+    </div>
+    <div>
+      환불 금액 : 당사에서는 주문에 대해 즉시 취소를 하고,
+    </div>
+    <div>
+      취소 금액에 대한 입금은 카드사 영업일 기준 4~5일이 소요될 수 있습니다.
     </div>
   </div>
 
