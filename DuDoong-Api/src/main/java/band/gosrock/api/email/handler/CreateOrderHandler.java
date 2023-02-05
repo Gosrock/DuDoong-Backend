@@ -27,6 +27,7 @@ public class CreateOrderHandler {
     public void handleDoneOrderFailEvent(CreateOrderEvent createOrderEvent) {
         log.info(createOrderEvent.getOrderUuid() + "주문 생성 이메일 요청");
 
+        // 승인 주문만 생성시에 이메일을 보낸다.
         if (createOrderEvent.getOrderMethod().isPayment()) {
             return;
         }
