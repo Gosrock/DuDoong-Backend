@@ -3,10 +3,7 @@ package band.gosrock.domain.domains.coupon.domain;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.Money;
-import band.gosrock.domain.domains.coupon.exception.AlreadyRecoveredCouponException;
-import band.gosrock.domain.domains.coupon.exception.AlreadyUsedCouponException;
-import band.gosrock.domain.domains.coupon.exception.NotApplicableCouponException;
-import band.gosrock.domain.domains.coupon.exception.NotMyCouponException;
+import band.gosrock.domain.domains.coupon.exception.*;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import javax.persistence.*;
@@ -36,19 +33,24 @@ public class IssuedCoupon extends BaseTimeEntity {
     /** 주문에서 사용하는 할인 금액 계산 함수, 할인 금액보다 결제 금액이 작을 경우 할인 불가로 에러 발생 */
     public Money getDiscountAmount(Money supplyAmount) {
         if (couponCampaign.getDiscountType().equals(DiscountType.AMOUNT)) { // 정액 할인
-            return checkSupplyIsGreaterThenDiscount(
-                    supplyAmount, couponCampaign.getDiscountAmount());
+            return checkSupplyAmount(
+                    supplyAmount,
+                    couponCampaign.getDiscountAmount(),
+                    couponCampaign.getMinimumCost());
         }
         // 정률 할인
         Long discountAmount =
                 supplyAmount.getDiscountAmountByPercentage(
                         supplyAmount, couponCampaign.getDiscountAmount());
-        return checkSupplyIsGreaterThenDiscount(supplyAmount, discountAmount);
+        return checkSupplyAmount(supplyAmount, discountAmount, couponCampaign.getMinimumCost());
     }
 
-    public Money checkSupplyIsGreaterThenDiscount(Money supply, Long discount) {
+    public Money checkSupplyAmount(Money supply, Long discount, Long minimum) {
         if (supply.isLessThan(Money.wons(discount))) {
-            throw NotApplicableCouponException.EXCEPTION;
+            throw SupplyLessThenDiscountException.EXCEPTION;
+        }
+        if (supply.isLessThan(Money.wons(minimum))) {
+            throw SupplyLessThenMinimumException.EXCEPTION;
         }
         return Money.wons(discount);
     }
