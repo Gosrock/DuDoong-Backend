@@ -1,5 +1,6 @@
 package band.gosrock.api.email.dto;
 
+
 import band.gosrock.infrastructure.config.mail.dto.EmailEventInfo;
 import band.gosrock.infrastructure.config.mail.dto.EmailOrderInfo;
 import band.gosrock.infrastructure.config.mail.dto.EmailUserInfo;

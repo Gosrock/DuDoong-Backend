@@ -2,8 +2,6 @@ package band.gosrock.api.email.service;
 
 
 import band.gosrock.api.email.dto.OrderMailDto;
-import band.gosrock.infrastructure.config.mail.dto.EmailEventInfo;
-import band.gosrock.infrastructure.config.mail.dto.EmailOrderInfo;
 import band.gosrock.infrastructure.config.mail.dto.EmailUserInfo;
 import band.gosrock.infrastructure.config.ses.AwsSesUtils;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +19,7 @@ public class OrderApproveRequestEmailService {
         context.setVariable("userInfo", userInfo);
         context.setVariable("orderInfo", orderMailDto.getOrderInfo());
         context.setVariable("eventInfo", orderMailDto.getEventInfo());
-        awsSesUtils.singleEmailRequest(userInfo.getEmail(), "두둥 주문승인 요청 알림드립니다.", "orderApproveRequest", context);
+        awsSesUtils.singleEmailRequest(
+                userInfo.getEmail(), "두둥 주문승인 요청 알림드립니다.", "orderApproveRequest", context);
     }
 }

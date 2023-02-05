@@ -84,7 +84,7 @@ public class User extends BaseTimeEntity {
         return UserProfileVo.from(this);
     }
 
-    public EmailUserInfo toEmailUserInfo(){
+    public EmailUserInfo toEmailUserInfo() {
         return new EmailUserInfo(profile.getName(), profile.getEmail());
     }
 }

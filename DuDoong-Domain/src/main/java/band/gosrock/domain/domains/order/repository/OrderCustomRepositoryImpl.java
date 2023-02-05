@@ -1,18 +1,12 @@
 package band.gosrock.domain.domains.order.repository;
 
 import static band.gosrock.domain.domains.event.domain.QEvent.event;
-import static band.gosrock.domain.domains.issuedTicket.domain.QIssuedTicket.issuedTicket;
-import static band.gosrock.domain.domains.issuedTicket.domain.QIssuedTicketOptionAnswer.issuedTicketOptionAnswer;
 import static band.gosrock.domain.domains.order.domain.QOrder.order;
 import static band.gosrock.domain.domains.order.domain.QOrderLineItem.orderLineItem;
-import static band.gosrock.domain.domains.order.domain.QOrderOptionAnswer.orderOptionAnswer;
 import static band.gosrock.domain.domains.user.domain.QUser.user;
 
 import band.gosrock.domain.common.util.SliceUtil;
-import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.order.domain.Order;
-import band.gosrock.domain.domains.order.domain.QOrder;
-import band.gosrock.domain.domains.order.domain.QOrderOptionAnswer;
 import band.gosrock.domain.domains.order.repository.condition.FindEventOrdersCondition;
 import band.gosrock.domain.domains.order.repository.condition.FindMyPageOrderCondition;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -36,12 +30,13 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
 
     @Override
     public Optional<Order> find(String orderUuid) {
-        Order find = queryFactory
-            .selectFrom(order)
-            .leftJoin(order.orderLineItems, orderLineItem)
-            .fetchJoin()
-            .where(order.uuid.eq(orderUuid))
-            .fetchOne();
+        Order find =
+                queryFactory
+                        .selectFrom(order)
+                        .leftJoin(order.orderLineItems, orderLineItem)
+                        .fetchJoin()
+                        .where(order.uuid.eq(orderUuid))
+                        .fetchOne();
 
         return Optional.ofNullable(find);
     }

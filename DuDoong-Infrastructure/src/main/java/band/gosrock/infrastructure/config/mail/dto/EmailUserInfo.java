@@ -1,5 +1,6 @@
 package band.gosrock.infrastructure.config.mail.dto;
 
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
