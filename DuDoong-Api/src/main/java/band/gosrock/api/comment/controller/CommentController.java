@@ -12,6 +12,7 @@ import band.gosrock.api.comment.service.RetrieveCommentCountUseCase;
 import band.gosrock.api.comment.service.RetrieveCommentUseCase;
 import band.gosrock.api.comment.service.RetrieveRandomCommentUseCase;
 import band.gosrock.api.common.slice.SliceResponse;
+import band.gosrock.common.annotation.DisableSwaggerSecurity;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@SecurityRequirement(name = "access-token")
 @Tag(name = "응원톡 컨트롤러")
 @RestController
 @RequestMapping("/v1/events/{eventId}/comments")
@@ -44,7 +46,6 @@ public class CommentController {
 
     private final RetrieveRandomCommentUseCase retrieveRandomCommentUseCase;
 
-    @SecurityRequirement(name = "access-token")
     @Operation(summary = "응원글을 생성합니다.")
     @PostMapping
     public CreateCommentResponse postComment(
@@ -53,6 +54,7 @@ public class CommentController {
         return createCommentUseCase.execute(eventId, createCommentRequest);
     }
 
+    @DisableSwaggerSecurity
     @Operation(summary = "응원글을 조회합니다.")
     @GetMapping
     public SliceResponse<RetrieveCommentDTO> getComments(
@@ -61,19 +63,20 @@ public class CommentController {
         return retrieveCommentUseCase.execute(eventId, pageable);
     }
 
-    @SecurityRequirement(name = "access-token")
     @Operation(summary = "[어드민 기능] 응원글을 삭제합니다.")
     @DeleteMapping(value = "/{commentId}")
     public void deleteComment(@PathVariable Long eventId, @PathVariable Long commentId) {
         deleteCommentUseCase.execute(eventId, commentId);
     }
 
+    @DisableSwaggerSecurity
     @Operation(summary = "응원글 개수를 카운팅합니다.")
     @GetMapping(value = "/counts")
     public RetrieveCommentCountResponse getCommentCounts(@PathVariable Long eventId) {
         return retrieveCommentCountUseCase.execute(eventId);
     }
 
+    @DisableSwaggerSecurity
     @Operation(summary = "응원글을 랜덤으로 뽑아옵니다.")
     @GetMapping(value = "/random")
     public RetrieveRandomCommentResponse getRandomComment(@PathVariable Long eventId) {
