@@ -28,7 +28,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@SecurityRequirement(name = "access-token")
 @Tag(name = "응원톡 컨트롤러")
 @RestController
 @RequestMapping("/v1/events/{eventId}/comments")
@@ -45,6 +44,7 @@ public class CommentController {
 
     private final RetrieveRandomCommentUseCase retrieveRandomCommentUseCase;
 
+    @SecurityRequirement(name = "access-token")
     @Operation(summary = "응원글을 생성합니다.")
     @PostMapping
     public CreateCommentResponse postComment(
@@ -61,6 +61,7 @@ public class CommentController {
         return retrieveCommentUseCase.execute(eventId, pageable);
     }
 
+    @SecurityRequirement(name = "access-token")
     @Operation(summary = "[어드민 기능] 응원글을 삭제합니다.")
     @DeleteMapping(value = "/{commentId}")
     public void deleteComment(@PathVariable Long eventId, @PathVariable Long commentId) {

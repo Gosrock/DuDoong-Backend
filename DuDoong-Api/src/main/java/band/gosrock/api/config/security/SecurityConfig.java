@@ -37,6 +37,8 @@ public class SecurityConfig {
                 .permitAll()
                 .mvcMatchers(HttpMethod.GET, "/v1/events/{eventId:[\\d+]}/ticketItems")
                 .permitAll()
+                .mvcMatchers(HttpMethod.GET, "/v1/events/{eventId:[\\d+]}/comments/**")
+                .permitAll()
                 .anyRequest()
                 .authenticated();
         http.apply(filterConfig);
