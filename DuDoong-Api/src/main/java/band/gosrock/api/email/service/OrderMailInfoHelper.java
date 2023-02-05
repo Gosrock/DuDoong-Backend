@@ -13,9 +13,11 @@ import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.infrastructure.config.mail.dto.EmailEventInfo;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.transaction.annotation.Transactional;
 
 @Helper
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class OrderMailInfoHelper {
     private final OrderAdaptor orderAdaptor;
     private final UserAdaptor userAdaptor;
@@ -23,7 +25,7 @@ public class OrderMailInfoHelper {
     private final HostAdaptor hostAdaptor;
 
     public OrderMailDto execute(String orderUuid){
-        Order order = orderAdaptor.findByOrderUuid(orderUuid);
+        Order order = orderAdaptor.find(orderUuid);
         User user = userAdaptor.queryUser(order.getUserId());
         Event event = eventAdaptor.findById(order.getEventId());
         Host host= hostAdaptor.findById(event.getHostId());

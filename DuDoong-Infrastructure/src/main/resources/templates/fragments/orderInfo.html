@@ -16,7 +16,7 @@
       margin-top: 20px;
       border: 0;
       font-weight: bold;
-      font-size: 24px;
+      font-size: 14px;
       font-family: Pretendard , AppleSDGothic, apple sd gothic neo, noto sans korean,
         noto sans korean regular, noto sans cjk kr, noto sans cjk, nanum gothic,
         malgun gothic, dotum, arial, helvetica, MS Gothic, sans-serif !important;
@@ -30,6 +30,7 @@
     <div >
       <span  >수량 : </span>
       <span  th:text="${orderInfo.quantity}" >수량</span>
+      <span  >매 </span>
     </div>
     <div >
       <span  >가격 : </span>
@@ -37,7 +38,7 @@
     </div>
     <div >
       <span  >주문 일시 : </span>
-      <span  th:text="${orderInfo.createAt}" >주문일시</span>
+      <span  th:text="${#temporals.format(orderInfo.createAt, 'yyyy-MM-dd HH:mm')}" >주문일시</span>
     </div>
   </div>
 </div>

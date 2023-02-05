@@ -1,5 +1,6 @@
 package band.gosrock.infrastructure.config.mail.dto;
 
+import band.gosrock.common.annotation.DateFormat;
 import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

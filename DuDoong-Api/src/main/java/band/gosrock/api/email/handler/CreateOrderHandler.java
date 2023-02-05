@@ -17,6 +17,7 @@ import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.infrastructure.config.mail.dto.EmailEventInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -30,6 +31,7 @@ public class CreateOrderHandler {
 
     private final OrderMailInfoHelper orderMailInfoHelper;
 
+    @Async
     @TransactionalEventListener(
             classes = CreateOrderEvent.class,
             phase = TransactionPhase.AFTER_COMMIT)
@@ -39,7 +41,6 @@ public class CreateOrderHandler {
         if(createOrderEvent.getOrderMethod().isPayment()){
             return;
         }
-
 
         orderApproveRequestEmailService.execute(orderMailInfoHelper.execute(
             createOrderEvent.getOrderUuid()));

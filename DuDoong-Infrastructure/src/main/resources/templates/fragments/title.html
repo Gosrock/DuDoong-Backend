@@ -22,9 +22,11 @@
         malgun gothic, dotum, arial, helvetica, MS Gothic, sans-serif !important;
     "
 >
-  <div>두둥</div>
-  <div th:text="${title}"
-  style="color: #6B36DC">타이틀</div>
+  <div style="padding: 0px 5px">
+    <div>두둥</div>
+    <div th:text="${title}"
+         style="color: #6B36DC">타이틀</div>
+  </div>
   <div th:replace="fragments/divider :: divider">divider</div>
 </div>
 </html>

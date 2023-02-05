@@ -33,6 +33,10 @@ public class OrderAdaptor {
         return orderRepository.findByUuid(uuid).orElseThrow(() -> OrderNotFoundException.EXCEPTION);
     }
 
+    public Order find(String uuid) {
+        return orderRepository.find(uuid).orElseThrow(() -> OrderNotFoundException.EXCEPTION);
+    }
+
     public Optional<Order> findRecentOrderByUserId(Long userId) {
         return orderRepository.findFirstByUserIdOrderByIdDesc(userId);
     }
