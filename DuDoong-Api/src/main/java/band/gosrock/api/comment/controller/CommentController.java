@@ -12,6 +12,7 @@ import band.gosrock.api.comment.service.RetrieveCommentCountUseCase;
 import band.gosrock.api.comment.service.RetrieveCommentUseCase;
 import band.gosrock.api.comment.service.RetrieveRandomCommentUseCase;
 import band.gosrock.api.common.slice.SliceResponse;
+import band.gosrock.common.annotation.DisableSwaggerSecurity;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -53,6 +54,7 @@ public class CommentController {
         return createCommentUseCase.execute(eventId, createCommentRequest);
     }
 
+    @DisableSwaggerSecurity
     @Operation(summary = "응원글을 조회합니다.")
     @GetMapping
     public SliceResponse<RetrieveCommentDTO> getComments(
@@ -67,12 +69,14 @@ public class CommentController {
         deleteCommentUseCase.execute(eventId, commentId);
     }
 
+    @DisableSwaggerSecurity
     @Operation(summary = "응원글 개수를 카운팅합니다.")
     @GetMapping(value = "/counts")
     public RetrieveCommentCountResponse getCommentCounts(@PathVariable Long eventId) {
         return retrieveCommentCountUseCase.execute(eventId);
     }
 
+    @DisableSwaggerSecurity
     @Operation(summary = "응원글을 랜덤으로 뽑아옵니다.")
     @GetMapping(value = "/random")
     public RetrieveRandomCommentResponse getRandomComment(@PathVariable Long eventId) {
