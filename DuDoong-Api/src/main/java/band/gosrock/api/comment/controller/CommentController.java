@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "응원톡 컨트롤러")
 @RestController
 @RequestMapping("/v1/events/{eventId}/comments")
+@Validated
 @RequiredArgsConstructor
 public class CommentController {
 
@@ -83,7 +85,7 @@ public class CommentController {
     @GetMapping(value = "/random")
     public RetrieveRandomCommentResponse getRandomComment(
             @PathVariable Long eventId,
-            @RequestParam @Min(value = 1, message = "limit 값은 0보다 커야 합니다.") Long limit) {
+            @RequestParam @Min(value = 1L, message = "limit 값은 0보다 커야 합니다.") Long limit) {
         return retrieveRandomCommentUseCase.execute(eventId, limit);
     }
 }
