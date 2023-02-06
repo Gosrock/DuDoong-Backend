@@ -23,9 +23,9 @@ public class RetrieveRandomCommentUseCase {
     private final EventAdaptor eventAdaptor;
 
     @Transactional(readOnly = true)
-    public RetrieveRandomCommentResponse execute(Long eventId, Long offset) {
+    public RetrieveRandomCommentResponse execute(Long eventId, Long limit) {
         Event event = eventAdaptor.findById(eventId);
-        List<Comment> comments = commentAdaptor.queryRandomComment(event.getId(), offset);
+        List<Comment> comments = commentAdaptor.queryRandomComment(event.getId(), limit);
         return commentMapper.toRetrieveRandomCommentResponse(comments);
     }
 }

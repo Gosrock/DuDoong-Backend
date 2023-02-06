@@ -34,9 +34,9 @@ public class CommentAdaptor {
         return commentRepository.countComment(eventId);
     }
 
-    public List<Comment> queryRandomComment(Long eventId, Long offset) {
+    public List<Comment> queryRandomComment(Long eventId, Long limit) {
         Long countComment = queryCommentCount(eventId);
         //        return commentRepository.queryRandomComment(eventId, countComment, offset);
-        return commentRepository.findAllRandom(eventId, offset);
+        return commentRepository.findAllRandom(eventId, limit);
     }
 }

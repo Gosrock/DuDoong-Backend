@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
@@ -81,7 +82,8 @@ public class CommentController {
     @Operation(summary = "응원글을 랜덤으로 뽑아옵니다.")
     @GetMapping(value = "/random")
     public RetrieveRandomCommentResponse getRandomComment(
-            @PathVariable Long eventId, @RequestParam Long offset) {
-        return retrieveRandomCommentUseCase.execute(eventId, offset);
+            @PathVariable Long eventId,
+            @RequestParam @Min(value = 1, message = "limit 값은 0보다 커야 합니다.") Long limit) {
+        return retrieveRandomCommentUseCase.execute(eventId, limit);
     }
 }

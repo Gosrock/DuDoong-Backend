@@ -17,5 +17,5 @@ public interface CommentRepository extends JpaRepository<Comment, Long>, Comment
                             + "WHERE c.event_id = :eventId "
                             + "ORDER BY RAND() DESC "
                             + "LIMIT :offset")
-    List<Comment> findAllRandom(@Param("eventId") Long eventId, @Param("offset") Long offset);
+    List<Comment> findAllRandom(@Param("eventId") Long eventId, @Param("offset") Long limit);
 }
