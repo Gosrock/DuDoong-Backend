@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @SecurityRequirement(name = "access-token")
@@ -79,7 +80,8 @@ public class CommentController {
     @DisableSwaggerSecurity
     @Operation(summary = "응원글을 랜덤으로 뽑아옵니다.")
     @GetMapping(value = "/random")
-    public RetrieveRandomCommentResponse getRandomComment(@PathVariable Long eventId) {
-        return retrieveRandomCommentUseCase.execute(eventId);
+    public RetrieveRandomCommentResponse getRandomComment(
+            @PathVariable Long eventId, @RequestParam Long offset) {
+        return retrieveRandomCommentUseCase.execute(eventId, offset);
     }
 }

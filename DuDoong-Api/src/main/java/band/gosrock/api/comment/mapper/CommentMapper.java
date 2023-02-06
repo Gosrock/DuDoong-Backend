@@ -13,6 +13,7 @@ import band.gosrock.domain.domains.comment.domain.Comment;
 import band.gosrock.domain.domains.comment.dto.condition.CommentCondition;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.user.domain.User;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Slice;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,8 +50,8 @@ public class CommentMapper {
         return RetrieveCommentCountResponse.of(commentCount);
     }
 
-    public RetrieveRandomCommentResponse toRetrieveRandomCommentResponse(Comment comment) {
-        return RetrieveRandomCommentResponse.of(comment);
+    public RetrieveRandomCommentResponse toRetrieveRandomCommentResponse(List<Comment> comments) {
+        return RetrieveRandomCommentResponse.of(comments);
     }
 
     private RetrieveCommentDTO toRetrieveCommentDTO(Comment comment, Long currentUserId) {

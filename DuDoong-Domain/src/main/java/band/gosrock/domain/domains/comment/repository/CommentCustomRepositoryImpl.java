@@ -72,7 +72,7 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
     }
 
     @Override
-    public Comment queryRandomComment(Long eventId, Long countComment) {
+    public List<Comment> queryRandomComment(Long eventId, Long countComment, Long offset) {
         SecureRandom secureRandom = new SecureRandom();
         int idx = (int) (secureRandom.nextFloat(1) * countComment);
 
@@ -82,7 +82,7 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
                         .selectFrom(comment)
                         .where(eventIdEq(eventId), comment.commentStatus.eq(CommentStatus.ACTIVE))
                         .offset(pageRequest.getOffset())
-                        .limit(1)
+                        .limit(offset)
                         .fetch();
 
         JPAQuery<Long> countQuery =
@@ -95,7 +95,7 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
                 PageableExecutionUtils.getPage(comments, pageRequest, countQuery::fetchOne);
 
         if (commentOfPage.hasContent()) {
-            return commentOfPage.getContent().get(0);
+            return commentOfPage.getContent();
         }
         throw RetrieveRandomCommentNotFoundException.EXCEPTION;
     }
