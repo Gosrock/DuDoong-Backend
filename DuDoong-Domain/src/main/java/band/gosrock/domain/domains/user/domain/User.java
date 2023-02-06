@@ -8,6 +8,7 @@ import band.gosrock.domain.common.vo.UserInfoVo;
 import band.gosrock.domain.common.vo.UserProfileVo;
 import band.gosrock.domain.domains.user.exception.AlreadyDeletedUserException;
 import band.gosrock.domain.domains.user.exception.ForbiddenUserException;
+import band.gosrock.infrastructure.config.mail.dto.EmailUserInfo;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -81,5 +82,9 @@ public class User extends BaseTimeEntity {
 
     public UserProfileVo toUserProfileVo() {
         return UserProfileVo.from(this);
+    }
+
+    public EmailUserInfo toEmailUserInfo() {
+        return new EmailUserInfo(profile.getName(), profile.getEmail());
     }
 }

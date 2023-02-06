@@ -27,16 +27,13 @@ public class CreateCouponUseCase {
             CreateCouponCampaignRequest createCouponCampaignRequest) {
         // 존재하는 유저인지 검증
         User user = userUtils.getCurrentUser();
-        // 슈퍼 호스트인지 검증
-        hostService.validateManagerHostUser(createCouponCampaignRequest.getHostId(), user.getId());
         // 이미 생성된 쿠폰 코드인지 검증
         createCouponCampaignDomainService.checkCouponCodeExists(
                 createCouponCampaignRequest.getCouponCode());
         // 쿠폰 생성
         CouponCampaign couponCampaign =
                 createCouponCampaignDomainService.createCouponCampaign(
-                        couponCampaignMapper.toEntity(createCouponCampaignRequest));
-        return CouponCampaignMapper.toCreateCouponCampaignResponse(
-                couponCampaign, couponCampaign.getHostId());
+                        couponCampaignMapper.toEntity(createCouponCampaignRequest, user.getId()));
+        return CouponCampaignMapper.toCreateCouponCampaignResponse(couponCampaign, user.getId());
     }
 }

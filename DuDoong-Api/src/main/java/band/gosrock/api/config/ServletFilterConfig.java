@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.security.web.context.AbstractSecurityWebApplicationInitializer;
 import org.springframework.web.filter.ForwardedHeaderFilter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.resource.ResourceUrlEncodingFilter;
 
 @Configuration
 @RequiredArgsConstructor
@@ -25,9 +26,17 @@ public class ServletFilterConfig implements WebMvcConfigurer {
             @Qualifier(AbstractSecurityWebApplicationInitializer.DEFAULT_FILTER_NAME)
                     Filter securityFilter) {
         FilterRegistrationBean registration = new FilterRegistrationBean(securityFilter);
-        registration.setOrder(Integer.MAX_VALUE - 2);
+        registration.setOrder(Integer.MAX_VALUE - 3);
         registration.setName(AbstractSecurityWebApplicationInitializer.DEFAULT_FILTER_NAME);
         return registration;
+    }
+
+    @Bean
+    public FilterRegistrationBean setResourceUrlEncodingFilter() {
+        FilterRegistrationBean registrationBean = new FilterRegistrationBean();
+        registrationBean.setFilter(new ResourceUrlEncodingFilter());
+        registrationBean.setOrder(Integer.MAX_VALUE - 2);
+        return registrationBean;
     }
 
     @Bean

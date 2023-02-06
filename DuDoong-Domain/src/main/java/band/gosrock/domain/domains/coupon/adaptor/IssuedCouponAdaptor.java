@@ -31,9 +31,9 @@ public class IssuedCouponAdaptor {
                         });
     }
 
-    public IssuedCoupon query(Long couponCampaignId) {
+    public IssuedCoupon query(Long issuedCouponId) {
         return issuedCouponRepository
-                .findById(couponCampaignId)
+                .findById(issuedCouponId)
                 .orElseThrow(() -> CouponNotFoundException.EXCEPTION);
     }
 }
