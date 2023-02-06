@@ -1,0 +1,45 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title></title>
+  <style>
+    * {
+      line-height: 150%;
+    }
+  </style>
+</head>
+<div th:fragment="orderInfo(orderInfo)"
+     style="
+      overflow: hidden;
+      padding: 0px;
+      margin-top: 20px;
+      border: 0;
+      font-weight: bold;
+      font-size: 14px;
+      font-family: Pretendard , AppleSDGothic, apple sd gothic neo, noto sans korean,
+        noto sans korean regular, noto sans cjk kr, noto sans cjk, nanum gothic,
+        malgun gothic, dotum, arial, helvetica, MS Gothic, sans-serif !important;
+    "
+>
+  <div style="font-weight: bold; background: #F8F8FA; padding: 10px ; margin-top: 10px;margin-bottom: 10px">
+    <div >
+      <span  >주문 이름 : </span>
+      <span  th:text="${orderInfo.name}" >호스트이름</span>
+    </div>
+    <div >
+      <span  >수량 : </span>
+      <span  th:text="${orderInfo.quantity}" >수량</span>
+      <span  >매 </span>
+    </div>
+    <div >
+      <span  >가격 : </span>
+      <span  th:text="${orderInfo.money}" >가격</span>
+    </div>
+    <div >
+      <span  >주문 일시 : </span>
+      <span  th:text="${#temporals.format(orderInfo.createAt, 'yyyy-MM-dd HH:mm')}" >주문일시</span>
+    </div>
+  </div>
+</div>
+</html>

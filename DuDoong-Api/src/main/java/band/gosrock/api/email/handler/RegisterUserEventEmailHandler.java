@@ -16,7 +16,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class RegisterUserEventHandler {
+public class RegisterUserEventEmailHandler {
 
     private final UserAdaptor userAdaptor;
 
