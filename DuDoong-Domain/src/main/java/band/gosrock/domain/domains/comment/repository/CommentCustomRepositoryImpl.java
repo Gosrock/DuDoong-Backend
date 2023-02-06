@@ -7,17 +7,11 @@ import band.gosrock.domain.common.util.SliceUtil;
 import band.gosrock.domain.domains.comment.domain.Comment;
 import band.gosrock.domain.domains.comment.domain.CommentStatus;
 import band.gosrock.domain.domains.comment.dto.condition.CommentCondition;
-import band.gosrock.domain.domains.comment.exception.RetrieveRandomCommentNotFoundException;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import java.security.SecureRandom;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.support.PageableExecutionUtils;
 
 @RequiredArgsConstructor
 public class CommentCustomRepositoryImpl implements CommentCustomRepository {
@@ -69,34 +63,5 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
                 .from(comment)
                 .where(eventIdEq(eventId), comment.commentStatus.eq(CommentStatus.ACTIVE))
                 .fetchOne();
-    }
-
-    @Override
-    public List<Comment> queryRandomComment(Long eventId, Long countComment, Long offset) {
-        SecureRandom secureRandom = new SecureRandom();
-        int idx = (int) (secureRandom.nextFloat(1) * countComment);
-
-        PageRequest pageRequest = PageRequest.of(idx, 1);
-        List<Comment> comments =
-                queryFactory
-                        .selectFrom(comment)
-                        .where(eventIdEq(eventId), comment.commentStatus.eq(CommentStatus.ACTIVE))
-                        .offset(pageRequest.getOffset())
-                        .limit(offset)
-                        .fetch();
-
-        JPAQuery<Long> countQuery =
-                queryFactory
-                        .select(comment.count())
-                        .from(comment)
-                        .where(eventIdEq(eventId), comment.commentStatus.eq(CommentStatus.ACTIVE));
-
-        Page<Comment> commentOfPage =
-                PageableExecutionUtils.getPage(comments, pageRequest, countQuery::fetchOne);
-
-        if (commentOfPage.hasContent()) {
-            return commentOfPage.getContent();
-        }
-        throw RetrieveRandomCommentNotFoundException.EXCEPTION;
     }
 }
