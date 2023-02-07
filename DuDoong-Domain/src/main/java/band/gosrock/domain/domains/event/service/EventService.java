@@ -7,6 +7,7 @@ import band.gosrock.domain.domains.event.domain.*;
 import band.gosrock.domain.domains.event.exception.CannotOpenEventException;
 import band.gosrock.domain.domains.event.exception.UseOtherApiException;
 import band.gosrock.domain.domains.event.repository.EventRepository;
+import band.gosrock.domain.domains.ticket_item.service.TicketItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class EventService {
     private final EventRepository eventRepository;
     private final EventAdaptor eventAdaptor;
+    private final TicketItemService ticketItemService;
 
     public Event createEvent(Event event) {
         return eventRepository.save(event);
@@ -50,6 +52,9 @@ public class EventService {
     }
 
     public Event openEvent(Event event) {
+        this.validateEventBasicExistence(event);
+        this.validateEventDetailExistence(event);
+        ticketItemService.validateExistenceByEventId(event.getId());
         event.open();
         return eventRepository.save(event);
     }

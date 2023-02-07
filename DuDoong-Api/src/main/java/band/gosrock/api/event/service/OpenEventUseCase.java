@@ -9,7 +9,6 @@ import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.service.EventService;
-import band.gosrock.domain.domains.ticket_item.service.TicketItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,16 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class OpenEventUseCase {
     private final EventService eventService;
     private final EventAdaptor eventAdaptor;
-    private final TicketItemService ticketItemService;
 
     @Transactional
     @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID)
     public EventResponse execute(Long eventId) {
         final Event event = eventAdaptor.findById(eventId);
-        eventService.validateEventBasicExistence(event);
-        eventService.validateEventDetailExistence(event);
-        ticketItemService.validateExistenceByEventId(eventId);
-
         return EventResponse.of(eventService.openEvent(event));
     }
 }
