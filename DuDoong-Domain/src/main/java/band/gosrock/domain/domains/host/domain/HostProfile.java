@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class HostProfile {
     // 호스트 이름
+    @Column(length = 15)
     private String name;
 
     // 간단 소개

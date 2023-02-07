@@ -9,6 +9,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 
 @Getter
 @RequiredArgsConstructor
@@ -19,6 +20,7 @@ public class CreateEventRequest {
 
     @Schema(defaultValue = "고스락 제 22회 정기공연", description = "공연 이름")
     @NotBlank(message = "공연 이름을 입력하세요")
+    @Length(max = 25)
     private String name;
 
     @Schema(
