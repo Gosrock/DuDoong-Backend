@@ -1,4 +1,4 @@
-package band.gosrock.api.config.slack;
+package band.gosrock.api.slack.sender;
 
 import static com.slack.api.model.block.Blocks.divider;
 import static com.slack.api.model.block.Blocks.section;
@@ -6,9 +6,6 @@ import static com.slack.api.model.block.composition.BlockCompositions.plainText;
 
 import band.gosrock.infrastructure.config.slack.SlackProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.slack.api.methods.MethodsClient;
-import com.slack.api.methods.SlackApiException;
-import com.slack.api.methods.request.chat.ChatPostMessageRequest;
 import com.slack.api.model.block.Blocks;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.composition.MarkdownTextObject;
@@ -19,27 +16,21 @@ import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.env.Environment;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class SlackApiProvider {
+public class SlackInternalErrorSender {
     private final ObjectMapper objectMapper;
 
     private final SlackProvider slackProvider;
 
     private final int MAX_LEN = 500;
 
-
-
-    private void executeSendError(
-            ContentCachingRequestWrapper cachingRequest, Exception e, Long userId)
+    public void execute(
+        ContentCachingRequestWrapper cachingRequest, Exception e, Long userId)
             throws IOException {
         final String url = cachingRequest.getRequestURL().toString();
         final String method = cachingRequest.getMethod();
