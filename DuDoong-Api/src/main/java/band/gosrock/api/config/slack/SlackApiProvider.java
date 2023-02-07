@@ -4,6 +4,7 @@ import static com.slack.api.model.block.Blocks.divider;
 import static com.slack.api.model.block.Blocks.section;
 import static com.slack.api.model.block.composition.BlockCompositions.plainText;
 
+import band.gosrock.infrastructure.config.slack.SlackProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slack.api.methods.MethodsClient;
 import com.slack.api.methods.SlackApiException;
@@ -29,27 +30,13 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 @RequiredArgsConstructor
 @Slf4j
 public class SlackApiProvider {
-    private final MethodsClient methodsClient;
     private final ObjectMapper objectMapper;
 
-    private final Environment env;
-
-    private final List<String> sendAlarmProfiles = List.of("staging", "prod");
-
-    @Value("${slack.webhook.id}")
-    private String CHANNEL_ID;
+    private final SlackProvider slackProvider;
 
     private final int MAX_LEN = 500;
 
-    @Async
-    public void sendError(ContentCachingRequestWrapper cachingRequest, Exception e, Long userId)
-            throws IOException {
-        String[] activeProfiles = env.getActiveProfiles();
-        List<String> currentProfile = Arrays.stream(activeProfiles).toList();
-        if (CollectionUtils.containsAny(sendAlarmProfiles, currentProfile)) {
-            executeSendError(cachingRequest, e, userId);
-        }
-    }
+
 
     private void executeSendError(
             ContentCachingRequestWrapper cachingRequest, Exception e, Long userId)
@@ -99,16 +86,6 @@ public class SlackApiProvider {
         layoutBlocks.add(
                 section(section -> section.fields(List.of(errorNameMarkdown, errorStackMarkdown))));
 
-        ChatPostMessageRequest chatPostMessageRequest =
-                ChatPostMessageRequest.builder()
-                        .channel(CHANNEL_ID)
-                        .text("")
-                        .blocks(layoutBlocks)
-                        .build();
-        try {
-            methodsClient.chatPostMessage(chatPostMessageRequest);
-        } catch (SlackApiException slackApiException) {
-            log.error(slackApiException.toString());
-        }
+        slackProvider.sendNotification(layoutBlocks);
     }
 }

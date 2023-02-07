@@ -27,10 +27,11 @@ public class RegisterUserEventEmailHandler {
             classes = UserRegisterEvent.class,
             phase = TransactionPhase.AFTER_COMMIT)
     public void handleRegisterUserEvent(UserRegisterEvent userRegisterEvent) {
-        Long userId = userRegisterEvent.getUserId();
-        User user = userAdaptor.queryUser(userId);
-        log.info(userId.toString() + "유저 등록");
-        Profile profile = user.getProfile();
-        sendRegisterEmailService.execute(profile.getName(), profile.getEmail());
+        throw new RuntimeException();
+//        Long userId = userRegisterEvent.getUserId();
+//        User user = userAdaptor.queryUser(userId);
+//        log.info(userId.toString() + "유저 등록");
+//        Profile profile = user.getProfile();
+//        sendRegisterEmailService.execute(profile.getName(), profile.getEmail());
     }
 }
