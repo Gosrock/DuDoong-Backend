@@ -4,6 +4,7 @@ package band.gosrock.domain.domains.event.service;
 import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.*;
+import band.gosrock.domain.domains.event.exception.CannotOpenEventException;
 import band.gosrock.domain.domains.event.exception.UseOtherApiException;
 import band.gosrock.domain.domains.event.repository.EventRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,18 @@ public class EventService {
         return eventRepository.save(event);
     }
 
+    public void validateEventBasicExistence(Event event) {
+        if (!event.hasEventBasic() || !event.hasEventPlace()) {
+            throw CannotOpenEventException.EXCEPTION;
+        }
+    }
+
+    public void validateEventDetailExistence(Event event) {
+        if (!event.hasEventDetail()) {
+            throw CannotOpenEventException.EXCEPTION;
+        }
+    }
+
     public Event openEvent(Event event) {
         event.open();
         return eventRepository.save(event);
@@ -44,9 +57,7 @@ public class EventService {
     public Event updateEventStatus(Event event, EventStatus status) {
         if (status == EventStatus.OPEN) {
             throw UseOtherApiException.EXCEPTION; // open 은 다른 API 강제
-        }
-        // todo :: 이벤트 상태 변경시 검증 필요
-        else if (status == EventStatus.CLOSED) event.close();
+        } else if (status == EventStatus.CLOSED) event.close();
         else if (status == EventStatus.CALCULATING) event.calculate();
         else if (status == EventStatus.PREPARING) event.prepare();
         return eventRepository.save(event);
