@@ -12,7 +12,6 @@ import com.slack.api.model.block.composition.MarkdownTextObject;
 import com.slack.api.model.block.composition.TextObject;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,20 +26,15 @@ public class SlackInternalErrorSender {
 
     private final SlackProvider slackProvider;
 
-    private final int MAX_LEN = 500;
-
-    public void execute(
-        ContentCachingRequestWrapper cachingRequest, Exception e, Long userId)
+    public void execute(ContentCachingRequestWrapper cachingRequest, Exception e, Long userId)
             throws IOException {
         final String url = cachingRequest.getRequestURL().toString();
         final String method = cachingRequest.getMethod();
         final String body =
                 objectMapper.readTree(cachingRequest.getContentAsByteArray()).toString();
-        final String exceptionAsString = Arrays.toString(e.getStackTrace());
-        final int cutLength = Math.min(exceptionAsString.length(), MAX_LEN);
 
         final String errorMessage = e.getMessage();
-        final String errorStack = exceptionAsString.substring(0, cutLength);
+        String errorStack = slackProvider.getErrorStack(e);
         final String errorUserIP = cachingRequest.getRemoteAddr();
 
         List<LayoutBlock> layoutBlocks = new ArrayList<>();

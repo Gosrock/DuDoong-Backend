@@ -1,5 +1,6 @@
 package band.gosrock.infrastructure.config.slack;
 
+
 import com.slack.api.methods.MethodsClient;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
@@ -23,6 +24,7 @@ public class SlackProvider {
     private final Environment env;
 
     private final List<String> sendAlarmProfiles = List.of("staging", "prod");
+    private final int MAX_LEN = 500;
 
     @Value("${slack.webhook.id}")
     private String CHANNEL_ID;
@@ -35,17 +37,23 @@ public class SlackProvider {
         return CollectionUtils.containsAny(sendAlarmProfiles, currentProfile);
     }
 
+    public String getErrorStack(Throwable throwable) {
+        String exceptionAsString = Arrays.toString(throwable.getStackTrace());
+        int cutLength = Math.min(exceptionAsString.length(), MAX_LEN);
+        return exceptionAsString.substring(0, cutLength);
+    }
+
     @Async
-    public void sendNotification(List<LayoutBlock> layoutBlocks){
-        if(!isNeedToNotificationProfile()){
+    public void sendNotification(List<LayoutBlock> layoutBlocks) {
+        if (!isNeedToNotificationProfile()) {
             return;
         }
         ChatPostMessageRequest chatPostMessageRequest =
-            ChatPostMessageRequest.builder()
-                .channel(CHANNEL_ID)
-                .text("")
-                .blocks(layoutBlocks)
-                .build();
+                ChatPostMessageRequest.builder()
+                        .channel(CHANNEL_ID)
+                        .text("")
+                        .blocks(layoutBlocks)
+                        .build();
         try {
             methodsClient.chatPostMessage(chatPostMessageRequest);
         } catch (SlackApiException | IOException slackApiException) {
