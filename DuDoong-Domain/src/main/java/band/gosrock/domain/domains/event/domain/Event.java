@@ -3,10 +3,7 @@ package band.gosrock.domain.domains.event.domain;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.*;
-import band.gosrock.domain.domains.event.exception.CannotModifyEventBasicException;
-import band.gosrock.domain.domains.event.exception.EventCannotEndBeforeStartException;
-import band.gosrock.domain.domains.event.exception.EventNotOpenException;
-import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
+import band.gosrock.domain.domains.event.exception.*;
 import java.time.LocalDateTime;
 import javax.persistence.*;
 import lombok.AccessLevel;
@@ -156,22 +153,23 @@ public class Event extends BaseTimeEntity {
     }
 
     public void prepare() {
-        // TODO : 오픈할수 있는 상태인지 검증필요함.
+        if (this.status == EventStatus.PREPARING) throw AlreadyPreparingStatusException.EXCEPTION;
         this.status = EventStatus.PREPARING;
     }
 
     public void open() {
-        // TODO : 오픈할수 있는 상태인지 검증필요함.
+        if (this.status == EventStatus.OPEN) throw AlreadyOpenStatusException.EXCEPTION;
         this.status = EventStatus.OPEN;
     }
 
     public void calculate() {
-        // TODO : 오픈할수 있는 상태인지 검증필요함.
+        if (this.status == EventStatus.CALCULATING)
+            throw AlreadyCalculatingStatusException.EXCEPTION;
         this.status = EventStatus.CALCULATING;
     }
 
     public void close() {
-        // TODO : 오픈할수 있는 상태인지 검증필요함.
-        this.status = EventStatus.OPEN;
+        if (this.status == EventStatus.CLOSED) throw AlreadyCloseStatusException.EXCEPTION;
+        this.status = EventStatus.CLOSED;
     }
 }
