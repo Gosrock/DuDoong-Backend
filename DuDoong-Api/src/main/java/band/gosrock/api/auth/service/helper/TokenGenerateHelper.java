@@ -9,6 +9,7 @@ import band.gosrock.domain.domains.user.adaptor.RefreshTokenAdaptor;
 import band.gosrock.domain.domains.user.domain.RefreshTokenEntity;
 import band.gosrock.domain.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @Helper
 @RequiredArgsConstructor
@@ -18,6 +19,7 @@ public class TokenGenerateHelper {
 
     private final RefreshTokenAdaptor refreshTokenAdaptor;
 
+    @Transactional
     public TokenAndUserResponse execute(User user) {
         String newAccessToken =
                 jwtTokenProvider.generateAccessToken(
