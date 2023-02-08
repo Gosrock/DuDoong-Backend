@@ -2,6 +2,8 @@ package band.gosrock.domain.domains.issuedTicket.domain;
 
 import static band.gosrock.common.consts.DuDoongStatic.NO_START_NUMBER;
 
+import band.gosrock.domain.common.aop.domainEvent.Events;
+import band.gosrock.domain.common.events.issuedTicket.EntranceIssuedTicketEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
 import band.gosrock.domain.common.vo.Money;
@@ -160,6 +162,7 @@ public class IssuedTicket extends BaseTimeEntity {
     /*
     발급 티켓으로 입장 시 상태 변환 메서드
     티켓이 입장 미완료 상태가 아니면 입장 할 수 없음
+    (입장 처리 도메인 이벤트 발행)
      */
     public void entrance() {
         if (this.issuedTicketStatus == IssuedTicketStatus.CANCELED) {
@@ -169,6 +172,7 @@ public class IssuedTicket extends BaseTimeEntity {
             throw IssuedTicketAlreadyEntranceException.EXCEPTION;
         }
         this.issuedTicketStatus = IssuedTicketStatus.ENTRANCE_COMPLETED;
+        Events.raise(EntranceIssuedTicketEvent.from(this));
     }
 
     /*
