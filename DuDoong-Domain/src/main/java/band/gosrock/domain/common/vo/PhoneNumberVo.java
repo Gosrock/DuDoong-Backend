@@ -32,38 +32,33 @@ public class PhoneNumberVo {
         PhoneNumberUtil instance = PhoneNumberInstance.instance;
         PhoneNumber phoneNumber = instance.parse(rawPhoneNumber, "KR");
 
-        return PhoneNumberVo.builder().nationalNumber(
-            String.valueOf(phoneNumber.getNationalNumber())).countryCode(
-            String.valueOf(phoneNumber.getCountryCode())).build();
+        return PhoneNumberVo.builder()
+                .nationalNumber(String.valueOf(phoneNumber.getNationalNumber()))
+                .countryCode(String.valueOf(phoneNumber.getCountryCode()))
+                .build();
     }
 
     public String getNumberToParse() {
         return countryCode + " " + nationalNumber;
     }
 
-    /**
-     * 010-xxxx-xxxx format
-     */
+    /** 010-xxxx-xxxx format */
     public String getNationalFormat() throws NumberParseException {
         PhoneNumberUtil instance = PhoneNumberInstance.instance;
         PhoneNumber phoneNumber = instance.parse(getNumberToParse(), "KR");
         return instance.format(phoneNumber, PhoneNumberFormat.NATIONAL);
     }
 
-    /**
-     * +82 10-xxxx-xxxx format
-     */
+    /** +82 10-xxxx-xxxx format */
     public String getInternationalFormat() throws NumberParseException {
         PhoneNumberUtil instance = PhoneNumberInstance.instance;
         PhoneNumber phoneNumber = instance.parse(getNumberToParse(), "KR");
         return instance.format(phoneNumber, PhoneNumberFormat.INTERNATIONAL);
     }
 
-    /**
-     * 01000000000 format
-     */
+    /** 01000000000 format */
     public String getNaverSmsToNumber() throws NumberParseException {
         String nationalFormat = this.getNationalFormat();
-        return nationalFormat.replaceAll("-","");
+        return nationalFormat.replaceAll("-", "");
     }
 }
