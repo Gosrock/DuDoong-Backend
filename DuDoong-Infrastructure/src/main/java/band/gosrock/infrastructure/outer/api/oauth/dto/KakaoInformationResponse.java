@@ -58,7 +58,7 @@ public class KakaoInformationResponse {
     }
 
     public String getName() {
-        return kakaoAccount.getName();
+        return kakaoAccount.getName() != null ? kakaoAccount.getName() : properties.getNickname();
     }
 
     public String getProfileUrl() {

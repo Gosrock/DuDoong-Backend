@@ -1,68 +1,40 @@
-package band.gosrock.api.config.slack;
+package band.gosrock.api.slack.sender;
 
 import static com.slack.api.model.block.Blocks.divider;
 import static com.slack.api.model.block.Blocks.section;
 import static com.slack.api.model.block.composition.BlockCompositions.plainText;
 
+import band.gosrock.infrastructure.config.slack.SlackProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.slack.api.methods.MethodsClient;
-import com.slack.api.methods.SlackApiException;
-import com.slack.api.methods.request.chat.ChatPostMessageRequest;
 import com.slack.api.model.block.Blocks;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.composition.MarkdownTextObject;
 import com.slack.api.model.block.composition.TextObject;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.env.Environment;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class SlackApiProvider {
-    private final MethodsClient methodsClient;
+public class SlackInternalErrorSender {
     private final ObjectMapper objectMapper;
 
-    private final Environment env;
+    private final SlackProvider slackProvider;
 
-    private final List<String> sendAlarmProfiles = List.of("staging", "prod");
-
-    @Value("${slack.webhook.id}")
-    private String CHANNEL_ID;
-
-    private final int MAX_LEN = 500;
-
-    @Async
-    public void sendError(ContentCachingRequestWrapper cachingRequest, Exception e, Long userId)
-            throws IOException {
-        String[] activeProfiles = env.getActiveProfiles();
-        List<String> currentProfile = Arrays.stream(activeProfiles).toList();
-        if (CollectionUtils.containsAny(sendAlarmProfiles, currentProfile)) {
-            executeSendError(cachingRequest, e, userId);
-        }
-    }
-
-    private void executeSendError(
-            ContentCachingRequestWrapper cachingRequest, Exception e, Long userId)
+    public void execute(ContentCachingRequestWrapper cachingRequest, Exception e, Long userId)
             throws IOException {
         final String url = cachingRequest.getRequestURL().toString();
         final String method = cachingRequest.getMethod();
         final String body =
                 objectMapper.readTree(cachingRequest.getContentAsByteArray()).toString();
-        final String exceptionAsString = Arrays.toString(e.getStackTrace());
-        final int cutLength = Math.min(exceptionAsString.length(), MAX_LEN);
 
         final String errorMessage = e.getMessage();
-        final String errorStack = exceptionAsString.substring(0, cutLength);
+        String errorStack = slackProvider.getErrorStack(e);
         final String errorUserIP = cachingRequest.getRemoteAddr();
 
         List<LayoutBlock> layoutBlocks = new ArrayList<>();
@@ -99,16 +71,6 @@ public class SlackApiProvider {
         layoutBlocks.add(
                 section(section -> section.fields(List.of(errorNameMarkdown, errorStackMarkdown))));
 
-        ChatPostMessageRequest chatPostMessageRequest =
-                ChatPostMessageRequest.builder()
-                        .channel(CHANNEL_ID)
-                        .text("")
-                        .blocks(layoutBlocks)
-                        .build();
-        try {
-            methodsClient.chatPostMessage(chatPostMessageRequest);
-        } catch (SlackApiException slackApiException) {
-            log.error(slackApiException.toString());
-        }
+        slackProvider.sendNotification(layoutBlocks);
     }
 }
