@@ -6,6 +6,7 @@ import band.gosrock.domain.domains.comment.domain.Comment;
 import band.gosrock.domain.domains.comment.dto.condition.CommentCondition;
 import band.gosrock.domain.domains.comment.exception.CommentNotFoundException;
 import band.gosrock.domain.domains.comment.repository.CommentRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Slice;
 
@@ -33,8 +34,9 @@ public class CommentAdaptor {
         return commentRepository.countComment(eventId);
     }
 
-    public Comment queryRandomComment(Long eventId) {
+    public List<Comment> queryRandomComment(Long eventId, Long limit) {
         Long countComment = queryCommentCount(eventId);
-        return commentRepository.queryRandomComment(eventId, countComment);
+        //        return commentRepository.queryRandomComment(eventId, countComment, offset);
+        return commentRepository.findAllRandom(eventId, limit);
     }
 }

@@ -3,6 +3,7 @@ package band.gosrock.api.comment.model.response;
 
 import band.gosrock.domain.common.vo.CommentInfoVo;
 import band.gosrock.domain.domains.comment.domain.Comment;
+import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -10,11 +11,11 @@ import lombok.Getter;
 @Builder
 public class RetrieveRandomCommentResponse {
 
-    private final CommentInfoVo commentInfo;
+    private final List<CommentInfoVo> commentInfos;
 
-    public static RetrieveRandomCommentResponse of(Comment comment) {
+    public static RetrieveRandomCommentResponse of(List<Comment> comments) {
         return RetrieveRandomCommentResponse.builder()
-                .commentInfo(comment.toCommentInfoVo())
+                .commentInfos(comments.stream().map(Comment::toCommentInfoVo).toList())
                 .build();
     }
 }
