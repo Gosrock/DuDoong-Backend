@@ -2,13 +2,14 @@ package band.gosrock.domain.common.vo;
 
 
 import band.gosrock.domain.common.util.PhoneNumberInstance;
+import band.gosrock.domain.domains.user.exception.UserPhoneNumberInvalidException;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 import javax.persistence.Embeddable;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -17,42 +18,37 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PhoneNumberVo {
 
-    // +1
-    private String countryCode;
-    // 2015550123
-    private String nationalNumber;
+    // +82 10-xxxx-xxxx format 으로 저장.
+    private String phoneNumber;
 
-    @Builder
-    public PhoneNumberVo(String countryCode, String nationalNumber) {
-        this.countryCode = countryCode;
-        this.nationalNumber = nationalNumber;
+    public PhoneNumberVo(String rawPhoneNumber) {
+        this.phoneNumber = rawPhoneNumber;
     }
 
-    public PhoneNumberVo valueOf(String rawPhoneNumber) throws NumberParseException {
+    public static PhoneNumberVo valueOf(String rawPhoneNumber) {
+        return new PhoneNumberVo(rawPhoneNumber);
+    }
+
+    private static PhoneNumber getPhoneNumber(String rawPhoneNumber) {
         PhoneNumberUtil instance = PhoneNumberInstance.instance;
-        PhoneNumber phoneNumber = instance.parse(rawPhoneNumber, "KR");
-
-        return PhoneNumberVo.builder()
-                .nationalNumber(String.valueOf(phoneNumber.getNationalNumber()))
-                .countryCode(String.valueOf(phoneNumber.getCountryCode()))
-                .build();
+        try {
+            return instance.parse(rawPhoneNumber, "KR");
+        } catch (NumberParseException e) {
+            throw UserPhoneNumberInvalidException.EXCEPTION;
+        }
     }
-
-    public String getNumberToParse() {
-        return countryCode + " " + nationalNumber;
-    }
-
     /** 010-xxxx-xxxx format */
-    public String getNationalFormat() throws NumberParseException {
+    @JsonValue
+    public String getNationalFormat() {
         PhoneNumberUtil instance = PhoneNumberInstance.instance;
-        PhoneNumber phoneNumber = instance.parse(getNumberToParse(), "KR");
+        PhoneNumber phoneNumber = getPhoneNumber(this.phoneNumber);
         return instance.format(phoneNumber, PhoneNumberFormat.NATIONAL);
     }
 
     /** +82 10-xxxx-xxxx format */
     public String getInternationalFormat() throws NumberParseException {
         PhoneNumberUtil instance = PhoneNumberInstance.instance;
-        PhoneNumber phoneNumber = instance.parse(getNumberToParse(), "KR");
+        PhoneNumber phoneNumber = getPhoneNumber(this.phoneNumber);
         return instance.format(phoneNumber, PhoneNumberFormat.INTERNATIONAL);
     }
 
