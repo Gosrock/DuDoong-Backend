@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.host.domain;
 
 
 import band.gosrock.domain.common.aop.domainEvent.Events;
+import band.gosrock.domain.common.events.host.HostRegisterSlackEvent;
 import band.gosrock.domain.common.events.host.HostUserInvitationEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.HostInfoVo;
@@ -76,6 +77,10 @@ public class Host extends BaseTimeEntity {
     }
 
     public void setSlackUrl(String slackUrl) {
+        if (this.slackUrl.equals(slackUrl)) {
+            throw DuplicateSlackUrlException.EXCEPTION;
+        }
+        Events.raise(HostRegisterSlackEvent.of(this));
         this.slackUrl = slackUrl;
     }
 

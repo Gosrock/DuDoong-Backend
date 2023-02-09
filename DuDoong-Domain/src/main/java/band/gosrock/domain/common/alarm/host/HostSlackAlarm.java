@@ -16,4 +16,8 @@ public class HostSlackAlarm {
                 + host.toHostProfileVo().getName()
                 + "에 가입했습니다!";
     }
+
+    public static String slackRegistrationOf(Host host) {
+        return host.toHostProfileVo().getName() + "에 슬랙 알림이 등록되었습니다!";
+    }
 }
