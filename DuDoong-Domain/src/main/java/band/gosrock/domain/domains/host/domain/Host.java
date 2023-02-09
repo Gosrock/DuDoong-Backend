@@ -2,7 +2,7 @@ package band.gosrock.domain.domains.host.domain;
 
 
 import band.gosrock.domain.common.aop.domainEvent.Events;
-import band.gosrock.domain.common.events.host.InviteHostEvent;
+import band.gosrock.domain.common.events.host.HostUserInvitationEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.HostInfoVo;
 import band.gosrock.domain.common.vo.HostProfileVo;
@@ -48,7 +48,7 @@ public class Host extends BaseTimeEntity {
     public void inviteHostUsers(Set<HostUser> hostUserList) {
         hostUserList.forEach(this::validateHostUserExistence);
         this.hostUsers.addAll(hostUserList);
-        hostUserList.forEach(hostUser -> Events.raise(InviteHostEvent.of(this, hostUser)));
+        hostUserList.forEach(hostUser -> Events.raise(HostUserInvitationEvent.of(this, hostUser)));
     }
 
     public Boolean hasHostUserId(Long userId) {

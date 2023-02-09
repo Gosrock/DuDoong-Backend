@@ -11,13 +11,13 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class InviteHostEvent extends DomainEvent {
+public class HostUserInvitationEvent extends DomainEvent {
     private final Long userId;
     private final HostRole role;
     private final HostProfileVo hostProfileVo;
 
-    public static InviteHostEvent of(Host host, HostUser hostUser) {
-        return InviteHostEvent.builder()
+    public static HostUserInvitationEvent of(Host host, HostUser hostUser) {
+        return HostUserInvitationEvent.builder()
                 .hostProfileVo(host.toHostProfileVo())
                 .role(hostUser.getRole())
                 .userId(hostUser.getUserId())

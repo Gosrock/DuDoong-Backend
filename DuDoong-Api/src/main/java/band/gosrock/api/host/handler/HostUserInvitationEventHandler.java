@@ -1,8 +1,8 @@
 package band.gosrock.api.host.handler;
 
 
-import band.gosrock.api.email.service.HostInviteEmailService;
-import band.gosrock.domain.common.events.host.InviteHostEvent;
+import band.gosrock.api.email.service.HostInvitationEmailService;
+import band.gosrock.domain.common.events.host.HostUserInvitationEvent;
 import band.gosrock.domain.domains.host.domain.HostRole;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
@@ -16,20 +16,20 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class InviteHostEventHandler {
+public class HostUserInvitationEventHandler {
     private final UserAdaptor userAdaptor;
-    private final HostInviteEmailService inviteEmailService;
+    private final HostInvitationEmailService invitationEmailService;
 
     @Async
     @TransactionalEventListener(
-            classes = InviteHostEvent.class,
+            classes = HostUserInvitationEvent.class,
             phase = TransactionPhase.AFTER_COMMIT)
-    public void handleRegisterUserEvent(InviteHostEvent inviteHostEvent) {
-        final Long userId = inviteHostEvent.getUserId();
+    public void handleRegisterUserEvent(HostUserInvitationEvent hostUserInvitationEvent) {
+        final Long userId = hostUserInvitationEvent.getUserId();
         final User user = userAdaptor.queryUser(userId);
-        final HostRole role = inviteHostEvent.getRole();
-        final String hostName = inviteHostEvent.getHostProfileVo().getName();
+        final HostRole role = hostUserInvitationEvent.getRole();
+        final String hostName = hostUserInvitationEvent.getHostProfileVo().getName();
 
-        inviteEmailService.execute(user.toEmailUserInfo(), hostName, role);
+        invitationEmailService.execute(user.toEmailUserInfo(), hostName, role);
     }
 }
