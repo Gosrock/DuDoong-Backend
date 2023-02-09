@@ -1,12 +1,14 @@
 package band.gosrock.api.host.handler;
 
 
-import band.gosrock.api.email.service.HostMasterChangeEmailService;
-import band.gosrock.domain.common.events.host.HostUserRoleChangeEvent;
+import band.gosrock.api.email.service.HostUserDisabledEmailService;
+import band.gosrock.domain.common.alarm.host.HostSlackAlarm;
+import band.gosrock.domain.common.events.host.HostUserDisabledEvent;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
-import band.gosrock.domain.domains.host.domain.HostRole;
+import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
+import band.gosrock.infrastructure.config.slack.SlackMessageProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -20,18 +22,21 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class HostUserDisabledEventHandler {
     private final UserAdaptor userAdaptor;
     private final HostAdaptor hostAdaptor;
-    private final HostMasterChangeEmailService hostMasterChangeEmailService;
+    private final HostUserDisabledEmailService hostUserDisabledEmailService;
+    private final SlackMessageProvider slackMessageProvider;
 
     @Async
     @TransactionalEventListener(
-            classes = HostUserRoleChangeEvent.class,
+            classes = HostUserDisabledEvent.class,
             phase = TransactionPhase.AFTER_COMMIT)
-    public void handle(HostUserRoleChangeEvent hostUserRoleChangeEvent) {
-        final Long userId = hostUserRoleChangeEvent.getUserId();
+    public void handle(HostUserDisabledEvent hostUserDisabledEvent) {
+        final Long userId = hostUserDisabledEvent.getUserId();
         final User user = userAdaptor.queryUser(userId);
-        final HostRole role = hostUserRoleChangeEvent.getRole();
-        final String hostName = hostUserRoleChangeEvent.getHostName();
+        final Host host = hostAdaptor.findById(hostUserDisabledEvent.getHostId());
+        final String hostName = hostUserDisabledEvent.getHostName();
+        final String message = HostSlackAlarm.disabledOf(user);
 
-        // todo: userId 본인에게 특정 host 에서 추방당함 통보
+        hostUserDisabledEmailService.execute(user.toEmailUserInfo(), hostName);
+        slackMessageProvider.sendMessage(host.getSlackUrl(), message);
     }
 }

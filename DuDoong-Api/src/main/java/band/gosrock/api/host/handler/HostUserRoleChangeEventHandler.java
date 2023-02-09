@@ -43,6 +43,7 @@ public class HostUserRoleChangeEventHandler {
         // role == master 이면 전체에게 추가 알림 + 이메일
         if (role == HostRole.MASTER) {
             // todo :: host users foreach
+            // todo :: 마스터 유저 권한 부여 api
             hostMasterChangeEmailService.execute(user.toEmailUserInfo(), hostName, role);
             slackMessageProvider.sendMessage(host.getSlackUrl(), message);
         } else {

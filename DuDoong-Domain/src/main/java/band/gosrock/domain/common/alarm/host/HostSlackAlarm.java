@@ -27,4 +27,8 @@ public class HostSlackAlarm {
                 + user.toUserProfileVo().getUserName()
                 + "으로 변경되었습니다.";
     }
+
+    public static String disabledOf(User user) {
+        return user.toUserProfileVo().getUserName() + "님이 호스트에서 추방당했습니다.";
+    }
 }
