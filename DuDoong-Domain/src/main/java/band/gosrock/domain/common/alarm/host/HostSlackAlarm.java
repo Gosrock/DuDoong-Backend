@@ -20,4 +20,11 @@ public class HostSlackAlarm {
     public static String slackRegistrationOf(Host host) {
         return host.toHostProfileVo().getName() + "에 슬랙 알림이 등록되었습니다!";
     }
+
+    public static String changeMasterOf(Host host, User user) {
+        return host.toHostProfileVo().getName()
+                + "의 마스터 유저가 "
+                + user.toUserProfileVo().getUserName()
+                + "으로 변경되었습니다.";
+    }
 }

@@ -12,7 +12,7 @@ import org.thymeleaf.context.Context;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class HostMasterChangeEmailService {
+public class HostUserRoleChangeEmailService {
     private final AwsSesUtils awsSesUtils;
 
     public void execute(EmailUserInfo userInfo, String hostName, HostRole hostRole) {
@@ -20,7 +20,7 @@ public class HostMasterChangeEmailService {
         context.setVariable("userInfo", userInfo);
         context.setVariable("hostName", hostName);
         context.setVariable("role", hostRole.getValue());
-        log.info(hostName + " 에서 마스터 변경 알림, " + userInfo); //
-        // todo : 마스터 변경 템플릿 추가
+        log.info(hostName + " 의 역할 변경 알림. " + userInfo); //
+        // todo : 당신의 역할이 변경되었음을 알리는 템플릿 추가
     }
 }
