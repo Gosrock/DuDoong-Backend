@@ -66,6 +66,11 @@ public class Host extends BaseTimeEntity {
                 .orElseThrow(() -> HostUserNotFoundException.EXCEPTION);
     }
 
+    public String getSlackToken() {
+        if (this.slackUrl == null) return null;
+        return this.slackUrl.substring(this.slackUrl.indexOf("https://hooks.slack.com/services/"));
+    }
+
     public void updateProfile(HostProfile hostProfile) {
         this.profile.updateProfile(hostProfile);
     }

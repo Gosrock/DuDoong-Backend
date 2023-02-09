@@ -1,11 +1,13 @@
 package band.gosrock.api.host.handler;
 
 
+import band.gosrock.domain.common.alarm.host.HostSlackAlarm;
 import band.gosrock.domain.common.events.host.HostUserJoinEvent;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
+import band.gosrock.infrastructure.config.slack.SlackMessageProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -19,6 +21,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class HostUserJoinEventHandler {
     private final UserAdaptor userAdaptor;
     private final HostAdaptor hostAdaptor;
+    private final SlackMessageProvider slackMessageProvider;
 
     @Async
     @TransactionalEventListener(
@@ -27,8 +30,8 @@ public class HostUserJoinEventHandler {
     public void handle(HostUserJoinEvent hostUserJoinEvent) {
         final User user = userAdaptor.queryUser(hostUserJoinEvent.getUserId());
         final Host host = hostAdaptor.findById(hostUserJoinEvent.getHostId());
+        final String message = HostSlackAlarm.joinOf(host, user);
 
-        // todo :: call slack alarm sender
-        // host.getHostUsers().forEach();
+        slackMessageProvider.sendMessage(host.getSlackUrl(), message);
     }
 }

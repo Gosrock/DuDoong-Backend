@@ -19,7 +19,7 @@ import org.springframework.util.CollectionUtils;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class SlackProvider {
+public class SlackServerNotificationProvider {
 
     private final Environment env;
 
