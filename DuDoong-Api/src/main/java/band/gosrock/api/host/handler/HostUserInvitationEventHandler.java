@@ -24,7 +24,7 @@ public class HostUserInvitationEventHandler {
     @TransactionalEventListener(
             classes = HostUserInvitationEvent.class,
             phase = TransactionPhase.AFTER_COMMIT)
-    public void handleRegisterUserEvent(HostUserInvitationEvent hostUserInvitationEvent) {
+    public void handle(HostUserInvitationEvent hostUserInvitationEvent) {
         final Long userId = hostUserInvitationEvent.getUserId();
         final User user = userAdaptor.queryUser(userId);
         final HostRole role = hostUserInvitationEvent.getRole();

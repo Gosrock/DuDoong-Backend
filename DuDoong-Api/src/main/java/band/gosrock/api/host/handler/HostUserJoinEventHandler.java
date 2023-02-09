@@ -24,7 +24,7 @@ public class HostUserJoinEventHandler {
     @TransactionalEventListener(
             classes = HostUserJoinEvent.class,
             phase = TransactionPhase.AFTER_COMMIT)
-    public void handleHostUserJoinEvent(HostUserJoinEvent hostUserJoinEvent) {
+    public void handle(HostUserJoinEvent hostUserJoinEvent) {
         final User user = userAdaptor.queryUser(hostUserJoinEvent.getUserId());
         final Host host = hostAdaptor.findById(hostUserJoinEvent.getHostId());
 
