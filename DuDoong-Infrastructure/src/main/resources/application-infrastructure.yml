@@ -17,6 +17,11 @@ slack:
     token: ${SLACK_WEBHOOK_TOKEN:}
     id: ${SLACK_WEBHOOK_ID:}
 
+ncp:
+  service-id: ${NCP_SERVICE_ID:}
+  access-key: ${NCP_ACCESS_KEY:}
+  secret-key: ${NCP_SECRET_KEY:}
+  plus-friend-id: ${NCP_PLUS_FRIEND_ID:}
 
 ---
 spring:

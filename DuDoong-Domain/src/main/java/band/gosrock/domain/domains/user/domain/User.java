@@ -8,6 +8,7 @@ import band.gosrock.domain.common.vo.UserInfoVo;
 import band.gosrock.domain.common.vo.UserProfileVo;
 import band.gosrock.domain.domains.user.exception.AlreadyDeletedUserException;
 import band.gosrock.domain.domains.user.exception.ForbiddenUserException;
+import band.gosrock.infrastructure.config.AlilmTalk.dto.AlimTalkUserInfo;
 import band.gosrock.infrastructure.config.mail.dto.EmailUserInfo;
 import java.time.LocalDateTime;
 import javax.persistence.Column;
@@ -90,5 +91,9 @@ public class User extends BaseTimeEntity {
 
     public EmailUserInfo toEmailUserInfo() {
         return new EmailUserInfo(profile.getName(), profile.getEmail());
+    }
+
+    public AlimTalkUserInfo toAlimTalkUserInfo() {
+        return new AlimTalkUserInfo(profile.getName(), profile.getPhoneNumber());
     }
 }

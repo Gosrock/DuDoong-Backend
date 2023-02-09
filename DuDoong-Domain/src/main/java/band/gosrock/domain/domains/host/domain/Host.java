@@ -123,6 +123,11 @@ public class Host extends BaseTimeEntity {
         }
     }
 
+    /** 해당 호스트가 파트너인지아닌지 */
+    public Boolean isPartnerHost() {
+        return partner;
+    }
+
     public HostInfoVo toHostInfoVo() {
         return HostInfoVo.from(this);
     }
