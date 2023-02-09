@@ -15,9 +15,7 @@ spring:
 slack:
   webhook:
     token: ${SLACK_WEBHOOK_TOKEN:}
-
-
-
+    id: ${SLACK_WEBHOOK_ID:}
 
 
 ---

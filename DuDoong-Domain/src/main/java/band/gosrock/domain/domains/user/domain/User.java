@@ -9,6 +9,7 @@ import band.gosrock.domain.common.vo.UserProfileVo;
 import band.gosrock.domain.domains.user.exception.AlreadyDeletedUserException;
 import band.gosrock.domain.domains.user.exception.ForbiddenUserException;
 import band.gosrock.infrastructure.config.mail.dto.EmailUserInfo;
+import java.time.LocalDateTime;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -46,6 +47,8 @@ public class User extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private AccountRole accountRole = AccountRole.USER;
 
+    private LocalDateTime lastLoginAt = LocalDateTime.now();
+
     @Builder
     public User(Profile profile, OauthInfo oauthInfo) {
         this.profile = profile;
@@ -74,6 +77,7 @@ public class User extends BaseTimeEntity {
         if (!AccountState.NORMAL.equals(this.accountState)) {
             throw ForbiddenUserException.EXCEPTION;
         }
+        lastLoginAt = LocalDateTime.now();
     }
 
     public UserInfoVo toUserInfoVo() {
