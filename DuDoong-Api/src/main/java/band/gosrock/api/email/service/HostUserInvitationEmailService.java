@@ -10,7 +10,7 @@ import org.thymeleaf.context.Context;
 
 @Service
 @RequiredArgsConstructor
-public class HostInvitationEmailService {
+public class HostUserInvitationEmailService {
     private final AwsSesUtils awsSesUtils;
 
     public void execute(EmailUserInfo userInfo, String hostName, HostRole hostRole) {
