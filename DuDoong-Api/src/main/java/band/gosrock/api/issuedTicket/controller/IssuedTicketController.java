@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @SecurityRequirement(name = "access-token")
-@Tag(name = "발급 티켓 관련 컨트롤러")
+@Tag(name = "8-2. [발급티켓]")
 @RestController
 @RequestMapping("/v1/issuedTickets")
 @RequiredArgsConstructor

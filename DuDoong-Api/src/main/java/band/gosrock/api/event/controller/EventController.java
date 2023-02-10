@@ -23,7 +23,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 @SecurityRequirement(name = "access-token")
-@Tag(name = "이벤트(공연) 관련 컨트롤러")
+@Tag(name = "3. [이벤트(공연)]")
 @RestController
 @RequestMapping("/v1/events")
 @RequiredArgsConstructor
