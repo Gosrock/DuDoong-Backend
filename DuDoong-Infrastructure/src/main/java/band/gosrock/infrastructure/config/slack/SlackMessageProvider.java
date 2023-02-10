@@ -1,15 +1,18 @@
 package band.gosrock.infrastructure.config.slack;
 
 
+import com.slack.api.Slack;
+import com.slack.api.webhook.Payload;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
-import net.gpedro.integrations.slack.SlackApi;
-import net.gpedro.integrations.slack.SlackMessage;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SlackMessageProvider {
 
     @Value("${slack.webhook.username}")
@@ -20,12 +23,14 @@ public class SlackMessageProvider {
 
     @Async
     public void sendMessage(String url, String text) {
-        final SlackApi slackApi = new SlackApi(url);
-        final SlackMessage slackMessage = new SlackMessage();
+        Slack slack = Slack.getInstance();
+        Payload payload = Payload.builder().text(text).username(username).iconUrl(iconUrl).build();
 
-        slackMessage.setText(text);
-        slackMessage.setUsername(username);
-        slackMessage.setIcon(iconUrl);
-        slackApi.call(slackMessage);
+        try {
+            slack.send(url, payload);
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
     }
 }

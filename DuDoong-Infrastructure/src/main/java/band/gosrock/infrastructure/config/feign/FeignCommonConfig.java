@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import feign.Feign;
 import feign.Logger.Level;
 import feign.codec.Decoder;
 import feign.jackson.JacksonDecoder;
@@ -17,12 +16,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableFeignClients(basePackageClasses = BaseFeignClientPackage.class)
 public class FeignCommonConfig {
-
-    @Bean
-    public Feign.Builder feignBuilder() {
-        return Feign.builder();
-    }
-
     @Bean
     public Decoder feignDecoder() {
         return new JacksonDecoder(customObjectMapper());

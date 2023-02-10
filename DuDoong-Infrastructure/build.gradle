@@ -3,7 +3,6 @@ jar { enabled = true }
 
 dependencies {
     api("com.slack.api:slack-api-client:1.27.2")
-    api("net.gpedro.integrations.slack:slack-webhook:1.4.0")
     api 'io.github.openfeign:feign-httpclient:12.1'
     api 'org.springframework.cloud:spring-cloud-starter-openfeign:3.1.4'
     api project(':DuDoong-Common')
