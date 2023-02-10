@@ -79,16 +79,6 @@ public class Event extends BaseTimeEntity {
         return this.status == EventStatus.PREPARING;
     }
 
-    /** 티켓팅 시작과 종료 시간을 지정 */
-    public void setTicketingTime(LocalDateTime startAt, LocalDateTime endAt) {
-        // 이벤트 종료가 시작보다 빠르면 안됨
-        if (startAt.isAfter(endAt)) {
-            throw EventCannotEndBeforeStartException.EXCEPTION;
-        }
-        this.ticketingStartAt = startAt;
-        this.ticketingEndAt = endAt;
-    }
-
     public void setEventBasic(EventBasic eventBasic) {
         if (isUpdated) {
             throw CannotModifyEventBasicException.EXCEPTION;
