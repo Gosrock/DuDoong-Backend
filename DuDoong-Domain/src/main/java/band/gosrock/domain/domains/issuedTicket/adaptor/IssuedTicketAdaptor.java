@@ -72,4 +72,10 @@ public class IssuedTicketAdaptor {
     public Long countPaidTicket(Long userId, Long itemId) {
         return issuedTicketRepository.countPaidTicket(userId, itemId);
     }
+
+    public IssuedTicket queryByIssuedTicketNo(String issuedTicketNo) {
+        return issuedTicketRepository
+                .findByIssuedTicketNo(issuedTicketNo)
+                .orElseThrow(() -> IssuedTicketNotFoundException.EXCEPTION);
+    }
 }

@@ -55,7 +55,6 @@ public class IssuedTicketDomainService {
     /*
     발급 티켓 입장 처리 로직
      */
-    @Transactional
     public IssuedTicketInfoVo processingEntranceIssuedTicket(Long eventId, Long issuedTicketId) {
         IssuedTicket issuedTicket = issuedTicketAdaptor.queryIssuedTicket(issuedTicketId);
         issuedTicketValidator.validIssuedTicketEventIdEqualEvent(issuedTicket, eventId);

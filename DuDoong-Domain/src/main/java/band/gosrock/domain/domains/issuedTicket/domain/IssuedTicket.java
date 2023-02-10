@@ -11,6 +11,7 @@ import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelEntranceEx
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotEntranceException;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketAlreadyEntranceException;
+import band.gosrock.infrastructure.config.mail.dto.EmailIssuedTicketInfo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -86,7 +87,7 @@ public class IssuedTicket extends BaseTimeEntity {
     발급 티켓 상태
      */
     @Enumerated(EnumType.STRING)
-    private IssuedTicketStatus issuedTicketStatus = IssuedTicketStatus.ENTRANCE_INCOMPLETE;
+    private IssuedTicketStatus issuedTicketStatus;
 
     /*
     빌더를 통해 객체 생성 시 List는 큰 의미를 두지 않지만
@@ -144,6 +145,15 @@ public class IssuedTicket extends BaseTimeEntity {
      */
     public IssuedTicketInfoVo toIssuedTicketInfoVo() {
         return IssuedTicketInfoVo.from(this);
+    }
+
+    public EmailIssuedTicketInfo toEmailIssuedTicketInfo() {
+        return new EmailIssuedTicketInfo(
+                this.getIssuedTicketNo(),
+                this.getItemInfo().getTicketName(),
+                this.getCreatedAt(),
+                this.getIssuedTicketStatus().getKr(),
+                this.getPrice().toString());
     }
 
     /** ---------------------------- 상태 변환 관련 메서드 ---------------------------------- */
