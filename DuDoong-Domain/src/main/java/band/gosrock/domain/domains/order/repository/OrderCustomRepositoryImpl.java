@@ -52,7 +52,11 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
                         .where(
                                 eqUserId(condition.getUserId()),
                                 openingState(condition.getShowing()),
-                            order.orderStatus.notIn(OrderStatus.FAILED,OrderStatus.PENDING_PAYMENT,OrderStatus.READY,OrderStatus.OUTDATED))
+                                order.orderStatus.notIn(
+                                        OrderStatus.FAILED,
+                                        OrderStatus.PENDING_PAYMENT,
+                                        OrderStatus.READY,
+                                        OrderStatus.OUTDATED))
                         .orderBy(order.id.desc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize() + 1)
@@ -93,13 +97,17 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
 
     @Override
     public Optional<Order> findRecentOrder(Long userId) {
-        Order findOrder = queryFactory
-            .selectFrom(order)
-            .where(
-                eqUserId(userId),
-                order.orderStatus.in(OrderStatus.APPROVED, OrderStatus.CONFIRM))
-            .orderBy(order.id.desc())
-            .fetchFirst();
+        Order findOrder =
+                queryFactory
+                        .selectFrom(order)
+                        .where(
+                                eqUserId(userId),
+                                order.orderStatus.in(
+                                        OrderStatus.PENDING_APPROVE,
+                                        OrderStatus.APPROVED,
+                                        OrderStatus.CONFIRM))
+                        .orderBy(order.id.desc())
+                        .fetchFirst();
         return Optional.ofNullable(findOrder);
     }
 

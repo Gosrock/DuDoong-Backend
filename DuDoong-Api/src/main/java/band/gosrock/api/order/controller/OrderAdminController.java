@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @SecurityRequirement(name = "access-token")
-@Tag(name = "주문 관련 컨트롤러")
+@Tag(name = "6-2. 주문 관련 호스트 관리자 ")
 @RestController
 @RequestMapping("/v1/events/{eventId}/orders")
 @RequiredArgsConstructor
@@ -51,7 +51,8 @@ public class OrderAdminController {
 
     @Operation(summary = "주문관리 리스트 페이지에서 주문 상세정보 조회할때")
     @GetMapping("/{order_uuid}")
-    public OrderResponse getEventOrderDetail( @PathVariable Long eventId,@PathVariable("order_uuid") String orderUuid) {
-        return readOrderUseCase.getEventOrderDetail(eventId,orderUuid);
+    public OrderResponse getEventOrderDetail(
+            @PathVariable Long eventId, @PathVariable("order_uuid") String orderUuid) {
+        return readOrderUseCase.getEventOrderDetail(eventId, orderUuid);
     }
 }

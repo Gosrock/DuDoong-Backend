@@ -23,7 +23,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @SecurityRequirement(name = "access-token")
-@Tag(name = "호스트 관련 컨트롤러")
+@Tag(name = "4. 호스트 관련 컨트롤러")
 @RestController
 @RequestMapping("/v1/hosts")
 @RequiredArgsConstructor

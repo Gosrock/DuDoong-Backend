@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @SecurityRequirement(name = "access-token")
-@Tag(name = "이미지 관련 컨트롤러")
+@Tag(name = "a1. 이미지 관련 컨트롤러")
 @RestController
 @RequestMapping("/v1")
 @RequiredArgsConstructor

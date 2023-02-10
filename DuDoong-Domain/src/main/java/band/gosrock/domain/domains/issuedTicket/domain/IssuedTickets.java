@@ -35,7 +35,7 @@ public class IssuedTickets {
     }
 
     public IssuedTicketsStage getIssuedTicketsStage() {
-        if(getTotalQuantity()==0)return IssuedTicketsStage.APPROVE_WAITING;
+        if (getTotalQuantity() == 0) return IssuedTicketsStage.APPROVE_WAITING;
         List<IssuedTicketStatus> issuedTicketStatuses = getIssuedTicketStatuses();
         if (isCanceled(issuedTicketStatuses)) {
             return IssuedTicketsStage.CANCELED;

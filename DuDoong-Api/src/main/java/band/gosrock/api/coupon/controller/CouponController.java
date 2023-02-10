@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @SecurityRequirement(name = "access-token")
-@Tag(name = "쿠폰 관련 컨트롤러")
+@Tag(name = "a0. 쿠폰 관련 컨트롤러")
 @RestController
 @RequestMapping("/v1/coupons")
 @RequiredArgsConstructor

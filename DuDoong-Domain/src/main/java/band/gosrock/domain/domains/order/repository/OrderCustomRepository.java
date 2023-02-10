@@ -18,5 +18,4 @@ public interface OrderCustomRepository {
     Page<Order> findEventOrders(FindEventOrdersCondition condition, Pageable pageable);
 
     Optional<Order> findRecentOrder(Long userId);
-
 }

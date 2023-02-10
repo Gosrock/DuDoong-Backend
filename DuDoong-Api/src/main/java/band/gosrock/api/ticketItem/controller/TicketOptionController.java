@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @SecurityRequirement(name = "access-token")
-@Tag(name = "티켓상품 옵션 관련 컨트롤러")
+@Tag(name = "7-2. 티켓상품 옵션 관련 컨트롤러")
 @RestController
 @RequestMapping("/v1/events/{eventId}/ticketOptions")
 @RequiredArgsConstructor

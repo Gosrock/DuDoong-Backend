@@ -1,12 +1,9 @@
 package band.gosrock.api.order.service;
 
-
 import static band.gosrock.api.common.aop.hostRole.FindHostFrom.EVENT_ID;
 import static band.gosrock.api.common.aop.hostRole.HostQualification.GUEST;
 
 import band.gosrock.api.common.UserUtils;
-import band.gosrock.api.common.aop.hostRole.FindHostFrom;
-import band.gosrock.api.common.aop.hostRole.HostQualification;
 import band.gosrock.api.common.aop.hostRole.HostRolesAllowed;
 import band.gosrock.api.common.page.PageResponse;
 import band.gosrock.api.common.slice.SliceResponse;
@@ -17,9 +14,7 @@ import band.gosrock.api.order.model.dto.response.OrderResponse;
 import band.gosrock.api.order.model.mapper.OrderMapper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
-import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
-import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.validator.OrderValidator;
@@ -80,6 +75,7 @@ public class ReadOrderUseCase {
                         adminOrderTableQueryRequest.toCondition(eventId), pageable);
         return PageResponse.of(orderMapper.toOrderAdminTableElement(orders));
     }
+
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
     public OrderResponse getEventOrderDetail(Long eventId, String orderUuid) {
         Order order = orderAdaptor.findByOrderUuid(orderUuid);
