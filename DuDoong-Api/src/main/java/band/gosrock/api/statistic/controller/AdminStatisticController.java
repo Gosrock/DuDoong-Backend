@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @SecurityRequirement(name = "access-token")
-@Tag(name = "어드민 통계관련")
+@Tag(name = "a2. [이벤트관리] 통계관련")
 @RestController
 @RequestMapping("/v1/events/{eventId}/statistics")
 @RequiredArgsConstructor

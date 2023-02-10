@@ -22,7 +22,7 @@ public class FindEventOrdersCondition {
             AdminTableSearchType searchType,
             AdminTableOrderFilterType filterType) {
         this.eventId = eventId;
-        this.searchString = searchString;
+        this.searchString = searchString != null ? searchString : "";
         this.searchType = searchType;
         this.filterType = filterType;
     }

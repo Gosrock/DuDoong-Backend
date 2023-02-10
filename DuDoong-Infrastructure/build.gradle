@@ -17,4 +17,6 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-thymeleaf'
     api 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
     api group: 'software.amazon.awssdk', name: 'ses', version: "2.19.29"
+
+    api 'com.googlecode.libphonenumber:libphonenumber:8.13.5'
 }

@@ -7,7 +7,6 @@ import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.host.domain.HostProfile;
 import band.gosrock.domain.domains.host.domain.HostRole;
 import band.gosrock.domain.domains.host.domain.HostUser;
-import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException;
 import band.gosrock.domain.domains.host.repository.HostRepository;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -25,10 +24,12 @@ public class HostService {
     }
 
     public Host addHostUser(Host host, HostUser hostUser) {
-        if (host.hasHostUserId(hostUser.getUserId())) {
-            throw AlreadyJoinedHostException.EXCEPTION;
-        }
         host.addHostUsers(Set.of(hostUser));
+        return hostRepository.save(host);
+    }
+
+    public Host inviteHostUser(Host host, HostUser hostUser) {
+        host.inviteHostUsers(Set.of(hostUser));
         return hostRepository.save(host);
     }
 

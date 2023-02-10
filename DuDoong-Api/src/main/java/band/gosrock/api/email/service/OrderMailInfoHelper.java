@@ -25,7 +25,7 @@ public class OrderMailInfoHelper {
     private final HostAdaptor hostAdaptor;
 
     public OrderMailDto execute(String orderUuid) {
-        Order order = orderAdaptor.find(orderUuid);
+        Order order = orderAdaptor.findByOrderUuid(orderUuid);
         User user = userAdaptor.queryUser(order.getUserId());
         Event event = eventAdaptor.findById(order.getEventId());
         Host host = hostAdaptor.findById(event.getHostId());
