@@ -2,7 +2,7 @@ package band.gosrock.api.host.handler;
 
 
 import band.gosrock.api.email.service.HostUserDisabledEmailService;
-import band.gosrock.domain.common.alarm.host.HostSlackAlarm;
+import band.gosrock.domain.common.alarm.HostSlackAlarm;
 import band.gosrock.domain.common.events.host.HostUserDisabledEvent;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;

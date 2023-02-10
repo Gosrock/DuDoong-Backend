@@ -1,4 +1,4 @@
-package band.gosrock.domain.common.alarm.host;
+package band.gosrock.domain.common.alarm;
 
 
 import band.gosrock.domain.domains.host.domain.Host;

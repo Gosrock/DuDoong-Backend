@@ -3,7 +3,7 @@ package band.gosrock.api.host.handler;
 
 import band.gosrock.api.email.service.HostMasterChangeEmailService;
 import band.gosrock.api.email.service.HostUserRoleChangeEmailService;
-import band.gosrock.domain.common.alarm.host.HostSlackAlarm;
+import band.gosrock.domain.common.alarm.HostSlackAlarm;
 import band.gosrock.domain.common.events.host.HostUserRoleChangeEvent;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;

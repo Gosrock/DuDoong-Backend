@@ -1,7 +1,7 @@
 package band.gosrock.api.host.handler;
 
 
-import band.gosrock.domain.common.alarm.host.HostSlackAlarm;
+import band.gosrock.domain.common.alarm.HostSlackAlarm;
 import band.gosrock.domain.common.events.host.HostUserJoinEvent;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
