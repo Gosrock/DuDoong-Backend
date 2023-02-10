@@ -47,7 +47,7 @@ public class OrderBriefElement {
                 .orderNo(order.getOrderNo())
                 .orderStatus(order.getOrderStatus())
                 .eventProfile(event.toEventProfileVo())
-                .itemName(issuedTickets.getItemName())
+                .itemName(order.getOrderName())
                 .totalQuantity(issuedTickets.getTotalQuantity())
                 .build();
     }

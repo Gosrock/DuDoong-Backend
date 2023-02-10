@@ -4,7 +4,6 @@ package band.gosrock.domain.domains.issuedTicket.service;
 import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.common.aop.redissonLock.RedissonLock;
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
-import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.validator.IssuedTicketValidator;
@@ -20,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class IssuedTicketDomainService {
     private final IssuedTicketAdaptor issuedTicketAdaptor;
     private final TicketItemAdaptor ticketItemAdaptor;
-    private final EventAdaptor eventAdaptor;
 
     private final IssuedTicketValidator issuedTicketValidator;
 
@@ -54,6 +52,9 @@ public class IssuedTicketDomainService {
                 });
     }
 
+    /*
+    발급 티켓 입장 처리 로직
+     */
     @Transactional
     public IssuedTicketInfoVo processingEntranceIssuedTicket(Long eventId, Long issuedTicketId) {
         IssuedTicket issuedTicket = issuedTicketAdaptor.queryIssuedTicket(issuedTicketId);

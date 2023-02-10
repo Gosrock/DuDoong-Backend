@@ -1,6 +1,12 @@
 package band.gosrock.domain.domains.event.domain;
 
+import static band.gosrock.domain.domains.event.domain.EventStatus.*;
 
+import band.gosrock.common.exception.DuDoongCodeException;
+import band.gosrock.domain.common.aop.domainEvent.Events;
+import band.gosrock.domain.common.events.event.EventContentChangeEvent;
+import band.gosrock.domain.common.events.event.EventCreationEvent;
+import band.gosrock.domain.common.events.event.EventStatusChangeEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.*;
 import band.gosrock.domain.domains.event.exception.*;
@@ -31,19 +37,9 @@ public class Event extends BaseTimeEntity {
 
     // 이벤트 상태
     @Enumerated(EnumType.STRING)
-    private EventStatus status = EventStatus.PREPARING;
+    private EventStatus status = PREPARING;
 
     private Boolean isUpdated = false;
-
-    /*********** 미확정된 정보 ***********/
-    // 공연 진행 시간
-
-    // 예매 시작 시각
-    private LocalDateTime ticketingStartAt;
-
-    // 예매 종료 시각
-    private LocalDateTime ticketingEndAt;
-    /*********** 미확정된 정보 ***********/
 
     public LocalDateTime getStartAt() {
         if (this.eventBasic == null) {
@@ -72,17 +68,7 @@ public class Event extends BaseTimeEntity {
     }
 
     public Boolean isPreparing() {
-        return this.status == EventStatus.PREPARING;
-    }
-
-    /** 티켓팅 시작과 종료 시간을 지정 */
-    public void setTicketingTime(LocalDateTime startAt, LocalDateTime endAt) {
-        // 이벤트 종료가 시작보다 빠르면 안됨
-        if (startAt.isAfter(endAt)) {
-            throw EventCannotEndBeforeStartException.EXCEPTION;
-        }
-        this.ticketingStartAt = startAt;
-        this.ticketingEndAt = endAt;
+        return this.status == PREPARING;
     }
 
     public void setEventBasic(EventBasic eventBasic) {
@@ -95,6 +81,7 @@ public class Event extends BaseTimeEntity {
 
     public void setEventDetail(EventDetail eventDetail) {
         this.eventDetail = eventDetail;
+        Events.raise(EventContentChangeEvent.of(this));
     }
 
     public void setEventPlace(EventPlace eventPlace) {
@@ -106,10 +93,11 @@ public class Event extends BaseTimeEntity {
     public Event(Long hostId, String name, LocalDateTime startAt, Long runTime) {
         this.hostId = hostId;
         this.eventBasic = EventBasic.builder().name(name).startAt(startAt).runTime(runTime).build();
+        Events.raise(EventCreationEvent.of(hostId, name));
     }
 
     public void validateStatusOpen() {
-        if (status != EventStatus.OPEN) {
+        if (status != OPEN) {
             throw EventNotOpenException.EXCEPTION;
         }
     }
@@ -153,23 +141,24 @@ public class Event extends BaseTimeEntity {
     }
 
     public void prepare() {
-        if (this.status == EventStatus.PREPARING) throw AlreadyPreparingStatusException.EXCEPTION;
-        this.status = EventStatus.PREPARING;
+        updateStatus(PREPARING, AlreadyPreparingStatusException.EXCEPTION);
     }
 
     public void open() {
-        if (this.status == EventStatus.OPEN) throw AlreadyOpenStatusException.EXCEPTION;
-        this.status = EventStatus.OPEN;
+        updateStatus(OPEN, AlreadyOpenStatusException.EXCEPTION);
     }
 
     public void calculate() {
-        if (this.status == EventStatus.CALCULATING)
-            throw AlreadyCalculatingStatusException.EXCEPTION;
-        this.status = EventStatus.CALCULATING;
+        updateStatus(CALCULATING, AlreadyCalculatingStatusException.EXCEPTION);
     }
 
     public void close() {
-        if (this.status == EventStatus.CLOSED) throw AlreadyCloseStatusException.EXCEPTION;
-        this.status = EventStatus.CLOSED;
+        updateStatus(CLOSED, AlreadyCloseStatusException.EXCEPTION);
+    }
+
+    private void updateStatus(EventStatus status, DuDoongCodeException exception) {
+        if (this.status == status) throw exception;
+        this.status = status;
+        Events.raise(EventStatusChangeEvent.of(this));
     }
 }

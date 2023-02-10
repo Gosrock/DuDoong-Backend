@@ -17,7 +17,6 @@ public class UserUtils {
     }
 
     public User getCurrentUser() {
-        User user = userAdaptor.queryUser(getCurrentUserId());
-        return user;
+        return userAdaptor.queryUser(getCurrentUserId());
     }
 }

@@ -11,9 +11,11 @@ import org.springframework.data.domain.Slice;
 
 public interface OrderCustomRepository {
 
-    Optional<Order> find(String orderUuid);
+    Optional<Order> findByOrderUuid(String orderUuid);
 
     Slice<Order> findMyOrders(FindMyPageOrderCondition condition, Pageable pageable);
 
     Page<Order> findEventOrders(FindEventOrdersCondition condition, Pageable pageable);
+
+    Optional<Order> findRecentOrder(Long userId);
 }
