@@ -1,6 +1,7 @@
 package band.gosrock.domain.domains.event.domain;
 
 
+import band.gosrock.common.exception.DuDoongCodeException;
 import band.gosrock.domain.common.aop.domainEvent.Events;
 import band.gosrock.domain.common.events.event.EventContentChangeEvent;
 import band.gosrock.domain.common.events.event.EventCreationEvent;
@@ -149,27 +150,23 @@ public class Event extends BaseTimeEntity {
     }
 
     public void prepare() {
-        if (this.status == EventStatus.PREPARING) throw AlreadyPreparingStatusException.EXCEPTION;
-        this.setStatus(EventStatus.PREPARING);
+        updateStatus(EventStatus.PREPARING, AlreadyPreparingStatusException.EXCEPTION);
     }
 
     public void open() {
-        if (this.status == EventStatus.OPEN) throw AlreadyOpenStatusException.EXCEPTION;
-        this.setStatus(EventStatus.OPEN);
+        updateStatus(EventStatus.OPEN, AlreadyOpenStatusException.EXCEPTION);
     }
 
     public void calculate() {
-        if (this.status == EventStatus.CALCULATING)
-            throw AlreadyCalculatingStatusException.EXCEPTION;
-        this.setStatus(EventStatus.CALCULATING);
+        updateStatus(EventStatus.CALCULATING, AlreadyCalculatingStatusException.EXCEPTION);
     }
 
     public void close() {
-        if (this.status == EventStatus.CLOSED) throw AlreadyCloseStatusException.EXCEPTION;
-        this.setStatus(EventStatus.CLOSED);
+        updateStatus(EventStatus.CLOSED, AlreadyCloseStatusException.EXCEPTION);
     }
 
-    private void setStatus(EventStatus status) {
+    private void updateStatus(EventStatus status, DuDoongCodeException exception) {
+        if (this.status == status) throw exception;
         this.status = status;
         Events.raise(EventStatusChangeEvent.of(this));
     }
