@@ -13,4 +13,6 @@ public interface HostRepository extends CrudRepository<Host, Long>, HostCustomRe
     List<Host> findAllByHostUsers_UserId(Long userId);
 
     Page<Host> findAllByHostUsers_UserId(Long userId, Pageable pageable);
+
+    List<Host> findByHostUsersIdIn(List<Long> userId);
 }
