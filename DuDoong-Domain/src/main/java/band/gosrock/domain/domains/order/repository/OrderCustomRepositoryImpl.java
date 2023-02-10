@@ -7,6 +7,7 @@ import static band.gosrock.domain.domains.user.domain.QUser.user;
 
 import band.gosrock.domain.common.util.SliceUtil;
 import band.gosrock.domain.domains.order.domain.Order;
+import band.gosrock.domain.domains.order.domain.OrderStatus;
 import band.gosrock.domain.domains.order.repository.condition.FindEventOrdersCondition;
 import band.gosrock.domain.domains.order.repository.condition.FindMyPageOrderCondition;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -29,7 +30,7 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Optional<Order> find(String orderUuid) {
+    public Optional<Order> findByOrderUuid(String orderUuid) {
         Order find =
                 queryFactory
                         .selectFrom(order)
@@ -50,7 +51,8 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
                         .on(order.eventId.eq(event.id))
                         .where(
                                 eqUserId(condition.getUserId()),
-                                openingState(condition.getShowing()))
+                                openingState(condition.getShowing()),
+                            order.orderStatus.notIn(OrderStatus.FAILED,OrderStatus.PENDING_PAYMENT,OrderStatus.READY,OrderStatus.OUTDATED))
                         .orderBy(order.id.desc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize() + 1)
@@ -87,6 +89,18 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
                                 condition.getSearchStringFilter());
 
         return PageableExecutionUtils.getPage(orders, pageable, countQuery::fetchOne);
+    }
+
+    @Override
+    public Optional<Order> findRecentOrder(Long userId) {
+        Order findOrder = queryFactory
+            .selectFrom(order)
+            .where(
+                eqUserId(userId),
+                order.orderStatus.in(OrderStatus.APPROVED, OrderStatus.CONFIRM))
+            .orderBy(order.id.desc())
+            .fetchFirst();
+        return Optional.ofNullable(findOrder);
     }
 
     private BooleanExpression eqUserId(Long userId) {

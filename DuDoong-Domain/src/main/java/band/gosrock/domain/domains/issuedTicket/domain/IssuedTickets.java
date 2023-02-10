@@ -21,11 +21,6 @@ public class IssuedTickets {
         return this.issuedTickets.stream().map(IssuedTicket::getIssuedTicketNo).toList();
     }
 
-    public String getItemName() {
-        IssuedTicket issuedTicket = issuedTickets.stream().findFirst().orElseThrow();
-        return issuedTicket.getItemInfo().getTicketName();
-    }
-
     public int getTotalQuantity() {
         return issuedTickets.size();
     }
@@ -40,6 +35,7 @@ public class IssuedTickets {
     }
 
     public IssuedTicketsStage getIssuedTicketsStage() {
+        if(getTotalQuantity()==0)return IssuedTicketsStage.APPROVE_WAITING;
         List<IssuedTicketStatus> issuedTicketStatuses = getIssuedTicketStatuses();
         if (isCanceled(issuedTicketStatuses)) {
             return IssuedTicketsStage.CANCELED;
