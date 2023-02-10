@@ -3,6 +3,7 @@ package band.gosrock.api.ticketItem.dto.response;
 
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.domain.domains.ticket_item.domain.TicketPayType;
 import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -14,6 +15,9 @@ public class TicketItemResponse {
     @Schema(description = "티켓상품 id")
     private final Long ticketItemId;
 
+    @Schema(description = "티켓 지불 타입")
+    private final TicketPayType payType;
+
     @Schema(description = "이름")
     private final String ticketName;
 
@@ -23,8 +27,8 @@ public class TicketItemResponse {
     @Schema(description = "가격")
     private final Money price;
 
-    @Schema(description = "티켓 타입")
-    private final TicketType type;
+    @Schema(description = "티켓 승인 타입")
+    private final TicketType approveType;
 
     @Schema(description = "1인당 구매 제한 매수")
     private final Long purchaseLimit;
@@ -35,17 +39,22 @@ public class TicketItemResponse {
     @Schema(description = "재고")
     private final Long quantity;
 
+    @Schema(description = "재고공개 여부")
+    private final Boolean isQuantityPublic;
+
     public static TicketItemResponse from(TicketItem ticketItem) {
 
         return TicketItemResponse.builder()
                 .ticketItemId(ticketItem.getId())
+                .payType(ticketItem.getPayType())
                 .ticketName(ticketItem.getName())
                 .description(ticketItem.getDescription())
                 .price(ticketItem.getPrice())
-                .type(ticketItem.getType())
+                .approveType(ticketItem.getType())
                 .purchaseLimit(ticketItem.getPurchaseLimit())
                 .supplyCount(ticketItem.getSupplyCount())
                 .quantity(ticketItem.getQuantity())
+                .isQuantityPublic(ticketItem.getIsQuantityPublic())
                 .build();
     }
 }

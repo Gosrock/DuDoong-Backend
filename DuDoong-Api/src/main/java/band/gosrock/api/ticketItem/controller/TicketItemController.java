@@ -32,7 +32,7 @@ public class TicketItemController {
 
     @Operation(
             summary = "특정 이벤트에 속하는 티켓 상품을 생성합니다.",
-            description = "제휴 되지 않은 회원은 티켓 가격 0으로 강제해 보내주세요!")
+            description = "두둥티켓은 승인형식만, 유료티켓은 선착순형식만 가능합니다.")
     @PostMapping
     public TicketItemResponse createTicketItem(
             @RequestBody @Valid CreateTicketItemRequest createTicketItemRequest,

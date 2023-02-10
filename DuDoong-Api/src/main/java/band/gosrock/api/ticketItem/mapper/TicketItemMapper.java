@@ -25,13 +25,16 @@ public class TicketItemMapper {
     public TicketItem toTicketItem(CreateTicketItemRequest createTicketItemRequest, Event event) {
 
         return TicketItem.builder()
-                .type(createTicketItemRequest.getType())
+                .payType(createTicketItemRequest.getPayType())
                 .name(createTicketItemRequest.getName())
                 .description(createTicketItemRequest.getDescription())
                 .price(Money.wons(createTicketItemRequest.getPrice()))
                 .quantity(createTicketItemRequest.getSupplyCount())
                 .supplyCount(createTicketItemRequest.getSupplyCount())
                 .purchaseLimit(createTicketItemRequest.getPurchaseLimit())
+                .type(createTicketItemRequest.getApproveType())
+                .accountNumber(createTicketItemRequest.getAccountNumber())
+                .isQuantityPublic(createTicketItemRequest.getIsQuantityPublic())
                 .isSellable(true)
                 .event(event)
                 .build();

@@ -18,9 +18,8 @@ public class TicketItemService {
 
     @Transactional
     public TicketItem createTicketItem(TicketItem ticketItem, Boolean isPartner) {
-        if (!isPartner) {
-            ticketItem.validateTicketPrice();
-        }
+
+        ticketItem.validateTicketPayType(isPartner);
         return ticketItemAdaptor.save(ticketItem);
     }
 
