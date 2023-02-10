@@ -4,9 +4,11 @@ package band.gosrock.domain.common.events.host;
 import band.gosrock.domain.common.aop.domainEvent.DomainEvent;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
 
 @Getter
 @Builder
+@ToString
 public class HostUserJoinEvent extends DomainEvent {
     private final Long hostId;
     private final Long userId;

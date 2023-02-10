@@ -6,9 +6,11 @@ import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.host.domain.HostUser;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
 
 @Getter
 @Builder
+@ToString
 public class HostUserDisabledEvent extends DomainEvent {
     private final Long hostId;
     private final String hostName;
