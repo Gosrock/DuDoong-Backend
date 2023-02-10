@@ -34,7 +34,7 @@ public class EventProfileVo {
 
         return EventProfileVo.builder()
                 .eventId(event.getId())
-                .posterImage(eventDetailVo.getPosterImage())
+                .posterImage(eventDetailVo.getPosterImageKey())
                 .name(eventBasicVo.getName())
                 .startAt(eventBasicVo.getStartAt())
                 .endAt(event.getEndAt())

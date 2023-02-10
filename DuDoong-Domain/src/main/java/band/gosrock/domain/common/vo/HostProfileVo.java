@@ -14,14 +14,14 @@ public class HostProfileVo {
 
     private final String introduce;
 
-    private final ImageVo profileImageUrl;
+    private final ImageVo profileImage;
 
     public static HostProfileVo from(Host host) {
         return HostProfileVo.builder()
                 .hostId(host.getId())
                 .name(host.getProfile().getName())
                 .introduce(host.getProfile().getIntroduce())
-                .profileImageUrl(host.getProfile().getProfileImage())
+                .profileImage(host.getProfile().getProfileImage())
                 .build();
     }
 }
