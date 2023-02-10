@@ -1,5 +1,6 @@
 package band.gosrock.domain.domains.event.domain;
 
+import static band.gosrock.domain.domains.event.domain.EventStatus.*;
 
 import band.gosrock.common.exception.DuDoongCodeException;
 import band.gosrock.domain.common.aop.domainEvent.Events;
@@ -36,19 +37,9 @@ public class Event extends BaseTimeEntity {
 
     // 이벤트 상태
     @Enumerated(EnumType.STRING)
-    private EventStatus status = EventStatus.PREPARING;
+    private EventStatus status = PREPARING;
 
     private Boolean isUpdated = false;
-
-    /*********** 미확정된 정보 ***********/
-    // 공연 진행 시간
-
-    // 예매 시작 시각
-    private LocalDateTime ticketingStartAt;
-
-    // 예매 종료 시각
-    private LocalDateTime ticketingEndAt;
-    /*********** 미확정된 정보 ***********/
 
     public LocalDateTime getStartAt() {
         if (this.eventBasic == null) {
@@ -77,7 +68,7 @@ public class Event extends BaseTimeEntity {
     }
 
     public Boolean isPreparing() {
-        return this.status == EventStatus.PREPARING;
+        return this.status == PREPARING;
     }
 
     public void setEventBasic(EventBasic eventBasic) {
@@ -106,7 +97,7 @@ public class Event extends BaseTimeEntity {
     }
 
     public void validateStatusOpen() {
-        if (status != EventStatus.OPEN) {
+        if (status != OPEN) {
             throw EventNotOpenException.EXCEPTION;
         }
     }
@@ -150,19 +141,19 @@ public class Event extends BaseTimeEntity {
     }
 
     public void prepare() {
-        updateStatus(EventStatus.PREPARING, AlreadyPreparingStatusException.EXCEPTION);
+        updateStatus(PREPARING, AlreadyPreparingStatusException.EXCEPTION);
     }
 
     public void open() {
-        updateStatus(EventStatus.OPEN, AlreadyOpenStatusException.EXCEPTION);
+        updateStatus(OPEN, AlreadyOpenStatusException.EXCEPTION);
     }
 
     public void calculate() {
-        updateStatus(EventStatus.CALCULATING, AlreadyCalculatingStatusException.EXCEPTION);
+        updateStatus(CALCULATING, AlreadyCalculatingStatusException.EXCEPTION);
     }
 
     public void close() {
-        updateStatus(EventStatus.CLOSED, AlreadyCloseStatusException.EXCEPTION);
+        updateStatus(CLOSED, AlreadyCloseStatusException.EXCEPTION);
     }
 
     private void updateStatus(EventStatus status, DuDoongCodeException exception) {
