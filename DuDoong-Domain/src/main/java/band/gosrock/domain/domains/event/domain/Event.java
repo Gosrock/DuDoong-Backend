@@ -150,26 +150,27 @@ public class Event extends BaseTimeEntity {
 
     public void prepare() {
         if (this.status == EventStatus.PREPARING) throw AlreadyPreparingStatusException.EXCEPTION;
-        this.status = EventStatus.PREPARING;
-        Events.raise(EventStatusChangeEvent.of(this));
+        this.setStatus(EventStatus.PREPARING);
     }
 
     public void open() {
         if (this.status == EventStatus.OPEN) throw AlreadyOpenStatusException.EXCEPTION;
-        this.status = EventStatus.OPEN;
-        Events.raise(EventStatusChangeEvent.of(this));
+        this.setStatus(EventStatus.OPEN);
     }
 
     public void calculate() {
         if (this.status == EventStatus.CALCULATING)
             throw AlreadyCalculatingStatusException.EXCEPTION;
-        this.status = EventStatus.CALCULATING;
-        Events.raise(EventStatusChangeEvent.of(this));
+        this.setStatus(EventStatus.CALCULATING);
     }
 
     public void close() {
         if (this.status == EventStatus.CLOSED) throw AlreadyCloseStatusException.EXCEPTION;
-        this.status = EventStatus.CLOSED;
+        this.setStatus(EventStatus.CLOSED);
+    }
+
+    private void setStatus(EventStatus status) {
+        this.status = status;
         Events.raise(EventStatusChangeEvent.of(this));
     }
 }
