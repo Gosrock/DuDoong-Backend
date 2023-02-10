@@ -1,8 +1,9 @@
-package band.gosrock.api.host.handler;
+package band.gosrock.api.event.handler;
 
 
-import band.gosrock.domain.common.alarm.HostSlackAlarm;
-import band.gosrock.domain.common.events.host.HostRegisterSlackEvent;
+import band.gosrock.domain.common.alarm.EventSlackAlarm;
+import band.gosrock.domain.common.events.event.EventCreationEvent;
+import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.infrastructure.config.slack.SlackMessageProvider;
@@ -16,17 +17,18 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class HostRegisterSlackEventHandler {
+public class EventCreationEventHandler {
     private final HostAdaptor hostAdaptor;
+    private final EventAdaptor eventAdaptor;
     private final SlackMessageProvider slackMessageProvider;
 
     @Async
     @TransactionalEventListener(
-            classes = HostRegisterSlackEvent.class,
+            classes = EventCreationEvent.class,
             phase = TransactionPhase.AFTER_COMMIT)
-    public void handle(HostRegisterSlackEvent hostRegisterSlackEvent) {
-        final Host host = hostAdaptor.findById(hostRegisterSlackEvent.getHostId());
-        final String message = HostSlackAlarm.slackRegistrationOf(host);
+    public void handle(EventCreationEvent eventCreationEvent) {
+        final Host host = hostAdaptor.findById(eventCreationEvent.getHostId());
+        final String message = EventSlackAlarm.creationOf(eventCreationEvent.getEventName());
 
         slackMessageProvider.sendMessage(host.getSlackUrl(), message);
     }
