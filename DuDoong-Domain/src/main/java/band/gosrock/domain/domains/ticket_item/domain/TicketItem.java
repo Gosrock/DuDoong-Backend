@@ -16,6 +16,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
+import org.springframework.util.StringUtils;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -154,7 +155,7 @@ public class TicketItem extends BaseTimeEntity {
             if (!this.type.equals(TicketType.APPROVAL)) {
                 throw InvalidTicketTypeException.EXCEPTION;
             }
-            if (this.accountNumber == null || this.accountNumber.isBlank()) {
+            if (StringUtils.isEmpty(this.accountNumber)) {
                 throw EmptyAccountNumberException.EXCEPTION;
             }
         }
