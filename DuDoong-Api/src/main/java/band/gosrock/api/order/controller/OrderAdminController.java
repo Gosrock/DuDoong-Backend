@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @SecurityRequirement(name = "access-token")
-@Tag(name = "6-2. 주문 관련 호스트 관리자 ")
+@Tag(name = "6-2. [이벤트관리] 주문관리 ")
 @RestController
 @RequestMapping("/v1/events/{eventId}/orders")
 @RequiredArgsConstructor

@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @SecurityRequirement(name = "access-token")
-@Tag(name = "8-1. 발급 티켓 관련 어드민 컨트롤러")
+@Tag(name = "8-1. [이벤트관리] 발급 티켓 관리 ")
 @RestController
 @RequestMapping("/v1/events/{eventId}/issuedTickets")
 @RequiredArgsConstructor

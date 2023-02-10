@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = "access-token")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "2. 유저 관련 컨트롤러")
+@Tag(name = "2. [유저]")
 public class UserController {
 
     private final ReadUserUseCase readUserUseCase;

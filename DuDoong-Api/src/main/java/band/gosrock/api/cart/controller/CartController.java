@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @SecurityRequirement(name = "access-token")
-@Tag(name = "5. 장바구니 관련 컨트롤러")
+@Tag(name = "5. [장바구니]")
 @RestController
 @RequestMapping("/v1/carts")
 @RequiredArgsConstructor

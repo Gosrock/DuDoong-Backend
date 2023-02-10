@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/examples")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "access-token")
-@Tag(name = "xx. 예시 컨트롤러 에러코드들의 목록을 가지고 있는 api 도 있습니다.")
+@Tag(name = "xx. [예시] 에러코드 문서화")
 public class ExampleController {
 
     private final ExampleApiService exampleApiService;

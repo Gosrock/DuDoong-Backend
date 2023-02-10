@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/auth")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "1-1. 인증 관련 컨트롤러")
+@Tag(name = "1-1. [인증]")
 public class AuthController {
 
     private final RegisterUseCase registerUseCase;
@@ -54,14 +54,14 @@ public class AuthController {
     private final CookieGenerateHelper cookieGenerateHelper;
 
     @Operation(summary = "kakao oauth 링크발급 (백엔드용 )", description = "kakao 링크를 받아볼수 있습니다.")
-    @Tag(name = "1-2. 카카오 oauth")
+    @Tag(name = "1-2. [카카오]")
     @GetMapping("/oauth/kakao/link/test")
     public OauthLoginLinkResponse getKakaoOauthLinkTest() {
         return registerUseCase.getKaKaoOauthLinkTest();
     }
 
     @Operation(summary = "kakao oauth 링크발급 (클라이언트용)", description = "kakao 링크를 받아볼수 있습니다.")
-    @Tag(name = "1-2. 카카오 oauth")
+    @Tag(name = "1-2. [카카오]")
     @GetMapping("/oauth/kakao/link")
     public OauthLoginLinkResponse getKakaoOauthLink(
             @RequestHeader(value = "referer", required = false) String referer,
@@ -84,7 +84,7 @@ public class AuthController {
     }
 
     @Operation(summary = "카카오 code 요청받는 곳입니다. referer,host는 건들이지 말아주세요!안보내셔도됩니다.")
-    @Tag(name = "1-2. 카카오 oauth")
+    @Tag(name = "1-2. [카카오]")
     @GetMapping("/oauth/kakao")
     @ApiErrorCodeExample(KakaoKauthErrorCode.class)
     public OauthTokenResponse getCredentialFromKaKao(
@@ -108,7 +108,7 @@ public class AuthController {
     }
 
     @Operation(summary = "개발용 회원가입입니다 클라이언트가 몰라도 됩니다.", deprecated = true)
-    @Tag(name = "1-2. 카카오 oauth")
+    @Tag(name = "1-2. [카카오]")
     @DevelopOnlyApi
     @GetMapping("/oauth/kakao/develop")
     public ResponseEntity<TokenAndUserResponse> developUserSign(@RequestParam("code") String code) {
@@ -119,7 +119,7 @@ public class AuthController {
     }
 
     @Operation(summary = "회원가입이 가능한지 id token 으로 확인합니다.")
-    @Tag(name = "1-2. 카카오 oauth")
+    @Tag(name = "1-2. [카카오]")
     @GetMapping("/oauth/kakao/register/valid")
     public AvailableRegisterResponse kakaoAuthCheckRegisterValid(
             @RequestParam("id_token") String token) {
@@ -127,7 +127,7 @@ public class AuthController {
     }
 
     @Operation(summary = "id_token 으로 회원가입을 합니다.")
-    @Tag(name = "1-2. 카카오 oauth")
+    @Tag(name = "1-2. [카카오]")
     @PostMapping("/oauth/kakao/register")
     public ResponseEntity<TokenAndUserResponse> kakaoAuthCheckRegisterValid(
             @RequestParam("id_token") String token,
@@ -141,7 +141,7 @@ public class AuthController {
 
     @NotNull
     @Operation(summary = "id_token 으로 로그인을 합니다.")
-    @Tag(name = "1-2. 카카오 oauth")
+    @Tag(name = "1-2. [카카오]")
     @PostMapping("/oauth/kakao/login")
     public ResponseEntity<TokenAndUserResponse> kakaoOauthUserLogin(
             @RequestParam("id_token") String token) {
@@ -152,7 +152,7 @@ public class AuthController {
     }
 
     @Operation(summary = "accessToken 으로 oauth user 정보를 가져옵니다.")
-    @Tag(name = "1-2. 카카오 oauth")
+    @Tag(name = "1-2. [카카오]")
     @PostMapping("/oauth/kakao/info")
     public OauthUserInfoResponse kakaoOauthUserInfo(
             @RequestParam("access_token") String accessToken) {
