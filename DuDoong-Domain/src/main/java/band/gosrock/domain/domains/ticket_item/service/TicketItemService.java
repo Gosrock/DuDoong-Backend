@@ -5,6 +5,7 @@ import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.common.aop.redissonLock.RedissonLock;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.domain.domains.ticket_item.exception.InvalidTicketItemException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +22,12 @@ public class TicketItemService {
             ticketItem.validateTicketPrice();
         }
         return ticketItemAdaptor.save(ticketItem);
+    }
+
+    public void validateExistenceByEventId(Long eventId) {
+        if (!ticketItemAdaptor.existsByEventId(eventId)) {
+            throw InvalidTicketItemException.EXCEPTION;
+        }
     }
 
     @RedissonLock(LockName = "티켓관리", identifier = "ticketItemId")

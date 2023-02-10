@@ -23,7 +23,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 @SecurityRequirement(name = "access-token")
-@Tag(name = "이벤트(공연) 관련 컨트롤러")
+@Tag(name = "3. [이벤트(공연)]")
 @RestController
 @RequestMapping("/v1/events")
 @RequiredArgsConstructor
@@ -36,6 +36,7 @@ public class EventController {
     private final UpdateEventBasicUseCase updateEventBasicUseCase;
     private final UpdateEventDetailUseCase updateEventDetailUseCase;
     private final UpdateEventStatusUseCase updateEventStatusUseCase;
+    private final OpenEventUseCase openEventStatusUseCase;
 
     @Operation(summary = "자신이 관리 중인 이벤트 리스트를 가져옵니다.")
     @GetMapping
@@ -79,7 +80,13 @@ public class EventController {
         return updateEventDetailUseCase.execute(eventId, updateEventDetailRequest);
     }
 
-    @Operation(summary = "공연 상태를 변경합니다.")
+    @Operation(summary = "공연을 오픈 상태로 변경합니다. 모든 체크리스트를 달성해야 합니다.")
+    @PatchMapping("/{eventId}/open")
+    public EventResponse updateEventStatus(@PathVariable Long eventId) {
+        return openEventStatusUseCase.execute(eventId);
+    }
+
+    @Operation(summary = "공연 상태를 변경합니다. (OPEN 제외)")
     @PatchMapping("/{eventId}/status")
     public EventResponse updateEventStatus(
             @PathVariable Long eventId,

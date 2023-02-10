@@ -10,8 +10,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public class UpdateEventStatusRequest {
-
-    @Schema(defaultValue = "OPEN", description = "오픈 상태", allowableValues = "OPEN,CLOSED,PREPARING")
+    @Schema(defaultValue = "OPEN", description = "오픈 상태")
     @Enum(message = "올바른 값을 입력해주세요.")
     private EventStatus status;
 }

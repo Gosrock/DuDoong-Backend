@@ -16,7 +16,7 @@ public class UserInfoVo {
 
     private final String email;
 
-    private final String phoneNumber;
+    private final PhoneNumberVo phoneNumber;
 
     private final ImageVo profileImage;
 
@@ -28,7 +28,7 @@ public class UserInfoVo {
                 .userName(user.getProfile().getName())
                 .email(user.getProfile().getEmail())
                 .profileImage(user.getProfile().getProfileImage())
-                .phoneNumber(user.getProfile().getPhoneNumber())
+                .phoneNumber(user.getProfile().getPhoneNumberVo())
                 .createdAt(user.getCreatedAt())
                 .build();
     }

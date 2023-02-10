@@ -23,7 +23,7 @@ public class HostProfileResponse {
     private final String introduce;
 
     @Schema(description = "호스트 프로필 이미지")
-    private final ImageVo profileImageUrl;
+    private final ImageVo profileImage;
 
     @Schema(description = "속한 호스트에서의 역할")
     private HostRole role;
@@ -40,7 +40,7 @@ public class HostProfileResponse {
                 .hostId(host.getId())
                 .name(host.getProfile().getName())
                 .introduce(host.getProfile().getIntroduce())
-                .profileImageUrl(host.getProfile().getProfileImage())
+                .profileImage(host.getProfile().getProfileImage())
                 .role(hostUser.getRole())
                 .isMaster(host.getMasterUserId().equals(userId))
                 .active(hostUser.getActive())

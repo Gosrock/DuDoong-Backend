@@ -7,7 +7,8 @@ import java.util.function.Function;
 
 /** 어드민 테이블의 검색어 지정 ( 전화번호 이름 검색 ) 을 지원하기 위함. */
 public enum AdminTableSearchType {
-    PHONE(user.profile.phoneNumber::contains),
+    // 검색 형식은 지원... 저장 형식이 이럼 xxxx-xxxx
+    PHONE(user.profile.phoneNumberVo.phoneNumber::contains),
     NAME(user.profile.name::contains);
 
     private final Function<String, BooleanExpression> expression;

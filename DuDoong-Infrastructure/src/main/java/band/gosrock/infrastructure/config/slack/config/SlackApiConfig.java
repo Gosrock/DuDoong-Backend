@@ -1,4 +1,4 @@
-package band.gosrock.infrastructure.config.slack;
+package band.gosrock.infrastructure.config.slack.config;
 
 
 import com.slack.api.Slack;

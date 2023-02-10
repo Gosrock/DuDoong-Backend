@@ -94,7 +94,9 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
     }
 
     private BooleanExpression phoneNumberContains(String phoneNumber) {
-        return phoneNumber == null ? null : issuedTicket.userInfo.phoneNumber.contains(phoneNumber);
+        return phoneNumber == null
+                ? null
+                : issuedTicket.userInfo.phoneNumber.phoneNumber.contains(phoneNumber);
     }
 
     private BooleanExpression issuedTicketStatusNotCanceled() {

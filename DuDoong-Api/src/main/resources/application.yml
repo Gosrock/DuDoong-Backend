@@ -12,6 +12,8 @@ spring:
 springdoc:
   default-produces-media-type: application/json
   default-consumes-media-type: application/json
+  swagger-ui:
+    tags-sorter: alpha
 
 server:
   servlet:

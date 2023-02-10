@@ -8,6 +8,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum IssuedTicketsStage {
+    APPROVE_WAITING("APPROVE_WAITING", "승인대기"),
     // 입장완료
     AFTER_ENTRANCE("AFTER_ENTRANCE", "입장완료"),
     // 관람예정

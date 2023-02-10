@@ -5,12 +5,14 @@ import band.gosrock.domain.domains.host.domain.HostRole;
 import band.gosrock.infrastructure.config.mail.dto.EmailUserInfo;
 import band.gosrock.infrastructure.config.ses.AwsSesUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 
 @Service
 @RequiredArgsConstructor
-public class HostInviteEmailService {
+@Slf4j
+public class HostMasterChangeEmailService {
     private final AwsSesUtils awsSesUtils;
 
     public void execute(EmailUserInfo userInfo, String hostName, HostRole hostRole) {
@@ -18,7 +20,7 @@ public class HostInviteEmailService {
         context.setVariable("userInfo", userInfo);
         context.setVariable("hostName", hostName);
         context.setVariable("role", hostRole.getValue());
-        awsSesUtils.singleEmailRequest(
-                userInfo.getEmail(), "두둥" + hostName + " 호스트 초대 알림 드립니다.", "hostInvite", context);
+        log.info(hostName + " 에서 마스터 변경 알림, " + userInfo); //
+        // todo : 마스터 변경 템플릿 추가
     }
 }

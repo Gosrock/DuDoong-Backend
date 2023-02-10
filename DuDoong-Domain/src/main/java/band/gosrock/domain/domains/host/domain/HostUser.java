@@ -1,6 +1,8 @@
 package band.gosrock.domain.domains.host.domain;
 
 
+import band.gosrock.domain.common.aop.domainEvent.Events;
+import band.gosrock.domain.common.events.host.HostUserJoinEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException;
 import javax.persistence.*;
@@ -41,10 +43,9 @@ public class HostUser extends BaseTimeEntity {
     }
 
     public void activate() {
-        if (this.active) {
-            throw AlreadyJoinedHostException.EXCEPTION;
-        }
+        if (this.active) throw AlreadyJoinedHostException.EXCEPTION;
         this.active = true;
+        Events.raise(HostUserJoinEvent.of(this.host.getId(), this.getUserId()));
     }
 
     @Builder
