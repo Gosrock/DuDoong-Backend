@@ -87,7 +87,7 @@ public class IssuedTicket extends BaseTimeEntity {
     발급 티켓 상태
      */
     @Enumerated(EnumType.STRING)
-    private IssuedTicketStatus issuedTicketStatus;
+    private IssuedTicketStatus issuedTicketStatus = IssuedTicketStatus.ENTRANCE_INCOMPLETE;
 
     /*
     빌더를 통해 객체 생성 시 List는 큰 의미를 두지 않지만

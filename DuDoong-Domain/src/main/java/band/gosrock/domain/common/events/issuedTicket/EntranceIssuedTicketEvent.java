@@ -6,9 +6,11 @@ import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketUserInfoVo;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
 
 @Getter
 @Builder
+@ToString
 public class EntranceIssuedTicketEvent extends DomainEvent {
 
     private final String issuedTicketNo;
