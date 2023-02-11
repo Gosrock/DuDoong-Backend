@@ -30,6 +30,7 @@ public class HostInfoVo {
                 .profileImage(host.getProfile().getProfileImage())
                 .contactEmail(host.getProfile().getContactEmail())
                 .contactNumber(host.getProfile().getContactNumber())
+                .partner(host.getPartner())
                 .build();
     }
 }
