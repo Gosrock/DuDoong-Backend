@@ -23,6 +23,7 @@ public class SlackMessageProvider {
 
     @Async
     public void sendMessage(String url, String text) {
+        if (url == null || url.isBlank()) return;
         Slack slack = Slack.getInstance();
         Payload payload = Payload.builder().text(text).username(username).iconUrl(iconUrl).build();
 

@@ -77,7 +77,7 @@ public class Host extends BaseTimeEntity {
     }
 
     public void setSlackUrl(String slackUrl) {
-        if (this.slackUrl.equals(slackUrl)) {
+        if (this.slackUrl != null && this.slackUrl.equals(slackUrl)) {
             throw DuplicateSlackUrlException.EXCEPTION;
         }
         Events.raise(HostRegisterSlackEvent.of(this));
