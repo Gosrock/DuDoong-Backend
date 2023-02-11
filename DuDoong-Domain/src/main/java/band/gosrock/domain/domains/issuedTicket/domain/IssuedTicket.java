@@ -9,6 +9,7 @@ import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelEntranceException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelException;
+import band.gosrock.domain.domains.issuedTicket.exception.CanNotEntranceException;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketAlreadyEntranceException;
 import band.gosrock.infrastructure.config.mail.dto.EmailIssuedTicketInfo;
 import java.util.ArrayList;
@@ -175,7 +176,7 @@ public class IssuedTicket extends BaseTimeEntity {
      */
     public void entrance() {
         if (this.issuedTicketStatus.isCanceled()) {
-            throw CanNotCancelException.EXCEPTION;
+            throw CanNotEntranceException.EXCEPTION;
         }
         if (this.issuedTicketStatus.isAfterEntrance()) {
             throw IssuedTicketAlreadyEntranceException.EXCEPTION;
