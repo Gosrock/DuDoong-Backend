@@ -31,6 +31,7 @@ public class UpdateHostSlackUrlUseCase {
     public HostDetailResponse execute(Long hostId, UpdateHostSlackRequest updateHostSlackRequest) {
         final Host host = hostAdaptor.findById(hostId);
         final String slackUrl = updateHostSlackRequest.getSlackUrl();
+        hostService.validateDuplicatedSlackUrl(host, slackUrl);
 
         try {
             slackMessageProvider.register(slackUrl);
