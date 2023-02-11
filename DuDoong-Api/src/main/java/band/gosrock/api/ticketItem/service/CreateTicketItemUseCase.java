@@ -42,6 +42,6 @@ public class CreateTicketItemUseCase {
                 ticketItemService.createTicketItem(
                         ticketItemMapper.toTicketItem(createTicketItemRequest, event), isPartner);
 
-        return TicketItemResponse.from(ticketItem);
+        return TicketItemResponse.from(ticketItem, true);
     }
 }

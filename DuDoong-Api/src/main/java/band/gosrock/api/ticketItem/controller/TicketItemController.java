@@ -56,6 +56,12 @@ public class TicketItemController {
         return getEventTicketItemsUseCase.execute(eventId);
     }
 
+    @Operation(summary = "해당 이벤트의 티켓상품을 모두 조회합니다. (어드민용)", description = "재고 정보가 무조건 공개됩니다.")
+    @GetMapping("/admin")
+    public GetEventTicketItemsResponse getEventTicketItemsForAdmin(@PathVariable Long eventId) {
+        return getEventTicketItemsUseCase.executeForAdmin(eventId);
+    }
+
     @Operation(summary = "해당 티켓상품의 옵션을 모두 조회합니다.")
     @GetMapping("/{ticketItemId}/options")
     public GetTicketItemOptionsResponse getTicketItemOptions(
