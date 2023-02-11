@@ -9,7 +9,6 @@ import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelEntranceException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelException;
-import band.gosrock.domain.domains.issuedTicket.exception.CanNotEntranceException;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketAlreadyEntranceException;
 import band.gosrock.infrastructure.config.mail.dto.EmailIssuedTicketInfo;
 import java.util.ArrayList;
@@ -163,7 +162,7 @@ public class IssuedTicket extends BaseTimeEntity {
     티켓이 입장 미완료 상태가 아니면 취소 할 수 없음
      */
     public void cancel() {
-        if (this.issuedTicketStatus != IssuedTicketStatus.ENTRANCE_INCOMPLETE) {
+        if (!this.issuedTicketStatus.isBeforeEntrance()) {
             throw CanNotCancelException.EXCEPTION;
         }
         this.issuedTicketStatus = IssuedTicketStatus.CANCELED;
@@ -175,10 +174,10 @@ public class IssuedTicket extends BaseTimeEntity {
     (입장 처리 도메인 이벤트 발행)
      */
     public void entrance() {
-        if (this.issuedTicketStatus == IssuedTicketStatus.CANCELED) {
-            throw CanNotEntranceException.EXCEPTION;
+        if (this.issuedTicketStatus.isCanceled()) {
+            throw CanNotCancelException.EXCEPTION;
         }
-        if (this.issuedTicketStatus == IssuedTicketStatus.ENTRANCE_COMPLETED) {
+        if (this.issuedTicketStatus.isAfterEntrance()) {
             throw IssuedTicketAlreadyEntranceException.EXCEPTION;
         }
         this.issuedTicketStatus = IssuedTicketStatus.ENTRANCE_COMPLETED;
@@ -190,7 +189,7 @@ public class IssuedTicket extends BaseTimeEntity {
     티켓이 입장 완료 상태가 아니면 입장 취소 할 수 없음
      */
     public void entranceCancel() {
-        if (this.issuedTicketStatus != IssuedTicketStatus.ENTRANCE_COMPLETED) {
+        if (!this.issuedTicketStatus.isAfterEntrance()) {
             throw CanNotCancelEntranceException.EXCEPTION;
         }
         this.issuedTicketStatus = IssuedTicketStatus.ENTRANCE_INCOMPLETE;
