@@ -11,6 +11,7 @@ import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelEntranceEx
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotEntranceException;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketAlreadyEntranceException;
+import band.gosrock.infrastructure.config.mail.dto.EmailIssuedTicketInfo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -144,6 +145,15 @@ public class IssuedTicket extends BaseTimeEntity {
      */
     public IssuedTicketInfoVo toIssuedTicketInfoVo() {
         return IssuedTicketInfoVo.from(this);
+    }
+
+    public EmailIssuedTicketInfo toEmailIssuedTicketInfo() {
+        return new EmailIssuedTicketInfo(
+                this.getIssuedTicketNo(),
+                this.getItemInfo().getTicketName(),
+                this.getCreatedAt(),
+                this.getIssuedTicketStatus().getKr(),
+                this.getPrice().toString());
     }
 
     /** ---------------------------- 상태 변환 관련 메서드 ---------------------------------- */
