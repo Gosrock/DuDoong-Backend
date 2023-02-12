@@ -42,7 +42,7 @@ public class TicketItemResponse {
     @Schema(description = "재고공개 여부")
     private final Boolean isQuantityPublic;
 
-    public static TicketItemResponse from(TicketItem ticketItem) {
+    public static TicketItemResponse from(TicketItem ticketItem, Boolean isAdmin) {
 
         return TicketItemResponse.builder()
                 .ticketItemId(ticketItem.getId())
@@ -53,7 +53,10 @@ public class TicketItemResponse {
                 .approveType(ticketItem.getType())
                 .purchaseLimit(ticketItem.getPurchaseLimit())
                 .supplyCount(ticketItem.getSupplyCount())
-                .quantity(ticketItem.getQuantity())
+                .quantity(
+                        isAdmin || ticketItem.getIsQuantityPublic()
+                                ? ticketItem.getQuantity()
+                                : null)
                 .isQuantityPublic(ticketItem.getIsQuantityPublic())
                 .build();
     }

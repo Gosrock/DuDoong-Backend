@@ -15,6 +15,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.apache.commons.codec.binary.StringUtils;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -77,7 +78,7 @@ public class Host extends BaseTimeEntity {
     }
 
     public void setSlackUrl(String slackUrl) {
-        if (this.slackUrl.equals(slackUrl)) {
+        if (StringUtils.equals(this.slackUrl, slackUrl)) {
             throw DuplicateSlackUrlException.EXCEPTION;
         }
         Events.raise(HostRegisterSlackEvent.of(this));

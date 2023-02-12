@@ -7,9 +7,11 @@ import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.host.domain.HostProfile;
 import band.gosrock.domain.domains.host.domain.HostRole;
 import band.gosrock.domain.domains.host.domain.HostUser;
+import band.gosrock.domain.domains.host.exception.InvalidSlackUrlException;
 import band.gosrock.domain.domains.host.repository.HostRepository;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.codec.binary.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 @DomainService
@@ -51,6 +53,12 @@ public class HostService {
     public Host activateHostUser(Host host, Long userId) {
         host.getHostUserByUserId(userId).activate();
         return hostRepository.save(host);
+    }
+
+    public void validateDuplicatedSlackUrl(Host host, String url) {
+        if (StringUtils.equals(host.getSlackUrl(), url)) {
+            throw InvalidSlackUrlException.EXCEPTION;
+        }
     }
 
     /** 해당 유저가 호스트에 속하는지 확인하는 검증 로직입니다 */
