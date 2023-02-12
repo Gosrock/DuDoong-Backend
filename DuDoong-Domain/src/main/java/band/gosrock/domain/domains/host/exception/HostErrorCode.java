@@ -22,6 +22,7 @@ public enum HostErrorCode implements BaseErrorCode {
     NOT_ACCEPTED_HOST(BAD_REQUEST, "HOST_400_6", "아직 초대를 수락하지 않은 유저입니다."),
     NOT_PARTNER_HOST(BAD_REQUEST, "HOST_400_7", "파트너 호스트만 사용할 수 있는 기능입니다. 제휴 신청을 해주세요."),
     DUPLICATED_SLACK_URL(BAD_REQUEST, "HOST_400_8", "기존과 동일한 슬랙 url 입니다."),
+    INVALID_SLACK_URL(BAD_REQUEST, "HOST_400_9", "유효하지 않은 않은 슬랙 url 입니다."),
     HOST_NOT_FOUND(NOT_FOUND, "Host_404_1", "해당 호스트를 찾을 수 없습니다."),
     HOST_USER_NOT_FOUND(NOT_FOUND, "HOST_404_2", "가입된 호스트 유저가 아닙니다.");
 
