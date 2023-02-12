@@ -7,9 +7,8 @@ import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.exception.*;
 import java.time.LocalDateTime;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import javax.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -79,7 +78,7 @@ public class TicketItem extends BaseTimeEntity {
     private Event event;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private final Set<ItemOptionGroup> itemOptionGroups = new HashSet<>();
+    private final List<ItemOptionGroup> itemOptionGroups = new ArrayList<>();
 
     @Builder
     public TicketItem(
