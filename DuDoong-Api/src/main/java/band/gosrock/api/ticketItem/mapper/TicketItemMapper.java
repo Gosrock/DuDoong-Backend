@@ -41,12 +41,15 @@ public class TicketItemMapper {
     }
 
     @Transactional(readOnly = true)
-    public GetEventTicketItemsResponse toGetEventTicketItemsResponse(Long eventId) {
+    public GetEventTicketItemsResponse toGetEventTicketItemsResponse(
+            Long eventId, Boolean isAdmin) {
 
         Event event = eventAdaptor.findById(eventId);
         List<TicketItem> ticketItems = ticketItemAdaptor.findAllByEventId(event.getId());
         return GetEventTicketItemsResponse.from(
-                ticketItems.stream().map(TicketItemResponse::from).toList());
+                ticketItems.stream()
+                        .map(ticketItem -> TicketItemResponse.from(ticketItem, isAdmin))
+                        .toList());
     }
 
     @Transactional(readOnly = true)
