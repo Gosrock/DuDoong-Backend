@@ -15,7 +15,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class WithDrawOrderEventHandler {
+public class WithdrawOrderEventHandler {
 
     private final IssuedTicketDomainService issuedTicketDomainService;
 
