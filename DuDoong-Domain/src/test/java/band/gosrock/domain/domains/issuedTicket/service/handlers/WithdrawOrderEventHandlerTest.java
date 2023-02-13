@@ -17,20 +17,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 public class WithdrawOrderEventHandlerTest {
 
-    @Mock
-    IssuedTicketDomainService issuedTicketDomainService;
+    @Mock IssuedTicketDomainService issuedTicketDomainService;
 
-    @Mock
-    IssuedTicketAdaptor issuedTicketAdaptor;
+    @Mock IssuedTicketAdaptor issuedTicketAdaptor;
 
-    @Mock
-    IssuedTicket issuedTicket;
+    @Mock IssuedTicket issuedTicket;
 
-    @Mock
-    IssuedTicket issuedTicket1;
+    @Mock IssuedTicket issuedTicket1;
 
-    @Mock
-    WithDrawOrderEvent withDrawOrderEvent;
+    @Mock WithDrawOrderEvent withDrawOrderEvent;
 
     List<IssuedTicket> issuedTickets = new ArrayList<>();
 
@@ -44,16 +39,16 @@ public class WithdrawOrderEventHandlerTest {
 
     @Test
     public void 주문이_취소되었으면_티켓발급_취소_로직_실행_테스트() {
-        WithdrawOrderEventHandler withDrawOrderEventHandler = new WithdrawOrderEventHandler(
-            issuedTicketDomainService, issuedTicketAdaptor);
-        //given
+        WithdrawOrderEventHandler withDrawOrderEventHandler =
+                new WithdrawOrderEventHandler(issuedTicketDomainService, issuedTicketAdaptor);
+        // given
         given(withDrawOrderEvent.getOrderUuid()).willReturn(orderUuid);
         given(issuedTicketAdaptor.findAllByOrderUuid(orderUuid)).willReturn(issuedTickets);
 
-        //when
+        // when
         withDrawOrderEventHandler.handleWithdrawOrderEvent(withDrawOrderEvent);
 
-        //then
+        // then
         then(issuedTicketDomainService).should(times(1)).withdrawIssuedTicket(any(), any());
     }
 }

@@ -61,7 +61,7 @@ public class IssuedTicketInfoVo {
                 .issuedTicketNo(issuedTicket.getIssuedTicketNo())
                 .uuid(issuedTicket.getUuid())
                 .ticketName(issuedTicket.getItemInfo().getTicketName())
-                .ticketPrice(issuedTicket.getPrice())
+                .ticketPrice(issuedTicket.getItemInfo().getPrice())
                 .createdAt(issuedTicket.getCreatedAt())
                 .issuedTicketStatus(issuedTicket.getIssuedTicketStatus())
                 .optionPrice(issuedTicket.sumOptionPrice())
