@@ -1,5 +1,6 @@
 package band.gosrock.domain.domains.host.domain;
 
+import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException;
 import band.gosrock.domain.domains.host.exception.CannotModifyMasterHostRoleException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ public class HostTest {
     @Mock HostUser masterHostUser;
     @Mock HostUser managerHostUser;
     @Mock HostUser guestHostUser;
+    @Mock HostProfile hostProfile;
 
     Host host;
     final Long masterUserId = 1L;
@@ -45,7 +47,8 @@ public class HostTest {
     }
 
     @Test
-    public void 호스트유저_유저ID로_가져오기_검증() {
+    public void 호스트유저_추가후_유저ID로_가져오기_검증() {
+        // given
         given(masterHostUser.getUserId()).willReturn(masterUserId);
         // when
         host.addHostUsers(Set.of(masterHostUser));
@@ -59,7 +62,8 @@ public class HostTest {
     }
 
     @Test
-    public void 호스트유저_유저ID로_포함여부_검증() {
+    public void 호스트유저ID로_포함여부_검증() {
+        // given
         given(masterHostUser.getUserId()).willReturn(masterUserId);
         // when
         host.addHostUsers(Set.of(masterHostUser));
@@ -68,18 +72,65 @@ public class HostTest {
     }
 
     @Test
+    public void 호스트유저로_포함여부_검증() {
+        // given
+        given(masterHostUser.getUserId()).willReturn(masterUserId);
+        // when
+        host.addHostUsers(Set.of(masterHostUser));
+        // then
+        assertTrue(host.hasHostUser(masterHostUser));
+    }
+
+    @Test
     public void 호스트에_유저_여러명_추가기능_검증() {
         // given
         given(masterHostUser.getUserId()).willReturn(masterUserId);
         given(managerHostUser.getUserId()).willReturn(managerUserId);
-
         // when
-        host.addHostUsers(Set.of(masterHostUser));
-        host.addHostUsers(Set.of(managerHostUser));
-
+        host.addHostUsers(Set.of(masterHostUser, managerHostUser));
         // then
         assertEquals(host.getHostUserByUserId(masterUserId), masterHostUser);
         assertEquals(host.getHostUserByUserId(managerUserId), managerHostUser);
+    }
+
+    @Test
+    public void 호스트에_유저_초대기능_검증() {
+        // given
+        given(managerHostUser.getUserId()).willReturn(managerUserId);
+        // when
+        host.inviteHostUsers(Set.of(managerHostUser));
+        // then
+        assertEquals(host.getHostUserByUserId(managerUserId), managerHostUser);
+    }
+
+    @Test
+    public void 이미있는_호스트유저는_초대불가능() {
+        // given
+        given(managerHostUser.getUserId()).willReturn(managerUserId);
+        // when
+        host.addHostUsers(Set.of(managerHostUser));
+        // then
+        assertThrows(
+                AlreadyJoinedHostException.class,
+                () -> {
+                    host.inviteHostUsers(Set.of(managerHostUser));
+                });
+    }
+
+    @Test
+    public void 호스트_프로필_변경_호출되었는지_검증() {
+        // given
+        given(hostProfile.getIntroduce()).willReturn("소개");
+        given(hostProfile.getContactNumber()).willReturn("num");
+        given(hostProfile.getProfileImage()).willReturn(null);
+        given(hostProfile.getContactEmail()).willReturn("mail");
+        // when
+        host.updateProfile(hostProfile);
+        // then
+        assertEquals(host.getProfile().getIntroduce(), hostProfile.getIntroduce());
+        assertEquals(host.getProfile().getContactEmail(), hostProfile.getContactEmail());
+        assertEquals(host.getProfile().getContactNumber(), hostProfile.getContactNumber());
+        assertEquals(host.getProfile().getProfileImage(), hostProfile.getProfileImage());
     }
 
     @Test
@@ -99,14 +150,12 @@ public class HostTest {
         // given
         given(masterHostUser.getUserId()).willReturn(masterUserId);
         given(managerHostUser.getUserId()).willReturn(managerUserId);
-
         // when
         host.addHostUsers(Set.of(masterHostUser, managerHostUser));
-
         // then
         host.setHostUserRole(managerUserId, HostRole.MANAGER);
-        // HostUser 에서 역할 변경 호출시 성공
         verify(managerHostUser).setHostRole(HostRole.MANAGER);
+        // HostUser 에서 역할 변경 호출시 성공
     }
 
     @Test
@@ -118,10 +167,8 @@ public class HostTest {
         given(managerHostUser.getRole()).willReturn(HostRole.MANAGER);
         given(guestHostUser.getUserId()).willReturn(guestUserId);
         given(guestHostUser.getRole()).willReturn(HostRole.GUEST);
-
         // when
         host.addHostUsers(Set.of(masterHostUser, managerHostUser, guestHostUser));
-
         // then
         // 게스트, 마스터는 매니저 x
         assertFalse(host.isManagerHostUserId(masterUserId));
