@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.host.domain;
 
 import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException;
 import band.gosrock.domain.domains.host.exception.CannotModifyMasterHostRoleException;
+import band.gosrock.domain.domains.host.exception.DuplicateSlackUrlException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -134,6 +135,26 @@ public class HostTest {
     }
 
     @Test
+    public void 슬랙알림용_URL변경_검증() {
+        // given
+        final String url = "https://mmm.test";
+        // when
+        host.setSlackUrl(url);
+        // then
+        assertEquals(host.getSlackUrl(), url);
+    }
+
+    @Test
+    public void 슬랙알림용_URL은_이미있는_값과_같으면_안된다() {
+        // given
+        final String url = "https://mmm.test";
+        host.setSlackUrl(url);
+        // when
+        // then
+        assertThrows(DuplicateSlackUrlException.class, () -> { host.setSlackUrl(url);});
+    }
+
+    @Test
     public void 마스터호스트_역할변경_불가_검증() {
         // given
         // then
@@ -176,30 +197,17 @@ public class HostTest {
         assertFalse(host.isManagerHostUserId(guestUserId));
     }
 
-    // todo :: activate 유저 테스트부터 선행
-    //    @Test
-    //    public void 호스트유저_매니저_권한_검증() {
-    //        //given
-    //        given(masterHostUser.getUserId()).willReturn(masterUserId);
-    //        given(masterHostUser.getRole()).willReturn(HostRole.MASTER);
-    //        given(managerHostUser.getUserId()).willReturn(managerUserId);
-    //        given(managerHostUser.getRole()).willReturn(HostRole.MANAGER);
-    //        given(guestHostUser.getUserId()).willReturn(guestUserId);
-    //        given(guestHostUser.getRole()).willReturn(HostRole.GUEST);
-    //
-    //        //when
-    //        host.addHostUsers(Set.of(masterHostUser, managerHostUser, guestHostUser));
-    //
-    //        //then
-    //        //게스트는 권한이 없음
-    //        assertThrows(NotManagerHostException.class, () -> {
-    //            host.validateManagerHostUser(guestUserId);
-    //        });
-    //        //마스터와 매니저는 권한 부여
-    //        assertDoesNotThrow(() -> {
-    //            host.validateManagerHostUser(managerUserId);
-    //            host.validateManagerHostUser(masterUserId);
-    //        });
-    //        //마스터와 매니저 모두 매니저 호스트여야함
-    //    }
+    @Test
+    public void 초대_수락한_호스트유저인지_검증() {
+        // given
+        given(managerHostUser.getUserId()).willReturn(managerUserId);
+        given(managerHostUser.getActive()).willReturn(false);
+        given(guestHostUser.getUserId()).willReturn(guestUserId);
+        given(guestHostUser.getActive()).willReturn(true);
+        // when
+        host.addHostUsers(Set.of(managerHostUser, guestHostUser));
+        // then
+        assertFalse(host.isActiveHostUserId(managerUserId));
+        assertTrue(host.isActiveHostUserId(guestUserId));
+    }
 }
