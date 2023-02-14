@@ -232,6 +232,5 @@ public class IssuedTicketDomainServiceTest {
 
         // then
         then(ticketItem).should(times(orderLineItems.size())).reduceQuantity(any());
-
     }
 }
