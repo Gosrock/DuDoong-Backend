@@ -8,7 +8,6 @@ import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.host.service.HostService;
-import band.gosrock.domain.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,13 +22,9 @@ public class JoinHostUseCase {
 
     @Transactional
     public HostDetailResponse execute(Long hostId) {
-        // 존재하는 유저인지 검증
-        final User user = userUtils.getCurrentUser();
-        final Long userId = user.getId();
+        final Long userId = userUtils.getCurrentUserId();
         final Host host = hostAdaptor.findById(hostId);
 
-        // 이 호스트에 초대받지 않음
-        host.validateHostUser(userId);
         return hostMapper.toHostDetailResponse(hostService.activateHostUser(host, userId));
     }
 }

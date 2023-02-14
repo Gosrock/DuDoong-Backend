@@ -9,6 +9,8 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.transaction.annotation.Transactional;
 
 @Adaptor
 @RequiredArgsConstructor
@@ -28,6 +30,11 @@ public class EventAdaptor {
 
     public Page<Event> findAllByHostIdIn(List<Long> hostId, Pageable pageable) {
         return eventRepository.findAllByHostIdIn(hostId, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Slice<Event> querySliceEventsByHostIdIn(List<Long> hostId, Pageable pageable) {
+        return eventRepository.querySliceEventsByHostIdIn(hostId, pageable);
     }
 
     public List<Event> findAllByIds(List<Long> ids) {

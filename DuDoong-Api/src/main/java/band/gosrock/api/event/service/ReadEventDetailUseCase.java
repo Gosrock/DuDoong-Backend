@@ -26,9 +26,8 @@ public class ReadEventDetailUseCase {
         final Event event = eventAdaptor.findById(eventId);
         final Host host = hostAdaptor.findById(event.getHostId());
         final Long userId = userUtils.getCurrentUserId();
-
         // 호스트 유저가 아닐 경우 준비 상태일 때 조회할 수 없음
-        if (event.isPreparing() && !host.hasHostUserId(userId)) {
+        if (event.isPreparing() && !host.isActiveHostUserId(userId)) {
             throw EventNotOpenException.EXCEPTION;
         }
         return eventMapper.toEventDetailResponse(host, event);

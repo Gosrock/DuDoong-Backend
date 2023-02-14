@@ -30,4 +30,8 @@ public enum IssuedTicketStatus {
     public Boolean isAfterEntrance() {
         return this == IssuedTicketStatus.ENTRANCE_COMPLETED;
     }
+
+    public Boolean is(IssuedTicket issuedTicket) {
+        return issuedTicket.getIssuedTicketStatus() == IssuedTicketStatus.ENTRANCE_INCOMPLETE;
+    }
 }

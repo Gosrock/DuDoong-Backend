@@ -22,7 +22,8 @@ public enum UserErrorCode implements BaseErrorCode {
     @ExplainError("탈퇴한 유저로 접근하려는 경우")
     USER_ALREADY_DELETED(FORBIDDEN, "USER_403_2", "이미 지워진 유저입니다."),
     @ExplainError("유저 정보를 찾을 수 없는 경우")
-    USER_NOT_FOUND(NOT_FOUND, "USER_404_1", "유저 정보를 찾을 수 없습니다.");
+    USER_NOT_FOUND(NOT_FOUND, "USER_404_1", "유저 정보를 찾을 수 없습니다."),
+    USER_PHONE_INVALID(BAD_REQUEST, "USER_400_2", "유저의 휴대폰 전화번호가 올바르지않습니다. 두둥 관리자에게 문의주세요");
 
     private Integer status;
     private String code;

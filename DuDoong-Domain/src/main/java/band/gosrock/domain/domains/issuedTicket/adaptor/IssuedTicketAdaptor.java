@@ -67,4 +67,15 @@ public class IssuedTicketAdaptor {
     public IssuedTickets findOrderIssuedTickets(String orderUuid) {
         return IssuedTickets.from(issuedTicketRepository.findAllByOrderUuid(orderUuid));
     }
+
+    /** 유저 아이디와 티켓 아이템 아이디를 인자로받아 유저가 현재까지 발급한 정상 티켓을 불러온다. */
+    public Long countPaidTicket(Long userId, Long itemId) {
+        return issuedTicketRepository.countPaidTicket(userId, itemId);
+    }
+
+    public IssuedTicket queryByIssuedTicketNo(String issuedTicketNo) {
+        return issuedTicketRepository
+                .findByIssuedTicketNo(issuedTicketNo)
+                .orElseThrow(() -> IssuedTicketNotFoundException.EXCEPTION);
+    }
 }

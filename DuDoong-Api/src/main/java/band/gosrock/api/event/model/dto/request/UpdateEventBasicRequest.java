@@ -9,18 +9,20 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 
 @Getter
 @RequiredArgsConstructor
 public class UpdateEventBasicRequest {
     @Schema(defaultValue = "고스락 제 22회 정기공연", description = "공연 이름")
     @NotBlank(message = "공연 이름을 입력하세요")
+    @Length(max = 25)
     private String name;
 
     @Schema(
             type = "string",
-            pattern = "yyyy-MM-dd HH:mm",
-            defaultValue = "2023-03-20 12:00",
+            pattern = "yyyy.MM.dd HH:mm",
+            defaultValue = "2023.03.20 12:00",
             description = "공연 시작 시각")
     @NotNull(message = "공연 시작 시각을 입력하세요")
     @DateFormat
@@ -49,24 +51,4 @@ public class UpdateEventBasicRequest {
     @Schema(defaultValue = "37.548369", description = "공연장 위치 위도")
     @Positive(message = "공연장 위도 정보를 입력하세요")
     private Double latitude;
-
-    // 예매 시작 시각
-    @Schema(
-            type = "string",
-            pattern = "yyyy-MM-dd HH:mm",
-            defaultValue = "2023-03-10 12:00",
-            description = "예매 시작 시간")
-    @NotNull(message = "예매 시작 시간을 입력하세요")
-    @DateFormat
-    private LocalDateTime ticketingStartAt;
-
-    // 예매 종료 시각
-    @Schema(
-            type = "string",
-            pattern = "yyyy-MM-dd HH:mm",
-            defaultValue = "2023-03-24 18:00",
-            description = "예매 종료 시간")
-    @NotNull(message = "예매 종료 시간을 입력하세요")
-    @DateFormat
-    private LocalDateTime ticketingEndAt;
 }

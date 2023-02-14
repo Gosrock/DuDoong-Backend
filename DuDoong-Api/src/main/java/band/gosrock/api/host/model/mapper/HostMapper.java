@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Mapper
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class HostMapper {
     private final HostAdaptor hostAdaptor;
     private final UserAdaptor userAdaptor;
@@ -40,7 +41,7 @@ public class HostMapper {
     public HostProfile toHostProfile(UpdateHostRequest updateHostRequest) {
         return HostProfile.builder()
                 .introduce(updateHostRequest.getIntroduce())
-                .profileImageUrl(updateHostRequest.getProfileImageUrl())
+                .profileImageKey(updateHostRequest.getProfileImageKey())
                 .contactEmail(updateHostRequest.getContactEmail())
                 .contactNumber(updateHostRequest.getContactNumber())
                 .build();
@@ -64,7 +65,6 @@ public class HostMapper {
         return HostUser.builder().userId(userId).host(host).role(HostRole.MASTER).build();
     }
 
-    @Transactional(readOnly = true)
     public UserProfileVo toHostInviteUserList(Long hostId, String email) {
         final Host host = hostAdaptor.findById(hostId);
 
@@ -75,13 +75,11 @@ public class HostMapper {
         return inviteUser.toUserProfileVo();
     }
 
-    @Transactional(readOnly = true)
     public HostDetailResponse toHostDetailResponse(Long hostId) {
         final Host host = hostAdaptor.findById(hostId);
         return toHostDetailResponseExecute(host);
     }
 
-    @Transactional(readOnly = true)
     public HostDetailResponse toHostDetailResponse(Host host) {
         return toHostDetailResponseExecute(host);
     }

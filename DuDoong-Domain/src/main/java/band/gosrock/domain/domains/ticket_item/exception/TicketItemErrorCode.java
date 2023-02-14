@@ -22,8 +22,8 @@ public enum TicketItemErrorCode implements BaseErrorCode {
     @ExplainError("주문 및 승인 요청 시 티켓 상품 재고보다 많은 양을 주문 시 발생하는 오류입니다.")
     TICKET_ITEM_QUANTITY_LESS_THAN_ZERO(
             BAD_REQUEST, "Ticket_Item_400_2", "티켓 아이템 재고가 0보다 작을 수 없습니다."),
-    @ExplainError("제휴되지 않은 호스트가 티켓 가격을 0이 아닌 값으로 요청했을때 발생하는 오류입니다.")
-    INVALID_TICKET_PRICE(BAD_REQUEST, "Ticket_Item_400_3", "티켓 가격을 설정할 수 없습니다."),
+    @ExplainError("설정할수 없는 티켓 가격일때 발생하는 오류입니다.")
+    INVALID_TICKET_PRICE(BAD_REQUEST, "Ticket_Item_400_3", "설정할 수 없는 티켓 가격입니다."),
     @ExplainError("예매 취소 및 티켓 취소 요청 시 티켓 상품 공급량보다 많은 양이 반환될 때 발생하는 오류입니다.")
     TICKET_ITEM_QUANTITY_LARGER_THAN_SUPPLY_COUNT(
             BAD_REQUEST, "Ticket_Item_400_4", "공급량보다 많은 티켓 아이템 재고가 설정되었습니다."),
@@ -41,7 +41,16 @@ public enum TicketItemErrorCode implements BaseErrorCode {
     @ExplainError("이미 재고가 감소되어 옵션 변경이 불가능할 경우 발생하는 오류입니다.")
     FORBIDDEN_OPTION_CHANGE(BAD_REQUEST, "Item_Option_Group_400_2", "옵션 변경이 불가능한 상태입니다."),
     @ExplainError("이미 재고가 감소되어 티켓상품 삭제가 불가능할 경우 발생하는 오류입니다.")
-    FORBIDDEN_TICKET_ITEM_DELETE(BAD_REQUEST, "Ticket_Item_400_7", "티켓상품 삭제가 불가능한 상태입니다.");
+    FORBIDDEN_TICKET_ITEM_DELETE(BAD_REQUEST, "Ticket_Item_400_7", "티켓상품 삭제가 불가능한 상태입니다."),
+    @ExplainError("이미 적용되어 옵션그룹 삭제가 불가능할 경우 발생하는 오류입니다.")
+    FORBIDDEN_OPTION_GROUP_DELETE(BAD_REQUEST, "Option_Group_400_2", "옵션그룹 삭제가 불가능한 상태입니다."),
+    @ExplainError("두둥티켓 타입에 계좌번호가 입력되지 않았을 경우 발생하는 오류입니다.")
+    EMPTY_ACCOUT_NUMBER(BAD_REQUEST, "Ticket_Item_400_8", "계좌번호가 필요합니다."),
+    @ExplainError("티켓 지불방식과 승인방식이 불가능한 조합일때 발생하는 오류입니다.")
+    INVALID_TICKET_TYPE(BAD_REQUEST, "Ticket_Item_400_9", "잘못된 티켓 승인타입입니다."),
+    @ExplainError("제휴되지 않은 호스트가 유료티켓 생성을 요청했을때 발생하는 오류입니다.")
+    INVALID_PARTNER(BAD_REQUEST, "Ticket_Item_400_3", "제휴된 호스트가 아닙니다.");
+
     private Integer status;
     private String code;
     private String reason;

@@ -8,6 +8,7 @@ import band.gosrock.domain.domains.comment.adaptor.CommentAdaptor;
 import band.gosrock.domain.domains.comment.domain.Comment;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,9 +23,9 @@ public class RetrieveRandomCommentUseCase {
     private final EventAdaptor eventAdaptor;
 
     @Transactional(readOnly = true)
-    public RetrieveRandomCommentResponse execute(Long eventId) {
+    public RetrieveRandomCommentResponse execute(Long eventId, Long limit) {
         Event event = eventAdaptor.findById(eventId);
-        Comment comment = commentAdaptor.queryRandomComment(event.getId());
-        return commentMapper.toRetrieveRandomCommentResponse(comment);
+        List<Comment> comments = commentAdaptor.queryRandomComment(event.getId(), limit);
+        return commentMapper.toRetrieveRandomCommentResponse(comments);
     }
 }

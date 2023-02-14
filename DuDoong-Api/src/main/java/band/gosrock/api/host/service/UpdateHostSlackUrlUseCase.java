@@ -10,7 +10,10 @@ import band.gosrock.api.host.model.mapper.HostMapper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
+import band.gosrock.domain.domains.host.exception.InvalidSlackUrlException;
 import band.gosrock.domain.domains.host.service.HostService;
+import band.gosrock.infrastructure.config.slack.SlackMessageProvider;
+import java.net.UnknownHostException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,11 +24,20 @@ public class UpdateHostSlackUrlUseCase {
     private final HostAdaptor hostAdaptor;
     private final HostMapper hostMapper;
 
+    private final SlackMessageProvider slackMessageProvider;
+
     @Transactional
     @HostRolesAllowed(role = MANAGER, findHostFrom = HOST_ID)
     public HostDetailResponse execute(Long hostId, UpdateHostSlackRequest updateHostSlackRequest) {
         final Host host = hostAdaptor.findById(hostId);
         final String slackUrl = updateHostSlackRequest.getSlackUrl();
-        return hostMapper.toHostDetailResponse(hostService.updateHostSlackUrl(host, slackUrl));
+        hostService.validateDuplicatedSlackUrl(host, slackUrl);
+
+        try {
+            slackMessageProvider.register(slackUrl);
+            return hostMapper.toHostDetailResponse(hostService.updateHostSlackUrl(host, slackUrl));
+        } catch (UnknownHostException e) {
+            throw InvalidSlackUrlException.EXCEPTION;
+        }
     }
 }

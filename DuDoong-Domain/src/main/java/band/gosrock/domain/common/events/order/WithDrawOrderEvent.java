@@ -7,10 +7,12 @@ import band.gosrock.domain.domains.order.domain.OrderMethod;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
 import org.springframework.lang.Nullable;
 
 @Getter
 @Builder
+@ToString
 public class WithDrawOrderEvent extends DomainEvent {
 
     private final String orderUuid;

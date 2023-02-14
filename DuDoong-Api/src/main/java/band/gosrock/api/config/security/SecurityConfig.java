@@ -3,6 +3,7 @@ package band.gosrock.api.config.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -32,6 +33,14 @@ public class SecurityConfig {
                 .permitAll()
                 .mvcMatchers("/v1/auth/token/refresh")
                 .permitAll()
+                .mvcMatchers(HttpMethod.GET, "/v1/events/{eventId:[0-9]*$}")
+                .permitAll()
+                .mvcMatchers(HttpMethod.GET, "/v1/events/{eventId:[0-9]*$}/ticketItems")
+                .permitAll()
+                .mvcMatchers(HttpMethod.GET, "/v1/events/{eventId:[0-9]*$}/comments/**")
+                .permitAll()
+                .mvcMatchers(HttpMethod.POST, "/v1/coupons/campaigns")
+                .hasRole("SUPER_ADMIN")
                 .anyRequest()
                 .authenticated();
         http.apply(filterConfig);

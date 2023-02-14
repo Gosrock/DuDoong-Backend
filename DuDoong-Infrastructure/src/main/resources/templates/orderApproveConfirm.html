@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns="http://www.w3.org/1999/xhtml"
+    layout:decorate="~{layouts/mailFormat}"
+>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title></title>
+  <style>
+    * {
+      line-height: 150%;
+      font-family: Pretendard ,AppleSDGothic, apple sd gothic neo, noto sans korean,
+      noto sans korean regular, noto sans cjk kr, noto sans cjk,
+      nanum gothic, malgun gothic, dotum, arial, helvetica, MS Gothic,
+      sans-serif !important;
+      mso-line-height-rule: exactly;
+      line-height: 1.8;
+      -ms-text-size-adjust: 100%;
+      -webkit-text-size-adjust: 100%;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0">
+<div layout:fragment="content">
+  <div th:replace="fragments/title :: title(title='주문 승인 확인 안내')">divider</div>
+
+    <div >
+      <span >안녕하세요</span>
+      <span  th:text="${userInfo.name}" >이름</span>
+      <span >님</span>
+      <br />
+    </div>
+  <div th:replace="fragments/subTilte :: hostAndEvent(eventInfo=${eventInfo},text=' 주문이 승인되었습니다.')">
+    이벤트 정보
+  </div>
+  <div th:replace="fragments/orderInfo :: orderInfo(orderInfo=${orderInfo})">
+    주문 정보
+  </div>
+
+  <div style="margin-top: 10px ; margin-bottom: 10px">
+  <div>
+    원할한 입장을 위해 QR코드를 미리 준비해 주세요
+  </div>
+  <div>
+    마이페이지 -> 내 예매 내역 -> 예매확인 -> QR 코드 보기
+  </div>
+  <div>
+    에서 각 티켓의 QR코드를 확인 할 수 있습니다.
+  </div>
+</div>
+
+  <div style="margin-top: 10px ; margin-bottom: 10px ;color: #7A7A80">
+    <div>
+      철회기한 이전까지 수수료 없이 환불 가능합니다.
+    </div>
+    <div>
+      공연 입장확인이 된 티켓이 있을경우 환불이 불가합니다.
+    </div>
+    <div>
+      환불 방법 : 티켓 예매 상세내역 > 예매취소
+    </div>
+    <div>
+      환불 금액 : 당사에서는 주문에 대해 즉시 취소를 하고,
+    </div>
+    <div>
+      취소 금액에 대한 입금은 카드사 영업일 기준 4~5일이 소요될 수 있습니다.
+    </div>
+  </div>
+
+  <div align="right">
+    <img width="163" style="" src="https://asset.dudoong.com/common/duduongs.png"/>
+  </div>
+
+  <div th:replace="fragments/button :: button(href='https://dudoong.com' , text='두둥 바로가기')">
+    button
+  </div>
+</div>
+</body>
+</html>

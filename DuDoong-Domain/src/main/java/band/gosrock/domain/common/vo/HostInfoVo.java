@@ -14,7 +14,7 @@ public class HostInfoVo {
 
     private final String introduce;
 
-    private final String profileImageUrl;
+    private final ImageVo profileImage;
 
     private final String contactEmail;
 
@@ -27,9 +27,10 @@ public class HostInfoVo {
                 .hostId(host.getId())
                 .name(host.getProfile().getName())
                 .introduce(host.getProfile().getIntroduce())
-                .profileImageUrl(host.getProfile().getProfileImageUrl())
+                .profileImage(host.getProfile().getProfileImage())
                 .contactEmail(host.getProfile().getContactEmail())
                 .contactNumber(host.getProfile().getContactNumber())
+                .partner(host.getPartner())
                 .build();
     }
 }

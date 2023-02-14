@@ -1,0 +1,48 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title></title>
+  <style>
+    * {
+      line-height: 150%;
+    }
+  </style>
+</head>
+<div th:fragment="issuedTicketInfo(issuedTicketInfo)"
+     style="
+      overflow: hidden;
+      padding: 0px;
+      margin-top: 20px;
+      border: 0;
+      font-weight: bold;
+      font-size: 14px;
+      font-family: Pretendard , AppleSDGothic, apple sd gothic neo, noto sans korean,
+        noto sans korean regular, noto sans cjk kr, noto sans cjk, nanum gothic,
+        malgun gothic, dotum, arial, helvetica, MS Gothic, sans-serif !important;
+    "
+>
+  <div style="font-weight: bold; background: #F8F8FA; padding: 10px ; margin-top: 10px;margin-bottom: 10px">
+    <div >
+      <span  >티켓 번호 : </span>
+      <span  th:text="${issuedTicketInfo.issuedTicketNo}" >티켓 번호</span>
+    </div>
+    <div >
+      <span  >티켓명 : </span>
+      <span  th:text="${issuedTicketInfo.ticketName}" >티켓명</span>
+    </div>
+    <div >
+      <span  >발급 일시 : </span>
+      <span  th:text="${#temporals.format(issuedTicketInfo.createdAt, 'yyyy-MM-dd HH:mm')}" >발급 일시</span>
+    </div>
+    <div >
+      <span  >티켓 상태 : </span>
+      <span  th:text="${issuedTicketInfo.issuedTicketStatus}" >티켓 상태</span>
+    </div>
+    <div>
+      <span>가격 : </span>
+      <span th:text="${issuedTicketInfo.money}">가격</span>
+    </div>
+  </div>
+</div>
+</html>

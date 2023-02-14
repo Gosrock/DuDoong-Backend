@@ -1,8 +1,12 @@
 package band.gosrock.domain.domains.host.domain;
 
 
+import band.gosrock.domain.common.aop.domainEvent.Events;
+import band.gosrock.domain.common.events.host.HostRegisterSlackEvent;
+import band.gosrock.domain.common.events.host.HostUserInvitationEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.HostInfoVo;
+import band.gosrock.domain.common.vo.HostProfileVo;
 import band.gosrock.domain.domains.host.exception.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -11,6 +15,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.apache.commons.codec.binary.StringUtils;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -38,11 +43,22 @@ public class Host extends BaseTimeEntity {
     private final Set<HostUser> hostUsers = new HashSet<>();
 
     public void addHostUsers(Set<HostUser> hostUserList) {
+        hostUserList.forEach(this::validateHostUserExistence);
         this.hostUsers.addAll(hostUserList);
+    }
+
+    public void inviteHostUsers(Set<HostUser> hostUserList) {
+        hostUserList.forEach(this::validateHostUserExistence);
+        this.hostUsers.addAll(hostUserList);
+        hostUserList.forEach(hostUser -> Events.raise(HostUserInvitationEvent.of(this, hostUser)));
     }
 
     public Boolean hasHostUserId(Long userId) {
         return this.hostUsers.stream().anyMatch(hostUser -> hostUser.getUserId().equals(userId));
+    }
+
+    public Boolean hasHostUser(HostUser hostUser) {
+        return this.hasHostUserId(hostUser.getUserId());
     }
 
     public HostUser getHostUserByUserId(Long userId) {
@@ -52,11 +68,20 @@ public class Host extends BaseTimeEntity {
                 .orElseThrow(() -> HostUserNotFoundException.EXCEPTION);
     }
 
+    public String getSlackToken() {
+        if (this.slackUrl == null) return null;
+        return this.slackUrl.substring(this.slackUrl.indexOf("https://hooks.slack.com/services/"));
+    }
+
     public void updateProfile(HostProfile hostProfile) {
         this.profile.updateProfile(hostProfile);
     }
 
     public void setSlackUrl(String slackUrl) {
+        if (StringUtils.equals(this.slackUrl, slackUrl)) {
+            throw DuplicateSlackUrlException.EXCEPTION;
+        }
+        Events.raise(HostRegisterSlackEvent.of(this));
         this.slackUrl = slackUrl;
     }
 
@@ -83,6 +108,17 @@ public class Host extends BaseTimeEntity {
                 .findFirst()
                 .orElseThrow(() -> HostUserNotFoundException.EXCEPTION)
                 .setHostRole(role);
+    }
+
+    /** 해당 유저가 호스트에 이미 속하는지 확인하는 검증 로직입니다 */
+    public void validateHostUserIdExistence(Long userId) {
+        if (this.hasHostUserId(userId)) {
+            throw AlreadyJoinedHostException.EXCEPTION;
+        }
+    }
+
+    public void validateHostUserExistence(HostUser hostUser) {
+        validateHostUserIdExistence(hostUser.getUserId());
     }
 
     /** 해당 유저가 호스트에 속하는지 확인하는 검증 로직입니다 */
@@ -116,15 +152,26 @@ public class Host extends BaseTimeEntity {
         }
     }
 
+    /** 해당 호스트가 파트너 인지 검증합니다. */
+    public void validatePartnerHost() {
+        if (!partner) {
+            throw NotPartnerHostException.EXCEPTION;
+        }
+    }
+
     public HostInfoVo toHostInfoVo() {
         return HostInfoVo.from(this);
+    }
+
+    public HostProfileVo toHostProfileVo() {
+        return HostProfileVo.from(this);
     }
 
     @Builder
     public Host(
             String name,
             String introduce,
-            String profileImageUrl,
+            String profileImageKey,
             String contactEmail,
             String contactNumber,
             String slackUrl,
@@ -133,7 +180,7 @@ public class Host extends BaseTimeEntity {
                 HostProfile.builder()
                         .name(name)
                         .introduce(introduce)
-                        .profileImageUrl(profileImageUrl)
+                        .profileImageKey(profileImageKey)
                         .contactEmail(contactEmail)
                         .contactNumber(contactNumber)
                         .build();

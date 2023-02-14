@@ -5,6 +5,7 @@ import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.common.aop.redissonLock.RedissonLock;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.domain.domains.ticket_item.exception.InvalidTicketItemException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,13 +18,18 @@ public class TicketItemService {
 
     @Transactional
     public TicketItem createTicketItem(TicketItem ticketItem, Boolean isPartner) {
-        if (!isPartner) {
-            ticketItem.validateTicketPrice();
-        }
+
+        ticketItem.validateTicketPayType(isPartner);
         return ticketItemAdaptor.save(ticketItem);
     }
 
-    @RedissonLock(LockName = "티켓재고관리", identifier = "ticketItemId")
+    public void validateExistenceByEventId(Long eventId) {
+        if (!ticketItemAdaptor.existsByEventId(eventId)) {
+            throw InvalidTicketItemException.EXCEPTION;
+        }
+    }
+
+    @RedissonLock(LockName = "티켓관리", identifier = "ticketItemId")
     public void softDeleteTicketItem(Long eventId, Long ticketItemId) {
 
         TicketItem ticketItem = ticketItemAdaptor.queryTicketItem(ticketItemId);

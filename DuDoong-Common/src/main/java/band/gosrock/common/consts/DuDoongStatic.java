@@ -23,6 +23,8 @@ public class DuDoongStatic {
     public static final Long MINIMUM_PAYMENT_WON = 1000L;
     public static final Long ZERO = 0L;
 
+    public static final String assetDomain = "https://asset.dudoong.com/";
+
     public static final String KAKAO_OAUTH_QUERY_STRING =
             "/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=code";
 }

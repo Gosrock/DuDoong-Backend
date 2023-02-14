@@ -2,16 +2,16 @@ package band.gosrock.domain.domains.issuedTicket.domain;
 
 import static band.gosrock.common.consts.DuDoongStatic.NO_START_NUMBER;
 
+import band.gosrock.domain.common.aop.domainEvent.Events;
+import band.gosrock.domain.common.events.issuedTicket.EntranceIssuedTicketEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
 import band.gosrock.domain.common.vo.Money;
-import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelEntranceException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotEntranceException;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketAlreadyEntranceException;
-import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
-import band.gosrock.domain.domains.user.domain.User;
+import band.gosrock.infrastructure.config.mail.dto.EmailIssuedTicketInfo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -95,19 +95,21 @@ public class IssuedTicket extends BaseTimeEntity {
      */
     @Builder
     public IssuedTicket(
-            Event event,
-            User user,
+            Long eventId,
+            IssuedTicketUserInfoVo userInfo,
             String orderUuid,
             Long orderLineId,
-            TicketItem ticketItem,
+            IssuedTicketItemInfoVo itemInfo,
             Money price,
+            IssuedTicketStatus issuedTicketStatus,
             List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers) {
-        this.eventId = event.getId();
-        this.userInfo = IssuedTicketUserInfoVo.from(user);
-        this.itemInfo = IssuedTicketItemInfoVo.from(ticketItem);
+        this.eventId = eventId;
+        this.userInfo = userInfo;
+        this.itemInfo = itemInfo;
         this.orderUuid = orderUuid;
         this.orderLineId = orderLineId;
         this.price = price;
+        this.issuedTicketStatus = issuedTicketStatus;
         this.issuedTicketOptionAnswers.addAll(issuedTicketOptionAnswers);
     }
 
@@ -134,9 +136,7 @@ public class IssuedTicket extends BaseTimeEntity {
      */
     public Money sumOptionPrice() {
         return issuedTicketOptionAnswers.stream()
-                .map(
-                        issuedTicketOptionAnswer ->
-                                issuedTicketOptionAnswer.getOption().getAdditionalPrice())
+                .map(IssuedTicketOptionAnswer::getAdditionalPrice)
                 .reduce(Money.ZERO, Money::plus);
     }
 
@@ -147,6 +147,15 @@ public class IssuedTicket extends BaseTimeEntity {
         return IssuedTicketInfoVo.from(this);
     }
 
+    public EmailIssuedTicketInfo toEmailIssuedTicketInfo() {
+        return new EmailIssuedTicketInfo(
+                this.getIssuedTicketNo(),
+                this.getItemInfo().getTicketName(),
+                this.getCreatedAt(),
+                this.getIssuedTicketStatus().getKr(),
+                this.getPrice().toString());
+    }
+
     /** ---------------------------- 상태 변환 관련 메서드 ---------------------------------- */
 
     /*
@@ -154,7 +163,7 @@ public class IssuedTicket extends BaseTimeEntity {
     티켓이 입장 미완료 상태가 아니면 취소 할 수 없음
      */
     public void cancel() {
-        if (this.issuedTicketStatus != IssuedTicketStatus.ENTRANCE_INCOMPLETE) {
+        if (!this.issuedTicketStatus.isBeforeEntrance()) {
             throw CanNotCancelException.EXCEPTION;
         }
         this.issuedTicketStatus = IssuedTicketStatus.CANCELED;
@@ -163,15 +172,17 @@ public class IssuedTicket extends BaseTimeEntity {
     /*
     발급 티켓으로 입장 시 상태 변환 메서드
     티켓이 입장 미완료 상태가 아니면 입장 할 수 없음
+    (입장 처리 도메인 이벤트 발행)
      */
     public void entrance() {
-        if (this.issuedTicketStatus == IssuedTicketStatus.CANCELED) {
+        if (this.issuedTicketStatus.isCanceled()) {
             throw CanNotEntranceException.EXCEPTION;
         }
-        if (this.issuedTicketStatus == IssuedTicketStatus.ENTRANCE_COMPLETED) {
+        if (this.issuedTicketStatus.isAfterEntrance()) {
             throw IssuedTicketAlreadyEntranceException.EXCEPTION;
         }
         this.issuedTicketStatus = IssuedTicketStatus.ENTRANCE_COMPLETED;
+        Events.raise(EntranceIssuedTicketEvent.from(this));
     }
 
     /*
@@ -179,7 +190,7 @@ public class IssuedTicket extends BaseTimeEntity {
     티켓이 입장 완료 상태가 아니면 입장 취소 할 수 없음
      */
     public void entranceCancel() {
-        if (this.issuedTicketStatus != IssuedTicketStatus.ENTRANCE_COMPLETED) {
+        if (!this.issuedTicketStatus.isAfterEntrance()) {
             throw CanNotCancelEntranceException.EXCEPTION;
         }
         this.issuedTicketStatus = IssuedTicketStatus.ENTRANCE_INCOMPLETE;

@@ -1,8 +1,10 @@
 package band.gosrock.api.host.model.dto.response;
 
 
+import band.gosrock.domain.common.vo.ImageVo;
 import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.host.domain.HostRole;
+import band.gosrock.domain.domains.host.domain.HostUser;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,7 +23,7 @@ public class HostProfileResponse {
     private final String introduce;
 
     @Schema(description = "호스트 프로필 이미지")
-    private final String profileImageUrl;
+    private final ImageVo profileImage;
 
     @Schema(description = "속한 호스트에서의 역할")
     private HostRole role;
@@ -29,14 +31,19 @@ public class HostProfileResponse {
     @Schema(description = "이 호스트의 마스터인지 여부")
     private final Boolean isMaster;
 
+    @Schema(description = "이 호스트 초대를 수락했는지 여부")
+    private final Boolean active;
+
     public static HostProfileResponse of(Host host, Long userId) {
+        HostUser hostUser = host.getHostUserByUserId(userId);
         return HostProfileResponse.builder()
                 .hostId(host.getId())
                 .name(host.getProfile().getName())
                 .introduce(host.getProfile().getIntroduce())
-                .profileImageUrl(host.getProfile().getProfileImageUrl())
-                .role(host.getHostUserByUserId(userId).getRole())
+                .profileImage(host.getProfile().getProfileImage())
+                .role(hostUser.getRole())
                 .isMaster(host.getMasterUserId().equals(userId))
+                .active(hostUser.getActive())
                 .build();
     }
 }

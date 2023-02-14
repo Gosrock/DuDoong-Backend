@@ -1,7 +1,7 @@
 package band.gosrock.api.order.controller;
 
 
-import band.gosrock.api.common.page.PageResponse;
+import band.gosrock.api.common.slice.SliceResponse;
 import band.gosrock.api.order.docs.CancelOrderExceptionDocs;
 import band.gosrock.api.order.docs.ConfirmOrderExceptionDocs;
 import band.gosrock.api.order.docs.CreateOrderExceptionDocs;
@@ -12,7 +12,6 @@ import band.gosrock.api.order.model.dto.request.CreateOrderRequest;
 import band.gosrock.api.order.model.dto.response.CreateOrderResponse;
 import band.gosrock.api.order.model.dto.response.OrderBriefElement;
 import band.gosrock.api.order.model.dto.response.OrderResponse;
-import band.gosrock.api.order.service.ApproveOrderUseCase;
 import band.gosrock.api.order.service.CancelOrderUseCase;
 import band.gosrock.api.order.service.ConfirmOrderUseCase;
 import band.gosrock.api.order.service.CreateOrderUseCase;
@@ -40,7 +39,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @SecurityRequirement(name = "access-token")
-@Tag(name = "주문 관련 컨트롤러")
+@Tag(name = "6-1. [주문]")
 @RestController
 @RequestMapping("/v1/orders")
 @RequiredArgsConstructor
@@ -48,7 +47,6 @@ public class OrderController {
 
     private final CreateOrderUseCase createOrderUseCase;
     private final ConfirmOrderUseCase confirmOrderUseCase;
-    private final ApproveOrderUseCase approveOrderUseCase;
     private final FreeOrderUseCase freeOrderUseCase;
     private final CancelOrderUseCase cancelOrderUseCase;
 
@@ -116,9 +114,9 @@ public class OrderController {
 
     @Operation(summary = "마이페이지 내 예매목록 조회")
     @GetMapping
-    public PageResponse<OrderBriefElement> getMyOrders(
+    public SliceResponse<OrderBriefElement> getMyOrders(
             @ParameterObject @RequestParam Boolean showing,
-            @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
+            @ParameterObject @PageableDefault Pageable pageable) {
         return readOrderUseCase.getMyOrders(showing, pageable);
     }
 }

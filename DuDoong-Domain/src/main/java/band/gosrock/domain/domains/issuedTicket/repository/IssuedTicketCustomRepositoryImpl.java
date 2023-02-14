@@ -1,7 +1,10 @@
 package band.gosrock.domain.domains.issuedTicket.repository;
 
+import static band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus.ENTRANCE_COMPLETED;
+import static band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus.ENTRANCE_INCOMPLETE;
 import static band.gosrock.domain.domains.issuedTicket.domain.QIssuedTicket.issuedTicket;
 import static band.gosrock.domain.domains.issuedTicket.domain.QIssuedTicketOptionAnswer.issuedTicketOptionAnswer;
+import static com.querydsl.core.types.ExpressionUtils.count;
 
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus;
@@ -61,6 +64,27 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
         return Optional.ofNullable(findIssuedTicket);
     }
 
+    @Override
+    public Long countPaidTicket(Long userId, Long issuedTicketId) {
+        return queryFactory
+                .select(count(issuedTicket))
+                .from(issuedTicket)
+                .where(eqUserId(userId), eqEventId(issuedTicketId), filterPaidTickets())
+                .fetchOne();
+    }
+
+    private BooleanExpression filterPaidTickets() {
+        return issuedTicket.issuedTicketStatus.in(ENTRANCE_COMPLETED, ENTRANCE_INCOMPLETE);
+    }
+
+    private BooleanExpression eqEventId(Long issuedTicketId) {
+        return issuedTicket.itemInfo.ticketItemId.eq(issuedTicketId);
+    }
+
+    private BooleanExpression eqUserId(Long userId) {
+        return issuedTicket.userInfo.userId.eq(userId);
+    }
+
     private BooleanExpression eventIdEq(Long eventId) {
         return eventId == null ? null : issuedTicket.eventId.eq(eventId);
     }
@@ -70,7 +94,9 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
     }
 
     private BooleanExpression phoneNumberContains(String phoneNumber) {
-        return phoneNumber == null ? null : issuedTicket.userInfo.phoneNumber.contains(phoneNumber);
+        return phoneNumber == null
+                ? null
+                : issuedTicket.userInfo.phoneNumber.phoneNumber.contains(phoneNumber);
     }
 
     private BooleanExpression issuedTicketStatusNotCanceled() {

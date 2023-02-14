@@ -1,6 +1,7 @@
 package band.gosrock.domain.common.dto;
 
 
+import band.gosrock.domain.common.vo.ImageVo;
 import band.gosrock.domain.domains.user.domain.User;
 import lombok.Builder;
 import lombok.Getter;
@@ -8,12 +9,12 @@ import lombok.Getter;
 @Getter
 public class ProfileViewDto {
     private final Long id;
-    private final String profileImage;
+    private final ImageVo profileImage;
     private final String name;
 
     @Builder
     public ProfileViewDto(
-            Long id, String email, String phoneNumber, String profileImage, String name) {
+            Long id, String email, String phoneNumber, ImageVo profileImage, String name) {
         this.id = id;
         this.profileImage = profileImage;
         this.name = name;

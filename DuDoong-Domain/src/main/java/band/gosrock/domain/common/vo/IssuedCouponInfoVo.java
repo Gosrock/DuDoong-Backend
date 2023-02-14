@@ -30,6 +30,8 @@ public class IssuedCouponInfoVo {
     // 쿠폰 사용 가능 마감 시각
     @DateFormat private final LocalDateTime validDateTime;
 
+    private final Long minimumCost;
+
     public static IssuedCouponInfoVo of(IssuedCoupon issuedCoupon) {
         return IssuedCouponInfoVo.builder()
                 .issuedCouponId(issuedCoupon.getId())
@@ -39,6 +41,7 @@ public class IssuedCouponInfoVo {
                 .discountType(issuedCoupon.getCouponCampaign().getDiscountType())
                 .discountAmount(issuedCoupon.getCouponCampaign().getDiscountAmount())
                 .validDateTime(issuedCoupon.calculateValidTerm())
+                .minimumCost(issuedCoupon.getCouponCampaign().getMinimumCost())
                 .build();
     }
 }

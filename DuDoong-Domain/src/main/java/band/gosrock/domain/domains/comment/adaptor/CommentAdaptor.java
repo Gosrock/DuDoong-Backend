@@ -6,10 +6,9 @@ import band.gosrock.domain.domains.comment.domain.Comment;
 import band.gosrock.domain.domains.comment.dto.condition.CommentCondition;
 import band.gosrock.domain.domains.comment.exception.CommentNotFoundException;
 import band.gosrock.domain.domains.comment.repository.CommentRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
 
 @Adaptor
 @RequiredArgsConstructor
@@ -22,8 +21,7 @@ public class CommentAdaptor {
     }
 
     public Slice<Comment> searchComment(CommentCondition commentCondition) {
-        PageRequest pageRequest = PageRequest.of(0, 20, Sort.by("createdAt").ascending());
-        return commentRepository.searchToPage(commentCondition, pageRequest);
+        return commentRepository.searchToPage(commentCondition);
     }
 
     public Comment queryComment(Long commentId) {
@@ -36,8 +34,9 @@ public class CommentAdaptor {
         return commentRepository.countComment(eventId);
     }
 
-    public Comment queryRandomComment(Long eventId) {
+    public List<Comment> queryRandomComment(Long eventId, Long limit) {
         Long countComment = queryCommentCount(eventId);
-        return commentRepository.queryRandomComment(eventId, countComment);
+        //        return commentRepository.queryRandomComment(eventId, countComment, offset);
+        return commentRepository.findAllRandom(eventId, limit);
     }
 }

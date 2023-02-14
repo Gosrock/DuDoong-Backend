@@ -2,6 +2,7 @@ package band.gosrock.api.host.controller;
 
 
 import band.gosrock.api.common.page.PageResponse;
+import band.gosrock.api.common.slice.SliceResponse;
 import band.gosrock.api.host.model.dto.request.*;
 import band.gosrock.api.host.model.dto.response.HostDetailResponse;
 import band.gosrock.api.host.model.dto.response.HostEventProfileResponse;
@@ -22,7 +23,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @SecurityRequirement(name = "access-token")
-@Tag(name = "호스트 관련 컨트롤러")
+@Tag(name = "4. [호스트]")
 @RestController
 @RequestMapping("/v1/hosts")
 @RequiredArgsConstructor
@@ -41,7 +42,7 @@ public class HostController {
 
     @Operation(summary = "내가 속한 호스트 리스트를 가져옵니다.")
     @GetMapping
-    public PageResponse<HostProfileResponse> getAllHosts(
+    public SliceResponse<HostProfileResponse> getAllHosts(
             @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
         return readHostsUseCase.execute(pageable);
     }

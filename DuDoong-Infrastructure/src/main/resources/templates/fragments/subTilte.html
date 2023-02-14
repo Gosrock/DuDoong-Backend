@@ -1,0 +1,64 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title></title>
+  <style>
+    * {
+      line-height: 150%;
+    }
+  </style>
+</head>
+<div th:fragment="hostAndEvent(eventInfo,text)"
+     style="
+      overflow: hidden;
+      padding: 0px;
+      border: 0;
+      font-size: 14px;
+      font-family: Pretendard , AppleSDGothic, apple sd gothic neo, noto sans korean,
+        noto sans korean regular, noto sans cjk kr, noto sans cjk, nanum gothic,
+        malgun gothic, dotum, arial, helvetica, MS Gothic, sans-serif !important;
+    "
+>
+  <div >
+    <span  th:text="${eventInfo.hostName}" >호스트이름</span>
+    <span  > </span>
+    <span  th:text="${eventInfo.eventName}" >이벤트 이름</span>
+    <span th:text="${text}"> 텍스트 </span>
+    <br />
+  </div>
+</div>
+
+<div th:fragment="host(hostName,text)"
+     style="
+      overflow: hidden;
+      padding: 0px;
+      border: 0;
+      font-size: 14px;
+      font-family: Pretendard , AppleSDGothic, apple sd gothic neo, noto sans korean,
+        noto sans korean regular, noto sans cjk kr, noto sans cjk, nanum gothic,
+        malgun gothic, dotum, arial, helvetica, MS Gothic, sans-serif !important;
+    "
+>
+  <div >
+    <span  th:text="${hostName}" >호스트이름</span>
+    <span > 호스트 </span>
+    <span th:text="${text}"> 텍스트 </span>
+    <br />
+  </div>
+</div>
+
+<div th:fragment="hostAndEventAndIssuedTicket(eventInfo, issuedTicketInfo, text)"
+     style="..."
+>
+  <div>
+    <span th:text="${eventInfo.hostName}" >호스트이름</span>
+    <span th:text="${eventInfo.eventName}">이벤트 이름</span>
+    <span>의</span>
+    <span th:text="${issuedTicketInfo.issuedTicketNo}">발급 티켓 번호</span>
+    <span th:text="${text}"> 텍스트 </span>
+    <br />
+  </div>
+</div>
+
+</html>

@@ -31,8 +31,8 @@ public enum GlobalErrorCode implements BaseErrorCode {
 
     @ExplainError("refreshToken 만료시 발생하는 오류입니다.")
     REFRESH_TOKEN_EXPIRED(FORBIDDEN, "AUTH_403_1", "인증 시간이 만료되었습니다. 재 로그인 해주세요."),
-    @ExplainError("헤더에 알맞은 형식으로 accessToken을 담지않았을 때 발생하는 오류")
-    ACCESS_TOKEN_NOT_EXIST(FORBIDDEN, "AUTH_403_2", "어세스토큰이 있는지 확인해 주세요."),
+    @ExplainError("헤더에 올바른 accessToken을 담지않았을 때 발생하는 오류(형식 불일치 등)")
+    ACCESS_TOKEN_NOT_EXIST(FORBIDDEN, "AUTH_403_2", "알맞은 accessToken을 넣어주세요."),
     @ExplainError("인증 토큰이 잘못됐을 때 발생하는 오류입니다.")
     INVALID_TOKEN(UNAUTHORIZED, "GLOBAL_401_1", "잘못된 토큰입니다. 재 로그인 해주세요"),
 
