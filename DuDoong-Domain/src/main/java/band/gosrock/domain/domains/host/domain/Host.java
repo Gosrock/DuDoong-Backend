@@ -101,7 +101,7 @@ public class Host extends BaseTimeEntity {
     public void setHostUserRole(Long userId, HostRole role) {
         // 마스터의 역할은 수정할 수 없음
         if (this.getMasterUserId().equals(userId)) {
-            throw ForbiddenHostOperationException.EXCEPTION;
+            throw CannotModifyMasterHostRoleException.EXCEPTION;
         }
         this.hostUsers.stream()
                 .filter(hostUser -> hostUser.getUserId().equals(userId))
@@ -120,6 +120,8 @@ public class Host extends BaseTimeEntity {
     public void validateHostUserExistence(HostUser hostUser) {
         validateHostUserIdExistence(hostUser.getUserId());
     }
+
+    // todo :: 여기서부터 테스트 진행
 
     /** 해당 유저가 호스트에 속하는지 확인하는 검증 로직입니다 */
     public void validateHostUser(Long userId) {
