@@ -30,8 +30,6 @@ public class IssuedTicketDomainService {
 
     private final IssuedTicketValidator issuedTicketValidator;
 
-    private final OrderToIssuedTicketService orderToIssuedTicketService;
-
     /*
     티켓 철회 로직
      */
@@ -85,16 +83,17 @@ public class IssuedTicketDomainService {
         List<IssuedTicket> issuedTickets =
                 orderLineItems.stream()
                         .map(
-                                orderLineItem ->
-                                        IssuedTicket.orderLineToIssuedTicket(
-                                                ticketItem,
-                                                user,
-                                                order,
-                                                order.getEventId(),
-                                                orderLineItem))
+                                orderLineItem -> {
+                                    ticketItem.reduceQuantity(1L);
+                                    return IssuedTicket.orderLineToIssuedTicket(
+                                            ticketItem,
+                                            user,
+                                            order,
+                                            order.getEventId(),
+                                            orderLineItem);
+                                })
                         .flatMap(Collection::stream)
                         .toList();
         issuedTicketAdaptor.saveAll(issuedTickets);
-        ticketItem.reduceQuantity((long) issuedTickets.size());
     }
 }
