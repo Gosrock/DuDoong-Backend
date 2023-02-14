@@ -1,19 +1,18 @@
 package band.gosrock.domain.domains.host.domain;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+
 import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException;
 import band.gosrock.domain.domains.host.exception.CannotModifyMasterHostRoleException;
 import band.gosrock.domain.domains.host.exception.DuplicateSlackUrlException;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 public class HostTest {
@@ -113,9 +112,7 @@ public class HostTest {
         // then
         assertThrows(
                 AlreadyJoinedHostException.class,
-                () -> {
-                    host.inviteHostUsers(Set.of(managerHostUser));
-                });
+                () -> host.inviteHostUsers(Set.of(managerHostUser)));
     }
 
     @Test
@@ -151,7 +148,7 @@ public class HostTest {
         host.setSlackUrl(url);
         // when
         // then
-        assertThrows(DuplicateSlackUrlException.class, () -> { host.setSlackUrl(url);});
+        assertThrows(DuplicateSlackUrlException.class, () -> host.setSlackUrl(url));
     }
 
     @Test
@@ -161,9 +158,7 @@ public class HostTest {
         // @BeforeEach 에서 마스터 ID 는 현재 1임
         assertThrows(
                 CannotModifyMasterHostRoleException.class,
-                () -> {
-                    host.setHostUserRole(masterUserId, HostRole.MANAGER);
-                });
+                () -> host.setHostUserRole(masterUserId, HostRole.MANAGER));
     }
 
     @Test
@@ -209,5 +204,31 @@ public class HostTest {
         // then
         assertFalse(host.isActiveHostUserId(managerUserId));
         assertTrue(host.isActiveHostUserId(guestUserId));
+    }
+
+    @Test
+    public void 이미_가입한_호스트_ID로_검증_테스트() {
+        given(managerHostUser.getUserId()).willReturn(managerUserId);
+        given(guestHostUser.getUserId()).willReturn(guestUserId);
+        // when
+        host.addHostUsers(Set.of(managerHostUser));
+        // then
+        assertThrows(
+                AlreadyJoinedHostException.class,
+                () -> host.validateHostUserIdExistence(managerHostUser.getUserId()));
+        assertDoesNotThrow(() -> host.validateHostUserIdExistence(guestHostUser.getUserId()));
+    }
+
+    @Test
+    public void 이미_가입한_호스트_호스트유저로_검증_테스트() {
+        given(managerHostUser.getUserId()).willReturn(managerUserId);
+        given(guestHostUser.getUserId()).willReturn(guestUserId);
+        // when
+        host.addHostUsers(Set.of(managerHostUser));
+        // then
+        assertThrows(
+                AlreadyJoinedHostException.class,
+                () -> host.validateHostUserExistence(managerHostUser));
+        assertDoesNotThrow(() -> host.validateHostUserExistence(guestHostUser));
     }
 }
