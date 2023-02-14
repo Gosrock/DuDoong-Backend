@@ -161,5 +161,4 @@ public class IssuedTicketTest {
                 CanNotCancelEntranceException.class, () -> canceledIssuedTicket.entranceCancel());
         assertThrows(CanNotCancelEntranceException.class, () -> issuedTicket.entranceCancel());
     }
-
 }
