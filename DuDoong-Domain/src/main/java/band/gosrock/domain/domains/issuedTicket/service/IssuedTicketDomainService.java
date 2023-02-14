@@ -83,17 +83,17 @@ public class IssuedTicketDomainService {
         List<IssuedTicket> issuedTickets =
                 orderLineItems.stream()
                         .map(
-                                orderLineItem -> {
-                                    ticketItem.reduceQuantity(1L);
-                                    return IssuedTicket.orderLineToIssuedTicket(
+                                orderLineItem ->
+                                     IssuedTicket.orderLineToIssuedTicket(
                                             ticketItem,
                                             user,
                                             order,
                                             order.getEventId(),
-                                            orderLineItem);
-                                })
+                                            orderLineItem)
+                                )
                         .flatMap(Collection::stream)
                         .toList();
         issuedTicketAdaptor.saveAll(issuedTickets);
+        ticketItem.reduceQuantity((long) issuedTickets.size());
     }
 }
