@@ -4,15 +4,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
-import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException;
-import band.gosrock.domain.domains.host.exception.CannotModifyMasterHostRoleException;
-import band.gosrock.domain.domains.host.exception.DuplicateSlackUrlException;
+import band.gosrock.domain.domains.host.exception.*;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 public class HostTest {
@@ -215,8 +214,8 @@ public class HostTest {
         // then
         assertThrows(
                 AlreadyJoinedHostException.class,
-                () -> host.validateHostUserIdExistence(managerHostUser.getUserId()));
-        assertDoesNotThrow(() -> host.validateHostUserIdExistence(guestHostUser.getUserId()));
+                () -> host.validateHostUserIdExistence(managerUserId));
+        assertDoesNotThrow(() -> host.validateHostUserIdExistence(guestUserId));
     }
 
     @Test
@@ -230,5 +229,78 @@ public class HostTest {
                 AlreadyJoinedHostException.class,
                 () -> host.validateHostUserExistence(managerHostUser));
         assertDoesNotThrow(() -> host.validateHostUserExistence(guestHostUser));
+    }
+
+    @Test
+    public void 호스트유저_종속_검증_테스트() {
+        given(managerHostUser.getUserId()).willReturn(managerUserId);
+        // when
+        host.addHostUsers(Set.of(managerHostUser));
+        // then
+        assertDoesNotThrow(() -> host.validateHostUser(managerUserId));
+        assertThrows(ForbiddenHostException.class, () -> host.validateHostUser(guestUserId));
+    }
+
+    @Test
+    public void 호스트유저_게스트권한_검증_테스트() {
+        // given
+        given(managerHostUser.getUserId()).willReturn(managerUserId);
+        given(managerHostUser.getActive()).willReturn(false);
+        given(guestHostUser.getUserId()).willReturn(guestUserId);
+        given(guestHostUser.getActive()).willReturn(true);
+        // when
+        host.addHostUsers(Set.of(managerHostUser, guestHostUser));
+        // then
+        assertThrows(
+                NotAcceptedHostException.class, () -> host.validateActiveHostUser(managerUserId));
+        assertDoesNotThrow(() -> host.validateActiveHostUser(guestUserId));
+    }
+
+    @Test
+    public void 호스트유저_매니저권한_검증_테스트() {
+        // given
+        given(masterHostUser.getUserId()).willReturn(masterUserId);
+        given(masterHostUser.getActive()).willReturn(true);
+        given(masterHostUser.getRole()).willReturn(HostRole.MASTER);
+        given(managerHostUser.getUserId()).willReturn(managerUserId);
+        given(managerHostUser.getActive()).willReturn(true);
+        given(managerHostUser.getRole()).willReturn(HostRole.MANAGER);
+        given(guestHostUser.getUserId()).willReturn(guestUserId);
+        given(guestHostUser.getActive()).willReturn(true);
+        given(guestHostUser.getRole()).willReturn(HostRole.GUEST);
+        // when
+        host.addHostUsers(Set.of(masterHostUser, managerHostUser, guestHostUser));
+        // then
+        assertThrows(
+                NotManagerHostException.class, () -> host.validateManagerHostUser(guestUserId));
+        assertDoesNotThrow(() -> host.validateManagerHostUser(managerUserId));
+        assertDoesNotThrow(() -> host.validateManagerHostUser(masterUserId));
+    }
+
+    @Test
+    public void 호스트유저_마스터_검증_테스트() {
+        // given
+        given(masterHostUser.getUserId()).willReturn(masterUserId);
+        given(masterHostUser.getActive()).willReturn(true);
+        given(managerHostUser.getUserId()).willReturn(managerUserId);
+        given(managerHostUser.getActive()).willReturn(true);
+        // when
+        host.addHostUsers(Set.of(masterHostUser, managerHostUser));
+        // then
+        assertThrows(
+                NotMasterHostException.class, () -> host.validateMasterHostUser(managerUserId));
+        assertDoesNotThrow(() -> host.validateMasterHostUser(masterUserId));
+    }
+
+    @Test
+    public void 호스트_파트너여부_검증_테스트() {
+        // given
+        // reflection 으로 partner 에 true 강제 주입
+        final Host partnerHost = new Host();
+        ReflectionTestUtils.setField(partnerHost, "partner", true);
+        // when
+        // then
+        assertThrows(NotPartnerHostException.class, () -> host.validatePartnerHost());
+        assertDoesNotThrow(partnerHost::validatePartnerHost);
     }
 }

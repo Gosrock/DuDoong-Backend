@@ -121,6 +121,8 @@ public class Host extends BaseTimeEntity {
         validateHostUserIdExistence(hostUser.getUserId());
     }
 
+    // todo :: 여기서부터 테스트 진행
+
     /** 해당 유저가 호스트에 속하는지 확인하는 검증 로직입니다 */
     public void validateHostUser(Long userId) {
         if (!this.hasHostUserId(userId)) {
