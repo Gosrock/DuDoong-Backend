@@ -17,7 +17,9 @@ public interface NcpClient {
 
     // , consumes = MediaType.APPLICATION_JSON_VALUE
     // , consumes = "application/json; charset=UTF-8"
-    @PostMapping(path = "/alimtalk/v2/services/{serviceId}/messages")
+    @PostMapping(
+            path = "/alimtalk/v2/services/{serviceId}/messages",
+            consumes = "application/json; charset=UTF-8")
     void sendAlimTalk(
             @PathVariable("serviceId") String serviceId,
             @RequestHeader("Accept") String contentType,
