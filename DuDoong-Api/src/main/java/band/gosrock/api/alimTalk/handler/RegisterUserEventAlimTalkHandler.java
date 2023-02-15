@@ -7,6 +7,7 @@ import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.Profile;
 import band.gosrock.domain.domains.user.domain.User;
 import com.google.i18n.phonenumbers.NumberParseException;
+import java.io.UnsupportedEncodingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.configurationprocessor.json.JSONException;
@@ -14,8 +15,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
-
-import java.io.UnsupportedEncodingException;
 
 @Component
 @RequiredArgsConstructor

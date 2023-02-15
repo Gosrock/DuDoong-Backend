@@ -8,10 +8,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import feign.Logger.Level;
 import feign.codec.Decoder;
-import feign.codec.Encoder;
-import feign.form.spring.SpringFormEncoder;
 import feign.jackson.JacksonDecoder;
-import feign.jackson.JacksonEncoder;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,5 +39,4 @@ public class FeignCommonConfig {
     Level feignLoggerLevel() {
         return Level.FULL;
     }
-
 }

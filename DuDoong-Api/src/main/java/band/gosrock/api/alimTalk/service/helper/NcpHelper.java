@@ -5,7 +5,6 @@ import band.gosrock.common.annotation.Helper;
 import band.gosrock.common.exception.DuDoongDynamicException;
 import band.gosrock.infrastructure.config.AlilmTalk.dto.MessageDto;
 import band.gosrock.infrastructure.outer.api.alimTalk.client.NcpClient;
-
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -47,26 +46,29 @@ public class NcpHelper {
         String[] signatureArray =
                 makePostSignature(ncpAccessKey, ncpSecretKey, alimTalkSignatureRequestUrl);
         // 헤더 생성
-        //Map<String, String> headerMap = makeHeader(ncpAccessKey, signatureArray);
+        // Map<String, String> headerMap = makeHeader(ncpAccessKey, signatureArray);
         // 바디 생성
-        //Map<String,Object> body= makeBodyMap(templateCode,to,content);
+        // Map<String,Object> body= makeBodyMap(templateCode,to,content);
         MessageDto.AlimTalkBody body = makeBody(templateCode, to, content);
-        //byte[] body=makeBodyEntity(templateCode,to,content);
+        // byte[] body=makeBodyEntity(templateCode,to,content);
         // api 전송
-        //"application/json; charset=UTF-8"
-        ncpClient.sendAlimTalk(serviceID, "application/json; charset=UTF-8", ncpAccessKey,signatureArray[0],signatureArray[1], body);
-        //ncpClient.sendAlimTalk(serviceID, headerMap, body);
+        // "application/json; charset=UTF-8"
+        ncpClient.sendAlimTalk(
+                serviceID,
+                "application/json; charset=UTF-8",
+                ncpAccessKey,
+                signatureArray[0],
+                signatureArray[1],
+                body);
+        // ncpClient.sendAlimTalk(serviceID, headerMap, body);
     }
 
     public MessageDto.AlimTalkBody makeBody(String templateCode, String to, String content) {
-        MessageDto.AlimTalkMessage alimTalkMessage=
-                MessageDto.AlimTalkMessage.builder()
-                        .to(to)
-                        .content(content)
-                        .build();
+        MessageDto.AlimTalkMessage alimTalkMessage =
+                MessageDto.AlimTalkMessage.builder().to(to).content(content).build();
         List<MessageDto.AlimTalkMessage> alimTalkMessages = new ArrayList<>();
         alimTalkMessages.add(alimTalkMessage);
-        
+
         return MessageDto.AlimTalkBody.builder()
                 .plusFriendId(plusFriendId)
                 .templateCode(templateCode)
@@ -134,11 +136,11 @@ public class NcpHelper {
         messageArray.put(messages);
         msgObj.put("messages", messageArray);
 
-        //StringEntity body= new StringEntity(msgObj.toString(), "UTF-8");
-        return  msgObj.toString().getBytes();
+        // StringEntity body= new StringEntity(msgObj.toString(), "UTF-8");
+        return msgObj.toString().getBytes();
     }
 
-    public Map<String,Object> makeBodyMap(String templateCode, String to, String content)
+    public Map<String, Object> makeBodyMap(String templateCode, String to, String content)
             throws JSONException {
         JSONObject msgObj = new JSONObject();
         msgObj.put("plusFriendId", plusFriendId);
@@ -153,8 +155,8 @@ public class NcpHelper {
         msgObj.put("messages", messageArray);
 
         Map<String, Object> bodyMap = new HashMap<>();
-        bodyMap.put("messages",msgObj);
-        //StringEntity body= new StringEntity(msgObj.toString(), "UTF-8");
+        bodyMap.put("messages", msgObj);
+        // StringEntity body= new StringEntity(msgObj.toString(), "UTF-8");
         return bodyMap;
     }
 }
