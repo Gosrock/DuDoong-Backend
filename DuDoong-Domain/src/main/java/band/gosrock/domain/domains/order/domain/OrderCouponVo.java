@@ -6,6 +6,7 @@ import static band.gosrock.common.consts.DuDoongStatic.ZERO;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon;
 import band.gosrock.domain.domains.order.exception.LessThanMinmumPaymentOrderException;
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,7 +16,10 @@ import lombok.NoArgsConstructor;
 @Embeddable
 @NoArgsConstructor
 public class OrderCouponVo {
+
+    @Column(name = "coupon_name")
     private String name = "사용하지 않음";
+
     private Money discountAmount = Money.ZERO;
     private Long couponId = ZERO;
 
