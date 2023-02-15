@@ -1,6 +1,8 @@
 package band.gosrock.domain.domains.event.domain;
 
 import static band.gosrock.domain.domains.event.domain.EventStatus.*;
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
 
 import band.gosrock.common.exception.DuDoongCodeException;
 import band.gosrock.domain.common.aop.domainEvent.Events;
@@ -39,19 +41,15 @@ public class Event extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private EventStatus status = PREPARING;
 
-    private Boolean isUpdated = false;
+    private Boolean isUpdated = FALSE;
 
     public LocalDateTime getStartAt() {
-        if (this.eventBasic == null) {
-            return null;
-        }
+        if (this.eventBasic == null) return null;
         return this.getEventBasic().getStartAt();
     }
 
     public LocalDateTime getEndAt() {
-        if (this.eventBasic == null) {
-            return null;
-        }
+        if (this.eventBasic == null) return null;
         return this.getEventBasic().endAt();
     }
 
@@ -72,9 +70,7 @@ public class Event extends BaseTimeEntity {
     }
 
     public void setEventBasic(EventBasic eventBasic) {
-        if (isUpdated) {
-            throw CannotModifyEventBasicException.EXCEPTION;
-        }
+        if (isUpdated == TRUE) throw CannotModifyEventBasicException.EXCEPTION;
         this.isUpdated = true;
         this.eventBasic = eventBasic;
     }
@@ -97,15 +93,11 @@ public class Event extends BaseTimeEntity {
     }
 
     public void validateStatusOpen() {
-        if (status != OPEN) {
-            throw EventNotOpenException.EXCEPTION;
-        }
+        if (status != OPEN) throw EventNotOpenException.EXCEPTION;
     }
 
     public void validateTicketingTime() {
-        if (!isTimeBeforeStartAt()) {
-            throw EventTicketingTimeIsPassedException.EXCEPTION;
-        }
+        if (!isTimeBeforeStartAt()) throw EventTicketingTimeIsPassedException.EXCEPTION;
     }
 
     public Boolean isRefundDateNotPassed() {
