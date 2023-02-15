@@ -6,12 +6,16 @@ import band.gosrock.domain.common.events.user.UserRegisterEvent;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.Profile;
 import band.gosrock.domain.domains.user.domain.User;
+import com.google.i18n.phonenumbers.NumberParseException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+
+import java.io.UnsupportedEncodingException;
 
 @Component
 @RequiredArgsConstructor
@@ -25,12 +29,13 @@ public class RegisterUserEventAlimTalkHandler {
     @TransactionalEventListener(
             classes = UserRegisterEvent.class,
             phase = TransactionPhase.AFTER_COMMIT)
-    public void handleRegisterUserEvent(UserRegisterEvent userRegisterEvent) {
+    public void handleRegisterUserEvent(UserRegisterEvent userRegisterEvent)
+            throws NumberParseException, JSONException, UnsupportedEncodingException {
         Long userId = userRegisterEvent.getUserId();
         User user = userAdaptor.queryUser(userId);
         log.info(userId.toString() + "유저 등록");
         Profile profile = user.getProfile();
-        // TODO: 전화번호 변경 머지되면 바꾸기
-        sendRegisterAlimTalkService.execute(profile.getName(), profile.getPhoneNumber());
+        sendRegisterAlimTalkService.execute(
+                profile.getName(), profile.getPhoneNumberVo().getNaverSmsToNumber());
     }
 }

@@ -1,4 +1,4 @@
-package band.gosrock.api.alimTalk.service;
+package band.gosrock.api.alimTalk.service.helper;
 
 
 import band.gosrock.api.alimTalk.dto.OrderAlimTalkDto;
@@ -12,6 +12,7 @@ import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.infrastructure.config.AlilmTalk.dto.AlimTalkEventInfo;
+import com.google.i18n.phonenumbers.NumberParseException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,8 +26,8 @@ public class OrderAlimTalkInfoHelper {
     private final EventAdaptor eventAdaptor;
     private final HostAdaptor hostAdaptor;
 
-    public OrderAlimTalkDto execute(String orderUuid) {
-        Order order = orderAdaptor.find(orderUuid);
+    public OrderAlimTalkDto execute(String orderUuid) throws NumberParseException {
+        Order order = orderAdaptor.findByOrderUuid(orderUuid);
         User user = userAdaptor.queryUser(order.getUserId());
         Event event = eventAdaptor.findById(order.getEventId());
         Host host = hostAdaptor.findById(event.getHostId());

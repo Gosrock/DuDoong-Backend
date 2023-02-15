@@ -121,6 +121,9 @@ public class AlimTalk {
             result[0] = timeStamp;
             result[1] = encodeBase64String;
 
+            System.out.println(result[0]);
+            System.out.println(result[1]);
+
         } catch (Exception ex) {
             throw new DuDoongDynamicException(0, "400", ex.getMessage());
         }
@@ -156,6 +159,7 @@ public class AlimTalk {
 
             result[0] = timeStamp;
             result[1] = encodeBase64String;
+
         } catch (Exception ex) {
             throw new DuDoongDynamicException(0, "400", ex.getMessage());
         }

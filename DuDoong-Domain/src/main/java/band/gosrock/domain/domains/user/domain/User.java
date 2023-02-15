@@ -10,6 +10,7 @@ import band.gosrock.domain.domains.user.exception.AlreadyDeletedUserException;
 import band.gosrock.domain.domains.user.exception.ForbiddenUserException;
 import band.gosrock.infrastructure.config.AlilmTalk.dto.AlimTalkUserInfo;
 import band.gosrock.infrastructure.config.mail.dto.EmailUserInfo;
+import com.google.i18n.phonenumbers.NumberParseException;
 import java.time.LocalDateTime;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
@@ -93,7 +94,8 @@ public class User extends BaseTimeEntity {
         return new EmailUserInfo(profile.getName(), profile.getEmail());
     }
 
-    public AlimTalkUserInfo toAlimTalkUserInfo() {
-        return new AlimTalkUserInfo(profile.getName(), profile.getPhoneNumber());
+    public AlimTalkUserInfo toAlimTalkUserInfo() throws NumberParseException {
+        return new AlimTalkUserInfo(
+                profile.getName(), profile.getPhoneNumberVo().getNaverSmsToNumber());
     }
 }
