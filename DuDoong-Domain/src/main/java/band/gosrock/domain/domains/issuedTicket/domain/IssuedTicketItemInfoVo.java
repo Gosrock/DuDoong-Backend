@@ -1,6 +1,7 @@
 package band.gosrock.domain.domains.issuedTicket.domain;
 
 
+import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import javax.persistence.Embeddable;
@@ -22,11 +23,15 @@ public class IssuedTicketItemInfoVo {
 
     private String ticketName;
 
+    private Money price;
+
     @Builder
-    public IssuedTicketItemInfoVo(Long ticketItemId, TicketType ticketType, String ticketName) {
+    public IssuedTicketItemInfoVo(
+            Long ticketItemId, TicketType ticketType, String ticketName, Money price) {
         this.ticketItemId = ticketItemId;
         this.ticketType = ticketType;
         this.ticketName = ticketName;
+        this.price = price;
     }
 
     public static IssuedTicketItemInfoVo from(TicketItem item) {
@@ -34,6 +39,7 @@ public class IssuedTicketItemInfoVo {
                 .ticketItemId(item.getId())
                 .ticketType(item.getType())
                 .ticketName(item.getName())
+                .price(item.getPrice())
                 .build();
     }
 }

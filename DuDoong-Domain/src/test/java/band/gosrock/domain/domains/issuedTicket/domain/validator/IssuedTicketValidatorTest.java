@@ -2,8 +2,6 @@ package band.gosrock.domain.domains.issuedTicket.domain.validator;
 
 import static org.mockito.BDDMockito.given;
 
-import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
-import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketNotMatchedEventException;
 import band.gosrock.domain.domains.issuedTicket.validator.IssuedTicketValidator;
@@ -19,15 +17,11 @@ public class IssuedTicketValidatorTest {
 
     @Mock IssuedTicket issuedTicket;
 
-    @Mock EventAdaptor eventAdaptor;
-
-    @Mock HostAdaptor hostAdaptor;
-
     IssuedTicketValidator issuedTicketValidator;
 
     @BeforeEach
     public void setUp() {
-        issuedTicketValidator = new IssuedTicketValidator(eventAdaptor, hostAdaptor);
+        issuedTicketValidator = new IssuedTicketValidator();
     }
 
     @Test

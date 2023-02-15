@@ -3,9 +3,11 @@ package band.gosrock.domain.common.vo;
 
 import band.gosrock.domain.domains.host.domain.Host;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @Getter
+@EqualsAndHashCode
 @Builder
 public class HostProfileVo {
     private final Long hostId;
