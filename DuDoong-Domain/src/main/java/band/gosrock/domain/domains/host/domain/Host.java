@@ -1,5 +1,7 @@
 package band.gosrock.domain.domains.host.domain;
 
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
 
 import band.gosrock.domain.common.aop.domainEvent.Events;
 import band.gosrock.domain.common.events.host.HostRegisterSlackEvent;
@@ -33,7 +35,7 @@ public class Host extends BaseTimeEntity {
 
     // 파트너 여부
     // 정책상 초기값 false 로 고정입니다
-    private final Boolean partner = false;
+    private final Boolean partner = FALSE;
 
     // 슬랙 웹훅 url
     private String slackUrl;
@@ -68,11 +70,6 @@ public class Host extends BaseTimeEntity {
                 .orElseThrow(() -> HostUserNotFoundException.EXCEPTION);
     }
 
-    public String getSlackToken() {
-        if (this.slackUrl == null) return null;
-        return this.slackUrl.substring(this.slackUrl.indexOf("https://hooks.slack.com/services/"));
-    }
-
     public void updateProfile(HostProfile hostProfile) {
         this.profile.updateProfile(hostProfile);
     }
@@ -100,9 +97,8 @@ public class Host extends BaseTimeEntity {
 
     public void setHostUserRole(Long userId, HostRole role) {
         // 마스터의 역할은 수정할 수 없음
-        if (this.getMasterUserId().equals(userId)) {
+        if (this.getMasterUserId().equals(userId))
             throw CannotModifyMasterHostRoleException.EXCEPTION;
-        }
         this.hostUsers.stream()
                 .filter(hostUser -> hostUser.getUserId().equals(userId))
                 .findFirst()
@@ -125,17 +121,13 @@ public class Host extends BaseTimeEntity {
 
     /** 해당 유저가 호스트에 속하는지 확인하는 검증 로직입니다 */
     public void validateHostUser(Long userId) {
-        if (!this.hasHostUserId(userId)) {
-            throw ForbiddenHostException.EXCEPTION;
-        }
+        if (!this.hasHostUserId(userId)) throw ForbiddenHostException.EXCEPTION;
     }
 
     /** 해당 유저가 호스트에 속하며 가입 승인을 완료했는지 (활성상태) 확인하는 검증 로직입니다 */
     public void validateActiveHostUser(Long userId) {
         this.validateHostUser(userId);
-        if (!this.isActiveHostUserId(userId)) {
-            throw NotAcceptedHostException.EXCEPTION;
-        }
+        if (!this.isActiveHostUserId(userId)) throw NotAcceptedHostException.EXCEPTION;
     }
 
     /** 해당 유저가 매니저 이상인지 확인하는 검증 로직입니다 */
@@ -149,16 +141,12 @@ public class Host extends BaseTimeEntity {
     /** 해당 유저가 호스트의 마스터(담당자, 방장)인지 확인하는 검증 로직입니다 */
     public void validateMasterHostUser(Long userId) {
         this.validateActiveHostUser(userId);
-        if (!this.getMasterUserId().equals(userId)) {
-            throw NotMasterHostException.EXCEPTION;
-        }
+        if (!this.getMasterUserId().equals(userId)) throw NotMasterHostException.EXCEPTION;
     }
 
     /** 해당 호스트가 파트너 인지 검증합니다. */
     public void validatePartnerHost() {
-        if (!partner) {
-            throw NotPartnerHostException.EXCEPTION;
-        }
+        if (partner != TRUE) throw NotPartnerHostException.EXCEPTION;
     }
 
     public HostInfoVo toHostInfoVo() {
