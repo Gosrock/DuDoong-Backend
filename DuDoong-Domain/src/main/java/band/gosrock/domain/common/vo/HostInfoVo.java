@@ -20,7 +20,7 @@ public class HostInfoVo {
 
     private final String contactNumber;
 
-    private final boolean partner;
+    private final Boolean partner;
 
     public static HostInfoVo from(Host host) {
         return HostInfoVo.builder()
