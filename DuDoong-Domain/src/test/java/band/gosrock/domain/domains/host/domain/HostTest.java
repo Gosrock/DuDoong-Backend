@@ -311,6 +311,7 @@ public class HostTest {
     public void 호스트_vo_변환_테스트() {
         // given
         // when
+        HostInfoVo hostInfoVo1 = host.toHostInfoVo();
         // then
         assertEquals(host.toHostInfoVo().getClass(), HostInfoVo.class);
         assertEquals(host.toHostProfileVo().getClass(), HostProfileVo.class);
