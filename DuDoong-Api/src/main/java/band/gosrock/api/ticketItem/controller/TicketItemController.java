@@ -32,7 +32,7 @@ public class TicketItemController {
 
     @Operation(
             summary = "특정 이벤트에 속하는 티켓 상품을 생성합니다.",
-            description = "제휴 되지 않은 회원은 티켓 가격 0으로 강제해 보내주세요!")
+            description = "두둥티켓은 승인형식만, 유료티켓은 선착순형식만 가능합니다.")
     @PostMapping
     public TicketItemResponse createTicketItem(
             @RequestBody @Valid CreateTicketItemRequest createTicketItemRequest,
@@ -54,6 +54,12 @@ public class TicketItemController {
     @GetMapping
     public GetEventTicketItemsResponse getEventTicketItems(@PathVariable Long eventId) {
         return getEventTicketItemsUseCase.execute(eventId);
+    }
+
+    @Operation(summary = "해당 이벤트의 티켓상품을 모두 조회합니다. (어드민용)", description = "재고 정보가 무조건 공개됩니다.")
+    @GetMapping("/admin")
+    public GetEventTicketItemsResponse getEventTicketItemsForAdmin(@PathVariable Long eventId) {
+        return getEventTicketItemsUseCase.executeForAdmin(eventId);
     }
 
     @Operation(summary = "해당 티켓상품의 옵션을 모두 조회합니다.")

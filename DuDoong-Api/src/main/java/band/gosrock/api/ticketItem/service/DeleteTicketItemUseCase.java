@@ -34,6 +34,6 @@ public class DeleteTicketItemUseCase {
 
         ticketItemService.softDeleteTicketItem(eventId, ticketItemId);
 
-        return ticketItemMapper.toGetEventTicketItemsResponse(eventId);
+        return ticketItemMapper.toGetEventTicketItemsResponse(eventId, true);
     }
 }

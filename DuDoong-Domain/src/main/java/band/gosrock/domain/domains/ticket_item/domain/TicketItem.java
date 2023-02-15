@@ -7,15 +7,15 @@ import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.exception.*;
 import java.time.LocalDateTime;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import javax.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
+import org.springframework.util.StringUtils;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -27,9 +27,9 @@ public class TicketItem extends BaseTimeEntity {
     @Column(name = "ticket_item_id")
     private Long id;
 
-    // 티켓 타입
+    // 티켓 지불 타입
     @Enumerated(EnumType.STRING)
-    private TicketType type;
+    private TicketPayType payType;
 
     // 티켓 이름
     private String name;
@@ -48,6 +48,16 @@ public class TicketItem extends BaseTimeEntity {
 
     // 1인당 구매 매수 제한
     private Long purchaseLimit;
+
+    // 티켓 승인 타입
+    @Enumerated(EnumType.STRING)
+    private TicketType type;
+
+    // 계좌번호
+    private String accountNumber;
+
+    // 재고 공개 여부
+    private Boolean isQuantityPublic;
 
     // 판매 가능 여부
     private Boolean isSellable;
@@ -68,28 +78,34 @@ public class TicketItem extends BaseTimeEntity {
     private Event event;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private final Set<ItemOptionGroup> itemOptionGroups = new HashSet<>();
+    private final List<ItemOptionGroup> itemOptionGroups = new ArrayList<>();
 
     @Builder
     public TicketItem(
-            TicketType type,
+            TicketPayType payType,
             String name,
             String description,
             Money price,
             Long quantity,
             Long supplyCount,
             Long purchaseLimit,
+            TicketType type,
+            String accountNumber,
+            Boolean isQuantityPublic,
             Boolean isSellable,
             LocalDateTime saleStartAt,
             LocalDateTime saleEndAt,
             Event event) {
-        this.type = type;
+        this.payType = payType;
         this.name = name;
         this.description = description;
         this.price = price;
         this.quantity = quantity;
         this.supplyCount = supplyCount;
         this.purchaseLimit = purchaseLimit;
+        this.type = type;
+        this.accountNumber = accountNumber;
+        this.isQuantityPublic = isQuantityPublic;
         this.isSellable = isSellable;
         this.saleStartAt = saleStartAt;
         this.saleEndAt = saleEndAt;
@@ -132,9 +148,33 @@ public class TicketItem extends BaseTimeEntity {
         }
     }
 
-    public void validateTicketPrice() {
-        if (!Money.ZERO.equals(this.price)) {
-            throw InvalidTicketPriceException.EXCEPTION;
+    public void validateTicketPayType(Boolean isPartner) {
+        // 두둥티켓은 무조건 승인 + 계좌번호 필요
+        if (this.payType.equals(TicketPayType.DUDOONG_TICKET)) {
+            if (!this.type.equals(TicketType.APPROVAL)) {
+                throw InvalidTicketTypeException.EXCEPTION;
+            }
+            if (StringUtils.isEmpty(this.accountNumber)) {
+                throw EmptyAccountNumberException.EXCEPTION;
+            }
+        }
+        // 유료티켓은 무조건 선착순 + 제휴 확인 + 1000원 이상
+        else if (this.payType.equals(TicketPayType.PRICE_TICKET)) {
+            if (!this.type.equals(TicketType.FIRST_COME_FIRST_SERVED)) {
+                throw InvalidTicketTypeException.EXCEPTION;
+            }
+            if (!isPartner) {
+                throw InvalidPartnerException.EXCEPTION;
+            }
+            if (this.price.isLessThan(Money.wons(1000))) {
+                throw InvalidTicketPriceException.EXCEPTION;
+            }
+        }
+        // 무료티켓은 무조건 0원
+        else {
+            if (!this.price.equals(Money.ZERO)) {
+                throw InvalidTicketPriceException.EXCEPTION;
+            }
         }
     }
 

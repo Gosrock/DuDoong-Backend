@@ -47,4 +47,18 @@
     <br />
   </div>
 </div>
+
+<div th:fragment="hostAndEventAndIssuedTicket(eventInfo, issuedTicketInfo, text)"
+     style="..."
+>
+  <div>
+    <span th:text="${eventInfo.hostName}" >호스트이름</span>
+    <span th:text="${eventInfo.eventName}">이벤트 이름</span>
+    <span>의</span>
+    <span th:text="${issuedTicketInfo.issuedTicketNo}">발급 티켓 번호</span>
+    <span th:text="${text}"> 텍스트 </span>
+    <br />
+  </div>
+</div>
+
 </html>

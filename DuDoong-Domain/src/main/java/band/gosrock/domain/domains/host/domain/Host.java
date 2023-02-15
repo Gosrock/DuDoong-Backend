@@ -15,6 +15,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.apache.commons.codec.binary.StringUtils;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -77,7 +78,7 @@ public class Host extends BaseTimeEntity {
     }
 
     public void setSlackUrl(String slackUrl) {
-        if (this.slackUrl.equals(slackUrl)) {
+        if (StringUtils.equals(this.slackUrl, slackUrl)) {
             throw DuplicateSlackUrlException.EXCEPTION;
         }
         Events.raise(HostRegisterSlackEvent.of(this));
@@ -100,7 +101,7 @@ public class Host extends BaseTimeEntity {
     public void setHostUserRole(Long userId, HostRole role) {
         // 마스터의 역할은 수정할 수 없음
         if (this.getMasterUserId().equals(userId)) {
-            throw ForbiddenHostOperationException.EXCEPTION;
+            throw CannotModifyMasterHostRoleException.EXCEPTION;
         }
         this.hostUsers.stream()
                 .filter(hostUser -> hostUser.getUserId().equals(userId))
@@ -119,6 +120,8 @@ public class Host extends BaseTimeEntity {
     public void validateHostUserExistence(HostUser hostUser) {
         validateHostUserIdExistence(hostUser.getUserId());
     }
+
+    // todo :: 여기서부터 테스트 진행
 
     /** 해당 유저가 호스트에 속하는지 확인하는 검증 로직입니다 */
     public void validateHostUser(Long userId) {

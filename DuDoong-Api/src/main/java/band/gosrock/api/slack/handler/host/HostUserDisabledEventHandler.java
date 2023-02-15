@@ -1,4 +1,4 @@
-package band.gosrock.api.host.handler;
+package band.gosrock.api.slack.handler.host;
 
 
 import band.gosrock.api.email.service.HostUserDisabledEmailService;
