@@ -18,7 +18,7 @@ public class ApproveOrderUseCase {
 
     private final OrderMapper orderMapper;
 
-    @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID)
+    @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID, applyTransaction = false)
     public OrderResponse execute(Long eventId, String orderUuid) {
         String confirmOrderUuid = orderApproveService.execute(orderUuid);
         return orderMapper.toOrderResponse(confirmOrderUuid);

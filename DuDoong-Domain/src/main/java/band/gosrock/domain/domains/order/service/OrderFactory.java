@@ -10,6 +10,7 @@ import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.validator.OrderValidator;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.domain.domains.ticket_item.domain.TicketPayType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,12 +30,23 @@ public class OrderFactory {
     public Order createNormalOrder(Long cartId, Long userId) {
         Cart cart = cartAdaptor.queryCart(cartId, userId);
         TicketItem ticketItem = itemAdaptor.queryTicketItem(cart.getItemId());
-        // 결제 주문 생성
-        if (ticketItem.isFCFS()) {
-            return Order.createPaymentOrder(userId, cart, ticketItem, orderValidator);
+        TicketPayType payType = ticketItem.getPayType();
+        // 두둥티켓
+        if (payType == TicketPayType.DUDOONG_TICKET) {
+            return Order.createApproveOrder(userId, cart, ticketItem, orderValidator);
         }
-        // 승인 주문 생성
-        return Order.createApproveOrder(userId, cart, ticketItem, orderValidator);
+        // 무료 티켓
+        if (payType == TicketPayType.FREE_TICKET) {
+            // 선착순 티켓
+            if (ticketItem.isFCFS()) {
+                return Order.createPaymentOrder(userId, cart, ticketItem, orderValidator);
+            }
+            // 승인 티켓
+            return Order.createApproveOrder(userId, cart, ticketItem, orderValidator);
+        }
+        // 유료 티켓
+        // 결제 주문 생성
+        return Order.createPaymentOrder(userId, cart, ticketItem, orderValidator);
     }
 
     public Order createCouponOrder(Long cartId, Long userId, Long couponId) {

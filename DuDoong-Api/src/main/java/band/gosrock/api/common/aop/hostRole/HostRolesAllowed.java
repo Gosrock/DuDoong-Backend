@@ -18,4 +18,6 @@ public @interface HostRolesAllowed {
     HostQualification role();
 
     FindHostFrom findHostFrom();
+
+    boolean applyTransaction() default true;
 }
