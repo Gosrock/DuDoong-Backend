@@ -1,5 +1,7 @@
 package band.gosrock.domain.domains.host.domain;
 
+import static band.gosrock.domain.domains.host.domain.HostRole.GUEST;
+import static java.lang.Boolean.FALSE;
 
 import band.gosrock.domain.common.aop.domainEvent.Events;
 import band.gosrock.domain.common.events.host.HostUserJoinEvent;
@@ -32,11 +34,11 @@ public class HostUser extends BaseTimeEntity {
     private Long userId;
 
     // 초대 승락 여부
-    private Boolean active = false;
+    private Boolean active = FALSE;
 
     // 유저의 권한
     @Enumerated(EnumType.STRING)
-    private HostRole role = HostRole.GUEST;
+    private HostRole role = GUEST;
 
     public void setHostRole(HostRole role) {
         this.role = role;
