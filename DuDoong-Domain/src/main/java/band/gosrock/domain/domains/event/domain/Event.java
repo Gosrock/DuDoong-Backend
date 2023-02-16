@@ -70,15 +70,18 @@ public class Event extends BaseTimeEntity {
     }
 
     public void setEventBasic(EventBasic eventBasic) {
+        this.validateOpenStatus();
         this.eventBasic = eventBasic;
     }
 
     public void setEventDetail(EventDetail eventDetail) {
+        this.validateOpenStatus();
         this.eventDetail = eventDetail;
         Events.raise(EventContentChangeEvent.of(this));
     }
 
     public void setEventPlace(EventPlace eventPlace) {
+        this.validateOpenStatus();
         this.eventPlace = eventPlace;
     }
 
@@ -87,6 +90,11 @@ public class Event extends BaseTimeEntity {
         this.hostId = hostId;
         this.eventBasic = EventBasic.builder().name(name).startAt(startAt).runTime(runTime).build();
         Events.raise(EventCreationEvent.of(hostId, name));
+    }
+
+    public void validateOpenStatus() {
+        if (status == OPEN) throw CannotModifyOpenEventException.EXCEPTION;
+        // todo : 오픈 전과 후 검증 로직 이름 변경
     }
 
     public void validateStatusOpen() {
