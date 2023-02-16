@@ -37,7 +37,7 @@ public class CreateOrderResponse {
     private final OrderMethod orderMethod;
 
     @Schema(description = "티켓의 타입. 승인 , 선착순 두가지입니다.")
-    private final TicketType ticketType;
+    private final TicketType approveType;
 
     @Schema(description = "티켓의 지불 타입. 두둥티켓, 무료 , 유료 세가지입니다.")
     private final TicketPayType ticketPayType;
@@ -54,7 +54,7 @@ public class CreateOrderResponse {
                 .amount(order.getTotalPaymentPrice())
                 .orderMethod(order.getOrderMethod())
                 .isNeedPayment(order.isNeedPaid())
-                .ticketType(item.getType())
+                .approveType(item.getType())
                 .ticketPayType(item.getPayType())
                 .accountNumber(item.getAccountNumber())
                 .build();

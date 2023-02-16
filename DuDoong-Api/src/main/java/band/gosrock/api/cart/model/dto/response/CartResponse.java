@@ -34,7 +34,7 @@ public class CartResponse {
     private final Boolean isNeedPayment;
 
     @Schema(description = "티켓의 타입. 승인 , 선착순 두가지입니다.")
-    private final TicketType ticketType;
+    private final TicketType approveType;
 
     public static CartResponse of(
             List<CartItemResponse> cartItemResponses, Cart cart, TicketItem item) {
@@ -45,7 +45,7 @@ public class CartResponse {
                 .title(cart.getCartName())
                 .isNeedPayment(cart.isNeedPaid())
                 .totalQuantity(cart.getTotalQuantity())
-                .ticketType(item.getType())
+                .approveType(item.getType())
                 .build();
     }
 }
