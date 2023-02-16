@@ -75,7 +75,6 @@ public class Event extends BaseTimeEntity {
     }
 
     public void setEventDetail(EventDetail eventDetail) {
-        this.validateOpenStatus();
         this.eventDetail = eventDetail;
         Events.raise(EventContentChangeEvent.of(this));
     }
