@@ -16,15 +16,14 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @RequiredArgsConstructor
 @Configuration
-public class ExampleJob {
-    private final String NAME = "예시";
+public class SlackUserStatistic {
 
+    private final String NAME = "슬랙유저통계";
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
 
     @Bean(name = JOB + NAME)
     public Job simpleJob() {
-
         return jobBuilderFactory.get(NAME)
             .start(exampleStep())
             .build();
@@ -34,7 +33,7 @@ public class ExampleJob {
     public Step exampleStep() {
         return stepBuilderFactory.get(NAME)
             .tasklet((contribution, chunkContext) -> {
-                log.info(">>>>> 예시 잡");
+                log.info(">>>>> 슬랙 유저 통계 잡");
                 return RepeatStatus.FINISHED;
             })
             .build();
