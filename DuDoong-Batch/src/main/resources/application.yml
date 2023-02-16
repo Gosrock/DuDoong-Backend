@@ -5,10 +5,6 @@ spring:
       - infrastructure
       - domain
       - common
-  data:
-    jpa:
-      repositories:
-        bootstrap-mode: default
 spring.batch.job.names: ${job.name:NONE}
 ---
 spring:
