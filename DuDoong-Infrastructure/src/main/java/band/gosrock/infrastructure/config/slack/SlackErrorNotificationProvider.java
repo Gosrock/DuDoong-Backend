@@ -19,11 +19,10 @@ import org.springframework.util.CollectionUtils;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class SlackServerNotificationProvider {
+public class SlackErrorNotificationProvider {
 
-    private final Environment env;
+    private final SlackHelper slackHelper;
 
-    private final List<String> sendAlarmProfiles = List.of("staging", "prod");
     private final int MAX_LEN = 500;
 
     @Value("${slack.webhook.id}")
@@ -31,11 +30,7 @@ public class SlackServerNotificationProvider {
 
     private final MethodsClient methodsClient;
 
-    private Boolean isNeedToNotificationProfile() {
-        String[] activeProfiles = env.getActiveProfiles();
-        List<String> currentProfile = Arrays.stream(activeProfiles).toList();
-        return CollectionUtils.containsAny(sendAlarmProfiles, currentProfile);
-    }
+
 
     public String getErrorStack(Throwable throwable) {
         String exceptionAsString = Arrays.toString(throwable.getStackTrace());
@@ -45,19 +40,6 @@ public class SlackServerNotificationProvider {
 
     @Async
     public void sendNotification(List<LayoutBlock> layoutBlocks) {
-        if (!isNeedToNotificationProfile()) {
-            return;
-        }
-        ChatPostMessageRequest chatPostMessageRequest =
-                ChatPostMessageRequest.builder()
-                        .channel(CHANNEL_ID)
-                        .text("")
-                        .blocks(layoutBlocks)
-                        .build();
-        try {
-            methodsClient.chatPostMessage(chatPostMessageRequest);
-        } catch (SlackApiException | IOException slackApiException) {
-            log.error(slackApiException.toString());
-        }
+        slackHelper.sendNotification(CHANNEL_ID,layoutBlocks);
     }
 }

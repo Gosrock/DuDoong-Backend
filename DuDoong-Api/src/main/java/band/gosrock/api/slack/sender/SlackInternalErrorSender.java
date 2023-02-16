@@ -4,7 +4,7 @@ import static com.slack.api.model.block.Blocks.divider;
 import static com.slack.api.model.block.Blocks.section;
 import static com.slack.api.model.block.composition.BlockCompositions.plainText;
 
-import band.gosrock.infrastructure.config.slack.SlackServerNotificationProvider;
+import band.gosrock.infrastructure.config.slack.SlackErrorNotificationProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slack.api.model.block.Blocks;
 import com.slack.api.model.block.LayoutBlock;
@@ -24,7 +24,7 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 public class SlackInternalErrorSender {
     private final ObjectMapper objectMapper;
 
-    private final SlackServerNotificationProvider slackProvider;
+    private final SlackErrorNotificationProvider slackProvider;
 
     public void execute(ContentCachingRequestWrapper cachingRequest, Exception e, Long userId)
             throws IOException {
