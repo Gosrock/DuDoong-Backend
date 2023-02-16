@@ -39,8 +39,6 @@ public class Event extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private EventStatus status = PREPARING;
 
-    private Boolean isUpdated = false;
-
     public LocalDateTime getStartAt() {
         if (this.eventBasic == null) {
             return null;
@@ -72,10 +70,6 @@ public class Event extends BaseTimeEntity {
     }
 
     public void setEventBasic(EventBasic eventBasic) {
-        if (isUpdated) {
-            throw CannotModifyEventBasicException.EXCEPTION;
-        }
-        this.isUpdated = true;
         this.eventBasic = eventBasic;
     }
 
@@ -85,7 +79,6 @@ public class Event extends BaseTimeEntity {
     }
 
     public void setEventPlace(EventPlace eventPlace) {
-        // 정보 한 번 등록시 변경 불가
         this.eventPlace = eventPlace;
     }
 
