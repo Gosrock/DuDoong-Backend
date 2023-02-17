@@ -13,4 +13,3 @@ public class BatchApplication {
         System.exit(SpringApplication.exit(context));
     }
 }
-

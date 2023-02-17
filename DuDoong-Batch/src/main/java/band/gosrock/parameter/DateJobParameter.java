@@ -1,5 +1,6 @@
 package band.gosrock.parameter;
 
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
@@ -25,6 +26,6 @@ public class DateJobParameter {
             throw new JobParametersInvalidException("날짜형식의 파라미터가 필요합니다.");
         }
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        this.date = LocalDate.parse(date,formatter);
+        this.date = LocalDate.parse(date, formatter);
     }
 }

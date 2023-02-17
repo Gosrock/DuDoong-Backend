@@ -1,9 +1,9 @@
 package band.gosrock.infrastructure.config.slack;
 
+
 import com.slack.api.methods.MethodsClient;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
-import com.slack.api.methods.response.chat.ChatPostMessageResponse;
 import com.slack.api.model.block.LayoutBlock;
 import java.io.IOException;
 import java.util.Arrays;
@@ -11,7 +11,6 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -20,7 +19,7 @@ import org.springframework.util.CollectionUtils;
 @Slf4j
 public class SlackHelper {
     private final Environment env;
-    private final List<String> sendAlarmProfiles = List.of("staging", "prod","dev");
+    private final List<String> sendAlarmProfiles = List.of("staging", "prod", "dev");
 
     private final MethodsClient methodsClient;
 
@@ -35,14 +34,13 @@ public class SlackHelper {
             return;
         }
         ChatPostMessageRequest chatPostMessageRequest =
-            ChatPostMessageRequest.builder()
-                .channel(CHANNEL_ID)
-                .text("")
-                .blocks(layoutBlocks)
-                .build();
+                ChatPostMessageRequest.builder()
+                        .channel(CHANNEL_ID)
+                        .text("")
+                        .blocks(layoutBlocks)
+                        .build();
         try {
-            methodsClient.chatPostMessage(
-                chatPostMessageRequest);
+            methodsClient.chatPostMessage(chatPostMessageRequest);
         } catch (SlackApiException | IOException slackApiException) {
             log.error(slackApiException.toString());
         }
