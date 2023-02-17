@@ -52,5 +52,7 @@ jobs:
         with:
           context: ./DuDoong-Batch
           push: true
-          tags: water0641/dudoong-batch:${{ steps.get_version.outputs.VERSION }}
+          tags: |
+            water0641/dudoong-batch:${{ steps.get_version.outputs.VERSION }}
+            water0641/dudoong-batch:latest
 
