@@ -4,6 +4,7 @@ package band.gosrock.api.cart.model.dto.response;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.domain.domains.ticket_item.domain.TicketPayType;
 import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
@@ -36,6 +37,12 @@ public class CartResponse {
     @Schema(description = "티켓의 타입. 승인 , 선착순 두가지입니다.")
     private final TicketType approveType;
 
+    @Schema(description = "티켓의 지불 타입. 두둥티켓, 무료 , 유료 세가지입니다.")
+    private final TicketPayType ticketPayType;
+
+    @Schema(description = "계좌정보", nullable = true)
+    private final String accountNumber;
+
     public static CartResponse of(
             List<CartItemResponse> cartItemResponses, Cart cart, TicketItem item) {
         return CartResponse.builder()
@@ -46,6 +53,8 @@ public class CartResponse {
                 .isNeedPayment(cart.isNeedPaid())
                 .totalQuantity(cart.getTotalQuantity())
                 .approveType(item.getType())
+                .ticketPayType(item.getPayType())
+                .accountNumber(item.getAccountNumber())
                 .build();
     }
 }
