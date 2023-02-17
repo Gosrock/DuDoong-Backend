@@ -30,4 +30,9 @@ public enum OrderStatus {
     private String value;
 
     @JsonValue private String kr;
+
+    public Boolean isInEventOrderExcelStatus(){
+        return this == OrderStatus.CONFIRM || this == OrderStatus.CANCELED ||
+            this == OrderStatus.APPROVED || this == OrderStatus.REFUND;
+    }
 }
