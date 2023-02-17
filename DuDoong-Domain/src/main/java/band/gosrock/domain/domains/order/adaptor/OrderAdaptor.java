@@ -7,6 +7,7 @@ import band.gosrock.domain.domains.order.exception.OrderNotFoundException;
 import band.gosrock.domain.domains.order.repository.OrderRepository;
 import band.gosrock.domain.domains.order.repository.condition.FindEventOrdersCondition;
 import band.gosrock.domain.domains.order.repository.condition.FindMyPageOrderCondition;
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,6 +28,10 @@ public class OrderAdaptor {
         return orderRepository
                 .findById(orderId)
                 .orElseThrow(() -> OrderNotFoundException.EXCEPTION);
+    }
+
+    public List<Order> findByEventId(Long eventId) {
+        return orderRepository.findByEventId(eventId);
     }
 
     public Order findByOrderUuid(String uuid) {
