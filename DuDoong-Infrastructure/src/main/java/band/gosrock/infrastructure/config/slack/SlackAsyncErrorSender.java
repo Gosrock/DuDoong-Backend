@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class SlackAsyncErrorSender {
-    private final SlackServerNotificationProvider slackProvider;
+    private final SlackErrorNotificationProvider slackProvider;
 
     public void execute(String name, Throwable throwable, Object[] params) {
         List<LayoutBlock> layoutBlocks = new ArrayList<>();

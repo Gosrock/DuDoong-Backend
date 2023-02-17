@@ -10,41 +10,26 @@ import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class SlackServerNotificationProvider {
-
+public class SlackHelper {
     private final Environment env;
-
-    private final List<String> sendAlarmProfiles = List.of("staging", "prod");
-    private final int MAX_LEN = 500;
-
-    @Value("${slack.webhook.id}")
-    private String CHANNEL_ID;
+    private final List<String> sendAlarmProfiles = List.of("staging", "prod", "dev");
 
     private final MethodsClient methodsClient;
 
-    private Boolean isNeedToNotificationProfile() {
+    public Boolean isNeedToNotificationProfile() {
         String[] activeProfiles = env.getActiveProfiles();
         List<String> currentProfile = Arrays.stream(activeProfiles).toList();
         return CollectionUtils.containsAny(sendAlarmProfiles, currentProfile);
     }
 
-    public String getErrorStack(Throwable throwable) {
-        String exceptionAsString = Arrays.toString(throwable.getStackTrace());
-        int cutLength = Math.min(exceptionAsString.length(), MAX_LEN);
-        return exceptionAsString.substring(0, cutLength);
-    }
-
-    @Async
-    public void sendNotification(List<LayoutBlock> layoutBlocks) {
+    public void sendNotification(String CHANNEL_ID, List<LayoutBlock> layoutBlocks) {
         if (!isNeedToNotificationProfile()) {
             return;
         }
