@@ -8,6 +8,7 @@ import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.excel.ExcelOrderDto;
 import band.gosrock.excel.ExcelOrderHelper;
+import band.gosrock.infrastructure.config.s3.S3PrivateFileUploadService;
 import band.gosrock.parameter.EventJobParameter;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
@@ -54,8 +55,7 @@ public class EventOrdersToExcel {
     private final EventAdaptor eventAdaptor;
     private final OrderAdaptor orderAdaptor;
     private final EventJobParameter eventJobParameter;
-    private final AmazonS3 amazonS3;
-
+    private final S3PrivateFileUploadService s3PrivateFileUploadService;
     @Bean(BEAN_PREFIX + "eventJobParameter")
     @JobScope
     public EventJobParameter eventJobParameter() {
@@ -99,22 +99,14 @@ public class EventOrdersToExcel {
                             workbook.write(outputStream);
                             workbook.close();
 
-                            byte[] bytes = outputStream.toByteArray();
-                            InputStream inputStream = new ByteArrayInputStream(bytes);
-                            // 엑셀 업로드 ( 로컬에선 파일로 , 배포에선 s3 로 )
 
-                            amazonS3.putObject("dudoong", "test.xlsx", inputStream, getObjectMetadata(bytes.length));
+                            // 엑셀 업로드 ( 로컬에선 파일로 , 배포에선 s3 로 )
+                            s3PrivateFileUploadService.excelUpload(event.getId(), outputStream);
                             // 파일 업로드시 정산관련 테이블에 파일 위치 저장.
 
                             return RepeatStatus.FINISHED;
                         })
                 .build();
     }
-    private ObjectMetadata getObjectMetadata(int contentLength) {
-        // create metadata for uploading file
-        ObjectMetadata objectMetadata = new ObjectMetadata();
-        objectMetadata.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        objectMetadata.setContentLength(contentLength);
-        return objectMetadata;
-    }
+
 }
