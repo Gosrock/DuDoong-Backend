@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.ticket_item.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.common.vo.AccountInfoVo;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.event.domain.Event;
@@ -53,8 +54,14 @@ public class TicketItem extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private TicketType type;
 
+    // 은행명
+    private String bankName;
+
     // 계좌번호
     private String accountNumber;
+
+    // 예금주
+    private String accountHolder;
 
     // 재고 공개 여부
     private Boolean isQuantityPublic;
@@ -90,7 +97,9 @@ public class TicketItem extends BaseTimeEntity {
             Long supplyCount,
             Long purchaseLimit,
             TicketType type,
+            String bankName,
             String accountNumber,
+            String accountHolder,
             Boolean isQuantityPublic,
             Boolean isSellable,
             LocalDateTime saleStartAt,
@@ -104,7 +113,9 @@ public class TicketItem extends BaseTimeEntity {
         this.supplyCount = supplyCount;
         this.purchaseLimit = purchaseLimit;
         this.type = type;
+        this.bankName = bankName;
         this.accountNumber = accountNumber;
+        this.accountHolder = accountHolder;
         this.isQuantityPublic = isQuantityPublic;
         this.isSellable = isSellable;
         this.saleStartAt = saleStartAt;
@@ -149,13 +160,15 @@ public class TicketItem extends BaseTimeEntity {
     }
 
     public void validateTicketPayType(Boolean isPartner) {
-        // 두둥티켓은 무조건 승인 + 계좌번호 필요
+        // 두둥티켓은 무조건 승인 + 계좌정보 필요
         if (this.payType.equals(TicketPayType.DUDOONG_TICKET)) {
             if (!this.type.equals(TicketType.APPROVAL)) {
                 throw InvalidTicketTypeException.EXCEPTION;
             }
-            if (StringUtils.isEmpty(this.accountNumber)) {
-                throw EmptyAccountNumberException.EXCEPTION;
+            if (StringUtils.isEmpty(this.accountNumber)
+                    || StringUtils.isEmpty(this.accountHolder)
+                    || StringUtils.isEmpty(this.bankName)) {
+                throw EmptyAccountInfoException.EXCEPTION;
             }
         }
         // 유료티켓은 무조건 선착순 + 제휴 확인 + 1000원 이상
@@ -176,6 +189,10 @@ public class TicketItem extends BaseTimeEntity {
                 throw InvalidTicketPriceException.EXCEPTION;
             }
         }
+    }
+
+    public AccountInfoVo toAccountInfoVo() {
+        return AccountInfoVo.from(this);
     }
 
     public RefundInfoVo getRefundInfoVo() {
