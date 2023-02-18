@@ -16,7 +16,6 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 @Component
 public class ExcelOrderHelper {
@@ -29,8 +28,15 @@ public class ExcelOrderHelper {
 
         List<String> fieldNames = Arrays.stream(declaredFields).map(Field::getName).toList();
         Sheet sheet = workbook.createSheet("orderList");
-//        sheet.setColumnWidth(0, 6000);
-//        sheet.setColumnWidth(1, 4000);
+        sheet.setColumnWidth(0, 6000);
+        sheet.setColumnWidth(1, 6000);
+        sheet.setColumnWidth(2, 6000);
+        sheet.setColumnWidth(3, 6000);
+        sheet.setColumnWidth(4, 6000);
+        sheet.setColumnWidth(5, 6000);
+        sheet.setColumnWidth(6, 6000);
+        sheet.setColumnWidth(7, 6000);
+        sheet.setColumnWidth(8, 6000);
         // create header
         Row header = sheet.createRow(0);
         CellStyle headerStyle = workbook.createCellStyle();
