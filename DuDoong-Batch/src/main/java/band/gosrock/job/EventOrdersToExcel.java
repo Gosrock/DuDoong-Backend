@@ -9,8 +9,15 @@ import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.excel.ExcelOrderDto;
 import band.gosrock.excel.ExcelOrderHelper;
 import band.gosrock.parameter.EventJobParameter;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +54,7 @@ public class EventOrdersToExcel {
     private final EventAdaptor eventAdaptor;
     private final OrderAdaptor orderAdaptor;
     private final EventJobParameter eventJobParameter;
+    private final AmazonS3 amazonS3;
 
     @Bean(BEAN_PREFIX + "eventJobParameter")
     @JobScope
@@ -87,15 +95,26 @@ public class EventOrdersToExcel {
                             String path = currDir.getAbsolutePath();
                             String fileLocation = path.substring(0, path.length() - 1) + "temp.xlsx";
                             log.info(fileLocation);
-                            FileOutputStream outputStream = new FileOutputStream(fileLocation);
+                            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                             workbook.write(outputStream);
                             workbook.close();
+
+                            byte[] bytes = outputStream.toByteArray();
+                            InputStream inputStream = new ByteArrayInputStream(bytes);
                             // 엑셀 업로드 ( 로컬에선 파일로 , 배포에선 s3 로 )
 
+                            amazonS3.putObject("dudoong", "test.xlsx", inputStream, getObjectMetadata(bytes.length));
                             // 파일 업로드시 정산관련 테이블에 파일 위치 저장.
 
                             return RepeatStatus.FINISHED;
                         })
                 .build();
+    }
+    private ObjectMetadata getObjectMetadata(int contentLength) {
+        // create metadata for uploading file
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        objectMetadata.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        objectMetadata.setContentLength(contentLength);
+        return objectMetadata;
     }
 }
