@@ -77,7 +77,7 @@ public class TicketItem extends BaseTimeEntity {
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     private final List<ItemOptionGroup> itemOptionGroups = new ArrayList<>();
 
     @Builder
@@ -127,6 +127,22 @@ public class TicketItem extends BaseTimeEntity {
         ItemOptionGroup itemOptionGroup =
                 ItemOptionGroup.builder().item(this).optionGroup(optionGroup).build();
         this.itemOptionGroups.add(itemOptionGroup);
+    }
+
+    public void removeItemOptionGroup(OptionGroup optionGroup) {
+        // 재고 감소된 티켓상품은 옵션적용 변경 불가
+        if (this.isQuantityReduced()) {
+            throw ForbiddenOptionChangeException.EXCEPTION;
+        }
+        ItemOptionGroup itemOptionGroup = this.findItemOptionGroup(optionGroup);
+        this.itemOptionGroups.remove(itemOptionGroup);
+    }
+
+    public ItemOptionGroup findItemOptionGroup(OptionGroup optionGroup) {
+        return this.itemOptionGroups.stream()
+                .filter(itemOptionGroup -> itemOptionGroup.getOptionGroup().equals(optionGroup))
+                .findAny()
+                .orElseThrow(() -> NotAppliedItemOptionGroupException.EXCEPTION);
     }
 
     public Boolean hasItemOptionGroup(Long optionGroupId) {

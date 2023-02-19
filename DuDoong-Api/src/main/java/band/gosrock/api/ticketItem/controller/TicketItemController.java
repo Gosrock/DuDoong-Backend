@@ -3,6 +3,7 @@ package band.gosrock.api.ticketItem.controller;
 
 import band.gosrock.api.ticketItem.dto.request.ApplyTicketOptionRequest;
 import band.gosrock.api.ticketItem.dto.request.CreateTicketItemRequest;
+import band.gosrock.api.ticketItem.dto.request.UnapplyTicketOptionRequest;
 import band.gosrock.api.ticketItem.dto.response.GetAppliedOptionGroupsResponse;
 import band.gosrock.api.ticketItem.dto.response.GetEventTicketItemsResponse;
 import band.gosrock.api.ticketItem.dto.response.GetTicketItemOptionsResponse;
@@ -29,6 +30,7 @@ public class TicketItemController {
     public final GetEventTicketItemsUseCase getEventTicketItemsUseCase;
     public final DeleteTicketItemUseCase deleteTicketItemUseCase;
     public final GetAppliedOptionGroupsUseCase getAppliedOptionGroupsUseCase;
+    public final UnapplyTicketOptionUseCase unapplyTicketOptionUseCase;
 
     @Operation(
             summary = "특정 이벤트에 속하는 티켓 상품을 생성합니다.",
@@ -47,6 +49,16 @@ public class TicketItemController {
             @PathVariable Long eventId,
             @PathVariable Long ticketItemId) {
         return applyTicketOptionUseCase.execute(applyTicketOptionRequest, eventId, ticketItemId);
+    }
+
+    @Operation(summary = "옵션을 티켓상품에 적용 취소합니다.")
+    @PatchMapping("/{ticketItemId}/option/cancel")
+    public GetTicketItemOptionsResponse unapplyTicketOption(
+            @RequestBody @Valid UnapplyTicketOptionRequest unapplyTicketOptionRequest,
+            @PathVariable Long eventId,
+            @PathVariable Long ticketItemId) {
+        return unapplyTicketOptionUseCase.execute(
+                unapplyTicketOptionRequest, eventId, ticketItemId);
     }
 
     @Operation(summary = "해당 이벤트의 티켓상품을 모두 조회합니다.")

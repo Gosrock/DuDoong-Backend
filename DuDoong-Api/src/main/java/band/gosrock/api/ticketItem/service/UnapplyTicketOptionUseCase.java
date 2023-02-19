@@ -4,7 +4,7 @@ import static band.gosrock.api.common.aop.hostRole.FindHostFrom.EVENT_ID;
 import static band.gosrock.api.common.aop.hostRole.HostQualification.GUEST;
 
 import band.gosrock.api.common.aop.hostRole.HostRolesAllowed;
-import band.gosrock.api.ticketItem.dto.request.ApplyTicketOptionRequest;
+import band.gosrock.api.ticketItem.dto.request.UnapplyTicketOptionRequest;
 import band.gosrock.api.ticketItem.dto.response.GetTicketItemOptionsResponse;
 import band.gosrock.api.ticketItem.mapper.TicketOptionMapper;
 import band.gosrock.common.annotation.UseCase;
@@ -14,19 +14,21 @@ import lombok.RequiredArgsConstructor;
 
 @UseCase
 @RequiredArgsConstructor
-public class ApplyTicketOptionUseCase {
+public class UnapplyTicketOptionUseCase {
 
     private final ItemOptionGroupService itemOptionGroupService;
     private final TicketOptionMapper ticketOptionMapper;
 
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID, applyTransaction = false)
     public GetTicketItemOptionsResponse execute(
-            ApplyTicketOptionRequest applyTicketOptionRequest, Long eventId, Long ticketItemId) {
+            UnapplyTicketOptionRequest unapplyTicketOptionRequest,
+            Long eventId,
+            Long ticketItemId) {
 
-        Long optionGroupId = applyTicketOptionRequest.getOptionGroupId();
+        Long optionGroupId = unapplyTicketOptionRequest.getOptionGroupId();
 
         TicketItem ticketItem =
-                itemOptionGroupService.addItemOptionGroup(ticketItemId, optionGroupId, eventId);
+                itemOptionGroupService.removeItemOptionGroup(ticketItemId, optionGroupId, eventId);
 
         return ticketOptionMapper.toGetTicketItemOptionResponse(eventId, ticketItem.getId());
     }

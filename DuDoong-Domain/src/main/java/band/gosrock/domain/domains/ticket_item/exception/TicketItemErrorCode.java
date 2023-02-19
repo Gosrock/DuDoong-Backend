@@ -45,11 +45,13 @@ public enum TicketItemErrorCode implements BaseErrorCode {
     @ExplainError("이미 적용되어 옵션그룹 삭제가 불가능할 경우 발생하는 오류입니다.")
     FORBIDDEN_OPTION_GROUP_DELETE(BAD_REQUEST, "Option_Group_400_2", "옵션그룹 삭제가 불가능한 상태입니다."),
     @ExplainError("두둥티켓 타입에 계좌번호가 입력되지 않았을 경우 발생하는 오류입니다.")
-    EMPTY_ACCOUT_INFO(BAD_REQUEST, "Ticket_Item_400_8", "계좌정보가 필요합니다."),
+    EMPTY_ACCOUNT_INFO(BAD_REQUEST, "Ticket_Item_400_8", "계좌정보가 필요합니다."),
     @ExplainError("티켓 지불방식과 승인방식이 불가능한 조합일때 발생하는 오류입니다.")
     INVALID_TICKET_TYPE(BAD_REQUEST, "Ticket_Item_400_9", "잘못된 티켓 승인타입입니다."),
     @ExplainError("제휴되지 않은 호스트가 유료티켓 생성을 요청했을때 발생하는 오류입니다.")
-    INVALID_PARTNER(BAD_REQUEST, "Ticket_Item_400_3", "제휴된 호스트가 아닙니다.");
+    INVALID_PARTNER(BAD_REQUEST, "Ticket_Item_400_3", "제휴된 호스트가 아닙니다."),
+    @ExplainError("해당 티켓상품에 적용되지 않은 옵션을 취소 시도할 경우 발생하는 오류입니다.")
+    NOT_APPLIED_ITEM_OPTION_GROUP(BAD_REQUEST, "Item_Option_Group_400_3", "적용되지 않은 옵션입니다.");
 
     private Integer status;
     private String code;
