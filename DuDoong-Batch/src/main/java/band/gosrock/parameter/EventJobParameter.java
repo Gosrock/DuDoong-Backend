@@ -3,15 +3,10 @@ package band.gosrock.parameter;
 
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.JobParametersInvalidException;
 import org.springframework.beans.factory.annotation.Value;
-
 
 @Getter
 public class EventJobParameter {

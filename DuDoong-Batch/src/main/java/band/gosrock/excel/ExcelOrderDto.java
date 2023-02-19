@@ -1,5 +1,6 @@
 package band.gosrock.excel;
 
+
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderMethod;
@@ -22,16 +23,17 @@ public class ExcelOrderDto {
     private final LocalDateTime createdAt;
     private final LocalDateTime refundAt;
 
-    public static ExcelOrderDto from(Order order){
-        return ExcelOrderDto.builder().amount(order.getTotalPaymentPrice())
-            .orderNo(order.getOrderNo())
-            .orderMethod(order.getOrderMethod())
-            .orderStatus(order.getOrderStatus())
-            .orderName(order.getOrderName())
-            .userId(order.getUserId())
-            .quantity(order.getTotalQuantity())
-            .createdAt(order.getCreatedAt())
-            .refundAt(order.getWithDrawAt()).build();
+    public static ExcelOrderDto from(Order order) {
+        return ExcelOrderDto.builder()
+                .amount(order.getTotalPaymentPrice())
+                .orderNo(order.getOrderNo())
+                .orderMethod(order.getOrderMethod())
+                .orderStatus(order.getOrderStatus())
+                .orderName(order.getOrderName())
+                .userId(order.getUserId())
+                .quantity(order.getTotalQuantity())
+                .createdAt(order.getCreatedAt())
+                .refundAt(order.getWithDrawAt())
+                .build();
     }
-
 }

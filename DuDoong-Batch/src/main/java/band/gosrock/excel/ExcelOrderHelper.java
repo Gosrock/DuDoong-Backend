@@ -1,5 +1,6 @@
 package band.gosrock.excel;
 
+
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -21,7 +22,8 @@ import org.springframework.stereotype.Component;
 public class ExcelOrderHelper {
 
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    public Workbook execute(List<ExcelOrderDto> excelOrders){
+
+    public Workbook execute(List<ExcelOrderDto> excelOrders) {
         Workbook workbook = new XSSFWorkbook();
 
         Field[] declaredFields = ExcelOrderDto.class.getDeclaredFields();
@@ -87,31 +89,32 @@ public class ExcelOrderHelper {
         CellStyle style = workbook.createCellStyle();
         style.setWrapText(true);
         IntStream.range(0, excelOrders.size())
-            .forEach(idx ->
-                {
-                    Row row = sheet.createRow(idx + 1);
-                    ExcelOrderDto excelOrderDto = excelOrders.get(idx);
-                    row.createCell(0).setCellValue(excelOrderDto.getOrderNo());
+                .forEach(
+                        idx -> {
+                            Row row = sheet.createRow(idx + 1);
+                            ExcelOrderDto excelOrderDto = excelOrders.get(idx);
+                            row.createCell(0).setCellValue(excelOrderDto.getOrderNo());
 
-                    row.createCell(1).setCellValue(excelOrderDto.getOrderMethod().getKr());
+                            row.createCell(1).setCellValue(excelOrderDto.getOrderMethod().getKr());
 
-                    row.createCell(2).setCellValue(excelOrderDto.getOrderStatus().getKr());
+                            row.createCell(2).setCellValue(excelOrderDto.getOrderStatus().getKr());
 
-                    row.createCell(3).setCellValue(excelOrderDto.getOrderName());
+                            row.createCell(3).setCellValue(excelOrderDto.getOrderName());
 
-                    row.createCell(4).setCellValue(excelOrderDto.getUserId());
+                            row.createCell(4).setCellValue(excelOrderDto.getUserId());
 
-                    row.createCell(5).setCellValue(excelOrderDto.getAmount().toString());
+                            row.createCell(5).setCellValue(excelOrderDto.getAmount().toString());
 
-                    row.createCell(6).setCellValue(excelOrderDto.getQuantity());
+                            row.createCell(6).setCellValue(excelOrderDto.getQuantity());
 
-                    row.createCell(7).setCellValue(excelOrderDto.getCreatedAt().format(formatter));
+                            row.createCell(7)
+                                    .setCellValue(excelOrderDto.getCreatedAt().format(formatter));
 
-                    LocalDateTime refundAt = excelOrderDto.getRefundAt();
-                    row.createCell(8).setCellValue(refundAt != null ? refundAt.format(formatter) : null);
-                }
-            )
-        ;
+                            LocalDateTime refundAt = excelOrderDto.getRefundAt();
+                            row.createCell(8)
+                                    .setCellValue(
+                                            refundAt != null ? refundAt.format(formatter) : null);
+                        });
         return workbook;
     }
 }

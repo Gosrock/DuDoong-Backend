@@ -1,19 +1,11 @@
 package band.gosrock.infrastructure.config.s3;
 
 
-import band.gosrock.common.exception.BadFileExtensionException;
-import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.Headers;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.net.URL;
-import java.util.Date;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,16 +36,14 @@ public class S3PrivateFileUploadService {
     }
 
     private String getFileKey(Long eventId) {
-        return baseUrl
-            + "/event/"
-            + eventId.toString()
-            + "/"
-            + excelFileName;
+        return baseUrl + "/event/" + eventId.toString() + "/" + excelFileName;
     }
+
     private ObjectMetadata getExcelObjectMetadata(int contentLength) {
         // create metadata for uploading file
         ObjectMetadata objectMetadata = new ObjectMetadata();
-        objectMetadata.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        objectMetadata.setContentType(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         objectMetadata.setContentLength(contentLength);
         return objectMetadata;
     }
