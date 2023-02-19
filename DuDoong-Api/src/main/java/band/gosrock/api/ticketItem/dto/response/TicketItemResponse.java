@@ -62,7 +62,7 @@ public class TicketItemResponse {
                                 ? ticketItem.getQuantity()
                                 : null)
                 .isQuantityPublic(ticketItem.getIsQuantityPublic())
-                .accountInfo(ticketItem.toAccountInfoVo())
+                .accountInfo(ticketItem.getAccountInfo())
                 .build();
     }
 }
