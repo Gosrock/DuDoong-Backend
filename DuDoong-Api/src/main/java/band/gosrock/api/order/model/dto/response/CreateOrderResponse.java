@@ -1,6 +1,7 @@
 package band.gosrock.api.order.model.dto.response;
 
 
+import band.gosrock.domain.common.vo.AccountInfoVo;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderMethod;
@@ -43,7 +44,7 @@ public class CreateOrderResponse {
     private final TicketPayType ticketPayType;
 
     @Schema(description = "계좌정보", nullable = true)
-    private final String accountNumber;
+    private final AccountInfoVo accountInfo;
 
     public static CreateOrderResponse from(Order order, TicketItem item, Profile profile) {
         return CreateOrderResponse.builder()
@@ -56,7 +57,7 @@ public class CreateOrderResponse {
                 .isNeedPayment(order.isNeedPaid())
                 .approveType(item.getType())
                 .ticketPayType(item.getPayType())
-                .accountNumber(item.getAccountNumber())
+                .accountInfo(item.getAccountInfo())
                 .build();
     }
 }

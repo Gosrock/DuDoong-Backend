@@ -54,14 +54,7 @@ public class TicketItem extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private TicketType type;
 
-    // 은행명
-    private String bankName;
-
-    // 계좌번호
-    private String accountNumber;
-
-    // 예금주
-    private String accountHolder;
+    @Embedded private AccountInfoVo accountInfo;
 
     // 재고 공개 여부
     private Boolean isQuantityPublic;
@@ -113,9 +106,7 @@ public class TicketItem extends BaseTimeEntity {
         this.supplyCount = supplyCount;
         this.purchaseLimit = purchaseLimit;
         this.type = type;
-        this.bankName = bankName;
-        this.accountNumber = accountNumber;
-        this.accountHolder = accountHolder;
+        this.accountInfo = AccountInfoVo.valueOf(bankName, accountNumber, accountHolder);
         this.isQuantityPublic = isQuantityPublic;
         this.isSellable = isSellable;
         this.saleStartAt = saleStartAt;
@@ -165,9 +156,9 @@ public class TicketItem extends BaseTimeEntity {
             if (!this.type.equals(TicketType.APPROVAL)) {
                 throw InvalidTicketTypeException.EXCEPTION;
             }
-            if (StringUtils.isEmpty(this.accountNumber)
-                    || StringUtils.isEmpty(this.accountHolder)
-                    || StringUtils.isEmpty(this.bankName)) {
+            if (StringUtils.isEmpty(this.accountInfo.getBankName())
+                    || StringUtils.isEmpty(this.accountInfo.getAccountNumber())
+                    || StringUtils.isEmpty(this.accountInfo.getAccountHolder())) {
                 throw EmptyAccountInfoException.EXCEPTION;
             }
         }
@@ -189,10 +180,6 @@ public class TicketItem extends BaseTimeEntity {
                 throw InvalidTicketPriceException.EXCEPTION;
             }
         }
-    }
-
-    public AccountInfoVo toAccountInfoVo() {
-        return AccountInfoVo.from(this);
     }
 
     public RefundInfoVo getRefundInfoVo() {
