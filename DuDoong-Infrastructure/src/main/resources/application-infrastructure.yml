@@ -12,7 +12,8 @@ spring:
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6379}
     password: ${REDIS_PASSWORD:}
-
+  main:
+    web-application-type: servlet
 slack:
   webhook:
     token: ${SLACK_WEBHOOK_TOKEN:}
@@ -21,7 +22,9 @@ slack:
     username: ${SLACK_WEBHOOK_USERNAME:DuDoongBot}
     icon-url: ${SLACK_WEBHOOK_ICON_URL:}
 
-
+feign:
+  toss:
+    url : https://api.tosspayments.com
 ---
 spring:
   config:

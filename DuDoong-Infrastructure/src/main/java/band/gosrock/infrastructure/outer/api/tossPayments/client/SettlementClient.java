@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient(
         name = "SettlementClient",
-        url = "https://api.tosspayments.com",
+        url = "${feign.toss.url}",
         configuration = {TransactionGetConfig.class})
 public interface SettlementClient {
     @GetMapping("/v1/settlements")
