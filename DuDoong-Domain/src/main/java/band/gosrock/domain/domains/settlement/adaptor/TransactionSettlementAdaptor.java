@@ -16,4 +16,8 @@ public class TransactionSettlementAdaptor {
     public void saveAll(List<TransactionSettlement> transactionSettlements) {
         transactionSettlementRepository.saveAll(transactionSettlements);
     }
+
+    public List<TransactionSettlement> findByEventId(Long eventId) {
+        return transactionSettlementRepository.findByEventId(eventId);
+    }
 }

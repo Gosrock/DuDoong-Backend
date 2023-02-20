@@ -12,9 +12,12 @@ public class EventSettlementAdaptor {
 
     private final EventSettlementRepository eventSettlementRepository;
 
-    public EventSettlement upsertByEventId(EventSettlement eventSettlement) {
+    public EventSettlement upsertByEventId(Long eventId) {
         return eventSettlementRepository
-                .findByEventId(eventSettlement.getEventId())
-                .orElseGet(() -> eventSettlementRepository.save(eventSettlement));
+                .findByEventId(eventId)
+                .orElseGet(
+                        () ->
+                                eventSettlementRepository.save(
+                                        EventSettlement.createWithEventId(eventId)));
     }
 }

@@ -9,9 +9,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.AttributeOverride;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -44,19 +46,32 @@ public class TransactionSettlement extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private TossPaymentMethod paymentMethod;
     // 결제한 금액
+
+    @AttributeOverride(name = "amount", column = @Column(name = "payment_amount"))
+    @Embedded
     private Money paymentAmount;
     // 수수료 상세정보
     @ElementCollection
     @CollectionTable(name = "tbl_transaction_settlement_fee_detail")
     private List<SettlementFeeVo> fees = new ArrayList<>();
     // 수수료 공급가액 ( 수수료 총액 )
+
+    @AttributeOverride(name = "amount", column = @Column(name = "fee_supply_amount"))
+    @Embedded
     private Money feeSupplyAmount;
     // 수수료 부가세
+    @AttributeOverride(name = "amount", column = @Column(name = "fee_vat"))
+    @Embedded
     private Money feeVat;
 
     // 할부 수수료 금액
+    @AttributeOverride(name = "amount", column = @Column(name = "interest_fee"))
+    @Embedded
     private Money interestFee;
     // 지급 금액 ( 정산 받는 금액 )
+
+    @AttributeOverride(name = "amount", column = @Column(name = "settlement_amount"))
+    @Embedded
     private Money settlementAmount;
 
     // 정산 지급일 ( 예정일도 가능 )

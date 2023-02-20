@@ -1,15 +1,17 @@
 package band.gosrock.job;
 
 
+import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
-import band.gosrock.infrastructure.outer.api.tossPayments.client.SettlementClient;
-import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.SettlementResponse;
+import band.gosrock.domain.domains.settlement.adaptor.EventSettlementAdaptor;
+import band.gosrock.domain.domains.settlement.adaptor.TransactionSettlementAdaptor;
+import band.gosrock.domain.domains.settlement.domain.EventSettlement;
+import band.gosrock.domain.domains.settlement.domain.TransactionSettlement;
 import band.gosrock.parameter.EventJobParameter;
-import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +41,9 @@ public class EventForClientSettlement {
     @Qualifier(BEAN_PREFIX + "eventJobParameter")
     private final EventJobParameter eventJobParameter;
 
-    private final SettlementClient settlementClient;
+    private final EventSettlementAdaptor eventSettlementAdaptor;
+
+    private final TransactionSettlementAdaptor transactionSettlementAdaptor;
 
     @Bean(BEAN_PREFIX + "eventJobParameter")
     @JobScope
@@ -60,35 +64,54 @@ public class EventForClientSettlement {
                 .tasklet(
                         (contribution, chunkContext) -> {
                             Event event = eventJobParameter.getEvent();
-                            List<Order> orders = orderAdaptor.findByEventId(event.getId());
+                            Long eventId = event.getId();
+                            List<Order> orders = orderAdaptor.findByEventId(eventId);
+                            // 오더중에 승인 주문중 두둥 총
+                            Money approveOrderTotalSales =
+                                    orders.stream()
+                                            .filter(
+                                                    order ->
+                                                            order.getOrderStatus()
+                                                                    == OrderStatus.APPROVED)
+                                            .map(Order::getTotalPaymentPrice)
+                                            .reduce(Money.ZERO, Money::plus);
+
                             // 오더중에 토스 페이먼츠 로결제를 진행한 목록을 추출.
-                            List<String> paymentOrderUuids =
+                            Money paymentOrderTotalSales =
                                     orders.stream()
                                             .filter(
                                                     order ->
                                                             order.getOrderStatus()
                                                                     == OrderStatus.CONFIRM)
-                                            .map(Order::getUuid)
-                                            .toList();
-
-                            // 시작 날짜. ( 이벤트 생성 시간 )
-                            LocalDate startAt = event.getCreatedAt().toLocalDate();
-                            // 끝나는 날짜.
-                            LocalDate endAt = event.getEndAt().toLocalDate();
-                            // 데이터가 실제로 들어가야만 있음.. 테스트 코드로 돌려야함.
-                            List<SettlementResponse> settlements =
-                                    settlementClient.execute(startAt, endAt, "soldDate", 1, 10000);
-
-                            // 이벤트와 관련된 정산 객체 집합.
-                            List<SettlementResponse> eventSettlementResponses =
-                                    settlements.stream()
+                                            .map(Order::getTotalPaymentPrice)
+                                            .reduce(Money.ZERO, Money::plus);
+                            // 오더중에 토스 페이먼츠로 결제를 진행한 목록중 쿠폰 할인 금액.
+                            Money paymentOrderDiscountAmount =
+                                    orders.stream()
                                             .filter(
-                                                    settlementResponse ->
-                                                            paymentOrderUuids.contains(
-                                                                    settlementResponse
-                                                                            .getOrderId()))
-                                            .toList();
+                                                    order ->
+                                                            order.getOrderStatus()
+                                                                    == OrderStatus.CONFIRM)
+                                            .map(Order::getTotalDiscountPrice)
+                                            .reduce(Money.ZERO, Money::plus);
 
+                            // 이벤트 트랜잭션 저장 목록 중에서 결제 대행 수수료 저장
+                            List<TransactionSettlement> transactionSettlements =
+                                    transactionSettlementAdaptor.findByEventId(eventId);
+                            Money paymentAmount =
+                                    transactionSettlements.stream()
+                                            .map(TransactionSettlement::getPaymentAmount)
+                                            .reduce(Money.ZERO, Money::plus);
+
+                            transactionSettlements.stream()
+                                    .map(TransactionSettlement::getSettlementAmount)
+                                    .reduce(Money.ZERO, Money::plus);
+                            // 중개 수수료 계산 공식? 그냥 정액으로..
+
+                            // 최종 정산 금액 계산.
+
+                            EventSettlement eventSettlement =
+                                    eventSettlementAdaptor.upsertByEventId(eventId);
                             return RepeatStatus.FINISHED;
                         })
                 .build();
