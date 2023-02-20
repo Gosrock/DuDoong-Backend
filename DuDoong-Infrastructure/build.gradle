@@ -21,7 +21,6 @@ dependencies {
     api 'com.googlecode.libphonenumber:libphonenumber:8.13.5'
     api 'org.springframework.boot:spring-boot-starter-web'
 
-    testImplementation "org.springframework.cloud:spring-boot-starter-web"
     testImplementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     testImplementation "org.springframework.cloud:spring-cloud-starter-contract-stub-runner:3.1.5"
     testImplementation "org.springframework.cloud:spring-cloud-contract-wiremock:3.1.5"
