@@ -33,8 +33,7 @@ public class RegisterUserEventAlimTalkHandler {
         Long userId = userRegisterEvent.getUserId();
         User user = userAdaptor.queryUser(userId);
         log.info(userId.toString() + "유저 등록");
-        AlimTalkUserInfo userInfo= user.toAlimTalkUserInfo();
-        sendRegisterAlimTalkService.execute(
-                userInfo.getUserName(), userInfo.getPhoneNum());
+        AlimTalkUserInfo userInfo = user.toAlimTalkUserInfo();
+        sendRegisterAlimTalkService.execute(userInfo.getUserName(), userInfo.getPhoneNum());
     }
 }
