@@ -67,7 +67,7 @@ public class EventSettlement {
                             LocalDate startAt = event.getCreatedAt().toLocalDate();
                             // 끝나는 날짜.
                             LocalDate endAt = event.getEndAt().toLocalDate();
-
+                            // 데이터가 실제로 들어가야만 있음.. 테스트 코드로 돌려야함.
                             List<SettlementResponse> settlementList =
                                     settlementClient.execute(startAt, endAt, "soldDate", 1, 10000);
                             return RepeatStatus.FINISHED;
