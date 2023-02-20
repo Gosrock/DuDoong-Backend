@@ -6,6 +6,8 @@ import band.gosrock.domain.common.events.user.UserRegisterEvent;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.Profile;
 import band.gosrock.domain.domains.user.domain.User;
+import band.gosrock.domain.domains.user.exception.EmptyPhoneNumException;
+import band.gosrock.infrastructure.config.AlilmTalk.dto.AlimTalkUserInfo;
 import com.google.i18n.phonenumbers.NumberParseException;
 import java.io.UnsupportedEncodingException;
 import lombok.RequiredArgsConstructor;
@@ -33,8 +35,8 @@ public class RegisterUserEventAlimTalkHandler {
         Long userId = userRegisterEvent.getUserId();
         User user = userAdaptor.queryUser(userId);
         log.info(userId.toString() + "유저 등록");
-        Profile profile = user.getProfile();
+        AlimTalkUserInfo userInfo= user.toAlimTalkUserInfo();
         sendRegisterAlimTalkService.execute(
-                profile.getName(), profile.getPhoneNumberVo().getNaverSmsToNumber());
+                userInfo.getUserName(), userInfo.getPhoneNum());
     }
 }
