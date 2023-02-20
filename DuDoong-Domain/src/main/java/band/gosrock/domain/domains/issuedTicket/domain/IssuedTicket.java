@@ -17,6 +17,7 @@ import band.gosrock.domain.domains.order.domain.OrderOptionAnswer;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.infrastructure.config.mail.dto.EmailIssuedTicketInfo;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -61,6 +62,8 @@ public class IssuedTicket extends BaseTimeEntity {
     발급 티켓 주문 id (단방향)
      */
     private String orderUuid;
+
+    private LocalDateTime enteredAt;
 
     /*
     발급 티켓의 주문 행 (단방향)
@@ -215,6 +218,7 @@ public class IssuedTicket extends BaseTimeEntity {
             throw IssuedTicketAlreadyEntranceException.EXCEPTION;
         }
         this.issuedTicketStatus = IssuedTicketStatus.ENTRANCE_COMPLETED;
+        this.enteredAt = LocalDateTime.now();
         Events.raise(EntranceIssuedTicketEvent.from(this));
     }
 
@@ -227,5 +231,9 @@ public class IssuedTicket extends BaseTimeEntity {
             throw CanNotCancelEntranceException.EXCEPTION;
         }
         this.issuedTicketStatus = IssuedTicketStatus.ENTRANCE_INCOMPLETE;
+    }
+
+    public Long getUserId() {
+        return this.userInfo.getUserId();
     }
 }

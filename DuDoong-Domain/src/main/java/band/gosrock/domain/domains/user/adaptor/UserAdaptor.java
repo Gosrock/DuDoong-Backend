@@ -8,6 +8,7 @@ import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.domain.domains.user.exception.UserNotFoundException;
 import band.gosrock.domain.domains.user.repository.UserRepository;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 
@@ -45,5 +46,9 @@ public class UserAdaptor {
 
     public Long countNormalUserCreatedBefore(LocalDateTime before) {
         return userRepository.countByAccountStateAndCreatedAtBefore(AccountState.NORMAL, before);
+    }
+
+    public List<User> findUserByIdIn(List<Long> userIds) {
+        return userRepository.findByIdIn(userIds);
     }
 }
