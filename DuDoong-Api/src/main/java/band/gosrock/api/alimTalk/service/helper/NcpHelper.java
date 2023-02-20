@@ -5,7 +5,6 @@ import band.gosrock.common.annotation.Helper;
 import band.gosrock.common.exception.DuDoongDynamicException;
 import band.gosrock.infrastructure.config.AlilmTalk.dto.MessageDto;
 import band.gosrock.infrastructure.outer.api.alimTalk.client.NcpClient;
-import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,9 +14,6 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.configurationprocessor.json.JSONArray;
-import org.springframework.boot.configurationprocessor.json.JSONException;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
 
 @Helper
 public class NcpHelper {
@@ -48,11 +44,7 @@ public class NcpHelper {
         // 헤더 생성
         // Map<String, String> headerMap = makeHeader(ncpAccessKey, signatureArray);
         // 바디 생성
-        // Map<String,Object> body= makeBodyMap(templateCode,to,content);
         MessageDto.AlimTalkBody body = makeBody(templateCode, to, content);
-        // byte[] body=makeBodyEntity(templateCode,to,content);
-        // api 전송
-        // "application/json; charset=UTF-8"
         ncpClient.sendAlimTalk(
                 serviceID,
                 "application/json; charset=UTF-8",
@@ -60,7 +52,6 @@ public class NcpHelper {
                 signatureArray[0],
                 signatureArray[1],
                 body);
-        // ncpClient.sendAlimTalk(serviceID, headerMap, body);
     }
 
     public MessageDto.AlimTalkBody makeBody(String templateCode, String to, String content) {
@@ -120,43 +111,5 @@ public class NcpHelper {
             throw new DuDoongDynamicException(0, "400", ex.getMessage());
         }
         return result;
-    }
-
-    public byte[] makeBodyEntity(String templateCode, String to, String content)
-            throws JSONException, UnsupportedEncodingException {
-        JSONObject msgObj = new JSONObject();
-        msgObj.put("plusFriendId", plusFriendId);
-        msgObj.put("templateCode", templateCode);
-
-        JSONObject messages = new JSONObject();
-        messages.put("to", to);
-        messages.put("content", content);
-
-        JSONArray messageArray = new JSONArray();
-        messageArray.put(messages);
-        msgObj.put("messages", messageArray);
-
-        // StringEntity body= new StringEntity(msgObj.toString(), "UTF-8");
-        return msgObj.toString().getBytes();
-    }
-
-    public Map<String, Object> makeBodyMap(String templateCode, String to, String content)
-            throws JSONException {
-        JSONObject msgObj = new JSONObject();
-        msgObj.put("plusFriendId", plusFriendId);
-        msgObj.put("templateCode", templateCode);
-
-        JSONObject messages = new JSONObject();
-        messages.put("to", to);
-        messages.put("content", content);
-
-        JSONArray messageArray = new JSONArray();
-        messageArray.put(messages);
-        msgObj.put("messages", messageArray);
-
-        Map<String, Object> bodyMap = new HashMap<>();
-        bodyMap.put("messages", msgObj);
-        // StringEntity body= new StringEntity(msgObj.toString(), "UTF-8");
-        return bodyMap;
     }
 }

@@ -36,13 +36,13 @@ public class DoneOrderEventAlimTalkHandler {
             phase = TransactionPhase.AFTER_COMMIT)
     public void handleDoneOrderEvent(DoneOrderEvent doneOrderEvent) throws NumberParseException {
         log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 파트너의 공연이면 알림톡 전송");
-        OrderAlimTalkDto orderAlimTalkDto =
-                orderAlimTalkInfoHelper.execute(doneOrderEvent.getOrderUuid());
         // 파트너인 호스트의 공연일 경우만 알림톡 전송
         Order order = orderAdaptor.findByOrderUuid(doneOrderEvent.getOrderUuid());
         Event event = eventAdaptor.findById(order.getEventId());
         Host host = hostAdaptor.findById(event.getHostId());
         if (host.isPartnerHost()) {
+            OrderAlimTalkDto orderAlimTalkDto =
+                    orderAlimTalkInfoHelper.execute(doneOrderEvent.getOrderUuid());
             sendDoneOrderAlimTalkService.execute(orderAlimTalkDto);
             log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 파트너의 공연 알림톡 전송 완료");
         }

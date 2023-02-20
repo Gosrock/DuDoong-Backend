@@ -20,35 +20,10 @@ public class NcpConfig {
         return new ColonInterceptor();
     }
 
-    public class ColonInterceptor implements RequestInterceptor {
+    public static class ColonInterceptor implements RequestInterceptor {
         @Override
         public void apply(RequestTemplate template) {
             template.uri(template.path().replaceAll("%3A", ":"));
         }
     }
-    //    @Bean
-    //    public Encoder feignFormEncoder () {
-    //        return new SpringFormEncoder(new JacksonEncoder());
-    //    }
-    //
-    //    @Bean
-    //    public FeignFormatterRegistrar localDateFeignFormatterRegistrar() {
-    //        return formatterRegistry -> {
-    //            DateTimeFormatterRegistrar registrar = new DateTimeFormatterRegistrar();
-    //            registrar.setUseIsoFormat(true);
-    //            registrar.registerFormatters(formatterRegistry);
-    //        };
-    //    }
-
-    //    @Configuration
-    //    class MultipartSupportConfig {
-    //
-    //        @Autowired
-    //        private ObjectFactory<HttpMessageConverters> messageConverters;
-    //
-    //        @Bean
-    //        public Encoder feignFormEncoder() {
-    //            return new SpringFormEncoder(new SpringEncoder(messageConverters));
-    //        }
-    //    }
 }

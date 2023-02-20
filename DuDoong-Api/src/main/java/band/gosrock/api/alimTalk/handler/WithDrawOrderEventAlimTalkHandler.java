@@ -35,14 +35,13 @@ public class WithDrawOrderEventAlimTalkHandler {
             phase = TransactionPhase.AFTER_COMMIT)
     public void handleWithDrawOrderEvent(WithDrawOrderEvent withDrawOrderEvent)
             throws NumberParseException {
-        OrderAlimTalkDto orderAlimTalkDto =
-                orderAlimTalkInfoHelper.execute(withDrawOrderEvent.getOrderUuid());
-
         // 파트너인 호스트의 공연일 경우만 알림톡 전송
         Order order = orderAdaptor.findByOrderUuid(withDrawOrderEvent.getOrderUuid());
         Event event = eventAdaptor.findById(order.getEventId());
         Host host = hostAdaptor.findById(event.getHostId());
         if (host.isPartnerHost()) {
+            OrderAlimTalkDto orderAlimTalkDto =
+                    orderAlimTalkInfoHelper.execute(withDrawOrderEvent.getOrderUuid());
             sendWithdrawOrderAlimTalkService.execute(orderAlimTalkDto);
         }
     }

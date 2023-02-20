@@ -2,7 +2,7 @@ package band.gosrock.api.alimTalk.service;
 
 
 import band.gosrock.api.alimTalk.dto.OrderAlimTalkDto;
-import band.gosrock.infrastructure.config.AlilmTalk.AlimTalk;
+import band.gosrock.api.alimTalk.service.helper.NcpHelper;
 import band.gosrock.infrastructure.config.AlilmTalk.dto.AlimTalkEventInfo;
 import band.gosrock.infrastructure.config.AlilmTalk.dto.AlimTalkUserInfo;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class SendDoneOrderAlimTalkService {
-    private final AlimTalk alimTalk;
+    private final NcpHelper ncpHelper;
 
     public void execute(OrderAlimTalkDto orderAlimTalkDto) {
         AlimTalkUserInfo userInfo = orderAlimTalkDto.getUserInfo();
@@ -29,6 +29,6 @@ public class SendDoneOrderAlimTalkService {
                         + "원활한 입장을 위해 QR코드를 미리 준비해주세요.\n"
                         + "마이페이지 -> 내 에매 내역 -> 예매 확인 -> QR 코드 보기에서 각 티켓의 QR코드를 확인할 수 있습니다.";
 
-        alimTalk.sendAlimTalk(userInfo.getPhoneNum(), "ticketdev", content);
+        ncpHelper.sendNcpAlimTalk(userInfo.getPhoneNum(), "ticketdev", content);
     }
 }
