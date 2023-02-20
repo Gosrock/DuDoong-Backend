@@ -12,8 +12,7 @@ import lombok.Getter;
 @EqualsAndHashCode
 public class RefundInfoVo {
 
-    @DateFormat
-    private final LocalDateTime endAt;
+    @DateFormat private final LocalDateTime endAt;
     private final Boolean availAble;
 
     @Builder

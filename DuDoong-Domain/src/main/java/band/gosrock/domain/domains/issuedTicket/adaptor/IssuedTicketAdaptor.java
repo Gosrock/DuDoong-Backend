@@ -12,8 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
 
 @Adaptor
 @RequiredArgsConstructor
@@ -50,10 +49,8 @@ public class IssuedTicketAdaptor {
         return issuedTicketRepository.existsByEventId(eventId);
     }
 
-    public Page<IssuedTicket> searchIssuedTicket(Long page, IssuedTicketCondition condition) {
-        PageRequest pageRequest =
-                PageRequest.of(Math.toIntExact(page), 10, Sort.by("id").descending());
-        return issuedTicketRepository.searchToPage(condition, pageRequest);
+    public Page<IssuedTicket> searchIssuedTicket(Pageable page, IssuedTicketCondition condition) {
+        return issuedTicketRepository.searchToPage(condition, page);
     }
 
     public void cancel(IssuedTicket issuedTicket) {
