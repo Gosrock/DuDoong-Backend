@@ -3,7 +3,6 @@ package band.gosrock.api.issuedTicket.mapper;
 
 import band.gosrock.api.common.page.PageResponse;
 import band.gosrock.api.issuedTicket.dto.response.IssuedTicketAdminTableElement;
-import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketDTO;
 import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketDetailResponse;
 import band.gosrock.common.annotation.Mapper;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
@@ -35,26 +34,32 @@ public class IssuedTicketMapper {
 
     @Transactional(readOnly = true)
     public PageResponse<IssuedTicketAdminTableElement> toIssuedTicketAdminTableElementPageResponse(
-        Pageable page, IssuedTicketCondition condition) {
+            Pageable page, IssuedTicketCondition condition) {
         Page<IssuedTicket> issuedTickets = issuedTicketAdaptor.searchIssuedTicket(page, condition);
-        List<String> orderUuids = issuedTickets.stream().map(IssuedTicket::getOrderUuid).distinct().toList();
-        List<Long> userIds = issuedTickets.stream().map(IssuedTicket::getUserId).distinct().toList();
+        List<String> orderUuids =
+                issuedTickets.stream().map(IssuedTicket::getOrderUuid).distinct().toList();
+        List<Long> userIds =
+                issuedTickets.stream().map(IssuedTicket::getUserId).distinct().toList();
         List<User> users = userAdaptor.findUserByIdIn(userIds);
         List<Order> orders = orderAdaptor.findByUuidIn(orderUuids);
-        Page<IssuedTicketAdminTableElement> issuedTicketAdminTableElements = issuedTickets.map(issuedTicket -> IssuedTicketAdminTableElement.of(issuedTicket, getUser(users, issuedTicket.getUserId()), getOrder(orders, issuedTicket.getOrderUuid())));
+        Page<IssuedTicketAdminTableElement> issuedTicketAdminTableElements =
+                issuedTickets.map(
+                        issuedTicket ->
+                                IssuedTicketAdminTableElement.of(
+                                        issuedTicket,
+                                        getUser(users, issuedTicket.getUserId()),
+                                        getOrder(orders, issuedTicket.getOrderUuid())));
         return PageResponse.of(issuedTicketAdminTableElements);
     }
 
     @NotNull
     private static Order getOrder(List<Order> orders, String orderUuid) {
-        return orders.stream().filter(o -> o.getUuid().equals(orderUuid))
-            .findFirst().orElseThrow();
+        return orders.stream().filter(o -> o.getUuid().equals(orderUuid)).findFirst().orElseThrow();
     }
 
     @NotNull
     private static User getUser(List<User> users, Long userId) {
-        return users.stream().filter(u -> u.getId().equals(userId)).findFirst()
-            .orElseThrow();
+        return users.stream().filter(u -> u.getId().equals(userId)).findFirst().orElseThrow();
     }
 
     @Transactional(readOnly = true)

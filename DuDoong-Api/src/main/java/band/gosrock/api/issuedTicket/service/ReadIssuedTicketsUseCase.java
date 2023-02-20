@@ -6,7 +6,6 @@ import static band.gosrock.api.common.aop.hostRole.HostQualification.MANAGER;
 import band.gosrock.api.common.aop.hostRole.HostRolesAllowed;
 import band.gosrock.api.common.page.PageResponse;
 import band.gosrock.api.issuedTicket.dto.response.IssuedTicketAdminTableElement;
-import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketDTO;
 import band.gosrock.api.issuedTicket.mapper.IssuedTicketMapper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.event.service.EventService;

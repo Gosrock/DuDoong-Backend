@@ -48,7 +48,7 @@ public class UserAdaptor {
         return userRepository.countByAccountStateAndCreatedAtBefore(AccountState.NORMAL, before);
     }
 
-    public List<User> findUserByIdIn(List<Long> userIds){
+    public List<User> findUserByIdIn(List<Long> userIds) {
         return userRepository.findByIdIn(userIds);
     }
 }

@@ -233,7 +233,7 @@ public class IssuedTicket extends BaseTimeEntity {
         this.issuedTicketStatus = IssuedTicketStatus.ENTRANCE_INCOMPLETE;
     }
 
-    public Long getUserId(){
+    public Long getUserId() {
         return this.userInfo.getUserId();
     }
 }

@@ -3,7 +3,6 @@ package band.gosrock.api.issuedTicket.controller;
 
 import band.gosrock.api.common.page.PageResponse;
 import band.gosrock.api.issuedTicket.dto.response.IssuedTicketAdminTableElement;
-import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketDTO;
 import band.gosrock.api.issuedTicket.service.EntranceIssuedTicketUseCase;
 import band.gosrock.api.issuedTicket.service.ReadIssuedTicketsUseCase;
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo;

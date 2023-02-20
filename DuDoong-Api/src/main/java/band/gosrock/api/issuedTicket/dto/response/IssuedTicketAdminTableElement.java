@@ -17,8 +17,7 @@ import lombok.Getter;
 @Builder
 public class IssuedTicketAdminTableElement {
 
-    @JsonUnwrapped
-    private final IssuedTicketInfoVo issuedTicketInfo;
+    @JsonUnwrapped private final IssuedTicketInfoVo issuedTicketInfo;
 
     private final UserInfoVo userInfo;
 
@@ -26,7 +25,8 @@ public class IssuedTicketAdminTableElement {
 
     private final List<IssuedTicketOptionAnswerVo> issuedTicketOptionAnswers;
 
-    public static IssuedTicketAdminTableElement of(IssuedTicket issuedTicket, User user, Order order) {
+    public static IssuedTicketAdminTableElement of(
+            IssuedTicket issuedTicket, User user, Order order) {
         return IssuedTicketAdminTableElement.builder()
                 .userInfo(user.toUserInfoVo())
                 .orderNo(order.getOrderNo())

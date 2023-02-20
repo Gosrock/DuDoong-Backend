@@ -15,7 +15,7 @@ spring:
     properties:
       hibernate:
         format_sql: ${FORMAT_SQL:true}
-        default_batch_fetch_size: ${JPA_BATCH_FETCH_SIZE:100}
+        default_batch_fetch_size: ${JPA_BATCH_FETCH_SIZE}
     hibernate:
       ddl-auto: update
     defer-datasource-initialization: true
