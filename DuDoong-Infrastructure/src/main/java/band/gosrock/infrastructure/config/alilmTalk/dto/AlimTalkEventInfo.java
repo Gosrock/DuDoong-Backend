@@ -1,4 +1,4 @@
-package band.gosrock.infrastructure.config.AlilmTalk.dto;
+package band.gosrock.infrastructure.config.alilmTalk.dto;
 
 
 import lombok.Getter;

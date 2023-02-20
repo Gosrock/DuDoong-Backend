@@ -1,7 +1,7 @@
 package band.gosrock.infrastructure.outer.api.alimTalk.client;
 
 
-import band.gosrock.infrastructure.config.AlilmTalk.dto.MessageDto;
+import band.gosrock.infrastructure.config.alilmTalk.dto.MessageDto;
 import band.gosrock.infrastructure.outer.api.alimTalk.config.NcpConfig;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PathVariable;

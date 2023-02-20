@@ -1,4 +1,4 @@
-package band.gosrock.infrastructure.config.AlilmTalk;
+package band.gosrock.infrastructure.config.alilmTalk;
 
 
 import band.gosrock.common.exception.DuDoongDynamicException;

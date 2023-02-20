@@ -11,7 +11,7 @@ import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
-import band.gosrock.infrastructure.config.AlilmTalk.dto.AlimTalkEventInfo;
+import band.gosrock.infrastructure.config.alilmTalk.dto.AlimTalkEventInfo;
 import com.google.i18n.phonenumbers.NumberParseException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;

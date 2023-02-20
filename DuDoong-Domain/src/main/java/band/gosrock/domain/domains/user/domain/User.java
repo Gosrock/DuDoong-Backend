@@ -9,7 +9,7 @@ import band.gosrock.domain.common.vo.UserProfileVo;
 import band.gosrock.domain.domains.user.exception.AlreadyDeletedUserException;
 import band.gosrock.domain.domains.user.exception.EmptyPhoneNumException;
 import band.gosrock.domain.domains.user.exception.ForbiddenUserException;
-import band.gosrock.infrastructure.config.AlilmTalk.dto.AlimTalkUserInfo;
+import band.gosrock.infrastructure.config.alilmTalk.dto.AlimTalkUserInfo;
 import band.gosrock.infrastructure.config.mail.dto.EmailUserInfo;
 import com.google.i18n.phonenumbers.NumberParseException;
 import java.time.LocalDateTime;

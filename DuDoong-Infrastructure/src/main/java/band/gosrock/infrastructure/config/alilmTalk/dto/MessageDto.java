@@ -1,4 +1,4 @@
-package band.gosrock.infrastructure.config.AlilmTalk.dto;
+package band.gosrock.infrastructure.config.alilmTalk.dto;
 
 
 import java.util.List;
@@ -23,11 +23,4 @@ public class MessageDto {
         private String to;
         private String content;
     }
-    //    public MessageDto(Object body) {
-    //        this.messages = body;
-    //    }
-    //
-    //    public static MessageDto from(Object messages) {
-    //        return new MessageDto(messages);
-    //    }
 }

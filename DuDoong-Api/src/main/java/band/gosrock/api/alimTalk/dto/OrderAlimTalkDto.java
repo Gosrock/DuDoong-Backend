@@ -1,8 +1,8 @@
 package band.gosrock.api.alimTalk.dto;
 
 
-import band.gosrock.infrastructure.config.AlilmTalk.dto.AlimTalkEventInfo;
-import band.gosrock.infrastructure.config.AlilmTalk.dto.AlimTalkUserInfo;
+import band.gosrock.infrastructure.config.alilmTalk.dto.AlimTalkEventInfo;
+import band.gosrock.infrastructure.config.alilmTalk.dto.AlimTalkUserInfo;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

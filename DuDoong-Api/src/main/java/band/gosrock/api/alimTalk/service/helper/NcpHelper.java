@@ -3,7 +3,7 @@ package band.gosrock.api.alimTalk.service.helper;
 
 import band.gosrock.common.annotation.Helper;
 import band.gosrock.common.exception.DuDoongDynamicException;
-import band.gosrock.infrastructure.config.AlilmTalk.dto.MessageDto;
+import band.gosrock.infrastructure.config.alilmTalk.dto.MessageDto;
 import band.gosrock.infrastructure.outer.api.alimTalk.client.NcpClient;
 import java.time.Instant;
 import java.util.ArrayList;
