@@ -3,6 +3,7 @@ package band.gosrock.infrastructure.outer.api.tossPayments.dto.response;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -42,4 +43,6 @@ public class SettlementResponse {
 
     private LocalDate soldDate;
     private LocalDate paidOutDate;
+
+    private List<SettlementFeeDto> fees;
 }

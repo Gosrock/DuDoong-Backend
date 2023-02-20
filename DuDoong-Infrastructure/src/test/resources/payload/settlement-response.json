@@ -1,0 +1,28 @@
+[
+  {
+    "mId": "tosspayments",
+    "paymentKey": "5zJ4xY7m0kODnyRpQWGrN2xqGlNvLrKwv1M9ENjbeoPaZdL6",
+    "transactionKey": "8B4F646A829571D870A3011A4E13D640",
+    "orderId": "a4CWyWY5m89PNh7xJwhk1",
+    "currency": "KRW",
+    "method": "카드",
+    "amount": 34000,
+    "interestFee": 0,
+    "fees": [
+      {
+        "type": "BASE",
+        "fee": "800"
+      },
+      {
+        "type": "INSTALLMENT",
+        "fee": "60"
+      }
+    ],
+    "supplyAmount": 782,
+    "vat": 78,
+    "payOutAmount": 33140,
+    "approvedAt": "2021-01-02T12:30:09+09:00",
+    "soldDate": "2021-01-02",
+    "paidOutDate": "2021-01-04"
+  }
+]
