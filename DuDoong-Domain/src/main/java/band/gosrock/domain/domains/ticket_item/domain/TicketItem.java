@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.ticket_item.domain;
 
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.common.vo.AccountInfoVo;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.event.domain.Event;
@@ -53,8 +54,7 @@ public class TicketItem extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private TicketType type;
 
-    // 계좌번호
-    private String accountNumber;
+    @Embedded private AccountInfoVo accountInfo;
 
     // 재고 공개 여부
     private Boolean isQuantityPublic;
@@ -77,7 +77,7 @@ public class TicketItem extends BaseTimeEntity {
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     private final List<ItemOptionGroup> itemOptionGroups = new ArrayList<>();
 
     @Builder
@@ -90,7 +90,9 @@ public class TicketItem extends BaseTimeEntity {
             Long supplyCount,
             Long purchaseLimit,
             TicketType type,
+            String bankName,
             String accountNumber,
+            String accountHolder,
             Boolean isQuantityPublic,
             Boolean isSellable,
             LocalDateTime saleStartAt,
@@ -104,7 +106,7 @@ public class TicketItem extends BaseTimeEntity {
         this.supplyCount = supplyCount;
         this.purchaseLimit = purchaseLimit;
         this.type = type;
-        this.accountNumber = accountNumber;
+        this.accountInfo = AccountInfoVo.valueOf(bankName, accountNumber, accountHolder);
         this.isQuantityPublic = isQuantityPublic;
         this.isSellable = isSellable;
         this.saleStartAt = saleStartAt;
@@ -125,6 +127,22 @@ public class TicketItem extends BaseTimeEntity {
         ItemOptionGroup itemOptionGroup =
                 ItemOptionGroup.builder().item(this).optionGroup(optionGroup).build();
         this.itemOptionGroups.add(itemOptionGroup);
+    }
+
+    public void removeItemOptionGroup(OptionGroup optionGroup) {
+        // 재고 감소된 티켓상품은 옵션적용 변경 불가
+        if (this.isQuantityReduced()) {
+            throw ForbiddenOptionChangeException.EXCEPTION;
+        }
+        ItemOptionGroup itemOptionGroup = this.findItemOptionGroup(optionGroup);
+        this.itemOptionGroups.remove(itemOptionGroup);
+    }
+
+    public ItemOptionGroup findItemOptionGroup(OptionGroup optionGroup) {
+        return this.itemOptionGroups.stream()
+                .filter(itemOptionGroup -> itemOptionGroup.getOptionGroup().equals(optionGroup))
+                .findAny()
+                .orElseThrow(() -> NotAppliedItemOptionGroupException.EXCEPTION);
     }
 
     public Boolean hasItemOptionGroup(Long optionGroupId) {
@@ -149,13 +167,15 @@ public class TicketItem extends BaseTimeEntity {
     }
 
     public void validateTicketPayType(Boolean isPartner) {
-        // 두둥티켓은 무조건 승인 + 계좌번호 필요
+        // 두둥티켓은 무조건 승인 + 계좌정보 필요
         if (this.payType.equals(TicketPayType.DUDOONG_TICKET)) {
             if (!this.type.equals(TicketType.APPROVAL)) {
                 throw InvalidTicketTypeException.EXCEPTION;
             }
-            if (StringUtils.isEmpty(this.accountNumber)) {
-                throw EmptyAccountNumberException.EXCEPTION;
+            if (StringUtils.isEmpty(this.accountInfo.getBankName())
+                    || StringUtils.isEmpty(this.accountInfo.getAccountNumber())
+                    || StringUtils.isEmpty(this.accountInfo.getAccountHolder())) {
+                throw EmptyAccountInfoException.EXCEPTION;
             }
         }
         // 유료티켓은 무조건 선착순 + 제휴 확인 + 1000원 이상

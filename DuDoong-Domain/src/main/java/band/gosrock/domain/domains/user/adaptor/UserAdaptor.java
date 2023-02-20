@@ -2,10 +2,12 @@ package band.gosrock.domain.domains.user.adaptor;
 
 
 import band.gosrock.common.annotation.Adaptor;
+import band.gosrock.domain.domains.user.domain.AccountState;
 import band.gosrock.domain.domains.user.domain.OauthInfo;
 import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.domain.domains.user.exception.UserNotFoundException;
 import band.gosrock.domain.domains.user.repository.UserRepository;
+import java.time.LocalDateTime;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 
@@ -37,7 +39,11 @@ public class UserAdaptor {
     /** 이메일로 유저를 가져오는 쿼리 */
     public User queryUserByEmail(String email) {
         return userRepository
-                .findByProfileEmail(email)
+                .findByProfileEmailAndAccountState(email, AccountState.NORMAL)
                 .orElseThrow(() -> UserNotFoundException.EXCEPTION);
+    }
+
+    public Long countNormalUserCreatedBefore(LocalDateTime before) {
+        return userRepository.countByAccountStateAndCreatedAtBefore(AccountState.NORMAL, before);
     }
 }

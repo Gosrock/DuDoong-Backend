@@ -4,4 +4,4 @@ include 'DuDoong-Infrastructure'
 include 'DuDoong-Api'
 include 'DuDoong-Common'
 include 'DuDoong-Socket'
-
+include 'DuDoong-Batch'

@@ -1,7 +1,8 @@
 package band.gosrock.api.issuedTicket.controller;
 
 
-import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketListResponse;
+import band.gosrock.api.common.page.PageResponse;
+import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketDTO;
 import band.gosrock.api.issuedTicket.service.EntranceIssuedTicketUseCase;
 import band.gosrock.api.issuedTicket.service.ReadIssuedTicketsUseCase;
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
@@ -9,6 +10,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.api.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,12 +32,12 @@ public class AdminIssuedTicketController {
 
     @Operation(summary = "[어드민 기능] 발급 티켓 리스트 가져오기 API 입니다.")
     @GetMapping
-    public RetrieveIssuedTicketListResponse getIssuedTickets(
+    public PageResponse<RetrieveIssuedTicketDTO> getIssuedTickets(
             @PathVariable Long eventId,
-            @RequestParam Long page,
+            @ParameterObject Pageable pageable,
             @RequestParam(required = false) String userName,
             @RequestParam(required = false) String phoneNumber) {
-        return readIssuedTicketsUseCase.execute(page, eventId, userName, phoneNumber);
+        return readIssuedTicketsUseCase.execute(pageable, eventId, userName, phoneNumber);
     }
 
     @Operation(summary = "[어드민 기능] 발급 티켓 입장 처리 API 입니다.")
