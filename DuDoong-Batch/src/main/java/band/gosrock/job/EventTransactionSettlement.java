@@ -3,12 +3,14 @@ package band.gosrock.job;
 
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
-import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
+import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
+import band.gosrock.domain.domains.order.domain.Order;
+import band.gosrock.domain.domains.order.domain.OrderStatus;
+import band.gosrock.domain.domains.settlement.adaptor.TransactionSettlementAdaptor;
+import band.gosrock.domain.domains.settlement.domain.TransactionSettlement;
 import band.gosrock.infrastructure.outer.api.tossPayments.client.SettlementClient;
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.SettlementResponse;
-import band.gosrock.parameter.DateJobParameter;
 import band.gosrock.parameter.EventJobParameter;
-import band.gosrock.slack.SlackSender;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -26,23 +28,22 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @RequiredArgsConstructor
 @Configuration
-public class EventSettlement {
+public class EventTransactionSettlement {
 
-    private static final String JOB_NAME = "이벤트정산";
+    private static final String JOB_NAME = "이벤트거래정산";
     private static final String BEAN_PREFIX = JOB_NAME + "_";
 
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
-    private final SlackSender slackSender;
     private final EventAdaptor eventAdaptor;
+    private final OrderAdaptor orderAdaptor;
 
     @Qualifier(BEAN_PREFIX + "eventJobParameter")
     private final EventJobParameter eventJobParameter;
 
-    private final UserAdaptor userAdaptor;
-    private final DateJobParameter dateJobParameter;
-
     private final SettlementClient settlementClient;
+
+    private final TransactionSettlementAdaptor transactionSettlementAdaptor;
 
     @Bean(BEAN_PREFIX + "eventJobParameter")
     @JobScope
@@ -63,13 +64,43 @@ public class EventSettlement {
                 .tasklet(
                         (contribution, chunkContext) -> {
                             Event event = eventJobParameter.getEvent();
+                            Long eventId = event.getId();
+
+                            List<Order> orders = orderAdaptor.findByEventId(eventId);
+                            // 오더중에 토스 페이먼츠 로결제를 진행한 목록을 추출.
+                            List<String> paymentOrderUuids =
+                                    orders.stream()
+                                            .filter(
+                                                    order ->
+                                                            order.getOrderStatus()
+                                                                    == OrderStatus.CONFIRM)
+                                            .map(Order::getUuid)
+                                            .toList();
+
                             // 시작 날짜. ( 이벤트 생성 시간 )
                             LocalDate startAt = event.getCreatedAt().toLocalDate();
                             // 끝나는 날짜.
                             LocalDate endAt = event.getEndAt().toLocalDate();
                             // 데이터가 실제로 들어가야만 있음.. 테스트 코드로 돌려야함.
-                            List<SettlementResponse> settlementList =
+                            List<SettlementResponse> settlements =
                                     settlementClient.execute(startAt, endAt, "soldDate", 1, 10000);
+
+                            // 이벤트와 관련된 정산 객체 집합.
+                            List<TransactionSettlement> transactionSettlements =
+                                    settlements.stream()
+                                            .filter(
+                                                    settlementResponse ->
+                                                            paymentOrderUuids.contains(
+                                                                    settlementResponse
+                                                                            .getOrderId()))
+                                            .map(
+                                                    settlementResponse ->
+                                                            TransactionSettlement.of(
+                                                                    eventId, settlementResponse))
+                                            .toList();
+                            // 정산 정보 저장.
+                            transactionSettlementAdaptor.saveAll(transactionSettlements);
+
                             return RepeatStatus.FINISHED;
                         })
                 .build();

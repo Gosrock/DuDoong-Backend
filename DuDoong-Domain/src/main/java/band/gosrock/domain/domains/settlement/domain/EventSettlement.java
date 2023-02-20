@@ -11,6 +11,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -51,4 +52,32 @@ public class EventSettlement extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     private EventSettlementStatus eventSettlementStatus;
+
+    @Builder
+    public EventSettlement(
+            Long eventId,
+            Money totalSalesAmount,
+            Money dudoongAmount,
+            Money paymentAmount,
+            Money couponAmount,
+            Money dudoongFee,
+            Money pgFee,
+            Money totalAmount,
+            String eventOrderExcelKey,
+            EventSettlementStatus eventSettlementStatus) {
+        this.eventId = eventId;
+        this.totalSalesAmount = totalSalesAmount;
+        this.dudoongAmount = dudoongAmount;
+        this.paymentAmount = paymentAmount;
+        this.couponAmount = couponAmount;
+        this.dudoongFee = dudoongFee;
+        this.pgFee = pgFee;
+        this.totalAmount = totalAmount;
+        this.eventOrderExcelKey = eventOrderExcelKey;
+        this.eventSettlementStatus = eventSettlementStatus;
+    }
+
+    public static EventSettlement createWithExcelKey(Long eventId, String key) {
+        return EventSettlement.builder().eventId(eventId).eventOrderExcelKey(key).build();
+    }
 }
