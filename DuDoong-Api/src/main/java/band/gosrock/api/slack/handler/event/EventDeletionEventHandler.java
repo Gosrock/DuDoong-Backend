@@ -3,8 +3,6 @@ package band.gosrock.api.slack.handler.event;
 
 import band.gosrock.domain.common.alarm.EventSlackAlarm;
 import band.gosrock.domain.common.events.event.EventDeletionEvent;
-import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
-import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.infrastructure.config.slack.SlackMessageProvider;
@@ -20,7 +18,6 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Slf4j
 public class EventDeletionEventHandler {
     private final HostAdaptor hostAdaptor;
-    private final EventAdaptor eventAdaptor;
     private final SlackMessageProvider slackMessageProvider;
 
     @Async
@@ -29,9 +26,8 @@ public class EventDeletionEventHandler {
             phase = TransactionPhase.AFTER_COMMIT)
     public void handle(EventDeletionEvent eventDeletionEvent) {
         final Host host = hostAdaptor.findById(eventDeletionEvent.getHostId());
-        final Event event = eventAdaptor.findById(eventDeletionEvent.getEventId());
-        final String message = EventSlackAlarm.deletionOf(event);
-
+        final String eventName = eventDeletionEvent.getEventName();
+        final String message = EventSlackAlarm.deletionOf(eventName);
         slackMessageProvider.sendMessage(host.getSlackUrl(), message);
     }
 }

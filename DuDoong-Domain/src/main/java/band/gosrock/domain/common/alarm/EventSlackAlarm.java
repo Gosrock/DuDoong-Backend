@@ -21,8 +21,8 @@ public class EventSlackAlarm {
         return nameOf(event) + "의 내용이 변경되었습니다. 확인해주세요!";
     }
 
-    public static String deletionOf(Event event) {
-        return nameOf(event) + "이(가) 삭제되었습니다.";
+    public static String deletionOf(String eventName) {
+        return "'" + eventName + "' 공연이 삭제되었습니다.";
     }
 
     private static String nameOf(Event event) {
