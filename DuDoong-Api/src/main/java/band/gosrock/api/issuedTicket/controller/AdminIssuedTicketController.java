@@ -2,7 +2,7 @@ package band.gosrock.api.issuedTicket.controller;
 
 
 import band.gosrock.api.common.page.PageResponse;
-import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketDTO;
+import band.gosrock.api.issuedTicket.dto.response.IssuedTicketAdminTableElement;
 import band.gosrock.api.issuedTicket.service.EntranceIssuedTicketUseCase;
 import band.gosrock.api.issuedTicket.service.ReadIssuedTicketsUseCase;
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
@@ -32,7 +32,7 @@ public class AdminIssuedTicketController {
 
     @Operation(summary = "[어드민 기능] 발급 티켓 리스트 가져오기 API 입니다.")
     @GetMapping
-    public PageResponse<RetrieveIssuedTicketDTO> getIssuedTickets(
+    public PageResponse<IssuedTicketAdminTableElement> getIssuedTickets(
             @PathVariable Long eventId,
             @ParameterObject Pageable pageable,
             @RequestParam(required = false) String userName,

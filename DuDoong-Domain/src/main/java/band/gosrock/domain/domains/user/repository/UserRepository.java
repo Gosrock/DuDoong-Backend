@@ -5,6 +5,7 @@ import band.gosrock.domain.domains.user.domain.AccountState;
 import band.gosrock.domain.domains.user.domain.OauthInfo;
 import band.gosrock.domain.domains.user.domain.User;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,4 +20,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByProfileEmailAndAccountState(String email, AccountState accountState);
 
     Long countByAccountStateAndCreatedAtBefore(AccountState accountState, LocalDateTime before);
+
+    List<User> findByIdIn(List<Long> userIds);
 }
