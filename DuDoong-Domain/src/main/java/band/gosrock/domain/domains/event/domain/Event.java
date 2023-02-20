@@ -6,6 +6,7 @@ import band.gosrock.common.exception.DuDoongCodeException;
 import band.gosrock.domain.common.aop.domainEvent.Events;
 import band.gosrock.domain.common.events.event.EventContentChangeEvent;
 import band.gosrock.domain.common.events.event.EventCreationEvent;
+import band.gosrock.domain.common.events.event.EventDeletionEvent;
 import band.gosrock.domain.common.events.event.EventStatusChangeEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.*;
@@ -16,9 +17,11 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Where;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Where(clause = "status != 'DELETED'")
 @Entity(name = "tbl_event")
 public class Event extends BaseTimeEntity {
     @Id
@@ -160,5 +163,11 @@ public class Event extends BaseTimeEntity {
         if (this.status == status) throw exception;
         this.status = status;
         Events.raise(EventStatusChangeEvent.of(this));
+    }
+
+    public void delete() {
+        if (this.status == DELETED) throw AlreadyDeletedStatusException.EXCEPTION;
+        this.status = DELETED;
+        Events.raise(EventDeletionEvent.of(this));
     }
 }

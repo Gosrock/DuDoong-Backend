@@ -60,11 +60,16 @@ public class EventService {
     }
 
     public Event updateEventStatus(Event event, EventStatus status) {
-        if (status == EventStatus.OPEN) {
-            throw UseOtherApiException.EXCEPTION; // open 은 다른 API 강제
-        } else if (status == EventStatus.CLOSED) event.close();
+        if (status == EventStatus.CLOSED) event.close();
         else if (status == EventStatus.CALCULATING) event.calculate();
         else if (status == EventStatus.PREPARING) event.prepare();
+        else throw UseOtherApiException.EXCEPTION; // open, delete 는 다른 API 강제
+        return eventRepository.save(event);
+    }
+
+    public Event deleteEvent(Event event) {
+        // todo :: 삭제 가능한지 확인
+        event.delete();
         return eventRepository.save(event);
     }
 }

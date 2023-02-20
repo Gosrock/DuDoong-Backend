@@ -27,6 +27,7 @@ public enum EventErrorCode implements BaseErrorCode {
     ALREADY_CALCULATING_STATUS(BAD_REQUEST, "Event_400_9", "이미 정산중인 이벤트입니다."),
     ALREADY_CLOSE_STATUS(BAD_REQUEST, "Event_400_10", "이미 닫은 이벤트입니다."),
     ALREADY_PREPARING_STATUS(BAD_REQUEST, "Event_400_11", "이미 준비중인 이벤트입니다."),
+    ALREADY_DELETED_STATUS(BAD_REQUEST, "Event_400_12", "이미 삭제된 이벤트입니다."),
 
     USE_OTHER_API(BAD_REQUEST, "Event_400_8", "잘못된 접근입니다.");
 
