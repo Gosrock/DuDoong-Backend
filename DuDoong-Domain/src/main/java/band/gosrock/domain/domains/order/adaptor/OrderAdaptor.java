@@ -40,6 +40,10 @@ public class OrderAdaptor {
                 .orElseThrow(() -> OrderNotFoundException.EXCEPTION);
     }
 
+    public List<Order> findByUuidIn(List<String> orderUuids) {
+        return orderRepository.findByUuidIn(orderUuids);
+    }
+
     public Optional<Order> findRecentOrderByUserId(Long userId) {
         return orderRepository.findRecentOrder(userId);
     }
