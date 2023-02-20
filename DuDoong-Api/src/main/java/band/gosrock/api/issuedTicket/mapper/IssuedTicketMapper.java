@@ -1,8 +1,9 @@
 package band.gosrock.api.issuedTicket.mapper;
 
 
+import band.gosrock.api.common.page.PageResponse;
+import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketDTO;
 import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketDetailResponse;
-import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketListResponse;
 import band.gosrock.common.annotation.Mapper;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
@@ -10,6 +11,8 @@ import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.dto.condition.IssuedTicketCondition;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 @Mapper
@@ -21,10 +24,10 @@ public class IssuedTicketMapper {
     private final EventAdaptor eventAdaptor;
 
     @Transactional(readOnly = true)
-    public RetrieveIssuedTicketListResponse toIssuedTicketPageResponse(
-            Long page, IssuedTicketCondition condition) {
-        return RetrieveIssuedTicketListResponse.of(
-                issuedTicketAdaptor.searchIssuedTicket(page, condition));
+    public PageResponse<RetrieveIssuedTicketDTO> toIssuedTicketPageResponse(
+            Pageable page, IssuedTicketCondition condition) {
+        Page<IssuedTicket> issuedTickets = issuedTicketAdaptor.searchIssuedTicket(page, condition);
+        return PageResponse.of(issuedTickets.map(RetrieveIssuedTicketDTO::of));
     }
 
     @Transactional(readOnly = true)
