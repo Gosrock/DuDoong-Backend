@@ -30,6 +30,10 @@ public class OrderAdaptor {
                 .orElseThrow(() -> OrderNotFoundException.EXCEPTION);
     }
 
+    public List<Order> findByEventId(Long eventId) {
+        return orderRepository.findByEventId(eventId);
+    }
+
     public Order findByOrderUuid(String uuid) {
         return orderRepository
                 .findByOrderUuid(uuid)

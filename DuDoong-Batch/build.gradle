@@ -16,6 +16,8 @@ dependencies {
     implementation project(':DuDoong-Common')
     implementation project(':DuDoong-Infrastructure')
     testImplementation('org.springframework.batch:spring-batch-test')
+    implementation 'org.apache.poi:poi:5.2.0'
+    implementation 'org.apache.poi:poi-ooxml:5.2.0'
 }
 
 test {
