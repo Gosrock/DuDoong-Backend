@@ -22,6 +22,6 @@ public class DeleteEventUseCase {
     @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID)
     public EventResponse execute(Long eventId) {
         final Event event = eventAdaptor.findById(eventId);
-        return EventResponse.of(eventService.deleteEvent(event));
+        return EventResponse.of(eventService.deleteEventSoft(event));
     }
 }

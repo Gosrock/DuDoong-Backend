@@ -165,7 +165,9 @@ public class Event extends BaseTimeEntity {
         Events.raise(EventStatusChangeEvent.of(this));
     }
 
-    public void delete() {
+    public void deleteSoft() {
+        // 오픈된 이벤트는 삭제 불가
+        if (this.status == OPEN) throw CannotDeleteByOpenEventException.EXCEPTION;
         if (this.status == DELETED) throw AlreadyDeletedStatusException.EXCEPTION;
         this.status = DELETED;
         Events.raise(EventDeletionEvent.of(this));

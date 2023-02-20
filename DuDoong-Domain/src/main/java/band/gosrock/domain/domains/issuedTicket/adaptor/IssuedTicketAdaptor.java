@@ -46,6 +46,10 @@ public class IssuedTicketAdaptor {
                 .orElseThrow(() -> IssuedTicketNotFoundException.EXCEPTION);
     }
 
+    public Boolean existsByEventId(Long eventId) {
+        return issuedTicketRepository.existsByEventId(eventId);
+    }
+
     public Page<IssuedTicket> searchIssuedTicket(Long page, IssuedTicketCondition condition) {
         PageRequest pageRequest =
                 PageRequest.of(Math.toIntExact(page), 10, Sort.by("id").descending());
