@@ -2,29 +2,15 @@ package band.gosrock.common.validator;
 
 
 import band.gosrock.common.annotation.Enum;
+import java.util.Arrays;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-import org.springframework.beans.BeanWrapperImpl;
 
 public class EnumValidator implements ConstraintValidator<Enum, java.lang.Enum> {
     @Override
     public boolean isValid(java.lang.Enum value, ConstraintValidatorContext context) {
-        boolean result = false;
-        try {
-            // 리플렉션을 이용한 Enum 클래스 가져오기
-            Class<?> reflectionEnumClass = new BeanWrapperImpl(value).getWrappedClass();
-            Object[] enumValues = reflectionEnumClass.getEnumConstants();
-            if (enumValues != null) {
-                for (Object enumValue : enumValues) {
-                    if (value == enumValue) {
-                        result = true;
-                        break;
-                    }
-                }
-            }
-            return result;
-        } catch (Exception e) {
-            return false;
-        }
+        if (value == null) return false; // null 값 허용 여부
+        Class<?> reflectionEnumClass = value.getDeclaringClass();
+        return Arrays.asList(reflectionEnumClass.getEnumConstants()).contains(value);
     }
 }
