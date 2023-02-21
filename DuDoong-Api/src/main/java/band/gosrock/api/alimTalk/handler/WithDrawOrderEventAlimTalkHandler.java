@@ -40,8 +40,7 @@ public class WithDrawOrderEventAlimTalkHandler {
         Event event = eventAdaptor.findById(order.getEventId());
         Host host = hostAdaptor.findById(event.getHostId());
         if (host.isPartnerHost()) {
-            OrderAlimTalkDto orderAlimTalkDto =
-                    orderAlimTalkInfoHelper.execute(withDrawOrderEvent.getOrderUuid());
+            OrderAlimTalkDto orderAlimTalkDto = orderAlimTalkInfoHelper.execute(order, event, host);
             sendWithdrawOrderAlimTalkService.execute(orderAlimTalkDto);
         }
     }

@@ -7,8 +7,6 @@ import feign.Response;
 import feign.codec.ErrorDecoder;
 
 public class NcpErrorDecoder implements ErrorDecoder {
-
-    // TODO: 에러코드 확인
     @Override
     public Exception decode(String methodKey, Response response) {
         if (response.status() >= 400) {

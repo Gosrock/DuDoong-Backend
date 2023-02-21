@@ -41,8 +41,7 @@ public class DoneOrderEventAlimTalkHandler {
         Event event = eventAdaptor.findById(order.getEventId());
         Host host = hostAdaptor.findById(event.getHostId());
         if (host.isPartnerHost()) {
-            OrderAlimTalkDto orderAlimTalkDto =
-                    orderAlimTalkInfoHelper.execute(doneOrderEvent.getOrderUuid());
+            OrderAlimTalkDto orderAlimTalkDto = orderAlimTalkInfoHelper.execute(order, event, host);
             sendDoneOrderAlimTalkService.execute(orderAlimTalkDto);
             log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 파트너의 공연 알림톡 전송 완료");
         }

@@ -4,6 +4,7 @@ package band.gosrock.api.alimTalk.service;
 import band.gosrock.api.alimTalk.dto.OrderAlimTalkDto;
 import band.gosrock.api.alimTalk.service.helper.NcpHelper;
 import band.gosrock.infrastructure.config.alilmTalk.dto.AlimTalkEventInfo;
+import band.gosrock.infrastructure.config.alilmTalk.dto.AlimTalkOrderInfo;
 import band.gosrock.infrastructure.config.alilmTalk.dto.AlimTalkUserInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ public class SendDoneOrderAlimTalkService {
     public void execute(OrderAlimTalkDto orderAlimTalkDto) {
         AlimTalkUserInfo userInfo = orderAlimTalkDto.getUserInfo();
         AlimTalkEventInfo eventInfo = orderAlimTalkDto.getEventInfo();
+        AlimTalkOrderInfo orderInfo = orderAlimTalkDto.getOrderInfo();
 
         String content =
                 "안녕하세요 "
@@ -26,9 +28,10 @@ public class SendDoneOrderAlimTalkService {
                         + eventInfo.getEventName()
                         + "티켓이 발급됐습니다.\n"
                         + "\n"
-                        + "원활한 입장을 위해 QR코드를 미리 준비해주세요.\n"
-                        + "마이페이지 -> 내 에매 내역 -> 예매 확인 -> QR 코드 보기에서 각 티켓의 QR코드를 확인할 수 있습니다.";
+                        + "원활한 입장을 위해 QR코드를 미리 준비해주세요.";
+        String headerContent = "주문 완료 안내";
 
-        ncpHelper.sendNcpAlimTalk(userInfo.getPhoneNum(), "ticketdev", content);
+        ncpHelper.sendItemNcpAlimTalk(
+                userInfo.getPhoneNum(), "doneorder", content, headerContent, orderInfo);
     }
 }

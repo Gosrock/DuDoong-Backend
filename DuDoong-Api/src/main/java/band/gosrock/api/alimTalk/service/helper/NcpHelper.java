@@ -3,9 +3,11 @@ package band.gosrock.api.alimTalk.service.helper;
 
 import band.gosrock.common.annotation.Helper;
 import band.gosrock.common.exception.DuDoongDynamicException;
+import band.gosrock.infrastructure.config.alilmTalk.dto.AlimTalkOrderInfo;
 import band.gosrock.infrastructure.config.alilmTalk.dto.MessageDto;
 import band.gosrock.infrastructure.outer.api.alimTalk.client.NcpClient;
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +38,12 @@ public class NcpHelper {
         this.plusFriendId = plusFriendId;
     }
 
-    public void sendNcpAlimTalk(String to, String templateCode, String content) {
+    public void sendItemButtonNcpAlimTalk(
+            String to,
+            String templateCode,
+            String content,
+            String headerContent,
+            AlimTalkOrderInfo orderInfo) {
         // signature 생성
         String alimTalkSignatureRequestUrl = "/alimtalk/v2/services/" + serviceID + "/messages";
         String[] signatureArray =
@@ -44,8 +51,27 @@ public class NcpHelper {
         // 헤더 생성
         // Map<String, String> headerMap = makeHeader(ncpAccessKey, signatureArray);
         // 바디 생성
-        MessageDto.AlimTalkBody body = makeBody(templateCode, to, content);
-        ncpClient.sendAlimTalk(
+        MessageDto.AlimTalkItemButtonBody alimTalkItemButtonBody =
+                makeItemButtonBody(templateCode, to, content, headerContent, orderInfo);
+        ncpClient.sendItemButtonAlimTalk(
+                serviceID,
+                "application/json; charset=UTF-8",
+                ncpAccessKey,
+                signatureArray[0],
+                signatureArray[1],
+                alimTalkItemButtonBody);
+    }
+
+    public void sendButtonNcpAlimTalk(String to, String templateCode, String content) {
+        // signature 생성
+        String alimTalkSignatureRequestUrl = "/alimtalk/v2/services/" + serviceID + "/messages";
+        String[] signatureArray =
+                makePostSignature(ncpAccessKey, ncpSecretKey, alimTalkSignatureRequestUrl);
+        // 헤더 생성
+        // Map<String, String> headerMap = makeHeader(ncpAccessKey, signatureArray);
+        // 바디 생성
+        MessageDto.AlimTalkButtonBody body = makeButtonBody(templateCode, to, content);
+        ncpClient.sendButtonAlimTalk(
                 serviceID,
                 "application/json; charset=UTF-8",
                 ncpAccessKey,
@@ -54,17 +80,142 @@ public class NcpHelper {
                 body);
     }
 
-    public MessageDto.AlimTalkBody makeBody(String templateCode, String to, String content) {
-        MessageDto.AlimTalkMessage alimTalkMessage =
-                MessageDto.AlimTalkMessage.builder().to(to).content(content).build();
-        List<MessageDto.AlimTalkMessage> alimTalkMessages = new ArrayList<>();
-        alimTalkMessages.add(alimTalkMessage);
+    public void sendItemNcpAlimTalk(
+            String to,
+            String templateCode,
+            String content,
+            String headerContent,
+            AlimTalkOrderInfo orderInfo) {
+        // signature 생성
+        String alimTalkSignatureRequestUrl = "/alimtalk/v2/services/" + serviceID + "/messages";
+        String[] signatureArray =
+                makePostSignature(ncpAccessKey, ncpSecretKey, alimTalkSignatureRequestUrl);
+        // 헤더 생성
+        // Map<String, String> headerMap = makeHeader(ncpAccessKey, signatureArray);
+        // 바디 생성
+        MessageDto.AlimTalkItemBody alimTalkItemBody =
+                makeItemBody(templateCode, to, content, headerContent, orderInfo);
+        ncpClient.sendItemAlimTalk(
+                serviceID,
+                "application/json; charset=UTF-8",
+                ncpAccessKey,
+                signatureArray[0],
+                signatureArray[1],
+                alimTalkItemBody);
+    }
 
-        return MessageDto.AlimTalkBody.builder()
+    public MessageDto.AlimTalkItemButtonBody makeItemButtonBody(
+            String templateCode,
+            String to,
+            String content,
+            String headerContent,
+            AlimTalkOrderInfo orderInfo) {
+        MessageDto.AlimTalkItem alimTalkItem = makeOrderItem(orderInfo);
+        List<MessageDto.AlimTalkButton> alimTalkButtons = makeSignUpButtons();
+
+        MessageDto.AlimTalkItemButtonMessage alimTalkItemButtonMessage =
+                MessageDto.AlimTalkItemButtonMessage.builder()
+                        .to(to)
+                        .content(content)
+                        .headerContent(headerContent)
+                        .item(alimTalkItem)
+                        .buttons(alimTalkButtons)
+                        .build();
+
+        List<MessageDto.AlimTalkItemButtonMessage> alimTalkItemButtonMessages = new ArrayList<>();
+        alimTalkItemButtonMessages.add(alimTalkItemButtonMessage);
+
+        return MessageDto.AlimTalkItemButtonBody.builder()
                 .plusFriendId(plusFriendId)
                 .templateCode(templateCode)
-                .messages(alimTalkMessages)
+                .messages(alimTalkItemButtonMessages)
                 .build();
+    }
+
+    public MessageDto.AlimTalkItemBody makeItemBody(
+            String templateCode,
+            String to,
+            String content,
+            String headerContent,
+            AlimTalkOrderInfo orderInfo) {
+        MessageDto.AlimTalkItem alimTalkItem = makeOrderItem(orderInfo);
+        MessageDto.AlimTalkItemMessage alimTalkMessage =
+                MessageDto.AlimTalkItemMessage.builder()
+                        .to(to)
+                        .content(content)
+                        .headerContent(headerContent)
+                        .item(alimTalkItem)
+                        .build();
+        List<MessageDto.AlimTalkItemMessage> alimTalkItemMessages = new ArrayList<>();
+        alimTalkItemMessages.add(alimTalkMessage);
+
+        return MessageDto.AlimTalkItemBody.builder()
+                .plusFriendId(plusFriendId)
+                .templateCode(templateCode)
+                .messages(alimTalkItemMessages)
+                .build();
+    }
+
+    public MessageDto.AlimTalkButtonBody makeButtonBody(
+            String templateCode, String to, String content) {
+        List<MessageDto.AlimTalkButton> alimTalkButtons = makeSignUpButtons();
+        MessageDto.AlimTalkButtonMessage alimTalkButtonMessage =
+                MessageDto.AlimTalkButtonMessage.builder()
+                        .to(to)
+                        .content(content)
+                        .buttons(alimTalkButtons)
+                        .build();
+
+        List<MessageDto.AlimTalkButtonMessage> alimTalkButtonMessages = new ArrayList<>();
+        alimTalkButtonMessages.add(alimTalkButtonMessage);
+
+        return MessageDto.AlimTalkButtonBody.builder()
+                .plusFriendId(plusFriendId)
+                .templateCode(templateCode)
+                .messages(alimTalkButtonMessages)
+                .build();
+    }
+
+    public MessageDto.AlimTalkItem makeOrderItem(AlimTalkOrderInfo orderInfo) {
+        List<MessageDto.Item> list = new ArrayList<>();
+        MessageDto.Item item1 =
+                MessageDto.Item.builder().title("주문명 :").description(orderInfo.getName()).build();
+        list.add(item1);
+        MessageDto.Item item2 =
+                MessageDto.Item.builder()
+                        .title("수량 :")
+                        .description(orderInfo.getQuantity().toString())
+                        .build();
+        list.add(item2);
+        MessageDto.Item item3 =
+                MessageDto.Item.builder().title("가격 :").description(orderInfo.getMoney()).build();
+        list.add(item3);
+        MessageDto.Item item4 =
+                MessageDto.Item.builder()
+                        .title("주문일시 :")
+                        .description(
+                                orderInfo
+                                        .getCreateAt()
+                                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
+                        .build();
+        list.add(item4);
+        return MessageDto.AlimTalkItem.builder().list(list).build();
+    }
+
+    public List<MessageDto.AlimTalkButton> makeSignUpButtons() {
+        MessageDto.AlimTalkButton alimTalkButton1 =
+                MessageDto.AlimTalkButton.builder().type("AC").name("채널 추가").build();
+        MessageDto.AlimTalkButton alimTalkButton2 =
+                MessageDto.AlimTalkButton.builder()
+                        .type("WL")
+                        .name("홈페이지 바로가기")
+                        .linkMobile("https://dudoong.com/")
+                        .linkPc("https://dudoong.com/")
+                        .build();
+        List<MessageDto.AlimTalkButton> alimTalkButtons = new ArrayList<>();
+        alimTalkButtons.add(alimTalkButton1);
+        alimTalkButtons.add(alimTalkButton2);
+        return alimTalkButtons;
     }
 
     public Map<String, String> makeHeader(String ncpAccessKey, String[] signatureArray) {
