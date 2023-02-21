@@ -19,7 +19,10 @@ public enum EventStatus {
     CALCULATING("CALCULATING", "정산중"),
 
     // 지난 공연
-    CLOSED("CLOSED", "지난공연");
+    CLOSED("CLOSED", "지난공연"),
+
+    // 삭제된 공연
+    DELETED("DELETED", "삭제된공연");
 
     private final String name;
     @JsonValue private final String value;

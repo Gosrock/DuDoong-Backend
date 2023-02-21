@@ -143,9 +143,6 @@ public class Order extends BaseTimeEntity {
     /** 승인 결제인 주문을 생성합니다. */
     public static Order createApproveOrder(
             Long userId, Cart cart, TicketItem item, OrderValidator orderValidator) {
-        if (cart.isNeedPaid()) {
-            throw InvalidOrderException.EXCEPTION;
-        }
         Order order =
                 Order.builder()
                         .userId(userId)
@@ -156,6 +153,7 @@ public class Order extends BaseTimeEntity {
                         .eventId(item.getEventId())
                         .build();
         orderValidator.validCanCreate(order);
+        order.calculatePaymentInfo();
         return order;
     }
 
@@ -311,7 +309,7 @@ public class Order extends BaseTimeEntity {
     /** 결제가 필요한 오더인지 반환합니다. */
     public Boolean isNeedPaid() {
         // 결제 여부는 총 결제금액으로 정함
-        return Money.ZERO.isLessThan(getTotalPaymentPrice());
+        return Money.ZERO.isLessThan(getTotalPaymentPrice()) && orderMethod.isPayment();
     }
 
     /** 결제 수단 정보를 가져옵니다. */

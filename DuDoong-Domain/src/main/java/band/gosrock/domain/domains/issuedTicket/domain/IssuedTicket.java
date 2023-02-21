@@ -11,10 +11,17 @@ import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelEntranceEx
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotEntranceException;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketAlreadyEntranceException;
+import band.gosrock.domain.domains.order.domain.Order;
+import band.gosrock.domain.domains.order.domain.OrderLineItem;
+import band.gosrock.domain.domains.order.domain.OrderOptionAnswer;
+import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.infrastructure.config.mail.dto.EmailIssuedTicketInfo;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.LongStream;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
@@ -56,6 +63,8 @@ public class IssuedTicket extends BaseTimeEntity {
      */
     private String orderUuid;
 
+    private LocalDateTime enteredAt;
+
     /*
     발급 티켓의 주문 행 (단방향)
      */
@@ -79,11 +88,6 @@ public class IssuedTicket extends BaseTimeEntity {
     private String uuid;
 
     /*
-    발급 티켓 가격
-     */
-    @Embedded private Money price;
-
-    /*
     발급 티켓 상태
      */
     @Enumerated(EnumType.STRING)
@@ -100,7 +104,6 @@ public class IssuedTicket extends BaseTimeEntity {
             String orderUuid,
             Long orderLineId,
             IssuedTicketItemInfoVo itemInfo,
-            Money price,
             IssuedTicketStatus issuedTicketStatus,
             List<IssuedTicketOptionAnswer> issuedTicketOptionAnswers) {
         this.eventId = eventId;
@@ -108,7 +111,6 @@ public class IssuedTicket extends BaseTimeEntity {
         this.itemInfo = itemInfo;
         this.orderUuid = orderUuid;
         this.orderLineId = orderLineId;
-        this.price = price;
         this.issuedTicketStatus = issuedTicketStatus;
         this.issuedTicketOptionAnswers.addAll(issuedTicketOptionAnswers);
     }
@@ -147,13 +149,47 @@ public class IssuedTicket extends BaseTimeEntity {
         return IssuedTicketInfoVo.from(this);
     }
 
+    public static IssuedTicket create(
+            TicketItem ticketItem,
+            User user,
+            Order order,
+            Long eventId,
+            OrderLineItem orderLineItem) {
+        List<OrderOptionAnswer> orderOptionAnswers = orderLineItem.getOrderOptionAnswers();
+        return IssuedTicket.builder()
+                .issuedTicketOptionAnswers(
+                        orderOptionAnswers.stream().map(IssuedTicketOptionAnswer::from).toList())
+                .itemInfo(IssuedTicketItemInfoVo.from(ticketItem))
+                .orderLineId(orderLineItem.getId())
+                .orderUuid(order.getUuid())
+                .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
+                .userInfo(IssuedTicketUserInfoVo.from(user))
+                .eventId(eventId)
+                .build();
+    }
+
+    public static List<IssuedTicket> orderLineToIssuedTicket(
+            TicketItem ticketItem,
+            User user,
+            Order order,
+            Long eventId,
+            OrderLineItem orderLineItem) {
+        Long quantity = orderLineItem.getQuantity();
+        return LongStream.range(0, quantity)
+                .mapToObj(i -> IssuedTicket.create(ticketItem, user, order, eventId, orderLineItem))
+                .toList();
+    }
+
+    /*
+    발급 티켓을 이메일 형식 Dto로 매핑하는 메서드
+     */
     public EmailIssuedTicketInfo toEmailIssuedTicketInfo() {
         return new EmailIssuedTicketInfo(
                 this.getIssuedTicketNo(),
                 this.getItemInfo().getTicketName(),
                 this.getCreatedAt(),
                 this.getIssuedTicketStatus().getKr(),
-                this.getPrice().toString());
+                this.getItemInfo().getPrice().toString());
     }
 
     /** ---------------------------- 상태 변환 관련 메서드 ---------------------------------- */
@@ -182,6 +218,7 @@ public class IssuedTicket extends BaseTimeEntity {
             throw IssuedTicketAlreadyEntranceException.EXCEPTION;
         }
         this.issuedTicketStatus = IssuedTicketStatus.ENTRANCE_COMPLETED;
+        this.enteredAt = LocalDateTime.now();
         Events.raise(EntranceIssuedTicketEvent.from(this));
     }
 
@@ -194,5 +231,9 @@ public class IssuedTicket extends BaseTimeEntity {
             throw CanNotCancelEntranceException.EXCEPTION;
         }
         this.issuedTicketStatus = IssuedTicketStatus.ENTRANCE_INCOMPLETE;
+    }
+
+    public Long getUserId() {
+        return this.userInfo.getUserId();
     }
 }

@@ -54,7 +54,6 @@ public class IssuedTicketTest {
                         .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
                         .orderLineId(1L)
                         .orderUuid(orderUuid)
-                        .price(W3000)
                         .build();
 
         canceledIssuedTicket =
@@ -67,7 +66,6 @@ public class IssuedTicketTest {
                         .issuedTicketStatus(IssuedTicketStatus.CANCELED)
                         .orderLineId(1L)
                         .orderUuid(orderUuid)
-                        .price(W3000)
                         .build();
 
         entranceIssuedTicket =
@@ -80,7 +78,6 @@ public class IssuedTicketTest {
                         .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_COMPLETED)
                         .orderLineId(1L)
                         .orderUuid(orderUuid)
-                        .price(W3000)
                         .build();
     }
 

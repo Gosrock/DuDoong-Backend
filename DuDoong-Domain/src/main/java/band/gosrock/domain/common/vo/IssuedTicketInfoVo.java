@@ -43,6 +43,8 @@ public class IssuedTicketInfoVo {
      */
     @DateFormat private final LocalDateTime createdAt;
 
+    @DateFormat private final LocalDateTime enteredAt;
+
     /*
     발급 티켓 상태
      */
@@ -61,11 +63,12 @@ public class IssuedTicketInfoVo {
                 .issuedTicketNo(issuedTicket.getIssuedTicketNo())
                 .uuid(issuedTicket.getUuid())
                 .ticketName(issuedTicket.getItemInfo().getTicketName())
-                .ticketPrice(issuedTicket.getPrice())
+                .ticketPrice(issuedTicket.getItemInfo().getPrice())
                 .createdAt(issuedTicket.getCreatedAt())
                 .issuedTicketStatus(issuedTicket.getIssuedTicketStatus())
                 .optionPrice(issuedTicket.sumOptionPrice())
                 .userInfo(issuedTicket.getUserInfo())
+                .enteredAt(issuedTicket.getEnteredAt())
                 .build();
     }
 }

@@ -22,9 +22,13 @@ class HostRoleHostTransaction implements HostRoleCallTransaction {
     @Transactional(readOnly = true)
     public Object proceed(Long hostId, HostQualification role, final ProceedingJoinPoint joinPoint)
             throws Throwable {
+        validRole(hostId, role);
+        return joinPoint.proceed();
+    }
+
+    private void validRole(Long hostId, HostQualification role) {
         Long currentUserId = userUtils.getCurrentUserId();
         Host host = hostAdaptor.findById(hostId);
         role.validQualification(currentUserId, host);
-        return joinPoint.proceed();
     }
 }

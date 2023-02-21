@@ -3,7 +3,6 @@ package band.gosrock.api.event.service;
 import static band.gosrock.api.common.aop.hostRole.FindHostFrom.EVENT_ID;
 import static band.gosrock.api.common.aop.hostRole.HostQualification.MANAGER;
 
-import band.gosrock.api.common.UserUtils;
 import band.gosrock.api.common.aop.hostRole.HostRolesAllowed;
 import band.gosrock.api.event.model.dto.request.UpdateEventBasicRequest;
 import band.gosrock.api.event.model.dto.response.EventResponse;
@@ -14,15 +13,12 @@ import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.domain.EventBasic;
 import band.gosrock.domain.domains.event.domain.EventPlace;
 import band.gosrock.domain.domains.event.service.EventService;
-import band.gosrock.domain.domains.host.service.HostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
 @UseCase
 @RequiredArgsConstructor
 public class UpdateEventBasicUseCase {
-    private final UserUtils userUtils;
-    private final HostService hostService;
     private final EventService eventService;
     private final EventAdaptor eventAdaptor;
     private final EventMapper eventMapper;

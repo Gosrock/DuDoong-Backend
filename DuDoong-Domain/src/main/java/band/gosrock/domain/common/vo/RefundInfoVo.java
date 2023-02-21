@@ -1,6 +1,7 @@
 package band.gosrock.domain.common.vo;
 
 
+import band.gosrock.common.annotation.DateFormat;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -11,7 +12,7 @@ import lombok.Getter;
 @EqualsAndHashCode
 public class RefundInfoVo {
 
-    private final LocalDateTime endAt;
+    @DateFormat private final LocalDateTime endAt;
     private final Boolean availAble;
 
     @Builder
