@@ -4,11 +4,12 @@ import static band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus
 import static band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus.ENTRANCE_INCOMPLETE;
 import static band.gosrock.domain.domains.issuedTicket.domain.QIssuedTicket.issuedTicket;
 import static band.gosrock.domain.domains.issuedTicket.domain.QIssuedTicketOptionAnswer.issuedTicketOptionAnswer;
+import static band.gosrock.domain.domains.user.domain.QUser.user;
 import static com.querydsl.core.types.ExpressionUtils.count;
 
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus;
-import band.gosrock.domain.domains.issuedTicket.dto.condition.IssuedTicketCondition;
+import band.gosrock.domain.domains.issuedTicket.repository.condition.FindEventIssuedTicketsCondition;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -25,14 +26,16 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Page<IssuedTicket> searchToPage(IssuedTicketCondition condition, Pageable pageable) {
+    public Page<IssuedTicket> searchToPage(
+            FindEventIssuedTicketsCondition condition, Pageable pageable) {
         List<IssuedTicket> issuedTickets =
                 queryFactory
                         .selectFrom(issuedTicket)
+                        .join(user)
+                        .on(user.id.eq(issuedTicket.userInfo.userId))
                         .where(
                                 eventIdEq(condition.getEventId()),
-                                userNameContains(condition.getUserName()),
-                                phoneNumberContains(condition.getPhoneNumber()),
+                                condition.getSearchStringFilter(),
                                 issuedTicketStatusNotCanceled())
                         .orderBy(issuedTicket.id.desc())
                         .offset(pageable.getOffset())
@@ -43,10 +46,11 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
                 queryFactory
                         .select(issuedTicket.count())
                         .from(issuedTicket)
+                        .join(user)
+                        .on(user.id.eq(issuedTicket.userInfo.userId))
                         .where(
                                 eventIdEq(condition.getEventId()),
-                                userNameContains(condition.getUserName()),
-                                phoneNumberContains(condition.getPhoneNumber()),
+                                condition.getSearchStringFilter(),
                                 issuedTicketStatusNotCanceled());
 
         return PageableExecutionUtils.getPage(issuedTickets, pageable, countQuery::fetchOne);

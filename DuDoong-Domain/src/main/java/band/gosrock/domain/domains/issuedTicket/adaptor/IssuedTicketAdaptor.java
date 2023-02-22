@@ -4,10 +4,10 @@ package band.gosrock.domain.domains.issuedTicket.adaptor;
 import band.gosrock.common.annotation.Adaptor;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTickets;
-import band.gosrock.domain.domains.issuedTicket.dto.condition.IssuedTicketCondition;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketNotFoundException;
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketUserNotMatchedException;
 import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepository;
+import band.gosrock.domain.domains.issuedTicket.repository.condition.FindEventIssuedTicketsCondition;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +49,8 @@ public class IssuedTicketAdaptor {
         return issuedTicketRepository.existsByEventId(eventId);
     }
 
-    public Page<IssuedTicket> searchIssuedTicket(Pageable page, IssuedTicketCondition condition) {
+    public Page<IssuedTicket> searchIssuedTicket(
+            Pageable page, FindEventIssuedTicketsCondition condition) {
         return issuedTicketRepository.searchToPage(condition, page);
     }
 
