@@ -9,9 +9,7 @@ import band.gosrock.infrastructure.outer.api.alimTalk.client.NcpClient;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.codec.binary.Base64;
@@ -38,6 +36,7 @@ public class NcpHelper {
         this.plusFriendId = plusFriendId;
     }
 
+    // 주문 취소 알림톡 (아이템리스트+버튼)
     public void sendItemButtonNcpAlimTalk(
             String to,
             String templateCode,
@@ -48,8 +47,6 @@ public class NcpHelper {
         String alimTalkSignatureRequestUrl = "/alimtalk/v2/services/" + serviceID + "/messages";
         String[] signatureArray =
                 makePostSignature(ncpAccessKey, ncpSecretKey, alimTalkSignatureRequestUrl);
-        // 헤더 생성
-        // Map<String, String> headerMap = makeHeader(ncpAccessKey, signatureArray);
         // 바디 생성
         MessageDto.AlimTalkItemButtonBody alimTalkItemButtonBody =
                 makeItemButtonBody(templateCode, to, content, headerContent, orderInfo);
@@ -62,13 +59,12 @@ public class NcpHelper {
                 alimTalkItemButtonBody);
     }
 
+    // 회원 가입 알림톡 (버튼)
     public void sendButtonNcpAlimTalk(String to, String templateCode, String content) {
         // signature 생성
         String alimTalkSignatureRequestUrl = "/alimtalk/v2/services/" + serviceID + "/messages";
         String[] signatureArray =
                 makePostSignature(ncpAccessKey, ncpSecretKey, alimTalkSignatureRequestUrl);
-        // 헤더 생성
-        // Map<String, String> headerMap = makeHeader(ncpAccessKey, signatureArray);
         // 바디 생성
         MessageDto.AlimTalkButtonBody body = makeButtonBody(templateCode, to, content);
         ncpClient.sendButtonAlimTalk(
@@ -80,6 +76,7 @@ public class NcpHelper {
                 body);
     }
 
+    // 주문 성공 알림톡 (아이템리스트)
     public void sendItemNcpAlimTalk(
             String to,
             String templateCode,
@@ -90,8 +87,6 @@ public class NcpHelper {
         String alimTalkSignatureRequestUrl = "/alimtalk/v2/services/" + serviceID + "/messages";
         String[] signatureArray =
                 makePostSignature(ncpAccessKey, ncpSecretKey, alimTalkSignatureRequestUrl);
-        // 헤더 생성
-        // Map<String, String> headerMap = makeHeader(ncpAccessKey, signatureArray);
         // 바디 생성
         MessageDto.AlimTalkItemBody alimTalkItemBody =
                 makeItemBody(templateCode, to, content, headerContent, orderInfo);
@@ -219,7 +214,7 @@ public class NcpHelper {
     }
 
     public List<MessageDto.AlimTalkButton> makeWithdrawButtons() {
-        MessageDto.AlimTalkButton alimTalkButton2 =
+        MessageDto.AlimTalkButton alimTalkButton =
                 MessageDto.AlimTalkButton.builder()
                         .type("WL")
                         .name("홈페이지 바로가기")
@@ -227,17 +222,8 @@ public class NcpHelper {
                         .linkPc("https://dudoong.com/")
                         .build();
         List<MessageDto.AlimTalkButton> alimTalkButtons = new ArrayList<>();
-        alimTalkButtons.add(alimTalkButton2);
+        alimTalkButtons.add(alimTalkButton);
         return alimTalkButtons;
-    }
-
-    public Map<String, String> makeHeader(String ncpAccessKey, String[] signatureArray) {
-        Map<String, String> headerMap = new HashMap<>();
-        headerMap.put("Content-Type", "application/json; charset=UTF-8");
-        headerMap.put("x-ncp-iam-access-key", ncpAccessKey);
-        headerMap.put("x-ncp-apigw-timestamp", signatureArray[0]);
-        headerMap.put("x-ncp-apigw-signature-v2", signatureArray[1]);
-        return headerMap;
     }
 
     public String[] makePostSignature(String accessKey, String secretKey, String url) {

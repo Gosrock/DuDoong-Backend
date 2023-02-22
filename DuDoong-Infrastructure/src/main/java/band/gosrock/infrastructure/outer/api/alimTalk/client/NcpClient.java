@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
         configuration = NcpConfig.class)
 public interface NcpClient {
 
+    // 주문 취소 알림톡 (아이템리스트+버튼)
     @PostMapping(
             path = "/alimtalk/v2/services/{serviceId}/messages",
             consumes = "application/json; charset=UTF-8")
@@ -26,6 +27,7 @@ public interface NcpClient {
             @RequestHeader("x-ncp-apigw-signature-v2") String signature,
             @RequestBody MessageDto.AlimTalkItemButtonBody alimTalkItemButtonBody);
 
+    // 주문 성공 알림톡 (아이템리스트)
     @PostMapping(
             path = "/alimtalk/v2/services/{serviceId}/messages",
             consumes = "application/json; charset=UTF-8")
@@ -37,6 +39,7 @@ public interface NcpClient {
             @RequestHeader("x-ncp-apigw-signature-v2") String signature,
             @RequestBody MessageDto.AlimTalkItemBody alimTalkItemBody);
 
+    // 회원 가입 알림톡 (버튼)
     @PostMapping(
             path = "/alimtalk/v2/services/{serviceId}/messages",
             consumes = "application/json; charset=UTF-8")
