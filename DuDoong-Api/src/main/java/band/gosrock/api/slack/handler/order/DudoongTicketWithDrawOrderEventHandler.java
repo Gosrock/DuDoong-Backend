@@ -2,7 +2,7 @@ package band.gosrock.api.slack.handler.order;
 
 
 import band.gosrock.domain.common.alarm.HostSlackAlarm;
-import band.gosrock.domain.common.events.order.DoneOrderEvent;
+import band.gosrock.domain.common.events.order.WithDrawOrderEvent;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
@@ -21,7 +21,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class OrderApprovedAlarmEventHandler {
+public class DudoongTicketWithDrawOrderEventHandler {
     private final EventAdaptor eventAdaptor;
 
     private final HostAdaptor hostAdaptor;
@@ -30,16 +30,16 @@ public class OrderApprovedAlarmEventHandler {
 
     @Async
     @TransactionalEventListener(
-            classes = DoneOrderEvent.class,
+            classes = WithDrawOrderEvent.class,
             phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(readOnly = true)
-    public void handle(DoneOrderEvent doneOrderEvent) {
-        if (doneOrderEvent.getOrderMethod().isPayment()) return;
-        log.info("승인 방식 완료 시에 알림 전송");
-        Order order = orderAdaptor.findByOrderUuid(doneOrderEvent.getOrderUuid());
+    public void handle(WithDrawOrderEvent withDrawOrderEvent) {
+        log.info("두둥 티켓 주문시에 전송되는 알림");
+        if (!withDrawOrderEvent.getIsDudoongTicketOrder()) return;
+        Order order = orderAdaptor.findByOrderUuid(withDrawOrderEvent.getOrderUuid());
         Event event = eventAdaptor.findById(order.getEventId());
         Host host = hostAdaptor.findById(event.getHostId());
-        String message = HostSlackAlarm.approvedOrder(event, order);
+        String message = HostSlackAlarm.refundRequestOrder(event, order);
         slackMessageProvider.sendMessage(host.getSlackUrl(), message);
     }
 }

@@ -7,7 +7,6 @@ import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.user.domain.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.jetbrains.annotations.NotNull;
 
 @Getter
 @AllArgsConstructor
@@ -47,16 +46,11 @@ public class HostSlackAlarm {
                 + getOrderNameAndAmount(order);
     }
 
-    public static String ApprovedOrder(Event event, Order order) {
+    public static String approvedOrder(Event event, Order order) {
         return getEventOrderTitle(event)
                 + getOrderNo(order)
                 + " 주문이 승인 되었습니다.\n"
                 + getOrderNameAndAmount(order);
-    }
-
-    @NotNull
-    private static String getOrderNo(Order order) {
-        return "주문번호 : " + order.getOrderNo();
     }
 
     public static String withDrawOrder(Event event, Order order) {
@@ -71,6 +65,10 @@ public class HostSlackAlarm {
                 + getOrderNo(order)
                 + " 두둥티켓 주문이 구매자에의해 환불 처리 되었습니다. 구매자에게 연락해서 환불을 진행해 주세요.\n"
                 + getOrderNameAndAmount(order);
+    }
+
+    private static String getOrderNo(Order order) {
+        return "주문번호 : " + order.getOrderNo();
     }
 
     private static String getOrderNameAndAmount(Order order) {

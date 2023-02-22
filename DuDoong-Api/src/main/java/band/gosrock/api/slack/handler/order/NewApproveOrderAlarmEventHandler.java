@@ -1,11 +1,15 @@
 package band.gosrock.api.slack.handler.order;
 
 
-import band.gosrock.api.email.service.HostUserInvitationEmailService;
-import band.gosrock.domain.common.events.host.HostUserInvitationEvent;
-import band.gosrock.domain.domains.host.domain.HostRole;
-import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
-import band.gosrock.domain.domains.user.domain.User;
+import band.gosrock.domain.common.alarm.HostSlackAlarm;
+import band.gosrock.domain.common.events.order.CreateOrderEvent;
+import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
+import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
+import band.gosrock.domain.domains.host.domain.Host;
+import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
+import band.gosrock.domain.domains.order.domain.Order;
+import band.gosrock.infrastructure.config.slack.SlackMessageProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -18,20 +22,25 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @RequiredArgsConstructor
 @Slf4j
 public class NewApproveOrderAlarmEventHandler {
-    private final UserAdaptor userAdaptor;
-    private final HostUserInvitationEmailService invitationEmailService;
+    private final EventAdaptor eventAdaptor;
+
+    private final HostAdaptor hostAdaptor;
+    private final OrderAdaptor orderAdaptor;
+    private final SlackMessageProvider slackMessageProvider;
 
     @Async
     @TransactionalEventListener(
-            classes = HostUserInvitationEvent.class,
+            classes = CreateOrderEvent.class,
             phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(readOnly = true)
-    public void handle(HostUserInvitationEvent hostUserInvitationEvent) {
-        final Long userId = hostUserInvitationEvent.getUserId();
-        final User user = userAdaptor.queryUser(userId);
-        final HostRole role = hostUserInvitationEvent.getRole();
-        final String hostName = hostUserInvitationEvent.getHostProfileVo().getName();
-
-        invitationEmailService.execute(user.toEmailUserInfo(), hostName, role);
+    public void handle(CreateOrderEvent createOrderEvent) {
+        // 승인 방식의 결제만 알림 발송 대상.
+        if (createOrderEvent.getOrderMethod().isPayment()) return;
+        log.info("승인 방식 요청 알림 전송");
+        Order order = orderAdaptor.findByOrderUuid(createOrderEvent.getOrderUuid());
+        Event event = eventAdaptor.findById(order.getEventId());
+        Host host = hostAdaptor.findById(event.getHostId());
+        String message = HostSlackAlarm.newApproveOrder(event, order);
+        slackMessageProvider.sendMessage(host.getSlackUrl(), message);
     }
 }

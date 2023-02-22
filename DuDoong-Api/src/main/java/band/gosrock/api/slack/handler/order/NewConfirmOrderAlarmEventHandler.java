@@ -9,7 +9,6 @@ import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
-import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.infrastructure.config.slack.SlackMessageProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +22,6 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @RequiredArgsConstructor
 @Slf4j
 public class NewConfirmOrderAlarmEventHandler {
-    private final UserAdaptor userAdaptor;
-
     private final EventAdaptor eventAdaptor;
 
     private final HostAdaptor hostAdaptor;
