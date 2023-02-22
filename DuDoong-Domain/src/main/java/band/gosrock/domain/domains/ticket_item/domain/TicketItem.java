@@ -1,9 +1,7 @@
 package band.gosrock.domain.domains.ticket_item.domain;
 
-
 import static band.gosrock.common.consts.DuDoongStatic.MINIMUM_PAYMENT_WON;
 
-import band.gosrock.common.consts.DuDoongStatic;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.AccountInfoVo;
 import band.gosrock.domain.common.vo.Money;
