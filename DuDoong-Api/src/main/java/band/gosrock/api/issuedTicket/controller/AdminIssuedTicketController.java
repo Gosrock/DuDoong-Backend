@@ -34,8 +34,9 @@ public class AdminIssuedTicketController {
     @GetMapping
     public PageResponse<IssuedTicketAdminTableElement> getIssuedTickets(
             @PathVariable Long eventId,
-            @ParameterObject Pageable pageable,
-            @ParameterObject AdminIssuedTicketTableQueryRequest queryRequest) {
+        @ParameterObject AdminIssuedTicketTableQueryRequest queryRequest,
+            @ParameterObject Pageable pageable
+            ) {
         return readIssuedTicketsUseCase.execute(pageable, eventId, queryRequest);
     }
 
