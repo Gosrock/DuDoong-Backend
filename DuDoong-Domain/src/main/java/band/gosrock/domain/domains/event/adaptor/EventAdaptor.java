@@ -43,6 +43,11 @@ public class EventAdaptor {
         return eventRepository.querySliceEventsByStatus(status, pageable);
     }
 
+    @Transactional(readOnly = true)
+    public Slice<Event> querySliceEventsByKeyword(String keyword, Pageable pageable) {
+        return eventRepository.querySliceEventsByKeyword(keyword, pageable);
+    }
+
     public List<Event> findAllByIds(List<Long> ids) {
         return eventRepository.findAllByIdIn(ids);
     }

@@ -11,4 +11,6 @@ public interface EventCustomRepository {
     Slice<Event> querySliceEventsByHostIdIn(List<Long> hostId, Pageable pageable);
 
     Slice<Event> querySliceEventsByStatus(EventStatus status, Pageable pageable);
+
+    Slice<Event> querySliceEventsByKeyword(String keyword, Pageable pageable);
 }

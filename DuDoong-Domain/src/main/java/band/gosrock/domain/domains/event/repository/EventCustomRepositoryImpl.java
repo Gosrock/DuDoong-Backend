@@ -1,5 +1,6 @@
 package band.gosrock.domain.domains.event.repository;
 
+import static band.gosrock.domain.domains.event.domain.EventStatus.OPEN;
 import static band.gosrock.domain.domains.event.domain.QEvent.event;
 
 import band.gosrock.domain.common.util.SliceUtil;
@@ -35,6 +36,23 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
                 queryFactory
                         .selectFrom(event)
                         .where(event.status.eq(status))
+                        .orderBy(event.id.desc())
+                        .offset(pageable.getOffset())
+                        .limit(pageable.getPageSize() + 1)
+                        .fetch();
+        return SliceUtil.valueOf(events, pageable);
+    }
+
+    @Override
+    public Slice<Event> querySliceEventsByKeyword(String keyword, Pageable pageable) {
+        List<Event> events =
+                queryFactory
+                        .selectFrom(event)
+                        .where(
+                                event.eventBasic
+                                        .name
+                                        .containsIgnoreCase(keyword)
+                                        .and(event.status.eq(OPEN)))
                         .orderBy(event.id.desc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize() + 1)

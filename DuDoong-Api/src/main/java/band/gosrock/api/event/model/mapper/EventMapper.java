@@ -92,6 +92,11 @@ public class EventMapper {
         return events.map(EventResponse::of);
     }
 
+    public Slice<EventResponse> toEventResponseSliceByKeyword(String keyword, Pageable pageable) {
+        Slice<Event> events = eventAdaptor.querySliceEventsByKeyword(keyword, pageable);
+        return events.map(EventResponse::of);
+    }
+
     private EventProfileResponse toEventProfileResponse(List<Host> hostList, Event event) {
         for (Host host : hostList) {
             if (host.getId().equals(event.getHostId())) return EventProfileResponse.of(host, event);
