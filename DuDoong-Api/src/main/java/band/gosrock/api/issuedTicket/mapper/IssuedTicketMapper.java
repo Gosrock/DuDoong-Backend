@@ -9,7 +9,7 @@ import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
-import band.gosrock.domain.domains.issuedTicket.dto.condition.IssuedTicketCondition;
+import band.gosrock.domain.domains.issuedTicket.repository.condition.FindEventIssuedTicketsCondition;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
@@ -34,7 +34,7 @@ public class IssuedTicketMapper {
 
     @Transactional(readOnly = true)
     public PageResponse<IssuedTicketAdminTableElement> toIssuedTicketAdminTableElementPageResponse(
-            Pageable page, IssuedTicketCondition condition) {
+            Pageable page, FindEventIssuedTicketsCondition condition) {
         Page<IssuedTicket> issuedTickets = issuedTicketAdaptor.searchIssuedTicket(page, condition);
         List<String> orderUuids =
                 issuedTickets.stream().map(IssuedTicket::getOrderUuid).distinct().toList();
