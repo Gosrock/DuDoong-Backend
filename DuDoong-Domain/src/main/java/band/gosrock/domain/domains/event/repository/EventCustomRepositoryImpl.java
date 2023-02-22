@@ -46,6 +46,7 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
 
     @Override
     public Slice<Event> querySliceEventsByKeyword(String keyword, Pageable pageable) {
+        if (keyword == null) keyword = "";
         List<Event> events =
                 queryFactory
                         .selectFrom(event)
@@ -66,6 +67,6 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
     }
 
     private BooleanExpression nameContains(String keyword) {
-        return event.eventBasic.name.containsIgnoreCase(keyword);
+        return event.eventBasic.name.containsIgnoreCase(keyword != null ? keyword : "");
     }
 }
