@@ -48,6 +48,7 @@ public class EventController {
     }
 
     @Operation(summary = "이벤트 이름을 키워드로 검색하여 최신순으로 가져옵니다.")
+    @DisableSwaggerSecurity
     @GetMapping("/search")
     public SliceResponse<EventResponse> getAllOpenEventByUser(
             @RequestParam(required = false) String keyword,
