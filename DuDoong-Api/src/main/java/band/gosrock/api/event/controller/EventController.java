@@ -30,8 +30,10 @@ import org.springframework.web.bind.annotation.*;
 public class EventController {
 
     private final ReadUserEventProfilesUseCase readUserHostEventListUseCase;
+    private final ReadOpenEventsUseCase readOpenEventsUseCase;
     private final ReadEventDetailUseCase readEventDetailUseCase;
     private final ReadEventChecklistUseCase readEventChecklistUseCase;
+    private final SearchEventsUseCase searchEventsUseCase;
     private final CreateEventUseCase createEventUseCase;
     private final UpdateEventBasicUseCase updateEventBasicUseCase;
     private final UpdateEventDetailUseCase updateEventDetailUseCase;
@@ -44,6 +46,21 @@ public class EventController {
     public SliceResponse<EventProfileResponse> getAllEventByUser(
             @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
         return readUserHostEventListUseCase.execute(pageable);
+    }
+
+    @Operation(summary = "오픈된 이벤트 리스트를 최신순으로 가져옵니다.")
+    @GetMapping("/list")
+    public SliceResponse<EventResponse> getAllOpenEventByUser(
+            @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
+        return readOpenEventsUseCase.execute(pageable);
+    }
+
+    @Operation(summary = "이벤트 이름을 키워드로 검색하여 최신순으로 가져옵니다.")
+    @GetMapping("/search")
+    public SliceResponse<EventResponse> getAllOpenEventByUser(
+            @RequestParam String keyword,
+            @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
+        return searchEventsUseCase.execute(keyword, pageable);
     }
 
     @Operation(summary = "공연 기본 정보를 등록하여, 새로운 이벤트(공연)를 생성합니다")
