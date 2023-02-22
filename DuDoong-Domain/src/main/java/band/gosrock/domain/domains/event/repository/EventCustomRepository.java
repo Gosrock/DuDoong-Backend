@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 
 public interface EventCustomRepository {
-    Slice<Event> querySliceEventsByHostIdIn(List<Long> hostId, Pageable pageable);
+    Slice<Event> querySliceEventsByHostIdIn(List<Long> hostIds, Pageable pageable);
 
     Slice<Event> querySliceEventsByStatus(EventStatus status, Pageable pageable);
 
