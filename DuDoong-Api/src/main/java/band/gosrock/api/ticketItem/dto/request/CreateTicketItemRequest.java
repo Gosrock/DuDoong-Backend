@@ -40,7 +40,7 @@ public class CreateTicketItemRequest {
     @Schema(nullable = true, example = "김원진")
     private String accountHolder;
 
-    @Positive
+    @NotNull
     @Schema(defaultValue = "0", nullable = false, example = "4000")
     private Long price;
 
