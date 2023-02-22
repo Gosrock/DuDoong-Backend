@@ -19,7 +19,7 @@ import org.springframework.util.CollectionUtils;
 @Slf4j
 public class SlackHelper {
     private final Environment env;
-    private final List<String> sendAlarmProfiles = List.of("staging", "prod", "dev");
+    private final List<String> sendAlarmProfiles = List.of("staging", "prod");
 
     private final MethodsClient methodsClient;
 

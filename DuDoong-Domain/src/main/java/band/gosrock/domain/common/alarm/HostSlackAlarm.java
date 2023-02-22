@@ -60,10 +60,17 @@ public class HostSlackAlarm {
                 + getOrderNameAndAmount(order);
     }
 
-    public static String refundRequestOrder(Event event, Order order) {
+    public static String dudoongOrderRefund(Event event, Order order) {
         return getEventOrderTitle(event)
                 + getOrderNo(order)
                 + " 두둥티켓 주문이 구매자에의해 환불 처리 되었습니다. 구매자에게 연락해서 환불을 진행해 주세요.\n"
+                + getOrderNameAndAmount(order);
+    }
+
+    public static String dudoongOrderCancel(Event event, Order order) {
+        return getEventOrderTitle(event)
+                + getOrderNo(order)
+                + " 두둥티켓 주문이 관리자에의해 환불 처리 되었습니다. 구매자에게 연락해서 환불을 진행해 주세요.\n"
                 + getOrderNameAndAmount(order);
     }
 

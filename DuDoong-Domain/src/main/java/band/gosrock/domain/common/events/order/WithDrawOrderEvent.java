@@ -21,6 +21,7 @@ public class WithDrawOrderEvent extends DomainEvent {
     private final OrderStatus orderStatus;
 
     private final Boolean isDudoongTicketOrder;
+    private final Boolean isRefund;
 
     @Nullable private final String paymentKey;
     private final Long itemId;
@@ -39,6 +40,7 @@ public class WithDrawOrderEvent extends DomainEvent {
                 .isUsingCoupon(order.hasCoupon())
                 .issuedCouponId(order.getOrderCouponVo().getCouponId())
                 .isDudoongTicketOrder(order.isDudoongTicketOrder())
+                .isRefund(order.getOrderStatus() == OrderStatus.REFUND)
                 .build();
     }
 }

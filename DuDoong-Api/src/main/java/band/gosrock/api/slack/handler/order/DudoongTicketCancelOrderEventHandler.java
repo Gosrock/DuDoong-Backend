@@ -21,7 +21,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class DudoongTicketWithDrawOrderEventHandler {
+public class DudoongTicketCancelOrderEventHandler {
     private final EventAdaptor eventAdaptor;
 
     private final HostAdaptor hostAdaptor;
@@ -34,12 +34,13 @@ public class DudoongTicketWithDrawOrderEventHandler {
             phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(readOnly = true)
     public void handle(WithDrawOrderEvent withDrawOrderEvent) {
-        log.info("두둥 티켓 주문시에 전송되는 알림");
+        log.info("두둥 티켓 취소 전송되는 알림");
         if (!withDrawOrderEvent.getIsDudoongTicketOrder()) return;
+        if (withDrawOrderEvent.getIsRefund()) return;
         Order order = orderAdaptor.findByOrderUuid(withDrawOrderEvent.getOrderUuid());
         Event event = eventAdaptor.findById(order.getEventId());
         Host host = hostAdaptor.findById(event.getHostId());
-        String message = HostSlackAlarm.refundRequestOrder(event, order);
+        String message = HostSlackAlarm.dudoongOrderCancel(event, order);
         slackMessageProvider.sendMessage(host.getSlackUrl(), message);
     }
 }
