@@ -2,6 +2,7 @@ package band.gosrock.api.issuedTicket.controller;
 
 
 import band.gosrock.api.common.page.PageResponse;
+import band.gosrock.api.issuedTicket.dto.request.AdminIssuedTicketTableQueryRequest;
 import band.gosrock.api.issuedTicket.dto.response.IssuedTicketAdminTableElement;
 import band.gosrock.api.issuedTicket.service.EntranceIssuedTicketUseCase;
 import band.gosrock.api.issuedTicket.service.ReadIssuedTicketsUseCase;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @SecurityRequirement(name = "access-token")
@@ -34,10 +34,9 @@ public class AdminIssuedTicketController {
     @GetMapping
     public PageResponse<IssuedTicketAdminTableElement> getIssuedTickets(
             @PathVariable Long eventId,
-            @ParameterObject Pageable pageable,
-            @RequestParam(required = false) String userName,
-            @RequestParam(required = false) String phoneNumber) {
-        return readIssuedTicketsUseCase.execute(pageable, eventId, userName, phoneNumber);
+            @ParameterObject AdminIssuedTicketTableQueryRequest queryRequest,
+            @ParameterObject Pageable pageable) {
+        return readIssuedTicketsUseCase.execute(pageable, eventId, queryRequest);
     }
 
     @Operation(summary = "[어드민 기능] 발급 티켓 입장 처리 API 입니다.")
