@@ -111,7 +111,7 @@ public class NcpHelper {
             String headerContent,
             AlimTalkOrderInfo orderInfo) {
         MessageDto.AlimTalkItem alimTalkItem = makeOrderItem(orderInfo);
-        List<MessageDto.AlimTalkButton> alimTalkButtons = makeSignUpButtons();
+        List<MessageDto.AlimTalkButton> alimTalkButtons = makeWithdrawButtons();
 
         MessageDto.AlimTalkItemButtonMessage alimTalkItemButtonMessage =
                 MessageDto.AlimTalkItemButtonMessage.builder()
@@ -214,6 +214,19 @@ public class NcpHelper {
                         .build();
         List<MessageDto.AlimTalkButton> alimTalkButtons = new ArrayList<>();
         alimTalkButtons.add(alimTalkButton1);
+        alimTalkButtons.add(alimTalkButton2);
+        return alimTalkButtons;
+    }
+
+    public List<MessageDto.AlimTalkButton> makeWithdrawButtons() {
+        MessageDto.AlimTalkButton alimTalkButton2 =
+                MessageDto.AlimTalkButton.builder()
+                        .type("WL")
+                        .name("홈페이지 바로가기")
+                        .linkMobile("https://dudoong.com/")
+                        .linkPc("https://dudoong.com/")
+                        .build();
+        List<MessageDto.AlimTalkButton> alimTalkButtons = new ArrayList<>();
         alimTalkButtons.add(alimTalkButton2);
         return alimTalkButtons;
     }

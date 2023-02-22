@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -34,6 +35,7 @@ public class DoneOrderEventAlimTalkHandler {
     @TransactionalEventListener(
             classes = DoneOrderEvent.class,
             phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(readOnly = true)
     public void handleDoneOrderEvent(DoneOrderEvent doneOrderEvent) throws NumberParseException {
         log.info(doneOrderEvent.getOrderUuid() + "주문 상태 완료, 파트너의 공연이면 알림톡 전송");
         // 파트너인 호스트의 공연일 경우만 알림톡 전송
