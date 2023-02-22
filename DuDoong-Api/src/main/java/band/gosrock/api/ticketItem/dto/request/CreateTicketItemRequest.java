@@ -7,7 +7,6 @@ import band.gosrock.domain.domains.ticket_item.domain.TicketType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
@@ -40,7 +39,7 @@ public class CreateTicketItemRequest {
     @Schema(nullable = true, example = "김원진")
     private String accountHolder;
 
-    @Positive
+    @NotNull
     @Schema(defaultValue = "0", nullable = false, example = "4000")
     private Long price;
 
