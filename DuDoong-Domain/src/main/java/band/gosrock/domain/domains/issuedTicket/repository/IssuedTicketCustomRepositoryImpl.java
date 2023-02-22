@@ -4,7 +4,6 @@ import static band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus
 import static band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus.ENTRANCE_INCOMPLETE;
 import static band.gosrock.domain.domains.issuedTicket.domain.QIssuedTicket.issuedTicket;
 import static band.gosrock.domain.domains.issuedTicket.domain.QIssuedTicketOptionAnswer.issuedTicketOptionAnswer;
-import static band.gosrock.domain.domains.order.domain.QOrder.order;
 import static band.gosrock.domain.domains.user.domain.QUser.user;
 import static com.querydsl.core.types.ExpressionUtils.count;
 
@@ -47,6 +46,8 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
                 queryFactory
                         .select(issuedTicket.count())
                         .from(issuedTicket)
+                        .join(user)
+                        .on(user.id.eq(issuedTicket.userInfo.userId))
                         .where(
                                 eventIdEq(condition.getEventId()),
                                 condition.getSearchStringFilter(),
