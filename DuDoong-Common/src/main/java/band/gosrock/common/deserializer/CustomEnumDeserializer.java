@@ -22,13 +22,12 @@ public class CustomEnumDeserializer extends StdDeserializer<Enum<?>>
     @SuppressWarnings("unchecked")
     @Override
     public Enum<?> deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
-        JsonNode jsonNode = jp.getCodec().readTree(jp);
-        JsonNode nameNode = jsonNode.get("name");
-        if (nameNode == null) return null;
-        String text = jsonNode.asText();
-        Class<? extends Enum> enumType = (Class<? extends Enum>) this._valueClass;
+        final JsonNode jsonNode = jp.getCodec().readTree(jp);
+        final String text = jsonNode.asText();
+        final Class<? extends Enum> enumType = (Class<? extends Enum>) this._valueClass;
+        if (enumType == null) return null;
         return Arrays.stream(enumType.getEnumConstants())
-                .filter(constant -> constant.name().equals(text))
+                .filter(value -> value.name().equals(text))
                 .findAny()
                 .orElse(null);
     }
