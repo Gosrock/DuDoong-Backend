@@ -3,6 +3,7 @@ package band.gosrock.api.alimTalk.service;
 
 import band.gosrock.api.alimTalk.dto.OrderAlimTalkDto;
 import band.gosrock.api.alimTalk.service.helper.NcpHelper;
+import band.gosrock.domain.common.alarm.OrderKakaoTalkAlarm;
 import band.gosrock.infrastructure.config.alilmTalk.dto.AlimTalkEventInfo;
 import band.gosrock.infrastructure.config.alilmTalk.dto.AlimTalkOrderInfo;
 import band.gosrock.infrastructure.config.alilmTalk.dto.AlimTalkUserInfo;
@@ -20,18 +21,15 @@ public class SendDoneOrderAlimTalkService {
         AlimTalkOrderInfo orderInfo = orderAlimTalkDto.getOrderInfo();
 
         String content =
-                "안녕하세요 "
-                        + userInfo.getUserName()
-                        + "님!\n"
-                        + eventInfo.getHostName()
-                        + " "
-                        + eventInfo.getEventName()
-                        + "티켓이 발급됐습니다.\n"
-                        + "\n"
-                        + "원활한 입장을 위해 QR코드를 미리 준비해주세요.";
-        String headerContent = "주문 완료 안내";
+                OrderKakaoTalkAlarm.creationOf(
+                        userInfo.getUserName(), eventInfo.getHostName(), eventInfo.getEventName());
+        String headerContent = OrderKakaoTalkAlarm.creationHeaderOf();
 
         ncpHelper.sendItemNcpAlimTalk(
-                userInfo.getPhoneNum(), "doneorder", content, headerContent, orderInfo);
+                userInfo.getPhoneNum(),
+                OrderKakaoTalkAlarm.creationTemplateCode(),
+                content,
+                headerContent,
+                orderInfo);
     }
 }
