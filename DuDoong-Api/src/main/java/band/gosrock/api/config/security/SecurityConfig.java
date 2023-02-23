@@ -39,6 +39,8 @@ public class SecurityConfig {
                 .permitAll()
                 .mvcMatchers(HttpMethod.GET, "/v1/events/{eventId:[0-9]*$}/comments/**")
                 .permitAll()
+                .mvcMatchers(HttpMethod.GET, "/v1/events/search")
+                .permitAll()
                 .mvcMatchers(HttpMethod.POST, "/v1/coupons/campaigns")
                 .hasRole("SUPER_ADMIN")
                 .anyRequest()

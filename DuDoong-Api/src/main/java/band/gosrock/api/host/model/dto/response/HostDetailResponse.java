@@ -6,8 +6,8 @@ import band.gosrock.domain.common.vo.HostUserVo;
 import band.gosrock.domain.domains.host.domain.Host;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -22,7 +22,7 @@ public class HostDetailResponse {
     private final HostUserVo masterUser;
 
     @Schema(description = "호스트 유저 정보")
-    private final Set<HostUserVo> hostUsers;
+    private final List<HostUserVo> hostUsers;
 
     @Schema(description = "슬랙 알람 url")
     private final String slackUrl;
@@ -30,11 +30,9 @@ public class HostDetailResponse {
     @Schema(description = "파트너쉽 여부")
     private final boolean partner;
 
-    // todo:: 이벤트 정보도 묶어서 내보내기
-
-    public static HostDetailResponse of(Host host, Set<HostUserVo> hostUserVoSet) {
+    public static HostDetailResponse of(Host host, List<HostUserVo> hostUserVoSet) {
         HostDetailResponseBuilder builder = HostDetailResponse.builder();
-        Set<HostUserVo> hostUserVoList = new HashSet<>();
+        List<HostUserVo> hostUserVoList = new ArrayList<>();
         hostUserVoSet.forEach(
                 hostUserVo -> {
                     if (hostUserVo.getUserInfoVo().getUserId().equals(host.getMasterUserId())) {

@@ -333,6 +333,11 @@ public class Order extends BaseTimeEntity {
         return isNeedPaid();
     }
 
+    public Boolean isDudoongTicketOrder() {
+        return getTotalPaymentPrice().isGreaterThan(Money.ZERO)
+                && orderMethod == OrderMethod.APPROVAL;
+    }
+
     public List<Long> getDistinctItemIds() {
         return this.orderLineItems.stream().map(OrderLineItem::getItemId).distinct().toList();
     }
