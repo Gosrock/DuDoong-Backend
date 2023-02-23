@@ -198,16 +198,22 @@ public class NcpHelper {
         return MessageDto.AlimTalkItem.builder().list(list).build();
     }
 
+    public MessageDto.AlimTalkButton makeHomePageButton() {
+        return MessageDto.AlimTalkButton.builder()
+                .type("WL")
+                .name("홈페이지 바로가기")
+                .linkMobile("https://dudoong.com/")
+                .linkPc("https://dudoong.com/")
+                .build();
+    }
+
+    public MessageDto.AlimTalkButton makeAddChannelButton() {
+        return MessageDto.AlimTalkButton.builder().type("AC").name("채널 추가").build();
+    }
+
     public List<MessageDto.AlimTalkButton> makeSignUpButtons() {
-        MessageDto.AlimTalkButton alimTalkButton1 =
-                MessageDto.AlimTalkButton.builder().type("AC").name("채널 추가").build();
-        MessageDto.AlimTalkButton alimTalkButton2 =
-                MessageDto.AlimTalkButton.builder()
-                        .type("WL")
-                        .name("홈페이지 바로가기")
-                        .linkMobile("https://dudoong.com/")
-                        .linkPc("https://dudoong.com/")
-                        .build();
+        MessageDto.AlimTalkButton alimTalkButton1 = makeAddChannelButton();
+        MessageDto.AlimTalkButton alimTalkButton2 = makeHomePageButton();
         List<MessageDto.AlimTalkButton> alimTalkButtons = new ArrayList<>();
         alimTalkButtons.add(alimTalkButton1);
         alimTalkButtons.add(alimTalkButton2);
@@ -215,13 +221,7 @@ public class NcpHelper {
     }
 
     public List<MessageDto.AlimTalkButton> makeWithdrawButtons() {
-        MessageDto.AlimTalkButton alimTalkButton =
-                MessageDto.AlimTalkButton.builder()
-                        .type("WL")
-                        .name("홈페이지 바로가기")
-                        .linkMobile("https://dudoong.com/")
-                        .linkPc("https://dudoong.com/")
-                        .build();
+        MessageDto.AlimTalkButton alimTalkButton = makeHomePageButton();
         List<MessageDto.AlimTalkButton> alimTalkButtons = new ArrayList<>();
         alimTalkButtons.add(alimTalkButton);
         return alimTalkButtons;
