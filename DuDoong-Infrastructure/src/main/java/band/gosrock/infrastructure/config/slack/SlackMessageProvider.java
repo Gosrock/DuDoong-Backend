@@ -5,11 +5,11 @@ import com.slack.api.Slack;
 import com.slack.api.webhook.Payload;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -23,8 +23,10 @@ public class SlackMessageProvider {
     @Value("${slack.webhook.icon-url}")
     private String iconUrl;
 
-    @Async
+    /** 이벤트 핸들러 자체에서 비동기로 실행하기 때문에 @Async 어노테이션 지움 */
     public void sendMessage(String url, String text) {
+        // 슬랙 url 이 null 일경우 안보냄.
+        if (Objects.isNull(url)) return;
         try {
             doSend(url, text);
         } catch (Exception ignored) {

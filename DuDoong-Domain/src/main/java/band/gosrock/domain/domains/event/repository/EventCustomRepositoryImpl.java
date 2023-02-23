@@ -49,7 +49,7 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
         List<Event> events =
                 queryFactory
                         .selectFrom(event)
-                        .where(nameContains(keyword).and(eqStatusOpen()))
+                        .where(eqStatusOpen().and(nameContains(keyword)))
                         .orderBy(event.id.desc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize() + 1)
@@ -66,6 +66,6 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
     }
 
     private BooleanExpression nameContains(String keyword) {
-        return event.eventBasic.name.containsIgnoreCase(keyword);
+        return keyword == null ? null : event.eventBasic.name.containsIgnoreCase(keyword);
     }
 }

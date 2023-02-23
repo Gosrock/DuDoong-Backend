@@ -1,7 +1,6 @@
 package band.gosrock.infrastructure.config.slack;
 
 
-import com.slack.api.methods.MethodsClient;
 import com.slack.api.model.block.LayoutBlock;
 import java.util.Arrays;
 import java.util.List;
@@ -22,8 +21,6 @@ public class SlackErrorNotificationProvider {
 
     @Value("${slack.webhook.id}")
     private String CHANNEL_ID;
-
-    private final MethodsClient methodsClient;
 
     public String getErrorStack(Throwable throwable) {
         String exceptionAsString = Arrays.toString(throwable.getStackTrace());
