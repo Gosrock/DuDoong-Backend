@@ -23,6 +23,10 @@ public class NcpHelper {
     private final String ncpSecretKey;
     private final String plusFriendId;
 
+    static String space = " "; // space
+    static String newLine = "\n"; // new line
+    static String method = "POST"; // method
+
     public NcpHelper(
             NcpClient ncpClient,
             @Value("${ncp.service-id}") String serviceID,
@@ -229,13 +233,8 @@ public class NcpHelper {
     public String[] makePostSignature(String accessKey, String secretKey, String url) {
         String[] result = new String[2];
         try {
-
             String timeStamp =
                     String.valueOf(Instant.now().toEpochMilli()); // current timestamp (epoch)
-            String space = " "; // space
-            String newLine = "\n"; // new line
-            String method = "POST"; // method
-
             String message =
                     new StringBuilder()
                             .append(method)
