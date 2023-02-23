@@ -25,6 +25,12 @@ slack:
 feign:
   toss:
     url : https://api.tosspayments.com
+ncp:
+  service-id: ${NCP_SERVICE_ID:}
+  access-key: ${NCP_ACCESS_KEY:}
+  secret-key: ${NCP_SECRET_KEY:}
+  plus-friend-id: ${NCP_PLUS_FRIEND_ID:}
+
 ---
 spring:
   config:
