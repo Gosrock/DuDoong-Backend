@@ -56,7 +56,6 @@ public class NcpHelper {
                 makeItemButtonBody(templateCode, to, content, headerContent, orderInfo);
         ncpClient.sendItemButtonAlimTalk(
                 serviceID,
-                "application/json; charset=UTF-8",
                 ncpAccessKey,
                 signatureArray[0],
                 signatureArray[1],
@@ -73,7 +72,6 @@ public class NcpHelper {
         MessageDto.AlimTalkButtonBody body = makeButtonBody(templateCode, to, content);
         ncpClient.sendButtonAlimTalk(
                 serviceID,
-                "application/json; charset=UTF-8",
                 ncpAccessKey,
                 signatureArray[0],
                 signatureArray[1],
@@ -96,7 +94,6 @@ public class NcpHelper {
                 makeItemBody(templateCode, to, content, headerContent, orderInfo);
         ncpClient.sendItemAlimTalk(
                 serviceID,
-                "application/json; charset=UTF-8",
                 ncpAccessKey,
                 signatureArray[0],
                 signatureArray[1],
