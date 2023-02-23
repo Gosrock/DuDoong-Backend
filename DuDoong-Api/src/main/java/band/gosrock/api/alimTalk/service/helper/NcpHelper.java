@@ -48,34 +48,31 @@ public class NcpHelper {
             String headerContent,
             AlimTalkOrderInfo orderInfo) {
         // signature 생성
+        String timeStamp =
+                String.valueOf(Instant.now().toEpochMilli()); // current timestamp (epoch)
         String alimTalkSignatureRequestUrl = "/alimtalk/v2/services/" + serviceID + "/messages";
-        String[] signatureArray =
-                makePostSignature(ncpAccessKey, ncpSecretKey, alimTalkSignatureRequestUrl);
+        String signature =
+                makePostSignature(
+                        ncpAccessKey, ncpSecretKey, alimTalkSignatureRequestUrl, timeStamp);
         // 바디 생성
         MessageDto.AlimTalkItemButtonBody alimTalkItemButtonBody =
                 makeItemButtonBody(templateCode, to, content, headerContent, orderInfo);
         ncpClient.sendItemButtonAlimTalk(
-                serviceID,
-                ncpAccessKey,
-                signatureArray[0],
-                signatureArray[1],
-                alimTalkItemButtonBody);
+                serviceID, ncpAccessKey, timeStamp, signature, alimTalkItemButtonBody);
     }
 
     // 회원 가입 알림톡 (버튼)
     public void sendButtonNcpAlimTalk(String to, String templateCode, String content) {
         // signature 생성
+        String timeStamp =
+                String.valueOf(Instant.now().toEpochMilli()); // current timestamp (epoch)
         String alimTalkSignatureRequestUrl = "/alimtalk/v2/services/" + serviceID + "/messages";
-        String[] signatureArray =
-                makePostSignature(ncpAccessKey, ncpSecretKey, alimTalkSignatureRequestUrl);
+        String signature =
+                makePostSignature(
+                        ncpAccessKey, ncpSecretKey, alimTalkSignatureRequestUrl, timeStamp);
         // 바디 생성
         MessageDto.AlimTalkButtonBody body = makeButtonBody(templateCode, to, content);
-        ncpClient.sendButtonAlimTalk(
-                serviceID,
-                ncpAccessKey,
-                signatureArray[0],
-                signatureArray[1],
-                body);
+        ncpClient.sendButtonAlimTalk(serviceID, ncpAccessKey, timeStamp, signature, body);
     }
 
     // 주문 성공 알림톡 (아이템리스트)
@@ -86,18 +83,16 @@ public class NcpHelper {
             String headerContent,
             AlimTalkOrderInfo orderInfo) {
         // signature 생성
+        String timeStamp =
+                String.valueOf(Instant.now().toEpochMilli()); // current timestamp (epoch)
         String alimTalkSignatureRequestUrl = "/alimtalk/v2/services/" + serviceID + "/messages";
-        String[] signatureArray =
-                makePostSignature(ncpAccessKey, ncpSecretKey, alimTalkSignatureRequestUrl);
+        String signature =
+                makePostSignature(
+                        ncpAccessKey, ncpSecretKey, alimTalkSignatureRequestUrl, timeStamp);
         // 바디 생성
         MessageDto.AlimTalkItemBody alimTalkItemBody =
                 makeItemBody(templateCode, to, content, headerContent, orderInfo);
-        ncpClient.sendItemAlimTalk(
-                serviceID,
-                ncpAccessKey,
-                signatureArray[0],
-                signatureArray[1],
-                alimTalkItemBody);
+        ncpClient.sendItemAlimTalk(serviceID, ncpAccessKey, timeStamp, signature, alimTalkItemBody);
     }
 
     public MessageDto.AlimTalkItemButtonBody makeItemButtonBody(
@@ -227,11 +222,10 @@ public class NcpHelper {
         return alimTalkButtons;
     }
 
-    public String[] makePostSignature(String accessKey, String secretKey, String url) {
-        String[] result = new String[2];
+    public String makePostSignature(
+            String accessKey, String secretKey, String url, String timeStamp) {
+        String result;
         try {
-            String timeStamp =
-                    String.valueOf(Instant.now().toEpochMilli()); // current timestamp (epoch)
             String message =
                     new StringBuilder()
                             .append(method)
@@ -250,8 +244,7 @@ public class NcpHelper {
             byte[] rawHmac = mac.doFinal(message.getBytes("UTF-8"));
             String encodeBase64String = Base64.encodeBase64String(rawHmac);
 
-            result[0] = timeStamp;
-            result[1] = encodeBase64String;
+            result = encodeBase64String;
 
         } catch (Exception ex) {
             throw new DuDoongDynamicException(0, "400", ex.getMessage());
