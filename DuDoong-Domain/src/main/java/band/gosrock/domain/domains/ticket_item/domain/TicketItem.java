@@ -1,7 +1,9 @@
 package band.gosrock.domain.domains.ticket_item.domain;
 
+import static band.gosrock.common.consts.DuDoongStatic.MINIMUM_PAYMENT_WON;
 
 import band.gosrock.domain.common.model.BaseTimeEntity;
+import band.gosrock.domain.common.vo.AccountInfoVo;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.event.domain.Event;
@@ -53,8 +55,7 @@ public class TicketItem extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private TicketType type;
 
-    // 계좌번호
-    private String accountNumber;
+    @Embedded private AccountInfoVo accountInfo;
 
     // 재고 공개 여부
     private Boolean isQuantityPublic;
@@ -77,7 +78,7 @@ public class TicketItem extends BaseTimeEntity {
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     private final List<ItemOptionGroup> itemOptionGroups = new ArrayList<>();
 
     @Builder
@@ -90,7 +91,9 @@ public class TicketItem extends BaseTimeEntity {
             Long supplyCount,
             Long purchaseLimit,
             TicketType type,
+            String bankName,
             String accountNumber,
+            String accountHolder,
             Boolean isQuantityPublic,
             Boolean isSellable,
             LocalDateTime saleStartAt,
@@ -104,7 +107,7 @@ public class TicketItem extends BaseTimeEntity {
         this.supplyCount = supplyCount;
         this.purchaseLimit = purchaseLimit;
         this.type = type;
-        this.accountNumber = accountNumber;
+        this.accountInfo = AccountInfoVo.valueOf(bankName, accountNumber, accountHolder);
         this.isQuantityPublic = isQuantityPublic;
         this.isSellable = isSellable;
         this.saleStartAt = saleStartAt;
@@ -125,6 +128,22 @@ public class TicketItem extends BaseTimeEntity {
         ItemOptionGroup itemOptionGroup =
                 ItemOptionGroup.builder().item(this).optionGroup(optionGroup).build();
         this.itemOptionGroups.add(itemOptionGroup);
+    }
+
+    public void removeItemOptionGroup(OptionGroup optionGroup) {
+        // 재고 감소된 티켓상품은 옵션적용 변경 불가
+        if (this.isQuantityReduced()) {
+            throw ForbiddenOptionChangeException.EXCEPTION;
+        }
+        ItemOptionGroup itemOptionGroup = this.findItemOptionGroup(optionGroup);
+        this.itemOptionGroups.remove(itemOptionGroup);
+    }
+
+    public ItemOptionGroup findItemOptionGroup(OptionGroup optionGroup) {
+        return this.itemOptionGroups.stream()
+                .filter(itemOptionGroup -> itemOptionGroup.getOptionGroup().equals(optionGroup))
+                .findAny()
+                .orElseThrow(() -> NotAppliedItemOptionGroupException.EXCEPTION);
     }
 
     public Boolean hasItemOptionGroup(Long optionGroupId) {
@@ -149,30 +168,36 @@ public class TicketItem extends BaseTimeEntity {
     }
 
     public void validateTicketPayType(Boolean isPartner) {
-        // 두둥티켓은 무조건 승인 + 계좌번호 필요
-        if (this.payType.equals(TicketPayType.DUDOONG_TICKET)) {
-            if (!this.type.equals(TicketType.APPROVAL)) {
+        // 두둥티켓은 무조건 승인 + 계좌정보 필요
+        if (payType == TicketPayType.DUDOONG_TICKET) {
+            if (type != TicketType.APPROVAL) {
                 throw InvalidTicketTypeException.EXCEPTION;
             }
-            if (StringUtils.isEmpty(this.accountNumber)) {
-                throw EmptyAccountNumberException.EXCEPTION;
+            // 두둥 티켓은 유로 티켓 이어야함.
+            if (price.isLessThanOrEqual(Money.ZERO)) {
+                throw InvalidTicketPriceException.EXCEPTION;
+            }
+            if (!StringUtils.hasText(accountInfo.getBankName())
+                    || !StringUtils.hasText(accountInfo.getAccountNumber())
+                    || !StringUtils.hasText(accountInfo.getAccountHolder())) {
+                throw EmptyAccountInfoException.EXCEPTION;
             }
         }
         // 유료티켓은 무조건 선착순 + 제휴 확인 + 1000원 이상
-        else if (this.payType.equals(TicketPayType.PRICE_TICKET)) {
-            if (!this.type.equals(TicketType.FIRST_COME_FIRST_SERVED)) {
+        else if (payType == TicketPayType.PRICE_TICKET) {
+            if (type != TicketType.FIRST_COME_FIRST_SERVED) {
                 throw InvalidTicketTypeException.EXCEPTION;
             }
             if (!isPartner) {
                 throw InvalidPartnerException.EXCEPTION;
             }
-            if (this.price.isLessThan(Money.wons(1000))) {
+            if (price.isLessThan(Money.wons(MINIMUM_PAYMENT_WON))) {
                 throw InvalidTicketPriceException.EXCEPTION;
             }
         }
         // 무료티켓은 무조건 0원
         else {
-            if (!this.price.equals(Money.ZERO)) {
+            if (!price.equals(Money.ZERO)) {
                 throw InvalidTicketPriceException.EXCEPTION;
             }
         }

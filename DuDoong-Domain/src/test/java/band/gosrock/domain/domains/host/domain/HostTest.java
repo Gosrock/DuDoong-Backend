@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
+import band.gosrock.domain.common.vo.HostInfoVo;
+import band.gosrock.domain.common.vo.HostProfileVo;
 import band.gosrock.domain.domains.host.exception.*;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +21,8 @@ public class HostTest {
     @Mock HostUser managerHostUser;
     @Mock HostUser guestHostUser;
     @Mock HostProfile hostProfile;
+    @Mock HostInfoVo hostInfoVo;
+    @Mock HostProfileVo hostProfileVo;
 
     Host host;
     final Long masterUserId = 1L;
@@ -301,5 +305,14 @@ public class HostTest {
         // then
         assertThrows(NotPartnerHostException.class, () -> host.validatePartnerHost());
         assertDoesNotThrow(partnerHost::validatePartnerHost);
+    }
+
+    @Test
+    public void 호스트_vo_변환_테스트() {
+        // given
+        // when
+        // then
+        assertEquals(host.toHostInfoVo(), HostInfoVo.from(host));
+        assertEquals(host.toHostProfileVo(), HostProfileVo.from(host));
     }
 }

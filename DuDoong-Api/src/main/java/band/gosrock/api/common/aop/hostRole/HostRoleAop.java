@@ -44,7 +44,7 @@ class HostRoleAop {
         Long id = getId(parameterNames, args, identifier);
 
         return hostCallTransactionFactory
-                .getCallTransaction(findHostFrom)
+                .getCallTransaction(findHostFrom, annotation.applyTransaction())
                 .proceed(id, hostQualification, joinPoint);
     }
 

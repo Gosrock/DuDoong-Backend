@@ -7,8 +7,14 @@ import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.validator.IssuedTicketValidator;
+import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
+import band.gosrock.domain.domains.order.domain.Order;
+import band.gosrock.domain.domains.order.domain.OrderLineItem;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
+import band.gosrock.domain.domains.user.domain.User;
+import java.util.Collection;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,11 +25,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class IssuedTicketDomainService {
     private final IssuedTicketAdaptor issuedTicketAdaptor;
     private final TicketItemAdaptor ticketItemAdaptor;
+    private final UserAdaptor userAdaptor;
+    private final OrderAdaptor orderAdaptor;
 
     private final IssuedTicketValidator issuedTicketValidator;
 
-    private final OrderToIssuedTicketService orderToIssuedTicketService;
-
+    /*
+    티켓 철회 로직
+     */
     @RedissonLock(LockName = "티켓관리", identifier = "itemId")
     public void withdrawIssuedTicket(Long itemId, List<IssuedTicket> issuedTickets) {
         // itemId로 티켓 아이템 찾아서 (해당 락에선 ticketItem이 하나로 정해지기 때문에)
@@ -62,12 +71,29 @@ public class IssuedTicketDomainService {
         return issuedTicket.toIssuedTicketInfoVo();
     }
 
+    /*
+    티켓 발급 로직
+     */
     @RedissonLock(LockName = "티켓관리", identifier = "itemId")
     public void createIssuedTicket(Long itemId, String orderUuid, Long userId) {
         TicketItem ticketItem = ticketItemAdaptor.queryTicketItem(itemId);
+        User user = userAdaptor.queryUser(userId);
+        Order order = orderAdaptor.findByOrderUuid(orderUuid);
+        List<OrderLineItem> orderLineItems = order.getOrderLineItems();
         List<IssuedTicket> issuedTickets =
-                orderToIssuedTicketService.execute(ticketItem, orderUuid, userId);
+                orderLineItems.stream()
+                        .map(
+                                orderLineItem -> {
+                                    ticketItem.reduceQuantity(orderLineItem.getQuantity());
+                                    return IssuedTicket.orderLineToIssuedTicket(
+                                            ticketItem,
+                                            user,
+                                            order,
+                                            order.getEventId(),
+                                            orderLineItem);
+                                })
+                        .flatMap(Collection::stream)
+                        .toList();
         issuedTicketAdaptor.saveAll(issuedTickets);
-        ticketItem.reduceQuantity((long) issuedTickets.size());
     }
 }

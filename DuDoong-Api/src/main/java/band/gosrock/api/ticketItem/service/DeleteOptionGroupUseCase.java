@@ -9,7 +9,6 @@ import band.gosrock.api.ticketItem.mapper.TicketOptionMapper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.domains.ticket_item.service.TicketOptionService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.transaction.annotation.Transactional;
 
 @UseCase
 @RequiredArgsConstructor
@@ -18,8 +17,7 @@ public class DeleteOptionGroupUseCase {
     private final TicketOptionMapper ticketOptionMapper;
     private final TicketOptionService ticketOptionService;
 
-    @Transactional
-    @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
+    @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID, applyTransaction = false)
     public GetEventOptionsResponse execute(Long eventId, Long optionGroupId) {
 
         ticketOptionService.softDeleteOptionGroup(eventId, optionGroupId);

@@ -1,0 +1,31 @@
+# commons
+spring:
+  profiles:
+    include:
+      - infrastructure
+      - domain
+      - common
+spring.batch.job.names: ${job.name:NONE}
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+#logging:
+#  level:
+#    root: info
+#logging:
+#  level:
+#    org.springframework.data.*.*: debug
+#    org.springframework.cache.*: debug
+---
+spring:
+  config:
+    activate:
+      on-profile: staging
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod

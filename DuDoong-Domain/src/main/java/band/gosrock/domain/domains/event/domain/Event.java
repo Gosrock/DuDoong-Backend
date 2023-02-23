@@ -8,6 +8,7 @@ import band.gosrock.common.exception.DuDoongCodeException;
 import band.gosrock.domain.common.aop.domainEvent.Events;
 import band.gosrock.domain.common.events.event.EventContentChangeEvent;
 import band.gosrock.domain.common.events.event.EventCreationEvent;
+import band.gosrock.domain.common.events.event.EventDeletionEvent;
 import band.gosrock.domain.common.events.event.EventStatusChangeEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.*;
@@ -18,9 +19,11 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Where;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Where(clause = "status != 'DELETED'")
 @Entity(name = "tbl_event")
 public class Event extends BaseTimeEntity {
     @Id
@@ -40,8 +43,6 @@ public class Event extends BaseTimeEntity {
     // 이벤트 상태
     @Enumerated(EnumType.STRING)
     private EventStatus status = PREPARING;
-
-    private Boolean isUpdated = FALSE;
 
     public LocalDateTime getStartAt() {
         if (this.eventBasic == null) return null;
@@ -70,8 +71,7 @@ public class Event extends BaseTimeEntity {
     }
 
     public void setEventBasic(EventBasic eventBasic) {
-        if (isUpdated == TRUE) throw CannotModifyEventBasicException.EXCEPTION;
-        this.isUpdated = true;
+        this.validateOpenStatus();
         this.eventBasic = eventBasic;
     }
 
@@ -81,7 +81,7 @@ public class Event extends BaseTimeEntity {
     }
 
     public void setEventPlace(EventPlace eventPlace) {
-        // 정보 한 번 등록시 변경 불가
+        this.validateOpenStatus();
         this.eventPlace = eventPlace;
     }
 
@@ -90,6 +90,11 @@ public class Event extends BaseTimeEntity {
         this.hostId = hostId;
         this.eventBasic = EventBasic.builder().name(name).startAt(startAt).runTime(runTime).build();
         Events.raise(EventCreationEvent.of(hostId, name));
+    }
+
+    public void validateOpenStatus() {
+        if (status == OPEN) throw CannotModifyOpenEventException.EXCEPTION;
+        // todo : 오픈 전과 후 검증 로직 이름 변경
     }
 
     public void validateStatusOpen() {
@@ -152,5 +157,13 @@ public class Event extends BaseTimeEntity {
         if (this.status == status) throw exception;
         this.status = status;
         Events.raise(EventStatusChangeEvent.of(this));
+    }
+
+    public void deleteSoft() {
+        // 오픈된 이벤트는 삭제 불가
+        if (this.status == OPEN) throw CannotDeleteByOpenEventException.EXCEPTION;
+        if (this.status == DELETED) throw AlreadyDeletedStatusException.EXCEPTION;
+        this.status = DELETED;
+        Events.raise(EventDeletionEvent.of(this));
     }
 }

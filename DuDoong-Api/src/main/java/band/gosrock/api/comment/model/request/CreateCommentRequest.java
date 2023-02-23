@@ -9,10 +9,10 @@ import lombok.Getter;
 public class CreateCommentRequest {
 
     @NotBlank(message = "작성자 닉네임을 입력해주세요.")
-    @Size(min = 1, max = 15)
+    @Size(min = 1, max = 10)
     private String nickName;
 
     @NotBlank(message = "댓글 내용을 입력해주세요.")
-    @Size(min = 1, max = 200)
+    @Size(min = 1, max = 150)
     private String content;
 }

@@ -25,10 +25,14 @@ class HostRoleEventTransaction implements HostRoleCallTransaction {
     @Transactional(readOnly = true)
     public Object proceed(Long eventId, HostQualification role, final ProceedingJoinPoint joinPoint)
             throws Throwable {
+        validRole(eventId, role);
+        return joinPoint.proceed();
+    }
+
+    private void validRole(Long eventId, HostQualification role) {
         Long currentUserId = userUtils.getCurrentUserId();
         Event event = eventAdaptor.findById(eventId);
         Host host = hostAdaptor.findById(event.getHostId());
         role.validQualification(currentUserId, host);
-        return joinPoint.proceed();
     }
 }

@@ -28,8 +28,16 @@ public class CreateTicketItemRequest {
     private String description;
 
     @Nullable
-    @Schema(nullable = true, example = "신한은행 110-123-1234567")
+    @Schema(nullable = true, example = "신한은행")
+    private String bankName;
+
+    @Nullable
+    @Schema(nullable = true, example = "110-123-1234567")
     private String accountNumber;
+
+    @Nullable
+    @Schema(nullable = true, example = "김원진")
+    private String accountHolder;
 
     @NotNull
     @Schema(defaultValue = "0", nullable = false, example = "4000")
@@ -39,7 +47,7 @@ public class CreateTicketItemRequest {
     @Schema(nullable = false, example = "100")
     private Long supplyCount;
 
-    @Schema(nullable = false, defaultValue = "선착순")
+    @Schema(nullable = false, defaultValue = "승인")
     @Enum(message = "선착순, 승인만 허용됩니다")
     private TicketType approveType;
 
