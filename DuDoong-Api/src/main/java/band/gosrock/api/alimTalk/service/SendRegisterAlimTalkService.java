@@ -2,9 +2,7 @@ package band.gosrock.api.alimTalk.service;
 
 
 import band.gosrock.api.alimTalk.service.helper.NcpHelper;
-import java.io.UnsupportedEncodingException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -12,8 +10,7 @@ import org.springframework.stereotype.Service;
 public class SendRegisterAlimTalkService {
     private final NcpHelper ncpHelper;
 
-    public void execute(String userName, String to)
-            throws JSONException, UnsupportedEncodingException {
+    public void execute(String userName, String to) {
         String content =
                 userName
                         + "님, 두둥에 가입하신 것을 환영합니다!\n"

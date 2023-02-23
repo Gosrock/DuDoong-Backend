@@ -7,10 +7,8 @@ import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.infrastructure.config.alilmTalk.dto.AlimTalkUserInfo;
 import com.google.i18n.phonenumbers.NumberParseException;
-import java.io.UnsupportedEncodingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -29,7 +27,7 @@ public class RegisterUserEventAlimTalkHandler {
             classes = UserRegisterEvent.class,
             phase = TransactionPhase.AFTER_COMMIT)
     public void handleRegisterUserEvent(UserRegisterEvent userRegisterEvent)
-            throws NumberParseException, JSONException, UnsupportedEncodingException {
+            throws NumberParseException {
         Long userId = userRegisterEvent.getUserId();
         User user = userAdaptor.queryUser(userId);
         log.info(userId.toString() + "유저 등록");
