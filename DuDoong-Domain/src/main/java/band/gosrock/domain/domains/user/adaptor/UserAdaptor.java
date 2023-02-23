@@ -9,7 +9,6 @@ import band.gosrock.domain.domains.user.exception.UserNotFoundException;
 import band.gosrock.domain.domains.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 
 @Adaptor
@@ -33,7 +32,7 @@ public class UserAdaptor {
     }
 
     /** user id 리스트에 포함되어 있는 유저를 모두 가져오는 쿼리 */
-    public Set<User> queryUserListByIdIn(Set<Long> userIdList) {
+    public List<User> queryUserListByIdIn(List<Long> userIdList) {
         return userRepository.findAllByIdIn(userIdList);
     }
 
