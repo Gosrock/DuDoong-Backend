@@ -43,16 +43,12 @@ public class Event extends BaseTimeEntity {
     private EventStatus status = PREPARING;
 
     public LocalDateTime getStartAt() {
-        if (this.eventBasic == null) {
-            return null;
-        }
+        if (this.eventBasic == null) return null;
         return this.getEventBasic().getStartAt();
     }
 
     public LocalDateTime getEndAt() {
-        if (this.eventBasic == null) {
-            return null;
-        }
+        if (this.eventBasic == null) return null;
         return this.getEventBasic().endAt();
     }
 
@@ -100,15 +96,11 @@ public class Event extends BaseTimeEntity {
     }
 
     public void validateStatusOpen() {
-        if (status != OPEN) {
-            throw EventNotOpenException.EXCEPTION;
-        }
+        if (status != OPEN) throw EventNotOpenException.EXCEPTION;
     }
 
     public void validateTicketingTime() {
-        if (!isTimeBeforeStartAt()) {
-            throw EventTicketingTimeIsPassedException.EXCEPTION;
-        }
+        if (!isTimeBeforeStartAt()) throw EventTicketingTimeIsPassedException.EXCEPTION;
     }
 
     public Boolean isRefundDateNotPassed() {
