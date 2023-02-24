@@ -1,6 +1,7 @@
 package band.gosrock.domain.domains.issuedTicket.domain;
 
 
+import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
 import java.util.List;
 import lombok.Getter;
 
@@ -59,5 +60,9 @@ public class IssuedTickets {
 
     public List<IssuedTicketStatus> getIssuedTicketStatuses() {
         return this.issuedTickets.stream().map(IssuedTicket::getIssuedTicketStatus).toList();
+    }
+
+    public List<IssuedTicketInfoVo> getIssuedTicketInfoVos() {
+        return this.issuedTickets.stream().map(IssuedTicket::toIssuedTicketInfoVo).toList();
     }
 }

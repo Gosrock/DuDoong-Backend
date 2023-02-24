@@ -43,6 +43,9 @@ public enum GlobalErrorCode implements BaseErrorCode {
     OTHER_SERVER_UNAUTHORIZED(BAD_REQUEST, "FEIGN_400_2", "Other server unauthorized"),
     OTHER_SERVER_FORBIDDEN(BAD_REQUEST, "FEIGN_400_3", "Other server forbidden"),
     OTHER_SERVER_EXPIRED_TOKEN(BAD_REQUEST, "FEIGN_400_4", "Other server expired token"),
+    OTHER_SERVER_NOT_FOUND(BAD_REQUEST, "FEIGN_400_5", "Other server not found error"),
+    OTHER_SERVER_INTERNAL_SERVER_ERROR(
+            BAD_REQUEST, "FEIGN_400_6", "Other server internal server error"),
     NOT_AVAILABLE_REDISSON_LOCK(500, "Redisson_500_1", "can not get redisson lock"),
     SECURITY_CONTEXT_NOT_FOUND(500, "GLOBAL_500_2", "security context not found"),
 

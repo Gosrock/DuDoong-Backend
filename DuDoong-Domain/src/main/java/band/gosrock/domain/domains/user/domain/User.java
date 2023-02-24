@@ -7,8 +7,11 @@ import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.UserInfoVo;
 import band.gosrock.domain.common.vo.UserProfileVo;
 import band.gosrock.domain.domains.user.exception.AlreadyDeletedUserException;
+import band.gosrock.domain.domains.user.exception.EmptyPhoneNumException;
 import band.gosrock.domain.domains.user.exception.ForbiddenUserException;
+import band.gosrock.infrastructure.config.alilmTalk.dto.AlimTalkUserInfo;
 import band.gosrock.infrastructure.config.mail.dto.EmailUserInfo;
+import com.google.i18n.phonenumbers.NumberParseException;
 import java.time.LocalDateTime;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
@@ -90,5 +93,14 @@ public class User extends BaseTimeEntity {
 
     public EmailUserInfo toEmailUserInfo() {
         return new EmailUserInfo(profile.getName(), profile.getEmail());
+    }
+
+    public AlimTalkUserInfo toAlimTalkUserInfo() throws NumberParseException {
+        if (profile.getPhoneNumberVo().getPhoneNumber() == null
+                || profile.getPhoneNumberVo().getPhoneNumber().isEmpty()) {
+            throw EmptyPhoneNumException.EXCEPTION;
+        }
+        return new AlimTalkUserInfo(
+                profile.getName(), profile.getPhoneNumberVo().getNaverSmsToNumber());
     }
 }

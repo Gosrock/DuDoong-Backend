@@ -13,6 +13,7 @@ import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.cart.domain.CartLineItem;
 import band.gosrock.domain.domains.cart.domain.CartOptionAnswer;
 import band.gosrock.domain.domains.cart.domain.CartValidator;
+import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
 import band.gosrock.domain.domains.ticket_item.domain.Option;
@@ -44,11 +45,11 @@ public class CartMapper {
     private CartResponse getCartResponse(Cart cart) {
         List<CartLineItem> newCartLineItems = cart.getCartLineItems();
         TicketItem ticketItem = ticketItemAdaptor.queryTicketItem(cart.getItemId());
-
+        Event event = ticketItem.getEvent();
         List<CartItemResponse> cartItemResponses =
                 getCartItemResponses(newCartLineItems, ticketItem.getName());
 
-        return CartResponse.of(cartItemResponses, cart, ticketItem);
+        return CartResponse.of(cartItemResponses, cart, ticketItem, event);
     }
 
     private List<CartItemResponse> getCartItemResponses(
