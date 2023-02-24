@@ -80,4 +80,10 @@ public class IssuedTicketAdaptor {
                 .findByIssuedTicketNo(issuedTicketNo)
                 .orElseThrow(() -> IssuedTicketNotFoundException.EXCEPTION);
     }
+
+    public IssuedTicket queryByIssuedTicketUuid(String uuid) {
+        return issuedTicketRepository
+                .findByUuid(uuid)
+                .orElseThrow(() -> IssuedTicketNotFoundException.EXCEPTION);
+    }
 }

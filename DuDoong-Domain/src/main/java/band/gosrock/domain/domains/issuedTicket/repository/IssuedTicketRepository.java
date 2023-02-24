@@ -15,4 +15,6 @@ public interface IssuedTicketRepository
     Optional<IssuedTicket> findByIssuedTicketNo(String issuedTicketNo);
 
     Boolean existsByEventId(Long eventId);
+
+    Optional<IssuedTicket> findByUuid(String uuid);
 }
