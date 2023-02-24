@@ -2,7 +2,7 @@ package band.gosrock.api.cart.model.dto.response;
 
 
 import band.gosrock.domain.common.vo.AccountInfoVo;
-import band.gosrock.domain.common.vo.EventInfoVo;
+import band.gosrock.domain.common.vo.EventProfileVo;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.cart.domain.Cart;
 import band.gosrock.domain.domains.event.domain.Event;
@@ -47,7 +47,7 @@ public class CartResponse {
     private final AccountInfoVo accountInfo;
 
     @Schema(description = "이벤트 정보")
-    private final EventInfoVo eventInfo;
+    private final EventProfileVo eventProfile;
 
     public static CartResponse of(
             List<CartItemResponse> cartItemResponses, Cart cart, TicketItem item, Event event) {
@@ -61,7 +61,7 @@ public class CartResponse {
                 .approveType(item.getType())
                 .ticketPayType(item.getPayType())
                 .accountInfo(item.getAccountInfo())
-                .eventInfo(event.toEventInfoVo())
+                .eventProfile(event.toEventProfileVo())
                 .build();
     }
 }
