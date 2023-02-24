@@ -1,8 +1,6 @@
 package band.gosrock.domain.domains.event.domain;
 
 import static band.gosrock.domain.domains.event.domain.EventStatus.*;
-import static java.lang.Boolean.FALSE;
-import static java.lang.Boolean.TRUE;
 
 import band.gosrock.common.exception.DuDoongCodeException;
 import band.gosrock.domain.common.aop.domainEvent.Events;

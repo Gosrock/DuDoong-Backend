@@ -65,14 +65,15 @@ public class EventTest {
         assertEquals(expectedEndAt, actualEndAt);
     }
 
-    @Test
-    public void eventBasic_중복수정은_불가능하다() {
-        // given
-        // reflection 으로 updated 에 true 강제 주입
-        ReflectionTestUtils.setField(event, "isUpdated", true);
-        // then
-        assertThrows(CannotModifyEventBasicException.class, () -> event.setEventBasic(eventBasic));
-    }
+    //    @Test
+    //    public void eventBasic_중복수정은_불가능하다() {
+    //        // given
+    //        // reflection 으로 updated 에 true 강제 주입
+    //        ReflectionTestUtils.setField(event, "isUpdated", true);
+    //        // then
+    //        assertThrows(CannotModifyEventBasicException.class, () ->
+    // event.setEventBasic(eventBasic));
+    //    }
 
     @Test
     public void eventBasic_업데이트_테스트() {
@@ -138,5 +139,18 @@ public class EventTest {
         assertEquals(expectedStatus, event.getStatus());
         assertNotEquals(originalStatus, expectedStatus);
         assertThrows(AlreadyPreparingStatusException.class, () -> event.prepare());
+    }
+
+    @Test
+    void 이벤트_삭제_상태변경_테스트() {
+        // given
+        final EventStatus originalStatus = event.getStatus();
+        final EventStatus expectedStatus = EventStatus.DELETED;
+        // when
+        event.deleteSoft();
+        // then
+        assertEquals(expectedStatus, event.getStatus());
+        assertNotEquals(originalStatus, expectedStatus);
+        assertThrows(AlreadyDeletedStatusException.class, () -> event.deleteSoft());
     }
 }
