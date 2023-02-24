@@ -9,6 +9,7 @@ import band.gosrock.api.issuedTicket.dto.request.AdminIssuedTicketTableQueryRequ
 import band.gosrock.api.issuedTicket.dto.response.IssuedTicketAdminTableElement;
 import band.gosrock.api.issuedTicket.mapper.IssuedTicketMapper;
 import band.gosrock.common.annotation.UseCase;
+import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 public class ReadIssuedTicketsUseCase {
 
     private final IssuedTicketMapper issuedTicketMapper;
+    private final IssuedTicketAdaptor issuedTicketAdaptor;
 
     /**
      * 발급된 티켓 리스트 가져오기 API 일단 유즈케이스에 트랜잭션 걸어서 처리 IssuedTicket에 걸린 event와 user를 연관관계 매핑 없이 조회하려할 때

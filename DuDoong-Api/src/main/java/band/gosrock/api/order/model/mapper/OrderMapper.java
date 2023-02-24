@@ -7,7 +7,9 @@ import band.gosrock.api.order.model.dto.response.OrderAdminTableElement;
 import band.gosrock.api.order.model.dto.response.OrderBriefElement;
 import band.gosrock.api.order.model.dto.response.OrderLineTicketResponse;
 import band.gosrock.api.order.model.dto.response.OrderResponse;
+import band.gosrock.api.order.model.dto.response.OrderTicketResponse;
 import band.gosrock.common.annotation.Mapper;
+import band.gosrock.domain.common.vo.IssuedTicketInfoVo;
 import band.gosrock.domain.common.vo.OptionAnswerVo;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
@@ -136,5 +138,13 @@ public class OrderMapper {
 
     private Event getEvent(Order order) {
         return eventAdaptor.findById(order.getItemGroupId());
+    }
+
+    public OrderTicketResponse toOrderTicketResponse(Order order) {
+        IssuedTickets orderIssuedTickets =
+                issuedTicketAdaptor.findOrderIssuedTickets(order.getUuid());
+        Event event = getEvent(order);
+        List<IssuedTicketInfoVo> issuedTicketInfoVos = orderIssuedTickets.getIssuedTicketInfoVos();
+        return OrderTicketResponse.of(order, event, issuedTicketInfoVos);
     }
 }
