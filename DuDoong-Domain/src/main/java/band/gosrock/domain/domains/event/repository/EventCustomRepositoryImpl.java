@@ -6,8 +6,10 @@ import static band.gosrock.domain.domains.event.domain.QEvent.event;
 import band.gosrock.domain.common.util.SliceUtil;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.domain.EventStatus;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -37,7 +39,7 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
                 queryFactory
                         .selectFrom(event)
                         .where(eqStatusOpen())
-                        .orderBy(event.id.desc())
+                        .orderBy(startAtAsc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize() + 1)
                         .fetch();
@@ -67,5 +69,9 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
 
     private BooleanExpression nameContains(String keyword) {
         return keyword == null ? null : event.eventBasic.name.containsIgnoreCase(keyword);
+    }
+
+    private OrderSpecifier<LocalDateTime> startAtAsc() {
+        return event.eventBasic.startAt.desc();
     }
 }

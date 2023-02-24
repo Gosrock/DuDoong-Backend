@@ -40,9 +40,9 @@ public class AdminIssuedTicketController {
     }
 
     @Operation(summary = "[어드민 기능] 발급 티켓 입장 처리 API 입니다.")
-    @PatchMapping(value = "/{issuedTicketId}")
+    @PatchMapping(value = "/{uuid}")
     public IssuedTicketInfoVo patchIssuedTicketStatus(
-            @PathVariable Long eventId, @PathVariable Long issuedTicketId) {
-        return entranceIssuedTicketUseCase.execute(eventId, issuedTicketId);
+            @PathVariable Long eventId, @PathVariable String uuid) {
+        return entranceIssuedTicketUseCase.execute(eventId, uuid);
     }
 }

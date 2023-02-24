@@ -22,8 +22,8 @@ public class IssuedTicketController {
     private final ReadIssuedTicketUseCase readIssuedTicketUseCase;
 
     @Operation(summary = "발급 티켓 가져오기 API 입니다.")
-    @GetMapping(value = "/{issuedTicketId}", produces = "application/json; charset=utf-8")
-    public RetrieveIssuedTicketDetailResponse getIssuedTicket(@PathVariable Long issuedTicketId) {
-        return readIssuedTicketUseCase.execute(issuedTicketId);
+    @GetMapping(value = "/{uuid}", produces = "application/json; charset=utf-8")
+    public RetrieveIssuedTicketDetailResponse getIssuedTicket(@PathVariable String uuid) {
+        return readIssuedTicketUseCase.execute(uuid);
     }
 }
