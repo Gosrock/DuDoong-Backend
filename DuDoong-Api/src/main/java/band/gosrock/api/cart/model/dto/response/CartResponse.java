@@ -2,8 +2,10 @@ package band.gosrock.api.cart.model.dto.response;
 
 
 import band.gosrock.domain.common.vo.AccountInfoVo;
+import band.gosrock.domain.common.vo.EventInfoVo;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.cart.domain.Cart;
+import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.ticket_item.domain.TicketPayType;
 import band.gosrock.domain.domains.ticket_item.domain.TicketType;
@@ -44,8 +46,11 @@ public class CartResponse {
     @Schema(description = "계좌정보", nullable = true)
     private final AccountInfoVo accountInfo;
 
+    @Schema(description = "이벤트 정보")
+    private final EventInfoVo eventInfo;
+
     public static CartResponse of(
-            List<CartItemResponse> cartItemResponses, Cart cart, TicketItem item) {
+            List<CartItemResponse> cartItemResponses, Cart cart, TicketItem item, Event event) {
         return CartResponse.builder()
                 .items(cartItemResponses)
                 .totalPrice(cart.getTotalPrice())
@@ -56,6 +61,7 @@ public class CartResponse {
                 .approveType(item.getType())
                 .ticketPayType(item.getPayType())
                 .accountInfo(item.getAccountInfo())
+                .eventInfo(event.toEventInfoVo())
                 .build();
     }
 }
