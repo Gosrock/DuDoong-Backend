@@ -73,7 +73,7 @@ public class ReadOrderUseCase {
         Page<Order> orders =
                 orderAdaptor.findEventOrders(
                         adminOrderTableQueryRequest.toCondition(eventId), pageable);
-        return PageResponse.of(orderMapper.toOrderAdminTableElement(orders));
+        return PageResponse.of(orderMapper.toOrderAdminTableElement(eventId, orders));
     }
 
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
