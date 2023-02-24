@@ -76,16 +76,16 @@ class IssuedCouponTest {
     //        assertTrue(result);
     //    }
     //
-//    @Test
-//    public void testCalculateValidTerm() {
-//        // given
-//        given(couponCampaign.getValidTerm()).willReturn(validTerm);
-//        given(issuedCoupon.getCreatedAt()).willReturn(createdAt);
-//        // when
-//        LocalDateTime result = issuedCoupon.calculateValidTerm();
-//        // then
-//        assertEquals(result, createdAt.plusDays(validTerm));
-//    }
+    //    @Test
+    //    public void testCalculateValidTerm() {
+    //        // given
+    //        given(couponCampaign.getValidTerm()).willReturn(validTerm);
+    //        given(issuedCoupon.getCreatedAt()).willReturn(createdAt);
+    //        // when
+    //        LocalDateTime result = issuedCoupon.calculateValidTerm();
+    //        // then
+    //        assertEquals(result, createdAt.plusDays(validTerm));
+    //    }
 
     @Test
     void testGetDiscountAmount_withAmountDiscountType() {
