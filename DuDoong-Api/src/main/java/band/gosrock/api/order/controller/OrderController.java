@@ -12,6 +12,7 @@ import band.gosrock.api.order.model.dto.request.CreateOrderRequest;
 import band.gosrock.api.order.model.dto.response.CreateOrderResponse;
 import band.gosrock.api.order.model.dto.response.OrderBriefElement;
 import band.gosrock.api.order.model.dto.response.OrderResponse;
+import band.gosrock.api.order.model.dto.response.OrderTicketResponse;
 import band.gosrock.api.order.service.CancelOrderUseCase;
 import band.gosrock.api.order.service.ConfirmOrderUseCase;
 import band.gosrock.api.order.service.CreateOrderUseCase;
@@ -104,6 +105,12 @@ public class OrderController {
     @GetMapping("/{order_uuid}")
     public OrderResponse getOrderDetail(@PathVariable("order_uuid") String orderUuid) {
         return readOrderUseCase.getOrderDetail(orderUuid);
+    }
+
+    @Operation(summary = "결제 아이디로 발급된 티켓 조회")
+    @GetMapping("/{order_uuid}/tickets")
+    public OrderTicketResponse getOrderTickets(@PathVariable("order_uuid") String orderUuid) {
+        return readOrderUseCase.getOrderTickets(orderUuid);
     }
 
     @Operation(summary = "최근 예매내역 조회")
