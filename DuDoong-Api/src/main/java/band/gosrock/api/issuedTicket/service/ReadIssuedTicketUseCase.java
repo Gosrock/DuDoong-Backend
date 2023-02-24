@@ -16,11 +16,11 @@ public class ReadIssuedTicketUseCase {
     /**
      * 발급 티켓 상세 정보 API
      *
-     * @param issuedTicketId 발급 티켓 id
+     * @param uuid 발급 티켓 id
      * @return RetrieveIssuedTicketDetailResponse
      */
-    public RetrieveIssuedTicketDetailResponse execute(Long issuedTicketId) {
+    public RetrieveIssuedTicketDetailResponse execute(String uuid) {
         Long currentUserId = SecurityUtils.getCurrentUserId();
-        return issuedTicketMapper.toIssuedTicketDetailResponse(currentUserId, issuedTicketId);
+        return issuedTicketMapper.toIssuedTicketDetailResponse(currentUserId, uuid);
     }
 }

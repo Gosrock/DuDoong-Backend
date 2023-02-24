@@ -28,10 +28,10 @@ public class IssuedTicketAdaptor {
         issuedTicketRepository.saveAll(issuedTickets);
     }
 
-    public IssuedTicket findForUser(Long currentUserId, Long issuedTicketId) {
+    public IssuedTicket findForUser(Long currentUserId, String uuid) {
         IssuedTicket issuedTicket =
                 issuedTicketRepository
-                        .find(issuedTicketId)
+                        .findByUuid(uuid)
                         .orElseThrow(() -> IssuedTicketNotFoundException.EXCEPTION);
         if (!Objects.equals(issuedTicket.getUserInfo().getUserId(), currentUserId)) {
             throw IssuedTicketUserNotMatchedException.EXCEPTION;

@@ -64,8 +64,8 @@ public class IssuedTicketMapper {
 
     @Transactional(readOnly = true)
     public RetrieveIssuedTicketDetailResponse toIssuedTicketDetailResponse(
-            Long currentUserId, Long issuedTicketId) {
-        IssuedTicket issuedTicket = issuedTicketAdaptor.findForUser(currentUserId, issuedTicketId);
+            Long currentUserId, String uuid) {
+        IssuedTicket issuedTicket = issuedTicketAdaptor.findForUser(currentUserId, uuid);
         Event event = eventAdaptor.findById(issuedTicket.getEventId());
         return RetrieveIssuedTicketDetailResponse.of(issuedTicket, event);
     }
