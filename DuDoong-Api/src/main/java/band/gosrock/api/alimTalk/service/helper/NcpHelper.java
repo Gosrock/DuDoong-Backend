@@ -9,11 +9,14 @@ import band.gosrock.infrastructure.outer.api.alimTalk.client.NcpClient;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
+import org.springframework.util.CollectionUtils;
 
 @Helper
 public class NcpHelper {
@@ -22,6 +25,8 @@ public class NcpHelper {
     private final String ncpAccessKey;
     private final String ncpSecretKey;
     private final String plusFriendId;
+    private final Environment env;
+    private final List<String> sendAlarmProfiles = List.of("staging", "prod");
 
     static String space = " "; // space
     static String newLine = "\n"; // new line
@@ -32,12 +37,20 @@ public class NcpHelper {
             @Value("${ncp.service-id}") String serviceID,
             @Value("${ncp.access-key}") String ncpAccessKey,
             @Value("${ncp.secret-key}") String ncpSecretKey,
-            @Value("${ncp.plus-friend-id}") String plusFriendId) {
+            @Value("${ncp.plus-friend-id}") String plusFriendId,
+            Environment env) {
         this.ncpClient = ncpClient;
         this.serviceID = serviceID;
         this.ncpAccessKey = ncpAccessKey;
         this.ncpSecretKey = ncpSecretKey;
         this.plusFriendId = plusFriendId;
+        this.env = env;
+    }
+
+    public Boolean isNeedToNotificationProfile() {
+        String[] activeProfiles = env.getActiveProfiles();
+        List<String> currentProfile = Arrays.stream(activeProfiles).toList();
+        return CollectionUtils.containsAny(sendAlarmProfiles, currentProfile);
     }
 
     // 주문 취소 알림톡 (아이템리스트+버튼)
@@ -47,6 +60,10 @@ public class NcpHelper {
             String content,
             String headerContent,
             AlimTalkOrderInfo orderInfo) {
+        // 전송 서버 검증
+        if (!isNeedToNotificationProfile()) {
+            return;
+        }
         // signature 생성
         String timeStamp =
                 String.valueOf(Instant.now().toEpochMilli()); // current timestamp (epoch)
@@ -63,6 +80,10 @@ public class NcpHelper {
 
     // 회원 가입 알림톡 (버튼)
     public void sendButtonNcpAlimTalk(String to, String templateCode, String content) {
+        // 전송 서버 검증
+        if (!isNeedToNotificationProfile()) {
+            return;
+        }
         // signature 생성
         String timeStamp =
                 String.valueOf(Instant.now().toEpochMilli()); // current timestamp (epoch)
@@ -82,6 +103,10 @@ public class NcpHelper {
             String content,
             String headerContent,
             AlimTalkOrderInfo orderInfo) {
+        // 전송 서버 검증
+        if (!isNeedToNotificationProfile()) {
+            return;
+        }
         // signature 생성
         String timeStamp =
                 String.valueOf(Instant.now().toEpochMilli()); // current timestamp (epoch)
