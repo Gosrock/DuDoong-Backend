@@ -18,7 +18,7 @@ public class EntranceIssuedTicketUseCase {
 
     @Transactional
     @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID)
-    public IssuedTicketInfoVo execute(Long eventId, Long issuedTicketId) {
-        return issuedTicketDomainService.processingEntranceIssuedTicket(eventId, issuedTicketId);
+    public IssuedTicketInfoVo execute(Long eventId, String uuid) {
+        return issuedTicketDomainService.processingEntranceIssuedTicket(eventId, uuid);
     }
 }
