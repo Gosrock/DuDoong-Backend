@@ -12,6 +12,8 @@ dependencies {
     api('com.fasterxml.jackson.datatype:jackson-datatype-jsr310')
     api 'com.amazonaws:aws-java-sdk-s3control:1.12.372'
     api 'io.github.openfeign:feign-jackson:12.1'
+    api 'com.bucket4j:bucket4j-core:8.1.1'
+    api 'com.bucket4j:bucket4j-jcache:8.1.1'
 
     //for email
     api 'org.springframework.boot:spring-boot-starter-thymeleaf'
