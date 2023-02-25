@@ -3,6 +3,7 @@ package band.gosrock.infrastructure.config.redis;
 
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.grid.jcache.JCacheProxyManager;
+import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
 import org.redisson.Redisson;
@@ -34,7 +35,10 @@ public class RedissonConfig {
     @Bean
     public CacheManager cacheManager(RedissonClient redissonClient) {
         CacheManager manager = Caching.getCachingProvider().getCacheManager();
-        manager.createCache("bucket4j", RedissonConfiguration.fromInstance(redissonClient));
+        Cache<Object, Object> bucket4j = manager.getCache("bucket4j");
+        if(bucket4j == null){
+            manager.createCache("bucket4j", RedissonConfiguration.fromInstance(redissonClient));
+        }
         return manager;
     }
 
