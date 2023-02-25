@@ -9,4 +9,5 @@ import lombok.RequiredArgsConstructor;
 public class EmailUserInfo {
     private final String name;
     private final String email;
+    private final Boolean receiveAgree;
 }

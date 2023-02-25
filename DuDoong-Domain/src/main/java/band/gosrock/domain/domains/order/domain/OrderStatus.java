@@ -37,4 +37,8 @@ public enum OrderStatus {
                 || this == OrderStatus.APPROVED
                 || this == OrderStatus.REFUND;
     }
+
+    public Boolean isCanWithDraw() {
+        return this == OrderStatus.APPROVED || this == OrderStatus.CONFIRM;
+    }
 }

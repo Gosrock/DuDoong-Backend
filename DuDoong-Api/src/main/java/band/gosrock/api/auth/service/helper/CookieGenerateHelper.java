@@ -3,22 +3,20 @@ package band.gosrock.api.auth.service.helper;
 
 import band.gosrock.api.auth.model.dto.response.TokenAndUserResponse;
 import band.gosrock.common.annotation.Helper;
-import java.util.Arrays;
+import band.gosrock.common.helper.SpringEnvironmentHelper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 
 @Helper
 @RequiredArgsConstructor
 public class CookieGenerateHelper {
-    private final Environment env;
+    private final SpringEnvironmentHelper springEnvironmentHelper;
 
     public HttpHeaders getTokenCookies(TokenAndUserResponse tokenAndUserResponse) {
-        String[] activeProfiles = env.getActiveProfiles();
         String sameSite = "None";
 
-        if (Arrays.stream(activeProfiles).toList().contains("prod")) {
+        if (springEnvironmentHelper.isProdProfile()) {
             sameSite = "Strict";
         }
 

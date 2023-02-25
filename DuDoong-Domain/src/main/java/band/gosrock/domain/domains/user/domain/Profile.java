@@ -20,6 +20,13 @@ public class Profile {
     @Embedded private PhoneNumberVo phoneNumberVo;
     @Embedded private ImageVo profileImage;
 
+    public void withdraw() {
+        this.name = "탈퇴한 유저";
+        this.email = null;
+        this.phoneNumberVo = null;
+        this.profileImage = null;
+    }
+
     @Builder
     public Profile(String name, String email, String phoneNumber, String profileImage) {
         this.name = name;
