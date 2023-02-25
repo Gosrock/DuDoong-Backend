@@ -8,6 +8,11 @@ import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler;
 
@@ -20,15 +25,34 @@ public class SecurityConfig {
         "/swagger-resources/**", "/swagger-ui/**", "/v3/api-docs/**",
     };
 
+    /** 스웨거용 인메모리 유저 설정 */
+    @Bean
+    public InMemoryUserDetailsManager userDetailsService() {
+        UserDetails user =
+                User.withUsername("user")
+                        .password(passwordEncoder().encode("password"))
+                        .roles("SWAGGER")
+                        .build();
+        return new InMemoryUserDetailsManager(user);
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(8);
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.formLogin().disable().cors().and().csrf().disable();
 
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        http.authorizeRequests().expressionHandler(expressionHandler());
+
+        // 베이직 시큐리티 설정
+        // 할려면 filterConfig 에서 jwtToken filter 을 basic 보다 뒤로 밀어야함!
+        http.authorizeRequests().mvcMatchers(SwaggerPatterns).authenticated().and().httpBasic();
+
         http.authorizeRequests()
-                .expressionHandler(expressionHandler())
-                .mvcMatchers(SwaggerPatterns)
-                .permitAll()
                 .mvcMatchers("/v1/auth/oauth/**")
                 .permitAll()
                 .mvcMatchers("/v1/auth/token/refresh")
