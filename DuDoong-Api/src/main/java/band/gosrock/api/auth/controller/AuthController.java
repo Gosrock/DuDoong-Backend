@@ -14,7 +14,7 @@ import band.gosrock.api.auth.service.RefreshUseCase;
 import band.gosrock.api.auth.service.RegisterUseCase;
 import band.gosrock.api.auth.service.WithDrawUseCase;
 import band.gosrock.api.auth.service.helper.CookieGenerateHelper;
-import band.gosrock.api.config.rateLimit.RateLimiter;
+import band.gosrock.api.config.rateLimit.UserRateLimiter;
 import band.gosrock.common.annotation.ApiErrorCodeExample;
 import band.gosrock.common.annotation.DevelopOnlyApi;
 import band.gosrock.infrastructure.outer.api.oauth.exception.KakaoKauthErrorCode;
@@ -55,16 +55,12 @@ public class AuthController {
 
     private final CookieGenerateHelper cookieGenerateHelper;
 
-    private final RateLimiter rateLimiter;
+    private final UserRateLimiter rateLimiter;
 
     @Operation(summary = "kakao oauth 링크발급 (백엔드용 )", description = "kakao 링크를 받아볼수 있습니다.")
     @Tag(name = "1-2. [카카오]")
     @GetMapping("/oauth/kakao/link/test")
     public OauthLoginLinkResponse getKakaoOauthLinkTest() {
-        Bucket bucket = rateLimiter.resolveBucket("1");
-        boolean b = bucket.tryConsume(1);
-        long availableTokens = bucket.getAvailableTokens();
-        log.info(String.valueOf(b)+ availableTokens);
         return registerUseCase.getKaKaoOauthLinkTest();
     }
 
