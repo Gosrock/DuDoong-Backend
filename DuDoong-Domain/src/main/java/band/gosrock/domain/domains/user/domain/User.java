@@ -50,6 +50,12 @@ public class User extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private AccountRole accountRole = AccountRole.USER;
 
+    // 이메일 수신 여부
+    private Boolean receiveMail = Boolean.TRUE;
+
+    // 마케팅 동의 여부
+    private Boolean marketingAgree = Boolean.FALSE;
+
     private LocalDateTime lastLoginAt = LocalDateTime.now();
 
     @Builder
