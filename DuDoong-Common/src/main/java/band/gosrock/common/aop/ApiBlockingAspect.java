@@ -2,13 +2,12 @@ package band.gosrock.common.aop;
 
 
 import band.gosrock.common.exception.DuDoongDynamicException;
-import java.util.Arrays;
+import band.gosrock.common.helper.SpringEnvironmentHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 @Aspect
@@ -17,12 +16,11 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ApiBlockingAspect {
 
-    private final Environment env;
+    private final SpringEnvironmentHelper springEnvironmentHelper;
 
     @Around("@annotation(band.gosrock.common.annotation.DevelopOnlyApi)")
     public Object checkApiAcceptingCondition(ProceedingJoinPoint joinPoint) throws Throwable {
-        String[] activeProfiles = env.getActiveProfiles();
-        if (Arrays.stream(activeProfiles).toList().contains("prod")) {
+        if (springEnvironmentHelper.isProdProfile()) {
             throw new DuDoongDynamicException(405, "Blocked Api", "not working api in production");
         }
         return joinPoint.proceed();
