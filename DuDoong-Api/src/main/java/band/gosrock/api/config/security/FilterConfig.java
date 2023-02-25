@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.config.annotation.SecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.DefaultSecurityFilterChain;
-import org.springframework.security.web.access.ExceptionTranslationFilter;
+import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.stereotype.Component;
 
@@ -21,9 +21,8 @@ public class FilterConfig
 
     @Override
     public void configure(HttpSecurity builder) {
-        // 스웨거용 기본 인증을 위해서 jwtTokenFilter 을 뒤로 미룸.
-        builder.addFilterAfter(jwtTokenFilter, BasicAuthenticationFilter.class);
-        builder.addFilterAfter(jwtExceptionFilter, JwtTokenFilter.class);
-        builder.addFilterAfter(accessDeniedFilter, ExceptionTranslationFilter.class);
+        builder.addFilterBefore(jwtTokenFilter, BasicAuthenticationFilter.class);
+        builder.addFilterBefore(jwtExceptionFilter, JwtTokenFilter.class);
+        builder.addFilterBefore(accessDeniedFilter, FilterSecurityInterceptor.class);
     }
 }
