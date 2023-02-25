@@ -25,7 +25,7 @@ swagger:
   password: ${SWAGGER_PASSWORD:password}
 
 throttle:
-  overdraft: ${RATE_LIMIT_REFILL:60}
+  overdraft: ${RATE_LIMIT_OVERDRAFT:60}
   greedyRefill: ${RATE_LIMIT_REFILL:60}
 ---
 spring:
