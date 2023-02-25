@@ -21,8 +21,8 @@ server:
   forward-headers-strategy: framework
 
 swagger:
-  user: ${SWAGGER_USER}
-  password: ${SWAGGER_PASSWORD}
+  user: ${SWAGGER_USER:user}
+  password: ${SWAGGER_PASSWORD:password}
 ---
 spring:
   config:
