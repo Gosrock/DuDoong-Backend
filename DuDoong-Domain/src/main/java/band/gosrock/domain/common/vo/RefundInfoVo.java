@@ -2,6 +2,7 @@ package band.gosrock.domain.common.vo;
 
 
 import band.gosrock.common.annotation.DateFormat;
+import band.gosrock.domain.domains.order.domain.OrderStatus;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -24,5 +25,10 @@ public class RefundInfoVo {
     public static RefundInfoVo from(LocalDateTime endAt) {
         boolean before = LocalDateTime.now().isBefore(endAt);
         return RefundInfoVo.builder().endAt(endAt).availAble(before).build();
+    }
+
+    public static RefundInfoVo of(LocalDateTime endAt, OrderStatus orderStatus) {
+        boolean eventAndBefore = LocalDateTime.now().isBefore(endAt);
+        return RefundInfoVo.builder().endAt(endAt).availAble(Boolean.logicalAnd(orderStatus.isCanWithDraw(), eventAndBefore)).build();
     }
 }

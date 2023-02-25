@@ -203,9 +203,6 @@ public class TicketItem extends BaseTimeEntity {
         }
     }
 
-    public RefundInfoVo getRefundInfoVo() {
-        return event.toRefundInfoVo();
-    }
 
     /** 선착순 결제인지 확인하는 메서드 */
     public Boolean isFCFS() {

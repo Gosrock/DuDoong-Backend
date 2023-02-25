@@ -11,6 +11,7 @@ import band.gosrock.domain.common.events.event.EventStatusChangeEvent;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.*;
 import band.gosrock.domain.domains.event.exception.*;
+import band.gosrock.domain.domains.order.domain.OrderStatus;
 import java.time.LocalDateTime;
 import javax.persistence.*;
 import lombok.AccessLevel;
@@ -109,6 +110,10 @@ public class Event extends BaseTimeEntity {
 
     public boolean isTimeBeforeStartAt() {
         return LocalDateTime.now().isBefore(getStartAt());
+    }
+
+    public RefundInfoVo toRefundInfoVoWithOrderStatus(OrderStatus orderStatus) {
+        return RefundInfoVo.of(getEndAt(),orderStatus);
     }
 
     public RefundInfoVo toRefundInfoVo() {
