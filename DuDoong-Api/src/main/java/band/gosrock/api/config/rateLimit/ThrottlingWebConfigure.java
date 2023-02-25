@@ -1,5 +1,6 @@
 package band.gosrock.api.config.rateLimit;
 
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;

@@ -53,7 +53,7 @@ public enum GlobalErrorCode implements BaseErrorCode {
     BAD_LOCK_IDENTIFIER(500, "AOP_500_1", "락의 키값이 잘못 세팅 되었습니다"),
     BAD_FILE_EXTENSION(BAD_REQUEST, "FILE_400_1", "파일 확장자가 잘못 되었습니다."),
     TOSS_PAYMENTS_ENUM_NOT_MATCH(INTERNAL_SERVER, "INFRA_500_1", "토스페이먼츠 이넘값 관련 매칭 안된 문제입니다."),
-    TOO_MANY_REQUEST(429,"GLOBAL_429_1", "과도한 요청을 보내셨습니다. 잠시 기다려 주세요.");
+    TOO_MANY_REQUEST(429, "GLOBAL_429_1", "과도한 요청을 보내셨습니다. 잠시 기다려 주세요.");
     private Integer status;
     private String code;
     private String reason;

@@ -18,7 +18,6 @@ import band.gosrock.api.config.rateLimit.UserRateLimiter;
 import band.gosrock.common.annotation.ApiErrorCodeExample;
 import band.gosrock.common.annotation.DevelopOnlyApi;
 import band.gosrock.infrastructure.outer.api.oauth.exception.KakaoKauthErrorCode;
-import io.github.bucket4j.Bucket;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
