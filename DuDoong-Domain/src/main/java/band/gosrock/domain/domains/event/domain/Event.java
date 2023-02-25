@@ -113,11 +113,11 @@ public class Event extends BaseTimeEntity {
     }
 
     public RefundInfoVo toRefundInfoVoWithOrderStatus(OrderStatus orderStatus) {
-        return RefundInfoVo.of(getEndAt(), orderStatus);
+        return RefundInfoVo.of(getStartAt(), orderStatus);
     }
 
     public RefundInfoVo toRefundInfoVo() {
-        return RefundInfoVo.from(getEndAt());
+        return RefundInfoVo.from(getStartAt());
     }
 
     public EventInfoVo toEventInfoVo() {
