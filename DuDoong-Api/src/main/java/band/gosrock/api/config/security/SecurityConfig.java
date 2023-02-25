@@ -1,7 +1,9 @@
 package band.gosrock.api.config.security;
 
 
+import band.gosrock.common.helper.SpringEnvironmentHelper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
@@ -21,18 +23,25 @@ import org.springframework.security.web.access.expression.DefaultWebSecurityExpr
 public class SecurityConfig {
 
     private final FilterConfig filterConfig;
+
+    @Value("${swagger.user}")
+    private String swaggerUser;
+
+    @Value("${swagger.password}")
+    private String swaggerPassword;
+
     private static final String[] SwaggerPatterns = {
         "/swagger-resources/**", "/swagger-ui/**", "/v3/api-docs/**",
     };
 
-    //    private final SpringEnvironmentHelper springEnvironmentHelper;
+    private final SpringEnvironmentHelper springEnvironmentHelper;
 
     /** 스웨거용 인메모리 유저 설정 */
     @Bean
     public InMemoryUserDetailsManager userDetailsService() {
         UserDetails user =
-                User.withUsername("user")
-                        .password(passwordEncoder().encode("password"))
+                User.withUsername(swaggerUser)
+                        .password(passwordEncoder().encode(swaggerPassword))
                         .roles("SWAGGER")
                         .build();
         return new InMemoryUserDetailsManager(user);
@@ -54,9 +63,10 @@ public class SecurityConfig {
         // 베이직 시큐리티는 ExceptionTranslationFilter 에서 authenticationEntryPoint 에서
         // commence 로 401 넘겨줌. -> 응답 헤더에 www-authenticate 로 인증하라는 응답줌.
         // 브라우저가 basic auth 실행 시켜줌.
-        //        if(springEnvironmentHelper.isProdAndStagingProfile()){
-        http.authorizeRequests().mvcMatchers(SwaggerPatterns).authenticated().and().httpBasic();
-        //        }
+        // 개발 환경에서만 스웨거 비밀번호 미설정.
+        if (springEnvironmentHelper.isProdAndStagingProfile()) {
+            http.authorizeRequests().mvcMatchers(SwaggerPatterns).authenticated().and().httpBasic();
+        }
 
         http.authorizeRequests()
                 .mvcMatchers(SwaggerPatterns)
@@ -82,8 +92,6 @@ public class SecurityConfig {
                 // 내부 소스까지 실행을 못함. 권한 문제 때문에.
                 .anyRequest()
                 .hasRole("USER");
-        //        http
-        //            .exceptionHandling()
         http.apply(filterConfig);
 
         return http.build();
