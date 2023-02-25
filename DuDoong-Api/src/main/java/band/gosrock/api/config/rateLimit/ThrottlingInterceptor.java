@@ -1,14 +1,21 @@
 package band.gosrock.api.config.rateLimit;
 
 import band.gosrock.api.config.security.SecurityUtils;
+import band.gosrock.api.slack.sender.SlackThrottleErrorSender;
+import band.gosrock.common.dto.ErrorResponse;
+import band.gosrock.common.exception.GlobalErrorCode;
 import band.gosrock.common.exception.TooManyRequestException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.bucket4j.Bucket;
+import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.util.ContentCachingRequestWrapper;
 
 @Component
 @RequiredArgsConstructor
@@ -17,9 +24,12 @@ public class ThrottlingInterceptor implements HandlerInterceptor {
 
     private final UserRateLimiter userRateLimiter;
     private final IPRateLimiter ipRateLimiter;
+    private final ObjectMapper objectMapper;
 
+    private final SlackThrottleErrorSender slackThrottleErrorSender;
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler){
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+        throws IOException {
         Long userId = SecurityUtils.getCurrentUserId();
         Bucket bucket;
         if(userId == 0L){
@@ -36,11 +46,26 @@ public class ThrottlingInterceptor implements HandlerInterceptor {
 
         if (bucket.tryConsume(1)) {
             return true;
-        } else {
+        }
+
             // 슬랙 알림 메시지 발송.
             // limit is exceeded
-            throw TooManyRequestException.EXCEPTION;
-        }
+            ContentCachingRequestWrapper cachingRequest = (ContentCachingRequestWrapper) request;
+            slackThrottleErrorSender.execute(cachingRequest,userId);
+            responseTooManyRequestError(request, response);
+
+        return false;
+    }
+
+    private void responseTooManyRequestError(HttpServletRequest request, HttpServletResponse response)
+        throws IOException {
+        ErrorResponse errorResponse = new ErrorResponse(
+            GlobalErrorCode.TOO_MANY_REQUEST.getErrorReason(),
+            request.getRequestURL().toString());
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setStatus(errorResponse.getStatus());
+        response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
     }
 
 }

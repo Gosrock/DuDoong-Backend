@@ -15,7 +15,7 @@ import org.springframework.web.servlet.resource.ResourceUrlEncodingFilter;
 
 @Configuration
 @RequiredArgsConstructor
-@Profile({"prod", "staging"})
+@Profile({"prod", "staging","dev"})
 public class ServletFilterConfig implements WebMvcConfigurer {
 
     private final HttpContentCacheFilter httpContentCacheFilter;

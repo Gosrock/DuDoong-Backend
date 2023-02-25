@@ -21,9 +21,9 @@ public class SlackHelper {
     private final MethodsClient methodsClient;
 
     public void sendNotification(String CHANNEL_ID, List<LayoutBlock> layoutBlocks) {
-        if (!springEnvironmentHelper.isProdAndStagingProfile()) {
-            return;
-        }
+//        if (!springEnvironmentHelper.isProdAndStagingProfile()) {
+//            return;
+//        }
         ChatPostMessageRequest chatPostMessageRequest =
                 ChatPostMessageRequest.builder()
                         .channel(CHANNEL_ID)
