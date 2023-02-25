@@ -8,7 +8,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maxLifetime: 580000
-      maximum-pool-size: 15
+      maximum-pool-size: 10
     password: ${MYSQL_PASSWORD}
     username: ${MYSQL_USERNAME}
   jpa:
@@ -48,7 +48,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maxLifetime: 580000
-      maximum-pool-size: 100
+      maximum-pool-size: 20
     password: ${MYSQL_PASSWORD}
     username: ${MYSQL_USERNAME}
   jpa:
@@ -72,7 +72,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maxLifetime: 580000
-      maximum-pool-size: 40
+      maximum-pool-size: 20
     password: ${MYSQL_PASSWORD}
     username: ${MYSQL_USERNAME}
   jpa:
