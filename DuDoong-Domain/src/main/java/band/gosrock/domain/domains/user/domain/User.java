@@ -59,9 +59,10 @@ public class User extends BaseTimeEntity {
     private LocalDateTime lastLoginAt = LocalDateTime.now();
 
     @Builder
-    public User(Profile profile, OauthInfo oauthInfo) {
+    public User(Profile profile, OauthInfo oauthInfo, Boolean marketingAgree) {
         this.profile = profile;
         this.oauthInfo = oauthInfo;
+        this.marketingAgree = marketingAgree;
     }
 
     @PostPersist
@@ -108,5 +109,21 @@ public class User extends BaseTimeEntity {
         }
         return new AlimTalkUserInfo(
                 profile.getName(), profile.getPhoneNumberVo().getNaverSmsToNumber());
+    }
+
+    public Boolean isReceiveEmail() {
+        return receiveMail;
+    }
+
+    public Boolean isAgreeMarketing() {
+        return marketingAgree;
+    }
+
+    public void toggleReceiveEmail() {
+        receiveMail = !receiveMail;
+    }
+
+    public void toggleMarketingAgree() {
+        marketingAgree = !marketingAgree;
     }
 }
