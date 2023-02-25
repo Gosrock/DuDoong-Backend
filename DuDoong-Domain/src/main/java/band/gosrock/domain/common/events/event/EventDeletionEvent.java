@@ -12,12 +12,12 @@ import lombok.ToString;
 @ToString
 public class EventDeletionEvent extends DomainEvent {
     private final Long hostId;
-    private final Long eventId;
+    private final String eventName;
 
     public static EventDeletionEvent of(Event event) {
         return EventDeletionEvent.builder()
                 .hostId(event.getHostId())
-                .eventId(event.getId())
+                .eventName(event.getEventBasic().getName())
                 .build();
     }
 }

@@ -1,6 +1,7 @@
 package band.gosrock.api.order.model.dto.response;
 
 
+import band.gosrock.common.annotation.DateFormat;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.OptionAnswerVo;
 import band.gosrock.domain.domains.order.domain.Order;
@@ -24,6 +25,7 @@ public class OrderLineTicketResponse {
     private final String ticketNos;
 
     @Schema(description = "구매 일시")
+    @DateFormat
     private final LocalDateTime paymentAt;
 
     @Schema(description = "유저이름")

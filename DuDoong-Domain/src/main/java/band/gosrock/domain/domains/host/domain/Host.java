@@ -11,7 +11,9 @@ import band.gosrock.domain.common.vo.HostInfoVo;
 import band.gosrock.domain.common.vo.HostProfileVo;
 import band.gosrock.domain.domains.host.exception.*;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -42,6 +44,7 @@ public class Host extends BaseTimeEntity {
 
     // 단방향 oneToMany 매핑
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OrderBy("createdAt DESC")
     private final Set<HostUser> hostUsers = new HashSet<>();
 
     public void addHostUsers(Set<HostUser> hostUserList) {
@@ -68,6 +71,10 @@ public class Host extends BaseTimeEntity {
                 .filter(hostUser -> hostUser.getUserId().equals(userId))
                 .findFirst()
                 .orElseThrow(() -> HostUserNotFoundException.EXCEPTION);
+    }
+
+    public List<Long> getHostUser_UserIds() {
+        return this.hostUsers.stream().map(HostUser::getUserId).collect(Collectors.toList());
     }
 
     public void updateProfile(HostProfile hostProfile) {
@@ -147,6 +154,11 @@ public class Host extends BaseTimeEntity {
     /** 해당 호스트가 파트너 인지 검증합니다. */
     public void validatePartnerHost() {
         if (partner != TRUE) throw NotPartnerHostException.EXCEPTION;
+    }
+
+    /** 해당 호스트가 파트너인지아닌지 */
+    public Boolean isPartnerHost() {
+        return partner;
     }
 
     public HostInfoVo toHostInfoVo() {

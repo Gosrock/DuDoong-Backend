@@ -32,17 +32,28 @@ public class EventController {
     private final ReadUserEventProfilesUseCase readUserHostEventListUseCase;
     private final ReadEventDetailUseCase readEventDetailUseCase;
     private final ReadEventChecklistUseCase readEventChecklistUseCase;
+    private final SearchEventsUseCase searchEventsUseCase;
     private final CreateEventUseCase createEventUseCase;
     private final UpdateEventBasicUseCase updateEventBasicUseCase;
     private final UpdateEventDetailUseCase updateEventDetailUseCase;
     private final UpdateEventStatusUseCase updateEventStatusUseCase;
-    private final OpenEventUseCase openEventStatusUseCase;
+    private final OpenEventUseCase openEventUseCase;
+    private final DeleteEventUseCase deleteEventUseCase;
 
     @Operation(summary = "자신이 관리 중인 이벤트 리스트를 가져옵니다.")
     @GetMapping
     public SliceResponse<EventProfileResponse> getAllEventByUser(
             @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
         return readUserHostEventListUseCase.execute(pageable);
+    }
+
+    @Operation(summary = "이벤트 이름을 키워드로 검색하여 최신순으로 가져옵니다.")
+    @DisableSwaggerSecurity
+    @GetMapping("/search")
+    public SliceResponse<EventResponse> getAllOpenEventByUser(
+            @RequestParam(required = false) String keyword,
+            @ParameterObject @PageableDefault(size = 10) Pageable pageable) {
+        return searchEventsUseCase.execute(keyword, pageable);
     }
 
     @Operation(summary = "공연 기본 정보를 등록하여, 새로운 이벤트(공연)를 생성합니다")
@@ -83,7 +94,7 @@ public class EventController {
     @Operation(summary = "공연을 오픈 상태로 변경합니다. 모든 체크리스트를 달성해야 합니다.")
     @PatchMapping("/{eventId}/open")
     public EventResponse updateEventStatus(@PathVariable Long eventId) {
-        return openEventStatusUseCase.execute(eventId);
+        return openEventUseCase.execute(eventId);
     }
 
     @Operation(summary = "공연 상태를 변경합니다. (OPEN 제외)")
@@ -92,5 +103,11 @@ public class EventController {
             @PathVariable Long eventId,
             @RequestBody @Valid UpdateEventStatusRequest updateEventDetailRequest) {
         return updateEventStatusUseCase.execute(eventId, updateEventDetailRequest);
+    }
+
+    @Operation(summary = "공연을 삭제합니다. 조건에 맞지 않을 경우 삭제할 수 없습니다.")
+    @PatchMapping("/{eventId}/delete")
+    public EventResponse deleteEvent(@PathVariable Long eventId) {
+        return deleteEventUseCase.execute(eventId);
     }
 }

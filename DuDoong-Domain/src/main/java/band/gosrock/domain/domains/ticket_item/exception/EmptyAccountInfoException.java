@@ -8,6 +8,6 @@ public class EmptyAccountInfoException extends DuDoongCodeException {
     public static final DuDoongCodeException EXCEPTION = new EmptyAccountInfoException();
 
     private EmptyAccountInfoException() {
-        super(TicketItemErrorCode.EMPTY_ACCOUT_INFO);
+        super(TicketItemErrorCode.EMPTY_ACCOUNT_INFO);
     }
 }

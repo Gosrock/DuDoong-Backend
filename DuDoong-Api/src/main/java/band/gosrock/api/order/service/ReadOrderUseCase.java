@@ -11,10 +11,10 @@ import band.gosrock.api.order.model.dto.request.AdminOrderTableQueryRequest;
 import band.gosrock.api.order.model.dto.response.OrderAdminTableElement;
 import band.gosrock.api.order.model.dto.response.OrderBriefElement;
 import band.gosrock.api.order.model.dto.response.OrderResponse;
+import band.gosrock.api.order.model.dto.response.OrderTicketResponse;
 import band.gosrock.api.order.model.mapper.OrderMapper;
 import band.gosrock.common.annotation.UseCase;
-import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
-import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
+import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.validator.OrderValidator;
@@ -34,14 +34,19 @@ public class ReadOrderUseCase {
     private final OrderAdaptor orderAdaptor;
 
     private final OrderValidator orderValidator;
-    private final HostAdaptor hostAdaptor;
-    private final EventAdaptor eventAdaptor;
     private final UserUtils userUtils;
 
+    private final IssuedTicketAdaptor issuedTicketAdaptor;
+
     public OrderResponse getOrderDetail(String orderUuid) {
+        Order order = getMyOrder(orderUuid);
+        return orderMapper.toOrderResponse(order);
+    }
+
+    private Order getMyOrder(String orderUuid) {
         Order order = orderAdaptor.findByOrderUuid(orderUuid);
         orderValidator.validOwner(order, userUtils.getCurrentUserId());
-        return orderMapper.toOrderResponse(order);
+        return order;
     }
 
     public OrderBriefElement getRecentOrder() {
@@ -73,12 +78,19 @@ public class ReadOrderUseCase {
         Page<Order> orders =
                 orderAdaptor.findEventOrders(
                         adminOrderTableQueryRequest.toCondition(eventId), pageable);
-        return PageResponse.of(orderMapper.toOrderAdminTableElement(orders));
+        return PageResponse.of(orderMapper.toOrderAdminTableElement(eventId, orders));
     }
 
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
     public OrderResponse getEventOrderDetail(Long eventId, String orderUuid) {
         Order order = orderAdaptor.findByOrderUuid(orderUuid);
         return orderMapper.toOrderResponse(order);
+    }
+
+    public OrderTicketResponse getOrderTickets(String orderUuid) {
+
+        Order order = getMyOrder(orderUuid);
+
+        return orderMapper.toOrderTicketResponse(order);
     }
 }

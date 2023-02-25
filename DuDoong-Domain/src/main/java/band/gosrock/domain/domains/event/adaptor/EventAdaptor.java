@@ -3,6 +3,7 @@ package band.gosrock.domain.domains.event.adaptor;
 
 import band.gosrock.common.annotation.Adaptor;
 import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.event.domain.EventStatus;
 import band.gosrock.domain.domains.event.exception.EventNotFoundException;
 import band.gosrock.domain.domains.event.repository.EventRepository;
 import java.util.List;
@@ -35,6 +36,16 @@ public class EventAdaptor {
     @Transactional(readOnly = true)
     public Slice<Event> querySliceEventsByHostIdIn(List<Long> hostId, Pageable pageable) {
         return eventRepository.querySliceEventsByHostIdIn(hostId, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Slice<Event> querySliceEventsByStatus(EventStatus status, Pageable pageable) {
+        return eventRepository.querySliceEventsByStatus(status, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Slice<Event> querySliceEventsByKeyword(String keyword, Pageable pageable) {
+        return eventRepository.querySliceEventsByKeyword(keyword, pageable);
     }
 
     public List<Event> findAllByIds(List<Long> ids) {

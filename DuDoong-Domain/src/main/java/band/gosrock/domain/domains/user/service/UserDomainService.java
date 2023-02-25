@@ -20,9 +20,14 @@ public class UserDomainService {
 
     @Transactional
     @RedissonLock(LockName = "유저등록", identifier = "oid", paramClassType = OauthInfo.class)
-    public User registerUser(Profile profile, OauthInfo oauthInfo) {
+    public User registerUser(Profile profile, OauthInfo oauthInfo, Boolean marketingAgree) {
         validUserCanRegister(oauthInfo);
-        User newUser = User.builder().profile(profile).oauthInfo(oauthInfo).build();
+        User newUser =
+                User.builder()
+                        .profile(profile)
+                        .marketingAgree(marketingAgree)
+                        .oauthInfo(oauthInfo)
+                        .build();
         userRepository.save(newUser);
         return newUser;
     }
@@ -35,14 +40,17 @@ public class UserDomainService {
                 .orElseGet(
                         () -> {
                             User newUser =
-                                    User.builder().profile(profile).oauthInfo(oauthInfo).build();
+                                    User.builder()
+                                            .profile(profile)
+                                            .marketingAgree(Boolean.TRUE)
+                                            .oauthInfo(oauthInfo)
+                                            .build();
                             userRepository.save(newUser);
                             return newUser;
                         });
     }
 
     public Boolean checkUserCanRegister(OauthInfo oauthInfo) {
-
         return !userAdaptor.exist(oauthInfo);
     }
 
@@ -62,5 +70,17 @@ public class UserDomainService {
     public void withDrawUser(Long userId) {
         User user = userAdaptor.queryUser(userId);
         user.withDrawUser();
+    }
+
+    @Transactional
+    public void toggleMarketAgree(Long currentUserId) {
+        User user = userAdaptor.queryUser(currentUserId);
+        user.toggleMarketingAgree();
+    }
+
+    @Transactional
+    public void toggleMailAgree(Long currentUserId) {
+        User user = userAdaptor.queryUser(currentUserId);
+        user.toggleReceiveEmail();
     }
 }

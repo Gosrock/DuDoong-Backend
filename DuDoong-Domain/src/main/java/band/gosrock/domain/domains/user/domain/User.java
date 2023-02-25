@@ -7,8 +7,11 @@ import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.UserInfoVo;
 import band.gosrock.domain.common.vo.UserProfileVo;
 import band.gosrock.domain.domains.user.exception.AlreadyDeletedUserException;
+import band.gosrock.domain.domains.user.exception.EmptyPhoneNumException;
 import band.gosrock.domain.domains.user.exception.ForbiddenUserException;
+import band.gosrock.infrastructure.config.alilmTalk.dto.AlimTalkUserInfo;
 import band.gosrock.infrastructure.config.mail.dto.EmailUserInfo;
+import com.google.i18n.phonenumbers.NumberParseException;
 import java.time.LocalDateTime;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
@@ -47,12 +50,19 @@ public class User extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private AccountRole accountRole = AccountRole.USER;
 
+    // 이메일 수신 여부
+    private Boolean receiveMail = Boolean.TRUE;
+
+    // 마케팅 동의 여부
+    private Boolean marketingAgree = Boolean.FALSE;
+
     private LocalDateTime lastLoginAt = LocalDateTime.now();
 
     @Builder
-    public User(Profile profile, OauthInfo oauthInfo) {
+    public User(Profile profile, OauthInfo oauthInfo, Boolean marketingAgree) {
         this.profile = profile;
         this.oauthInfo = oauthInfo;
+        this.marketingAgree = marketingAgree;
     }
 
     @PostPersist
@@ -70,6 +80,7 @@ public class User extends BaseTimeEntity {
             throw AlreadyDeletedUserException.EXCEPTION;
         }
         accountState = AccountState.DELETED;
+        profile.withdraw();
         oauthInfo = oauthInfo.withDrawOauthInfo();
     }
 
@@ -89,6 +100,31 @@ public class User extends BaseTimeEntity {
     }
 
     public EmailUserInfo toEmailUserInfo() {
-        return new EmailUserInfo(profile.getName(), profile.getEmail());
+        return new EmailUserInfo(profile.getName(), profile.getEmail(), receiveMail);
+    }
+
+    public AlimTalkUserInfo toAlimTalkUserInfo() throws NumberParseException {
+        if (profile.getPhoneNumberVo().getPhoneNumber() == null
+                || profile.getPhoneNumberVo().getPhoneNumber().isEmpty()) {
+            throw EmptyPhoneNumException.EXCEPTION;
+        }
+        return new AlimTalkUserInfo(
+                profile.getName(), profile.getPhoneNumberVo().getNaverSmsToNumber());
+    }
+
+    public Boolean isReceiveEmail() {
+        return receiveMail;
+    }
+
+    public Boolean isAgreeMarketing() {
+        return marketingAgree;
+    }
+
+    public void toggleReceiveEmail() {
+        receiveMail = !receiveMail;
+    }
+
+    public void toggleMarketingAgree() {
+        marketingAgree = !marketingAgree;
     }
 }

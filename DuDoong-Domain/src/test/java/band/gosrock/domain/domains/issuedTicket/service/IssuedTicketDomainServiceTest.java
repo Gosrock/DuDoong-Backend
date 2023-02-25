@@ -208,12 +208,12 @@ public class IssuedTicketDomainServiceTest {
     @Test
     public void 발급_티켓_입장_처리_로직_정상_작동_테스트() {
         // given
-        given(issuedTicketAdaptor.queryIssuedTicket(any())).willReturn(issuedTicket1);
+        given(issuedTicketAdaptor.queryByIssuedTicketUuid(any())).willReturn(issuedTicket1);
         given(issuedTicketOptionAnswer.getAdditionalPrice()).willReturn(w3000);
         given(issuedTicketOptionAnswer1.getAdditionalPrice()).willReturn(w3000);
 
         // when
-        issuedTicketDomainService.processingEntranceIssuedTicket(1L, 1L);
+        issuedTicketDomainService.processingEntranceIssuedTicket(1L, "UUID");
 
         // then
         assertEquals(issuedTicket1.getIssuedTicketStatus(), IssuedTicketStatus.ENTRANCE_COMPLETED);

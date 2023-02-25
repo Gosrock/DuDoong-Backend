@@ -8,6 +8,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maxLifetime: 580000
+      maximum-pool-size: 10
     password: ${MYSQL_PASSWORD}
     username: ${MYSQL_USERNAME}
   jpa:
@@ -15,7 +16,7 @@ spring:
     properties:
       hibernate:
         format_sql: ${FORMAT_SQL:true}
-        default_batch_fetch_size: ${JPA_BATCH_FETCH_SIZE}
+        default_batch_fetch_size: ${JPA_BATCH_FETCH_SIZE:100}
     hibernate:
       ddl-auto: update
     defer-datasource-initialization: true
@@ -26,6 +27,8 @@ spring:
     database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
 logging:
   level:
+    com.zaxxer.hikari.HikariConfig: DEBUG
+    com.zaxxer.hikari: TRACE
     org.springframework.orm.jpa: DEBUG
     org.springframework.transaction: DEBUG
 ---
@@ -45,6 +48,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maxLifetime: 580000
+      maximum-pool-size: 20
     password: ${MYSQL_PASSWORD}
     username: ${MYSQL_USERNAME}
   jpa:
@@ -68,6 +72,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maxLifetime: 580000
+      maximum-pool-size: 20
     password: ${MYSQL_PASSWORD}
     username: ${MYSQL_USERNAME}
   jpa:
