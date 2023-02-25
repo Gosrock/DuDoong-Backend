@@ -5,7 +5,6 @@ import static band.gosrock.common.consts.DuDoongStatic.MINIMUM_PAYMENT_WON;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.AccountInfoVo;
 import band.gosrock.domain.common.vo.Money;
-import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.exception.*;
 import java.time.LocalDateTime;
@@ -202,7 +201,6 @@ public class TicketItem extends BaseTimeEntity {
             }
         }
     }
-
 
     /** 선착순 결제인지 확인하는 메서드 */
     public Boolean isFCFS() {

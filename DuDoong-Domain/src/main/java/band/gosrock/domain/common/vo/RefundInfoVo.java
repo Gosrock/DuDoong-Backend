@@ -29,6 +29,8 @@ public class RefundInfoVo {
 
     public static RefundInfoVo of(LocalDateTime endAt, OrderStatus orderStatus) {
         boolean eventAndBefore = LocalDateTime.now().isBefore(endAt);
-        return RefundInfoVo.builder().endAt(endAt).availAble(Boolean.logicalAnd(orderStatus.isCanWithDraw(), eventAndBefore)).build();
+        Boolean availAble =
+                eventAndBefore == Boolean.TRUE ? orderStatus.isCanWithDraw() : Boolean.FALSE;
+        return RefundInfoVo.builder().endAt(endAt).availAble(availAble).build();
     }
 }

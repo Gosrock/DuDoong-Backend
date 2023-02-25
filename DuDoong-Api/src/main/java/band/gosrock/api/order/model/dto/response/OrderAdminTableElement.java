@@ -55,7 +55,7 @@ public class OrderAdminTableElement {
 
     public static OrderAdminTableElement of(Order order, Event event, User user) {
         return OrderAdminTableElement.builder()
-                .refundInfo(event.toRefundInfoVo())
+                .refundInfo(event.toRefundInfoVoWithOrderStatus(order.getOrderStatus()))
                 .orderUuid(order.getUuid())
                 .orderNo(order.getOrderNo())
                 .orderStatus(order.getOrderStatus())
