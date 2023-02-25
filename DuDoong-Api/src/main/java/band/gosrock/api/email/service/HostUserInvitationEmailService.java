@@ -19,6 +19,6 @@ public class HostUserInvitationEmailService {
         context.setVariable("hostName", hostName);
         context.setVariable("role", hostRole.getValue());
         awsSesUtils.singleEmailRequest(
-                userInfo.getEmail(), "두둥" + hostName + " 호스트 초대 알림 드립니다.", "hostInvite", context);
+                userInfo, "두둥" + hostName + " 호스트 초대 알림 드립니다.", "hostInvite", context);
     }
 }

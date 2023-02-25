@@ -23,7 +23,6 @@ public class EntranceIssuedTicketEmailService {
         context.setVariable("issuedTicketInfo", issuedTicketMailDTO.getIssuedTicketInfo());
         context.setVariable("eventInfo", issuedTicketMailDTO.getEventInfo());
 
-        awsSesUtils.singleEmailRequest(
-                userInfo.getEmail(), subject, "entranceIssuedTicket", context);
+        awsSesUtils.singleEmailRequest(userInfo, subject, "entranceIssuedTicket", context);
     }
 }

@@ -19,7 +19,6 @@ public class OrderPaymentDoneEmailService {
         context.setVariable("userInfo", userInfo);
         context.setVariable("orderInfo", orderMailDto.getOrderInfo());
         context.setVariable("eventInfo", orderMailDto.getEventInfo());
-        awsSesUtils.singleEmailRequest(
-                userInfo.getEmail(), "두둥 주문 완료 알림드립니다.", "orderPaymentDone", context);
+        awsSesUtils.singleEmailRequest(userInfo, "두둥 주문 완료 알림드립니다.", "orderPaymentDone", context);
     }
 }
