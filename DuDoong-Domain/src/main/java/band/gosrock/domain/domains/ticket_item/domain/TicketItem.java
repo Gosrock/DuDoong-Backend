@@ -249,6 +249,10 @@ public class TicketItem extends BaseTimeEntity {
         this.quantity = this.quantity + quantity;
     }
 
+    public Boolean isSold() {
+        return quantity < supplyCount;
+    }
+
     public Long getEventId() {
         return event.getId();
     }
