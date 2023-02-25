@@ -35,7 +35,7 @@ class RegisterUserEventHandlerTest {
         //            }
         //        });
         // when
-        userDomainService.registerUser(profile, oauthInfo);
+        userDomainService.registerUser(profile, oauthInfo, Boolean.TRUE);
 
         // then
         BDDMockito.then(registerUserEventHandler).should(times(1)).handleRegisterUserEvent(any());

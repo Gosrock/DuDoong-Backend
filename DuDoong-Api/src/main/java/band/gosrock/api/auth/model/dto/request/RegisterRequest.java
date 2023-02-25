@@ -4,17 +4,17 @@ package band.gosrock.api.auth.model.dto.request;
 import band.gosrock.domain.domains.user.domain.Profile;
 import javax.validation.constraints.NotEmpty;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
+@NoArgsConstructor
 public class RegisterRequest {
-    @NotEmpty private final String email;
-    private final String phoneNumber;
-    private final String profileImage;
-    @NotEmpty private final String name;
+    @NotEmpty private String email;
+    private String phoneNumber;
+    private String profileImage;
+    @NotEmpty private String name;
 
-    private final Boolean marketingAgree = Boolean.FALSE;
+    private Boolean marketingAgree = Boolean.FALSE;
 
     public Profile toProfile() {
         return Profile.builder()
