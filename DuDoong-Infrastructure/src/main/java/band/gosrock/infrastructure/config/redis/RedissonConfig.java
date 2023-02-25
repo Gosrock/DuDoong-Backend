@@ -36,7 +36,7 @@ public class RedissonConfig {
     public CacheManager cacheManager(RedissonClient redissonClient) {
         CacheManager manager = Caching.getCachingProvider().getCacheManager();
         Cache<Object, Object> bucket4j = manager.getCache("bucket4j");
-        if(bucket4j == null){
+        if (bucket4j == null) {
             manager.createCache("bucket4j", RedissonConfiguration.fromInstance(redissonClient));
         }
         return manager;
