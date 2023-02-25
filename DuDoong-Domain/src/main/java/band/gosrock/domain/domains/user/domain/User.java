@@ -99,7 +99,7 @@ public class User extends BaseTimeEntity {
     }
 
     public EmailUserInfo toEmailUserInfo() {
-        return new EmailUserInfo(profile.getName(), profile.getEmail());
+        return new EmailUserInfo(profile.getName(), profile.getEmail(), receiveMail);
     }
 
     public AlimTalkUserInfo toAlimTalkUserInfo() throws NumberParseException {
