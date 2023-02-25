@@ -10,7 +10,6 @@ import band.gosrock.api.ticketItem.mapper.TicketOptionMapper;
 import band.gosrock.common.annotation.UseCase;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
-import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.domain.OptionGroup;
 import band.gosrock.domain.domains.ticket_item.service.TicketOptionService;
 import lombok.RequiredArgsConstructor;
@@ -27,11 +26,9 @@ public class CreateTicketOptionUseCase {
     public OptionGroupResponse execute(
             CreateTicketOptionRequest createTicketOptionRequest, Long eventId) {
 
-        Event event = eventAdaptor.findById(eventId);
-
         OptionGroup ticketOption =
                 ticketOptionMapper
-                        .toOptionGroup(createTicketOptionRequest, event)
+                        .toOptionGroup(createTicketOptionRequest, eventId)
                         .createTicketOption(
                                 Money.wons(createTicketOptionRequest.getAdditionalPrice()));
         OptionGroup ticketOptionResult = ticketOptionService.createTicketOption(ticketOption);
