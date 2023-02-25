@@ -73,6 +73,7 @@ public class User extends BaseTimeEntity {
             throw AlreadyDeletedUserException.EXCEPTION;
         }
         accountState = AccountState.DELETED;
+        profile.withdraw();
         oauthInfo = oauthInfo.withDrawOauthInfo();
     }
 
