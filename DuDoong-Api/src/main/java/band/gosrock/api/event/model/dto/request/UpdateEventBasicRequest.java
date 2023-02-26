@@ -4,6 +4,7 @@ package band.gosrock.api.event.model.dto.request;
 import band.gosrock.common.annotation.DateFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
+import javax.validation.constraints.Future;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
@@ -25,6 +26,7 @@ public class UpdateEventBasicRequest {
             defaultValue = "2023.03.20 12:00",
             description = "공연 시작 시각")
     @NotNull(message = "공연 시작 시각을 입력하세요")
+    @Future(message = "공연 시작 시각은 현재보다 이후여야 합니다.")
     @DateFormat
     private LocalDateTime startAt;
 
