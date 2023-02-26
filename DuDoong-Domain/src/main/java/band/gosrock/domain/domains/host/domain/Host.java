@@ -43,7 +43,11 @@ public class Host extends BaseTimeEntity {
     private String slackUrl;
 
     // 단방향 oneToMany 매핑
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(
+            mappedBy = "host",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.EAGER)
     @OrderBy("createdAt DESC")
     private final Set<HostUser> hostUsers = new HashSet<>();
 
@@ -113,6 +117,11 @@ public class Host extends BaseTimeEntity {
                 .setHostRole(role);
     }
 
+    public void removeHostUser(Long userId) {
+        if (this.isActiveHostUserId(userId)) throw AlreadyJoinedHostException.EXCEPTION;
+        this.hostUsers.remove(this.getHostUserByUserId(userId));
+    }
+
     /** 해당 유저가 호스트에 이미 속하는지 확인하는 검증 로직입니다 */
     public void validateHostUserIdExistence(Long userId) {
         if (this.hasHostUserId(userId)) {
@@ -123,8 +132,6 @@ public class Host extends BaseTimeEntity {
     public void validateHostUserExistence(HostUser hostUser) {
         validateHostUserIdExistence(hostUser.getUserId());
     }
-
-    // todo :: 여기서부터 테스트 진행
 
     /** 해당 유저가 호스트에 속하는지 확인하는 검증 로직입니다 */
     public void validateHostUser(Long userId) {

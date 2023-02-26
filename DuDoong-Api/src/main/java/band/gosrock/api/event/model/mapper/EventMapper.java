@@ -80,7 +80,7 @@ public class EventMapper {
     }
 
     public Slice<EventProfileResponse> toEventProfileResponseSlice(Long userId, Pageable pageable) {
-        List<Host> hosts = hostAdaptor.findAllByHostUsers_UserId(userId);
+        List<Host> hosts = hostAdaptor.querySliceHostsByActiveUserId(userId);
         List<Long> hostIds = hosts.stream().map(Host::getId).toList();
         Slice<Event> events = eventAdaptor.querySliceEventsByHostIdIn(hostIds, pageable);
         return events.map(event -> this.toEventProfileResponse(hosts, event));

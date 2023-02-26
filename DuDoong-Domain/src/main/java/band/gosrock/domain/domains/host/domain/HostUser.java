@@ -25,7 +25,7 @@ public class HostUser extends BaseTimeEntity {
     private Long id;
 
     // 소속 호스트 아이디
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "host_id")
     private Host host;
 
