@@ -5,7 +5,6 @@ import static band.gosrock.common.consts.DuDoongStatic.MINIMUM_PAYMENT_WON;
 import band.gosrock.domain.common.model.BaseTimeEntity;
 import band.gosrock.domain.common.vo.AccountInfoVo;
 import band.gosrock.domain.common.vo.Money;
-import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.exception.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -73,9 +72,7 @@ public class TicketItem extends BaseTimeEntity {
     @ColumnDefault(value = "'VALID'")
     private TicketItemStatus ticketItemStatus = TicketItemStatus.VALID;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id", nullable = false)
-    private Event event;
+    private Long eventId;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     private final List<ItemOptionGroup> itemOptionGroups = new ArrayList<>();
@@ -97,7 +94,7 @@ public class TicketItem extends BaseTimeEntity {
             Boolean isSellable,
             LocalDateTime saleStartAt,
             LocalDateTime saleEndAt,
-            Event event) {
+            Long eventId) {
         this.payType = payType;
         this.name = name;
         this.description = description;
@@ -111,7 +108,7 @@ public class TicketItem extends BaseTimeEntity {
         this.isSellable = isSellable;
         this.saleStartAt = saleStartAt;
         this.saleEndAt = saleEndAt;
-        this.event = event;
+        this.eventId = eventId;
     }
 
     public void addItemOptionGroup(OptionGroup optionGroup) {
@@ -161,7 +158,7 @@ public class TicketItem extends BaseTimeEntity {
     }
 
     public void validateEventId(Long eventId) {
-        if (!this.getEvent().getId().equals(eventId)) {
+        if (!this.getEventId().equals(eventId)) {
             throw InvalidTicketItemException.EXCEPTION;
         }
     }
@@ -254,6 +251,6 @@ public class TicketItem extends BaseTimeEntity {
     }
 
     public Long getEventId() {
-        return event.getId();
+        return eventId;
     }
 }

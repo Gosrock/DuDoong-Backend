@@ -12,5 +12,5 @@ public interface OptionGroupRepository extends JpaRepository<OptionGroup, Long> 
     Optional<OptionGroup> findByIdAndOptionGroupStatus(
             Long optionGroupId, OptionGroupStatus status);
 
-    List<OptionGroup> findAllByEvent_IdAndOptionGroupStatus(Long eventId, OptionGroupStatus status);
+    List<OptionGroup> findAllByEventIdAndOptionGroupStatus(Long eventId, OptionGroupStatus status);
 }

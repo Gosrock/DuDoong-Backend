@@ -25,7 +25,7 @@ public class OrderToIssuedTicketService {
     public List<IssuedTicket> execute(TicketItem ticketItem, String orderUuid, Long userId) {
         User user = userAdaptor.queryUser(userId);
         Order order = orderAdaptor.findByOrderUuid(orderUuid);
-        Long eventId = ticketItem.getEvent().getId();
+        Long eventId = ticketItem.getEventId();
         return order.getOrderLineItems().stream()
                 .map(
                         orderLineItem ->
