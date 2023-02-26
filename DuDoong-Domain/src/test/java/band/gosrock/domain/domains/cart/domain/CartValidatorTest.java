@@ -50,7 +50,9 @@ class CartValidatorTest {
 
     @BeforeEach
     void setUp() {
-        cartValidator = new CartValidator(ticketItemAdaptor, issuedTicketAdaptor,eventAdaptor, optionAdaptor);
+        cartValidator =
+                new CartValidator(
+                        ticketItemAdaptor, issuedTicketAdaptor, eventAdaptor, optionAdaptor);
     }
 
     @Test
