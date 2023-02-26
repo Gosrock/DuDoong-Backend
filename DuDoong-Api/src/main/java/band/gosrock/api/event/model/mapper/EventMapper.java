@@ -29,7 +29,6 @@ public class EventMapper {
     private final EventAdaptor eventAdaptor;
     private final TicketItemAdaptor ticketItemAdaptor;
 
-    @Transactional(readOnly = true)
     public Event toEntity(CreateEventRequest createEventRequest) {
         return Event.builder()
                 .hostId(createEventRequest.getHostId())
