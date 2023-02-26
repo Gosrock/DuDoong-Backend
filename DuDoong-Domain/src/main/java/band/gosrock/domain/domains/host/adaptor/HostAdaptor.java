@@ -38,4 +38,13 @@ public class HostAdaptor {
     public List<Host> findAllByHostUsers_UserId(Long userId) {
         return hostRepository.findAllByHostUsers_UserId(userId);
     }
+
+    /** 자신이 속해있는 호스트 리스트 중 초대 수락한 호스트만 가져오는 쿼리 요청 */
+    public List<Host> querySliceHostsByActiveUserId(Long userId) {
+        return hostRepository.queryHostsByActiveUserId(userId);
+    }
+
+    public Slice<Host> querySliceHostsByActiveUserId(Long userId, Pageable pageable) {
+        return hostRepository.querySliceHostsByActiveUserId(userId, pageable);
+    }
 }

@@ -39,6 +39,7 @@ public class HostController {
     private final UpdateHostUserRoleUseCase updateHostUserRoleUseCase;
     private final InviteHostUseCase inviteHostUseCase;
     private final JoinHostUseCase joinHostUseCase;
+    private final RejectHostUseCase rejectHostUseCase;
 
     @Operation(summary = "내가 속한 호스트 리스트를 가져옵니다.")
     @GetMapping
@@ -80,6 +81,12 @@ public class HostController {
         return joinHostUseCase.execute(hostId);
     }
 
+    @Operation(summary = "호스트 초대를 거절합니다.")
+    @PostMapping("/{hostId}/reject")
+    public HostDetailResponse rejectHost(@PathVariable Long hostId) {
+        return rejectHostUseCase.execute(hostId);
+    }
+
     @Operation(summary = "다른 유저를 호스트 유저로 초대합니다.")
     @PostMapping("/{hostId}/invite")
     public HostDetailResponse inviteHost(
@@ -95,7 +102,6 @@ public class HostController {
         return updateHostUserRoleUseCase.execute(hostId, updateHostUserRoleRequest);
     }
 
-    // todo :: 슈퍼 호스트 이상으로?
     @Operation(summary = "호스트 정보를 변경합니다. 매니저 이상만 가능합니다.")
     @PatchMapping("/{hostId}/profile")
     public HostDetailResponse patchHostById(
