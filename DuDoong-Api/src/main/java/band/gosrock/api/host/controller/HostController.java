@@ -95,7 +95,6 @@ public class HostController {
         return updateHostUserRoleUseCase.execute(hostId, updateHostUserRoleRequest);
     }
 
-    // todo :: 슈퍼 호스트 이상으로?
     @Operation(summary = "호스트 정보를 변경합니다. 매니저 이상만 가능합니다.")
     @PatchMapping("/{hostId}/profile")
     public HostDetailResponse patchHostById(
