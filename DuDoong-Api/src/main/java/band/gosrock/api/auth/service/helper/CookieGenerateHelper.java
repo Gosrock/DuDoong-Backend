@@ -25,7 +25,7 @@ public class CookieGenerateHelper {
                         .path("/")
                         .maxAge(tokenAndUserResponse.getAccessTokenAge())
                         .sameSite(sameSite)
-                        .httpOnly(true)
+                        //                        .httpOnly(true)
                         .secure(true)
                         .build();
         ResponseCookie refreshToken =
@@ -33,7 +33,7 @@ public class CookieGenerateHelper {
                         .path("/")
                         .maxAge(tokenAndUserResponse.getRefreshTokenAge())
                         .sameSite(sameSite)
-                        .httpOnly(true)
+                        //                        .httpOnly(true)
                         .secure(true)
                         .build();
         HttpHeaders httpHeaders = new HttpHeaders();
