@@ -27,9 +27,9 @@ public class TicketOptionMapper {
     private final OptionGroupAdaptor optionGroupAdaptor;
 
     public OptionGroup toOptionGroup(
-            CreateTicketOptionRequest createTicketOptionRequest, Event event) {
+            CreateTicketOptionRequest createTicketOptionRequest, Long eventId) {
         return OptionGroup.builder()
-                .event(event)
+                .eventId(eventId)
                 .type(createTicketOptionRequest.getType())
                 .name(createTicketOptionRequest.getName())
                 .description(createTicketOptionRequest.getDescription())

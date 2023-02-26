@@ -9,9 +9,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TicketItemRepository extends JpaRepository<TicketItem, Long> {
 
-    List<TicketItem> findAllByEvent_IdAndTicketItemStatus(Long eventId, TicketItemStatus status);
+    List<TicketItem> findAllByEventIdAndTicketItemStatus(Long eventId, TicketItemStatus status);
 
-    Boolean existsByEvent_Id(Long eventId);
+    Boolean existsByEventId(Long eventId);
 
     Optional<TicketItem> findByIdAndTicketItemStatus(Long ticketItemId, TicketItemStatus status);
 }

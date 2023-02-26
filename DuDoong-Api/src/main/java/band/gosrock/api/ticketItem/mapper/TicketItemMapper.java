@@ -22,7 +22,7 @@ public class TicketItemMapper {
     private final TicketItemAdaptor ticketItemAdaptor;
     private final EventAdaptor eventAdaptor;
 
-    public TicketItem toTicketItem(CreateTicketItemRequest createTicketItemRequest, Event event) {
+    public TicketItem toTicketItem(CreateTicketItemRequest createTicketItemRequest, Long eventId) {
 
         return TicketItem.builder()
                 .payType(createTicketItemRequest.getPayType())
@@ -38,7 +38,7 @@ public class TicketItemMapper {
                 .accountHolder(createTicketItemRequest.getAccountHolder())
                 .isQuantityPublic(createTicketItemRequest.getIsQuantityPublic())
                 .isSellable(true)
-                .event(event)
+                .eventId(eventId)
                 .build();
     }
 
