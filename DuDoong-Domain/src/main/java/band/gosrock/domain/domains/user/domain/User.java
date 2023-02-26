@@ -104,8 +104,7 @@ public class User extends BaseTimeEntity {
     }
 
     public AlimTalkUserInfo toAlimTalkUserInfo() throws NumberParseException {
-        if (profile.getPhoneNumberVo().getPhoneNumber() == null
-                || profile.getPhoneNumberVo().getPhoneNumber().isEmpty()) {
+        if (profile.getPhoneNumberVo() == null) {
             throw EmptyPhoneNumException.EXCEPTION;
         }
         return new AlimTalkUserInfo(
