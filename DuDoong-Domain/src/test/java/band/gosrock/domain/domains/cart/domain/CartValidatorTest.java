@@ -9,6 +9,7 @@ import static org.mockito.BDDMockito.willThrow;
 
 import band.gosrock.domain.domains.cart.exception.CartItemNotOneTypeException;
 import band.gosrock.domain.domains.cart.exception.CartNotAnswerAllOptionGroupException;
+import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.exception.EventNotOpenException;
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException;
@@ -43,12 +44,13 @@ class CartValidatorTest {
     @Mock TicketItem item;
 
     @Mock IssuedTicketAdaptor issuedTicketAdaptor;
+    @Mock EventAdaptor eventAdaptor;
 
     CartValidator cartValidator;
 
     @BeforeEach
     void setUp() {
-        cartValidator = new CartValidator(ticketItemAdaptor, issuedTicketAdaptor, optionAdaptor);
+        cartValidator = new CartValidator(ticketItemAdaptor, issuedTicketAdaptor,eventAdaptor, optionAdaptor);
     }
 
     @Test
