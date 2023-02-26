@@ -1,5 +1,6 @@
 package band.gosrock.api.config.security;
 
+import static band.gosrock.common.consts.DuDoongStatic.SwaggerPatterns;
 
 import band.gosrock.common.helper.SpringEnvironmentHelper;
 import lombok.RequiredArgsConstructor;
@@ -29,10 +30,6 @@ public class SecurityConfig {
 
     @Value("${swagger.password}")
     private String swaggerPassword;
-
-    private static final String[] SwaggerPatterns = {
-        "/swagger-resources/**", "/swagger-ui/**", "/v3/api-docs/**",
-    };
 
     private final SpringEnvironmentHelper springEnvironmentHelper;
 
