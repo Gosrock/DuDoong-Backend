@@ -6,6 +6,7 @@ import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
+import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
@@ -46,6 +47,8 @@ public class OrderValidator {
     private final OptionAdaptor optionAdaptor;
 
     private final UserAdaptor userAdaptor;
+
+    private final OrderAdaptor orderAdaptor;
 
     /** 주문을 생성할 수 있는지에 대한검증 */
     public void validCanCreate(Order order) {
@@ -152,6 +155,13 @@ public class OrderValidator {
     }
 
     /** 아이템의 구매갯수 제한을 넘지 않았는지 */
+    public void validItemPurchaseLimit(Order order, TicketItem item) {
+        Long paidTicketCount = issuedTicketAdaptor.countPaidTicket(order.getUserId(), item.getId());
+        Long totalIssuedCount = paidTicketCount + order.getTotalQuantity();
+        item.validPurchaseLimit(totalIssuedCount);
+    }
+
+    /** 승인 주문 생성시에 이미 넣은 승인 주문 총합 계산 */
     public void validItemPurchaseLimit(Order order, TicketItem item) {
         Long paidTicketCount = issuedTicketAdaptor.countPaidTicket(order.getUserId(), item.getId());
         Long totalIssuedCount = paidTicketCount + order.getTotalQuantity();
