@@ -10,7 +10,8 @@ public interface OrderRepository extends CrudRepository<Order, Long>, OrderCusto
 
     List<Order> findByEventId(Long eventId);
 
-    List<Order> findByEventIdAndOrderStatus(Long eventId, OrderStatus orderStatus);
+    List<Order> findByEventIdAndUserIdAndOrderStatus(
+            Long eventId, Long userId, OrderStatus orderStatus);
 
     List<Order> findByUuidIn(List<String> uuids);
 }
