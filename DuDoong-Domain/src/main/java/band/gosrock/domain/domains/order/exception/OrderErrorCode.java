@@ -35,7 +35,11 @@ public enum OrderErrorCode implements BaseErrorCode {
     @ExplainError("한 장바구니엔 관련된 한 아이템만 올수 있음")
     ORDER_INVALID_ITEM_KIND_POLICY(BAD_REQUEST, "Order_400_12", "장바구니에 아이템을 담는 정책을 위반하였습니다."),
     ORDER_OPTION_CHANGED(BAD_REQUEST, "Order_400_13", "주문 과정중 아이템의 옵션이 변화했습니다."),
-    CAN_NOT_DELETED_USER_APPROVE(BAD_REQUEST, "Order_400_14", "유저가 탈퇴를 했습니다.");
+    CAN_NOT_DELETED_USER_APPROVE(BAD_REQUEST, "Order_400_14", "유저가 탈퇴를 했습니다."),
+    APPROVE_WAITING_PURCHASE_LIMIT(
+            BAD_REQUEST,
+            "Order_400_15",
+            "승인 대기중인 주문으로 인해 티켓 최대 구매 가능 회수를 넘겼습니다." + "이미 신청한 주문이 승인 될 때까지 기다려주세요.");
 
     private Integer status;
     private String code;

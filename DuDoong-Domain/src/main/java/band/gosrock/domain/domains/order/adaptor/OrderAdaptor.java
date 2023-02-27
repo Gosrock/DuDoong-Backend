@@ -3,6 +3,7 @@ package band.gosrock.domain.domains.order.adaptor;
 
 import band.gosrock.common.annotation.Adaptor;
 import band.gosrock.domain.domains.order.domain.Order;
+import band.gosrock.domain.domains.order.domain.OrderStatus;
 import band.gosrock.domain.domains.order.exception.OrderNotFoundException;
 import band.gosrock.domain.domains.order.repository.OrderRepository;
 import band.gosrock.domain.domains.order.repository.condition.FindEventOrdersCondition;
@@ -32,6 +33,10 @@ public class OrderAdaptor {
 
     public List<Order> findByEventId(Long eventId) {
         return orderRepository.findByEventId(eventId);
+    }
+
+    public List<Order> findByEventIdAndOrderStatus(Long eventId, OrderStatus orderStatus) {
+        return orderRepository.findByEventIdAndOrderStatus(eventId, orderStatus);
     }
 
     public Order findByOrderUuid(String uuid) {
