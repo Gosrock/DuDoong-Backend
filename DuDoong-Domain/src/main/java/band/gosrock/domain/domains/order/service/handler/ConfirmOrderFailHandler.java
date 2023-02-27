@@ -27,8 +27,6 @@ public class ConfirmOrderFailHandler {
     private final RecoveryCouponService recoveryCouponService;
 
     private final OrderAdaptor orderAdaptor;
-    private final IssuedTicketAdaptor issuedTicketAdaptor;
-
     @Async
     @TransactionalEventListener(
             classes = DoneOrderEvent.class,
@@ -38,10 +36,6 @@ public class ConfirmOrderFailHandler {
         log.info(doneOrderEvent.getOrderUuid() + "주문 실패 처리 핸들러");
 
         Order order = orderAdaptor.findByOrderUuid(doneOrderEvent.getOrderUuid());
-        if (order.getOrderStatus() == OrderStatus.FAILED) {
-            return;
-        }
-
         order.fail();
 
         if (order.hasCoupon()) { // 쿠폰 사용했을 시 쿠폰 복구

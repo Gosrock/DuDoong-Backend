@@ -38,6 +38,10 @@ public enum OrderStatus {
                 || this == OrderStatus.REFUND;
     }
 
+    public Boolean isCanDone(){
+        return this == OrderStatus.PENDING_PAYMENT || this == OrderStatus.PENDING_APPROVE;
+    }
+
     public Boolean isCanWithDraw() {
         return this == OrderStatus.APPROVED || this == OrderStatus.CONFIRM;
     }
