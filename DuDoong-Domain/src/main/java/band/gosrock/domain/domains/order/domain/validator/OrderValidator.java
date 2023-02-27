@@ -79,7 +79,6 @@ public class OrderValidator {
                 });
     }
 
-
     /** 승인 가능한 주문인지 검증합니다. */
     public void validCanApproveOrder(Order order) {
         validMethodIsCanApprove(order);
@@ -92,7 +91,7 @@ public class OrderValidator {
     /** 주문 승인 간에 유저가 탈퇴를 했는지 조회합니다. */
     private void validUserNotDeleted(Order order) {
         User user = userAdaptor.queryUser(order.getUserId());
-        if(user.isDeletedUser()){
+        if (user.isDeletedUser()) {
             throw CanNotApproveDeletedUserOrderException.EXCEPTION;
         }
     }

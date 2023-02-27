@@ -127,7 +127,7 @@ public class User extends BaseTimeEntity {
         marketingAgree = !marketingAgree;
     }
 
-    public Boolean isDeletedUser(){
+    public Boolean isDeletedUser() {
         return accountState == AccountState.DELETED;
     }
 }
