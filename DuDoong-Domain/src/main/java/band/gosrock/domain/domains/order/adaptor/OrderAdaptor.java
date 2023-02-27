@@ -35,10 +35,6 @@ public class OrderAdaptor {
         return orderRepository.findByEventId(eventId);
     }
 
-    public List<Order> findByEventIdAndOrderStatus(Long eventId, OrderStatus orderStatus) {
-        return orderRepository.findByEventIdAndOrderStatus(eventId, orderStatus);
-    }
-
     public Order findByOrderUuid(String uuid) {
         return orderRepository
                 .findByOrderUuid(uuid)
@@ -59,5 +55,10 @@ public class OrderAdaptor {
 
     public Page<Order> findEventOrders(FindEventOrdersCondition condition, Pageable pageable) {
         return orderRepository.findEventOrders(condition, pageable);
+    }
+
+    public List<Order> findByEventIdAndOrderStatusAndUserId(
+            Long eventId, Long userId, OrderStatus orderStatus) {
+        return orderRepository.findByEventIdAndUserIdAndOrderStatus(eventId, userId, orderStatus);
     }
 }
