@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.host.service;
 
 
 import band.gosrock.common.annotation.DomainService;
+import band.gosrock.domain.common.aop.redissonLock.RedissonLock;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.host.domain.HostProfile;
@@ -30,6 +31,7 @@ public class HostService {
         return hostRepository.save(host);
     }
 
+    @RedissonLock(LockName = "호스트유저초대", identifier = "id", paramClassType = Host.class)
     public Host inviteHostUser(Host host, HostUser hostUser) {
         host.inviteHostUsers(Set.of(hostUser));
         return hostRepository.save(host);

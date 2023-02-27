@@ -34,6 +34,7 @@ import band.gosrock.domain.domains.ticket_item.domain.Option;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLackException;
 import band.gosrock.domain.domains.ticket_item.exception.TicketPurchaseLimitException;
+import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,6 +56,7 @@ class OrderValidatorTest {
     @Mock TicketItemAdaptor ticketItemAdaptor;
     @Mock IssuedTicketAdaptor issuedTicketAdaptor;
     @Mock OptionAdaptor optionAdaptor;
+    @Mock UserAdaptor userAdaptor;
     @Mock Option optionOfGroup1;
     @Mock Option optionOfGroup2;
     @Mock OrderLineItem orderLineItem;
@@ -67,7 +69,11 @@ class OrderValidatorTest {
     void setUp() {
         orderValidator =
                 new OrderValidator(
-                        eventAdaptor, ticketItemAdaptor, issuedTicketAdaptor, optionAdaptor);
+                        eventAdaptor,
+                        ticketItemAdaptor,
+                        issuedTicketAdaptor,
+                        optionAdaptor,
+                        userAdaptor);
     }
 
     @Test

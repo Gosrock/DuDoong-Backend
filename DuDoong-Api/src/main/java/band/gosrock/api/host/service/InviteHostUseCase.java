@@ -16,7 +16,6 @@ import band.gosrock.domain.domains.host.service.HostService;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
-import org.springframework.transaction.annotation.Transactional;
 
 @UseCase
 @RequiredArgsConstructor
@@ -27,15 +26,13 @@ public class InviteHostUseCase {
     private final HostAdaptor hostAdaptor;
     private final HostMapper hostMapper;
 
-    @Transactional
     @HostRolesAllowed(role = MANAGER, findHostFrom = HOST_ID)
     public HostDetailResponse execute(Long hostId, InviteHostRequest inviteHostRequest) {
-        // 초대할 유저
-        final User user = userAdaptor.queryUserByEmail(inviteHostRequest.getEmail());
-        final Long inviteUserId = user.getId();
         final Host host = hostAdaptor.findById(hostId);
+        final User invitedUser = userAdaptor.queryUserByEmail(inviteHostRequest.getEmail());
+        final Long invitedUserId = invitedUser.getId();
         final HostRole role = inviteHostRequest.getRole();
-        final HostUser hostUser = hostMapper.toHostUser(hostId, inviteUserId, role);
+        final HostUser hostUser = hostMapper.toHostUser(hostId, invitedUserId, role);
 
         return hostMapper.toHostDetailResponse(hostService.inviteHostUser(host, hostUser));
     }

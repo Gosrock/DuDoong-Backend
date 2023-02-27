@@ -9,6 +9,7 @@ import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
+import band.gosrock.domain.domains.order.exception.CanNotApproveDeletedUserOrderException;
 import band.gosrock.domain.domains.order.exception.CanNotCancelOrderException;
 import band.gosrock.domain.domains.order.exception.CanNotRefundOrderException;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
@@ -24,6 +25,8 @@ import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
 import band.gosrock.domain.domains.ticket_item.domain.Option;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
+import band.gosrock.domain.domains.user.domain.User;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +44,8 @@ public class OrderValidator {
 
     private final IssuedTicketAdaptor issuedTicketAdaptor;
     private final OptionAdaptor optionAdaptor;
+
+    private final UserAdaptor userAdaptor;
 
     /** 주문을 생성할 수 있는지에 대한검증 */
     public void validCanCreate(Order order) {
@@ -74,16 +79,21 @@ public class OrderValidator {
                 });
     }
 
-    public void validOptionNotChangeAfterDoneOrderEvent(Order order) {
-        TicketItem item = getItem(order);
-        validOptionNotChange(order, item);
-    }
-
     /** 승인 가능한 주문인지 검증합니다. */
     public void validCanApproveOrder(Order order) {
         validMethodIsCanApprove(order);
         validStatusCanApprove(getOrderStatus(order));
         validCanDone(order);
+        // 유저가 탈퇴를 안했는지 확인.
+        validUserNotDeleted(order);
+    }
+
+    /** 주문 승인 간에 유저가 탈퇴를 했는지 조회합니다. */
+    public void validUserNotDeleted(Order order) {
+        User user = userAdaptor.queryUser(order.getUserId());
+        if (user.isDeletedUser()) {
+            throw CanNotApproveDeletedUserOrderException.EXCEPTION;
+        }
     }
 
     /** 결제 방식의 주문을 승인할수있는지 확인합니다. */
