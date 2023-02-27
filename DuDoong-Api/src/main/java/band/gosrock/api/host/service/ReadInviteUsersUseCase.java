@@ -3,7 +3,6 @@ package band.gosrock.api.host.service;
 import static band.gosrock.api.common.aop.hostRole.FindHostFrom.HOST_ID;
 import static band.gosrock.api.common.aop.hostRole.HostQualification.GUEST;
 
-import band.gosrock.api.common.UserUtils;
 import band.gosrock.api.common.aop.hostRole.HostRolesAllowed;
 import band.gosrock.api.host.model.mapper.HostMapper;
 import band.gosrock.common.annotation.UseCase;
@@ -14,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 @UseCase
 @RequiredArgsConstructor
 public class ReadInviteUsersUseCase {
-    private final UserUtils userUtils;
     private final HostMapper hostMapper;
 
     @Transactional(readOnly = true)

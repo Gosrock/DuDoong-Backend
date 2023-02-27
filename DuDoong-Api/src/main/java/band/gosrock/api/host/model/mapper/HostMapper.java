@@ -16,7 +16,9 @@ import band.gosrock.domain.domains.host.domain.HostUser;
 import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -66,7 +68,6 @@ public class HostMapper {
 
     public UserProfileVo toHostInviteUserList(Long hostId, String email) {
         final Host host = hostAdaptor.findById(hostId);
-
         final User inviteUser = userAdaptor.queryUserByEmail(email);
         if (host.hasHostUserId(inviteUser.getId())) {
             throw AlreadyJoinedHostException.EXCEPTION;
