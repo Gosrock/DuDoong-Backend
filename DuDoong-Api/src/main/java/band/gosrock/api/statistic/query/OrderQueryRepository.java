@@ -43,7 +43,7 @@ public class OrderQueryRepository {
         return ExpressionUtils.as(
                 JPAExpressions.select(order.totalPaymentInfo.paymentAmount.amount.sum())
                         .from(order)
-                        .where(eventIdEq(eventId), order.orderStatus.eq(CONFIRM)),
+                        .where(eventIdEq(eventId), order.orderStatus.in(CONFIRM, APPROVED)),
                 "sellAmount");
     }
 
