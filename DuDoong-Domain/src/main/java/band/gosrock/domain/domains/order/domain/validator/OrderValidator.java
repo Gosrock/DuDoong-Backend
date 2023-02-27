@@ -10,6 +10,7 @@ import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
+import band.gosrock.domain.domains.order.exception.ApproveWaitingOrderPurchaseLimitException;
 import band.gosrock.domain.domains.order.exception.CanNotApproveDeletedUserOrderException;
 import band.gosrock.domain.domains.order.exception.CanNotCancelOrderException;
 import band.gosrock.domain.domains.order.exception.CanNotRefundOrderException;
@@ -162,10 +163,28 @@ public class OrderValidator {
     }
 
     /** 승인 주문 생성시에 이미 넣은 승인 주문 총합 계산 */
-    public void validItemPurchaseLimit(Order order, TicketItem item) {
+    public void validApproveStatePurchaseLimit(Order order) {
+        TicketItem item = getItem(order);
+        // 이미 발급된 티켓 개수
         Long paidTicketCount = issuedTicketAdaptor.countPaidTicket(order.getUserId(), item.getId());
-        Long totalIssuedCount = paidTicketCount + order.getTotalQuantity();
-        item.validPurchaseLimit(totalIssuedCount);
+
+        List<Order> approveWaitingOrders =
+                orderAdaptor.findByEventIdAndOrderStatus(
+                        order.getEventId(), OrderStatus.PENDING_APPROVE);
+        // 승인 대기중인 티켓 개수
+        Long approveWaitingTicketCount =
+                approveWaitingOrders.stream()
+                        .filter(o -> Objects.equals(item.getId(), o.getItemId()))
+                        .map(Order::getTotalQuantity)
+                        .reduce(0L, Long::sum);
+        // 주문승인 요청할 티켓 개수
+        Long totalIssuedCount =
+                paidTicketCount + approveWaitingTicketCount + order.getTotalQuantity();
+        // 아이템 갯수 리밋을 초과하면
+        if (item.isPurchaseLimitExceed(totalIssuedCount)) {
+            throw ApproveWaitingOrderPurchaseLimitException.EXCEPTION;
+        }
+        ;
     }
 
     /** 이벤트가 열려있는 상태인지 */
