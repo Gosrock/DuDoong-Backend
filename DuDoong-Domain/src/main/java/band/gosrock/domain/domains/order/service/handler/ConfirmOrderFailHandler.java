@@ -3,11 +3,9 @@ package band.gosrock.domain.domains.order.service.handler;
 
 import band.gosrock.domain.common.events.order.DoneOrderEvent;
 import band.gosrock.domain.domains.coupon.service.RecoveryCouponService;
-import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.issuedTicket.service.IssuedTicketDomainService;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
-import band.gosrock.domain.domains.order.domain.OrderStatus;
 import band.gosrock.domain.domains.order.service.WithdrawPaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +25,7 @@ public class ConfirmOrderFailHandler {
     private final RecoveryCouponService recoveryCouponService;
 
     private final OrderAdaptor orderAdaptor;
+
     @Async
     @TransactionalEventListener(
             classes = DoneOrderEvent.class,

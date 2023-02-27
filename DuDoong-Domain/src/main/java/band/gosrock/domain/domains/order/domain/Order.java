@@ -224,9 +224,7 @@ public class Order extends BaseTimeEntity {
         this.orderStatus = OrderStatus.APPROVED;
     }
 
-    /**
-     * 주문 상태가 완료될수 있는 상태일 때 돈 오더 이벤트를 발생시킵니다.
-     */
+    /** 주문 상태가 완료될수 있는 상태일 때 돈 오더 이벤트를 발생시킵니다. */
     private void issueDoneOrderEvent() {
         if (orderStatus.isCanDone()) {
             Events.raise(DoneOrderEvent.from(this));

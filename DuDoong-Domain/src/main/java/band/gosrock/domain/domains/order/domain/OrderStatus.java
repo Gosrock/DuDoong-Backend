@@ -38,7 +38,7 @@ public enum OrderStatus {
                 || this == OrderStatus.REFUND;
     }
 
-    public Boolean isCanDone(){
+    public Boolean isCanDone() {
         return this == OrderStatus.PENDING_PAYMENT || this == OrderStatus.PENDING_APPROVE;
     }
 
