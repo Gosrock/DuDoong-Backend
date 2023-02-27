@@ -166,11 +166,12 @@ public class OrderValidator {
     public void validApproveStatePurchaseLimit(Order order) {
         TicketItem item = getItem(order);
         // 이미 발급된 티켓 개수
-        Long paidTicketCount = issuedTicketAdaptor.countPaidTicket(order.getUserId(), item.getId());
+        Long userId = order.getUserId();
+        Long paidTicketCount = issuedTicketAdaptor.countPaidTicket(userId, item.getId());
 
         List<Order> approveWaitingOrders =
-                orderAdaptor.findByEventIdAndOrderStatus(
-                        order.getEventId(), OrderStatus.PENDING_APPROVE);
+                orderAdaptor.findByEventIdAndOrderStatusAndUserId(
+                        order.getEventId(), userId, OrderStatus.PENDING_APPROVE);
         // 승인 대기중인 티켓 개수
         Long approveWaitingTicketCount =
                 approveWaitingOrders.stream()
