@@ -31,6 +31,10 @@ public class FindEventOrdersCondition {
         return filterType.getFilter();
     }
 
+    public BooleanExpression showDeleteUserExpression() {
+        return filterType.showDeleteUserExpression();
+    }
+
     public BooleanExpression getSearchStringFilter() {
         if (searchType == null) return null;
         return searchType.getContains(searchString);

@@ -10,6 +10,7 @@ import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
 import band.gosrock.domain.domains.order.repository.condition.FindEventOrdersCondition;
 import band.gosrock.domain.domains.order.repository.condition.FindMyPageOrderCondition;
+import band.gosrock.domain.domains.user.domain.AccountState;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.DateTemplate;
 import com.querydsl.core.types.dsl.Expressions;
@@ -73,6 +74,8 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
                         .join(user)
                         .on(user.id.eq(order.userId))
                         .where(
+                                // 주문 승인 요청 보여질 때만 지워진 유저를 보이게 하지 않습니다.
+                                condition.showDeleteUserExpression(),
                                 eqEventId(condition.getEventId()),
                                 condition.getOrderStatusFilter(),
                                 condition.getSearchStringFilter())
@@ -88,6 +91,7 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
                         .join(user)
                         .on(user.id.eq(order.userId))
                         .where(
+                                condition.showDeleteUserExpression(),
                                 eqEventId(condition.getEventId()),
                                 condition.getOrderStatusFilter(),
                                 condition.getSearchStringFilter());
@@ -130,5 +134,9 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
         return isShowing == Boolean.TRUE
                 ? eventEndAtTemplate.after(now)
                 : eventEndAtTemplate.before(now);
+    }
+
+    private BooleanExpression notDeletedUser() {
+        return user.accountState.ne(AccountState.DELETED);
     }
 }
