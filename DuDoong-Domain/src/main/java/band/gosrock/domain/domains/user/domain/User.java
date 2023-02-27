@@ -82,6 +82,8 @@ public class User extends BaseTimeEntity {
         accountState = AccountState.DELETED;
         profile.withdraw();
         oauthInfo = oauthInfo.withDrawOauthInfo();
+        marketingAgree = Boolean.FALSE;
+        receiveMail = Boolean.FALSE;
     }
 
     public void login() {

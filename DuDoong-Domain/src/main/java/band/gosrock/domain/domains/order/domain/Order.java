@@ -153,6 +153,7 @@ public class Order extends BaseTimeEntity {
                         .eventId(item.getEventId())
                         .build();
         orderValidator.validCanCreate(order);
+        orderValidator.validApproveStatePurchaseLimit(order);
         order.calculatePaymentInfo();
         return order;
     }
@@ -199,7 +200,7 @@ public class Order extends BaseTimeEntity {
     /** 결제 방식의 주문을 승인 합니다. */
     public void confirmPayment(
             LocalDateTime approvedAt, PgPaymentInfo pgPaymentInfo, OrderValidator orderValidator) {
-        Events.raise(DoneOrderEvent.from(this));
+        issueDoneOrderEvent();
         orderValidator.validCanConfirmPayment(this);
         orderStatus = OrderStatus.CONFIRM;
         this.approvedAt = approvedAt;
@@ -208,7 +209,7 @@ public class Order extends BaseTimeEntity {
 
     /** 승인 방식의 주문을 승인합니다. */
     public void approve(OrderValidator orderValidator) {
-        Events.raise(DoneOrderEvent.from(this));
+        issueDoneOrderEvent();
         orderValidator.validCanApproveOrder(this);
         this.approvedAt = LocalDateTime.now();
         this.orderStatus = OrderStatus.APPROVED;
@@ -217,10 +218,17 @@ public class Order extends BaseTimeEntity {
     /** 선착순 방식의 0원 결제입니다. */
     public void freeConfirm(Long currentUserId, OrderValidator orderValidator) {
         orderValidator.validOwner(this, currentUserId);
-        Events.raise(DoneOrderEvent.from(this));
+        issueDoneOrderEvent();
         orderValidator.validCanFreeConfirm(this);
         this.approvedAt = LocalDateTime.now();
         this.orderStatus = OrderStatus.APPROVED;
+    }
+
+    /** 주문 상태가 완료될수 있는 상태일 때 돈 오더 이벤트를 발생시킵니다. */
+    private void issueDoneOrderEvent() {
+        if (orderStatus.isCanDone()) {
+            Events.raise(DoneOrderEvent.from(this));
+        }
     }
 
     /** 관리자가 주문을 취소 시킵니다 */
