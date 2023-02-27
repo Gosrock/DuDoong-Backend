@@ -103,7 +103,10 @@ public class TicketItem extends BaseTimeEntity {
         this.supplyCount = supplyCount;
         this.purchaseLimit = purchaseLimit;
         this.type = type;
-        this.accountInfo = AccountInfoVo.valueOf(bankName, accountNumber, accountHolder);
+        this.accountInfo =
+                payType.equals(TicketPayType.DUDOONG_TICKET)
+                        ? AccountInfoVo.valueOf(bankName, accountNumber, accountHolder)
+                        : null;
         this.isQuantityPublic = isQuantityPublic;
         this.isSellable = isSellable;
         this.saleStartAt = saleStartAt;
@@ -115,6 +118,14 @@ public class TicketItem extends BaseTimeEntity {
         // 재고 감소된 티켓상품은 옵션적용 변경 불가
         if (this.isQuantityReduced()) {
             throw ForbiddenOptionChangeException.EXCEPTION;
+        }
+
+        // 무료티켓에 유료 옵션 적용 불가
+        if (this.payType.equals(TicketPayType.FREE_TICKET)
+                && optionGroup.getOptions().stream()
+                        .anyMatch(
+                                option -> option.getAdditionalPrice().isGreaterThan(Money.ZERO))) {
+            throw ForbiddenOptionPriceException.EXCEPTION;
         }
 
         // 중복 체크
