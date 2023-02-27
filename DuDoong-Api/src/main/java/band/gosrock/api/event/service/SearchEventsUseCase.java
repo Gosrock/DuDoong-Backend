@@ -1,7 +1,6 @@
 package band.gosrock.api.event.service;
 
 
-import band.gosrock.api.common.UserUtils;
 import band.gosrock.api.common.slice.SliceResponse;
 import band.gosrock.api.event.model.dto.response.EventResponse;
 import band.gosrock.api.event.model.mapper.EventMapper;
@@ -15,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class SearchEventsUseCase {
-    private final UserUtils userUtils;
     private final EventMapper eventMapper;
 
     public SliceResponse<EventResponse> execute(String keyword, Pageable pageable) {
