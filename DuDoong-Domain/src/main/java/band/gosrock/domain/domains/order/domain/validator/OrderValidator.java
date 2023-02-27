@@ -184,7 +184,6 @@ public class OrderValidator {
         if (item.isPurchaseLimitExceed(totalIssuedCount)) {
             throw ApproveWaitingOrderPurchaseLimitException.EXCEPTION;
         }
-        ;
     }
 
     /** 이벤트가 열려있는 상태인지 */
