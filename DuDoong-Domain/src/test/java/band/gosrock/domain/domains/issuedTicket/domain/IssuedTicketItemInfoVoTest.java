@@ -20,6 +20,8 @@ public class IssuedTicketItemInfoVoTest {
 
     private final TicketType ticketType = TicketType.FIRST_COME_FIRST_SERVED;
 
+    private final TicketPayType payType = TicketPayType.DUDOONG_TICKET;
+
     private final Money w3000 = Money.wons(3000L);
 
     private final LocalDateTime startAt = LocalDateTime.now();
@@ -32,6 +34,7 @@ public class IssuedTicketItemInfoVoTest {
                 IssuedTicketItemInfoVo.builder()
                         .ticketItemId(1L)
                         .ticketType(ticketType)
+                        .payType(payType)
                         .ticketName("testTicket")
                         .price(w3000)
                         .build();
@@ -67,6 +70,7 @@ public class IssuedTicketItemInfoVoTest {
         assertAll(
                 () -> assertEquals(itemInfoVo.getPrice(), itemInfoVoForTest.getPrice()),
                 () -> assertEquals(itemInfoVo.getTicketName(), itemInfoVoForTest.getTicketName()),
-                () -> assertEquals(itemInfoVo.getTicketType(), itemInfoVoForTest.getTicketType()));
+                () -> assertEquals(itemInfoVo.getTicketType(), itemInfoVoForTest.getTicketType()),
+                () -> assertEquals(itemInfoVo.getPayType(), itemInfoVoForTest.getPayType()));
     }
 }

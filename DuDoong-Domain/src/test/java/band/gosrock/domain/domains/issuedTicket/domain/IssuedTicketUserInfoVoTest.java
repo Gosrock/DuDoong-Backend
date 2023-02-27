@@ -31,6 +31,7 @@ public class IssuedTicketUserInfoVoTest {
                         .userId(1L)
                         .userName("test")
                         .phoneNumber(phoneNumberVo)
+                        .email("test@test.com")
                         .build();
         profile =
                 Profile.builder()
@@ -55,6 +56,7 @@ public class IssuedTicketUserInfoVoTest {
                 () ->
                         assertEquals(
                                 userInfoVo.getPhoneNumber().getPhoneNumber(),
-                                userInfoVoForTest.getPhoneNumber().getPhoneNumber()));
+                                userInfoVoForTest.getPhoneNumber().getPhoneNumber()),
+                () -> assertEquals(userInfoVo.getEmail(), userInfoVoForTest.getEmail()));
     }
 }
