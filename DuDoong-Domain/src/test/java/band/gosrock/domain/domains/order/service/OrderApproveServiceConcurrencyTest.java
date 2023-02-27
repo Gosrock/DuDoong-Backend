@@ -53,6 +53,7 @@ class OrderApproveServiceConcurrencyTest {
                         .build();
         order.addUUID();
         willDoNothing().given(orderValidator).validCanDone(any());
+        willDoNothing().given(orderValidator).validUserNotDeleted(any());
         willCallRealMethod().given(orderValidator).validCanApproveOrder(any());
         willCallRealMethod().given(orderValidator).validStatusCanApprove(any());
         given(orderAdaptor.findByOrderUuid(any())).willReturn(order);

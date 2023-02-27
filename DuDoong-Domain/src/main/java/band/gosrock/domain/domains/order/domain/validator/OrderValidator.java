@@ -89,7 +89,7 @@ public class OrderValidator {
     }
 
     /** 주문 승인 간에 유저가 탈퇴를 했는지 조회합니다. */
-    private void validUserNotDeleted(Order order) {
+    public void validUserNotDeleted(Order order) {
         User user = userAdaptor.queryUser(order.getUserId());
         if (user.isDeletedUser()) {
             throw CanNotApproveDeletedUserOrderException.EXCEPTION;
