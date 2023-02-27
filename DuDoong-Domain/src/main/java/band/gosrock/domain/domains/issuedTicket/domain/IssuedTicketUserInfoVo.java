@@ -19,10 +19,14 @@ public class IssuedTicketUserInfoVo {
 
     private PhoneNumberVo phoneNumber;
 
+    private String email;
+
     @Builder
-    public IssuedTicketUserInfoVo(Long userId, String userName, PhoneNumberVo phoneNumber) {
+    public IssuedTicketUserInfoVo(
+            Long userId, String userName, String email, PhoneNumberVo phoneNumber) {
         this.userId = userId;
         this.userName = userName;
+        this.email = email;
         this.phoneNumber = phoneNumber;
     }
 
@@ -31,6 +35,7 @@ public class IssuedTicketUserInfoVo {
                 .userId(user.getId())
                 .userName(user.getProfile().getName())
                 .phoneNumber(user.getProfile().getPhoneNumberVo())
+                .email(user.getProfile().getEmail())
                 .build();
     }
 }

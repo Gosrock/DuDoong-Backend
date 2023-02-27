@@ -1,11 +1,10 @@
-package band.gosrock.domain.domains.issuedTicket;
+package band.gosrock.domain.domains.issuedTicket.domain;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.BDDMockito.given;
 
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.OptionAnswerVo;
-import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketOptionAnswer;
 import band.gosrock.domain.domains.ticket_item.domain.Option;
 import band.gosrock.domain.domains.ticket_item.domain.OptionGroupType;
 import org.junit.jupiter.api.BeforeEach;
