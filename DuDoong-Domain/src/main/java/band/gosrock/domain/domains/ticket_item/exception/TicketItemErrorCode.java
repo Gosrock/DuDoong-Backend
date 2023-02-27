@@ -53,7 +53,9 @@ public enum TicketItemErrorCode implements BaseErrorCode {
     @ExplainError("해당 티켓상품에 적용되지 않은 옵션을 취소 시도할 경우 발생하는 오류입니다.")
     NOT_APPLIED_ITEM_OPTION_GROUP(BAD_REQUEST, "Item_Option_Group_400_3", "적용되지 않은 옵션입니다."),
     @ExplainError("무료 티켓에 유료 옵션을 적용하려고 했을 때 발생하는 오류입니다.")
-    FORBIDDEN_OPTION_PRICE(BAD_REQUEST, "Item_Option_Group_400_4", "유료 옵션을 적용할 수 없습니다.");
+    FORBIDDEN_OPTION_PRICE(BAD_REQUEST, "Item_Option_Group_400_4", "유료 옵션을 적용할 수 없습니다."),
+    @ExplainError("옵션 추가가격이 음수일 때 발생하는 오류입니다.")
+    INVALID_OPTION_PRICE(BAD_REQUEST, "Option_Group_400_3", "설정할 수 없는 추가 가격입니다.");
 
     private Integer status;
     private String code;

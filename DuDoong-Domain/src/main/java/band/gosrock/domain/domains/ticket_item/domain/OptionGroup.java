@@ -8,6 +8,7 @@ import static band.gosrock.domain.domains.ticket_item.domain.OptionGroupType.*;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.ticket_item.exception.ForbiddenOptionGroupDeleteException;
 import band.gosrock.domain.domains.ticket_item.exception.InvalidOptionGroupException;
+import band.gosrock.domain.domains.ticket_item.exception.InvalidOptionPriceException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.*;
@@ -83,6 +84,9 @@ public class OptionGroup {
     public OptionGroup createTicketOption(Money additionalPrice) {
         OptionGroupType type = this.getType();
         if (type == TRUE_FALSE) {
+            if (additionalPrice.isLessThan(ZERO)) {
+                throw InvalidOptionPriceException.EXCEPTION;
+            }
             this.options.add(Option.create(KR_YES, additionalPrice, this));
             this.options.add(Option.create(KR_NO, ZERO, this));
         } else if (type == SUBJECTIVE) {
