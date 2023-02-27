@@ -22,7 +22,7 @@ public class OptionGroupAdaptor {
     }
 
     public List<OptionGroup> findAllByEventId(Long eventId) {
-        return optionGroupRepository.findAllByEvent_IdAndOptionGroupStatus(
+        return optionGroupRepository.findAllByEventIdAndOptionGroupStatus(
                 eventId, OptionGroupStatus.VALID);
     }
 

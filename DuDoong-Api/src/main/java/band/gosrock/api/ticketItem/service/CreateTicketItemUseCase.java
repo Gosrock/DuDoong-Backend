@@ -36,7 +36,7 @@ public class CreateTicketItemUseCase {
         Boolean isPartner = host.getPartner();
         TicketItem ticketItem =
                 ticketItemService.createTicketItem(
-                        ticketItemMapper.toTicketItem(createTicketItemRequest, event), isPartner);
+                        ticketItemMapper.toTicketItem(createTicketItemRequest, eventId), isPartner);
 
         return TicketItemResponse.from(ticketItem, true);
     }

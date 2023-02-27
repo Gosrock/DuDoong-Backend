@@ -55,6 +55,11 @@ public class HostService {
         return hostRepository.save(host);
     }
 
+    public Host removeHostUser(Host host, Long userId) {
+        host.removeHostUser(userId);
+        return hostRepository.save(host);
+    }
+
     public void validateDuplicatedSlackUrl(Host host, String url) {
         if (StringUtils.equals(host.getSlackUrl(), url)) {
             throw InvalidSlackUrlException.EXCEPTION;
