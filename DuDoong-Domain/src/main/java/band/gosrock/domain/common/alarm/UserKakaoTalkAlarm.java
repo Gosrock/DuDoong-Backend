@@ -18,6 +18,6 @@ public class UserKakaoTalkAlarm {
     }
 
     public static String creationTemplateCode() {
-        return "usersignup";
+        return "signup";
     }
 }
