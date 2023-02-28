@@ -54,4 +54,4 @@ spring:
       on-profile: prod
 logging:
   level:
-    band.gosrock.infrastructure.outer.api.* : debug
+    band.gosrock.infrastructure.outer.api.tossPayments.* : debug
