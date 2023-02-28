@@ -50,3 +50,6 @@ spring:
   config:
     activate:
       on-profile: prod
+logging:
+  level:
+    ROOT: WARN
