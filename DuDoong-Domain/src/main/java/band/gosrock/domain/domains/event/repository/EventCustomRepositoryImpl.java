@@ -39,7 +39,7 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
                 queryFactory
                         .selectFrom(event)
                         .where(eqStatusOpen())
-                        .orderBy(startAtAsc())
+                        .orderBy(createdAtDesc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize() + 1)
                         .fetch();
@@ -52,7 +52,7 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
                 queryFactory
                         .selectFrom(event)
                         .where(eqStatusOpen().and(nameContains(keyword)))
-                        .orderBy(startAtAsc())
+                        .orderBy(createdAtDesc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize() + 1)
                         .fetch();
@@ -71,7 +71,7 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
         return keyword == null ? null : event.eventBasic.name.containsIgnoreCase(keyword);
     }
 
-    private OrderSpecifier<LocalDateTime> startAtAsc() {
-        return event.eventBasic.startAt.asc();
+    private OrderSpecifier<LocalDateTime> createdAtDesc() {
+        return event.createdAt.desc();
     }
 }
