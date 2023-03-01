@@ -15,14 +15,22 @@
 
 <br/>
 
+<img width="100%" align=center alt="readme" src="https://user-images.githubusercontent.com/55226431/221773192-5e178d8e-93a4-4a50-821f-3dbd9c9ac759.png">
 
-## 1. 서비스 소개
+<br/>
 
-<img width="90%" align=center alt="readme" src="https://user-images.githubusercontent.com/55226431/221773192-5e178d8e-93a4-4a50-821f-3dbd9c9ac759.png">
+## ✨ 서비스 관련
+- [랜딩페이지](https://dudoong.com)
+- [호스트 관리자 페이지](https://dudoong.com/admin)
+- [서비스 소개 노션](https://dudoong.notion.site/c4999331a2aa47299e1c6821a7dee9af)
+- [Storybook](https://gosrock.github.io/DuDoong-Front)
+<div>
+<img src="https://user-images.githubusercontent.com/55226431/221772278-78452025-d9df-4676-90e7-ca6d4033ed7e.gif"  width="100%" >
+</div>
 
-<br/><br/>
+<br>
 
-## 2. 사용 스택
+## 📚 사용 스택
 <div align="left">
 <div>
 <img src="https://img.shields.io/badge/Spring Boot-6DB33F?style=flat-square&logo=Spring Boot&logoColor=white">
@@ -50,17 +58,28 @@
 
 <br/>
 
-## 3. Dudoong.com
-- [Storybook](https://gosrock.github.io/Dudoong-Front) 링크 들어가니까 안뜨던데 스토리북 이거 맞는지 확인 필요
-- <b>[랜딩페이지](https://dudoong.com)</b>
 
-<div>
-<img src="https://user-images.githubusercontent.com/55226431/221772278-78452025-d9df-4676-90e7-ca6d4033ed7e.gif"  width="100%" >
-</div>
 
-<br>
+## 🔍 개발 과정
+- [찬진 : Spring disable Aop in test](https://devnm.tistory.com/24)
+- [경민 : Custom Enum Validator 구현하기](https://gengminy.tistory.com/47)
+- [경민 : Relection 을 이용하여 Enum Validator 개선하기](https://gengminy.tistory.com/48)
+- [경민 : Custom Enum Deserializer 구현하여 Enum 에 없는 값 null 로 파싱하기](https://gengminy.tistory.com/49)
+- [경민 : 스프링 날짜 타입 JSON 변환 및 포맷팅하기 - @JsonFormat, @JacksonAnnotationsInside](https://gengminy.tistory.com/50)
+  
+  
 
-## 4. 프로젝트 구조
+
+
+
+
+
+
+
+
+
+
+## 📁 Project Structure
 DDD와 멀티모듈 구조를 사용했습니다.
 
 ```bash
@@ -137,7 +156,7 @@ DDD와 멀티모듈 구조를 사용했습니다.
 ```
 
 
-## 5. 참여자
+## 💻 Developers
 <table>
     <tr align="center">
         <td><B>Lead•Backend</B></td>
