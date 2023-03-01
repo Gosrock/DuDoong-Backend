@@ -1,8 +1,10 @@
 
 ![Frame 4](https://user-images.githubusercontent.com/55226431/221772740-e9946fda-a24c-4b90-8871-4d1d8a340725.png)
 
-
-<br/><br/>
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Gosrock_DuDoong-Backend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Gosrock_DuDoong-Backend)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Gosrock_DuDoong-Backend&metric=coverage)](https://sonarcloud.io/summary/new_code?id=Gosrock_DuDoong-Backend)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=Gosrock_DuDoong-Backend&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=Gosrock_DuDoong-Backend)
+<br/>
 
 # 두둥<img src="https://user-images.githubusercontent.com/55226431/221770112-27710500-f49a-4c7b-8765-8b3698566e55.png" align=left width=100>
 
