@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @RequiredArgsConstructor
 @Configuration
-public class EventForClientSettlement {
+public class EventSummarySettlement {
 
     private static final String JOB_NAME = "이벤트정산요약";
     private static final String BEAN_PREFIX = JOB_NAME + "_";
