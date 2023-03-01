@@ -8,6 +8,7 @@ import band.gosrock.api.example.service.ExampleApiService;
 import band.gosrock.common.annotation.ApiErrorCodeExample;
 import band.gosrock.common.annotation.ApiErrorExceptionsExample;
 import band.gosrock.common.annotation.DevelopOnlyApi;
+import band.gosrock.common.annotation.DisableSwaggerSecurity;
 import band.gosrock.common.exception.GlobalErrorCode;
 import band.gosrock.domain.domains.cart.exception.CartErrorCode;
 import band.gosrock.domain.domains.coupon.exception.CouponErrorCode;
@@ -46,6 +47,10 @@ public class ExampleController {
     public ExampleResponse get() {
         return exampleApiService.getExample();
     }
+
+    @GetMapping("/health")
+    @DisableSwaggerSecurity
+    public void health() {}
 
     @PostMapping
     @ApiErrorExceptionsExample(ExampleException2Docs.class)

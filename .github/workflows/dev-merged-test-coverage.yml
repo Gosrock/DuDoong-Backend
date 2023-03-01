@@ -1,0 +1,42 @@
+name: ci
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  spotlessJavaCheck:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: SetUp JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: "17"
+          distribution: 'adopt'
+
+      - name: Gradle Caching
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: spotless check
+        run: ./gradlew spotlessCheck
+
+      - name: Start containers
+        run: docker-compose up -d
+
+      - name: test and analyze
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./gradlew test sonar --info --stacktrace
