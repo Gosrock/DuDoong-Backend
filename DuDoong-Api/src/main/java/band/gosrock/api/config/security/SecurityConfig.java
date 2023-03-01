@@ -80,6 +80,8 @@ public class SecurityConfig {
                 .permitAll()
                 .mvcMatchers(HttpMethod.GET, "/v1/events/search")
                 .permitAll()
+                .mvcMatchers(HttpMethod.GET, "/v1/examples/health")
+                .permitAll()
                 .mvcMatchers(HttpMethod.POST, "/v1/coupons/campaigns")
                 .hasRole("SUPER_ADMIN")
                 // 인증 이필요한 모든 요청은 USER 권한을 최소한 가지고있어야한다.
