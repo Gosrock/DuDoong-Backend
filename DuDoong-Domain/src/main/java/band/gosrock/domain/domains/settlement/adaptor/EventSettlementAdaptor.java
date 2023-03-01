@@ -12,6 +12,10 @@ public class EventSettlementAdaptor {
 
     private final EventSettlementRepository eventSettlementRepository;
 
+    public EventSettlement save(EventSettlement eventSettlement) {
+        return eventSettlementRepository.save(eventSettlement);
+    }
+
     public EventSettlement upsertByEventId(Long eventId) {
         return eventSettlementRepository
                 .findByEventId(eventId)
@@ -19,5 +23,9 @@ public class EventSettlementAdaptor {
                         () ->
                                 eventSettlementRepository.save(
                                         EventSettlement.createWithEventId(eventId)));
+    }
+
+    public void deleteByEventId(Long eventId) {
+        eventSettlementRepository.deleteByEventId(eventId);
     }
 }

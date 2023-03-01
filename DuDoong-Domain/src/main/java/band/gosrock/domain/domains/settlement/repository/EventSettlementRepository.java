@@ -8,4 +8,6 @@ import org.springframework.data.repository.CrudRepository;
 public interface EventSettlementRepository extends CrudRepository<EventSettlement, Long> {
 
     Optional<EventSettlement> findByEventId(Long eventId);
+
+    void deleteByEventId(Long eventId);
 }
