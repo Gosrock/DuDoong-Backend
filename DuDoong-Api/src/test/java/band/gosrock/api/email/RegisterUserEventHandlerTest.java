@@ -5,8 +5,10 @@ import static org.mockito.Mockito.times;
 
 import band.gosrock.api.email.handler.RegisterUserEventEmailHandler;
 import band.gosrock.api.supports.ApiIntegrateSpringBootTest;
+import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.OauthInfo;
 import band.gosrock.domain.domains.user.domain.Profile;
+import band.gosrock.domain.domains.user.repository.UserRepository;
 import band.gosrock.domain.domains.user.service.UserDomainService;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
@@ -24,6 +26,7 @@ class RegisterUserEventHandlerTest {
         // given
         Profile profile = Profile.builder().build();
         OauthInfo oauthInfo = OauthInfo.builder().build();
+//        BDDMockito.given(userRepository.save(any())).willReturn(null);
         //        given(registerUserEventHandler.handleRegisterUserEvent(any())).will(new Answer() {
         //            @Override
         //            public UserRegisterEvent answer(InvocationOnMock invocation) throws Throwable

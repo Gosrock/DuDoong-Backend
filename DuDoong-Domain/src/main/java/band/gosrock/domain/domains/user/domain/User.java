@@ -31,7 +31,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Table(
-        name = "user",
+        name = "tbl_user",
         uniqueConstraints = {@UniqueConstraint(columnNames = {"oid", "provider"})})
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
