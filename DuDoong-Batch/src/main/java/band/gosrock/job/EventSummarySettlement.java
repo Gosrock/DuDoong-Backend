@@ -123,14 +123,11 @@ public class EventSummarySettlement {
                                             .reduce(Money.ZERO, Money::plus);
                             // PG 수수료
                             Money pgFee = paymentAmount.minus(settlementAmount);
-                            // PG 수수료의 부가세
-                            Money pgFeeVat =
-                                    transactionSettlements.stream()
-                                            .map(TransactionSettlement::getFeeVat)
-                                            .reduce(Money.ZERO, Money::plus);
 
                             // 중개 수수료 계산 공식? 그냥 정액으로..
-
+                            // 소숫점 없애기
+                            Money pgFeeVat = Money.wons(pgFee.times(0.1).longValue());
+                            Money totalAmount = paymentAmount.minus(pgFee).minus(pgFeeVat);
                             EventSettlement eventSettlement =
                                     EventSettlement.builder()
                                             .eventId(eventId)
@@ -138,11 +135,11 @@ public class EventSummarySettlement {
                                             .dudoongAmount(dudoongTicketSalesAmount)
                                             .paymentAmount(paymentAmount)
                                             .couponAmount(paymentOrderDiscountAmount)
-                                            .dudoongFee(pgFee)
+                                            .dudoongFee(Money.ZERO)
                                             .pgFee(pgFee)
                                             .pgFeeVat(pgFeeVat)
                                             // 최종 정산금액
-                                            .totalAmount(paymentAmount)
+                                            .totalAmount(totalAmount)
                                             .eventSettlementStatus(EventSettlementStatus.CALCULATED)
                                             .build();
 
