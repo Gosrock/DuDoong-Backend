@@ -16,6 +16,10 @@ public class EventSettlementAdaptor {
         return eventSettlementRepository.save(eventSettlement);
     }
 
+    public EventSettlement findByEventId(Long eventId) {
+        return eventSettlementRepository.findByEventId(eventId).orElseThrow();
+    }
+
     public EventSettlement upsertByEventId(Long eventId) {
         return eventSettlementRepository
                 .findByEventId(eventId)

@@ -2,6 +2,9 @@ package band.gosrock.job;
 
 
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
+import band.gosrock.domain.domains.event.domain.Event;
+import band.gosrock.domain.domains.settlement.adaptor.EventSettlementAdaptor;
+import band.gosrock.domain.domains.settlement.domain.EventSettlement;
 import band.gosrock.infrastructure.config.pdf.PdfRender;
 import band.gosrock.parameter.EventJobParameter;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +33,8 @@ public class EventSettlementPDF {
     private final StepBuilderFactory stepBuilderFactory;
     private final EventAdaptor eventAdaptor;
 
-    @Qualifier(BEAN_PREFIX + "eventJobParameter")
+    private final EventSettlementAdaptor eventSettlementAdaptor;
+
     private final PdfRender pdfRender;
 
     private final SpringTemplateEngine templateEngine;
@@ -41,6 +45,8 @@ public class EventSettlementPDF {
         return new EventJobParameter(eventAdaptor);
     }
 
+    @Qualifier(BEAN_PREFIX + "eventJobParameter")
+    private final EventJobParameter eventJobParameter;
     @Bean(JOB_NAME)
     public Job slackUserStatisticJob() {
         return jobBuilderFactory.get(JOB_NAME).preventRestart().start(userStatisticStep()).build();
@@ -53,10 +59,17 @@ public class EventSettlementPDF {
                 .get(BEAN_PREFIX + "step")
                 .tasklet(
                         (contribution, chunkContext) -> {
+                            Event event = eventJobParameter.getEvent();
+                            Long eventId = event.getId();
+                            EventSettlement eventSettlement = eventSettlementAdaptor.findByEventId(
+                                eventId);
+
                             Context context = new Context();
                             context.setVariable("username", "우저이름");
-                            String signUp = templateEngine.process("settlement", context);
-                            pdfRender.generatePdfFromHtml(signUp);
+                            // 정산 관련 타임리프 파일.
+                            String html = templateEngine.process("settlement", context);
+                            // html
+                            pdfRender.generatePdfFromHtml(html);
 
                             return RepeatStatus.FINISHED;
                         })
