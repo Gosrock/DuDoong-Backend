@@ -5,7 +5,6 @@ import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
-import band.gosrock.domain.domains.order.domain.OrderStatus;
 import band.gosrock.domain.domains.settlement.adaptor.TransactionSettlementAdaptor;
 import band.gosrock.domain.domains.settlement.domain.TransactionSettlement;
 import band.gosrock.infrastructure.outer.api.tossPayments.client.SettlementClient;
@@ -65,16 +64,18 @@ public class EventTransactionSettlement {
                         (contribution, chunkContext) -> {
                             Event event = eventJobParameter.getEvent();
                             Long eventId = event.getId();
+                            // 멱등성 유지하기위해
+                            // 저장된 정산 목록에서 지움
+                            transactionSettlementAdaptor.deleteByEventId(eventId);
 
                             List<Order> orders = orderAdaptor.findByEventId(eventId);
                             // 오더중에 토스 페이먼츠 로결제를 진행한 목록을 추출.
+                            // 해당이벤트의 모든 주문 내역을 불러와야함.
+                            // 토스에 환불진행되는 입금 건도 있음
                             List<String> paymentOrderUuids =
                                     orders.stream()
-                                            .filter(
-                                                    order ->
-                                                            order.getOrderStatus()
-                                                                    == OrderStatus.CONFIRM)
-                                            .map(Order::getUuid)
+                                            .filter(order -> order.isPaid())
+                                            .map(order -> order.getPgPaymentInfo().getPaymentKey())
                                             .toList();
 
                             // 시작 날짜. ( 이벤트 생성 시간 )
@@ -92,7 +93,7 @@ public class EventTransactionSettlement {
                                                     settlementResponse ->
                                                             paymentOrderUuids.contains(
                                                                     settlementResponse
-                                                                            .getOrderId()))
+                                                                            .getPaymentKey()))
                                             .map(
                                                     settlementResponse ->
                                                             TransactionSettlement.of(

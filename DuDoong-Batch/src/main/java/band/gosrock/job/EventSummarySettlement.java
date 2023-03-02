@@ -10,6 +10,7 @@ import band.gosrock.domain.domains.order.domain.OrderStatus;
 import band.gosrock.domain.domains.settlement.adaptor.EventSettlementAdaptor;
 import band.gosrock.domain.domains.settlement.adaptor.TransactionSettlementAdaptor;
 import band.gosrock.domain.domains.settlement.domain.EventSettlement;
+import band.gosrock.domain.domains.settlement.domain.EventSettlementStatus;
 import band.gosrock.domain.domains.settlement.domain.TransactionSettlement;
 import band.gosrock.parameter.EventJobParameter;
 import java.util.List;
@@ -28,9 +29,9 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @RequiredArgsConstructor
 @Configuration
-public class EventForClientSettlement {
+public class EventSummarySettlement {
 
-    private static final String JOB_NAME = "이벤트클라이언트정산";
+    private static final String JOB_NAME = "이벤트정산요약";
     private static final String BEAN_PREFIX = JOB_NAME + "_";
 
     private final JobBuilderFactory jobBuilderFactory;
@@ -65,9 +66,17 @@ public class EventForClientSettlement {
                         (contribution, chunkContext) -> {
                             Event event = eventJobParameter.getEvent();
                             Long eventId = event.getId();
+                            eventSettlementAdaptor.deleteByEventId(eventId);
+
                             List<Order> orders = orderAdaptor.findByEventId(eventId);
+                            Money totalSalesAmount =
+                                    orders.stream()
+                                            .filter(order -> order.getOrderStatus().isCanWithDraw())
+                                            .map(Order::getTotalPaymentPrice)
+                                            .reduce(Money.ZERO, Money::plus);
+
                             // 오더중에 승인 주문중 두둥 총
-                            Money approveOrderTotalSales =
+                            Money dudoongTicketSalesAmount =
                                     orders.stream()
                                             .filter(
                                                     order ->
@@ -75,7 +84,6 @@ public class EventForClientSettlement {
                                                                     == OrderStatus.APPROVED)
                                             .map(Order::getTotalPaymentPrice)
                                             .reduce(Money.ZERO, Money::plus);
-
                             // 오더중에 토스 페이먼츠 로결제를 진행한 목록을 추출.
                             Money paymentOrderTotalSales =
                                     orders.stream()
@@ -85,6 +93,7 @@ public class EventForClientSettlement {
                                                                     == OrderStatus.CONFIRM)
                                             .map(Order::getTotalPaymentPrice)
                                             .reduce(Money.ZERO, Money::plus);
+                            log.info("주문 결제 금액" + paymentOrderTotalSales);
                             // 오더중에 토스 페이먼츠로 결제를 진행한 목록중 쿠폰 할인 금액.
                             Money paymentOrderDiscountAmount =
                                     orders.stream()
@@ -95,23 +104,50 @@ public class EventForClientSettlement {
                                             .map(Order::getTotalDiscountPrice)
                                             .reduce(Money.ZERO, Money::plus);
 
-                            // 이벤트 트랜잭션 저장 목록 중에서 결제 대행 수수료 저장
+                            // 이벤트 트랜잭션 저장 목록 조회
                             List<TransactionSettlement> transactionSettlements =
                                     transactionSettlementAdaptor.findByEventId(eventId);
+                            // 결제 된 금액
+
                             Money paymentAmount =
                                     transactionSettlements.stream()
                                             .map(TransactionSettlement::getPaymentAmount)
                                             .reduce(Money.ZERO, Money::plus);
+                            // TODO :  정산금액 밸리데이션
+                            // paymentOrderTotalSales == paymentAmount 이어야함!
 
-                            transactionSettlements.stream()
-                                    .map(TransactionSettlement::getSettlementAmount)
-                                    .reduce(Money.ZERO, Money::plus);
+                            // 결제 정산 받을금액
+                            Money settlementAmount =
+                                    transactionSettlements.stream()
+                                            .map(TransactionSettlement::getSettlementAmount)
+                                            .reduce(Money.ZERO, Money::plus);
+                            // PG 수수료
+                            Money pgFee = paymentAmount.minus(settlementAmount);
+                            // PG 수수료의 부가세
+                            Money pgFeeVat =
+                                    transactionSettlements.stream()
+                                            .map(TransactionSettlement::getFeeVat)
+                                            .reduce(Money.ZERO, Money::plus);
+
                             // 중개 수수료 계산 공식? 그냥 정액으로..
 
-                            // 최종 정산 금액 계산.
-
                             EventSettlement eventSettlement =
-                                    eventSettlementAdaptor.upsertByEventId(eventId);
+                                    EventSettlement.builder()
+                                            .eventId(eventId)
+                                            .totalSalesAmount(totalSalesAmount)
+                                            .dudoongAmount(dudoongTicketSalesAmount)
+                                            .paymentAmount(paymentAmount)
+                                            .couponAmount(paymentOrderDiscountAmount)
+                                            .dudoongFee(pgFee)
+                                            .pgFee(pgFee)
+                                            .pgFeeVat(pgFeeVat)
+                                            // 최종 정산금액
+                                            .totalAmount(paymentAmount)
+                                            .eventSettlementStatus(EventSettlementStatus.CALCULATED)
+                                            .build();
+
+                            // 최종 정산 금액 계산.
+                            eventSettlementAdaptor.save(eventSettlement);
                             return RepeatStatus.FINISHED;
                         })
                 .build();

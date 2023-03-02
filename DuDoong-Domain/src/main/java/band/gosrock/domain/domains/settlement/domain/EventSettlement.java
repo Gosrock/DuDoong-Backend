@@ -58,6 +58,11 @@ public class EventSettlement extends BaseTimeEntity {
     @Embedded
     private Money pgFee;
 
+    // 결제 대행 수수료 vat
+    @AttributeOverride(name = "amount", column = @Column(name = "pg_fee_vat"))
+    @Embedded
+    private Money pgFeeVat;
+
     // 최종 정산 금액
     @AttributeOverride(name = "amount", column = @Column(name = "total_amount"))
     @Embedded
@@ -81,7 +86,8 @@ public class EventSettlement extends BaseTimeEntity {
             Money pgFee,
             Money totalAmount,
             String eventOrderExcelKey,
-            EventSettlementStatus eventSettlementStatus) {
+            EventSettlementStatus eventSettlementStatus,
+            Money pgFeeVat) {
         this.eventId = eventId;
         this.totalSalesAmount = totalSalesAmount;
         this.dudoongAmount = dudoongAmount;
@@ -92,6 +98,7 @@ public class EventSettlement extends BaseTimeEntity {
         this.totalAmount = totalAmount;
         this.eventOrderExcelKey = eventOrderExcelKey;
         this.eventSettlementStatus = eventSettlementStatus;
+        this.pgFeeVat = pgFeeVat;
     }
 
     public static EventSettlement createWithEventId(Long eventId) {
