@@ -10,12 +10,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+import org.xhtmlrenderer.layout.SharedContext;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class PdfRender {
+
+    private final B64ImgReplacedElementFactory b64ImgReplacedElementFactory;
 
     public ByteArrayOutputStream generatePdfFromHtml(String html)
             throws DocumentException, IOException {
@@ -24,6 +27,12 @@ public class PdfRender {
         //        OutputStream outputStream = new FileOutputStream(outputFolder);
         log.info(outputFolder);
         ITextRenderer renderer = new ITextRenderer();
+        SharedContext sharedContext = renderer.getSharedContext();
+        sharedContext.setPrint(true);
+        sharedContext.setInteractive(false);
+        sharedContext.setReplacedElementFactory(b64ImgReplacedElementFactory);
+        sharedContext.getTextRenderer().setSmoothingThreshold(0);
+
         renderer.getFontResolver()
                 .addFont(
                         new ClassPathResource("/templates/NanumBarunGothic.ttf")
