@@ -76,7 +76,12 @@ public class S3PrivateFileService {
         S3Object object = amazonS3.getObject(bucket, getEventSettlementPdfKey(eventId));
 
         S3ObjectInputStream finalObject = object.getObjectContent();
-        byte[] bytes = finalObject.readAllBytes();
-        return bytes;
+        return finalObject.readAllBytes();
+    }
+
+    public byte[] downloadEventOrdersExcel(Long eventId) throws IOException {
+        S3Object object = amazonS3.getObject(bucket, eventOrdersExcelGetKey(eventId));
+        S3ObjectInputStream finalObject = object.getObjectContent();
+        return finalObject.readAllBytes();
     }
 }
