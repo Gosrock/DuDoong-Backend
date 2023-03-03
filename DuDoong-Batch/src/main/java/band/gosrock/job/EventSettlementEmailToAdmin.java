@@ -13,6 +13,7 @@ import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.dto.SettlementPDFDto;
 import band.gosrock.infrastructure.config.pdf.PdfRender;
 import band.gosrock.infrastructure.config.s3.S3PrivateFileService;
+import band.gosrock.infrastructure.config.ses.AwsSesUtils;
 import band.gosrock.parameter.EventJobParameter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayOutputStream;
@@ -35,9 +36,9 @@ import org.thymeleaf.spring5.SpringTemplateEngine;
 @Slf4j
 @RequiredArgsConstructor
 @Configuration
-public class EventSettlementPDF {
+public class EventSettlementEmailToAdmin {
 
-    private static final String JOB_NAME = "이벤트정산서";
+    private static final String JOB_NAME = "이벤트정산_이메일발송_어드민";
     private static final String BEAN_PREFIX = JOB_NAME + "_";
 
     private final JobBuilderFactory jobBuilderFactory;
@@ -56,6 +57,8 @@ public class EventSettlementPDF {
     private final SpringTemplateEngine templateEngine;
 
     private final S3PrivateFileService s3PrivateFileUploadService;
+
+    private final AwsSesUtils awsSesUtils;
 
     @Bean(BEAN_PREFIX + "eventJobParameter")
     @JobScope
@@ -82,49 +85,10 @@ public class EventSettlementPDF {
                             Long eventId = event.getId();
                             Host host = hostAdaptor.findById(event.getHostId());
                             User masterUser = userAdaptor.queryUser(host.getMasterUserId());
-                            EventSettlement eventSettlement =
-                                    eventSettlementAdaptor.findByEventId(eventId);
-                            // 결제 대행사 수수료
+                            byte[] eventSettlementPdf = s3PrivateFileUploadService.downloadEventSettlementPdf(
+                                eventId);
 
-                            Money pgFee = eventSettlement.getPgFee();
-                            Money pgFeeVat = eventSettlement.getPgFeeVat();
-                            SettlementPDFDto settlementPDFDto =
-                                    SettlementPDFDto.builder()
-                                            .eventTitle(event.getEventBasic().getName())
-                                            .hostName(masterUser.getProfile().getName())
-                                            .settlementAt(event.getEndAt().plusDays(6L))
-                                            .dudoongTicketAmount(
-                                                    eventSettlement.getDudoongAmount().toString())
-                                            .pgTicketAmount(
-                                                    eventSettlement.getPaymentAmount().toString())
-                                            .totalAmount(
-                                                    eventSettlement
-                                                            .getTotalSalesAmount()
-                                                            .toString())
-                                            // 초기 두둥 자체 수수료 없음.
-                                            .dudoongFee(Money.ZERO.toString())
-                                            .pgFee(pgFee.toString())
-                                            .totalFee(pgFee.toString())
-                                            .totalFeeVat(pgFeeVat.toString())
-                                            .totalSettlement(
-                                                    eventSettlement.getTotalAmount().toString())
-                                            .now(LocalDateTime.now())
-                                            .build();
-                            Map result = objectMapper.convertValue(settlementPDFDto, Map.class);
-
-                            Context context = new Context(null, result);
-                            context.setVariable("settlementAt", settlementPDFDto.getSettlementAt());
-                            context.setVariable("now", settlementPDFDto.getNow());
-                            // 정산 관련 타임리프 파일.
-                            String html = templateEngine.process("settlement", context);
-                            // html
-                            ByteArrayOutputStream outputStream =
-                                    pdfRender.generatePdfFromHtml(html);
-
-                            String fileKey =
-                                    s3PrivateFileUploadService.eventSettlementPdfUpload(
-                                            event.getId(), outputStream);
-                            log.info(fileKey);
+                            awsSesUtils.sendRawEmails(eventSettlementPdf);
                             return RepeatStatus.FINISHED;
                         })
                 .build();
