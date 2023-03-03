@@ -24,19 +24,33 @@ public class S3PrivateFileUploadService {
     @Value("${aws.s3.base-url}")
     private String baseUrl;
 
-    private static String excelFileName = "eventOrderList.xlsx";
+    private static String eventOrdersExcelFileName = "eventOrders.xlsx";
+    private static String eventSettlementPdfFileName = "eventSettlement.pdf";
 
-    public String excelUpload(Long eventId, ByteArrayOutputStream outputStream) {
+    public String eventOrdersExcelUpload(Long eventId, ByteArrayOutputStream outputStream) {
         byte[] bytes = outputStream.toByteArray();
         InputStream inputStream = new ByteArrayInputStream(bytes);
 
-        String fileKey = getFileKey(eventId);
+        String fileKey = eventOrdersExcelGetKey(eventId);
         amazonS3.putObject(bucket, fileKey, inputStream, getExcelObjectMetadata(bytes.length));
         return fileKey;
     }
 
-    private String getFileKey(Long eventId) {
-        return baseUrl + "/event/" + eventId.toString() + "/" + excelFileName;
+    public String eventSettlementPdfUpload(Long eventId, ByteArrayOutputStream outputStream) {
+        byte[] bytes = outputStream.toByteArray();
+        InputStream inputStream = new ByteArrayInputStream(bytes);
+
+        String fileKey = getEventSettlementPdfKey(eventId);
+        amazonS3.putObject(bucket, fileKey, inputStream, getPdfObjectMetadata(bytes.length));
+        return fileKey;
+    }
+
+    private String eventOrdersExcelGetKey(Long eventId) {
+        return baseUrl + "/event/" + eventId.toString() + "/" + eventOrdersExcelFileName;
+    }
+
+    private String getEventSettlementPdfKey(Long eventId) {
+        return baseUrl + "/event/" + eventId.toString() + "/" + eventSettlementPdfFileName;
     }
 
     private ObjectMetadata getExcelObjectMetadata(int contentLength) {
@@ -44,6 +58,13 @@ public class S3PrivateFileUploadService {
         ObjectMetadata objectMetadata = new ObjectMetadata();
         objectMetadata.setContentType(
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        objectMetadata.setContentLength(contentLength);
+        return objectMetadata;
+    }
+
+    private ObjectMetadata getPdfObjectMetadata(int contentLength) {
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        objectMetadata.setContentType("application/pdf");
         objectMetadata.setContentLength(contentLength);
         return objectMetadata;
     }

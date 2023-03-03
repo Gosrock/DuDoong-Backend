@@ -5,7 +5,6 @@ import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
-import band.gosrock.domain.domains.settlement.service.EventSettlementDomainService;
 import band.gosrock.excel.ExcelOrderDto;
 import band.gosrock.excel.ExcelOrderHelper;
 import band.gosrock.infrastructure.config.s3.S3PrivateFileUploadService;
@@ -39,8 +38,6 @@ public class EventOrdersToExcel {
     private final ExcelOrderHelper excelOrderHelper;
     private final EventAdaptor eventAdaptor;
     private final OrderAdaptor orderAdaptor;
-
-    private final EventSettlementDomainService eventSettlementDomainService;
 
     @Qualifier(BEAN_PREFIX + "eventJobParameter")
     private final EventJobParameter eventJobParameter;
@@ -86,11 +83,13 @@ public class EventOrdersToExcel {
                             workbook.close();
 
                             String fileKey =
-                                    s3PrivateFileUploadService.excelUpload(
+                                    s3PrivateFileUploadService.eventOrdersExcelUpload(
                                             event.getId(), outputStream);
                             // 이벤트 정산용 엑셀 파일 업로드 정보 저장
-                            eventSettlementDomainService.updateEventOrderListExcelFileKey(
-                                    event.getId(), fileKey);
+                            // 파일 키 형식 맞출꺼라서 필요없을듯.
+                            //
+                            // eventSettlementDomainService.updateEventOrderListExcelFileKey(
+                            //                                    event.getId(), fileKey);
 
                             return RepeatStatus.FINISHED;
                         })

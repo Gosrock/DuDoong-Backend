@@ -12,8 +12,10 @@ import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.dto.SettlementPDFDto;
 import band.gosrock.infrastructure.config.pdf.PdfRender;
+import band.gosrock.infrastructure.config.s3.S3PrivateFileUploadService;
 import band.gosrock.parameter.EventJobParameter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -53,6 +55,8 @@ public class EventSettlementPDF {
 
     private final SpringTemplateEngine templateEngine;
 
+    private final S3PrivateFileUploadService s3PrivateFileUploadService;
+
     @Bean(BEAN_PREFIX + "eventJobParameter")
     @JobScope
     public EventJobParameter eventJobParameter() {
@@ -61,6 +65,7 @@ public class EventSettlementPDF {
 
     @Qualifier(BEAN_PREFIX + "eventJobParameter")
     private final EventJobParameter eventJobParameter;
+
     @Bean(JOB_NAME)
     public Job slackUserStatisticJob() {
         return jobBuilderFactory.get(JOB_NAME).preventRestart().start(userStatisticStep()).build();
@@ -77,36 +82,49 @@ public class EventSettlementPDF {
                             Long eventId = event.getId();
                             Host host = hostAdaptor.findById(event.getHostId());
                             User masterUser = userAdaptor.queryUser(host.getMasterUserId());
-                            EventSettlement eventSettlement = eventSettlementAdaptor.findByEventId(
-                                eventId);
+                            EventSettlement eventSettlement =
+                                    eventSettlementAdaptor.findByEventId(eventId);
                             // 결제 대행사 수수료
 
                             Money pgFee = eventSettlement.getPgFee();
                             Money pgFeeVat = eventSettlement.getPgFeeVat();
-                            SettlementPDFDto settlementPDFDto = SettlementPDFDto.builder()
-                                .eventTitle(event.getEventBasic().getName())
-                                .hostName(masterUser.getProfile().getName())
-                                .settlementAt(event.getEndAt().plusDays(6L))
-                                .dudoongTicketAmount(eventSettlement.getDudoongAmount().toString())
-                                .pgTicketAmount(eventSettlement.getPaymentAmount().toString())
-                                .totalAmount(eventSettlement.getTotalSalesAmount().toString())
-                                // 초기 두둥 자체 수수료 없음.
-                                .dudoongFee(Money.ZERO.toString())
-                                .pgFee(pgFee.toString())
-                                .totalFee(pgFee.toString())
-                                .totalFeeVat(pgFeeVat.toString())
-                                .totalSettlement(eventSettlement.getTotalAmount().toString())
-                                .now(LocalDateTime.now()).build();
+                            SettlementPDFDto settlementPDFDto =
+                                    SettlementPDFDto.builder()
+                                            .eventTitle(event.getEventBasic().getName())
+                                            .hostName(masterUser.getProfile().getName())
+                                            .settlementAt(event.getEndAt().plusDays(6L))
+                                            .dudoongTicketAmount(
+                                                    eventSettlement.getDudoongAmount().toString())
+                                            .pgTicketAmount(
+                                                    eventSettlement.getPaymentAmount().toString())
+                                            .totalAmount(
+                                                    eventSettlement
+                                                            .getTotalSalesAmount()
+                                                            .toString())
+                                            // 초기 두둥 자체 수수료 없음.
+                                            .dudoongFee(Money.ZERO.toString())
+                                            .pgFee(pgFee.toString())
+                                            .totalFee(pgFee.toString())
+                                            .totalFeeVat(pgFeeVat.toString())
+                                            .totalSettlement(
+                                                    eventSettlement.getTotalAmount().toString())
+                                            .now(LocalDateTime.now())
+                                            .build();
                             Map result = objectMapper.convertValue(settlementPDFDto, Map.class);
 
-                            Context context = new Context(null,result);
-                            context.setVariable("settlementAt",settlementPDFDto.getSettlementAt());
-                            context.setVariable("now",settlementPDFDto.getNow());
+                            Context context = new Context(null, result);
+                            context.setVariable("settlementAt", settlementPDFDto.getSettlementAt());
+                            context.setVariable("now", settlementPDFDto.getNow());
                             // 정산 관련 타임리프 파일.
                             String html = templateEngine.process("settlement", context);
                             // html
-                            pdfRender.generatePdfFromHtml(html);
+                            ByteArrayOutputStream outputStream =
+                                    pdfRender.generatePdfFromHtml(html);
 
+                            String fileKey =
+                                    s3PrivateFileUploadService.eventSettlementPdfUpload(
+                                            event.getId(), outputStream);
+                            log.info(fileKey);
                             return RepeatStatus.FINISHED;
                         })
                 .build();

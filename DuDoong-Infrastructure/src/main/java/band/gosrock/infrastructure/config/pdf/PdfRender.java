@@ -3,10 +3,9 @@ package band.gosrock.infrastructure.config.pdf;
 
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.pdf.BaseFont;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
@@ -18,11 +17,12 @@ import org.xhtmlrenderer.pdf.ITextRenderer;
 @Slf4j
 public class PdfRender {
 
-    public void generatePdfFromHtml(String html) throws DocumentException, IOException {
+    public ByteArrayOutputStream generatePdfFromHtml(String html)
+            throws DocumentException, IOException {
         String outputFolder = System.getProperty("user.home") + File.separator + "thymeleaf.pdf";
-        OutputStream outputStream = new FileOutputStream(outputFolder);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        //        OutputStream outputStream = new FileOutputStream(outputFolder);
         log.info(outputFolder);
-
         ITextRenderer renderer = new ITextRenderer();
         renderer.getFontResolver()
                 .addFont(
@@ -37,5 +37,6 @@ public class PdfRender {
         renderer.createPDF(outputStream);
 
         outputStream.close();
+        return outputStream;
     }
 }
