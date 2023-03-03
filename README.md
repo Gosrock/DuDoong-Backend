@@ -66,17 +66,10 @@
 - [찬진 : Spring disable Aop in test](https://devnm.tistory.com/24)
 - [찬진 : 도커 로그 ec2환경에서 클라우드 와치로 전송하기](https://devnm.tistory.com/8)
 - [경민 : Custom Enum Validator 구현하기](https://gengminy.tistory.com/47)
-- [경민 : Relection 을 이용하여 Enum Validator 개선하기](https://gengminy.tistory.com/48)
+- [경민 : Reflection 을 이용하여 Enum Validator 개선하기](https://gengminy.tistory.com/48)
 - [경민 : Custom Enum Deserializer 구현하여 Enum 에 없는 값 null 로 파싱하기](https://gengminy.tistory.com/49)
 - [경민 : 스프링 날짜 타입 JSON 변환 및 포맷팅하기 - @JsonFormat, @JacksonAnnotationsInside](https://gengminy.tistory.com/50)
-  
-  
-
-
-
-
-
-
+- [경민 : Incoming WebHooks 로 슬랙봇 생성 및 슬랙 메세지 전송하기](https://gengminy.tistory.com/51)
 
 
 
