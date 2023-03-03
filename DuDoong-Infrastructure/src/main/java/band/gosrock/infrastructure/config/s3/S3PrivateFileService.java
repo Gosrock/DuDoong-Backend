@@ -79,6 +79,4 @@ public class S3PrivateFileService {
         byte[] bytes = finalObject.readAllBytes();
         return bytes;
     }
-
-
 }

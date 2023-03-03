@@ -1,24 +1,18 @@
 package band.gosrock.job;
 
 
-import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.settlement.adaptor.EventSettlementAdaptor;
-import band.gosrock.domain.domains.settlement.domain.EventSettlement;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
-import band.gosrock.dto.SettlementPDFDto;
 import band.gosrock.infrastructure.config.pdf.PdfRender;
 import band.gosrock.infrastructure.config.s3.S3PrivateFileService;
 import band.gosrock.infrastructure.config.ses.AwsSesUtils;
 import band.gosrock.parameter.EventJobParameter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.ByteArrayOutputStream;
-import java.time.LocalDateTime;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -30,7 +24,6 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.thymeleaf.context.Context;
 import org.thymeleaf.spring5.SpringTemplateEngine;
 
 @Slf4j
@@ -85,8 +78,8 @@ public class EventSettlementEmailToAdmin {
                             Long eventId = event.getId();
                             Host host = hostAdaptor.findById(event.getHostId());
                             User masterUser = userAdaptor.queryUser(host.getMasterUserId());
-                            byte[] eventSettlementPdf = s3PrivateFileUploadService.downloadEventSettlementPdf(
-                                eventId);
+                            byte[] eventSettlementPdf =
+                                    s3PrivateFileUploadService.downloadEventSettlementPdf(eventId);
 
                             awsSesUtils.sendRawEmails(eventSettlementPdf);
                             return RepeatStatus.FINISHED;

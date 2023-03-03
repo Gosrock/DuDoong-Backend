@@ -4,8 +4,8 @@ package band.gosrock.infrastructure.config.ses;
 import band.gosrock.infrastructure.config.mail.dto.EmailUserInfo;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.Properties;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
@@ -19,6 +19,7 @@ import javax.mail.internet.MimeMessage.RecipientType;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring5.SpringTemplateEngine;
@@ -35,6 +36,7 @@ import software.amazon.awssdk.services.ses.model.SendRawEmailRequest;
 
 @Component
 @AllArgsConstructor
+@Slf4j
 public class AwsSesUtils {
 
     private final SesClient sesClient;
@@ -66,119 +68,83 @@ public class AwsSesUtils {
                 .body(Body.builder().html(builder -> builder.data(html)).build())
                 .build();
     }
+    // The HTML body of the email.
 
+    public void sendRawEmails(SendRawEmailDto sendRawEmailDto)
+            throws AddressException, MessagingException, IOException {
 
-        // Replace sender@example.com with your "From" address.
-        // This address must be verified with Amazon SES.
-        private static String SENDER = "Sender Name <support@dudoong.com>";
+        Session session = Session.getDefaultInstance(new Properties());
+        // Create a new MimeMessage object.
+        MimeMessage message = new MimeMessage(session);
+        // 제목 송신, 수신자 설정
+        setRawEmailBaseInfo(sendRawEmailDto, message);
+        // Create a multipart/mixed parent container.
+        MimeMultipart msg = new MimeMultipart("mixed");
+        // Add the parent container to the message.
+        message.setContent(msg);
+        // Define the HTML part.
+        setBodyHtml(sendRawEmailDto, msg);
 
-        // Replace recipient@example.com with a "To" address. If your account
-        // is still in the sandbox, this address must be verified.
-        private static String RECIPIENT = "water0641@naver.com";
-
-        // Specify a configuration set. If you do not want to use a configuration
-        // set, comment the following variable, and the
-        // ConfigurationSetName=CONFIGURATION_SET argument below.
-        private static String CONFIGURATION_SET = "ConfigSet";
-
-        // The subject line for the email.
-        private static String SUBJECT = "Customer service contact info";
-
-        // The email body for recipients with non-HTML email clients.
-        private static String BODY_TEXT = "Hello,\r\n"
-            + "Please see the attached file for a list "
-            + "of customers to contact.";
-
-        // The HTML body of the email.
-        private static String BODY_HTML = "<html>"
-            + "<head></head>"
-            + "<body>"
-            + "<h1>Hello!</h1>"
-            + "<p>Please see the attached file for a "
-            + "list of customers to contact.</p>"
-            + "</body>"
-            + "</html>";
-
-        public void sendRawEmails(byte[] eventSettlementPdf) throws AddressException, MessagingException, IOException {
-
-            Session session = Session.getDefaultInstance(new Properties());
-
-            // Create a new MimeMessage object.
-            MimeMessage message = new MimeMessage(session);
-
-            // Add subject, from and to lines.
-            message.setSubject(SUBJECT, "UTF-8");
-            message.setFrom(new InternetAddress(SENDER));
-
-            message.setRecipients(RecipientType.TO, InternetAddress.parse(RECIPIENT));
-
-            // Create a multipart/alternative child container.
-            MimeMultipart msg_body = new MimeMultipart("alternative");
-
-            // Create a wrapper for the HTML and text parts.
-            MimeBodyPart wrap = new MimeBodyPart();
-
-            // Define the text part.
-            MimeBodyPart textPart = new MimeBodyPart();
-            textPart.setContent(BODY_TEXT, "text/plain; charset=UTF-8");
-
-            // Define the HTML part.
-            MimeBodyPart htmlPart = new MimeBodyPart();
-            htmlPart.setContent(BODY_HTML,"text/html; charset=UTF-8");
-
-            // Add the text and HTML parts to the child container.
-            msg_body.addBodyPart(textPart);
-            msg_body.addBodyPart(htmlPart);
-
-            // Add the child container to the wrapper object.
-            wrap.setContent(msg_body);
-
-            // Create a multipart/mixed parent container.
-            MimeMultipart msg = new MimeMultipart("mixed");
-
-            // Add the parent container to the message.
-            message.setContent(msg);
-
-            // Add the multipart/alternative part to the message.
-            msg.addBodyPart(wrap);
-
-            // Define the attachment
-            MimeBodyPart att = new MimeBodyPart();
-            DataSource fds = new ByteArrayDataSource(eventSettlementPdf,"application/pdf");
-            att.setDataHandler(new DataHandler(fds));
-            att.setFileName("이벤트 정산서.pdf");
-
-            // Add the attachment to the message.
-            msg.addBodyPart(att);
-
-            // Try to send the email.
-            try {
-                System.out.println("Attempting to send an email through Amazon SES "
-                    +"using the AWS SDK for Java...");
-
-                // Print the raw email content on the console
-                PrintStream out = System.out;
-                message.writeTo(out);
-
-                // Send the email.
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                message.writeTo(outputStream);
-                RawMessage rawMessage =
-                    RawMessage.builder().data(
-                        SdkBytes.fromByteBuffer(ByteBuffer.wrap(outputStream.toByteArray()))).build();
-                SendRawEmailRequest rawEmailRequest =
-                    SendRawEmailRequest.builder().rawMessage(rawMessage)
-//                        .configurationSetName(CONFIGURATION_SET)
-                        .build();
-
-                sesClient.sendRawEmail(rawEmailRequest);
-                System.out.println("Email sent!");
-                // Display an error if something goes wrong.
-            } catch (Exception ex) {
-                System.out.println("Email Failed");
-                System.err.println("Error message: " + ex.getMessage());
-                ex.printStackTrace();
-            }
+        setAttachments(sendRawEmailDto, msg);
+        // Try to send the email.
+        try {
+            // Send the email.
+            sesClient.sendRawEmail(buildSendRawEmailRequest(message));
+        } catch (Exception ex) {
+            log.info(ex.toString());
+            ex.printStackTrace();
         }
+    }
 
+    private static SendRawEmailRequest buildSendRawEmailRequest(MimeMessage message)
+            throws IOException, MessagingException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        message.writeTo(outputStream);
+        RawMessage rawMessage =
+                RawMessage.builder()
+                        .data(SdkBytes.fromByteBuffer(ByteBuffer.wrap(outputStream.toByteArray())))
+                        .build();
+        SendRawEmailRequest rawEmailRequest =
+                SendRawEmailRequest.builder().rawMessage(rawMessage).build();
+        return rawEmailRequest;
+    }
+
+    private void setAttachments(SendRawEmailDto sendRawEmailDto, MimeMultipart msg) {
+        List<RawEmailAttachmentDto> rawEmailAttachments = sendRawEmailDto.getRawEmailAttachments();
+        rawEmailAttachments.forEach(
+                rawEmailAttachmentDto -> setAttachmentToMessage(msg, rawEmailAttachmentDto));
+    }
+
+    private void setBodyHtml(SendRawEmailDto sendRawEmailDto, MimeMultipart msg)
+            throws MessagingException {
+        MimeBodyPart htmlPart = new MimeBodyPart();
+        htmlPart.setContent(sendRawEmailDto.getBodyHtml(), "text/html; charset=UTF-8");
+        // html 추가
+        msg.addBodyPart(htmlPart);
+    }
+
+    private void setAttachmentToMessage(
+            MimeMultipart msg, RawEmailAttachmentDto rawEmailAttachmentDto) {
+        try {
+            MimeBodyPart att = new MimeBodyPart();
+            DataSource fds =
+                    new ByteArrayDataSource(
+                            rawEmailAttachmentDto.getFileBytes(), rawEmailAttachmentDto.getType());
+            att.setDataHandler(new DataHandler(fds));
+            att.setFileName(rawEmailAttachmentDto.getFileName());
+            msg.addBodyPart(att);
+        } catch (Exception e) {
+            log.info(e.toString());
+            e.printStackTrace();
+        }
+    }
+
+    private void setRawEmailBaseInfo(SendRawEmailDto sendRawEmailDto, MimeMessage message)
+            throws MessagingException {
+        // Add subject, from and to lines.
+        message.setSubject(sendRawEmailDto.getSubject(), "UTF-8");
+        message.setFrom(new InternetAddress(sendRawEmailDto.getSender()));
+        message.setRecipients(
+                RecipientType.TO, InternetAddress.parse(sendRawEmailDto.getRecipient()));
+    }
 }
