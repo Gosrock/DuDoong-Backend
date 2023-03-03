@@ -17,6 +17,10 @@ import org.xhtmlrenderer.pdf.ITextImageElement;
 import org.xhtmlrenderer.render.BlockBox;
 import org.xhtmlrenderer.simple.extend.FormSubmissionListener;
 
+/**
+ * 이미지 가져오는 방식수정
+ * https://www.tothenew.com/blog/using-data-urls-for-embedding-images-in-flying-saucer-generated-pdfs/
+ */
 @Component
 public class B64ImgReplacedElementFactory implements ReplacedElementFactory {
 
