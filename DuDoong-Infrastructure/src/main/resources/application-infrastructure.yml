@@ -12,8 +12,6 @@ spring:
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6379}
     password: ${REDIS_PASSWORD:}
-  main:
-    web-application-type: servlet
 slack:
   webhook:
     token: ${SLACK_WEBHOOK_TOKEN:}
