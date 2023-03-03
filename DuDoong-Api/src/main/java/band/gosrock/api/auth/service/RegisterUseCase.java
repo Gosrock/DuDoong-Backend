@@ -57,7 +57,11 @@ public class RegisterUseCase {
             String idToken, RegisterRequest registerUserRequest) {
 
         OauthInfo oauthInfo = kakaoOauthHelper.getOauthInfoByIdToken(idToken);
-        User user = userDomainService.registerUser(registerUserRequest.toProfile(), oauthInfo);
+        User user =
+                userDomainService.registerUser(
+                        registerUserRequest.toProfile(),
+                        oauthInfo,
+                        registerUserRequest.getMarketingAgree());
 
         return tokenGenerateHelper.execute(user);
     }

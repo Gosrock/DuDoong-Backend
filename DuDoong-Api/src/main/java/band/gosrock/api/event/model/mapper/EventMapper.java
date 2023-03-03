@@ -7,12 +7,10 @@ import band.gosrock.api.event.model.dto.request.UpdateEventDetailRequest;
 import band.gosrock.api.event.model.dto.response.EventChecklistResponse;
 import band.gosrock.api.event.model.dto.response.EventDetailResponse;
 import band.gosrock.api.event.model.dto.response.EventProfileResponse;
+import band.gosrock.api.event.model.dto.response.EventResponse;
 import band.gosrock.common.annotation.Mapper;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
-import band.gosrock.domain.domains.event.domain.Event;
-import band.gosrock.domain.domains.event.domain.EventBasic;
-import band.gosrock.domain.domains.event.domain.EventDetail;
-import band.gosrock.domain.domains.event.domain.EventPlace;
+import band.gosrock.domain.domains.event.domain.*;
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
 import band.gosrock.domain.domains.host.domain.Host;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
@@ -21,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.transaction.annotation.Transactional;
 
 @Mapper
 @RequiredArgsConstructor
@@ -31,7 +28,6 @@ public class EventMapper {
     private final EventAdaptor eventAdaptor;
     private final TicketItemAdaptor ticketItemAdaptor;
 
-    @Transactional(readOnly = true)
     public Event toEntity(CreateEventRequest createEventRequest) {
         return Event.builder()
                 .hostId(createEventRequest.getHostId())
@@ -82,10 +78,21 @@ public class EventMapper {
     }
 
     public Slice<EventProfileResponse> toEventProfileResponseSlice(Long userId, Pageable pageable) {
-        List<Host> hosts = hostAdaptor.findAllByHostUsers_UserId(userId);
+        List<Host> hosts = hostAdaptor.querySliceHostsByActiveUserId(userId);
         List<Long> hostIds = hosts.stream().map(Host::getId).toList();
         Slice<Event> events = eventAdaptor.querySliceEventsByHostIdIn(hostIds, pageable);
         return events.map(event -> this.toEventProfileResponse(hosts, event));
+    }
+
+    public Slice<EventResponse> toEventResponseSliceByStatus(
+            EventStatus status, Pageable pageable) {
+        Slice<Event> events = eventAdaptor.querySliceEventsByStatus(status, pageable);
+        return events.map(EventResponse::of);
+    }
+
+    public Slice<EventResponse> toEventResponseSliceByKeyword(String keyword, Pageable pageable) {
+        Slice<Event> events = eventAdaptor.querySliceEventsByKeyword(keyword, pageable);
+        return events.map(EventResponse::of);
     }
 
     private EventProfileResponse toEventProfileResponse(List<Host> hostList, Event event) {

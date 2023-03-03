@@ -24,6 +24,7 @@ class RegisterUserEventHandlerTest {
         // given
         Profile profile = Profile.builder().build();
         OauthInfo oauthInfo = OauthInfo.builder().build();
+        //        BDDMockito.given(userRepository.save(any())).willReturn(null);
         //        given(registerUserEventHandler.handleRegisterUserEvent(any())).will(new Answer() {
         //            @Override
         //            public UserRegisterEvent answer(InvocationOnMock invocation) throws Throwable
@@ -35,7 +36,7 @@ class RegisterUserEventHandlerTest {
         //            }
         //        });
         // when
-        userDomainService.registerUser(profile, oauthInfo);
+        userDomainService.registerUser(profile, oauthInfo, Boolean.TRUE);
 
         // then
         BDDMockito.then(registerUserEventHandler).should(times(1)).handleRegisterUserEvent(any());

@@ -1,5 +1,6 @@
 package band.gosrock.api.config.security;
 
+import static band.gosrock.common.consts.DuDoongStatic.SwaggerPatterns;
 
 import band.gosrock.common.dto.ErrorReason;
 import band.gosrock.common.dto.ErrorResponse;
@@ -15,7 +16,10 @@ import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationTrustResolver;
+import org.springframework.security.authentication.AuthenticationTrustResolverImpl;
 import org.springframework.stereotype.Component;
+import org.springframework.util.PatternMatchUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @RequiredArgsConstructor
@@ -23,6 +27,15 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class AccessDeniedFilter extends OncePerRequestFilter {
 
     private final ObjectMapper objectMapper;
+
+    private AuthenticationTrustResolver authenticationTrustResolver =
+            new AuthenticationTrustResolverImpl();
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String servletPath = request.getServletPath();
+        return PatternMatchUtils.simpleMatch(SwaggerPatterns, servletPath);
+    }
 
     @Override
     protected void doFilterInternal(
@@ -35,6 +48,21 @@ public class AccessDeniedFilter extends OncePerRequestFilter {
                     response,
                     getErrorResponse(e.getErrorCode(), request.getRequestURL().toString()));
         } catch (AccessDeniedException e) {
+            // 익명 유저일 경우 ( 회원 가입 안하고 Role 자체가 어나니머스 )
+            // basic authentication 같은경운
+            //  ExceptionTranslateFilter 내부에서
+            //  this.authenticationEntryPoint.commence(request, response, reason); 메소드를 실행시켜야함.
+            //            Authentication authentication =
+            // SecurityContextHolder.getContext().getAuthentication();
+            //            boolean isAnonymous =
+            // this.authenticationTrustResolver.isAnonymous(authentication);
+            //            // ExceptionTranslateFilter 에게 처리 위임
+            //            // 해야하는건.. 스웨거 일때만 해당하는걸로 수정해야함!
+            //            if (isAnonymous) {
+            //                throw e;
+            //            }
+            // 익명 유저가아닌 Access denied exception 같은경우 ( jwt 필터만 탄경우 )
+            // 토큰 에러핸들링 제대로.
             ErrorResponse access_denied =
                     new ErrorResponse(
                             GlobalErrorCode.ACCESS_TOKEN_NOT_EXIST.getErrorReason(),

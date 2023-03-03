@@ -4,6 +4,7 @@ aws:
   secret-key: ${AWS_SECRET_KEY:secretKey}
   s3:
     bucket: ${AWS_S3_BUCKET:bucket}
+    private-bucket : ${AWS_S3_BUCKET_PRIVATE:bucket-private}
     base-url: ${AWS_S3_BASE_URL:base-url}
 
 spring:
@@ -11,7 +12,8 @@ spring:
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6379}
     password: ${REDIS_PASSWORD:}
-
+  main:
+    web-application-type: servlet
 slack:
   webhook:
     token: ${SLACK_WEBHOOK_TOKEN:}
@@ -20,6 +22,14 @@ slack:
     username: ${SLACK_WEBHOOK_USERNAME:DuDoongBot}
     icon-url: ${SLACK_WEBHOOK_ICON_URL:}
 
+feign:
+  toss:
+    url : https://api.tosspayments.com
+ncp:
+  service-id: ${NCP_SERVICE_ID:}
+  access-key: ${NCP_ACCESS_KEY:}
+  secret-key: ${NCP_SECRET_KEY:}
+  plus-friend-id: ${NCP_PLUS_FRIEND_ID:}
 
 ---
 spring:
@@ -42,3 +52,6 @@ spring:
   config:
     activate:
       on-profile: prod
+logging:
+  level:
+    band.gosrock.infrastructure.outer.api.tossPayments.* : debug

@@ -22,12 +22,12 @@ public class TicketItemAdaptor {
     }
 
     public List<TicketItem> findAllByEventId(Long eventId) {
-        return ticketItemRepository.findAllByEvent_IdAndTicketItemStatus(
+        return ticketItemRepository.findAllByEventIdAndTicketItemStatus(
                 eventId, TicketItemStatus.VALID);
     }
 
     public Boolean existsByEventId(Long eventId) {
-        return ticketItemRepository.existsByEvent_Id(eventId);
+        return ticketItemRepository.existsByEventId(eventId);
     }
 
     public TicketItem save(TicketItem ticketItem) {

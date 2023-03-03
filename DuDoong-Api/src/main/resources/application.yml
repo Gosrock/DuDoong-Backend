@@ -20,6 +20,13 @@ server:
     context-path: /api
   forward-headers-strategy: framework
 
+swagger:
+  user: ${SWAGGER_USER:user}
+  password: ${SWAGGER_PASSWORD:password}
+
+throttle:
+  overdraft: ${RATE_LIMIT_OVERDRAFT:60}
+  greedyRefill: ${RATE_LIMIT_REFILL:60}
 ---
 spring:
   config:
@@ -43,3 +50,6 @@ spring:
   config:
     activate:
       on-profile: prod
+logging:
+  level:
+    ROOT: WARN

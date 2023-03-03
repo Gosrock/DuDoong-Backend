@@ -1,6 +1,9 @@
 package band.gosrock.api.host.service;
 
+import static band.gosrock.api.common.aop.hostRole.FindHostFrom.HOST_ID;
+import static band.gosrock.api.common.aop.hostRole.HostQualification.GUEST;
 
+import band.gosrock.api.common.aop.hostRole.HostRolesAllowed;
 import band.gosrock.api.common.page.PageResponse;
 import band.gosrock.api.host.model.dto.response.HostEventProfileResponse;
 import band.gosrock.common.annotation.UseCase;
@@ -18,6 +21,7 @@ public class ReadHostEventsUseCase {
     private final HostAdaptor hostAdaptor;
     private final EventAdaptor eventAdaptor;
 
+    @HostRolesAllowed(role = GUEST, findHostFrom = HOST_ID)
     public PageResponse<HostEventProfileResponse> execute(Long hostId, Pageable pageable) {
         Host host = hostAdaptor.findById(hostId);
         return PageResponse.of(

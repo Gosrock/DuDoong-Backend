@@ -6,9 +6,9 @@ import static band.gosrock.domain.common.vo.Money.ZERO;
 import static band.gosrock.domain.domains.ticket_item.domain.OptionGroupType.*;
 
 import band.gosrock.domain.common.vo.Money;
-import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.ticket_item.exception.ForbiddenOptionGroupDeleteException;
 import band.gosrock.domain.domains.ticket_item.exception.InvalidOptionGroupException;
+import band.gosrock.domain.domains.ticket_item.exception.InvalidOptionPriceException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.*;
@@ -28,9 +28,7 @@ public class OptionGroup {
     @Column(name = "option_group_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id", nullable = false)
-    private Event event;
+    private Long eventId;
 
     // 옵션 그룹 응답 형식
     @Enumerated(EnumType.STRING)
@@ -55,13 +53,13 @@ public class OptionGroup {
 
     @Builder
     public OptionGroup(
-            Event event,
+            Long eventId,
             OptionGroupType type,
             String name,
             String description,
             Boolean isEssential,
             List<Option> options) {
-        this.event = event;
+        this.eventId = eventId;
         this.type = type;
         this.name = name;
         this.description = description;
@@ -72,7 +70,7 @@ public class OptionGroup {
     }
 
     public void validateEventId(Long eventId) {
-        if (!this.getEvent().getId().equals(eventId)) {
+        if (!this.getEventId().equals(eventId)) {
             throw InvalidOptionGroupException.EXCEPTION;
         }
     }
@@ -86,6 +84,9 @@ public class OptionGroup {
     public OptionGroup createTicketOption(Money additionalPrice) {
         OptionGroupType type = this.getType();
         if (type == TRUE_FALSE) {
+            if (additionalPrice.isLessThan(ZERO)) {
+                throw InvalidOptionPriceException.EXCEPTION;
+            }
             this.options.add(Option.create(KR_YES, additionalPrice, this));
             this.options.add(Option.create(KR_NO, ZERO, this));
         } else if (type == SUBJECTIVE) {

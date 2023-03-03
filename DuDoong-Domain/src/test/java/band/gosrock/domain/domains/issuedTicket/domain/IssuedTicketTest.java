@@ -1,15 +1,10 @@
-package band.gosrock.domain.domains.issuedTicket;
+package band.gosrock.domain.domains.issuedTicket.domain;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
 
 import band.gosrock.domain.common.vo.Money;
-import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
-import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketItemInfoVo;
-import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketOptionAnswer;
-import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus;
-import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketUserInfoVo;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelEntranceException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotCancelException;
 import band.gosrock.domain.domains.issuedTicket.exception.CanNotEntranceException;

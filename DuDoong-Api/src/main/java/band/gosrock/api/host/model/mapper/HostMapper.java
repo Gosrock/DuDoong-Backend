@@ -16,8 +16,9 @@ import band.gosrock.domain.domains.host.domain.HostUser;
 import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException;
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,7 +68,6 @@ public class HostMapper {
 
     public UserProfileVo toHostInviteUserList(Long hostId, String email) {
         final Host host = hostAdaptor.findById(hostId);
-
         final User inviteUser = userAdaptor.queryUserByEmail(email);
         if (host.hasHostUserId(inviteUser.getId())) {
             throw AlreadyJoinedHostException.EXCEPTION;
@@ -85,22 +85,22 @@ public class HostMapper {
     }
 
     private HostDetailResponse toHostDetailResponseExecute(Host host) {
-        Set<Long> userIdList = new HashSet<>();
-        host.getHostUsers().forEach(hostUser -> userIdList.add(hostUser.getUserId()));
-        final Set<UserInfoVo> userInfoVoSet =
-                userAdaptor.queryUserListByIdIn(userIdList).stream()
-                        .map(User::toUserInfoVo)
-                        .collect(Collectors.toSet());
+        final List<Long> userIds = host.getHostUser_UserIds();
+        final List<User> userList = userAdaptor.queryUserListByIdIn(userIds);
+        final Map<Long, User> userMap =
+                userList.stream().collect(Collectors.toMap(User::getId, user -> user));
+        final List<HostUserVo> hostUserVoList = new ArrayList<>();
 
-        final Set<HostUserVo> hostUserVoSet =
-                userInfoVoSet.stream()
-                        .map(
-                                userInfoVo ->
-                                        HostUserVo.from(
-                                                userInfoVo,
-                                                host.getHostUserByUserId(userInfoVo.getUserId())))
-                        .collect(Collectors.toSet());
+        for (Long userId : userIds) {
+            final User user = userMap.get(userId);
+            if (user != null) {
+                final UserInfoVo userInfoVo = user.toUserInfoVo();
+                final HostUser hostUser = host.getHostUserByUserId(userId);
+                final HostUserVo hostUserVo = HostUserVo.from(userInfoVo, hostUser);
+                hostUserVoList.add(hostUserVo);
+            }
+        }
 
-        return HostDetailResponse.of(host, hostUserVoSet);
+        return HostDetailResponse.of(host, hostUserVoList);
     }
 }

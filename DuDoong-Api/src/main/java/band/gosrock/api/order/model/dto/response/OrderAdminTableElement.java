@@ -1,6 +1,7 @@
 package band.gosrock.api.order.model.dto.response;
 
 
+import band.gosrock.common.annotation.DateFormat;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.common.vo.RefundInfoVo;
 import band.gosrock.domain.common.vo.UserInfoVo;
@@ -35,12 +36,15 @@ public class OrderAdminTableElement {
     private final String orderName;
 
     @Schema(description = "주문 생성 시간")
+    @DateFormat
     private final LocalDateTime createdAt;
 
     @Schema(description = "철회 완료 시간")
+    @DateFormat
     private final LocalDateTime withDrawAt;
 
     @Schema(description = "승인 된 시간")
+    @DateFormat
     private final LocalDateTime approveAt;
 
     @Schema(description = "아이템 총 갯수")
@@ -51,7 +55,7 @@ public class OrderAdminTableElement {
 
     public static OrderAdminTableElement of(Order order, Event event, User user) {
         return OrderAdminTableElement.builder()
-                .refundInfo(event.toRefundInfoVo())
+                .refundInfo(event.toRefundInfoVoWithOrderStatus(order.getOrderStatus()))
                 .orderUuid(order.getUuid())
                 .orderNo(order.getOrderNo())
                 .orderStatus(order.getOrderStatus())

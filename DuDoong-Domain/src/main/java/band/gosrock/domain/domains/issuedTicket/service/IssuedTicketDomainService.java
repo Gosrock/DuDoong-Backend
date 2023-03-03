@@ -64,8 +64,8 @@ public class IssuedTicketDomainService {
     /*
     발급 티켓 입장 처리 로직
      */
-    public IssuedTicketInfoVo processingEntranceIssuedTicket(Long eventId, Long issuedTicketId) {
-        IssuedTicket issuedTicket = issuedTicketAdaptor.queryIssuedTicket(issuedTicketId);
+    public IssuedTicketInfoVo processingEntranceIssuedTicket(Long eventId, String uuid) {
+        IssuedTicket issuedTicket = issuedTicketAdaptor.queryByIssuedTicketUuid(uuid);
         issuedTicketValidator.validIssuedTicketEventIdEqualEvent(issuedTicket, eventId);
         issuedTicket.entrance();
         return issuedTicket.toIssuedTicketInfoVo();

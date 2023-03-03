@@ -20,6 +20,6 @@ public class OrderApproveConfirmEmailService {
         context.setVariable("orderInfo", orderMailDto.getOrderInfo());
         context.setVariable("eventInfo", orderMailDto.getEventInfo());
         awsSesUtils.singleEmailRequest(
-                userInfo.getEmail(), "두둥 주문승인 완료 알림드립니다.", "orderApproveConfirm", context);
+                userInfo, "두둥 주문승인 완료 알림드립니다.", "orderApproveConfirm", context);
     }
 }

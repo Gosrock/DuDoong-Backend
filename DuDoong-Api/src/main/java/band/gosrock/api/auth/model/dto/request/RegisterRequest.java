@@ -2,17 +2,19 @@ package band.gosrock.api.auth.model.dto.request;
 
 
 import band.gosrock.domain.domains.user.domain.Profile;
+import javax.validation.constraints.NotEmpty;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
+@NoArgsConstructor
 public class RegisterRequest {
-    private final String email;
-    private final String phoneNumber;
-    private final String profileImage;
-    private final String name;
-    // oauth 제공자
+    @NotEmpty private String email;
+    private String phoneNumber;
+    private String profileImage;
+    @NotEmpty private String name;
+
+    private Boolean marketingAgree = Boolean.FALSE;
 
     public Profile toProfile() {
         return Profile.builder()

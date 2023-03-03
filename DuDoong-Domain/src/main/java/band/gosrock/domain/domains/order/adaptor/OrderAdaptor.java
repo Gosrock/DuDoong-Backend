@@ -3,10 +3,12 @@ package band.gosrock.domain.domains.order.adaptor;
 
 import band.gosrock.common.annotation.Adaptor;
 import band.gosrock.domain.domains.order.domain.Order;
+import band.gosrock.domain.domains.order.domain.OrderStatus;
 import band.gosrock.domain.domains.order.exception.OrderNotFoundException;
 import band.gosrock.domain.domains.order.repository.OrderRepository;
 import band.gosrock.domain.domains.order.repository.condition.FindEventOrdersCondition;
 import band.gosrock.domain.domains.order.repository.condition.FindMyPageOrderCondition;
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,10 +31,18 @@ public class OrderAdaptor {
                 .orElseThrow(() -> OrderNotFoundException.EXCEPTION);
     }
 
+    public List<Order> findByEventId(Long eventId) {
+        return orderRepository.findByEventId(eventId);
+    }
+
     public Order findByOrderUuid(String uuid) {
         return orderRepository
                 .findByOrderUuid(uuid)
                 .orElseThrow(() -> OrderNotFoundException.EXCEPTION);
+    }
+
+    public List<Order> findByUuidIn(List<String> orderUuids) {
+        return orderRepository.findByUuidIn(orderUuids);
     }
 
     public Optional<Order> findRecentOrderByUserId(Long userId) {
@@ -45,5 +55,10 @@ public class OrderAdaptor {
 
     public Page<Order> findEventOrders(FindEventOrdersCondition condition, Pageable pageable) {
         return orderRepository.findEventOrders(condition, pageable);
+    }
+
+    public List<Order> findByEventIdAndOrderStatusAndUserId(
+            Long eventId, Long userId, OrderStatus orderStatus) {
+        return orderRepository.findByEventIdAndUserIdAndOrderStatus(eventId, userId, orderStatus);
     }
 }

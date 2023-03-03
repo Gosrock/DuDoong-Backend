@@ -37,18 +37,18 @@ public class OrderBriefElement {
     private final String itemName;
 
     @Schema(description = "아이템 총 갯수")
-    private final int totalQuantity;
+    private final Long totalQuantity;
 
     public static OrderBriefElement of(Order order, Event event, IssuedTickets issuedTickets) {
         return OrderBriefElement.builder()
-                .refundInfo(event.toRefundInfoVo())
+                .refundInfo(event.toRefundInfoVoWithOrderStatus(order.getOrderStatus()))
                 .stage(issuedTickets.getIssuedTicketsStage())
                 .orderUuid(order.getUuid())
                 .orderNo(order.getOrderNo())
                 .orderStatus(order.getOrderStatus())
                 .eventProfile(event.toEventProfileVo())
                 .itemName(order.getOrderName())
-                .totalQuantity(issuedTickets.getTotalQuantity())
+                .totalQuantity(order.getTotalQuantity())
                 .build();
     }
 }

@@ -43,13 +43,17 @@ public enum GlobalErrorCode implements BaseErrorCode {
     OTHER_SERVER_UNAUTHORIZED(BAD_REQUEST, "FEIGN_400_2", "Other server unauthorized"),
     OTHER_SERVER_FORBIDDEN(BAD_REQUEST, "FEIGN_400_3", "Other server forbidden"),
     OTHER_SERVER_EXPIRED_TOKEN(BAD_REQUEST, "FEIGN_400_4", "Other server expired token"),
+    OTHER_SERVER_NOT_FOUND(BAD_REQUEST, "FEIGN_400_5", "Other server not found error"),
+    OTHER_SERVER_INTERNAL_SERVER_ERROR(
+            BAD_REQUEST, "FEIGN_400_6", "Other server internal server error"),
     NOT_AVAILABLE_REDISSON_LOCK(500, "Redisson_500_1", "can not get redisson lock"),
     SECURITY_CONTEXT_NOT_FOUND(500, "GLOBAL_500_2", "security context not found"),
 
     TOSS_PAYMENTS_UNHANDLED(INTERNAL_SERVER, "PAYMENTS_INTERNAL_SERVER", "관리자에게 연락부탁드려요."),
     BAD_LOCK_IDENTIFIER(500, "AOP_500_1", "락의 키값이 잘못 세팅 되었습니다"),
     BAD_FILE_EXTENSION(BAD_REQUEST, "FILE_400_1", "파일 확장자가 잘못 되었습니다."),
-    TOSS_PAYMENTS_ENUM_NOT_MATCH(INTERNAL_SERVER, "INFRA_500_1", "토스페이먼츠 이넘값 관련 매칭 안된 문제입니다.");
+    TOSS_PAYMENTS_ENUM_NOT_MATCH(INTERNAL_SERVER, "INFRA_500_1", "토스페이먼츠 이넘값 관련 매칭 안된 문제입니다."),
+    TOO_MANY_REQUEST(429, "GLOBAL_429_1", "과도한 요청을 보내셨습니다. 잠시 기다려 주세요.");
     private Integer status;
     private String code;
     private String reason;

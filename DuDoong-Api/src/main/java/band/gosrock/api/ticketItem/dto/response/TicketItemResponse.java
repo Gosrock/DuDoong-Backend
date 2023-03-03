@@ -1,6 +1,7 @@
 package band.gosrock.api.ticketItem.dto.response;
 
 
+import band.gosrock.domain.common.vo.AccountInfoVo;
 import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
 import band.gosrock.domain.domains.ticket_item.domain.TicketPayType;
@@ -42,6 +43,12 @@ public class TicketItemResponse {
     @Schema(description = "재고공개 여부")
     private final Boolean isQuantityPublic;
 
+    @Schema(description = "계좌 정보")
+    private final AccountInfoVo accountInfo;
+
+    @Schema(description = "재고가 감소한 티켓인지 리턴")
+    private final Boolean isSold;
+
     public static TicketItemResponse from(TicketItem ticketItem, Boolean isAdmin) {
 
         return TicketItemResponse.builder()
@@ -58,6 +65,8 @@ public class TicketItemResponse {
                                 ? ticketItem.getQuantity()
                                 : null)
                 .isQuantityPublic(ticketItem.getIsQuantityPublic())
+                .accountInfo(ticketItem.getAccountInfo())
+                .isSold(ticketItem.isSold())
                 .build();
     }
 }

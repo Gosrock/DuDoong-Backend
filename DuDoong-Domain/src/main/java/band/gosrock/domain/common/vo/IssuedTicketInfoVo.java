@@ -4,7 +4,7 @@ package band.gosrock.domain.common.vo;
 import band.gosrock.common.annotation.DateFormat;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus;
-import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketUserInfoVo;
+import band.gosrock.domain.domains.ticket_item.domain.TicketPayType;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
@@ -34,6 +34,11 @@ public class IssuedTicketInfoVo {
     private final String ticketName;
 
     /*
+    발급 티켓 지불 방식
+     */
+    private final TicketPayType payType;
+
+    /*
     발급 티켓 가격
      */
     private final Money ticketPrice;
@@ -42,6 +47,8 @@ public class IssuedTicketInfoVo {
     티켓 발급 시간
      */
     @DateFormat private final LocalDateTime createdAt;
+
+    @DateFormat private final LocalDateTime enteredAt;
 
     /*
     발급 티켓 상태
@@ -53,19 +60,18 @@ public class IssuedTicketInfoVo {
      */
     private final Money optionPrice;
 
-    private final IssuedTicketUserInfoVo userInfo;
-
     public static IssuedTicketInfoVo from(IssuedTicket issuedTicket) {
         return IssuedTicketInfoVo.builder()
                 .issuedTicketId(issuedTicket.getId())
                 .issuedTicketNo(issuedTicket.getIssuedTicketNo())
                 .uuid(issuedTicket.getUuid())
                 .ticketName(issuedTicket.getItemInfo().getTicketName())
+                .payType(issuedTicket.getItemInfo().getPayType())
                 .ticketPrice(issuedTicket.getItemInfo().getPrice())
                 .createdAt(issuedTicket.getCreatedAt())
                 .issuedTicketStatus(issuedTicket.getIssuedTicketStatus())
                 .optionPrice(issuedTicket.sumOptionPrice())
-                .userInfo(issuedTicket.getUserInfo())
+                .enteredAt(issuedTicket.getEnteredAt())
                 .build();
     }
 }

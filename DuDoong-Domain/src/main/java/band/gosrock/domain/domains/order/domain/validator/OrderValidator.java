@@ -6,9 +6,12 @@ import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
+import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
+import band.gosrock.domain.domains.order.exception.ApproveWaitingOrderPurchaseLimitException;
+import band.gosrock.domain.domains.order.exception.CanNotApproveDeletedUserOrderException;
 import band.gosrock.domain.domains.order.exception.CanNotCancelOrderException;
 import band.gosrock.domain.domains.order.exception.CanNotRefundOrderException;
 import band.gosrock.domain.domains.order.exception.InvalidOrderException;
@@ -24,6 +27,8 @@ import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor;
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor;
 import band.gosrock.domain.domains.ticket_item.domain.Option;
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem;
+import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
+import band.gosrock.domain.domains.user.domain.User;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +46,10 @@ public class OrderValidator {
 
     private final IssuedTicketAdaptor issuedTicketAdaptor;
     private final OptionAdaptor optionAdaptor;
+
+    private final UserAdaptor userAdaptor;
+
+    private final OrderAdaptor orderAdaptor;
 
     /** 주문을 생성할 수 있는지에 대한검증 */
     public void validCanCreate(Order order) {
@@ -74,16 +83,21 @@ public class OrderValidator {
                 });
     }
 
-    public void validOptionNotChangeAfterDoneOrderEvent(Order order) {
-        TicketItem item = getItem(order);
-        validOptionNotChange(order, item);
-    }
-
     /** 승인 가능한 주문인지 검증합니다. */
     public void validCanApproveOrder(Order order) {
         validMethodIsCanApprove(order);
         validStatusCanApprove(getOrderStatus(order));
         validCanDone(order);
+        // 유저가 탈퇴를 안했는지 확인.
+        validUserNotDeleted(order);
+    }
+
+    /** 주문 승인 간에 유저가 탈퇴를 했는지 조회합니다. */
+    public void validUserNotDeleted(Order order) {
+        User user = userAdaptor.queryUser(order.getUserId());
+        if (user.isDeletedUser()) {
+            throw CanNotApproveDeletedUserOrderException.EXCEPTION;
+        }
     }
 
     /** 결제 방식의 주문을 승인할수있는지 확인합니다. */
@@ -146,6 +160,31 @@ public class OrderValidator {
         Long paidTicketCount = issuedTicketAdaptor.countPaidTicket(order.getUserId(), item.getId());
         Long totalIssuedCount = paidTicketCount + order.getTotalQuantity();
         item.validPurchaseLimit(totalIssuedCount);
+    }
+
+    /** 승인 주문 생성시에 이미 넣은 승인 주문 총합 계산 */
+    public void validApproveStatePurchaseLimit(Order order) {
+        TicketItem item = getItem(order);
+        // 이미 발급된 티켓 개수
+        Long userId = order.getUserId();
+        Long paidTicketCount = issuedTicketAdaptor.countPaidTicket(userId, item.getId());
+
+        List<Order> approveWaitingOrders =
+                orderAdaptor.findByEventIdAndOrderStatusAndUserId(
+                        order.getEventId(), userId, OrderStatus.PENDING_APPROVE);
+        // 승인 대기중인 티켓 개수
+        Long approveWaitingTicketCount =
+                approveWaitingOrders.stream()
+                        .filter(o -> Objects.equals(item.getId(), o.getItemId()))
+                        .map(Order::getTotalQuantity)
+                        .reduce(0L, Long::sum);
+        // 주문승인 요청할 티켓 개수
+        Long totalIssuedCount =
+                paidTicketCount + approveWaitingTicketCount + order.getTotalQuantity();
+        // 아이템 갯수 리밋을 초과하면
+        if (item.isPurchaseLimitExceed(totalIssuedCount)) {
+            throw ApproveWaitingOrderPurchaseLimitException.EXCEPTION;
+        }
     }
 
     /** 이벤트가 열려있는 상태인지 */

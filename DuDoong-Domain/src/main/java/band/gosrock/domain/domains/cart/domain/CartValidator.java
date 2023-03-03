@@ -4,6 +4,7 @@ package band.gosrock.domain.domains.cart.domain;
 import band.gosrock.common.annotation.Validator;
 import band.gosrock.domain.domains.cart.exception.CartItemNotOneTypeException;
 import band.gosrock.domain.domains.cart.exception.CartNotAnswerAllOptionGroupException;
+import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor;
@@ -20,6 +21,7 @@ public class CartValidator {
 
     private final TicketItemAdaptor itemAdaptor;
     private final IssuedTicketAdaptor issuedTicketAdaptor;
+    private final EventAdaptor eventAdaptor;
 
     private final OptionAdaptor optionAdaptor;
 
@@ -27,7 +29,7 @@ public class CartValidator {
         validItemKindIsOneType(cart);
         validCorrectAnswer(cart);
         TicketItem item = getItem(cart);
-        Event event = item.getEvent();
+        Event event = eventAdaptor.findById(item.getEventId());
         validAnswerToAllQuestion(cart, item);
         validEventIsOpen(event);
         validTicketingTime(event);

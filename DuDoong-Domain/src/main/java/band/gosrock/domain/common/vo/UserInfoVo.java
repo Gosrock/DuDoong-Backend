@@ -22,6 +22,10 @@ public class UserInfoVo {
 
     private final LocalDateTime createdAt;
 
+    private Boolean receiveMail;
+
+    private Boolean marketingAgree;
+
     public static UserInfoVo from(User user) {
         return UserInfoVo.builder()
                 .userId(user.getId())
@@ -30,6 +34,8 @@ public class UserInfoVo {
                 .profileImage(user.getProfile().getProfileImage())
                 .phoneNumber(user.getProfile().getPhoneNumberVo())
                 .createdAt(user.getCreatedAt())
+                .receiveMail(user.isReceiveEmail())
+                .marketingAgree(user.isAgreeMarketing())
                 .build();
     }
 }

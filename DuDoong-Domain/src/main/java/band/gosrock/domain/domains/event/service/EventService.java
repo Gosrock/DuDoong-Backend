@@ -4,9 +4,11 @@ package band.gosrock.domain.domains.event.service;
 import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.*;
+import band.gosrock.domain.domains.event.exception.CannotDeleteByIssuedTicketException;
 import band.gosrock.domain.domains.event.exception.CannotOpenEventException;
 import band.gosrock.domain.domains.event.exception.UseOtherApiException;
 import band.gosrock.domain.domains.event.repository.EventRepository;
+import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.ticket_item.service.TicketItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +20,7 @@ public class EventService {
     private final EventRepository eventRepository;
     private final EventAdaptor eventAdaptor;
     private final TicketItemService ticketItemService;
+    private final IssuedTicketAdaptor issuedTicketAdaptor;
 
     public Event createEvent(Event event) {
         return eventRepository.save(event);
@@ -40,15 +43,12 @@ public class EventService {
     }
 
     public void validateEventBasicExistence(Event event) {
-        if (!event.hasEventBasic() || !event.hasEventPlace()) {
+        if (!event.hasEventBasic() || !event.hasEventPlace())
             throw CannotOpenEventException.EXCEPTION;
-        }
     }
 
     public void validateEventDetailExistence(Event event) {
-        if (!event.hasEventDetail()) {
-            throw CannotOpenEventException.EXCEPTION;
-        }
+        if (!event.hasEventDetail()) throw CannotOpenEventException.EXCEPTION;
     }
 
     public Event openEvent(Event event) {
@@ -60,11 +60,18 @@ public class EventService {
     }
 
     public Event updateEventStatus(Event event, EventStatus status) {
-        if (status == EventStatus.OPEN) {
-            throw UseOtherApiException.EXCEPTION; // open 은 다른 API 강제
-        } else if (status == EventStatus.CLOSED) event.close();
+        if (status == EventStatus.CLOSED) event.close();
         else if (status == EventStatus.CALCULATING) event.calculate();
         else if (status == EventStatus.PREPARING) event.prepare();
+        else throw UseOtherApiException.EXCEPTION; // open, deleteSoft 는 다른 API 강제
+        return eventRepository.save(event);
+    }
+
+    public Event deleteEventSoft(Event event) {
+        // 발급된 티켓이 있다면 삭제 불가
+        if (issuedTicketAdaptor.existsByEventId(event.getId()))
+            throw CannotDeleteByIssuedTicketException.EXCEPTION;
+        event.deleteSoft();
         return eventRepository.save(event);
     }
 }

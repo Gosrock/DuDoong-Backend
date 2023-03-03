@@ -3,11 +3,9 @@ package band.gosrock.domain.domains.order.service.handler;
 
 import band.gosrock.domain.common.events.order.DoneOrderEvent;
 import band.gosrock.domain.domains.coupon.service.RecoveryCouponService;
-import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.issuedTicket.service.IssuedTicketDomainService;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
-import band.gosrock.domain.domains.order.domain.OrderStatus;
 import band.gosrock.domain.domains.order.service.WithdrawPaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +25,6 @@ public class ConfirmOrderFailHandler {
     private final RecoveryCouponService recoveryCouponService;
 
     private final OrderAdaptor orderAdaptor;
-    private final IssuedTicketAdaptor issuedTicketAdaptor;
 
     @Async
     @TransactionalEventListener(
@@ -38,10 +35,6 @@ public class ConfirmOrderFailHandler {
         log.info(doneOrderEvent.getOrderUuid() + "주문 실패 처리 핸들러");
 
         Order order = orderAdaptor.findByOrderUuid(doneOrderEvent.getOrderUuid());
-        if (order.getOrderStatus() == OrderStatus.FAILED) {
-            return;
-        }
-
         order.fail();
 
         if (order.hasCoupon()) { // 쿠폰 사용했을 시 쿠폰 복구

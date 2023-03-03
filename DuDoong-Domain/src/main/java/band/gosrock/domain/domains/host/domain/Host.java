@@ -11,7 +11,9 @@ import band.gosrock.domain.common.vo.HostInfoVo;
 import band.gosrock.domain.common.vo.HostProfileVo;
 import band.gosrock.domain.domains.host.exception.*;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -41,7 +43,12 @@ public class Host extends BaseTimeEntity {
     private String slackUrl;
 
     // 단방향 oneToMany 매핑
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(
+            mappedBy = "host",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.EAGER)
+    @OrderBy("createdAt DESC")
     private final Set<HostUser> hostUsers = new HashSet<>();
 
     public void addHostUsers(Set<HostUser> hostUserList) {
@@ -68,6 +75,10 @@ public class Host extends BaseTimeEntity {
                 .filter(hostUser -> hostUser.getUserId().equals(userId))
                 .findFirst()
                 .orElseThrow(() -> HostUserNotFoundException.EXCEPTION);
+    }
+
+    public List<Long> getHostUser_UserIds() {
+        return this.hostUsers.stream().map(HostUser::getUserId).collect(Collectors.toList());
     }
 
     public void updateProfile(HostProfile hostProfile) {
@@ -106,6 +117,11 @@ public class Host extends BaseTimeEntity {
                 .setHostRole(role);
     }
 
+    public void removeHostUser(Long userId) {
+        if (this.isActiveHostUserId(userId)) throw AlreadyJoinedHostException.EXCEPTION;
+        this.hostUsers.remove(this.getHostUserByUserId(userId));
+    }
+
     /** 해당 유저가 호스트에 이미 속하는지 확인하는 검증 로직입니다 */
     public void validateHostUserIdExistence(Long userId) {
         if (this.hasHostUserId(userId)) {
@@ -116,8 +132,6 @@ public class Host extends BaseTimeEntity {
     public void validateHostUserExistence(HostUser hostUser) {
         validateHostUserIdExistence(hostUser.getUserId());
     }
-
-    // todo :: 여기서부터 테스트 진행
 
     /** 해당 유저가 호스트에 속하는지 확인하는 검증 로직입니다 */
     public void validateHostUser(Long userId) {
@@ -147,6 +161,11 @@ public class Host extends BaseTimeEntity {
     /** 해당 호스트가 파트너 인지 검증합니다. */
     public void validatePartnerHost() {
         if (partner != TRUE) throw NotPartnerHostException.EXCEPTION;
+    }
+
+    /** 해당 호스트가 파트너인지아닌지 */
+    public Boolean isPartnerHost() {
+        return partner;
     }
 
     public HostInfoVo toHostInfoVo() {
