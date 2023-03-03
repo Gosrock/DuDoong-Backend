@@ -12,7 +12,7 @@ import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.domain.domains.user.domain.User;
 import band.gosrock.dto.SettlementPDFDto;
 import band.gosrock.infrastructure.config.pdf.PdfRender;
-import band.gosrock.infrastructure.config.s3.S3PrivateFileUploadService;
+import band.gosrock.infrastructure.config.s3.S3PrivateFileService;
 import band.gosrock.parameter.EventJobParameter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayOutputStream;
@@ -55,7 +55,7 @@ public class EventSettlementPDF {
 
     private final SpringTemplateEngine templateEngine;
 
-    private final S3PrivateFileUploadService s3PrivateFileUploadService;
+    private final S3PrivateFileService s3PrivateFileUploadService;
 
     @Bean(BEAN_PREFIX + "eventJobParameter")
     @JobScope

@@ -3,8 +3,11 @@ package band.gosrock.infrastructure.config.s3;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +17,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class S3PrivateFileUploadService {
+public class S3PrivateFileService {
 
     private final AmazonS3 amazonS3;
 
@@ -67,5 +70,18 @@ public class S3PrivateFileUploadService {
         objectMetadata.setContentType("application/pdf");
         objectMetadata.setContentLength(contentLength);
         return objectMetadata;
+    }
+
+    public byte[] downloadEventSettlementPdf(Long eventId) throws IOException {
+        S3Object object = amazonS3.getObject(bucket, getEventSettlementPdfKey(eventId));
+
+        S3ObjectInputStream finalObject = object.getObjectContent();
+        return finalObject.readAllBytes();
+    }
+
+    public byte[] downloadEventOrdersExcel(Long eventId) throws IOException {
+        S3Object object = amazonS3.getObject(bucket, eventOrdersExcelGetKey(eventId));
+        S3ObjectInputStream finalObject = object.getObjectContent();
+        return finalObject.readAllBytes();
     }
 }

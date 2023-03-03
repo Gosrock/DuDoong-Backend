@@ -7,7 +7,7 @@ import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.excel.ExcelOrderDto;
 import band.gosrock.excel.ExcelOrderHelper;
-import band.gosrock.infrastructure.config.s3.S3PrivateFileUploadService;
+import band.gosrock.infrastructure.config.s3.S3PrivateFileService;
 import band.gosrock.parameter.EventJobParameter;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
@@ -42,7 +42,7 @@ public class EventOrdersToExcel {
     @Qualifier(BEAN_PREFIX + "eventJobParameter")
     private final EventJobParameter eventJobParameter;
 
-    private final S3PrivateFileUploadService s3PrivateFileUploadService;
+    private final S3PrivateFileService s3PrivateFileUploadService;
 
     @Bean(BEAN_PREFIX + "eventJobParameter")
     @JobScope
