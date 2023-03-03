@@ -6,8 +6,6 @@ spring:
       - domain
       - common
   batch.job.names: ${job.name:NONE}
-  main:
-    web-application-type: none
 
 
 ---
