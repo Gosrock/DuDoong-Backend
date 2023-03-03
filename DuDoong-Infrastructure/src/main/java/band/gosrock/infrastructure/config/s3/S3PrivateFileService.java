@@ -35,6 +35,7 @@ public class S3PrivateFileService {
         InputStream inputStream = new ByteArrayInputStream(bytes);
 
         String fileKey = eventOrdersExcelGetKey(eventId);
+
         amazonS3.putObject(bucket, fileKey, inputStream, getExcelObjectMetadata(bytes.length));
         return fileKey;
     }
@@ -42,7 +43,6 @@ public class S3PrivateFileService {
     public String eventSettlementPdfUpload(Long eventId, ByteArrayOutputStream outputStream) {
         byte[] bytes = outputStream.toByteArray();
         InputStream inputStream = new ByteArrayInputStream(bytes);
-
         String fileKey = getEventSettlementPdfKey(eventId);
         amazonS3.putObject(bucket, fileKey, inputStream, getPdfObjectMetadata(bytes.length));
         return fileKey;
