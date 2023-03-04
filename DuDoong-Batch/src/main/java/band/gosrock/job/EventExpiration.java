@@ -3,6 +3,8 @@ package band.gosrock.job;
 
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.service.EventService;
+import band.gosrock.parameter.DateTimeJobParameter;
+import band.gosrock.slack.SlackEventExpirationSender;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -26,16 +28,15 @@ public class EventExpiration {
 
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
+
+    private final SlackEventExpirationSender slackEventExpirationSender;
     private final EventService eventService;
 
-    //    @Bean(BEAN_PREFIX + "eventJobParameter")
-    //    @JobScope
-    //    public EventJobParameter eventJobParameter() {
-    //        return new EventJobParameter(eventAdaptor);
-    //    }
-    //
-    //    @Qualifier(BEAN_PREFIX + "eventJobParameter")
-    //    private final EventJobParameter eventJobParameter;
+    @Bean(BEAN_PREFIX + "dateTimeJobParameter")
+    @JobScope
+    public DateTimeJobParameter dateTimeJobParameter() {
+        return new DateTimeJobParameter();
+    }
 
     @Bean(JOB_NAME)
     public Job eventExpirationJob() {
@@ -54,15 +55,9 @@ public class EventExpiration {
                 .tasklet(
                         (contribution, chunkContext) -> {
                             log.info(">>>>> 이벤트 자동 만료 작업 실행");
-                            LocalDateTime now = LocalDateTime.now();
-
-                            System.out.println("now = " + now);
-                            List<Event> events = eventService.closeExpiredEventsEndAtBefore(now);
-                            System.out.println("events.size() = " + events.size());
-
-                            events.forEach(
-                                    event -> System.out.println("closed event = " + event.getId()));
-
+                            LocalDateTime time = dateTimeJobParameter().getTime();
+                            List<Event> events = eventService.closeExpiredEventsEndAtBefore(time);
+                            slackEventExpirationSender.execute(time, events);
                             return RepeatStatus.FINISHED;
                         })
                 .build();
