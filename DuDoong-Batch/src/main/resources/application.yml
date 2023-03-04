@@ -6,7 +6,9 @@ spring:
       - domain
       - common
   batch.job.names: ${job.name:NONE}
-
+  batch:
+    jdbc:
+      initialize-schema: always
 
 ---
 spring:
