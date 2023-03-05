@@ -64,6 +64,8 @@
 
 ## 🔍 개발 과정
 - [찬진 : Spring disable Aop in test](https://devnm.tistory.com/24)
+- [찬진 : Spring open api swagger basic auth 세팅](https://devnm.tistory.com/25)
+- [찬진 : Spring swagger api 하나만 인증 풀기](https://devnm.tistory.com/26)
 - [찬진 : 도커 로그 ec2환경에서 클라우드 와치로 전송하기](https://devnm.tistory.com/8)
 - [경민 : Custom Enum Validator 구현하기](https://gengminy.tistory.com/47)
 - [경민 : Reflection 을 이용하여 Enum Validator 개선하기](https://gengminy.tistory.com/48)
