@@ -5,7 +5,9 @@ spring:
       - infrastructure
       - domain
       - common
-spring.batch.job.names: ${job.name:NONE}
+  batch.job.names: ${job.name:NONE}
+
+
 ---
 spring:
   config:

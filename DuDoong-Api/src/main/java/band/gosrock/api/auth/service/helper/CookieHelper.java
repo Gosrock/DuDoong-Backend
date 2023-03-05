@@ -10,7 +10,7 @@ import org.springframework.http.ResponseCookie;
 
 @Helper
 @RequiredArgsConstructor
-public class CookieGenerateHelper {
+public class CookieHelper {
     private final SpringEnvironmentHelper springEnvironmentHelper;
 
     public HttpHeaders getTokenCookies(TokenAndUserResponse tokenAndUserResponse) {
@@ -32,6 +32,35 @@ public class CookieGenerateHelper {
                 ResponseCookie.from("refreshToken", tokenAndUserResponse.getRefreshToken())
                         .path("/")
                         .maxAge(tokenAndUserResponse.getRefreshTokenAge())
+                        .sameSite(sameSite)
+                        //                        .httpOnly(true)
+                        .secure(true)
+                        .build();
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add(HttpHeaders.SET_COOKIE, accessToken.toString());
+        httpHeaders.add(HttpHeaders.SET_COOKIE, refreshToken.toString());
+        return httpHeaders;
+    }
+
+    public HttpHeaders deleteCookies() {
+        String sameSite = "None";
+
+        if (springEnvironmentHelper.isProdProfile()) {
+            sameSite = "Strict";
+        }
+
+        ResponseCookie accessToken =
+                ResponseCookie.from("accessToken", null)
+                        .path("/")
+                        .maxAge(0)
+                        .sameSite(sameSite)
+                        //                        .httpOnly(true)
+                        .secure(true)
+                        .build();
+        ResponseCookie refreshToken =
+                ResponseCookie.from("refreshToken", null)
+                        .path("/")
+                        .maxAge(0)
                         .sameSite(sameSite)
                         //                        .httpOnly(true)
                         .secure(true)

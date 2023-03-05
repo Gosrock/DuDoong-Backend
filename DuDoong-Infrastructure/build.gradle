@@ -21,7 +21,8 @@ dependencies {
     api group: 'software.amazon.awssdk', name: 'ses', version: "2.19.29"
 
     api 'com.googlecode.libphonenumber:libphonenumber:8.13.5'
-    api 'org.springframework.boot:spring-boot-starter-web'
+    api 'org.xhtmlrenderer:flying-saucer-pdf:9.1.20'
+    api 'com.sun.mail:javax.mail:1.6.2'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     testImplementation "org.springframework.cloud:spring-cloud-starter-contract-stub-runner:3.1.5"

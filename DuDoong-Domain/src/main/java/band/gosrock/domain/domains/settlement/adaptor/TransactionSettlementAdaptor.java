@@ -20,4 +20,8 @@ public class TransactionSettlementAdaptor {
     public List<TransactionSettlement> findByEventId(Long eventId) {
         return transactionSettlementRepository.findByEventId(eventId);
     }
+
+    public void deleteByEventId(Long eventId) {
+        transactionSettlementRepository.deleteByEventId(eventId);
+    }
 }

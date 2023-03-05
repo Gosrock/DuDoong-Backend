@@ -1,0 +1,77 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns="http://www.w3.org/1999/xhtml"
+    layout:decorate="~{layouts/mailFormat}"
+>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title></title>
+  <style>
+    * {
+      line-height: 150%;
+      font-family: Pretendard ,AppleSDGothic, apple sd gothic neo, noto sans korean,
+      noto sans korean regular, noto sans cjk kr, noto sans cjk,
+      nanum gothic, malgun gothic, dotum, arial, helvetica, MS Gothic,
+      sans-serif !important;
+      mso-line-height-rule: exactly;
+      line-height: 1.8;
+      -ms-text-size-adjust: 100%;
+      -webkit-text-size-adjust: 100%;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0">
+<div layout:fragment="content">
+  <div th:replace="fragments/title :: title(title='제휴 호스트 공연 정산 안내')">divider</div>
+
+  <div style="margin-top: 10px ; margin-bottom: 10px ;">
+    <div>
+      안녕하세요 두둥 정산 관리팀입니다.
+    </div>
+    <div>
+      해당 공연이 종료되어 정산 관련 이메일을 보내드립니다.
+    </div>
+    <br/>
+    <div>
+      첨부 파일로 보내드린 정산서 내역을 확인해 주시고,
+    </div>
+    <br/>
+    <div>
+      <b>입금과 세금 계산서 발행</b>을 위해
+    </div>
+    <div>
+      입금받으실 분의 주민등록번호와 성함을 평문으로,
+    </div>
+    <div>
+      통장사본은 첨부하셔서 <b>support@dudoong.com</b> 으로 이메일을 보내주시면 감사하겠습니다.
+    </div>
+    <div>
+      입금받으실 분의 성함과 통장사본의 성함이 일치해야합니다.
+    </div>
+    <br/>
+    <div>
+      문의사항이 있으시면 <a href="http://pf.kakao.com/_xiaLWxj">두둥 카카오톡 채널</a> 또는 010-9476-8640 으로 연락주시면
+    </div>
+    <div>
+      빠르게 답변 드리도록 하겠습니다.
+    </div>
+    <br/>
+    <div>
+      두둥 서비스를 이용해 주셔서 감사합니다.
+    </div>
+  </div>
+
+  <div align="right">
+    <img width="163" style="" src="https://asset.dudoong.com/common/duduongs.png"/>
+  </div>
+
+  <div th:replace="fragments/button :: button(href='https://dudoong.com' , text='두둥 바로가기')">
+    button
+  </div>
+</div>
+</body>
+</html>
