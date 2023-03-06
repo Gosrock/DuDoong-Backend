@@ -3,7 +3,7 @@ package band.gosrock.job;
 
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
 import band.gosrock.parameter.DateJobParameter;
-import band.gosrock.slack.SlackSender;
+import band.gosrock.slack.SlackUserNotificationSender;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -28,7 +28,7 @@ public class SlackUserStatistic {
 
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
-    private final SlackSender slackSender;
+    private final SlackUserNotificationSender slackSender;
 
     private final UserAdaptor userAdaptor;
     private final DateJobParameter dateJobParameter;

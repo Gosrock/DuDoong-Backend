@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class SlackSender {
+public class SlackUserNotificationSender {
     private final SlackServiceNotificationProvider slackProvider;
 
     public void execute(LocalDate date, Long todayUserCount, Long yesterdayCount) {

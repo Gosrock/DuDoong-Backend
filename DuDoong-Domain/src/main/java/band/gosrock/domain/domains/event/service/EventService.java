@@ -1,5 +1,6 @@
 package band.gosrock.domain.domains.event.service;
 
+import static band.gosrock.domain.domains.event.domain.QEvent.event;
 
 import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
@@ -10,6 +11,8 @@ import band.gosrock.domain.domains.event.exception.UseOtherApiException;
 import band.gosrock.domain.domains.event.repository.EventRepository;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
 import band.gosrock.domain.domains.ticket_item.service.TicketItemService;
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,6 +68,13 @@ public class EventService {
         else if (status == EventStatus.PREPARING) event.prepare();
         else throw UseOtherApiException.EXCEPTION; // open, deleteSoft 는 다른 API 강제
         return eventRepository.save(event);
+    }
+
+    public List<Event> closeExpiredEventsEndAtBefore(LocalDateTime time) {
+        List<Event> events = eventAdaptor.queryEventsByEndAtBefore(time);
+        events.forEach(event -> updateEventStatus(event, EventStatus.CLOSED));
+        eventRepository.saveAll(events);
+        return events;
     }
 
     public Event deleteEventSoft(Event event) {
