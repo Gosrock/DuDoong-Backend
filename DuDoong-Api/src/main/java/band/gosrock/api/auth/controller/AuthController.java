@@ -13,7 +13,7 @@ import band.gosrock.api.auth.service.OauthUserInfoUseCase;
 import band.gosrock.api.auth.service.RefreshUseCase;
 import band.gosrock.api.auth.service.RegisterUseCase;
 import band.gosrock.api.auth.service.WithDrawUseCase;
-import band.gosrock.api.auth.service.helper.CookieGenerateHelper;
+import band.gosrock.api.auth.service.helper.CookieHelper;
 import band.gosrock.api.config.rateLimit.UserRateLimiter;
 import band.gosrock.common.annotation.ApiErrorCodeExample;
 import band.gosrock.common.annotation.DevelopOnlyApi;
@@ -26,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -52,7 +53,7 @@ public class AuthController {
     private final WithDrawUseCase withDrawUseCase;
     private final LogoutUseCase logoutUseCase;
 
-    private final CookieGenerateHelper cookieGenerateHelper;
+    private final CookieHelper cookieHelper;
 
     private final UserRateLimiter rateLimiter;
 
@@ -117,7 +118,7 @@ public class AuthController {
     public ResponseEntity<TokenAndUserResponse> developUserSign(@RequestParam("code") String code) {
         TokenAndUserResponse tokenAndUserResponse = registerUseCase.upsertKakaoOauthUser(code);
         return ResponseEntity.ok()
-                .headers(cookieGenerateHelper.getTokenCookies(tokenAndUserResponse))
+                .headers(cookieHelper.getTokenCookies(tokenAndUserResponse))
                 .body(tokenAndUserResponse);
     }
 
@@ -138,7 +139,7 @@ public class AuthController {
         TokenAndUserResponse tokenAndUserResponse =
                 registerUseCase.registerUserByOCIDToken(token, registerRequest);
         return ResponseEntity.ok()
-                .headers(cookieGenerateHelper.getTokenCookies(tokenAndUserResponse))
+                .headers(cookieHelper.getTokenCookies(tokenAndUserResponse))
                 .body(tokenAndUserResponse);
     }
 
@@ -150,7 +151,7 @@ public class AuthController {
             @RequestParam("id_token") String token) {
         TokenAndUserResponse tokenAndUserResponse = loginUseCase.execute(token);
         return ResponseEntity.ok()
-                .headers(cookieGenerateHelper.getTokenCookies(tokenAndUserResponse))
+                .headers(cookieHelper.getTokenCookies(tokenAndUserResponse))
                 .body(tokenAndUserResponse);
     }
 
@@ -164,24 +165,33 @@ public class AuthController {
 
     @Operation(summary = "refreshToken 용입니다.")
     @PostMapping("/token/refresh")
-    public ResponseEntity<TokenAndUserResponse> tokenRefresh(@RequestParam("token") String code) {
-        TokenAndUserResponse tokenAndUserResponse = refreshUseCase.execute(code);
+    public ResponseEntity<TokenAndUserResponse> tokenRefresh(
+            @CookieValue(value = "refreshToken", required = false) String refreshTokenCookie,
+            @RequestParam(value = "token", required = false, defaultValue = "")
+                    String refreshToken) {
+
+        // 쿠키 우선시해서 리프레쉬.
+        TokenAndUserResponse tokenAndUserResponse =
+                refreshUseCase.execute(
+                        refreshTokenCookie != null ? refreshTokenCookie : refreshToken);
         return ResponseEntity.ok()
-                .headers(cookieGenerateHelper.getTokenCookies(tokenAndUserResponse))
+                .headers(cookieHelper.getTokenCookies(tokenAndUserResponse))
                 .body(tokenAndUserResponse);
     }
 
     @Operation(summary = "회원탈퇴를 합니다.")
     @SecurityRequirement(name = "access-token")
     @DeleteMapping("/me")
-    public void withDrawUser() {
+    public ResponseEntity withDrawUser() {
         withDrawUseCase.execute();
+        return ResponseEntity.ok().headers(cookieHelper.deleteCookies()).body(null);
     }
 
     @Operation(summary = "로그아웃을 합니다.")
     @SecurityRequirement(name = "access-token")
     @PostMapping("/logout")
-    public void logoutUser() {
+    public ResponseEntity logoutUser() {
         logoutUseCase.execute();
+        return ResponseEntity.ok().headers(cookieHelper.deleteCookies()).body(null);
     }
 }

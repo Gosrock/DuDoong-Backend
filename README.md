@@ -64,6 +64,12 @@
 
 ## 🔍 개발 과정
 - [찬진 : Spring disable Aop in test](https://devnm.tistory.com/24)
+- [찬진 : Spring open api swagger basic auth 세팅](https://devnm.tistory.com/25)
+- [찬진 : Spring swagger api 하나만 인증 풀기](https://devnm.tistory.com/26)
+- [찬진 : Spring 에러코드 도메인 별로 분리하기](https://devnm.tistory.com/27)
+- [찬진 : Spring 공통 응답 형식 만들기 ResponseBodyAdvice](https://devnm.tistory.com/28)
+- [찬진 : Spring swagger 같은 응답 코드 여러 에러 예시 만들기](https://devnm.tistory.com/29)
+- [찬진 : spring 프록시 환경에서 HttpContentCache 적용](https://devnm.tistory.com/30)
 - [찬진 : 도커 로그 ec2환경에서 클라우드 와치로 전송하기](https://devnm.tistory.com/8)
 - [경민 : Custom Enum Validator 구현하기](https://gengminy.tistory.com/47)
 - [경민 : Reflection 을 이용하여 Enum Validator 개선하기](https://gengminy.tistory.com/48)
