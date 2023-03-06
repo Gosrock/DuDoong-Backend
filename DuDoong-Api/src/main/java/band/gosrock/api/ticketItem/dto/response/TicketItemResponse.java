@@ -49,6 +49,9 @@ public class TicketItemResponse {
     @Schema(description = "재고가 감소한 티켓인지 리턴")
     private final Boolean isSold;
 
+    @Schema(description = "재고가 남아있는지 리턴")
+    private final Boolean isQuantityLeft;
+
     public static TicketItemResponse from(TicketItem ticketItem, Boolean isAdmin) {
 
         return TicketItemResponse.builder()
@@ -67,6 +70,7 @@ public class TicketItemResponse {
                 .isQuantityPublic(ticketItem.getIsQuantityPublic())
                 .accountInfo(ticketItem.getAccountInfo())
                 .isSold(ticketItem.isSold())
+                .isQuantityLeft(ticketItem.isQuantityLeft())
                 .build();
     }
 }
