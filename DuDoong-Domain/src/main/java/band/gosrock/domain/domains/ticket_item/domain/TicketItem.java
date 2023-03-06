@@ -265,6 +265,10 @@ public class TicketItem extends BaseTimeEntity {
         return quantity < supplyCount;
     }
 
+    public Boolean isQuantityLeft() {
+        return quantity > 0;
+    }
+
     public Long getEventId() {
         return eventId;
     }
