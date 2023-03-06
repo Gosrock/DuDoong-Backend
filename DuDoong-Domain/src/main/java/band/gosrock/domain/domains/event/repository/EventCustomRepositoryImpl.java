@@ -1,5 +1,6 @@
 package band.gosrock.domain.domains.event.repository;
 
+import static band.gosrock.domain.domains.event.domain.EventStatus.CLOSED;
 import static band.gosrock.domain.domains.event.domain.EventStatus.OPEN;
 import static band.gosrock.domain.domains.event.domain.QEvent.event;
 
@@ -8,6 +9,8 @@ import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.domain.EventStatus;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.DateTemplate;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -59,6 +62,11 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
         return SliceUtil.valueOf(events, pageable);
     }
 
+    @Override
+    public List<Event> queryEventsByEndAtBefore(LocalDateTime time) {
+        return queryFactory.selectFrom(event).where(endAtBefore(time), notEqClosed()).fetch();
+    }
+
     private BooleanExpression hostIdIn(List<Long> hostId) {
         return event.hostId.in(hostId);
     }
@@ -67,11 +75,25 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
         return event.status.eq(OPEN);
     }
 
+    private BooleanExpression notEqClosed() {
+        return event.status.eq(CLOSED).not();
+    }
+
     private BooleanExpression nameContains(String keyword) {
         return keyword == null ? null : event.eventBasic.name.containsIgnoreCase(keyword);
     }
 
     private OrderSpecifier<LocalDateTime> createdAtDesc() {
         return event.createdAt.desc();
+    }
+
+    private BooleanExpression endAtBefore(LocalDateTime time) {
+        DateTemplate<LocalDateTime> eventEndAtTemplate =
+                Expressions.dateTemplate(
+                        LocalDateTime.class,
+                        "TIMESTAMPADD(MINUTE,{0}, {1}) ",
+                        event.eventBasic.runTime,
+                        event.eventBasic.startAt);
+        return eventEndAtTemplate.before(time);
     }
 }
