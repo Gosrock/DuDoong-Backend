@@ -54,7 +54,7 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
         List<Event> events =
                 queryFactory
                         .selectFrom(event)
-                        .where(nameContains(keyword))
+                        .where(eqStatusCanExposed(), nameContains(keyword))
                         .orderBy(statusDesc(), startAtAsc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize() + 1)
@@ -73,6 +73,10 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
 
     private BooleanExpression eqStatusOpen() {
         return event.status.eq(OPEN);
+    }
+
+    private BooleanExpression eqStatusCanExposed() {
+        return event.status.eq(OPEN).or(event.status.eq(CLOSED));
     }
 
     private BooleanExpression statusEq(EventStatus status) {
