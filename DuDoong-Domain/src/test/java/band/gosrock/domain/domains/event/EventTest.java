@@ -103,6 +103,7 @@ public class EventTest {
     @Test
     void 이벤트_종료로_상태변경_테스트() {
         // given
+        ReflectionTestUtils.setField(event, "status", EventStatus.OPEN);
         final EventStatus originalStatus = event.getStatus();
         final EventStatus expectedStatus = EventStatus.CLOSED;
         // when
@@ -118,12 +119,28 @@ public class EventTest {
         // given
         final EventStatus originalStatus = event.getStatus();
         final EventStatus expectedStatus = EventStatus.OPEN;
+        final LocalDateTime startAt = LocalDateTime.now().plusMinutes(1);
         // when
+        when(eventBasic.getStartAt()).thenReturn(startAt);
+        event.setEventBasic(eventBasic);
         event.open();
         // then
         assertEquals(expectedStatus, event.getStatus());
         assertNotEquals(originalStatus, expectedStatus);
         assertThrows(AlreadyOpenStatusException.class, () -> event.open());
+    }
+
+    @Test
+    void 오픈_시간_이전인_이벤트는_오픈할수_없음() {
+        // given
+        final EventStatus originalStatus = event.getStatus();
+        final LocalDateTime startAt = LocalDateTime.now().minusMinutes(1);
+        // when
+        when(eventBasic.getStartAt()).thenReturn(startAt);
+        event.setEventBasic(eventBasic);
+        // then
+        assertThrows(EventOpenTimeExpiredException.class, () -> event.open());
+        assertEquals(originalStatus, event.getStatus());
     }
 
     @Test
