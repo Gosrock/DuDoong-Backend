@@ -27,6 +27,8 @@ swagger:
 throttle:
   overdraft: ${RATE_LIMIT_OVERDRAFT:60}
   greedyRefill: ${RATE_LIMIT_REFILL:60}
+
+acl.whiteList : ${ACL_WHITELIST:127.0.0.1,127.0.0.2}
 ---
 spring:
   config:

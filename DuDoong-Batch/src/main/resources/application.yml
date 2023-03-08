@@ -7,7 +7,6 @@ spring:
       - common
   batch.job.names: ${job.name:NONE}
 
-
 ---
 spring:
   config:
