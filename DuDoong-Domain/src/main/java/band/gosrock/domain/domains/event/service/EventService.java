@@ -1,6 +1,5 @@
 package band.gosrock.domain.domains.event.service;
 
-import static band.gosrock.domain.domains.event.domain.QEvent.event;
 
 import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;

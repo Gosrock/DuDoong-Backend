@@ -63,8 +63,8 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
     }
 
     @Override
-    public List<Event> queryEventsByEndAtBefore(LocalDateTime time) {
-        return queryFactory.selectFrom(event).where(endAtBefore(time), notEqClosed()).fetch();
+    public List<Event> queryEventsByEndAtBeforeAndStatusOpen(LocalDateTime time) {
+        return queryFactory.selectFrom(event).where(endAtBefore(time), statusEq(OPEN)).fetch();
     }
 
     private BooleanExpression hostIdIn(List<Long> hostId) {
@@ -83,8 +83,8 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
         return event.status.eq(status);
     }
 
-    private BooleanExpression notEqClosed() {
-        return event.status.eq(CLOSED).not();
+    private BooleanExpression statusNotEq(EventStatus status) {
+        return event.status.eq(status).not();
     }
 
     private BooleanExpression nameContains(String keyword) {

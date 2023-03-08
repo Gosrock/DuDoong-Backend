@@ -46,7 +46,7 @@ public class EventAdaptor {
     }
 
     public List<Event> queryEventsByEndAtBefore(LocalDateTime time) {
-        return eventRepository.queryEventsByEndAtBefore(time);
+        return eventRepository.queryEventsByEndAtBeforeAndStatusOpen(time);
     }
 
     public List<Event> findAllByIds(List<Long> ids) {
