@@ -15,5 +15,5 @@ public interface EventCustomRepository {
 
     Slice<Event> querySliceEventsByKeyword(String keyword, Pageable pageable);
 
-    List<Event> queryEventsByEndAtBefore(LocalDateTime time);
+    List<Event> queryEventsByEndAtBeforeAndStatusOpen(LocalDateTime time);
 }

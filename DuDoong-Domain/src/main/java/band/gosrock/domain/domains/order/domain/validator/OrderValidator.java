@@ -189,7 +189,7 @@ public class OrderValidator {
 
     /** 이벤트가 열려있는 상태인지 */
     public void validEventIsOpen(Event event) {
-        event.validateStatusOpen();
+        event.validateNotOpenStatus();
     }
 
     /** 아이템의 종류가 1종류인지. */
