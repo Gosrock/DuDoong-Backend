@@ -56,7 +56,7 @@ public class CartValidator {
 
     /** 이벤트가 현재 열려있는 상태인지 확인합니다. */
     public void validEventIsOpen(Event event) {
-        event.validateStatusOpen();
+        event.validateNotOpenStatus();
     }
 
     /** 카트에 담길때 아이템이 한 종류인지 확인합니다. */

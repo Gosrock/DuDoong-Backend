@@ -93,10 +93,9 @@ public class Event extends BaseTimeEntity {
 
     public void validateOpenStatus() {
         if (status == OPEN) throw CannotModifyOpenEventException.EXCEPTION;
-        // todo : 오픈 전과 후 검증 로직 이름 변경
     }
 
-    public void validateStatusOpen() {
+    public void validateNotOpenStatus() {
         if (status != OPEN) throw EventNotOpenException.EXCEPTION;
     }
 
