@@ -70,7 +70,7 @@ public class EventService {
     }
 
     public List<Event> closeExpiredEventsEndAtBefore(LocalDateTime time) {
-        List<Event> events = eventAdaptor.queryEventsByEndAtBefore(time);
+        List<Event> events = eventAdaptor.queryEventsByEndAtBeforeAndStatusOpen(time);
         events.forEach(event -> updateEventStatus(event, EventStatus.CLOSED));
         eventRepository.saveAll(events);
         return events;
