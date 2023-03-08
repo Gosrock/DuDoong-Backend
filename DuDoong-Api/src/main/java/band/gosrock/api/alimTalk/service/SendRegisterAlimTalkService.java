@@ -1,8 +1,8 @@
 package band.gosrock.api.alimTalk.service;
 
 
-import band.gosrock.api.alimTalk.service.helper.NcpHelper;
 import band.gosrock.domain.common.alarm.UserKakaoTalkAlarm;
+import band.gosrock.infrastructure.config.alilmTalk.NcpHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

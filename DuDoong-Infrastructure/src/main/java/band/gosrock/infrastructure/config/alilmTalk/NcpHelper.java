@@ -1,4 +1,4 @@
-package band.gosrock.api.alimTalk.service.helper;
+package band.gosrock.infrastructure.config.alilmTalk;
 
 
 import band.gosrock.common.annotation.Helper;
@@ -111,6 +111,31 @@ public class NcpHelper {
         ncpClient.sendItemAlimTalk(serviceID, ncpAccessKey, timeStamp, signature, alimTalkItemBody);
     }
 
+    // 주문서 전송 알림톡 (아이템리스트)
+    public void sendSettlementNcpAlimTalk(
+            String to,
+            String templateCode,
+            String content,
+            String headerContent,
+            String email,
+            String eventName) {
+        // 전송 서버 검증
+        if (!springEnvironmentHelper.isProdAndStagingProfile()) {
+            return;
+        }
+        // signature 생성
+        String timeStamp =
+                String.valueOf(Instant.now().toEpochMilli()); // current timestamp (epoch)
+        String alimTalkSignatureRequestUrl = "/alimtalk/v2/services/" + serviceID + "/messages";
+        String signature =
+                makePostSignature(
+                        ncpAccessKey, ncpSecretKey, alimTalkSignatureRequestUrl, timeStamp);
+        // 바디 생성
+        MessageDto.AlimTalkItemBody alimTalkItemBody =
+                makeSettlementItemBody(templateCode, to, content, headerContent, email, eventName);
+        ncpClient.sendItemAlimTalk(serviceID, ncpAccessKey, timeStamp, signature, alimTalkItemBody);
+    }
+
     public MessageDto.AlimTalkItemButtonBody makeItemButtonBody(
             String templateCode,
             String to,
@@ -136,6 +161,31 @@ public class NcpHelper {
                 .plusFriendId(plusFriendId)
                 .templateCode(templateCode)
                 .messages(alimTalkItemButtonMessages)
+                .build();
+    }
+
+    public MessageDto.AlimTalkItemBody makeSettlementItemBody(
+            String templateCode,
+            String to,
+            String content,
+            String headerContent,
+            String email,
+            String eventName) {
+        MessageDto.AlimTalkItem alimTalkItem = makeSettlementItem(email, eventName);
+        MessageDto.AlimTalkItemMessage alimTalkMessage =
+                MessageDto.AlimTalkItemMessage.builder()
+                        .to(to)
+                        .content(content)
+                        .headerContent(headerContent)
+                        .item(alimTalkItem)
+                        .build();
+        List<MessageDto.AlimTalkItemMessage> alimTalkItemMessages = new ArrayList<>();
+        alimTalkItemMessages.add(alimTalkMessage);
+
+        return MessageDto.AlimTalkItemBody.builder()
+                .plusFriendId(plusFriendId)
+                .templateCode(templateCode)
+                .messages(alimTalkItemMessages)
                 .build();
     }
 
@@ -181,6 +231,16 @@ public class NcpHelper {
                 .templateCode(templateCode)
                 .messages(alimTalkButtonMessages)
                 .build();
+    }
+
+    public MessageDto.AlimTalkItem makeSettlementItem(String email, String eventName) {
+        List<MessageDto.Item> list = new ArrayList<>();
+        MessageDto.Item item1 = MessageDto.Item.builder().title("이메일 :").description(email).build();
+        list.add(item1);
+        MessageDto.Item item2 =
+                MessageDto.Item.builder().title("이벤트 :").description(eventName).build();
+        list.add(item2);
+        return MessageDto.AlimTalkItem.builder().list(list).build();
     }
 
     public MessageDto.AlimTalkItem makeOrderItem(AlimTalkOrderInfo orderInfo) {
