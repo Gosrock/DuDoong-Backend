@@ -1,6 +1,5 @@
 package band.gosrock.domain.domains.event.service;
 
-import static band.gosrock.domain.domains.event.domain.QEvent.event;
 
 import band.gosrock.common.annotation.DomainService;
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
@@ -71,7 +70,7 @@ public class EventService {
     }
 
     public List<Event> closeExpiredEventsEndAtBefore(LocalDateTime time) {
-        List<Event> events = eventAdaptor.queryEventsByEndAtBefore(time);
+        List<Event> events = eventAdaptor.queryEventsByEndAtBeforeAndStatusOpen(time);
         events.forEach(event -> updateEventStatus(event, EventStatus.CLOSED));
         eventRepository.saveAll(events);
         return events;

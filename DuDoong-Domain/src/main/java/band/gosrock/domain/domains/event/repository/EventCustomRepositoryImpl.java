@@ -29,7 +29,7 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
                 queryFactory
                         .selectFrom(event)
                         .where(hostIdIn(hostIds))
-                        .orderBy(event.id.desc())
+                        .orderBy(statusDesc(), createdAtDesc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize() + 1)
                         .fetch();
@@ -41,8 +41,8 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
         List<Event> events =
                 queryFactory
                         .selectFrom(event)
-                        .where(eqStatusOpen())
-                        .orderBy(createdAtDesc())
+                        .where(statusEq(status))
+                        .orderBy(statusDesc(), startAtAsc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize() + 1)
                         .fetch();
@@ -54,8 +54,8 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
         List<Event> events =
                 queryFactory
                         .selectFrom(event)
-                        .where(eqStatusOpen().and(nameContains(keyword)))
-                        .orderBy(createdAtDesc())
+                        .where(eqStatusCanExposed(), nameContains(keyword))
+                        .orderBy(statusDesc(), startAtAsc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize() + 1)
                         .fetch();
@@ -63,8 +63,8 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
     }
 
     @Override
-    public List<Event> queryEventsByEndAtBefore(LocalDateTime time) {
-        return queryFactory.selectFrom(event).where(endAtBefore(time), notEqClosed()).fetch();
+    public List<Event> queryEventsByEndAtBeforeAndStatusOpen(LocalDateTime time) {
+        return queryFactory.selectFrom(event).where(endAtBefore(time), statusEq(OPEN)).fetch();
     }
 
     private BooleanExpression hostIdIn(List<Long> hostId) {
@@ -75,8 +75,16 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
         return event.status.eq(OPEN);
     }
 
-    private BooleanExpression notEqClosed() {
-        return event.status.eq(CLOSED).not();
+    private BooleanExpression eqStatusCanExposed() {
+        return event.status.eq(OPEN).or(event.status.eq(CLOSED));
+    }
+
+    private BooleanExpression statusEq(EventStatus status) {
+        return event.status.eq(status);
+    }
+
+    private BooleanExpression statusNotEq(EventStatus status) {
+        return event.status.eq(status).not();
     }
 
     private BooleanExpression nameContains(String keyword) {
@@ -85,6 +93,14 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
 
     private OrderSpecifier<LocalDateTime> createdAtDesc() {
         return event.createdAt.desc();
+    }
+
+    private OrderSpecifier<LocalDateTime> startAtAsc() {
+        return event.eventBasic.startAt.asc();
+    }
+
+    private OrderSpecifier<EventStatus> statusDesc() {
+        return event.status.desc();
     }
 
     private BooleanExpression endAtBefore(LocalDateTime time) {
