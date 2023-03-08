@@ -2,8 +2,8 @@ package band.gosrock.api.alimTalk.service;
 
 
 import band.gosrock.api.alimTalk.dto.OrderAlimTalkDto;
-import band.gosrock.api.alimTalk.service.helper.NcpHelper;
 import band.gosrock.domain.common.alarm.OrderKakaoTalkAlarm;
+import band.gosrock.infrastructure.config.alilmTalk.NcpHelper;
 import band.gosrock.infrastructure.config.alilmTalk.dto.AlimTalkEventInfo;
 import band.gosrock.infrastructure.config.alilmTalk.dto.AlimTalkOrderInfo;
 import band.gosrock.infrastructure.config.alilmTalk.dto.AlimTalkUserInfo;

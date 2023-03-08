@@ -392,7 +392,7 @@ class OrderValidatorTest {
     @Test
     public void 주문_티켓팅_이벤트_상태검증_성공() {
         // given
-        willDoNothing().given(event).validateStatusOpen();
+        willDoNothing().given(event).validateNotOpenStatus();
         // when
         orderValidator.validEventIsOpen(event);
         // then
@@ -401,7 +401,7 @@ class OrderValidatorTest {
     @Test
     public void 주문_티켓팅_이벤트_상태검증_실패() {
         // given
-        willThrow(EventNotOpenException.class).given(event).validateStatusOpen();
+        willThrow(EventNotOpenException.class).given(event).validateNotOpenStatus();
         // when
         // then
         assertThrows(EventNotOpenException.class, () -> orderValidator.validEventIsOpen(event));
