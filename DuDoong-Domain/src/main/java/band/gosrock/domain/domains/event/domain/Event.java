@@ -91,6 +91,11 @@ public class Event extends BaseTimeEntity {
         Events.raise(EventCreationEvent.of(hostId, name));
     }
 
+    public void validateStartAt() {
+        if (this.getStartAt().isBefore(LocalDateTime.now()))
+            throw EventOpenTimeExpiredException.EXCEPTION;
+    }
+
     public void validateOpenStatus() {
         if (status == OPEN) throw CannotModifyOpenEventException.EXCEPTION;
     }
@@ -144,6 +149,7 @@ public class Event extends BaseTimeEntity {
     }
 
     public void open() {
+        validateStartAt();
         updateStatus(OPEN, AlreadyOpenStatusException.EXCEPTION);
     }
 
