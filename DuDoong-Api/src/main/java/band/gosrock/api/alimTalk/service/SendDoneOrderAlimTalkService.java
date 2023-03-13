@@ -25,7 +25,7 @@ public class SendDoneOrderAlimTalkService {
                         userInfo.getUserName(), eventInfo.getHostName(), eventInfo.getEventName());
         String headerContent = OrderKakaoTalkAlarm.creationHeaderOf();
 
-        ncpHelper.sendItemNcpAlimTalk(
+        ncpHelper.sendDoneOrderAlimTalk(
                 userInfo.getPhoneNum(),
                 OrderKakaoTalkAlarm.creationTemplateCode(),
                 content,

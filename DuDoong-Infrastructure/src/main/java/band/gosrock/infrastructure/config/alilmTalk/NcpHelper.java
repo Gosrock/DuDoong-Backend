@@ -45,7 +45,7 @@ public class NcpHelper {
     }
 
     // 주문 취소 알림톡 (아이템리스트+버튼)
-    public void sendItemButtonNcpAlimTalk(
+    public void sendCancelOrderAlimTalk(
             String to,
             String templateCode,
             String content,
@@ -64,7 +64,7 @@ public class NcpHelper {
                         ncpAccessKey, ncpSecretKey, alimTalkSignatureRequestUrl, timeStamp);
         // 바디 생성
         MessageDto.AlimTalkItemButtonBody alimTalkItemButtonBody =
-                makeItemButtonBody(templateCode, to, content, headerContent, orderInfo);
+                makeCancelOrderBody(templateCode, to, content, headerContent, orderInfo);
         ncpClient.sendItemButtonAlimTalk(
                 serviceID, ncpAccessKey, timeStamp, signature, alimTalkItemButtonBody);
     }
@@ -87,8 +87,8 @@ public class NcpHelper {
         ncpClient.sendButtonAlimTalk(serviceID, ncpAccessKey, timeStamp, signature, body);
     }
 
-    // 주문 성공 알림톡 (아이템리스트)
-    public void sendItemNcpAlimTalk(
+    // 주문 성공 알림톡 (아이템리스트+버튼)
+    public void sendDoneOrderAlimTalk(
             String to,
             String templateCode,
             String content,
@@ -106,9 +106,10 @@ public class NcpHelper {
                 makePostSignature(
                         ncpAccessKey, ncpSecretKey, alimTalkSignatureRequestUrl, timeStamp);
         // 바디 생성
-        MessageDto.AlimTalkItemBody alimTalkItemBody =
-                makeItemBody(templateCode, to, content, headerContent, orderInfo);
-        ncpClient.sendItemAlimTalk(serviceID, ncpAccessKey, timeStamp, signature, alimTalkItemBody);
+        MessageDto.AlimTalkItemButtonBody alimTalkItemButtonBody =
+                makeDoneOrderBody(templateCode, to, content, headerContent, orderInfo);
+        ncpClient.sendItemButtonAlimTalk(
+                serviceID, ncpAccessKey, timeStamp, signature, alimTalkItemButtonBody);
     }
 
     // 주문서 전송 알림톡 (아이템리스트)
@@ -136,14 +137,42 @@ public class NcpHelper {
         ncpClient.sendItemAlimTalk(serviceID, ncpAccessKey, timeStamp, signature, alimTalkItemBody);
     }
 
-    public MessageDto.AlimTalkItemButtonBody makeItemButtonBody(
+    public MessageDto.AlimTalkItemButtonBody makeDoneOrderBody(
             String templateCode,
             String to,
             String content,
             String headerContent,
             AlimTalkOrderInfo orderInfo) {
         MessageDto.AlimTalkItem alimTalkItem = makeOrderItem(orderInfo);
-        List<MessageDto.AlimTalkButton> alimTalkButtons = makeWithdrawButtons();
+        List<MessageDto.AlimTalkButton> alimTalkButtons = makeDoneOrderButtons();
+
+        MessageDto.AlimTalkItemButtonMessage alimTalkItemButtonMessage =
+                MessageDto.AlimTalkItemButtonMessage.builder()
+                        .to(to)
+                        .content(content)
+                        .headerContent(headerContent)
+                        .item(alimTalkItem)
+                        .buttons(alimTalkButtons)
+                        .build();
+
+        List<MessageDto.AlimTalkItemButtonMessage> alimTalkItemButtonMessages = new ArrayList<>();
+        alimTalkItemButtonMessages.add(alimTalkItemButtonMessage);
+
+        return MessageDto.AlimTalkItemButtonBody.builder()
+                .plusFriendId(plusFriendId)
+                .templateCode(templateCode)
+                .messages(alimTalkItemButtonMessages)
+                .build();
+    }
+
+    public MessageDto.AlimTalkItemButtonBody makeCancelOrderBody(
+            String templateCode,
+            String to,
+            String content,
+            String headerContent,
+            AlimTalkOrderInfo orderInfo) {
+        MessageDto.AlimTalkItem alimTalkItem = makeOrderItem(orderInfo);
+        List<MessageDto.AlimTalkButton> alimTalkButtons = makeCancelOrderButtons();
 
         MessageDto.AlimTalkItemButtonMessage alimTalkItemButtonMessage =
                 MessageDto.AlimTalkItemButtonMessage.builder()
@@ -282,6 +311,15 @@ public class NcpHelper {
         return MessageDto.AlimTalkButton.builder().type("AC").name("채널 추가").build();
     }
 
+    public MessageDto.AlimTalkButton makeMyPageButton() {
+        return MessageDto.AlimTalkButton.builder()
+                .type("WL")
+                .name("마이페이지 바로가기")
+                .linkMobile("https://dudoong.com/mypage")
+                .linkPc("https://dudoong.com/mypage")
+                .build();
+    }
+
     public List<MessageDto.AlimTalkButton> makeSignUpButtons() {
         MessageDto.AlimTalkButton alimTalkButton1 = makeAddChannelButton();
         MessageDto.AlimTalkButton alimTalkButton2 = makeHomePageButton();
@@ -291,7 +329,14 @@ public class NcpHelper {
         return alimTalkButtons;
     }
 
-    public List<MessageDto.AlimTalkButton> makeWithdrawButtons() {
+    public List<MessageDto.AlimTalkButton> makeDoneOrderButtons() {
+        MessageDto.AlimTalkButton alimTalkButton = makeMyPageButton();
+        List<MessageDto.AlimTalkButton> alimTalkButtons = new ArrayList<>();
+        alimTalkButtons.add(alimTalkButton);
+        return alimTalkButtons;
+    }
+
+    public List<MessageDto.AlimTalkButton> makeCancelOrderButtons() {
         MessageDto.AlimTalkButton alimTalkButton = makeHomePageButton();
         List<MessageDto.AlimTalkButton> alimTalkButtons = new ArrayList<>();
         alimTalkButtons.add(alimTalkButton);
