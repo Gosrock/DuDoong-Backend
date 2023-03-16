@@ -3,10 +3,12 @@ package band.gosrock.api.order.controller;
 
 import band.gosrock.api.common.page.PageResponse;
 import band.gosrock.api.order.docs.ApproveOrderExceptionDocs;
+import band.gosrock.api.order.docs.CancelOrderExceptionDocs;
 import band.gosrock.api.order.model.dto.request.AdminOrderTableQueryRequest;
 import band.gosrock.api.order.model.dto.response.OrderAdminTableElement;
 import band.gosrock.api.order.model.dto.response.OrderResponse;
 import band.gosrock.api.order.service.ApproveOrderUseCase;
+import band.gosrock.api.order.service.CancelOrderUseCase;
 import band.gosrock.api.order.service.ReadOrderUseCase;
 import band.gosrock.common.annotation.ApiErrorExceptionsExample;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,6 +33,7 @@ public class OrderAdminController {
 
     private final ApproveOrderUseCase approveOrderUseCase;
     private final ReadOrderUseCase readOrderUseCase;
+    private final CancelOrderUseCase cancelOrderUseCase;
 
     @Operation(summary = "어드민 목록 내 테이블 조회 OrderStage 는 꼭 보내주삼!")
     @GetMapping
@@ -39,6 +42,14 @@ public class OrderAdminController {
             @ParameterObject Pageable pageable,
             @PathVariable Long eventId) {
         return readOrderUseCase.getEventOrders(eventId, adminOrderTableQueryRequest, pageable);
+    }
+
+    @Operation(summary = "결제 취소요청. 호스트 관리자가 결제를 취소 시킵니다.! (호스트 관리자용(관리자쪽에서 사용))")
+    @ApiErrorExceptionsExample(CancelOrderExceptionDocs.class)
+    @PostMapping("/{order_uuid}/cancel")
+    public OrderResponse cancelOrder(
+            @PathVariable("eventId") Long eventId, @PathVariable("order_uuid") String orderUuid) {
+        return cancelOrderUseCase.execute(eventId, orderUuid);
     }
 
     @Operation(summary = "주문 승인하기 . 호스트 관리자가 티켓 주문을 승인합니다. ( 어드민 이벤트쪽으로 이동예정 )")

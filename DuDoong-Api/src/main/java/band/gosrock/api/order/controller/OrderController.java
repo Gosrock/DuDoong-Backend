@@ -2,7 +2,6 @@ package band.gosrock.api.order.controller;
 
 
 import band.gosrock.api.common.slice.SliceResponse;
-import band.gosrock.api.order.docs.CancelOrderExceptionDocs;
 import band.gosrock.api.order.docs.ConfirmOrderExceptionDocs;
 import band.gosrock.api.order.docs.CreateOrderExceptionDocs;
 import band.gosrock.api.order.docs.FreeOrderExceptionDocs;
@@ -13,7 +12,6 @@ import band.gosrock.api.order.model.dto.response.CreateOrderResponse;
 import band.gosrock.api.order.model.dto.response.OrderBriefElement;
 import band.gosrock.api.order.model.dto.response.OrderResponse;
 import band.gosrock.api.order.model.dto.response.OrderTicketResponse;
-import band.gosrock.api.order.service.CancelOrderUseCase;
 import band.gosrock.api.order.service.ConfirmOrderUseCase;
 import band.gosrock.api.order.service.CreateOrderUseCase;
 import band.gosrock.api.order.service.CreateTossOrderUseCase;
@@ -49,7 +47,6 @@ public class OrderController {
     private final CreateOrderUseCase createOrderUseCase;
     private final ConfirmOrderUseCase confirmOrderUseCase;
     private final FreeOrderUseCase freeOrderUseCase;
-    private final CancelOrderUseCase cancelOrderUseCase;
 
     private final RefundOrderUseCase refundOrderUseCase;
     private final ReadOrderUseCase readOrderUseCase;
@@ -85,13 +82,6 @@ public class OrderController {
     @PostMapping("/{order_uuid}/free")
     public OrderResponse freeOrder(@PathVariable("order_uuid") String orderUuid) {
         return freeOrderUseCase.execute(orderUuid);
-    }
-
-    @Operation(summary = "결제 취소요청. 호스트 관리자가 결제를 취소 시킵니다.! (호스트 관리자용(관리자쪽에서 사용))")
-    @ApiErrorExceptionsExample(CancelOrderExceptionDocs.class)
-    @PostMapping("/{order_uuid}/cancel")
-    public OrderResponse cancelOrder(@PathVariable("order_uuid") String orderUuid) {
-        return cancelOrderUseCase.execute(orderUuid);
     }
 
     @Operation(summary = "결제 환불요청. 본인이 구매한 오더를 환불 시킵니다.! (본인 용)")
