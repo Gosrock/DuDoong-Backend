@@ -57,7 +57,7 @@ class WithdrawOrderServiceTest {
         AtomicLong successCount = new AtomicLong();
         // when
         CunCurrencyExecutorService.execute(
-                () -> withdrawOrderService.cancelOrder(order.getUuid(), userId), successCount);
+                () -> withdrawOrderService.cancelOrder(order.getUuid()), successCount);
 
         assertThat(successCount.get()).isGreaterThanOrEqualTo(1);
     }

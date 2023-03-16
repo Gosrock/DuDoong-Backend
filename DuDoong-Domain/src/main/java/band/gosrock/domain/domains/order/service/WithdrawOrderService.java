@@ -23,8 +23,6 @@ public class WithdrawOrderService {
     @RedissonLock(LockName = "주문", identifier = "orderUuid")
     public String cancelOrder(String orderUuid) {
         Order order = orderAdaptor.findByOrderUuid(orderUuid);
-        // TODO : 관리자 권환으로 치환.
-        orderValidator.validOwner(order, userId);
         order.cancel(orderValidator);
         return orderUuid;
     }
