@@ -69,6 +69,10 @@ public class Event extends BaseTimeEntity {
         return this.status == PREPARING;
     }
 
+    public Boolean isClosed() {
+        return this.status == CLOSED;
+    }
+
     public void setEventBasic(EventBasic eventBasic) {
         this.validateOpenStatus();
         this.eventBasic = eventBasic;
