@@ -42,7 +42,7 @@ public class OrderBriefElement {
     public static OrderBriefElement of(Order order, Event event, IssuedTickets issuedTickets) {
         return OrderBriefElement.builder()
                 .refundInfo(event.toRefundInfoVoWithOrderStatus(order.getOrderStatus()))
-                .stage(issuedTickets.getIssuedTicketsStage())
+                .stage(issuedTickets.getIssuedTicketsStage(event))
                 .orderUuid(order.getUuid())
                 .orderNo(order.getOrderNo())
                 .orderStatus(order.getOrderStatus())
