@@ -16,7 +16,9 @@ public enum IssuedTicketsStage {
     // 입장중
     ENTERING("ENTERING", "입장중"),
     // 취소됨
-    CANCELED("CANCELED", "취소됨");
+    CANCELED("CANCELED", "취소됨"),
+
+    PASSED_EVENT("PASSED_EVENT", "지난공연");
     private final String value;
 
     @JsonValue private final String kr;

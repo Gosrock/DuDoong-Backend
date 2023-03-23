@@ -8,10 +8,12 @@ import band.gosrock.common.exception.GlobalErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.bucket4j.Bucket;
 import java.io.IOException;
+import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -26,6 +28,9 @@ public class ThrottlingInterceptor implements HandlerInterceptor {
     private final IPRateLimiter ipRateLimiter;
     private final ObjectMapper objectMapper;
 
+    @Value("${acl.whiteList}")
+    private List<String> aclWhiteList;
+
     private final SlackThrottleErrorSender slackThrottleErrorSender;
 
     @Override
@@ -33,10 +38,18 @@ public class ThrottlingInterceptor implements HandlerInterceptor {
             HttpServletRequest request, HttpServletResponse response, Object handler)
             throws IOException {
         Long userId = SecurityUtils.getCurrentUserId();
+        String remoteAddr = request.getRemoteAddr();
+        log.info("remoteAddr : " + remoteAddr);
+
+        // next js ssr 대응
+        if (aclWhiteList.contains(remoteAddr)) {
+            log.info("white List pass" + remoteAddr);
+            return true;
+        }
+
         Bucket bucket;
         if (userId == 0L) {
             // 익명 유저 ip 기반처리
-            String remoteAddr = request.getRemoteAddr();
             bucket = ipRateLimiter.resolveBucket(remoteAddr);
         } else {
             // 비 익명 유저 유저 아이디 기반 처리

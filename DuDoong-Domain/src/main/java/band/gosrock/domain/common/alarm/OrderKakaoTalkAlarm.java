@@ -25,7 +25,7 @@ public class OrderKakaoTalkAlarm {
     }
 
     public static String creationTemplateCode() {
-        return "doneorder";
+        return "doneorderv2";
     }
 
     public static String deletionOf(String userName, String hostName, String eventName) {

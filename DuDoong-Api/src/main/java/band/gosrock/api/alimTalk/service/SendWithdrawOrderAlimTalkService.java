@@ -25,7 +25,7 @@ public class SendWithdrawOrderAlimTalkService {
                         userInfo.getUserName(), eventInfo.getHostName(), eventInfo.getEventName());
         String headerContent = OrderKakaoTalkAlarm.deletionHeaderOf();
 
-        ncpHelper.sendItemButtonNcpAlimTalk(
+        ncpHelper.sendCancelOrderAlimTalk(
                 userInfo.getPhoneNum(),
                 OrderKakaoTalkAlarm.deletionTemplateCode(),
                 content,
