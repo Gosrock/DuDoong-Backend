@@ -76,6 +76,7 @@
 - [찬진 : spring feign client wiremock test](https://devnm.tistory.com/34)
 - [찬진 : spring oauth Open ID Connect with kakao](https://devnm.tistory.com/35)
 - [찬진 : 멀티모듈 jacoco , sonarqube (cloud) 세팅](https://devnm.tistory.com/36)
+- [찬진 : spring redisson 분산락 Aop 적용기](https://devnm.tistory.com/37)
 - [찬진 : 도커 로그 ec2환경에서 클라우드 와치로 전송하기](https://devnm.tistory.com/8)
 - [경민 : Custom Enum Validator 구현하기](https://gengminy.tistory.com/47)
 - [경민 : Reflection 을 이용하여 Enum Validator 개선하기](https://gengminy.tistory.com/48)
