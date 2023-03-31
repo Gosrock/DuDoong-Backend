@@ -3,14 +3,7 @@ package band.gosrock.job;
 
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor;
 import band.gosrock.domain.domains.event.domain.Event;
-import band.gosrock.domain.domains.host.adaptor.HostAdaptor;
-import band.gosrock.domain.domains.host.domain.Host;
-import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
-import band.gosrock.domain.domains.user.domain.User;
-import band.gosrock.infrastructure.config.s3.S3PrivateFileService;
-import band.gosrock.infrastructure.config.ses.AwsSesUtils;
-import band.gosrock.infrastructure.config.ses.RawEmailAttachmentDto;
-import band.gosrock.infrastructure.config.ses.SendRawEmailDto;
+import band.gosrock.helper.SettlementEmailHelper;
 import band.gosrock.parameter.EventJobParameter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +16,6 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.thymeleaf.context.Context;
-import org.thymeleaf.spring5.SpringTemplateEngine;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -38,14 +29,7 @@ public class EventSettlementEmailToAdmin {
     private final StepBuilderFactory stepBuilderFactory;
     private final EventAdaptor eventAdaptor;
 
-    private final HostAdaptor hostAdaptor;
-    private final UserAdaptor userAdaptor;
-
-    private final SpringTemplateEngine templateEngine;
-
-    private final S3PrivateFileService s3PrivateFileUploadService;
-
-    private final AwsSesUtils awsSesUtils;
+    private final SettlementEmailHelper settlementEmailHelper;
 
     @Bean(BEAN_PREFIX + "eventJobParameter")
     @JobScope
@@ -69,42 +53,7 @@ public class EventSettlementEmailToAdmin {
                 .tasklet(
                         (contribution, chunkContext) -> {
                             Event event = eventJobParameter.getEvent();
-                            String eventName = event.getEventBasic().getName();
-                            Long eventId = event.getId();
-                            Host host = hostAdaptor.findById(event.getHostId());
-                            User masterUser = userAdaptor.queryUser(host.getMasterUserId());
-                            byte[] eventSettlementPdf =
-                                    s3PrivateFileUploadService.downloadEventSettlementPdf(eventId);
-                            RawEmailAttachmentDto eventSettlementPdfAttachment =
-                                    RawEmailAttachmentDto.builder()
-                                            .fileName(eventName + "_정산서.pdf")
-                                            .fileBytes(eventSettlementPdf)
-                                            .type("application/pdf")
-                                            .build();
-
-                            byte[] eventOrderListExcel =
-                                    s3PrivateFileUploadService.downloadEventOrdersExcel(eventId);
-                            RawEmailAttachmentDto eventOrderListExcelAttachment =
-                                    RawEmailAttachmentDto.builder()
-                                            .fileName(eventName + "_주문목록.xlsx")
-                                            .fileBytes(eventOrderListExcel)
-                                            .type(
-                                                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                                            .build();
-
-                            SendRawEmailDto sendRawEmailDto =
-                                    SendRawEmailDto.builder()
-                                            .bodyHtml(
-                                                    templateEngine.process(
-                                                            "eventSettlement", new Context()))
-                                            .recipient("support@dudoong.com")
-                                            .subject(eventName + "공연 정산서 어드민 발송 ( 관리자용 )")
-                                            .build();
-
-                            sendRawEmailDto.addEmailAttachments(eventSettlementPdfAttachment);
-                            sendRawEmailDto.addEmailAttachments(eventOrderListExcelAttachment);
-
-                            awsSesUtils.sendRawEmails(sendRawEmailDto);
+                            settlementEmailHelper.sendToAdmin(event);
                             return RepeatStatus.FINISHED;
                         })
                 .build();
