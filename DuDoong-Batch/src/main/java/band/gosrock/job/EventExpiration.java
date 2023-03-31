@@ -3,8 +3,8 @@ package band.gosrock.job;
 
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.service.EventService;
+import band.gosrock.helper.slack.SlackEventExpirationSender;
 import band.gosrock.parameter.DateTimeJobParameter;
-import band.gosrock.slack.SlackEventExpirationSender;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
