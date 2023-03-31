@@ -1,6 +1,8 @@
 package band.gosrock.excel;
 
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -23,7 +25,7 @@ public class ExcelOrderHelper {
 
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    public Workbook execute(List<ExcelOrderDto> excelOrders) {
+    public ByteArrayOutputStream execute(List<ExcelOrderDto> excelOrders) throws IOException {
         Workbook workbook = new XSSFWorkbook();
 
         Field[] declaredFields = ExcelOrderDto.class.getDeclaredFields();
@@ -115,6 +117,9 @@ public class ExcelOrderHelper {
                                     .setCellValue(
                                             refundAt != null ? refundAt.format(formatter) : null);
                         });
-        return workbook;
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+        return outputStream;
     }
 }
