@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/** 이벤트 정산 수수료 , 내역등을 요약해서 저장합니다. */
 @Slf4j
 @RequiredArgsConstructor
 @Configuration
