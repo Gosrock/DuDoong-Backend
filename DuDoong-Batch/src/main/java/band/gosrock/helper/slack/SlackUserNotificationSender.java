@@ -1,4 +1,4 @@
-package band.gosrock.slack;
+package band.gosrock.helper.slack;
 
 import static com.slack.api.model.block.Blocks.divider;
 import static com.slack.api.model.block.Blocks.section;
