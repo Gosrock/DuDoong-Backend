@@ -2,8 +2,8 @@ package band.gosrock.job;
 
 
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor;
+import band.gosrock.helper.slack.SlackUserNotificationSender;
 import band.gosrock.parameter.DateJobParameter;
-import band.gosrock.slack.SlackUserNotificationSender;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
