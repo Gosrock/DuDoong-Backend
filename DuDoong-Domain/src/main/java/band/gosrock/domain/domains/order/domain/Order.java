@@ -239,6 +239,14 @@ public class Order extends BaseTimeEntity {
         Events.raise(WithDrawOrderEvent.from(this));
     }
 
+    /** 관리자가 승인 대기 중인 주문을 거절합니다. */
+    public void refuse(OrderValidator orderValidator) {
+        orderValidator.validCanRefuse(this);
+        this.orderStatus = OrderStatus.CANCELED;
+        this.withDrawAt = LocalDateTime.now();
+        Events.raise(WithDrawOrderEvent.from(this));
+    }
+
     /** 사용자가 주문을 환불 시킵니다. */
     public void refund(Long currentUserId, OrderValidator orderValidator) {
         orderValidator.validOwner(this, currentUserId);

@@ -39,7 +39,8 @@ public enum OrderErrorCode implements BaseErrorCode {
     APPROVE_WAITING_PURCHASE_LIMIT(
             BAD_REQUEST,
             "Order_400_15",
-            "승인 대기중인 주문으로 인해 티켓 최대 구매 가능 횟수를 넘겼습니다." + "이미 신청한 주문이 승인 될 때까지 기다려주세요.");
+            "승인 대기중인 주문으로 인해 티켓 최대 구매 가능 횟수를 넘겼습니다." + "이미 신청한 주문이 승인 될 때까지 기다려주세요."),
+    ORDER_CANNOT_REFUSE(BAD_REQUEST, "Order_400_16", "승인 대기중인 주문을 거절할 수 없는 상태입니다.");
 
     private Integer status;
     private String code;

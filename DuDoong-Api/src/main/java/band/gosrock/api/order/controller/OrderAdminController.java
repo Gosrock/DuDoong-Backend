@@ -10,6 +10,7 @@ import band.gosrock.api.order.model.dto.response.OrderResponse;
 import band.gosrock.api.order.service.ApproveOrderUseCase;
 import band.gosrock.api.order.service.CancelOrderUseCase;
 import band.gosrock.api.order.service.ReadOrderUseCase;
+import band.gosrock.api.order.service.RefuseOrderUseCase;
 import band.gosrock.common.annotation.ApiErrorExceptionsExample;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -35,6 +36,8 @@ public class OrderAdminController {
     private final ReadOrderUseCase readOrderUseCase;
     private final CancelOrderUseCase cancelOrderUseCase;
 
+    private final RefuseOrderUseCase refuseOrderUseCase;
+
     @Operation(summary = "어드민 목록 내 테이블 조회 OrderStage 는 꼭 보내주삼!")
     @GetMapping
     public PageResponse<OrderAdminTableElement> getEventOrders(
@@ -52,12 +55,19 @@ public class OrderAdminController {
         return cancelOrderUseCase.execute(eventId, orderUuid);
     }
 
-    @Operation(summary = "주문 승인하기 . 호스트 관리자가 티켓 주문을 승인합니다. ( 어드민 이벤트쪽으로 이동예정 )")
+    @Operation(summary = "주문 승인하기 . 호스트 관리자가 티켓 주문을 승인합니다.")
     @ApiErrorExceptionsExample(ApproveOrderExceptionDocs.class)
     @PostMapping("/{order_uuid}/approve")
     public OrderResponse confirmOrder(
             @PathVariable Long eventId, @PathVariable("order_uuid") String orderUuid) {
         return approveOrderUseCase.execute(eventId, orderUuid);
+    }
+
+    @Operation(summary = "승인 주문 거절하기 . 호스트 관리자가 승인 대기중인 주문을 거절합니다.")
+    @PostMapping("/{order_uuid}/refuse")
+    public OrderResponse refuseOrder(
+            @PathVariable Long eventId, @PathVariable("order_uuid") String orderUuid) {
+        return refuseOrderUseCase.execute(eventId, orderUuid);
     }
 
     @Operation(summary = "주문관리 리스트 페이지에서 주문 상세정보 조회할때")
