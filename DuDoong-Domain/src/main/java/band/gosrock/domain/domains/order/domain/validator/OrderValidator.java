@@ -121,6 +121,15 @@ public class OrderValidator {
         validCanWithDraw(order);
     }
 
+    /** 거절할 수 있는 승인 대기중인 주문인지 검증합니다. */
+    public void validCanRefuse(Order order) {
+        validAvailableRefundDate(order);
+        validStatusCanRefuse(getOrderStatus(order));
+        validCanWithDraw(order);
+    }
+
+
+
     /** 환불 할 수 있는 주문인지 검증합니다. */
     public void validCanRefund(Order order) {
         validAvailableRefundDate(order);
@@ -280,6 +289,11 @@ public class OrderValidator {
                 || Objects.equals(orderStatus, OrderStatus.APPROVED);
     }
 
+    /** 주문상태가 철회가능한 상태인지를 반환합니다. */
+    public Boolean isStatusCanRefuse(OrderStatus orderStatus) {
+        return Objects.equals(orderStatus, OrderStatus.PENDING_APPROVE);
+    }
+
     /** 주문 상태가 취소가능한 상태인지 검증합니다. */
     public void validStatusCanCancel(OrderStatus orderStatus) {
         if (!isStatusCanWithDraw(orderStatus)) {
@@ -291,6 +305,12 @@ public class OrderValidator {
     public void validStatusCanRefund(OrderStatus orderStatus) {
         if (!isStatusCanWithDraw(orderStatus)) {
             throw CanNotRefundOrderException.EXCEPTION;
+        }
+    }
+    /** 주문 상태가 관리자 취소가능한 상태인지 검증합니다. */
+    public void validStatusCanRefuse(OrderStatus orderStatus) {
+        if (!isStatusCanRefuse(orderStatus)) {
+            throw CanNotCancelOrderException.EXCEPTION;
         }
     }
 
