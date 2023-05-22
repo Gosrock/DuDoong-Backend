@@ -10,6 +10,7 @@ import band.gosrock.api.order.model.dto.response.OrderResponse;
 import band.gosrock.api.order.service.ApproveOrderUseCase;
 import band.gosrock.api.order.service.CancelOrderUseCase;
 import band.gosrock.api.order.service.ReadOrderUseCase;
+import band.gosrock.api.order.service.RefuseOrderUseCase;
 import band.gosrock.common.annotation.ApiErrorExceptionsExample;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -34,6 +35,8 @@ public class OrderAdminController {
     private final ApproveOrderUseCase approveOrderUseCase;
     private final ReadOrderUseCase readOrderUseCase;
     private final CancelOrderUseCase cancelOrderUseCase;
+
+    private final RefuseOrderUseCase refuseOrderUseCase;
 
     @Operation(summary = "어드민 목록 내 테이블 조회 OrderStage 는 꼭 보내주삼!")
     @GetMapping
@@ -64,7 +67,7 @@ public class OrderAdminController {
     @PostMapping("/{order_uuid}/refuse")
     public OrderResponse refuseOrder(
             @PathVariable Long eventId, @PathVariable("order_uuid") String orderUuid) {
-        return approveOrderUseCase.execute(eventId, orderUuid);
+        return refuseOrderUseCase.execute(eventId, orderUuid);
     }
 
     @Operation(summary = "주문관리 리스트 페이지에서 주문 상세정보 조회할때")
