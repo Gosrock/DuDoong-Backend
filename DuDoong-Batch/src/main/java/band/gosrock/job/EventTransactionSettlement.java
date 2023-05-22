@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/** 토스페이먼츠 거래 내역들을 이벤트별로 취합 후 저장합니다. */
 @Slf4j
 @RequiredArgsConstructor
 @Configuration
@@ -64,46 +65,42 @@ public class EventTransactionSettlement {
                         (contribution, chunkContext) -> {
                             Event event = eventJobParameter.getEvent();
                             Long eventId = event.getId();
-                            // 멱등성 유지하기위해
-                            // 저장된 정산 목록에서 지움
+                            // 멱등성 유지하기위해 저장된 정산 목록에서 지움 ( 실제로 다시만들일은 없을듯...? )
                             transactionSettlementAdaptor.deleteByEventId(eventId);
 
-                            List<Order> orders = orderAdaptor.findByEventId(eventId);
-                            // 오더중에 토스 페이먼츠 로결제를 진행한 목록을 추출.
-                            // 해당이벤트의 모든 주문 내역을 불러와야함.
-                            // 토스에 환불진행되는 입금 건도 있음
-                            List<String> paymentOrderUuids =
-                                    orders.stream()
-                                            .filter(order -> order.isPaid())
-                                            .map(order -> order.getPgPaymentInfo().getPaymentKey())
-                                            .toList();
-
-                            // 시작 날짜. ( 이벤트 생성 시간 )
-                            LocalDate startAt = event.getCreatedAt().toLocalDate();
-                            // 끝나는 날짜.
-                            LocalDate endAt = event.getEndAt().toLocalDate();
-                            // 데이터가 실제로 들어가야만 있음.. 테스트 코드로 돌려야함.
-                            List<SettlementResponse> settlements =
-                                    settlementClient.execute(startAt, endAt, "soldDate", 1, 10000);
-
-                            // 이벤트와 관련된 정산 객체 집합.
-                            List<TransactionSettlement> transactionSettlements =
-                                    settlements.stream()
-                                            .filter(
-                                                    settlementResponse ->
-                                                            paymentOrderUuids.contains(
-                                                                    settlementResponse
-                                                                            .getPaymentKey()))
-                                            .map(
-                                                    settlementResponse ->
-                                                            TransactionSettlement.of(
-                                                                    eventId, settlementResponse))
-                                            .toList();
-                            // 정산 정보 저장.
-                            transactionSettlementAdaptor.saveAll(transactionSettlements);
+                            // 정산 정보 저장
+                            transactionSettlementAdaptor.saveAll(getTransactionSettlements(event));
 
                             return RepeatStatus.FINISHED;
                         })
                 .build();
+    }
+
+    private List<String> getPaymentOrderUUIDs(Long eventId) {
+        List<Order> orders = orderAdaptor.findByEventId(eventId);
+        return orders.stream()
+                .filter(Order::isPaid)
+                .map(order -> order.getPgPaymentInfo().getPaymentKey())
+                .toList();
+    }
+
+    private List<TransactionSettlement> getTransactionSettlements(Event event) {
+        Long eventId = event.getId();
+        List<String> paymentOrderUuids = getPaymentOrderUUIDs(eventId);
+        List<SettlementResponse> settlements = getTossPaymentsSettlementData(event);
+
+        return settlements.stream()
+                .filter(
+                        settlementResponse ->
+                                paymentOrderUuids.contains(settlementResponse.getPaymentKey()))
+                .map(settlementResponse -> TransactionSettlement.of(eventId, settlementResponse))
+                .toList();
+    }
+
+    // 토스페이먼츠에서 시작일 종료일 매출일 기준 정산액을 조회합니다.
+    private List<SettlementResponse> getTossPaymentsSettlementData(Event event) {
+        LocalDate startAt = event.getCreatedAt().toLocalDate();
+        LocalDate endAt = event.getEndAt().toLocalDate();
+        return settlementClient.execute(startAt, endAt, "soldDate", 1, 10000);
     }
 }

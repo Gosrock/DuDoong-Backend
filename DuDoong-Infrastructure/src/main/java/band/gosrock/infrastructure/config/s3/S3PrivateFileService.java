@@ -72,16 +72,24 @@ public class S3PrivateFileService {
         return objectMetadata;
     }
 
-    public byte[] downloadEventSettlementPdf(Long eventId) throws IOException {
+    public byte[] downloadEventSettlementPdf(Long eventId) {
         S3Object object = amazonS3.getObject(bucket, getEventSettlementPdfKey(eventId));
 
         S3ObjectInputStream finalObject = object.getObjectContent();
-        return finalObject.readAllBytes();
+        try {
+            return finalObject.readAllBytes();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public byte[] downloadEventOrdersExcel(Long eventId) throws IOException {
+    public byte[] downloadEventOrdersExcel(Long eventId) {
         S3Object object = amazonS3.getObject(bucket, eventOrdersExcelGetKey(eventId));
         S3ObjectInputStream finalObject = object.getObjectContent();
-        return finalObject.readAllBytes();
+        try {
+            return finalObject.readAllBytes();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

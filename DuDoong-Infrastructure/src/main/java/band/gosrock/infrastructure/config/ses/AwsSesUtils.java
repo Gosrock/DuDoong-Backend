@@ -11,7 +11,6 @@ import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.MessagingException;
 import javax.mail.Session;
-import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -70,8 +69,7 @@ public class AwsSesUtils {
     }
     // The HTML body of the email.
 
-    public void sendRawEmails(SendRawEmailDto sendRawEmailDto)
-            throws AddressException, MessagingException, IOException {
+    public void sendRawEmails(SendRawEmailDto sendRawEmailDto) throws MessagingException {
 
         Session session = Session.getDefaultInstance(new Properties());
         // Create a new MimeMessage object.

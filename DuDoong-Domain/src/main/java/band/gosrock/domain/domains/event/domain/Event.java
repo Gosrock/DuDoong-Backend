@@ -178,4 +178,8 @@ public class Event extends BaseTimeEntity {
         this.status = DELETED;
         Events.raise(EventDeletionEvent.of(this));
     }
+
+    public String getEventName() {
+        return eventBasic.getName();
+    }
 }

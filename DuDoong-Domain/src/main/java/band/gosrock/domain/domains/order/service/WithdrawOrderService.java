@@ -33,4 +33,11 @@ public class WithdrawOrderService {
         order.refund(userId, orderValidator);
         return orderUuid;
     }
+
+    @RedissonLock(LockName = "주문", identifier = "orderUuid")
+    public String refuseOrder(String orderUuid) {
+        Order order = orderAdaptor.findByOrderUuid(orderUuid);
+        order.refuse(orderValidator);
+        return orderUuid;
+    }
 }
