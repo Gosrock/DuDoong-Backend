@@ -63,10 +63,9 @@ public class OrderAdminController {
     @Operation(summary = "승인 주문 거절하기 . 호스트 관리자가 승인 대기중인 주문을 거절합니다.")
     @PostMapping("/{order_uuid}/refuse")
     public OrderResponse refuseOrder(
-        @PathVariable Long eventId, @PathVariable("order_uuid") String orderUuid) {
+            @PathVariable Long eventId, @PathVariable("order_uuid") String orderUuid) {
         return approveOrderUseCase.execute(eventId, orderUuid);
     }
-
 
     @Operation(summary = "주문관리 리스트 페이지에서 주문 상세정보 조회할때")
     @GetMapping("/{order_uuid}")

@@ -128,8 +128,6 @@ public class OrderValidator {
         validCanWithDraw(order);
     }
 
-
-
     /** 환불 할 수 있는 주문인지 검증합니다. */
     public void validCanRefund(Order order) {
         validAvailableRefundDate(order);
