@@ -5,6 +5,7 @@ dependencies {
     api("com.slack.api:slack-api-client:1.27.2")
     api 'io.github.openfeign:feign-httpclient:12.1'
     api 'org.springframework.cloud:spring-cloud-starter-openfeign:3.1.4'
+    api 'org.springframework.retry:spring-retry:1.3.4'
     api project(':DuDoong-Common')
     api 'org.springframework.boot:spring-boot-starter-data-redis'
     api 'org.redisson:redisson:3.19.0'
