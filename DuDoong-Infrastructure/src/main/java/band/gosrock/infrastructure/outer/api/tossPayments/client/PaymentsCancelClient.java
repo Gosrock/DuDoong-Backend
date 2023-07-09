@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 @FeignClient(
         name = "PaymentsCancelClient",
-        url = "https://api.tosspayments.com",
+        url = "${feign.toss.url}",
         configuration = {PaymentsCancelConfig.class})
 public interface PaymentsCancelClient {
     @PostMapping("/v1/payments/{paymentKey}/cancel")
