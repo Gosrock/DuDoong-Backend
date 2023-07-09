@@ -6,18 +6,17 @@ import band.gosrock.common.exception.DuDoongDynamicException;
 import band.gosrock.infrastructure.outer.api.tossPayments.exception.PaymentsCancelErrorCode;
 import band.gosrock.infrastructure.outer.api.tossPayments.exception.PaymentsUnHandleException;
 import band.gosrock.infrastructure.outer.api.tossPayments.exception.TossPaymentsErrorDto;
-import feign.Request;
+import feign.FeignException;
 import feign.Response;
 import feign.RetryableException;
 import feign.Retryer;
 import feign.codec.ErrorDecoder;
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 
 public class PaymentCancelErrorDecoder implements ErrorDecoder {
-    private static final long PERIOD = 100L;
+    private static final long PERIOD = 500L;
     private static final long MAX_PERIOD = TimeUnit.SECONDS.toMillis(3L);
     private static final int MAX_ATTEMPTS = 3;
 
@@ -28,20 +27,26 @@ public class PaymentCancelErrorDecoder implements ErrorDecoder {
 
     @Override
     public Exception decode(String methodKey, Response response) {
-        TossPaymentsErrorDto body = TossPaymentsErrorDto.from(response);
         try {
+            FeignException exception = feign.FeignException.errorStatus(methodKey, response);
+            int status = response.status();
+            // 500번대는 기본적으로 리트라이
+            if (HttpStatus.valueOf(status).is5xxServerError()) {
+                throw new RetryableException(
+                        status,
+                        exception.getMessage(),
+                        response.request().httpMethod(),
+                        exception,
+                        null,
+                        response.request());
+            }
+            // payments 에러 코드 Decode
+            TossPaymentsErrorDto body = TossPaymentsErrorDto.from(response);
+
             final PaymentsCancelErrorCode paymentsCancelErrorCode =
                     PaymentsCancelErrorCode.valueOf(body.getCode());
             final ErrorReason errorReason = paymentsCancelErrorCode.getErrorReason();
-            final Request request = response.request();
-            if (HttpStatus.valueOf(body.getCode()).is5xxServerError()) {
-                throw new RetryableException(
-                        errorReason.getStatus(),
-                        errorReason.getReason(),
-                        request.httpMethod(),
-                        new Date(),
-                        request);
-            }
+
             throw new DuDoongDynamicException(
                     errorReason.getStatus(), errorReason.getCode(), errorReason.getReason());
         } catch (IllegalArgumentException e) {
