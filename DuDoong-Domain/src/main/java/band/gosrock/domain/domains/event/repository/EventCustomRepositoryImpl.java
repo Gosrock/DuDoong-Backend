@@ -1,9 +1,5 @@
 package band.gosrock.domain.domains.event.repository;
 
-import static band.gosrock.domain.domains.event.domain.EventStatus.CLOSED;
-import static band.gosrock.domain.domains.event.domain.EventStatus.OPEN;
-import static band.gosrock.domain.domains.event.domain.QEvent.event;
-
 import band.gosrock.domain.common.util.SliceUtil;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.domain.EventStatus;
@@ -12,11 +8,16 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.DateTemplate;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import java.time.LocalDateTime;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static band.gosrock.domain.domains.event.domain.EventStatus.CLOSED;
+import static band.gosrock.domain.domains.event.domain.EventStatus.OPEN;
+import static band.gosrock.domain.domains.event.domain.QEvent.event;
 
 @RequiredArgsConstructor
 public class EventCustomRepositoryImpl implements EventCustomRepository {
@@ -51,20 +52,45 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
 
     @Override
     public Slice<Event> querySliceEventsByKeyword(String keyword, Pageable pageable) {
-        List<Event> events =
+        List<Event> openEvents =
                 queryFactory
                         .selectFrom(event)
-                        .where(eqStatusCanExposed(), nameContains(keyword))
-                        .orderBy(statusDesc(), startAtAsc())
+                        .where(eqStatusOpen().and(nameContains(keyword)))
+                        .orderBy(createdAtAsc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize() + 1)
                         .fetch();
-        return SliceUtil.valueOf(events, pageable);
+
+        final long remainingSize = Math.max(pageable.getPageSize() - openEvents.size(), 0);
+        if (remainingSize > 0) {
+            openEvents.addAll(queryClosedEventsByKeywordAndSize(keyword, pageable, remainingSize));
+        }
+        return SliceUtil.valueOf(openEvents, pageable);
     }
 
     @Override
     public List<Event> queryEventsByEndAtBeforeAndStatusOpen(LocalDateTime time) {
         return queryFactory.selectFrom(event).where(endAtBefore(time), statusEq(OPEN)).fetch();
+    }
+
+    private List<Event> queryClosedEventsByKeywordAndSize(
+            String keyword, Pageable pageable, Long size) {
+        final long totalOpenEventsSize = queryCountByKeywordAndStatus(keyword, OPEN);
+        final long closedEventsOffset = Math.max(pageable.getOffset() - totalOpenEventsSize, 0);
+        return queryFactory
+                .selectFrom(event)
+                .where(eqStatusClosed().and(nameContains(keyword)))
+                .orderBy(startAtDesc())
+                .offset(closedEventsOffset)
+                .limit(size + 1)
+                .fetch();
+    }
+
+    private long queryCountByKeywordAndStatus(String keyword, EventStatus status) {
+        return queryFactory
+                .from(event)
+                .where(statusEq(status).and(nameContains(keyword)))
+                .fetchCount();
     }
 
     private BooleanExpression hostIdIn(List<Long> hostId) {
@@ -75,16 +101,12 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
         return event.status.eq(OPEN);
     }
 
-    private BooleanExpression eqStatusCanExposed() {
-        return event.status.eq(OPEN).or(event.status.eq(CLOSED));
+    private BooleanExpression eqStatusClosed() {
+        return event.status.eq(CLOSED);
     }
 
     private BooleanExpression statusEq(EventStatus status) {
         return event.status.eq(status);
-    }
-
-    private BooleanExpression statusNotEq(EventStatus status) {
-        return event.status.eq(status).not();
     }
 
     private BooleanExpression nameContains(String keyword) {
@@ -95,8 +117,16 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
         return event.createdAt.desc();
     }
 
+    private OrderSpecifier<LocalDateTime> createdAtAsc() {
+        return event.createdAt.asc();
+    }
+
     private OrderSpecifier<LocalDateTime> startAtAsc() {
         return event.eventBasic.startAt.asc();
+    }
+
+    private OrderSpecifier<LocalDateTime> startAtDesc() {
+        return event.eventBasic.startAt.desc();
     }
 
     private OrderSpecifier<EventStatus> statusDesc() {
