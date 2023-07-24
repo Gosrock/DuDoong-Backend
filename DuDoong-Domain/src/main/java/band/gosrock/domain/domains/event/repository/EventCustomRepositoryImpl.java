@@ -1,5 +1,9 @@
 package band.gosrock.domain.domains.event.repository;
 
+import static band.gosrock.domain.domains.event.domain.EventStatus.CLOSED;
+import static band.gosrock.domain.domains.event.domain.EventStatus.OPEN;
+import static band.gosrock.domain.domains.event.domain.QEvent.event;
+
 import band.gosrock.domain.common.util.SliceUtil;
 import band.gosrock.domain.domains.event.domain.Event;
 import band.gosrock.domain.domains.event.domain.EventStatus;
@@ -8,16 +12,11 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.DateTemplate;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static band.gosrock.domain.domains.event.domain.EventStatus.CLOSED;
-import static band.gosrock.domain.domains.event.domain.EventStatus.OPEN;
-import static band.gosrock.domain.domains.event.domain.QEvent.event;
 
 @RequiredArgsConstructor
 public class EventCustomRepositoryImpl implements EventCustomRepository {
