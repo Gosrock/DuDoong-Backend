@@ -60,8 +60,8 @@ public class EventCustomRepositoryImpl implements EventCustomRepository {
                         .limit(pageable.getPageSize() + 1)
                         .fetch();
 
-        final long remainingSize = Math.max(pageable.getPageSize() - openEvents.size(), 0);
-        if (remainingSize > 0) {
+        final long remainingSize = pageable.getPageSize() - openEvents.size();
+        if (remainingSize >= 0) {
             openEvents.addAll(queryClosedEventsByKeywordAndSize(keyword, pageable, remainingSize));
         }
         return SliceUtil.valueOf(openEvents, pageable);
