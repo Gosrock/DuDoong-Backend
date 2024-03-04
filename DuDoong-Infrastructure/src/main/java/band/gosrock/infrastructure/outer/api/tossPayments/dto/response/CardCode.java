@@ -22,6 +22,7 @@ public enum CardCode {
     SHINHYEOP("62", "신협", "SHINHYEOP", "신협"),
     CITI("36", "씨티", "CITI", "씨티카드"),
     WOORI("33", "우리", "WOORI", "우리카드"),
+    WOORI_ACQUIRE("W1", "우리", "WOORI", "우리카드"),
     POST("37", "우체국", "POST", "우체국예금보험"),
     SAVINGBANK("39", "저축", "SAVINGBANK", "저축은행중앙회"),
     JEONBUKBANK("35", "전북", "JEONBUKBANK", "전북은행"),
