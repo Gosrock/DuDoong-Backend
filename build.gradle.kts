@@ -10,7 +10,7 @@ plugins {
     kotlin("plugin.spring") version "1.9.22" apply false
     kotlin("plugin.jpa") version "1.9.22" apply false
     kotlin("kapt") version "1.9.22" apply false
-    id("com.diffplug.spotless") version "6.11.0"
+    id("org.jlleitschuh.gradle.ktlint") version "11.6.1"
 }
 
 tasks.bootJar { enabled = false }
@@ -70,7 +70,7 @@ subprojects {
             html.required.set(true)
             csv.required.set(true)
             xml.required.set(true)
-            xml.outputLocation.set(file("${buildDir}/reports/jacoco.xml"))
+            xml.outputLocation.set(file("$buildDir/reports/jacoco.xml"))
         }
 
         val qDomains = ('A'..'Z').map { "**/Q$it*" }
@@ -121,19 +121,12 @@ subprojects {
     }
 }
 
-spotless {
-    java {
-        target("**/*.java")
-        googleJavaFormat().aosp()
-        importOrder()
-        removeUnusedImports()
-        trimTrailingWhitespace()
-        endWithNewline()
-    }
-    kotlin {
-        target("**/*.kt")
-        ktlint("0.50.0")
-        trimTrailingWhitespace()
-        endWithNewline()
+ktlint {
+    version.set("0.50.0")
+    android.set(false)
+    outputToConsole.set(true)
+    filter {
+        exclude("**/generated/**")
+        exclude("**/build/**")
     }
 }
