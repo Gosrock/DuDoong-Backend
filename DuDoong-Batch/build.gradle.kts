@@ -1,0 +1,9 @@
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-batch")
+    implementation(project(":DuDoong-Domain"))
+    implementation(project(":DuDoong-Common"))
+    implementation(project(":DuDoong-Infrastructure"))
+    testImplementation("org.springframework.batch:spring-batch-test")
+    implementation("org.apache.poi:poi:5.2.0")
+    implementation("org.apache.poi:poi-ooxml:5.2.0")
+}
