@@ -1,0 +1,7 @@
+rootProject.name = "DuDoong"
+include("DuDoong-Domain")
+include("DuDoong-Infrastructure")
+include("DuDoong-Api")
+include("DuDoong-Common")
+include("DuDoong-Socket")
+include("DuDoong-Batch")
