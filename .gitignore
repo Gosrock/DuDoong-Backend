@@ -40,4 +40,5 @@ out/
 
 *.xlsx
 
-DuDoong-Domain/src/main/generated/**/*.java.omc/
+**/src/main/generated/
+.omc/
