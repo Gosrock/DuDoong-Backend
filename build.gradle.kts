@@ -72,10 +72,11 @@ subprojects {
             xml.required.set(true)
             xml.outputLocation.set(file("$buildDir/reports/jacoco.xml"))
         }
+    }
 
+    afterEvaluate {
         val qDomains = ('A'..'Z').map { "**/Q$it*" }
-
-        afterEvaluate {
+        tasks.named<JacocoReport>("jacocoTestReport") {
             classDirectories.setFrom(
                 files(
                     classDirectories.files.map {
