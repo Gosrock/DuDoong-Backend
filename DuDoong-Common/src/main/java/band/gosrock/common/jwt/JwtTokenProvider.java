@@ -90,10 +90,9 @@ public class JwtTokenProvider {
     public AccessTokenInfo parseAccessToken(String token) {
         if (isAccessToken(token)) {
             Claims claims = getJws(token).getBody();
-            return AccessTokenInfo.builder()
-                    .userId(Long.parseLong(claims.getSubject()))
-                    .role((String) claims.get(TOKEN_ROLE))
-                    .build();
+            return new AccessTokenInfo(
+                    Long.parseLong(claims.getSubject()),
+                    (String) claims.get(TOKEN_ROLE));
         }
         throw InvalidTokenException.EXCEPTION;
     }
