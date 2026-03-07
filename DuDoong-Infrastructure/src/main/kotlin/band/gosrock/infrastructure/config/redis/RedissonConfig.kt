@@ -2,6 +2,7 @@ package band.gosrock.infrastructure.config.redis
 
 import io.github.bucket4j.distributed.proxy.ProxyManager
 import io.github.bucket4j.grid.jcache.JCacheProxyManager
+import javax.cache.Cache
 import javax.cache.CacheManager
 import javax.cache.Caching
 import org.redisson.Redisson
@@ -32,8 +33,8 @@ class RedissonConfig(
     @Bean
     fun cacheManager(redissonClient: RedissonClient): CacheManager {
         val manager = Caching.getCachingProvider().cacheManager
-        // getCache(String, Class<K>, Class<V>) 오버로드 사용으로 타입 추론 명시
-        val bucket4j = manager.getCache("bucket4j", Any::class.java, Any::class.java)
+        // 1-arg getCache (no type checking) to match original Java behavior
+        val bucket4j = manager.getCache<Any, Any>("bucket4j")
         if (bucket4j == null) {
             manager.createCache("bucket4j", RedissonConfiguration.fromInstance<Any, Any>(redissonClient))
         }
@@ -42,6 +43,7 @@ class RedissonConfig(
 
     /** for bucket4j */
     @Bean
+    @Suppress("UNCHECKED_CAST")
     fun proxyManager(cacheManager: CacheManager): ProxyManager<String> =
-        JCacheProxyManager(cacheManager.getCache("bucket4j", String::class.java, ByteArray::class.java))
+        JCacheProxyManager(cacheManager.getCache<Any, Any>("bucket4j") as Cache<String, ByteArray>)
 }
