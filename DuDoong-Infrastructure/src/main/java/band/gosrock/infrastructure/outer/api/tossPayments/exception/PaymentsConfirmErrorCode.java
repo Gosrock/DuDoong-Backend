@@ -147,7 +147,7 @@ public enum PaymentsConfirmErrorCode implements BaseErrorCode {
 
     @Override
     public ErrorReason getErrorReason() {
-        return ErrorReason.builder().status(status).code(code).reason(reason).build();
+        return new ErrorReason(status, code, reason);
     }
 
     @Override
