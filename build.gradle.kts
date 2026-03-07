@@ -1,5 +1,3 @@
-import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
-import org.gradle.testing.jacoco.tasks.JacocoReport
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -27,7 +25,6 @@ subprojects {
     apply(plugin = "java-library")
     apply(plugin = "org.springframework.boot")
     apply(plugin = "io.spring.dependency-management")
-    apply(plugin = "jacoco")
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "org.jetbrains.kotlin.plugin.spring")
     apply(plugin = "org.jetbrains.kotlin.plugin.jpa")
@@ -60,44 +57,6 @@ subprojects {
         }
     }
 
-    configure<JacocoPluginExtension> {
-        toolVersion = "0.8.8"
-    }
-
-    tasks.named<JacocoReport>("jacocoTestReport") {
-        dependsOn(tasks.test)
-        reports {
-            html.required.set(true)
-            csv.required.set(true)
-            xml.required.set(true)
-            xml.outputLocation.set(file("$buildDir/reports/jacoco.xml"))
-        }
-    }
-
-    afterEvaluate {
-        val qDomains = ('A'..'Z').map { "**/Q$it*" }
-        tasks.named<JacocoReport>("jacocoTestReport") {
-            classDirectories.setFrom(
-                files(
-                    classDirectories.files.map {
-                        fileTree(it) {
-                            exclude(
-                                "**/*Application*",
-                                "**/*Config*",
-                                "**/*Dto*",
-                                "**/*Request*",
-                                "**/*Response*",
-                                "**/*Interceptor*",
-                                "**/*Exception*",
-                            )
-                            exclude(qDomains)
-                        }
-                    },
-                ),
-            )
-        }
-    }
-
     repositories {
         mavenCentral()
     }
@@ -118,7 +77,6 @@ subprojects {
 
     tasks.test {
         useJUnitPlatform()
-        finalizedBy("jacocoTestReport")
     }
 }
 
