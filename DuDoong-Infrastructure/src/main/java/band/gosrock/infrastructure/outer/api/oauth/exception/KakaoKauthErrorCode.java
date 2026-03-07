@@ -49,7 +49,7 @@ public enum KakaoKauthErrorCode implements BaseErrorCode {
 
     @Override
     public ErrorReason getErrorReason() {
-        return ErrorReason.builder().status(status).code(errorCode).reason(reason).build();
+        return new ErrorReason(status, errorCode, reason);
     }
 
     @Override
