@@ -1,0 +1,454 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1771743634205,
+  "projectRoot": "/Users/chanjin/Desktop/dudoong-v2/DuDoong-Backend",
+  "techStack": {
+    "languages": [
+      {
+        "name": "Kotlin",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "build.gradle.kts"
+        ]
+      }
+    ],
+    "frameworks": [],
+    "packageManager": "gradle",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [],
+    "gitBranches": {
+      "defaultBranch": "dev",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "DuDoong-Api": {
+      "path": "DuDoong-Api",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1771743634170,
+      "keyFiles": [
+        "Dockerfile",
+        "build.gradle.kts"
+      ]
+    },
+    "DuDoong-Batch": {
+      "path": "DuDoong-Batch",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1771743634171,
+      "keyFiles": [
+        "Dockerfile",
+        "build.gradle.kts"
+      ]
+    },
+    "DuDoong-Common": {
+      "path": "DuDoong-Common",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1771743634171,
+      "keyFiles": [
+        "build.gradle.kts"
+      ]
+    },
+    "DuDoong-Domain": {
+      "path": "DuDoong-Domain",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1771743634172,
+      "keyFiles": [
+        "build.gradle.kts"
+      ]
+    },
+    "DuDoong-Infrastructure": {
+      "path": "DuDoong-Infrastructure",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1771743634172,
+      "keyFiles": [
+        "build.gradle.kts"
+      ]
+    },
+    "DuDoong-Socket": {
+      "path": "DuDoong-Socket",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1771743634172,
+      "keyFiles": [
+        "Dockerfile",
+        "build.gradle.kts"
+      ]
+    },
+    "gradle": {
+      "path": "gradle",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1771743634173,
+      "keyFiles": []
+    },
+    "DuDoong-Api/src": {
+      "path": "DuDoong-Api/src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1771743634174,
+      "keyFiles": []
+    },
+    "DuDoong-Batch/src": {
+      "path": "DuDoong-Batch/src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1771743634174,
+      "keyFiles": []
+    },
+    "DuDoong-Common/src": {
+      "path": "DuDoong-Common/src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1771743634174,
+      "keyFiles": []
+    },
+    "DuDoong-Domain/src": {
+      "path": "DuDoong-Domain/src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1771743634177,
+      "keyFiles": []
+    },
+    "DuDoong-Infrastructure/src": {
+      "path": "DuDoong-Infrastructure/src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1771743634177,
+      "keyFiles": []
+    },
+    "DuDoong-Socket/src": {
+      "path": "DuDoong-Socket/src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1771743634177,
+      "keyFiles": []
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/exception/DuDoongCodeException.java",
+      "accessCount": 2,
+      "lastAccessed": 1772871919434,
+      "type": "file"
+    },
+    {
+      "path": "CLAUDE.md",
+      "accessCount": 1,
+      "lastAccessed": 1771744397445,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/annotation/Adaptor.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761936182,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/annotation/ApiErrorCodeExample.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761936925,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/annotation/ApiErrorExceptionsExample.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761937640,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/annotation/DateFormat.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761938321,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/annotation/DevelopOnlyApi.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761939064,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/annotation/DisableSwaggerSecurity.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761939739,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/annotation/DomainService.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761940356,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/annotation/Enum.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761941022,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/annotation/EnumClass.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761941623,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/annotation/ExceptionDoc.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761942296,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/annotation/ExplainError.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761942871,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/annotation/Helper.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761943433,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/annotation/Mapper.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761944017,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/annotation/Phone.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761944568,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/annotation/Policy.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761945138,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/annotation/Port.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761945680,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/annotation/UseCase.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761946273,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/annotation/Validator.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761946887,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/aop/ApiBlockingAspect.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761947511,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/consts/DuDoongStatic.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761948142,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/deserializer/CustomEnumDeserializer.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761948744,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/helper/SpringEnvironmentHelper.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761949345,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/interfaces/SwaggerExampleExceptions.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761949958,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/validator/EnumValidator.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761950570,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/validator/PhoneValidator.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761951186,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/config/ConfigurationPropertiesConfig.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761951861,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/java/band/gosrock/common/DuDoongCommonApplication.java",
+      "accessCount": 1,
+      "lastAccessed": 1771761952416,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/annotation/Adaptor.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762056195,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/annotation/ApiErrorCodeExample.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762057917,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/annotation/ApiErrorExceptionsExample.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762059554,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/annotation/DateFormat.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762061590,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/annotation/DevelopOnlyApi.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762062718,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/annotation/DisableSwaggerSecurity.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762063832,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/annotation/DomainService.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762065278,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/annotation/Enum.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762068607,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/annotation/EnumClass.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762069956,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/annotation/ExceptionDoc.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762071586,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/annotation/ExplainError.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762073242,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/annotation/Helper.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762074883,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/annotation/Mapper.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762082079,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/annotation/Phone.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762083313,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/annotation/Policy.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762084070,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/annotation/Port.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762084343,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/annotation/UseCase.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762084675,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/annotation/Validator.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762084922,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/consts/DuDoongStatic.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762089633,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/interfaces/SwaggerExampleExceptions.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762090393,
+      "type": "file"
+    },
+    {
+      "path": "DuDoong-Common/src/main/kotlin/band/gosrock/common/helper/SpringEnvironmentHelper.kt",
+      "accessCount": 1,
+      "lastAccessed": 1771762094859,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
