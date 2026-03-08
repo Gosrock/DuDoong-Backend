@@ -1,0 +1,25 @@
+package band.gosrock.infrastructure.outer.api.tossPayments.config
+
+import feign.codec.ErrorDecoder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.cloud.openfeign.FeignFormatterRegistrar
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
+import org.springframework.format.datetime.standard.DateTimeFormatterRegistrar
+
+@Import(TossHeaderConfig::class, PaymentConfirmErrorDecoder::class)
+class PaymentsConfirmConfig {
+
+    @Bean
+    @ConditionalOnMissingBean(value = [ErrorDecoder::class])
+    fun commonFeignErrorDecoder(): PaymentConfirmErrorDecoder = PaymentConfirmErrorDecoder()
+
+    @Bean
+    fun localDateFeignFormatterRegistrar(): FeignFormatterRegistrar =
+        FeignFormatterRegistrar { formatterRegistry ->
+            DateTimeFormatterRegistrar().apply {
+                setUseIsoFormat(true)
+                registerFormatters(formatterRegistry)
+            }
+        }
+}
