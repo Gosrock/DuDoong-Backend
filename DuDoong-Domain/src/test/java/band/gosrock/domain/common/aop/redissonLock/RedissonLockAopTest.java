@@ -7,9 +7,12 @@ import band.gosrock.domain.common.dto.ProfileViewDto;
 import java.lang.reflect.InvocationTargetException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.redisson.api.RedissonClient;
 
+@ExtendWith(MockitoExtension.class)
 class RedissonLockAopTest {
     @Mock RedissonClient redissonClient;
     @Mock CallTransactionFactory callTransactionFactory;
