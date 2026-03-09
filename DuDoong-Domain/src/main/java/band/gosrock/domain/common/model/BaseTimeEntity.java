@@ -20,4 +20,9 @@ public abstract class BaseTimeEntity {
     private LocalDateTime createdAt;
 
     @Column @LastModifiedDate private LocalDateTime updatedAt;
+
+    /** Kotlin 호환용 메서드 - 같은 모듈에서 Kotlin이 Lombok getter에 접근 불가한 문제 우회 */
+    public LocalDateTime createdAtKt() {
+        return this.createdAt;
+    }
 }
