@@ -8,6 +8,7 @@ plugins {
     kotlin("plugin.spring") version "1.9.22" apply false
     kotlin("plugin.jpa") version "1.9.22" apply false
     kotlin("kapt") version "1.9.22" apply false
+    kotlin("plugin.allopen") version "1.9.22" apply false
     id("org.jlleitschuh.gradle.ktlint") version "11.6.1"
 }
 
@@ -28,11 +29,19 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "org.jetbrains.kotlin.plugin.spring")
     apply(plugin = "org.jetbrains.kotlin.plugin.jpa")
+    apply(plugin = "org.jetbrains.kotlin.plugin.allopen")
     apply(plugin = "org.jetbrains.kotlin.kapt")
 
     java {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    // JPA 엔티티 클래스를 open으로 만들어 Hibernate 프록시 및 Mockito 서브클래스 목킹 지원
+    configure<org.jetbrains.kotlin.allopen.gradle.AllOpenExtension> {
+        annotation("javax.persistence.Entity")
+        annotation("javax.persistence.Embeddable")
+        annotation("javax.persistence.MappedSuperclass")
     }
 
     tasks.withType<KotlinCompile> {

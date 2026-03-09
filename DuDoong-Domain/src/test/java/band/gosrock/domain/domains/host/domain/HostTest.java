@@ -21,9 +21,6 @@ public class HostTest {
     @Mock HostUser managerHostUser;
     @Mock HostUser guestHostUser;
     @Mock HostProfile hostProfile;
-    @Mock HostInfoVo hostInfoVo;
-    @Mock HostProfileVo hostProfileVo;
-
     Host host;
     final Long masterUserId = 1L;
     final Long managerUserId = 2L;
