@@ -36,7 +36,7 @@ public class EventTest {
         LocalDateTime expectedStartAt = startAt;
         // when
         when(eventBasic.getStartAt()).thenReturn(expectedStartAt);
-        event.setEventBasic(eventBasic);
+        event.updateEventBasic(eventBasic);
         LocalDateTime actualStartAt = event.getStartAt();
         // then
         assertEquals(expectedStartAt, actualStartAt);
@@ -45,7 +45,7 @@ public class EventTest {
     @Test
     void eventBasic_null_이면_endAt도_반드시_null() {
         // Given
-        event.setEventBasic(null);
+        event.updateEventBasic(null);
         // When
         final LocalDateTime endAt = event.getEndAt();
         // Then
@@ -57,7 +57,7 @@ public class EventTest {
         // given
         final EventBasic eventBasic =
                 EventBasic.builder().startAt(startAt).runTime(runTime).build();
-        event.setEventBasic(eventBasic);
+        event.updateEventBasic(eventBasic);
         // when
         final LocalDateTime expectedEndAt = startAt.plusMinutes(runTime);
         final LocalDateTime actualEndAt = event.getEndAt();
@@ -72,7 +72,7 @@ public class EventTest {
     //        ReflectionTestUtils.setField(event, "isUpdated", true);
     //        // then
     //        assertThrows(CannotModifyEventBasicException.class, () ->
-    // event.setEventBasic(eventBasic));
+    // event.updateEventBasic(eventBasic));
     //    }
 
     @Test
@@ -81,7 +81,7 @@ public class EventTest {
         EventBasic eventBasic =
                 EventBasic.builder().name("test event").startAt(startAt).runTime(runTime).build();
         // when
-        event.setEventBasic(eventBasic);
+        event.updateEventBasic(eventBasic);
         // then
         assertNotNull(event.getEventBasic());
         assertEquals(eventBasic, event.getEventBasic());
@@ -122,7 +122,7 @@ public class EventTest {
         final LocalDateTime startAt = LocalDateTime.now().plusMinutes(1);
         // when
         when(eventBasic.getStartAt()).thenReturn(startAt);
-        event.setEventBasic(eventBasic);
+        event.updateEventBasic(eventBasic);
         event.open();
         // then
         assertEquals(expectedStatus, event.getStatus());
@@ -137,7 +137,7 @@ public class EventTest {
         final LocalDateTime startAt = LocalDateTime.now().minusMinutes(1);
         // when
         when(eventBasic.getStartAt()).thenReturn(startAt);
-        event.setEventBasic(eventBasic);
+        event.updateEventBasic(eventBasic);
         // then
         assertThrows(EventOpenTimeExpiredException.class, () -> event.open());
         assertEquals(originalStatus, event.getStatus());
