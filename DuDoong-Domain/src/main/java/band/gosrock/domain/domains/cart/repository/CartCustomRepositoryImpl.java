@@ -13,7 +13,7 @@ public class CartCustomRepositoryImpl implements CartCustomRepository {
 
     private final JPAQueryFactory queryFactory;
 
-    public Optional<Cart> find(Long cartId) {
+    public Optional<Cart> find(long cartId) {
         Cart findCart =
                 queryFactory
                         .selectFrom(cart)

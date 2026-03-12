@@ -12,6 +12,7 @@ import band.gosrock.domain.common.vo.Money;
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor;
 import band.gosrock.domain.domains.order.domain.Order;
 import band.gosrock.domain.domains.order.domain.OrderLineItem;
+import band.gosrock.domain.domains.order.domain.OrderMethod;
 import band.gosrock.domain.domains.order.domain.OrderStatus;
 import band.gosrock.domain.domains.order.domain.validator.OrderValidator;
 import java.util.List;
@@ -43,6 +44,7 @@ class WithdrawOrderServiceTest {
                 Order.builder()
                         .userId(userId)
                         .orderStatus(OrderStatus.CONFIRM)
+                        .orderMethod(OrderMethod.PAYMENT)
                         .orderLineItems(List.of(orderLineItem))
                         .build();
         order.addUUID();

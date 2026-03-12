@@ -100,7 +100,7 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
     }
 
     @Override
-    public Optional<Order> findRecentOrder(Long userId) {
+    public Optional<Order> findRecentOrder(long userId) {
         Order findOrder =
                 queryFactory
                         .selectFrom(order)

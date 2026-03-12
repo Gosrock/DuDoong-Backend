@@ -18,7 +18,7 @@ data class RefundInfoVo(
 
         @JvmStatic
         fun of(startAt: LocalDateTime, orderStatus: OrderStatus): RefundInfoVo {
-            val availAble = if (nowIsBefore(startAt)) orderStatus.isCanWithDraw else false
+            val availAble = if (nowIsBefore(startAt)) orderStatus.isCanWithDraw() else false
             return RefundInfoVo(startAt = startAt, availAble = availAble)
         }
 
