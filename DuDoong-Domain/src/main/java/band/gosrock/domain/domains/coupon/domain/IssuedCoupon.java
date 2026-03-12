@@ -62,6 +62,10 @@ public class IssuedCoupon extends BaseTimeEntity {
         this.usageStatus = false;
     }
 
+    public Long getIssuedCouponId() {
+        return this.id;
+    }
+
     public String getCouponName() { // 쿠폰코드==쿠폰이름
         return this.couponCampaign.getCouponCode();
     }

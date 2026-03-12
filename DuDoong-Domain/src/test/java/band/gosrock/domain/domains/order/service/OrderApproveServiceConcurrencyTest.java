@@ -50,6 +50,7 @@ class OrderApproveServiceConcurrencyTest {
                         .orderMethod(OrderMethod.APPROVAL)
                         .orderStatus(OrderStatus.PENDING_APPROVE)
                         .orderLineItems(List.of(orderLineItem))
+                        .userId(1L)
                         .build();
         order.addUUID();
         willDoNothing().given(orderValidator).validCanDone(any());
