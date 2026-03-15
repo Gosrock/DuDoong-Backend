@@ -6,7 +6,6 @@ import band.gosrock.common.consts.DuDoongStatic.NOT_FOUND
 import band.gosrock.common.dto.ErrorReason
 import band.gosrock.common.exception.BaseErrorCode
 import java.lang.reflect.Field
-import java.util.Objects
 
 enum class HostErrorCode(
     private val status: Int,
@@ -26,12 +25,12 @@ enum class HostErrorCode(
     HOST_USER_NOT_FOUND(NOT_FOUND, "HOST_404_2", "가입된 호스트 유저가 아닙니다.");
 
     override fun getErrorReason(): ErrorReason =
-        ErrorReason.builder().reason(reason).code(code).status(status).build()
+        ErrorReason(status = status, code = code, reason = reason)
 
     override fun getExplainError(): String {
         val field: Field = this.javaClass.getField(this.name)
         val annotation = field.getAnnotation(ExplainError::class.java)
-        return if (Objects.nonNull(annotation)) annotation.value else reason
+        return annotation?.value ?: reason
     }
 
     fun getReason(): String = reason

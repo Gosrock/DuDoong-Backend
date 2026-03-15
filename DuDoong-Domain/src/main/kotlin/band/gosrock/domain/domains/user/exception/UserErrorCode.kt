@@ -7,7 +7,6 @@ import band.gosrock.common.consts.DuDoongStatic.NOT_FOUND
 import band.gosrock.common.dto.ErrorReason
 import band.gosrock.common.exception.BaseErrorCode
 import java.lang.reflect.Field
-import java.util.Objects
 
 enum class UserErrorCode(
     private val status: Int,
@@ -31,12 +30,12 @@ enum class UserErrorCode(
     USER_PHONE_EMPTY(BAD_REQUEST, "USER_400_3", "유저의 휴대폰 전화번호가 null입니다.");
 
     override fun getErrorReason(): ErrorReason =
-        ErrorReason.builder().reason(reason).code(code).status(status).build()
+        ErrorReason(status = status, code = code, reason = reason)
 
     override fun getExplainError(): String {
         val field: Field = this.javaClass.getField(this.name)
         val annotation = field.getAnnotation(ExplainError::class.java)
-        return if (Objects.nonNull(annotation)) annotation.value else reason
+        return annotation?.value ?: reason
     }
 
     fun getReason(): String = reason

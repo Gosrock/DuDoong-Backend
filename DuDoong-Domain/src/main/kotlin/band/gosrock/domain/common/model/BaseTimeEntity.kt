@@ -23,5 +23,5 @@ abstract class BaseTimeEntity {
         protected set
 
     /** Kotlin 호환용 메서드 - 같은 모듈에서 Kotlin이 Lombok getter에 접근 불가한 문제 우회 */
-    fun createdAtKt(): LocalDateTime = this.createdAt!!
+    fun createdAtKt(): LocalDateTime = this.createdAt ?: throw IllegalStateException("Entity has not been persisted yet")
 }

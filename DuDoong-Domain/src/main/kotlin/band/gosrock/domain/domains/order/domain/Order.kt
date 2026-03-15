@@ -262,9 +262,7 @@ class Order() : BaseTimeEntity() {
     fun getCouponName(): String = orderCouponVo.name
 
     fun getTotalSupplyPrice(): Money =
-        orderLineItems.stream()
-            .map { it.getTotalOrderLinePrice() }
-            .reduce(Money.ZERO, Money::plus)
+        orderLineItems.fold(Money.ZERO) { acc, item -> acc.plus(item.getTotalOrderLinePrice()) }
 
     fun getTotalPaymentPrice(): Money = getTotalSupplyPrice().minus(getTotalDiscountPrice())
 
@@ -273,9 +271,7 @@ class Order() : BaseTimeEntity() {
     fun hasCoupon(): Boolean = !orderCouponVo.isDefault()
 
     private fun getOrderLineItem(): OrderLineItem =
-        orderLineItems.stream()
-            .findFirst()
-            .orElseThrow { OrderLineNotFountException.EXCEPTION }
+        orderLineItems.firstOrNull() ?: throw OrderLineNotFountException.EXCEPTION
 
     val itemId: Long
         get() = getOrderLineItem().getItemId()

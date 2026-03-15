@@ -6,7 +6,6 @@ import band.gosrock.common.consts.DuDoongStatic.NOT_FOUND
 import band.gosrock.common.dto.ErrorReason
 import band.gosrock.common.exception.BaseErrorCode
 import java.lang.reflect.Field
-import java.util.Objects
 
 enum class CommentErrorCode(
     private val status: Int,
@@ -22,11 +21,11 @@ enum class CommentErrorCode(
     RETRIEVE_RANDOM_COMMENT_NOT_FOUND(NOT_FOUND, "Comment_404_2", "랜덤 응원글을 찾을 수 없습니다.");
 
     override fun getErrorReason(): ErrorReason =
-        ErrorReason.builder().reason(reason).code(code).status(status).build()
+        ErrorReason(status = status, code = code, reason = reason)
 
     override fun getExplainError(): String {
         val field: Field = this.javaClass.getField(this.name)
         val annotation: ExplainError? = field.getAnnotation(ExplainError::class.java)
-        return if (Objects.nonNull(annotation)) annotation!!.value else this.reason
+        return annotation?.value ?: this.reason
     }
 }

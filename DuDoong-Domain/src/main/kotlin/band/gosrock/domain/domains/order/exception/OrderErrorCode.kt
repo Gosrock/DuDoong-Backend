@@ -6,7 +6,6 @@ import band.gosrock.common.consts.DuDoongStatic.NOT_FOUND
 import band.gosrock.common.dto.ErrorReason
 import band.gosrock.common.exception.BaseErrorCode
 import java.lang.reflect.Field
-import java.util.Objects
 
 enum class OrderErrorCode(
     private val status: Int,
@@ -38,11 +37,11 @@ enum class OrderErrorCode(
     ORDER_CANNOT_REFUSE(BAD_REQUEST, "Order_400_16", "승인 대기중인 주문을 거절할 수 없는 상태입니다.");
 
     override fun getErrorReason(): ErrorReason =
-        ErrorReason.builder().reason(reason).code(code).status(status).build()
+        ErrorReason(status = status, code = code, reason = reason)
 
     override fun getExplainError(): String {
         val field: Field = this.javaClass.getField(this.name)
         val annotation: ExplainError? = field.getAnnotation(ExplainError::class.java)
-        return if (Objects.nonNull(annotation)) annotation!!.value else this.reason
+        return annotation?.value ?: this.reason
     }
 }

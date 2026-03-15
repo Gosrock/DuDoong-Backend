@@ -90,11 +90,11 @@ class GlobalExceptionHandler(
             val path = propertyPath.drop(propertyPath.size - 1).firstOrNull()
             bindingErrors[path ?: ""] = constraintViolation.message
         }
-        val errorReason = ErrorReason.builder()
-            .code("BAD_REQUEST")
-            .status(400)
-            .reason(bindingErrors.toString())
-            .build()
+        val errorReason = ErrorReason(
+            status = 400,
+            code = "BAD_REQUEST",
+            reason = bindingErrors.toString(),
+        )
         val errorResponse = ErrorResponse(errorReason, request.requestURL.toString())
         return ResponseEntity.status(HttpStatus.valueOf(errorReason.status)).body(errorResponse)
     }

@@ -6,7 +6,6 @@ import band.gosrock.common.consts.DuDoongStatic.NOT_FOUND
 import band.gosrock.common.dto.ErrorReason
 import band.gosrock.common.exception.BaseErrorCode
 import java.lang.reflect.Field
-import java.util.Objects
 
 enum class CouponErrorCode(
     private val status: Int,
@@ -27,11 +26,11 @@ enum class CouponErrorCode(
     ALREADY_RECOVERED_COUPON(BAD_REQUEST, "Coupon_400_11", "이미 복구한 쿠폰입니다.");
 
     override fun getErrorReason(): ErrorReason =
-        ErrorReason.builder().reason(reason).code(code).status(status).build()
+        ErrorReason(status = status, code = code, reason = reason)
 
     override fun getExplainError(): String {
         val field: Field = this.javaClass.getField(this.name)
         val annotation: ExplainError? = field.getAnnotation(ExplainError::class.java)
-        return if (Objects.nonNull(annotation)) annotation!!.value else this.reason
+        return annotation?.value ?: this.reason
     }
 }
