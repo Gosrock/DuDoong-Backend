@@ -65,24 +65,28 @@ class OrderLineItem() : BaseTimeEntity() {
         }
     }
 
+    private val safeOrderItem: OrderItemVo
+        get() = orderItem ?: throw IllegalStateException("OrderItem is not initialized")
+
+    private val safeQuantity: Long
+        get() = quantity ?: throw IllegalStateException("Quantity is not initialized")
+
     fun getOptionAnswersPrice(): Money =
-        orderOptionAnswers.stream()
-            .map { it.additionalPrice }
-            .reduce(Money.ZERO, Money::plus)
+        orderOptionAnswers.fold(Money.ZERO) { acc, answer -> acc.plus(answer.additionalPrice) }
 
     fun getTotalOrderLinePrice(): Money =
-        getItemPrice().plus(getOptionAnswersPrice()).times(quantity!!.toDouble())
+        getItemPrice().plus(getOptionAnswersPrice()).times(safeQuantity.toDouble())
 
-    fun getItemPrice(): Money = orderItem!!.price!!
+    fun getItemPrice(): Money = safeOrderItem.price ?: throw IllegalStateException("OrderItem price is not set")
 
     fun isNeedPaid(): Boolean = Money.ZERO.isLessThan(getTotalOrderLinePrice())
 
-    fun getItemId(): Long = orderItem!!.itemId!!
+    fun getItemId(): Long = safeOrderItem.itemId ?: throw IllegalStateException("OrderItem itemId is not set")
 
-    fun getItemGroupId(): Long = orderItem!!.itemGroupId!!
+    fun getItemGroupId(): Long = safeOrderItem.itemGroupId ?: throw IllegalStateException("OrderItem itemGroupId is not set")
 
-    fun getItemName(): String = orderItem!!.name!!
+    fun getItemName(): String = safeOrderItem.name ?: throw IllegalStateException("OrderItem name is not set")
 
     fun getAnswerOptionIds(): List<Long> =
-        orderOptionAnswers.map { it.optionId!! }
+        orderOptionAnswers.map { it.optionId ?: throw IllegalStateException("OrderOptionAnswer optionId is not set") }
 }

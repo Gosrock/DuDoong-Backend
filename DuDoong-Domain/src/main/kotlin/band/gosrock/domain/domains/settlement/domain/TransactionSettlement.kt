@@ -131,22 +131,31 @@ open class TransactionSettlement protected constructor() : BaseTimeEntity() {
     companion object {
         @JvmStatic
         fun of(eventId: Long, settlementResponse: SettlementResponse): TransactionSettlement {
-            val settlementFeeVos = settlementResponse.fees!!.map { SettlementFeeVo.from(it) }
+            val settlementFeeVos = (settlementResponse.fees
+                ?: throw IllegalArgumentException("Missing fees in settlement response"))
+                .map { SettlementFeeVo.from(it) }
             return TransactionSettlement(
                 eventId = eventId,
                 orderUuid = settlementResponse.orderId,
                 paymentKey = settlementResponse.paymentKey,
                 transactionKey = settlementResponse.transactionKey,
                 paymentMethod = settlementResponse.method,
-                paymentAmount = Money.wons(settlementResponse.amount!!),
+                paymentAmount = Money.wons(settlementResponse.amount
+                    ?: throw IllegalArgumentException("Missing amount in settlement response")),
                 fees = settlementFeeVos,
-                feeSupplyAmount = Money.wons(settlementResponse.supplyAmount!!),
-                feeVat = Money.wons(settlementResponse.vat!!),
-                interestFee = Money.wons(settlementResponse.interestFee!!),
-                settlementAmount = Money.wons(settlementResponse.payOutAmount!!),
+                feeSupplyAmount = Money.wons(settlementResponse.supplyAmount
+                    ?: throw IllegalArgumentException("Missing supplyAmount in settlement response")),
+                feeVat = Money.wons(settlementResponse.vat
+                    ?: throw IllegalArgumentException("Missing vat in settlement response")),
+                interestFee = Money.wons(settlementResponse.interestFee
+                    ?: throw IllegalArgumentException("Missing interestFee in settlement response")),
+                settlementAmount = Money.wons(settlementResponse.payOutAmount
+                    ?: throw IllegalArgumentException("Missing payOutAmount in settlement response")),
                 soldDate = settlementResponse.soldDate,
                 paidOutDate = settlementResponse.paidOutDate,
-                approvedAt = settlementResponse.approvedAt!!.toLocalDateTime(),
+                approvedAt = (settlementResponse.approvedAt
+                    ?: throw IllegalArgumentException("Missing approvedAt in settlement response"))
+                    .toLocalDateTime(),
             )
         }
     }

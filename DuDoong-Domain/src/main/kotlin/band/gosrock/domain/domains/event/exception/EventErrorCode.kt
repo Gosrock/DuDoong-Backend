@@ -6,7 +6,6 @@ import band.gosrock.common.consts.DuDoongStatic.NOT_FOUND
 import band.gosrock.common.dto.ErrorReason
 import band.gosrock.common.exception.BaseErrorCode
 import java.lang.reflect.Field
-import java.util.Objects
 
 enum class EventErrorCode(
     private val status: Int,
@@ -34,11 +33,11 @@ enum class EventErrorCode(
     USE_OTHER_API(BAD_REQUEST, "Event_400_8", "잘못된 접근입니다.");
 
     override fun getErrorReason(): ErrorReason =
-        ErrorReason.builder().reason(reason).code(code).status(status).build()
+        ErrorReason(status = status, code = code, reason = reason)
 
     override fun getExplainError(): String {
         val field: Field = this.javaClass.getField(this.name)
         val annotation: ExplainError? = field.getAnnotation(ExplainError::class.java)
-        return if (Objects.nonNull(annotation)) annotation!!.value else this.reason
+        return annotation?.value ?: this.reason
     }
 }

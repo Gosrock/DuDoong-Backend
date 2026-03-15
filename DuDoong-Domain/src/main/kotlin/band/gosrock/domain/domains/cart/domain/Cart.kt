@@ -68,24 +68,18 @@ class Cart() : BaseTimeEntity() {
     }
 
     fun isNeedPaid(): Boolean =
-        cartLineItems.stream()
-            .map { it.isNeedPaid() }
-            .reduce(false) { a, b -> a || b }
+        cartLineItems.any { it.isNeedPaid() }
 
     fun getTotalQuantity(): Long =
         cartLineItems.sumOf { it.quantity!! }
 
     fun getTotalPrice(): Money =
-        cartLineItems.stream()
-            .map { it.getTotalCartLinePrice() }
-            .reduce(Money.ZERO, Money::plus)
+        cartLineItems.fold(Money.ZERO) { acc, item -> acc.plus(item.getTotalCartLinePrice()) }
 
     fun getItemId(): Long = getCartLineItem().itemId!!
 
     fun getCartLineItem(): CartLineItem =
-        cartLineItems.stream()
-            .findFirst()
-            .orElseThrow { CartLineItemNotFoundException.EXCEPTION }
+        cartLineItems.firstOrNull() ?: throw CartLineItemNotFoundException.EXCEPTION
 
     fun getDistinctItemIds(): List<Long> =
         cartLineItems.map { it.itemId!! }.distinct()

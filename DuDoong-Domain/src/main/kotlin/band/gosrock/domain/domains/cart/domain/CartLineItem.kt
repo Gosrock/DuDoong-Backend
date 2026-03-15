@@ -64,12 +64,13 @@ class CartLineItem() : BaseTimeEntity() {
     }
 
     fun getTotalOptionsPrice(): Money =
-        cartOptionAnswers.stream()
-            .map { it.additionalPrice }
-            .reduce(Money.ZERO, Money::plus)
+        cartOptionAnswers.fold(Money.ZERO) { acc, answer -> acc.plus(answer.additionalPrice) }
 
-    fun getTotalCartLinePrice(): Money =
-        itemPrice!!.plus(getTotalOptionsPrice()).times(quantity!!.toDouble())
+    fun getTotalCartLinePrice(): Money {
+        val price = itemPrice ?: throw IllegalStateException("CartLineItem itemPrice is not initialized")
+        val qty = quantity ?: throw IllegalStateException("CartLineItem quantity is not initialized")
+        return price.plus(getTotalOptionsPrice()).times(qty.toDouble())
+    }
 
     fun isNeedPaid(): Boolean = Money.ZERO.isLessThan(getTotalCartLinePrice())
 

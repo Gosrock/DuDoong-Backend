@@ -3,8 +3,6 @@ package band.gosrock.domain.common.vo
 import band.gosrock.domain.common.converter.BigDecimalScale6WithBankersRoundingConverter
 import com.fasterxml.jackson.annotation.JsonValue
 import java.math.BigDecimal
-import java.util.Objects
-import java.util.function.Function
 import javax.persistence.Column
 import javax.persistence.Convert
 import javax.persistence.Embeddable
@@ -32,8 +30,8 @@ class Money() {
         fun wons(amount: Double): Money = Money(BigDecimal.valueOf(amount))
 
         @JvmStatic
-        fun <T> sum(bags: Collection<T>, monetary: Function<T, Money>): Money =
-            bags.stream().map(monetary).reduce(ZERO, Money::plus)
+        fun <T> sum(bags: Collection<T>, monetary: (T) -> Money): Money =
+            bags.fold(ZERO) { acc, item -> acc.plus(monetary(item)) }
     }
 
     fun plus(amount: Money): Money = Money(this.amount.add(amount.amount))
@@ -52,10 +50,10 @@ class Money() {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Money) return false
-        return Objects.equals(amount.toDouble(), other.amount.toDouble())
+        return amount.compareTo(other.amount) == 0
     }
 
-    override fun hashCode(): Int = Objects.hashCode(amount)
+    override fun hashCode(): Int = amount.stripTrailingZeros().hashCode()
 
     @JsonValue
     override fun toString(): String = "${amount.toLong()}원"

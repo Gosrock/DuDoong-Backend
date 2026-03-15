@@ -6,7 +6,6 @@ import band.gosrock.common.consts.DuDoongStatic.NOT_FOUND
 import band.gosrock.common.dto.ErrorReason
 import band.gosrock.common.exception.BaseErrorCode
 import java.lang.reflect.Field
-import java.util.Objects
 
 enum class IssuedTicketErrorCode(
     private val status: Int,
@@ -22,11 +21,11 @@ enum class IssuedTicketErrorCode(
     ISSUED_TICKET_NOT_MATCHED_EVENT(BAD_REQUEST, "IssuedTicket_400_6", "이 티켓은 해당 이벤트에서 발급된 티켓이 아닙니다.");
 
     override fun getErrorReason(): ErrorReason =
-        ErrorReason.builder().reason(reason).code(code).status(status).build()
+        ErrorReason(status = status, code = code, reason = reason)
 
     override fun getExplainError(): String {
         val field: Field = this.javaClass.getField(this.name)
         val annotation: ExplainError? = field.getAnnotation(ExplainError::class.java)
-        return if (Objects.nonNull(annotation)) annotation!!.value else this.reason
+        return annotation?.value ?: this.reason
     }
 }

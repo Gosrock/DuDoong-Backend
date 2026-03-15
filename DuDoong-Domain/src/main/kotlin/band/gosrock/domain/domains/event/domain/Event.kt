@@ -81,11 +81,11 @@ class Event() : BaseTimeEntity() {
 
     fun getEndAt(): LocalDateTime? = this.eventBasic?.endAt()
 
-    fun hasEventBasic(): Boolean = this.eventBasic != null && this.eventBasic!!.isUpdated()
+    fun hasEventBasic(): Boolean = this.eventBasic?.isUpdated() == true
 
-    fun hasEventPlace(): Boolean = this.eventPlace != null && this.eventPlace!!.isUpdated()
+    fun hasEventPlace(): Boolean = this.eventPlace?.isUpdated() == true
 
-    fun hasEventDetail(): Boolean = this.eventDetail != null && this.eventDetail!!.isUpdated()
+    fun hasEventDetail(): Boolean = this.eventDetail?.isUpdated() == true
 
     fun isPreparing(): Boolean = this.status == PREPARING
 
@@ -107,7 +107,8 @@ class Event() : BaseTimeEntity() {
     }
 
     fun validateStartAt() {
-        if (getStartAt()!!.isBefore(LocalDateTime.now())) throw EventOpenTimeExpiredException.EXCEPTION
+        val startAt = getStartAt() ?: throw IllegalStateException("Event startAt must be set")
+        if (startAt.isBefore(LocalDateTime.now())) throw EventOpenTimeExpiredException.EXCEPTION
     }
 
     fun validateOpenStatus() {
@@ -124,12 +125,20 @@ class Event() : BaseTimeEntity() {
 
     fun isRefundDateNotPassed(): Boolean = toRefundInfoVo().availAble
 
-    fun isTimeBeforeStartAt(): Boolean = LocalDateTime.now().isBefore(getStartAt()!!)
+    fun isTimeBeforeStartAt(): Boolean {
+        val startAt = getStartAt() ?: throw IllegalStateException("Event startAt must be set")
+        return LocalDateTime.now().isBefore(startAt)
+    }
 
-    fun toRefundInfoVoWithOrderStatus(orderStatus: OrderStatus): RefundInfoVo =
-        RefundInfoVo.of(getStartAt()!!, orderStatus)
+    fun toRefundInfoVoWithOrderStatus(orderStatus: OrderStatus): RefundInfoVo {
+        val startAt = getStartAt() ?: throw IllegalStateException("Event startAt must be set")
+        return RefundInfoVo.of(startAt, orderStatus)
+    }
 
-    fun toRefundInfoVo(): RefundInfoVo = RefundInfoVo.from(getStartAt()!!)
+    fun toRefundInfoVo(): RefundInfoVo {
+        val startAt = getStartAt() ?: throw IllegalStateException("Event startAt must be set")
+        return RefundInfoVo.from(startAt)
+    }
 
     fun toEventInfoVo(): EventInfoVo = EventInfoVo.from(this)
 
