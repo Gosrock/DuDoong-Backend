@@ -136,7 +136,7 @@ public class HostTest {
         // given
         final String url = "https://mmm.test";
         // when
-        host.setSlackUrl(url);
+        host.updateSlackUrl(url);
         // then
         assertEquals(host.getSlackUrl(), url);
     }
@@ -145,10 +145,10 @@ public class HostTest {
     public void 슬랙알림용_URL은_이미있는_값과_같으면_안된다() {
         // given
         final String url = "https://mmm.test";
-        host.setSlackUrl(url);
+        host.updateSlackUrl(url);
         // when
         // then
-        assertThrows(DuplicateSlackUrlException.class, () -> host.setSlackUrl(url));
+        assertThrows(DuplicateSlackUrlException.class, () -> host.updateSlackUrl(url));
     }
 
     @Test

@@ -7,6 +7,8 @@ spring:
       - infrastructure
       - domain
       - common
+    group:
+      local: infrastructure, domain-local, common-local
   autoconfigure:
     exclude: org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
 springdoc:

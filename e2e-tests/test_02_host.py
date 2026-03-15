@@ -5,7 +5,7 @@
 import pytest
 import requests
 
-from conftest import assert_status
+from conftest import assert_status, get_data, get_data
 
 
 def test_create_host(base_url, auth_headers, state):
@@ -25,9 +25,9 @@ def test_create_host(base_url, auth_headers, state):
     assert resp.status_code in (200, 201), (
         f"호스트 생성 실패: status={resp.status_code}, body={resp.text[:300]}"
     )
-    data = resp.json()
-    assert "id" in data, f"응답에 id 필드가 없습니다: {data}"
-    state.host_id = data["id"]
+    data = get_data(resp)
+    assert "hostId" in data, f"응답에 hostId 필드가 없습니다: {data}"
+    state.host_id = data["hostId"]
     print(f"[test_create_host] 호스트 생성 완료: host_id={state.host_id}")
 
 
@@ -39,12 +39,12 @@ def test_read_host_profiles(base_url, auth_headers, state):
     print(f"[test_read_host_profiles] status={resp.status_code}, body={resp.text[:400]}")
 
     assert_status(resp, 200)
-    data = resp.json()
-    # SliceResponse 구조: {"data": [...], "hasNext": bool}
-    assert "data" in data, f"응답에 data 필드가 없습니다: {data}"
-    print(f"[test_read_host_profiles] 호스트 목록 조회 완료: {len(data['data'])}개")
+    data = get_data(resp)
+    # SliceResponse 구조: {"content": [...], "hasNext": bool}
+    assert "content" in data, f"응답에 content 필드가 없습니다: {data}"
+    print(f"[test_read_host_profiles] 호스트 목록 조회 완료: {len(data['content'])}개")
     if state.host_id:
-        ids = [h.get("id") for h in data["data"]]
+        ids = [h.get("hostId") for h in data["content"]]
         assert state.host_id in ids, (
             f"생성된 host_id={state.host_id}가 목록에 없습니다: {ids}"
         )

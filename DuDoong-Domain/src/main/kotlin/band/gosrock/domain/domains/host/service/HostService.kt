@@ -42,7 +42,7 @@ open class HostService(
     }
 
     open fun updateHostSlackUrl(host: Host, url: String): Host {
-        host.setSlackUrl(url)
+        host.updateSlackUrl(url)
         return hostRepository.save(host)
     }
 

@@ -6,11 +6,12 @@ services:
       - '6379:6379'
 
   mysql:
-    image: 'mysql:8.0'
+    image: 'mysql:8.4'
     ports:
-      - '3306:3306'
+      - '13306:3306'
     environment:
       MYSQL_ROOT_PASSWORD: dudoong
+      MYSQL_ROOT_HOST: '%'
       MYSQL_DATABASE: dudoong
       MYSQL_USER: dudoong
       MYSQL_PASSWORD: dudoong
@@ -20,6 +21,7 @@ services:
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci
       --default-time-zone=+09:00
+      --mysql-native-password=ON
 
 volumes:
   dudoong-mysql-data:

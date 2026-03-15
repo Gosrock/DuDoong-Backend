@@ -5,7 +5,7 @@
 import pytest
 import requests
 
-from conftest import assert_status
+from conftest import assert_status, get_data, get_data
 
 
 def test_create_comment(base_url, auth_headers, state):
@@ -27,7 +27,7 @@ def test_create_comment(base_url, auth_headers, state):
     assert resp.status_code in (200, 201), (
         f"응원글 생성 실패: status={resp.status_code}, body={resp.text[:300]}"
     )
-    data = resp.json()
+    data = get_data(resp)
     assert "id" in data, f"응답에 id 필드가 없습니다: {data}"
     state.comment_id = data["id"]
     print(f"[test_create_comment] 응원글 생성 완료: comment_id={state.comment_id}")
@@ -45,9 +45,9 @@ def test_read_comments(base_url, state):
     print(f"[test_read_comments] status={resp.status_code}, body={resp.text[:400]}")
 
     assert_status(resp, 200)
-    data = resp.json()
-    assert "data" in data, f"응답에 data 필드가 없습니다: {data}"
-    print(f"[test_read_comments] 응원글 목록 조회 완료: {len(data['data'])}개")
+    data = get_data(resp)
+    assert "content" in data, f"응답에 content 필드가 없습니다: {data}"
+    print(f"[test_read_comments] 응원글 목록 조회 완료: {len(data['content'])}개")
 
 
 def test_get_comment_counts(base_url, state):
@@ -59,6 +59,6 @@ def test_get_comment_counts(base_url, state):
     print(f"[test_get_comment_counts] status={resp.status_code}, body={resp.text[:200]}")
 
     assert_status(resp, 200)
-    data = resp.json()
-    assert "count" in data, f"응답에 count 필드가 없습니다: {data}"
-    print(f"[test_get_comment_counts] 응원글 개수: {data.get('count')}")
+    data = get_data(resp)
+    assert "commentCounts" in data, f"응답에 commentCounts 필드가 없습니다: {data}"
+    print(f"[test_get_comment_counts] 응원글 개수: {data.get('commentCounts')}")

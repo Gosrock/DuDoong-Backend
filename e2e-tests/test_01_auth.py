@@ -5,7 +5,7 @@
 import pytest
 import requests
 
-from conftest import assert_status
+from conftest import assert_status, get_data, get_data
 
 
 def test_local_login(base_url, state):
@@ -23,7 +23,7 @@ def test_local_login(base_url, state):
     print(f"[test_local_login] status={resp.status_code}, body={resp.text[:300]}")
 
     assert_status(resp, 200)
-    data = resp.json()
+    data = get_data(resp)
     assert "accessToken" in data, "accessToken 필드가 응답에 없습니다"
     assert "refreshToken" in data, "refreshToken 필드가 응답에 없습니다"
     assert data["accessToken"], "accessToken이 비어 있습니다"
@@ -45,7 +45,7 @@ def test_token_refresh(base_url, state):
     print(f"[test_token_refresh] status={resp.status_code}, body={resp.text[:300]}")
 
     assert_status(resp, 200)
-    data = resp.json()
+    data = get_data(resp)
     assert "accessToken" in data, "accessToken 필드가 응답에 없습니다"
     assert "refreshToken" in data, "refreshToken 필드가 응답에 없습니다"
     # 갱신된 토큰으로 state 업데이트

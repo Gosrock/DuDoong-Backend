@@ -5,7 +5,7 @@
 import pytest
 import requests
 
-from conftest import assert_status
+from conftest import assert_status, get_data, get_data
 
 
 def test_create_cart(base_url, auth_headers, state):
@@ -32,9 +32,9 @@ def test_create_cart(base_url, auth_headers, state):
     assert resp.status_code in (200, 201), (
         f"장바구니 생성 실패: status={resp.status_code}, body={resp.text[:300]}"
     )
-    data = resp.json()
-    assert "id" in data, f"응답에 id 필드가 없습니다: {data}"
-    state.cart_id = data["id"]
+    data = get_data(resp)
+    assert "cartId" in data, f"응답에 cartId 필드가 없습니다: {data}"
+    state.cart_id = data["cartId"]
     print(f"[test_create_cart] 장바구니 생성 완료: cart_id={state.cart_id}")
 
 
@@ -46,11 +46,11 @@ def test_read_cart(base_url, auth_headers, state):
     print(f"[test_read_cart] status={resp.status_code}, body={resp.text[:400]}")
 
     assert_status(resp, 200)
-    data = resp.json()
+    data = get_data(resp)
     # 장바구니가 없을 경우 null 반환 가능
     if data is not None:
-        assert "id" in data, f"응답에 id 필드가 없습니다: {data}"
-        print(f"[test_read_cart] 장바구니 조회 완료: cart_id={data.get('id')}")
+        assert "cartId" in data, f"응답에 cartId 필드가 없습니다: {data}"
+        print(f"[test_read_cart] 장바구니 조회 완료: cart_id={data.get('cartId')}")
     else:
         print(f"[test_read_cart] 장바구니 없음 (null 반환)")
 
@@ -74,9 +74,9 @@ def test_create_order(base_url, auth_headers, state):
     assert resp.status_code in (200, 201), (
         f"주문 생성 실패: status={resp.status_code}, body={resp.text[:300]}"
     )
-    data = resp.json()
-    assert "orderUuid" in data, f"응답에 orderUuid 필드가 없습니다: {data}"
-    state.order_uuid = data["orderUuid"]
+    data = get_data(resp)
+    assert "orderId" in data, f"응답에 orderId 필드가 없습니다: {data}"
+    state.order_uuid = data["orderId"]
     print(f"[test_create_order] 주문 생성 완료: order_uuid={state.order_uuid}")
 
 
@@ -92,9 +92,9 @@ def test_free_order(base_url, auth_headers, state):
     print(f"[test_free_order] status={resp.status_code}, body={resp.text[:400]}")
 
     assert_status(resp, 200)
-    data = resp.json()
+    data = get_data(resp)
     assert "orderUuid" in data, f"응답에 orderUuid 필드가 없습니다: {data}"
-    print(f"[test_free_order] 무료 주문 완료: order_uuid={data.get('orderUuid')}")
+    print(f"[test_free_order] 무료 주문 완료: orderUuid={data.get('orderUuid')}")
 
 
 def test_read_order(base_url, auth_headers, state):
@@ -106,7 +106,7 @@ def test_read_order(base_url, auth_headers, state):
     print(f"[test_read_order] status={resp.status_code}, body={resp.text[:400]}")
 
     assert_status(resp, 200)
-    data = resp.json()
+    data = get_data(resp)
     assert "orderUuid" in data, f"응답에 orderUuid 필드가 없습니다: {data}"
     assert data["orderUuid"] == state.order_uuid, "반환된 orderUuid가 일치하지 않습니다"
     print(f"[test_read_order] 주문 상세 조회 완료: {data.get('orderUuid')}")

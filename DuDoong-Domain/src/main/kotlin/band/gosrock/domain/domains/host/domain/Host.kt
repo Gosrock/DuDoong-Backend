@@ -47,8 +47,8 @@ class Host() : BaseTimeEntity() {
     val partner: Boolean = false
 
     // 슬랙 웹훅 url
-    final var slackUrl: String? = null
-        private set
+    var slackUrl: String? = null
+        protected set
 
     // 단방향 oneToMany 매핑
     @OneToMany(
@@ -107,7 +107,7 @@ class Host() : BaseTimeEntity() {
         this.profile?.updateProfile(hostProfile)
     }
 
-    fun setSlackUrl(slackUrl: String) {
+    fun updateSlackUrl(slackUrl: String) {
         if (StringUtils.equals(this.slackUrl, slackUrl)) throw DuplicateSlackUrlException.EXCEPTION
         Events.raise(HostRegisterSlackEvent.of(this))
         this.slackUrl = slackUrl

@@ -1,6 +1,9 @@
 """
 DuDoong Backend E2E 테스트 공통 픽스처 및 공유 상태 정의.
 모든 테스트 모듈에서 이 파일의 fixtures를 사용합니다.
+
+API 응답은 SuccessResponseAdvice에 의해 {"status":200, "data":{...}} 형태로 래핑됩니다.
+get_data() 헬퍼를 사용하여 data 필드를 추출하세요.
 """
 import os
 import pytest
@@ -51,7 +54,7 @@ def auth_token(base_url, state):
     resp = requests.post(url, json=payload)
     print(f"[AUTH] status={resp.status_code}, body={resp.text[:300]}")
     assert resp.status_code == 200, f"로그인 실패: {resp.text}"
-    data = resp.json()
+    data = get_data(resp)
     state.access_token = data["accessToken"]
     state.refresh_token = data["refreshToken"]
     return data["accessToken"]
@@ -69,3 +72,11 @@ def assert_status(response, expected_status):
         f"기대 상태코드 {expected_status}, 실제: {response.status_code}\n"
         f"응답 본문: {response.text[:500]}"
     )
+
+
+def get_data(response):
+    """SuccessResponseAdvice 래핑된 응답에서 data 필드를 추출합니다."""
+    body = response.json()
+    if "data" in body:
+        return body["data"]
+    return body

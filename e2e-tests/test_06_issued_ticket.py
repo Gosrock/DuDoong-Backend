@@ -5,7 +5,7 @@
 import pytest
 import requests
 
-from conftest import assert_status
+from conftest import assert_status, get_data, get_data
 
 
 def test_read_order_tickets(base_url, auth_headers, state):
@@ -20,7 +20,7 @@ def test_read_order_tickets(base_url, auth_headers, state):
     print(f"[test_read_order_tickets] status={resp.status_code}, body={resp.text[:400]}")
 
     assert_status(resp, 200)
-    data = resp.json()
+    data = get_data(resp)
     # OrderTicketResponse 구조 확인
     print(f"[test_read_order_tickets] 주문 티켓 조회 완료: {data}")
 
@@ -37,9 +37,9 @@ def test_read_my_orders(base_url, auth_headers, state):
     print(f"[test_read_my_orders] status={resp.status_code}, body={resp.text[:400]}")
 
     assert_status(resp, 200)
-    data = resp.json()
-    assert "data" in data, f"응답에 data 필드가 없습니다: {data}"
-    print(f"[test_read_my_orders] 예매 목록 조회 완료: {len(data['data'])}개")
+    data = get_data(resp)
+    assert "content" in data, f"응답에 content 필드가 없습니다: {data}"
+    print(f"[test_read_my_orders] 예매 목록 조회 완료: {len(data['content'])}개")
     if state.order_uuid:
-        uuids = [o.get("orderUuid") for o in data["data"]]
+        uuids = [o.get("orderId") for o in data["content"]]
         print(f"[test_read_my_orders] 조회된 order UUIDs: {uuids}")

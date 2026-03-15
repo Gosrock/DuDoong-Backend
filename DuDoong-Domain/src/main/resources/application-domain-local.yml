@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/dudoong?useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true&tinyInt1isBit=false
+    url: jdbc:mysql://127.0.0.1:13306/dudoong?useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true&tinyInt1isBit=false
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maxLifetime: 580000
