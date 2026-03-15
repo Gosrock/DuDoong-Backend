@@ -1,3 +1,2 @@
-e2e-tests/__pycache__/
-e2e-tests/__pycache__/
-e2e-tests/.pytest_cache/
+__pycache__/
+.pytest_cache/
