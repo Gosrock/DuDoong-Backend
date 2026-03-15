@@ -6,6 +6,7 @@ import band.gosrock.api.auth.model.dto.response.OauthLoginLinkResponse
 import band.gosrock.api.auth.model.dto.response.OauthTokenResponse
 import band.gosrock.api.auth.model.dto.response.OauthUserInfoResponse
 import band.gosrock.api.auth.model.dto.response.TokenAndUserResponse
+import band.gosrock.api.auth.service.LocalDevLoginUseCase
 import band.gosrock.api.auth.service.LoginUseCase
 import band.gosrock.api.auth.service.LogoutUseCase
 import band.gosrock.api.auth.service.OauthUserInfoUseCase
@@ -44,7 +45,8 @@ class AuthController(
     private val withDrawUseCase: WithDrawUseCase,
     private val logoutUseCase: LogoutUseCase,
     private val cookieHelper: CookieHelper,
-    private val rateLimiter: UserRateLimiter
+    private val rateLimiter: UserRateLimiter,
+    private val localDevLoginUseCase: LocalDevLoginUseCase
 ) {
     private val log = LoggerFactory.getLogger(AuthController::class.java)
 
@@ -176,5 +178,18 @@ class AuthController(
     fun logoutUser(): ResponseEntity<Void> {
         logoutUseCase.execute()
         return ResponseEntity.ok().headers(cookieHelper.deleteCookies()).body(null)
+    }
+
+    @Operation(summary = "로컬 개발용 즉시 로그인 (카카오 불필요)", deprecated = true)
+    @Tag(name = "1-2. [카카오]")
+    @DevelopOnlyApi
+    @PostMapping("/oauth/local/login")
+    fun localDevLogin(
+        @Valid @RequestBody registerRequest: RegisterRequest
+    ): ResponseEntity<TokenAndUserResponse> {
+        val tokenAndUserResponse = localDevLoginUseCase.execute(registerRequest)
+        return ResponseEntity.ok()
+            .headers(cookieHelper.getTokenCookies(tokenAndUserResponse))
+            .body(tokenAndUserResponse)
     }
 }

@@ -1,0 +1,18 @@
+auth:
+  jwt:
+    secret-key: testkeytestkeytestkeytestkeytestkeytestkeytestkeytestkeytestkey
+    access-exp: 86400
+    refresh-exp: 604800
+
+oauth:
+  kakao:
+    base-url: https://kauth.kakao.com
+    client-id: DUMMY_LOCAL_CLIENT
+    client-secret: DUMMY_LOCAL_SECRET
+    redirect-url: http://localhost:8080/api/v1/auth/oauth/kakao/develop
+    app-id: DUMMY_LOCAL_APP_ID
+    admin-key: DUMMY_LOCAL_ADMIN_KEY
+
+toss:
+  secret-key: test_sk_ADpexMgkW36weAqp4bNVGbR5ozO0
+  mid: gosroc9mwo
