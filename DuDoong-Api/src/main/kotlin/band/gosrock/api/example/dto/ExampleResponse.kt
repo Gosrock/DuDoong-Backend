@@ -10,8 +10,8 @@ data class ExampleResponse(
         @JvmStatic
         fun from(exampleEntity: ExampleEntity): ExampleResponse =
             ExampleResponse(
-                id = exampleEntity.id,
-                content = exampleEntity.content,
+                id = exampleEntity.id!!,
+                content = exampleEntity.content!!,
             )
     }
 }

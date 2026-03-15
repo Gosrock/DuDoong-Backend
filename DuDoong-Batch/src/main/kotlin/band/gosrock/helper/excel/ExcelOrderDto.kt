@@ -27,7 +27,7 @@ data class ExcelOrderDto(
                 orderName = order.orderName!!,
                 userId = order.userId!!,
                 quantity = order.getTotalQuantity(),
-                createdAt = order.getCreatedAt(),
+                createdAt = order.createdAt!!,
                 refundAt = order.withDrawAt,
             )
     }
