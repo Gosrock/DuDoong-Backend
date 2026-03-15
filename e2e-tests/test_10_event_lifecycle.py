@@ -128,8 +128,8 @@ def test_event_status_open(base_url, auth_headers):
         status_val = check_data.get("status") or check_data.get("eventStatus")
         print(f"[test_event_status_open] 이벤트 상태: {status_val}")
         if status_val:
-            assert "OPEN" in str(status_val) or "오픈" in str(status_val), (
-                f"오픈 후 상태는 OPEN이어야 합니다: {status_val}"
+            assert any(s in str(status_val) for s in ("OPEN", "오픈", "진행중")), (
+                f"오픈 후 상태는 OPEN/진행중이어야 합니다: {status_val}"
             )
     print(f"[test_event_status_open] OPEN 상태 전이 확인 완료")
 

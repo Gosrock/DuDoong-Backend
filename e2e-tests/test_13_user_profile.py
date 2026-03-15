@@ -26,7 +26,7 @@ def test_read_my_profile(base_url, auth_headers):
 
 def test_toggle_marketing(base_url, auth_headers):
     """마케팅 수신 동의 상태를 토글하고 성공 응답을 확인합니다."""
-    url = f"{base_url}/v1/users/marketing"
+    url = f"{base_url}/v1/users/me/marketing"
     print(f"\n[test_toggle_marketing] PATCH {url}")
     resp = requests.patch(url, headers=auth_headers)
     print(f"[test_toggle_marketing] status={resp.status_code}, body={resp.text[:400]}")

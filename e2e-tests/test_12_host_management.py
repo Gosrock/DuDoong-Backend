@@ -13,12 +13,13 @@ def test_update_host_profile(base_url, auth_headers, state):
     if not state.host_id:
         pytest.skip("host_id가 없어 테스트를 건너뜁니다.")
 
-    url = f"{base_url}/v1/hosts/{state.host_id}"
+    url = f"{base_url}/v1/hosts/{state.host_id}/profile"
     payload = {
         "name": "E2E테스트호스트(수정됨)",
         "contactEmail": "updated-host@dudoong.com",
         "contactNumber": "010-9999-8888",
         "introduce": "E2E 테스트를 위한 호스트입니다.",
+        "profileImageKey": "test/host/profile.jpeg",
     }
     print(f"\n[test_update_host_profile] PATCH {url}")
     print(f"[test_update_host_profile] payload={payload}")

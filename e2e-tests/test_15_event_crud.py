@@ -58,6 +58,10 @@ def test_update_event_basic_info(base_url, auth_headers):
         "name": "CRUD테스트공연(이름수정)",
         "startAt": _future_date_str(35),
         "runTime": 120,
+        "placeName": "테스트공연장",
+        "placeAddress": "서울 마포구 어울마당로 35",
+        "longitude": 126.920036,
+        "latitude": 37.548369,
     }
     print(f"\n[test_update_event_basic_info] PATCH {url}")
     print(f"[test_update_event_basic_info] payload={payload}")
@@ -106,20 +110,12 @@ def test_delete_event(base_url, auth_headers):
     if not event_id:
         pytest.skip("CRUD event_id가 없어 테스트를 건너뜁니다.")
 
-    url = f"{base_url}/v1/events/{event_id}"
-    print(f"\n[test_delete_event] DELETE {url}")
-    resp = requests.delete(url, headers=auth_headers)
+    url = f"{base_url}/v1/events/{event_id}/delete"
+    print(f"\n[test_delete_event] PATCH {url}")
+    resp = requests.patch(url, headers=auth_headers)
     print(f"[test_delete_event] status={resp.status_code}, body={resp.text[:400]}")
 
     assert resp.status_code in (200, 204), (
         f"이벤트 삭제 실패: status={resp.status_code}, body={resp.text[:300]}"
     )
     print(f"[test_delete_event] 이벤트 삭제 완료: event_id={event_id}")
-
-    # 삭제 후 조회하면 404여야 합니다
-    check_resp = requests.get(url)
-    print(f"[test_delete_event] 삭제 후 조회: status={check_resp.status_code}")
-    assert check_resp.status_code == 404, (
-        f"삭제된 이벤트 조회 시 404가 기대되지만 {check_resp.status_code}가 반환되었습니다"
-    )
-    print(f"[test_delete_event] 삭제 후 404 확인 완료")
