@@ -58,7 +58,7 @@ data class OrderAdminTableElement(
                 orderStatus = order.orderStatus,
                 userInfoVo = user.toUserInfoVo(),
                 orderName = order.orderName!!,
-                createdAt = order.createdAt,
+                createdAt = order.createdAt!!,
                 withDrawAt = order.withDrawAt,
                 approveAt = order.approvedAt,
                 totalQuantity = order.getTotalQuantity(),

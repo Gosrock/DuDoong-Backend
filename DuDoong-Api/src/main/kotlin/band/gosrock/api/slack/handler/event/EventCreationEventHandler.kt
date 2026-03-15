@@ -25,8 +25,8 @@ class EventCreationEventHandler(
         phase = TransactionPhase.AFTER_COMMIT,
     )
     fun handle(eventCreationEvent: EventCreationEvent) {
-        val host = hostAdaptor.findById(eventCreationEvent.hostId)
-        val message = EventSlackAlarm.creationOf(eventCreationEvent.eventName)
+        val host = hostAdaptor.findById(eventCreationEvent.hostId!!)
+        val message = EventSlackAlarm.creationOf(eventCreationEvent.eventName!!)
         slackMessageProvider.sendMessage(host.slackUrl, message)
     }
 }

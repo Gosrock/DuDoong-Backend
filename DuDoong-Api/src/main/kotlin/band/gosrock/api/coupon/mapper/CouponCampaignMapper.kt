@@ -46,7 +46,7 @@ class CouponCampaignMapper {
         }
 
         fun toDateTimePeriod(startAt: LocalDateTime, endAt: LocalDateTime): DateTimePeriod {
-            return DateTimePeriod.builder().startAt(startAt).endAt(endAt).build()
+            return DateTimePeriod(startAt, endAt)
         }
     }
 }
