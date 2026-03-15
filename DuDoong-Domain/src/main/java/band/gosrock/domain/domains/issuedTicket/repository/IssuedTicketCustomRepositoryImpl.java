@@ -57,7 +57,7 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
     }
 
     @Override
-    public Optional<IssuedTicket> find(Long issuedTicketId) {
+    public Optional<IssuedTicket> find(long issuedTicketId) {
         IssuedTicket findIssuedTicket =
                 queryFactory
                         .selectFrom(issuedTicket)
@@ -69,21 +69,23 @@ public class IssuedTicketCustomRepositoryImpl implements IssuedTicketCustomRepos
     }
 
     @Override
-    public Long countPaidTicket(Long userId, Long ticketItemId) {
-        return queryFactory
+    public long countPaidTicket(long userId, long ticketItemId) {
+        Long result = queryFactory
                 .select(count(issuedTicket))
                 .from(issuedTicket)
                 .where(eqUserId(userId), eqTicketItemId(ticketItemId), filterPaidTickets())
                 .fetchOne();
+        return result != null ? result : 0L;
     }
 
     @Override
-    public Long countIssuedTicketByItemId(Long ticketItemId) {
-        return queryFactory
+    public long countIssuedTicketByItemId(long ticketItemId) {
+        Long result = queryFactory
                 .select(count(issuedTicket))
                 .from(issuedTicket)
                 .where(eqTicketItemId(ticketItemId), filterPaidTickets())
                 .fetchOne();
+        return result != null ? result : 0L;
     }
 
     private BooleanExpression filterPaidTickets() {

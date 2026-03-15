@@ -1,6 +1,8 @@
 package band.gosrock.domain.domains.issuedTicket.service.handlers;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
@@ -28,7 +30,7 @@ public class OrderEventHandlerTest {
         // when
         orderEventHandler.handleDoneOrderEvent(doneOrderEvent);
 
-        then(issuedTicketDomainService).should(times(1)).createIssuedTicket(any(), any(), any());
+        then(issuedTicketDomainService).should(times(1)).createIssuedTicket(anyLong(), nullable(String.class), anyLong());
     }
 
     @Test
@@ -39,6 +41,6 @@ public class OrderEventHandlerTest {
         orderEventHandler.handleDoneOrderEvent(doneOrderEvent1);
         orderEventHandler.handleDoneOrderEvent(doneOrderEvent2);
 
-        then(issuedTicketDomainService).should(times(3)).createIssuedTicket(any(), any(), any());
+        then(issuedTicketDomainService).should(times(3)).createIssuedTicket(anyLong(), nullable(String.class), anyLong());
     }
 }
