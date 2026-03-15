@@ -1,0 +1,36 @@
+spring:
+  profiles:
+    include:
+      - infrastructure
+      - domain-local
+      - common-local
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+
+api:
+  prefix: /api
+
+server:
+  servlet:
+    context-path: /api
+  forward-headers-strategy: framework
+
+springdoc:
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
+  swagger-ui:
+    tags-sorter: alpha
+
+swagger:
+  user: user
+  password: password
+
+throttle:
+  overdraft: 9999
+  greedyRefill: 9999
+
+acl.whiteList: 127.0.0.1,127.0.0.2
+
+logging:
+  level:
+    band.gosrock: DEBUG
