@@ -141,7 +141,7 @@ def test_event_status_calculating(base_url, auth_headers):
         pytest.skip("lifecycle event_id가 없어 테스트를 건너뜁니다.")
 
     url = f"{base_url}/v1/events/{event_id}/status"
-    payload = {"status": "정산중"}
+    payload = {"status": "CALCULATING"}
     print(f"\n[test_event_status_calculating] PATCH {url}")
     print(f"[test_event_status_calculating] payload={payload}")
     resp = requests.patch(url, json=payload, headers=auth_headers)
@@ -165,7 +165,7 @@ def test_event_status_closed(base_url, auth_headers):
         pytest.skip("lifecycle event_id가 없어 테스트를 건너뜁니다.")
 
     url = f"{base_url}/v1/events/{event_id}/status"
-    payload = {"status": "정산완료"}
+    payload = {"status": "CLOSED"}
     print(f"\n[test_event_status_closed] PATCH {url}")
     print(f"[test_event_status_closed] payload={payload}")
     resp = requests.patch(url, json=payload, headers=auth_headers)
