@@ -1,5 +1,6 @@
 package band.gosrock.domain.domains.issuedTicket.service.handlers;
 
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.*;
 
 import band.gosrock.domain.common.events.order.WithDrawOrderEvent;
@@ -49,6 +50,6 @@ public class WithdrawOrderEventHandlerTest {
         withDrawOrderEventHandler.handleWithdrawOrderEvent(withDrawOrderEvent);
 
         // then
-        then(issuedTicketDomainService).should(times(1)).withdrawIssuedTicket(any(), any());
+        then(issuedTicketDomainService).should(times(1)).withdrawIssuedTicket(anyLong(), any());
     }
 }

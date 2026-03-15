@@ -25,9 +25,9 @@ class OrderCouponVo() {
         @JvmStatic
         fun of(coupon: IssuedCoupon, orderSupplyAmount: Money): OrderCouponVo =
             OrderCouponVo().apply {
-                couponId = coupon.getIssuedCouponId()
+                couponId = coupon.getIssuedCouponId()!!
                 discountAmount = coupon.getDiscountAmount(orderSupplyAmount)
-                name = coupon.getCouponName()
+                name = coupon.getCouponName()!!
             }
 
         @JvmStatic

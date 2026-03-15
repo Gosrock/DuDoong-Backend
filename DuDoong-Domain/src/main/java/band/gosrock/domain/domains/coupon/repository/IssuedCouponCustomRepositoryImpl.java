@@ -14,7 +14,7 @@ public class IssuedCouponCustomRepositoryImpl implements IssuedCouponCustomRepos
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<IssuedCoupon> findAllByUserId(Long userId) {
+    public List<IssuedCoupon> findAllByUserId(long userId) {
         return queryFactory.selectFrom(issuedCoupon).where(userIdEq(userId)).fetch();
     }
 
