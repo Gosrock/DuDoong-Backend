@@ -22,8 +22,8 @@ class RegisterUserEventHandlerTest {
     @Test
     void 유저등록시도메인이벤트가발생해야한다() {
         // given
-        Profile profile = Profile.builder().build();
-        OauthInfo oauthInfo = OauthInfo.builder().build();
+        Profile profile = Profile.builder().name("test").email("test@test.com").build();
+        OauthInfo oauthInfo = OauthInfo.builder().provider(band.gosrock.domain.domains.user.domain.OauthProvider.KAKAO).oid("test-oid").build();
         //        BDDMockito.given(userRepository.save(any())).willReturn(null);
         //        given(registerUserEventHandler.handleRegisterUserEvent(any())).will(new Answer() {
         //            @Override
