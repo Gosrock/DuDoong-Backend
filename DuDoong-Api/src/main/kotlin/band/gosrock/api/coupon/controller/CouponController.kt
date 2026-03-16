@@ -1,5 +1,6 @@
 package band.gosrock.api.coupon.controller
 
+import band.gosrock.api.config.security.CurrentUserId
 import band.gosrock.api.coupon.dto.reqeust.CreateCouponCampaignRequest
 import band.gosrock.api.coupon.dto.response.CreateCouponCampaignResponse
 import band.gosrock.api.coupon.dto.response.CreateUserCouponResponse
@@ -31,24 +32,27 @@ class CouponController(
     @Operation(summary = "쿠폰 캠페인 생성 API")
     @PostMapping("/campaigns")
     fun createCouponCampaign(
+        @CurrentUserId userId: Long,
         @RequestBody @Valid createCouponCampaignRequest: CreateCouponCampaignRequest,
     ): CreateCouponCampaignResponse {
-        return createCouponUseCase.execute(createCouponCampaignRequest)
+        return createCouponUseCase.execute(userId, createCouponCampaignRequest)
     }
 
     @Operation(summary = "유저 쿠폰 발급 API")
     @PostMapping("/campaigns/{coupon_code}")
     fun createUserCoupon(
+        @CurrentUserId userId: Long,
         @PathVariable("coupon_code") couponCode: String,
     ): CreateUserCouponResponse {
-        return createUserCouponUseCase.execute(couponCode)
+        return createUserCouponUseCase.execute(userId, couponCode)
     }
 
     @Operation(summary = "내 쿠폰 조회 API")
     @GetMapping("")
     fun getAllMyIssuedCoupons(
+        @CurrentUserId userId: Long,
         @RequestParam(required = false, defaultValue = "true") expired: Boolean,
     ): ReadIssuedCouponResponse {
-        return readIssuedCouponUseCase.execute(expired)
+        return readIssuedCouponUseCase.execute(userId, expired)
     }
 }

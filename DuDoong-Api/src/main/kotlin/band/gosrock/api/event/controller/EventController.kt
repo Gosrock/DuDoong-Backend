@@ -19,6 +19,7 @@ import band.gosrock.api.event.service.SearchEventsUseCase
 import band.gosrock.api.event.service.UpdateEventBasicUseCase
 import band.gosrock.api.event.service.UpdateEventDetailUseCase
 import band.gosrock.api.event.service.UpdateEventStatusUseCase
+import band.gosrock.api.config.security.CurrentUserId
 import band.gosrock.common.annotation.DisableSwaggerSecurity
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -55,9 +56,10 @@ class EventController(
     @Operation(summary = "자신이 관리 중인 이벤트 리스트를 가져옵니다.")
     @GetMapping
     fun getAllEventByUser(
+        @CurrentUserId userId: Long,
         @ParameterObject @PageableDefault(size = 10) pageable: Pageable
     ): SliceResponse<EventProfileResponse> {
-        return readUserHostEventListUseCase.execute(pageable)
+        return readUserHostEventListUseCase.execute(userId, pageable)
     }
 
     @Operation(summary = "이벤트 이름을 키워드로 검색하여 최신순으로 가져옵니다.")
@@ -72,15 +74,15 @@ class EventController(
 
     @Operation(summary = "공연 기본 정보를 등록하여, 새로운 이벤트(공연)를 생성합니다")
     @PostMapping
-    fun createEvent(@RequestBody @Valid createEventRequest: CreateEventRequest): EventResponse {
-        return createEventUseCase.execute(createEventRequest)
+    fun createEvent(@CurrentUserId userId: Long, @RequestBody @Valid createEventRequest: CreateEventRequest): EventResponse {
+        return createEventUseCase.execute(userId, createEventRequest)
     }
 
     @Operation(summary = "공연 상세 정보를 가져옵니다.")
     @DisableSwaggerSecurity
     @GetMapping("/{eventId}")
-    fun getEventDetailById(@PathVariable eventId: Long): EventDetailResponse {
-        return readEventDetailUseCase.execute(eventId)
+    fun getEventDetailById(@CurrentUserId userId: Long, @PathVariable eventId: Long): EventDetailResponse {
+        return readEventDetailUseCase.execute(userId, eventId)
     }
 
     @Operation(summary = "공연 체크리스트 가져오기")

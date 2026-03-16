@@ -1,6 +1,5 @@
 package band.gosrock.api.host.service
 
-import band.gosrock.api.common.UserUtils
 import band.gosrock.api.common.slice.SliceResponse
 import band.gosrock.api.host.model.dto.response.HostProfileResponse
 import band.gosrock.common.annotation.UseCase
@@ -10,14 +9,10 @@ import org.springframework.transaction.annotation.Transactional
 
 @UseCase
 class ReadHostProfilesUseCase(
-    private val userUtils: UserUtils,
     private val hostAdaptor: HostAdaptor,
 ) {
     @Transactional(readOnly = true)
-    fun execute(pageable: Pageable): SliceResponse<HostProfileResponse> {
-        val user = userUtils.getCurrentUser()
-        val userId = user.id!!
-
+    fun execute(userId: Long, pageable: Pageable): SliceResponse<HostProfileResponse> {
         return SliceResponse.of(
             hostAdaptor
                 .querySliceHostsByUserId(userId, pageable)

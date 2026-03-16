@@ -5,6 +5,7 @@ import band.gosrock.api.cart.model.dto.request.AddCartRequest
 import band.gosrock.api.cart.model.dto.response.CartResponse
 import band.gosrock.api.cart.service.CreateCartUseCase
 import band.gosrock.api.cart.service.ReadCartUseCase
+import band.gosrock.api.config.security.CurrentUserId
 import band.gosrock.common.annotation.ApiErrorExceptionsExample
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -27,13 +28,13 @@ class CartController(
     @Operation(summary = "상품을 장바구니에 담습니다. 상품에 답변해야하는 응답이 있다면, 응답도 보내주시면 됩니다.")
     @ApiErrorExceptionsExample(CreateCartExceptionDocs::class)
     @PostMapping
-    fun createCartLines(@RequestBody @Valid addCartRequest: AddCartRequest): CartResponse {
-        return createCartUseCase.execute(addCartRequest)
+    fun createCartLines(@CurrentUserId userId: Long, @RequestBody @Valid addCartRequest: AddCartRequest): CartResponse {
+        return createCartUseCase.execute(userId, addCartRequest)
     }
 
     @Operation(summary = "사용자가 최근에 만들었던 장바구니를 불러옵니다. 없으면 data null (구현 안해도 됨)")
     @GetMapping("/recent")
-    fun getRecentMyCart(): CartResponse? {
-        return readCartUseCase.execute()
+    fun getRecentMyCart(@CurrentUserId userId: Long): CartResponse? {
+        return readCartUseCase.execute(userId)
     }
 }

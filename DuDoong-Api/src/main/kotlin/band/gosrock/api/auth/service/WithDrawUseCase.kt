@@ -1,7 +1,6 @@
 package band.gosrock.api.auth.service
 
 import band.gosrock.api.auth.service.helper.KakaoOauthHelper
-import band.gosrock.api.config.security.SecurityUtils
 import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.domains.user.adaptor.RefreshTokenAdaptor
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
@@ -17,12 +16,11 @@ class WithDrawUseCase(
 ) {
 
     @Transactional
-    fun execute() {
-        val currentUserId = SecurityUtils.getCurrentUserId()
-        refreshTokenAdaptor.deleteByUserId(currentUserId)
-        val user = userAdaptor.queryUser(currentUserId)
+    fun execute(userId: Long) {
+        refreshTokenAdaptor.deleteByUserId(userId)
+        val user = userAdaptor.queryUser(userId)
         val oid = user.oauthInfo!!.oid!!
-        userDomainService.withDrawUser(currentUserId)
+        userDomainService.withDrawUser(userId)
         kakaoOauthHelper.unlink(oid)
     }
 }

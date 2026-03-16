@@ -1,6 +1,5 @@
 package band.gosrock.api.event.service
 
-import band.gosrock.api.common.UserUtils
 import band.gosrock.api.common.slice.SliceResponse
 import band.gosrock.api.event.model.dto.response.EventProfileResponse
 import band.gosrock.api.event.model.mapper.EventMapper
@@ -12,11 +11,9 @@ import org.springframework.transaction.annotation.Transactional
 @UseCase
 @Transactional(readOnly = true)
 class ReadUserEventProfilesUseCase(
-    private val userUtils: UserUtils,
     private val eventMapper: EventMapper
 ) {
-    fun execute(pageable: Pageable): SliceResponse<EventProfileResponse> {
-        val userId = userUtils.getCurrentUserId()
+    fun execute(userId: Long, pageable: Pageable): SliceResponse<EventProfileResponse> {
         return SliceResponse.of(eventMapper.toEventProfileResponseSlice(userId, pageable))
     }
 }

@@ -1,5 +1,6 @@
 package band.gosrock.api.issuedTicket.controller
 
+import band.gosrock.api.config.security.CurrentUserId
 import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketDetailResponse
 import band.gosrock.api.issuedTicket.service.ReadIssuedTicketUseCase
 import io.swagger.v3.oas.annotations.Operation
@@ -20,7 +21,7 @@ class IssuedTicketController(
 
     @Operation(summary = "발급 티켓 가져오기 API 입니다.")
     @GetMapping(value = ["/{uuid}"], produces = ["application/json; charset=utf-8"])
-    fun getIssuedTicket(@PathVariable uuid: String): RetrieveIssuedTicketDetailResponse {
-        return readIssuedTicketUseCase.execute(uuid)
+    fun getIssuedTicket(@CurrentUserId userId: Long, @PathVariable uuid: String): RetrieveIssuedTicketDetailResponse {
+        return readIssuedTicketUseCase.execute(userId, uuid)
     }
 }

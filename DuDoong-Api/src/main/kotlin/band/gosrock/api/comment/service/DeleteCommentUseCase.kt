@@ -1,7 +1,6 @@
 package band.gosrock.api.comment.service
 
 import band.gosrock.api.comment.mapper.CommentMapper
-import band.gosrock.api.common.UserUtils
 import band.gosrock.api.common.aop.hostRole.FindHostFrom.EVENT_ID
 import band.gosrock.api.common.aop.hostRole.HostQualification.MANAGER
 import band.gosrock.api.common.aop.hostRole.HostRolesAllowed
@@ -12,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional
 
 @UseCase
 class DeleteCommentUseCase(
-    private val userUtils: UserUtils,
     private val commentMapper: CommentMapper,
     private val eventService: EventService,
     private val commentDomainService: CommentDomainService,

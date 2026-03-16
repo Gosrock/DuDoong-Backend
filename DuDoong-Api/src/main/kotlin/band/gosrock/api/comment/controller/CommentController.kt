@@ -11,6 +11,7 @@ import band.gosrock.api.comment.service.RetrieveCommentCountUseCase
 import band.gosrock.api.comment.service.RetrieveCommentUseCase
 import band.gosrock.api.comment.service.RetrieveRandomCommentUseCase
 import band.gosrock.api.common.slice.SliceResponse
+import band.gosrock.api.config.security.CurrentUserId
 import band.gosrock.common.annotation.DisableSwaggerSecurity
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -45,17 +46,19 @@ class CommentController(
     @Operation(summary = "응원글을 생성합니다.")
     @PostMapping
     fun postComment(
+        @CurrentUserId userId: Long,
         @RequestBody @Valid createCommentRequest: CreateCommentRequest,
         @PathVariable eventId: Long,
-    ): CreateCommentResponse = createCommentUseCase.execute(eventId, createCommentRequest)
+    ): CreateCommentResponse = createCommentUseCase.execute(userId, eventId, createCommentRequest)
 
     @DisableSwaggerSecurity
     @Operation(summary = "응원글을 조회합니다.")
     @GetMapping
     fun getComments(
+        @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @ParameterObject @PageableDefault(size = 10) pageable: Pageable,
-    ): SliceResponse<RetrieveCommentDTO> = retrieveCommentUseCase.execute(eventId, pageable)
+    ): SliceResponse<RetrieveCommentDTO> = retrieveCommentUseCase.execute(userId, eventId, pageable)
 
     @Operation(summary = "[어드민 기능] 응원글을 삭제합니다.")
     @DeleteMapping("/{commentId}")
