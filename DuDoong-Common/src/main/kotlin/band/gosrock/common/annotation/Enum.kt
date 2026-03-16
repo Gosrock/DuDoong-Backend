@@ -1,8 +1,8 @@
 package band.gosrock.common.annotation
 
 import band.gosrock.common.validator.EnumValidator
-import javax.validation.Constraint
-import javax.validation.Payload
+import jakarta.validation.Constraint
+import jakarta.validation.Payload
 import kotlin.reflect.KClass
 
 /** RequestBody 의 Enum 검증을 위한 어노테이션 입니다 */

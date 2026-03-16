@@ -27,17 +27,18 @@ import band.gosrock.domain.domains.event.exception.CannotDeleteByOpenEventExcept
 import band.gosrock.domain.domains.event.exception.CannotModifyOpenEventException
 import band.gosrock.domain.domains.event.exception.EventNotOpenException
 import band.gosrock.domain.domains.event.exception.EventOpenTimeExpiredException
+import band.gosrock.domain.domains.event.exception.InvalidEventStatusTransitionException
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException
 import band.gosrock.domain.domains.order.domain.OrderStatus
 import java.time.LocalDateTime
-import javax.persistence.Column
-import javax.persistence.Embedded
-import javax.persistence.Entity
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
-import javax.persistence.GeneratedValue
-import javax.persistence.GenerationType
-import javax.persistence.Id
+import jakarta.persistence.Column
+import jakarta.persistence.Embedded
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
 import org.hibernate.annotations.Where
 
 @Where(clause = "status != 'DELETED'")
@@ -167,9 +168,12 @@ class Event() : BaseTimeEntity() {
         updateStatus(CLOSED, AlreadyCloseStatusException.EXCEPTION)
     }
 
-    private fun updateStatus(status: EventStatus, exception: DuDoongCodeException) {
-        if (this.status == status) throw exception
-        this.status = status
+    private fun updateStatus(newStatus: EventStatus, alreadySameException: DuDoongCodeException) {
+        if (this.status == newStatus) throw alreadySameException
+        if (!this.status.canTransitionTo(newStatus)) {
+            throw InvalidEventStatusTransitionException.EXCEPTION
+        }
+        this.status = newStatus
         Events.raise(EventStatusChangeEvent.of(this))
     }
 

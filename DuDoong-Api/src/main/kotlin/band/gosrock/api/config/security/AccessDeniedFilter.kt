@@ -6,9 +6,9 @@ import band.gosrock.common.exception.BaseErrorCode
 import band.gosrock.common.exception.DuDoongCodeException
 import band.gosrock.common.exception.GlobalErrorCode
 import com.fasterxml.jackson.databind.ObjectMapper
-import javax.servlet.FilterChain
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.FilterChain
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.MediaType
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.stereotype.Component

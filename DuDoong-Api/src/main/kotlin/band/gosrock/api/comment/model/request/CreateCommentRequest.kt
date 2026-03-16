@@ -1,7 +1,7 @@
 package band.gosrock.api.comment.model.request
 
-import javax.validation.constraints.NotBlank
-import javax.validation.constraints.Size
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 
 data class CreateCommentRequest(
     @field:NotBlank(message = "작성자 닉네임을 입력해주세요.")

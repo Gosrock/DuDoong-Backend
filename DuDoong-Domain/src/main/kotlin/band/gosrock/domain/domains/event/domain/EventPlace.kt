@@ -1,6 +1,6 @@
 package band.gosrock.domain.domains.event.domain
 
-import javax.persistence.Embeddable
+import jakarta.persistence.Embeddable
 
 @Embeddable
 class EventPlace() {

@@ -1,7 +1,7 @@
 package band.gosrock.api.auth.model.dto.request
 
 import band.gosrock.domain.domains.user.domain.Profile
-import javax.validation.constraints.NotEmpty
+import jakarta.validation.constraints.NotEmpty
 
 data class RegisterRequest(
     @field:NotEmpty

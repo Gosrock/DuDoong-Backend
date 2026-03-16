@@ -1,7 +1,7 @@
 package band.gosrock.domain.domains.coupon.domain
 
 import band.gosrock.domain.domains.coupon.exception.NoCouponStockLeftException
-import javax.persistence.Embeddable
+import jakarta.persistence.Embeddable
 
 @Embeddable
 class CouponStockInfo() {

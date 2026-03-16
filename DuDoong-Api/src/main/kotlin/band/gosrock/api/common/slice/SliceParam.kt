@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
-import javax.validation.constraints.Positive
+import jakarta.validation.constraints.Positive
 
 @Deprecated("Use cursor-based pagination instead")
 class SliceParam(

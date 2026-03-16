@@ -1,6 +1,6 @@
 package band.gosrock.domain.common.vo
 
-import javax.persistence.Embeddable
+import jakarta.persistence.Embeddable
 
 @Embeddable
 class AccountInfoVo() {

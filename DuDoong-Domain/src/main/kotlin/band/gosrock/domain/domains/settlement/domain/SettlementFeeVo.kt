@@ -2,10 +2,10 @@ package band.gosrock.domain.domains.settlement.domain
 
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.FeeCode
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.SettlementFeeDto
-import javax.persistence.Column
-import javax.persistence.Embeddable
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
+import jakarta.persistence.Column
+import jakarta.persistence.Embeddable
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 
 @Embeddable
 class SettlementFeeVo protected constructor() {

@@ -2,9 +2,9 @@ package band.gosrock.api.host.model.dto.request
 
 import band.gosrock.common.annotation.Phone
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.constraints.Email
-import javax.validation.constraints.NotEmpty
-import javax.validation.constraints.NotNull
+import jakarta.validation.constraints.Email
+import jakarta.validation.constraints.NotEmpty
+import jakarta.validation.constraints.NotNull
 
 /** 호스트 정보 변경 요청 DTO */
 data class UpdateHostRequest(

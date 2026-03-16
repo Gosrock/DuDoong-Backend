@@ -8,15 +8,15 @@ import band.gosrock.domain.domains.ticket_item.domain.OptionGroupType.TRUE_FALSE
 import band.gosrock.domain.domains.ticket_item.exception.ForbiddenOptionGroupDeleteException
 import band.gosrock.domain.domains.ticket_item.exception.InvalidOptionGroupException
 import band.gosrock.domain.domains.ticket_item.exception.InvalidOptionPriceException
-import javax.persistence.CascadeType
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
-import javax.persistence.GeneratedValue
-import javax.persistence.GenerationType
-import javax.persistence.Id
-import javax.persistence.OneToMany
+import jakarta.persistence.CascadeType
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.OneToMany
 import org.hibernate.annotations.ColumnDefault
 
 @Entity(name = "tbl_option_group")

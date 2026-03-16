@@ -4,14 +4,14 @@ import band.gosrock.common.consts.DuDoongStatic.KR_NO
 import band.gosrock.common.consts.DuDoongStatic.KR_YES
 import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.domains.ticket_item.exception.NotCorrectOptionAnswerException
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.FetchType
-import javax.persistence.GeneratedValue
-import javax.persistence.GenerationType
-import javax.persistence.Id
-import javax.persistence.JoinColumn
-import javax.persistence.ManyToOne
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
 
 @Entity(name = "tbl_option")
 class Option() {

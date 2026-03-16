@@ -2,15 +2,15 @@ package band.gosrock.domain.domains.settlement.domain
 
 import band.gosrock.domain.common.model.BaseTimeEntity
 import band.gosrock.domain.common.vo.Money
-import javax.persistence.AttributeOverride
-import javax.persistence.Column
-import javax.persistence.Embedded
-import javax.persistence.Entity
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
-import javax.persistence.GeneratedValue
-import javax.persistence.GenerationType
-import javax.persistence.Id
+import jakarta.persistence.AttributeOverride
+import jakarta.persistence.Column
+import jakarta.persistence.Embedded
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
 
 /** 이벤트 별 정산용 ( 클라이언트 용 ) */
 @Entity(name = "tbl_event_settlement")

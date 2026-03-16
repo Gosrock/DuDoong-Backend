@@ -6,9 +6,9 @@ import band.gosrock.infrastructure.config.s3.S3PrivateFileService
 import band.gosrock.infrastructure.config.ses.AwsSesUtils
 import band.gosrock.infrastructure.config.ses.RawEmailAttachmentDto
 import band.gosrock.infrastructure.config.ses.SendRawEmailDto
-import javax.mail.MessagingException
+import jakarta.mail.MessagingException
 import org.thymeleaf.context.Context
-import org.thymeleaf.spring5.SpringTemplateEngine
+import org.thymeleaf.spring6.SpringTemplateEngine
 
 @Helper
 class SettlementEmailHelper(

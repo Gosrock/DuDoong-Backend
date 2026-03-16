@@ -2,12 +2,12 @@ package band.gosrock.domain.domains.order.domain
 
 import band.gosrock.domain.common.vo.Money
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.PaymentsResponse
-import javax.persistence.AttributeOverride
-import javax.persistence.Column
-import javax.persistence.Embeddable
-import javax.persistence.Embedded
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
+import jakarta.persistence.AttributeOverride
+import jakarta.persistence.Column
+import jakarta.persistence.Embeddable
+import jakarta.persistence.Embedded
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 
 @Embeddable
 class PgPaymentInfo() {

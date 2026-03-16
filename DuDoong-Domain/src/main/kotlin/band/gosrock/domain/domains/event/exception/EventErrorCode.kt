@@ -30,6 +30,8 @@ enum class EventErrorCode(
     CANNOT_DELETE_BY_OPEN_EVENT(BAD_REQUEST, "Event_400_14", "오픈 상태인 이벤트는 삭제할 수 없습니다."),
     OPEN_TIME_EXPIRED(BAD_REQUEST, "Event_400_15", "오픈 예정 시간이 현재 시간보다 빠릅니다."),
 
+    INVALID_EVENT_STATUS_TRANSITION(BAD_REQUEST, "Event_400_16", "허용되지 않는 상태 전이입니다."),
+
     USE_OTHER_API(BAD_REQUEST, "Event_400_8", "잘못된 접근입니다.");
 
     override fun getErrorReason(): ErrorReason =

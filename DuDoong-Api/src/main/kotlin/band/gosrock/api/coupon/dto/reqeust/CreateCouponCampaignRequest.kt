@@ -5,11 +5,11 @@ import band.gosrock.domain.domains.coupon.domain.ApplyTarget
 import band.gosrock.domain.domains.coupon.domain.DiscountType
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
-import javax.validation.constraints.Future
-import javax.validation.constraints.Min
-import javax.validation.constraints.NotBlank
-import javax.validation.constraints.NotNull
-import javax.validation.constraints.Positive
+import jakarta.validation.constraints.Future
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Positive
 
 data class CreateCouponCampaignRequest(
     @field:NotNull(message = "discountType을 입력해주세요.")

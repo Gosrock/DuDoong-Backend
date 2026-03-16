@@ -1,10 +1,10 @@
 package band.gosrock.domain.domains.order.domain
 
 import band.gosrock.domain.common.vo.Money
-import javax.persistence.AttributeOverride
-import javax.persistence.Column
-import javax.persistence.Embeddable
-import javax.persistence.Embedded
+import jakarta.persistence.AttributeOverride
+import jakarta.persistence.Column
+import jakarta.persistence.Embeddable
+import jakarta.persistence.Embedded
 
 @Embeddable
 class PaymentInfo() {

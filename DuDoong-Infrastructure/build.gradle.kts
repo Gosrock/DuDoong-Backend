@@ -4,10 +4,10 @@ tasks.jar { enabled = true }
 dependencies {
     api("com.slack.api:slack-api-client:1.27.2")
     api("io.github.openfeign:feign-httpclient:12.1")
-    api("org.springframework.cloud:spring-cloud-starter-openfeign:3.1.4")
+    api("org.springframework.cloud:spring-cloud-starter-openfeign:4.1.0")
     api(project(":DuDoong-Common"))
     api("org.springframework.boot:spring-boot-starter-data-redis")
-    api("org.redisson:redisson:3.19.0")
+    api("org.redisson:redisson:3.25.2")
     api("com.fasterxml.jackson.datatype:jackson-datatype-jdk8")
     api("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     api("com.amazonaws:aws-java-sdk-s3control:1.12.372")
@@ -22,9 +22,9 @@ dependencies {
 
     api("com.googlecode.libphonenumber:libphonenumber:8.13.5")
     api("org.xhtmlrenderer:flying-saucer-pdf:9.1.20")
-    api("com.sun.mail:javax.mail:1.6.2")
+    api("com.sun.mail:jakarta.mail:2.0.1")
 
     testImplementation("org.springframework.boot:spring-boot-starter-thymeleaf")
-    testImplementation("org.springframework.cloud:spring-cloud-starter-contract-stub-runner:3.1.5")
-    testImplementation("org.springframework.cloud:spring-cloud-contract-wiremock:3.1.5")
+    testImplementation("org.springframework.cloud:spring-cloud-starter-contract-stub-runner:4.1.0")
+    testImplementation("org.springframework.cloud:spring-cloud-contract-wiremock:4.1.0")
 }

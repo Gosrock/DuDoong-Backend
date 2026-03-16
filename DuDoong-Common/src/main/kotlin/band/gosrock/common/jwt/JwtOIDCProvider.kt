@@ -5,9 +5,7 @@ import band.gosrock.common.exception.ExpiredTokenException
 import band.gosrock.common.exception.InvalidTokenException
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.ExpiredJwtException
-import io.jsonwebtoken.Header
 import io.jsonwebtoken.Jws
-import io.jsonwebtoken.Jwt
 import io.jsonwebtoken.Jwts
 import java.math.BigInteger
 import java.security.Key
@@ -22,22 +20,15 @@ class JwtOIDCProvider {
     private val log = LoggerFactory.getLogger(JwtOIDCProvider::class.java)
     private val KID = "kid"
 
-    fun getKidFromUnsignedTokenHeader(token: String, iss: String, aud: String): String =
-        getUnsignedTokenClaims(token, iss, aud).header.get(KID) as String
-
-    private fun getUnsignedTokenClaims(token: String, iss: String, aud: String): Jwt<Header<*>, Claims> =
-        try {
-            Jwts.parserBuilder()
-                .requireAudience(aud)
-                .requireIssuer(iss)
-                .build()
-                .parseClaimsJwt(getUnsignedToken(token))
-        } catch (e: ExpiredJwtException) {
-            throw ExpiredTokenException.EXCEPTION
-        } catch (e: Exception) {
-            log.error(e.toString())
-            throw InvalidTokenException.EXCEPTION
-        }
+    fun getKidFromUnsignedTokenHeader(token: String, iss: String, aud: String): String {
+        val unsignedToken = getUnsignedToken(token)
+        val splitToken = unsignedToken.split(".")
+        val headerJson = String(Base64.getUrlDecoder().decode(splitToken[0]))
+        // Parse kid from header manually since JJWT 0.12 removed unsigned JWT parsing
+        val kidRegex = """"kid"\s*:\s*"([^"]+)"""".toRegex()
+        val match = kidRegex.find(headerJson) ?: throw InvalidTokenException.EXCEPTION
+        return match.groupValues[1]
+    }
 
     private fun getUnsignedToken(token: String): String {
         val splitToken = token.split(".")
@@ -47,10 +38,10 @@ class JwtOIDCProvider {
 
     fun getOIDCTokenJws(token: String, modulus: String, exponent: String): Jws<Claims> =
         try {
-            Jwts.parserBuilder()
-                .setSigningKey(getRSAPublicKey(modulus, exponent))
+            Jwts.parser()
+                .verifyWith(getRSAPublicKey(modulus, exponent) as java.security.PublicKey)
                 .build()
-                .parseClaimsJws(token)
+                .parseSignedClaims(token)
         } catch (e: ExpiredJwtException) {
             throw ExpiredTokenException.EXCEPTION
         } catch (e: Exception) {
@@ -59,10 +50,10 @@ class JwtOIDCProvider {
         }
 
     fun getOIDCTokenBody(token: String, modulus: String, exponent: String): OIDCDecodePayload {
-        val body = getOIDCTokenJws(token, modulus, exponent).body
+        val body = getOIDCTokenJws(token, modulus, exponent).payload
         return OIDCDecodePayload(
             iss = body.issuer,
-            aud = body.audience,
+            aud = body.audience.firstOrNull() ?: "",
             sub = body.subject,
             email = body.get("email", String::class.java),
         )

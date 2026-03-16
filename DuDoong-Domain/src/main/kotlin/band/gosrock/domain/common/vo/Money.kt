@@ -3,9 +3,9 @@ package band.gosrock.domain.common.vo
 import band.gosrock.domain.common.converter.BigDecimalScale6WithBankersRoundingConverter
 import com.fasterxml.jackson.annotation.JsonValue
 import java.math.BigDecimal
-import javax.persistence.Column
-import javax.persistence.Convert
-import javax.persistence.Embeddable
+import jakarta.persistence.Column
+import jakarta.persistence.Convert
+import jakarta.persistence.Embeddable
 
 @Embeddable
 class Money() {

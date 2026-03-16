@@ -4,9 +4,9 @@ import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem
 import band.gosrock.domain.domains.ticket_item.domain.TicketPayType
 import band.gosrock.domain.domains.ticket_item.domain.TicketType
-import javax.persistence.Embeddable
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
+import jakarta.persistence.Embeddable
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 
 @Embeddable
 class IssuedTicketItemInfoVo() {

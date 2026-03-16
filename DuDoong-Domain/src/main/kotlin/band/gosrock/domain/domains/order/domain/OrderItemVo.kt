@@ -2,7 +2,7 @@ package band.gosrock.domain.domains.order.domain
 
 import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem
-import javax.persistence.Embeddable
+import jakarta.persistence.Embeddable
 
 @Embeddable
 class OrderItemVo() {

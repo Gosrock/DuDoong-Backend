@@ -2,8 +2,8 @@ package band.gosrock.api.host.model.dto.request
 
 import band.gosrock.common.annotation.Phone
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.constraints.Email
-import javax.validation.constraints.NotBlank
+import jakarta.validation.constraints.Email
+import jakarta.validation.constraints.NotBlank
 import org.hibernate.validator.constraints.Length
 
 /** 호스트 간편 생성 요청 DTO */

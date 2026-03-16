@@ -3,7 +3,7 @@ package band.gosrock.api.host.model.dto.request
 import band.gosrock.common.annotation.Enum
 import band.gosrock.domain.domains.host.domain.HostRole
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.constraints.Positive
+import jakarta.validation.constraints.Positive
 
 /** 호스트 유저 역할 수정 요청 DTO */
 data class UpdateHostUserRoleRequest(

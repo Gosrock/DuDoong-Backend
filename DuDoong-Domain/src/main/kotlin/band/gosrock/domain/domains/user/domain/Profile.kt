@@ -2,8 +2,8 @@ package band.gosrock.domain.domains.user.domain
 
 import band.gosrock.domain.common.vo.ImageVo
 import band.gosrock.domain.common.vo.PhoneNumberVo
-import javax.persistence.Embeddable
-import javax.persistence.Embedded
+import jakarta.persistence.Embeddable
+import jakarta.persistence.Embedded
 
 @Embeddable
 class Profile() {

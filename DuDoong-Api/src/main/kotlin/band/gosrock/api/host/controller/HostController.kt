@@ -26,9 +26,9 @@ import band.gosrock.domain.common.vo.UserProfileVo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.validation.Valid
-import javax.validation.constraints.Email
-import org.springdoc.api.annotations.ParameterObject
+import jakarta.validation.Valid
+import jakarta.validation.constraints.Email
+import org.springdoc.core.annotations.ParameterObject
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.validation.annotation.Validated

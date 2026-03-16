@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatusCode
 import org.springframework.http.ResponseEntity
 import org.springframework.http.server.ServletServerHttpRequest
 import org.springframework.validation.FieldError
@@ -23,8 +24,8 @@ import org.springframework.web.context.request.WebRequest
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
 import org.springframework.web.util.ContentCachingRequestWrapper
 import org.springframework.web.util.UriComponentsBuilder
-import javax.servlet.http.HttpServletRequest
-import javax.validation.ConstraintViolationException
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.validation.ConstraintViolationException
 
 private val log = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
 
@@ -37,24 +38,25 @@ class GlobalExceptionHandler(
         ex: Exception,
         body: Any?,
         headers: HttpHeaders,
-        status: HttpStatus,
+        statusCode: HttpStatusCode,
         request: WebRequest,
-    ): ResponseEntity<Any> {
+    ): ResponseEntity<Any>? {
         val servletWebRequest = request as ServletWebRequest
         val url = UriComponentsBuilder
             .fromHttpRequest(ServletServerHttpRequest(servletWebRequest.request))
             .build()
             .toUriString()
+        val status = HttpStatus.valueOf(statusCode.value())
         val errorResponse = ErrorResponse(status.value(), status.name, ex.message ?: "", url)
-        return super.handleExceptionInternal(ex, errorResponse, headers, status, request)
+        return super.handleExceptionInternal(ex, errorResponse, headers, statusCode, request)
     }
 
     override fun handleMethodArgumentNotValid(
         ex: MethodArgumentNotValidException,
         headers: HttpHeaders,
-        status: HttpStatus,
+        statusCode: HttpStatusCode,
         request: WebRequest,
-    ): ResponseEntity<Any> {
+    ): ResponseEntity<Any>? {
         val errors: List<FieldError> = ex.bindingResult.fieldErrors
         val servletWebRequest = request as ServletWebRequest
         val url = UriComponentsBuilder
@@ -63,6 +65,7 @@ class GlobalExceptionHandler(
             .toUriString()
         val fieldAndErrorMessages = errors.associate { it.field to it.defaultMessage }
         val errorsToJsonString = ObjectMapper().writeValueAsString(fieldAndErrorMessages)
+        val status = HttpStatus.valueOf(statusCode.value())
         val errorResponse = ErrorResponse(status.value(), status.name, errorsToJsonString, url)
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
     }

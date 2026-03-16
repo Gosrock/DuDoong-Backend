@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.method.HandlerMethod
 import java.util.Collections
-import javax.servlet.ServletContext
+import jakarta.servlet.ServletContext
 
 /** Swagger 사용 환경을 위한 설정 파일 */
 @Configuration

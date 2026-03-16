@@ -1,11 +1,11 @@
 package band.gosrock.domain.domains.event.domain
 
 import band.gosrock.domain.common.model.BaseTimeEntity
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.GenerationType
-import javax.persistence.Id
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
 
 @Entity(name = "tbl_event_detail_image")
 class EventDetailImage() : BaseTimeEntity() {
