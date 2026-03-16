@@ -6,17 +6,17 @@ import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.Settlemen
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.TossPaymentMethod
 import java.time.LocalDate
 import java.time.LocalDateTime
-import javax.persistence.AttributeOverride
-import javax.persistence.CollectionTable
-import javax.persistence.Column
-import javax.persistence.ElementCollection
-import javax.persistence.Embedded
-import javax.persistence.Entity
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
-import javax.persistence.GeneratedValue
-import javax.persistence.GenerationType
-import javax.persistence.Id
+import jakarta.persistence.AttributeOverride
+import jakarta.persistence.CollectionTable
+import jakarta.persistence.Column
+import jakarta.persistence.ElementCollection
+import jakarta.persistence.Embedded
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
 
 /** 거래 건 별 정산용 ( 로그 성 ) */
 @Entity(name = "tbl_transaction_settlement")

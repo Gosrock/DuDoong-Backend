@@ -1,8 +1,8 @@
 package band.gosrock.common.annotation
 
 import band.gosrock.common.validator.PhoneValidator
-import javax.validation.Constraint
-import javax.validation.Payload
+import jakarta.validation.Constraint
+import jakarta.validation.Payload
 import kotlin.reflect.KClass
 
 @Target(AnnotationTarget.FIELD)

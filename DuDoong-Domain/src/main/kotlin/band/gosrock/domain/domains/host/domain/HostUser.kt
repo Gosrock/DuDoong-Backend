@@ -4,18 +4,18 @@ import band.gosrock.domain.common.aop.domainEvent.Events
 import band.gosrock.domain.common.events.host.HostUserJoinEvent
 import band.gosrock.domain.common.model.BaseTimeEntity
 import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
-import javax.persistence.FetchType
-import javax.persistence.GeneratedValue
-import javax.persistence.GenerationType
-import javax.persistence.Id
-import javax.persistence.JoinColumn
-import javax.persistence.ManyToOne
-import javax.persistence.Table
-import javax.persistence.UniqueConstraint
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 
 @Entity(name = "tbl_host_user")
 @Table(uniqueConstraints = [UniqueConstraint(columnNames = ["host_id", "user_id"])])

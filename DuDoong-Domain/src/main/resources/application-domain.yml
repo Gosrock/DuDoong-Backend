@@ -24,7 +24,7 @@ spring:
       init:
         mode: always
     open-in-view: false
-    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    database-platform: org.hibernate.dialect.MySQLDialect
 logging:
   level:
     com.zaxxer.hikari.HikariConfig: DEBUG
@@ -57,7 +57,7 @@ spring:
         default_batch_fetch_size: ${JPA_BATCH_FETCH_SIZE:100}
     hibernate:
       ddl-auto: none
-    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    database-platform: org.hibernate.dialect.MySQLDialect
 logging:
   level:
     org.springframework.orm.jpa: DEBUG
@@ -81,5 +81,5 @@ spring:
         default_batch_fetch_size: ${JPA_BATCH_FETCH_SIZE:100}
     hibernate:
       ddl-auto: none
-    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    database-platform: org.hibernate.dialect.MySQLDialect
 

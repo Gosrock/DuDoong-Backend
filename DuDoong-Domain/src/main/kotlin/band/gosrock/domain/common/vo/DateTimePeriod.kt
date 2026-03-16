@@ -1,7 +1,7 @@
 package band.gosrock.domain.common.vo
 
 import java.time.LocalDateTime
-import javax.persistence.Embeddable
+import jakarta.persistence.Embeddable
 
 @Embeddable
 open class DateTimePeriod() {

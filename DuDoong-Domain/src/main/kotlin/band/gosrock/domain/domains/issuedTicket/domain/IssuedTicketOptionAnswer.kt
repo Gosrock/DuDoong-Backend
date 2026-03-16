@@ -6,11 +6,11 @@ import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.common.vo.OptionAnswerVo
 import band.gosrock.domain.domains.order.domain.OrderOptionAnswer
 import band.gosrock.domain.domains.ticket_item.domain.Option
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.GenerationType
-import javax.persistence.Id
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
 
 @Entity(name = "tbl_issued_ticket_option_answer")
 class IssuedTicketOptionAnswer() : BaseTimeEntity() {

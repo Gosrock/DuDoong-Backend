@@ -4,9 +4,9 @@ import band.gosrock.common.annotation.Enum
 import band.gosrock.domain.domains.ticket_item.domain.TicketPayType
 import band.gosrock.domain.domains.ticket_item.domain.TicketType
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.constraints.NotEmpty
-import javax.validation.constraints.NotNull
-import javax.validation.constraints.Positive
+import jakarta.validation.constraints.NotEmpty
+import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Positive
 
 data class CreateTicketItemRequest(
     @field:Schema(nullable = false, defaultValue = "두둥티켓")

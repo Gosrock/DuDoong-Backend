@@ -1,8 +1,8 @@
 package band.gosrock.common.validator
 
 import band.gosrock.common.annotation.Phone
-import javax.validation.ConstraintValidator
-import javax.validation.ConstraintValidatorContext
+import jakarta.validation.ConstraintValidator
+import jakarta.validation.ConstraintValidatorContext
 
 class PhoneValidator : ConstraintValidator<Phone, String> {
     override fun isValid(value: String?, context: ConstraintValidatorContext): Boolean {

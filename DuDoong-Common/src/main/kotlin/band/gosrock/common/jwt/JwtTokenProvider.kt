@@ -15,10 +15,10 @@ import io.jsonwebtoken.Claims
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jws
 import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.security.Keys
 import java.nio.charset.StandardCharsets
-import java.security.Key
 import java.util.Date
+import javax.crypto.SecretKey
+import io.jsonwebtoken.security.Keys
 import org.springframework.stereotype.Component
 
 @Component
@@ -27,43 +27,39 @@ class JwtTokenProvider(
 ) {
     private fun getJws(token: String): Jws<Claims> =
         try {
-            Jwts.parserBuilder()
-                .setSigningKey(getSecretKey())
+            Jwts.parser()
+                .verifyWith(getSecretKey())
                 .build()
-                .parseClaimsJws(token)
+                .parseSignedClaims(token)
         } catch (e: ExpiredJwtException) {
             throw ExpiredTokenException.EXCEPTION
         } catch (e: Exception) {
             throw InvalidTokenException.EXCEPTION
         }
 
-    private fun getSecretKey(): Key =
+    private fun getSecretKey(): SecretKey =
         Keys.hmacShaKeyFor(jwtProperties.secretKey.toByteArray(StandardCharsets.UTF_8))
 
-    private fun buildAccessToken(id: Long, issuedAt: Date, accessTokenExpiresIn: Date, role: String): String {
-        val encodedKey = getSecretKey()
-        return Jwts.builder()
-            .setIssuer(TOKEN_ISSUER)
-            .setIssuedAt(issuedAt)
-            .setSubject(id.toString())
+    private fun buildAccessToken(id: Long, issuedAt: Date, accessTokenExpiresIn: Date, role: String): String =
+        Jwts.builder()
+            .issuer(TOKEN_ISSUER)
+            .issuedAt(issuedAt)
+            .subject(id.toString())
             .claim(TOKEN_TYPE, ACCESS_TOKEN)
             .claim(TOKEN_ROLE, role)
-            .setExpiration(accessTokenExpiresIn)
-            .signWith(encodedKey)
+            .expiration(accessTokenExpiresIn)
+            .signWith(getSecretKey())
             .compact()
-    }
 
-    private fun buildRefreshToken(id: Long, issuedAt: Date, accessTokenExpiresIn: Date): String {
-        val encodedKey = getSecretKey()
-        return Jwts.builder()
-            .setIssuer(TOKEN_ISSUER)
-            .setIssuedAt(issuedAt)
-            .setSubject(id.toString())
+    private fun buildRefreshToken(id: Long, issuedAt: Date, accessTokenExpiresIn: Date): String =
+        Jwts.builder()
+            .issuer(TOKEN_ISSUER)
+            .issuedAt(issuedAt)
+            .subject(id.toString())
             .claim(TOKEN_TYPE, REFRESH_TOKEN)
-            .setExpiration(accessTokenExpiresIn)
-            .signWith(encodedKey)
+            .expiration(accessTokenExpiresIn)
+            .signWith(getSecretKey())
             .compact()
-    }
 
     fun generateAccessToken(id: Long, role: String): String {
         val issuedAt = Date()
@@ -78,14 +74,14 @@ class JwtTokenProvider(
     }
 
     fun isAccessToken(token: String): Boolean =
-        getJws(token).body.get(TOKEN_TYPE) == ACCESS_TOKEN
+        getJws(token).payload.get(TOKEN_TYPE) == ACCESS_TOKEN
 
     fun isRefreshToken(token: String): Boolean =
-        getJws(token).body.get(TOKEN_TYPE) == REFRESH_TOKEN
+        getJws(token).payload.get(TOKEN_TYPE) == REFRESH_TOKEN
 
     fun parseAccessToken(token: String): AccessTokenInfo {
         if (isAccessToken(token)) {
-            val claims = getJws(token).body
+            val claims = getJws(token).payload
             return AccessTokenInfo(
                 userId = claims.subject.toLong(),
                 role = claims.get(TOKEN_ROLE, String::class.java),
@@ -97,7 +93,7 @@ class JwtTokenProvider(
     fun parseRefreshToken(token: String): Long {
         try {
             if (isRefreshToken(token)) {
-                val claims = getJws(token).body
+                val claims = getJws(token).payload
                 return claims.subject.toLong()
             }
         } catch (e: ExpiredTokenException) {

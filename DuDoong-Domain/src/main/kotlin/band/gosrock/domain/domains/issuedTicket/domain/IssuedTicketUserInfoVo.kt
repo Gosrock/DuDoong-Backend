@@ -2,7 +2,7 @@ package band.gosrock.domain.domains.issuedTicket.domain
 
 import band.gosrock.domain.common.vo.PhoneNumberVo
 import band.gosrock.domain.domains.user.domain.User
-import javax.persistence.Embeddable
+import jakarta.persistence.Embeddable
 
 @Embeddable
 class IssuedTicketUserInfoVo() {

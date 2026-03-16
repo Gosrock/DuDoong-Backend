@@ -3,7 +3,7 @@ package band.gosrock.api.host.model.dto.request
 import band.gosrock.common.annotation.Enum
 import band.gosrock.domain.domains.host.domain.HostRole
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.constraints.Email
+import jakarta.validation.constraints.Email
 
 /** 호스트 초대 요청 DTO */
 data class InviteHostRequest(

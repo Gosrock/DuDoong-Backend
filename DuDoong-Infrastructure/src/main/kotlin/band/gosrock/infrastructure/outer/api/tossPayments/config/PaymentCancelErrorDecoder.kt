@@ -28,7 +28,7 @@ class PaymentCancelErrorDecoder : ErrorDecoder {
                     exception.message,
                     response.request().httpMethod(),
                     exception,
-                    null,
+                    null as Long?,
                     response.request(),
                 )
             }

@@ -3,10 +3,10 @@ package band.gosrock.api.event.model.dto.request
 import band.gosrock.common.annotation.DateFormat
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
-import javax.validation.constraints.Future
-import javax.validation.constraints.NotBlank
-import javax.validation.constraints.NotNull
-import javax.validation.constraints.Positive
+import jakarta.validation.constraints.Future
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Positive
 import org.hibernate.validator.constraints.Length
 
 data class UpdateEventBasicRequest(

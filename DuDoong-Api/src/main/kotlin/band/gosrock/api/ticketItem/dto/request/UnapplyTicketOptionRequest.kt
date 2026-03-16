@@ -1,7 +1,7 @@
 package band.gosrock.api.ticketItem.dto.request
 
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.constraints.Positive
+import jakarta.validation.constraints.Positive
 
 data class UnapplyTicketOptionRequest(
     @field:Schema(nullable = false, example = "1")

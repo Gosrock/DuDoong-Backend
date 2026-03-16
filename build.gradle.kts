@@ -2,8 +2,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     java
-    id("org.springframework.boot") version "2.7.7"
-    id("io.spring.dependency-management") version "1.0.15.RELEASE" apply false
+    id("org.springframework.boot") version "3.2.0"
+    id("io.spring.dependency-management") version "1.1.4" apply false
     kotlin("jvm") version "1.9.22" apply false
     kotlin("plugin.spring") version "1.9.22" apply false
     kotlin("plugin.jpa") version "1.9.22" apply false
@@ -39,30 +39,24 @@ subprojects {
 
     // JPA 엔티티 클래스를 open으로 만들어 Hibernate 프록시 및 Mockito 서브클래스 목킹 지원
     configure<org.jetbrains.kotlin.allopen.gradle.AllOpenExtension> {
-        annotation("javax.persistence.Entity")
-        annotation("javax.persistence.Embeddable")
-        annotation("javax.persistence.MappedSuperclass")
+        annotation("jakarta.persistence.Entity")
+        annotation("jakarta.persistence.Embeddable")
+        annotation("jakarta.persistence.MappedSuperclass")
+    }
+
+    // KAPT adds -proc:none to compileTestJava, breaking Lombok annotation processing
+    tasks.withType<JavaCompile> {
+        if (name == "compileTestJava") {
+            doFirst {
+                options.compilerArgs.remove("-proc:none")
+            }
+        }
     }
 
     tasks.withType<KotlinCompile> {
         kotlinOptions {
             freeCompilerArgs += "-Xjsr305=strict"
             jvmTarget = "17"
-        }
-    }
-
-    // KAPT adds -proc:none to compileJava to suppress Java annotation processing,
-    // but Java sources (Lombok) still need annotation processing during compileJava.
-    tasks.withType<JavaCompile> {
-        doFirst {
-            options.compilerArgs.remove("-proc:none")
-        }
-    }
-
-    // compileOnly extends annotationProcessor so Lombok annotations are visible at compile time
-    configurations {
-        compileOnly {
-            extendsFrom(configurations["annotationProcessor"])
         }
     }
 
@@ -75,11 +69,10 @@ subprojects {
         implementation("org.jetbrains.kotlin:kotlin-reflect")
         implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
-        // Lombok (Java 소스 Kotlin 마이그레이션 완료 전까지 유지)
-        compileOnly("org.projectlombok:lombok")
-        annotationProcessor("org.projectlombok:lombok")
         annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
         testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+        // Lombok (Java 테스트 파일에서 사용 - 추후 테스트 Kotlin 전환 시 제거)
         testCompileOnly("org.projectlombok:lombok")
         testAnnotationProcessor("org.projectlombok:lombok")
     }

@@ -9,7 +9,7 @@ import org.springframework.security.web.context.AbstractSecurityWebApplicationIn
 import org.springframework.web.filter.ForwardedHeaderFilter
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import org.springframework.web.servlet.resource.ResourceUrlEncodingFilter
-import javax.servlet.Filter
+import jakarta.servlet.Filter
 
 @Configuration
 @Profile("prod", "staging", "dev")

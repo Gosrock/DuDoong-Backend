@@ -1,8 +1,8 @@
 package band.gosrock.api.event.model.dto.request
 
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.constraints.NotBlank
-import javax.validation.constraints.NotEmpty
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotEmpty
 
 data class UpdateEventDetailRequest(
     // 포스터 이미지 url

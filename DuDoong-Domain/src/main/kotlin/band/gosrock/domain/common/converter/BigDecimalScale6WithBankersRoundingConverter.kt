@@ -2,7 +2,7 @@ package band.gosrock.domain.common.converter
 
 import java.math.BigDecimal
 import java.math.RoundingMode
-import javax.persistence.AttributeConverter
+import jakarta.persistence.AttributeConverter
 
 class BigDecimalScale6WithBankersRoundingConverter : AttributeConverter<BigDecimal, String> {
 

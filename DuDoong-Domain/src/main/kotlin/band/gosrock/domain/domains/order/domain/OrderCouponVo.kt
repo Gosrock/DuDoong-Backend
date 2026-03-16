@@ -5,8 +5,8 @@ import band.gosrock.common.consts.DuDoongStatic.ZERO
 import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.domains.coupon.domain.IssuedCoupon
 import band.gosrock.domain.domains.order.exception.LessThanMinmumPaymentOrderException
-import javax.persistence.Column
-import javax.persistence.Embeddable
+import jakarta.persistence.Column
+import jakarta.persistence.Embeddable
 
 @Embeddable
 class OrderCouponVo() {

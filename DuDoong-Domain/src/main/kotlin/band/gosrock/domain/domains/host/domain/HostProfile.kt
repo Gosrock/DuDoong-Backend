@@ -1,9 +1,9 @@
 package band.gosrock.domain.domains.host.domain
 
 import band.gosrock.domain.common.vo.ImageVo
-import javax.persistence.Column
-import javax.persistence.Embeddable
-import javax.persistence.Embedded
+import jakarta.persistence.Column
+import jakarta.persistence.Embeddable
+import jakarta.persistence.Embedded
 
 @Embeddable
 class HostProfile() {

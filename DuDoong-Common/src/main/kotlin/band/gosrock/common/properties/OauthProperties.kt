@@ -1,9 +1,7 @@
 package band.gosrock.common.properties
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
 
-@ConstructorBinding
 @ConfigurationProperties("oauth")
 class OauthProperties(
     private val kakao: OAuthSecret,

@@ -2,7 +2,7 @@ package band.gosrock.domain.common.vo
 
 import band.gosrock.common.consts.DuDoongStatic.assetDomain
 import com.fasterxml.jackson.annotation.JsonValue
-import javax.persistence.Embeddable
+import jakarta.persistence.Embeddable
 
 @Embeddable
 class ImageVo() {

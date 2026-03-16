@@ -1,7 +1,7 @@
 package band.gosrock.api.cart.model.dto.request
 
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.constraints.Min
+import jakarta.validation.constraints.Min
 
 data class AddCartLineDto(
     @Schema(description = "주문할 아이템 아이디", defaultValue = "1")

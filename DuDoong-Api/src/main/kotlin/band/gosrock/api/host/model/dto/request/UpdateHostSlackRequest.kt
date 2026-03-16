@@ -1,7 +1,7 @@
 package band.gosrock.api.host.model.dto.request
 
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotBlank
 import org.hibernate.validator.constraints.URL
 
 /** 호스트 슬랙 알람 URL 수정 요청 DTO */
