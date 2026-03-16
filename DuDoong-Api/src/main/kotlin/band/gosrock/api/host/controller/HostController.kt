@@ -22,6 +22,7 @@ import band.gosrock.api.host.service.RejectHostUseCase
 import band.gosrock.api.host.service.UpdateHostProfileUseCase
 import band.gosrock.api.host.service.UpdateHostSlackUrlUseCase
 import band.gosrock.api.host.service.UpdateHostUserRoleUseCase
+import band.gosrock.api.config.security.CurrentUserId
 import band.gosrock.domain.common.vo.UserProfileVo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -62,9 +63,10 @@ class HostController(
     @Operation(summary = "내가 속한 호스트 리스트를 가져옵니다.")
     @GetMapping
     fun getAllHosts(
+        @CurrentUserId userId: Long,
         @ParameterObject @PageableDefault(size = 10) pageable: Pageable
     ): SliceResponse<HostProfileResponse> {
-        return readHostsUseCase.execute(pageable)
+        return readHostsUseCase.execute(userId, pageable)
     }
 
     @Operation(summary = "고유 아이디에 해당하는 호스트 정보를 가져옵니다.")
@@ -93,20 +95,20 @@ class HostController(
 
     @Operation(summary = "호스트 간편 생성. 호스트를 생성한 유저 자신은 마스터 호스트가 됩니다.")
     @PostMapping
-    fun createHost(@RequestBody @Valid createEventRequest: CreateHostRequest): HostResponse {
-        return createHostUseCase.execute(createEventRequest)
+    fun createHost(@CurrentUserId userId: Long, @RequestBody @Valid createEventRequest: CreateHostRequest): HostResponse {
+        return createHostUseCase.execute(userId, createEventRequest)
     }
 
     @Operation(summary = "초대 받은 호스트에 가입합니다.")
     @PostMapping("/{hostId}/join")
-    fun joinHost(@PathVariable hostId: Long): HostDetailResponse {
-        return joinHostUseCase.execute(hostId)
+    fun joinHost(@CurrentUserId userId: Long, @PathVariable hostId: Long): HostDetailResponse {
+        return joinHostUseCase.execute(userId, hostId)
     }
 
     @Operation(summary = "호스트 초대를 거절합니다.")
     @PostMapping("/{hostId}/reject")
-    fun rejectHost(@PathVariable hostId: Long): HostDetailResponse {
-        return rejectHostUseCase.execute(hostId)
+    fun rejectHost(@CurrentUserId userId: Long, @PathVariable hostId: Long): HostDetailResponse {
+        return rejectHostUseCase.execute(userId, hostId)
     }
 
     @Operation(summary = "다른 유저를 호스트 유저로 초대합니다.")

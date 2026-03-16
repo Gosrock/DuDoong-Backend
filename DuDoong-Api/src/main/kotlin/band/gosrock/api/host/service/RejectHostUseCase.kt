@@ -1,6 +1,5 @@
 package band.gosrock.api.host.service
 
-import band.gosrock.api.common.UserUtils
 import band.gosrock.api.host.model.dto.response.HostDetailResponse
 import band.gosrock.api.host.model.mapper.HostMapper
 import band.gosrock.common.annotation.UseCase
@@ -10,14 +9,12 @@ import org.springframework.transaction.annotation.Transactional
 
 @UseCase
 class RejectHostUseCase(
-    private val userUtils: UserUtils,
     private val hostService: HostService,
     private val hostAdaptor: HostAdaptor,
     private val hostMapper: HostMapper,
 ) {
     @Transactional
-    fun execute(hostId: Long): HostDetailResponse {
-        val userId = userUtils.getCurrentUserId()
+    fun execute(userId: Long, hostId: Long): HostDetailResponse {
         val host = hostAdaptor.findById(hostId)
 
         return hostMapper.toHostDetailResponse(hostService.removeHostUser(host, userId))

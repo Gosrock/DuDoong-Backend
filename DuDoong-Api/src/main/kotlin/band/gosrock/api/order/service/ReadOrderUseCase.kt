@@ -1,6 +1,5 @@
 package band.gosrock.api.order.service
 
-import band.gosrock.api.common.UserUtils
 import band.gosrock.api.common.aop.hostRole.FindHostFrom.EVENT_ID
 import band.gosrock.api.common.aop.hostRole.HostQualification.GUEST
 import band.gosrock.api.common.aop.hostRole.HostRolesAllowed
@@ -27,32 +26,29 @@ class ReadOrderUseCase(
     private val orderMapper: OrderMapper,
     private val orderAdaptor: OrderAdaptor,
     private val orderValidator: OrderValidator,
-    private val userUtils: UserUtils,
     private val issuedTicketAdaptor: IssuedTicketAdaptor,
 ) {
-    fun getOrderDetail(orderUuid: String): OrderResponse {
-        val order = getMyOrder(orderUuid)
+    fun getOrderDetail(userId: Long, orderUuid: String): OrderResponse {
+        val order = getMyOrder(userId, orderUuid)
         return orderMapper.toOrderResponse(order)
     }
 
-    private fun getMyOrder(orderUuid: String): Order {
+    private fun getMyOrder(userId: Long, orderUuid: String): Order {
         val order = orderAdaptor.findByOrderUuid(orderUuid)
-        orderValidator.validOwner(order, userUtils.getCurrentUserId())
+        orderValidator.validOwner(order, userId)
         return order
     }
 
-    fun getRecentOrder(): OrderBriefElement? {
-        val currentUserId = userUtils.getCurrentUserId()
-        val recentOrder = orderAdaptor.findRecentOrderByUserId(currentUserId)
+    fun getRecentOrder(userId: Long): OrderBriefElement? {
+        val recentOrder = orderAdaptor.findRecentOrderByUserId(userId)
         return recentOrder.map { orderMapper.toOrderBriefElement(it) }.orElse(null)
     }
 
-    fun getMyOrders(showing: Boolean, pageable: Pageable): SliceResponse<OrderBriefElement> {
-        val currentUserId = userUtils.getCurrentUserId()
+    fun getMyOrders(userId: Long, showing: Boolean, pageable: Pageable): SliceResponse<OrderBriefElement> {
         val condition = if (showing == true) {
-            FindMyPageOrderCondition.onShowing(currentUserId)
+            FindMyPageOrderCondition.onShowing(userId)
         } else {
-            FindMyPageOrderCondition.notShowing(currentUserId)
+            FindMyPageOrderCondition.notShowing(userId)
         }
         val ordersWithPagination = orderAdaptor.findMyOrders(condition, pageable)
         val orderBriefElements = orderMapper.toOrderBriefsResponse(ordersWithPagination)
@@ -75,8 +71,8 @@ class ReadOrderUseCase(
         return orderMapper.toOrderResponse(order)
     }
 
-    fun getOrderTickets(orderUuid: String): OrderTicketResponse {
-        val order = getMyOrder(orderUuid)
+    fun getOrderTickets(userId: Long, orderUuid: String): OrderTicketResponse {
+        val order = getMyOrder(userId, orderUuid)
         return orderMapper.toOrderTicketResponse(order)
     }
 }

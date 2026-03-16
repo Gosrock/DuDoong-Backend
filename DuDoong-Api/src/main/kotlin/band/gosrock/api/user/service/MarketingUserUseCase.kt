@@ -1,30 +1,28 @@
 package band.gosrock.api.user.service
 
-
-import band.gosrock.api.common.UserUtils
 import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.common.vo.UserInfoVo
+import band.gosrock.domain.domains.user.adaptor.UserAdaptor
 import band.gosrock.domain.domains.user.service.UserDomainService
-
 
 @UseCase
 class MarketingUserUseCase(
-    private val userUtils: UserUtils,
+    private val userAdaptor: UserAdaptor,
     private val userDomainService: UserDomainService,
 ) {
 
-    fun execute(): UserInfoVo {
-        val currentUser = userUtils.getCurrentUser()
+    fun execute(userId: Long): UserInfoVo {
+        val currentUser = userAdaptor.queryUser(userId)
         return currentUser.toUserInfoVo()
     }
 
-    fun toggleMailAgree(): UserInfoVo {
-        userDomainService.toggleMailAgree(userUtils.getCurrentUserId())
-        return userUtils.getCurrentUser().toUserInfoVo()
+    fun toggleMailAgree(userId: Long): UserInfoVo {
+        userDomainService.toggleMailAgree(userId)
+        return userAdaptor.queryUser(userId).toUserInfoVo()
     }
 
-    fun toggleMarketAgree(): UserInfoVo {
-        userDomainService.toggleMarketAgree(userUtils.getCurrentUserId())
-        return userUtils.getCurrentUser().toUserInfoVo()
+    fun toggleMarketAgree(userId: Long): UserInfoVo {
+        userDomainService.toggleMarketAgree(userId)
+        return userAdaptor.queryUser(userId).toUserInfoVo()
     }
 }

@@ -15,6 +15,7 @@ import band.gosrock.api.auth.service.RegisterUseCase
 import band.gosrock.api.auth.service.WithDrawUseCase
 import band.gosrock.api.auth.service.helper.CookieHelper
 import band.gosrock.api.config.rateLimit.UserRateLimiter
+import band.gosrock.api.config.security.CurrentUserId
 import band.gosrock.common.annotation.ApiErrorCodeExample
 import band.gosrock.common.annotation.DevelopOnlyApi
 import band.gosrock.infrastructure.outer.api.oauth.exception.KakaoKauthErrorCode
@@ -167,16 +168,16 @@ class AuthController(
     @Operation(summary = "회원탈퇴를 합니다.")
     @SecurityRequirement(name = "access-token")
     @DeleteMapping("/me")
-    fun withDrawUser(): ResponseEntity<Void> {
-        withDrawUseCase.execute()
+    fun withDrawUser(@CurrentUserId userId: Long): ResponseEntity<Void> {
+        withDrawUseCase.execute(userId)
         return ResponseEntity.ok().headers(cookieHelper.deleteCookies()).body(null)
     }
 
     @Operation(summary = "로그아웃을 합니다.")
     @SecurityRequirement(name = "access-token")
     @PostMapping("/logout")
-    fun logoutUser(): ResponseEntity<Void> {
-        logoutUseCase.execute()
+    fun logoutUser(@CurrentUserId userId: Long): ResponseEntity<Void> {
+        logoutUseCase.execute(userId)
         return ResponseEntity.ok().headers(cookieHelper.deleteCookies()).body(null)
     }
 

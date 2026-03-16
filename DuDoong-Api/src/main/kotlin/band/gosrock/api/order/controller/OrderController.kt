@@ -17,6 +17,7 @@ import band.gosrock.api.order.service.CreateTossOrderUseCase
 import band.gosrock.api.order.service.FreeOrderUseCase
 import band.gosrock.api.order.service.ReadOrderUseCase
 import band.gosrock.api.order.service.RefundOrderUseCase
+import band.gosrock.api.config.security.CurrentUserId
 import band.gosrock.common.annotation.ApiErrorExceptionsExample
 import band.gosrock.common.annotation.DevelopOnlyApi
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.PaymentsResponse
@@ -56,47 +57,49 @@ class OrderController(
     @Operation(summary = "주문을 생성합니다. 장바구니 아이디를 주문서로 변환하는 작업을 합니다.")
     @ApiErrorExceptionsExample(CreateOrderExceptionDocs::class)
     @PostMapping("/")
-    fun createOrder(@RequestBody @Valid createOrderRequest: CreateOrderRequest): CreateOrderResponse =
-        createOrderUseCase.execute(createOrderRequest)
+    fun createOrder(@CurrentUserId userId: Long, @RequestBody @Valid createOrderRequest: CreateOrderRequest): CreateOrderResponse =
+        createOrderUseCase.execute(userId, createOrderRequest)
 
     @Operation(summary = "결제 확인하기 . successUrl 로 돌아온 웹페이지에서 query 로 받은 응답값을 서버로 보냅니당.")
     @ApiErrorExceptionsExample(ConfirmOrderExceptionDocs::class)
     @PostMapping("/{order_uuid}/confirm")
     fun confirmOrder(
+        @CurrentUserId userId: Long,
         @PathVariable("order_uuid") orderUuid: String,
         @RequestBody confirmOrderRequest: ConfirmOrderRequest,
-    ): OrderResponse = confirmOrderUseCase.execute(orderUuid, confirmOrderRequest)
+    ): OrderResponse = confirmOrderUseCase.execute(userId, orderUuid, confirmOrderRequest)
 
     @Operation(summary = "주문을 무료로 결제합니다. 선착순 방식 결제 0원일 때 지원")
     @ApiErrorExceptionsExample(FreeOrderExceptionDocs::class)
     @PostMapping("/{order_uuid}/free")
-    fun freeOrder(@PathVariable("order_uuid") orderUuid: String): OrderResponse =
-        freeOrderUseCase.execute(orderUuid)
+    fun freeOrder(@CurrentUserId userId: Long, @PathVariable("order_uuid") orderUuid: String): OrderResponse =
+        freeOrderUseCase.execute(userId, orderUuid)
 
     @Operation(summary = "결제 환불요청. 본인이 구매한 오더를 환불 시킵니다.! (본인 용)")
     @ApiErrorExceptionsExample(RefundOrderExceptionDocs::class)
     @PostMapping("/{order_uuid}/refund")
-    fun refundOrder(@PathVariable("order_uuid") orderUuid: String): OrderResponse =
-        refundOrderUseCase.execute(orderUuid)
+    fun refundOrder(@CurrentUserId userId: Long, @PathVariable("order_uuid") orderUuid: String): OrderResponse =
+        refundOrderUseCase.execute(userId, orderUuid)
 
     @Operation(summary = "결제 조회. 결제 조회 권한은 주문 본인")
     @GetMapping("/{order_uuid}")
-    fun getOrderDetail(@PathVariable("order_uuid") orderUuid: String): OrderResponse =
-        readOrderUseCase.getOrderDetail(orderUuid)
+    fun getOrderDetail(@CurrentUserId userId: Long, @PathVariable("order_uuid") orderUuid: String): OrderResponse =
+        readOrderUseCase.getOrderDetail(userId, orderUuid)
 
     @Operation(summary = "결제 아이디로 발급된 티켓 조회")
     @GetMapping("/{order_uuid}/tickets")
-    fun getOrderTickets(@PathVariable("order_uuid") orderUuid: String): OrderTicketResponse =
-        readOrderUseCase.getOrderTickets(orderUuid)
+    fun getOrderTickets(@CurrentUserId userId: Long, @PathVariable("order_uuid") orderUuid: String): OrderTicketResponse =
+        readOrderUseCase.getOrderTickets(userId, orderUuid)
 
     @Operation(summary = "최근 예매내역 조회")
     @GetMapping("/recent")
-    fun getRecentOrder(): OrderBriefElement? = readOrderUseCase.getRecentOrder()
+    fun getRecentOrder(@CurrentUserId userId: Long): OrderBriefElement? = readOrderUseCase.getRecentOrder(userId)
 
     @Operation(summary = "마이페이지 내 예매목록 조회")
     @GetMapping
     fun getMyOrders(
+        @CurrentUserId userId: Long,
         @ParameterObject @RequestParam showing: Boolean,
         @ParameterObject @PageableDefault pageable: Pageable,
-    ): SliceResponse<OrderBriefElement> = readOrderUseCase.getMyOrders(showing, pageable)
+    ): SliceResponse<OrderBriefElement> = readOrderUseCase.getMyOrders(userId, showing, pageable)
 }

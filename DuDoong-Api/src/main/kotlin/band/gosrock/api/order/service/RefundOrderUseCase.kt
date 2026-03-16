@@ -1,6 +1,5 @@
 package band.gosrock.api.order.service
 
-import band.gosrock.api.config.security.SecurityUtils
 import band.gosrock.api.order.model.dto.response.OrderResponse
 import band.gosrock.api.order.model.mapper.OrderMapper
 import band.gosrock.common.annotation.UseCase
@@ -12,9 +11,8 @@ class RefundOrderUseCase(
     private val withdrawOrderService: WithdrawOrderService,
     private val orderMapper: OrderMapper,
 ) {
-    fun execute(orderUuid: String): OrderResponse {
-        val currentUserId = SecurityUtils.getCurrentUserId()
-        withdrawOrderService.refundOrder(orderUuid, currentUserId)
+    fun execute(userId: Long, orderUuid: String): OrderResponse {
+        withdrawOrderService.refundOrder(orderUuid, userId)
         return orderMapper.toOrderResponse(orderUuid)
     }
 }
