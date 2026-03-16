@@ -65,6 +65,8 @@ class SecurityConfig(
                 .requestMatchers(HttpMethod.GET, "/v1/events/search").permitAll()
                 .requestMatchers(HttpMethod.GET, "/v1/examples/health").permitAll()
                 .requestMatchers(HttpMethod.POST, "/v1/coupons/campaigns").hasRole("SUPER_ADMIN")
+                .requestMatchers("/internal-api/v1/auth/oauth/**").permitAll()
+                .requestMatchers("/internal-api/v1/auth/token/refresh").permitAll()
                 .requestMatchers("/internal-api/**").hasRole("MANAGER")
                 .anyRequest().hasRole("USER")
         }

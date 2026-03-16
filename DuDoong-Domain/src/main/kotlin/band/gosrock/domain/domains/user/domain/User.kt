@@ -116,6 +116,18 @@ class User() : BaseTimeEntity() {
         marketingAgree = !marketingAgree
     }
 
+    fun changeRole(newRole: AccountRole) {
+        accountRole = newRole
+    }
+
+    fun changeAccountState(newState: AccountState) {
+        if (newState == AccountState.DELETED) {
+            withDrawUser()
+            return
+        }
+        accountState = newState
+    }
+
     fun isDeletedUser(): Boolean = accountState == AccountState.DELETED
 
     companion object {

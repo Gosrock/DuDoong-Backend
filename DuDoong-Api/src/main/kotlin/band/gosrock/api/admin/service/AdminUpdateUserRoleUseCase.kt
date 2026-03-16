@@ -23,12 +23,7 @@ class AdminUpdateUserRoleUseCase(
         }
 
         val targetUser = userAdaptor.queryUser(targetUserId)
-        // Use reflection-like approach since accountRole has protected setter
-        // We need to add a method to User entity or use repository directly
-        val field = targetUser.javaClass.getDeclaredField("accountRole")
-        field.isAccessible = true
-        field.set(targetUser, request.role)
-
+        targetUser.changeRole(request.role)
         userRepository.save(targetUser)
         return AdminUserResponse.from(targetUser)
     }

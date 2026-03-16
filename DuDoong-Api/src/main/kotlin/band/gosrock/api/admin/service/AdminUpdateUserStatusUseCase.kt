@@ -16,11 +16,7 @@ class AdminUpdateUserStatusUseCase(
     @Transactional
     fun execute(targetUserId: Long, request: AdminUpdateUserStatusRequest): AdminUserResponse {
         val targetUser = userAdaptor.queryUser(targetUserId)
-
-        val field = targetUser.javaClass.getDeclaredField("accountState")
-        field.isAccessible = true
-        field.set(targetUser, request.status)
-
+        targetUser.changeAccountState(request.status)
         userRepository.save(targetUser)
         return AdminUserResponse.from(targetUser)
     }
