@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController
 @SecurityRequirement(name = "access-token")
 @Tag(name = "7-1. [티켓상품]")
 @RestController
-@RequestMapping("/v1/events/{eventId}/ticketItems")
+@RequestMapping("/api/v1/events/{eventId}/ticketItems")
 class TicketItemController(
     val createTicketItemUseCase: CreateTicketItemUseCase,
     val applyTicketOptionUseCase: ApplyTicketOptionUseCase,

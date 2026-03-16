@@ -3,7 +3,11 @@ package band.gosrock.domain.domains.user.repository
 import band.gosrock.domain.domains.user.domain.AccountState
 import band.gosrock.domain.domains.user.domain.OauthInfo
 import band.gosrock.domain.domains.user.domain.User
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import java.time.LocalDateTime
 import java.util.Optional
 
@@ -19,4 +23,14 @@ interface UserRepository : JpaRepository<User, Long> {
     fun countByAccountStateAndCreatedAtBefore(accountState: AccountState, before: LocalDateTime): Long
 
     fun findByIdIn(userIds: List<Long>): List<User>
+
+    /** Admin: 키워드로 유저 검색 (이름 또는 이메일) */
+    @Query(
+        "SELECT u FROM User u WHERE " +
+            "(:keyword IS NULL OR u.profile.name LIKE %:keyword% OR u.profile.email LIKE %:keyword%)"
+    )
+    fun findAllByKeyword(@Param("keyword") keyword: String?, pageable: Pageable): Page<User>
+
+    /** Admin: 오늘 가입한 유저 수 */
+    fun countByCreatedAtAfter(after: LocalDateTime): Long
 }

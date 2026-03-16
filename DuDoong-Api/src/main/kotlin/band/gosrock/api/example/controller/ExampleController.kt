@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/v1/examples")
+@RequestMapping("/api/v1/examples")
 @SecurityRequirement(name = "access-token")
 @Tag(name = "xx. [예시] 에러코드 문서화")
 class ExampleController(

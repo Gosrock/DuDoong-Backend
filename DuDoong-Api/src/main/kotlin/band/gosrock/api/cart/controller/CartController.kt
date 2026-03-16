@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController
 @SecurityRequirement(name = "access-token")
 @Tag(name = "5. [장바구니]")
 @RestController
-@RequestMapping("/v1/carts")
+@RequestMapping("/api/v1/carts")
 class CartController(
     private val createCartUseCase: CreateCartUseCase,
     private val readCartUseCase: ReadCartUseCase,

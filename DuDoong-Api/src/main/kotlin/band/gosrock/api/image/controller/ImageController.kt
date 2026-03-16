@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController
 @SecurityRequirement(name = "access-token")
 @Tag(name = "a1. [이미지]")
 @RestController
-@RequestMapping("/v1")
+@RequestMapping("/api/v1")
 class ImageController(
     private val getImageUploadUrlUseCase: GetImageUploadUrlUseCase,
 ) {

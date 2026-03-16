@@ -57,14 +57,15 @@ class SecurityConfig(
         http.authorizeHttpRequests { auth ->
             auth
                 .requestMatchers(*SwaggerPatterns).permitAll()
-                .requestMatchers("/v1/auth/oauth/**").permitAll()
-                .requestMatchers("/v1/auth/token/refresh").permitAll()
+                .requestMatchers("/api/v1/auth/oauth/**").permitAll()
+                .requestMatchers("/api/v1/auth/token/refresh").permitAll()
                 .requestMatchers(HttpMethod.GET, "/v1/events/{eventId:[0-9]*$}").permitAll()
                 .requestMatchers(HttpMethod.GET, "/v1/events/{eventId:[0-9]*$}/ticketItems").permitAll()
                 .requestMatchers(HttpMethod.GET, "/v1/events/{eventId:[0-9]*$}/comments/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/v1/events/search").permitAll()
                 .requestMatchers(HttpMethod.GET, "/v1/examples/health").permitAll()
                 .requestMatchers(HttpMethod.POST, "/v1/coupons/campaigns").hasRole("SUPER_ADMIN")
+                .requestMatchers("/internal-api/**").hasRole("MANAGER")
                 .anyRequest().hasRole("USER")
         }
 

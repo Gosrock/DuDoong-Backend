@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController
 @SecurityRequirement(name = "access-token")
 @Tag(name = "8-2. [발급티켓]")
 @RestController
-@RequestMapping("/v1/issuedTickets")
+@RequestMapping("/api/v1/issuedTickets")
 class IssuedTicketController(
     private val readIssuedTicketUseCase: ReadIssuedTicketUseCase,
 ) {
