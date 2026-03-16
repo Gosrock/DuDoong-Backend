@@ -18,7 +18,6 @@ springdoc:
     tags-sorter: alpha
 
 server:
-  servlet:
   forward-headers-strategy: framework
 
 swagger:
