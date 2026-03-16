@@ -12,6 +12,8 @@ from conftest import assert_status, get_data
 _option_state: dict = {
     "option_group_id": 0,
     "new_ticket_item_id": 0,
+    "preparing_event_id": 0,
+    "preparing_ticket_id": 0,
 }
 
 
@@ -22,7 +24,7 @@ def test_create_option_group(base_url, auth_headers, state):
 
     url = f"{base_url}/v1/events/{state.event_id}/ticketOptions"
     payload = {
-        "type": "Y_N",
+        "type": "Y/N",
         "name": "E2E굿즈수령여부",
         "description": "굿즈를 수령하시겠습니까?",
         "additionalPrice": 0,
@@ -58,15 +60,57 @@ def test_get_event_options(base_url, auth_headers, state):
     print(f"[test_get_event_options] 옵션 목록 조회 완료: {data}")
 
 
-def test_apply_option_to_ticket(base_url, auth_headers, state):
-    """기존 티켓에 옵션 그룹을 적용합니다."""
-    if not state.event_id or not state.ticket_item_id:
-        pytest.skip("event_id 또는 ticket_item_id가 없어 테스트를 건너뜁니다.")
-    if not _option_state["option_group_id"]:
-        pytest.skip("option_group_id가 없어 테스트를 건너뜁니다.")
+def test_setup_preparing_event_for_options(base_url, auth_headers, state):
+    """옵션 적용/해제 테스트용 PREPARING 상태 이벤트와 티켓을 생성합니다."""
+    if not state.host_id:
+        pytest.skip("host_id가 없어 테스트를 건너뜁니다.")
 
-    url = f"{base_url}/v1/events/{state.event_id}/ticketItems/{state.ticket_item_id}/option"
-    payload = {"optionGroupId": _option_state["option_group_id"]}
+    from datetime import datetime, timedelta
+    future = (datetime.now() + timedelta(days=300)).strftime("%Y.%m.%d %H:%M")
+
+    event_resp = requests.post(
+        f"{base_url}/v1/events",
+        json={"hostId": state.host_id, "name": "옵션테스트이벤트", "startAt": future, "runTime": 60},
+        headers=auth_headers,
+    )
+    assert event_resp.status_code in (200, 201), f"이벤트 생성 실패: {event_resp.text[:200]}"
+    eid = get_data(event_resp)["eventId"]
+    _option_state["preparing_event_id"] = eid
+
+    # 옵션 그룹을 이 이벤트에도 생성
+    og_resp = requests.post(
+        f"{base_url}/v1/events/{eid}/ticketOptions",
+        json={"type": "Y/N", "name": "옵션적용테스트", "description": "테스트", "additionalPrice": 0},
+        headers=auth_headers,
+    )
+    assert og_resp.status_code in (200, 201)
+    og_data = get_data(og_resp)
+    _option_state["option_group_id"] = og_data.get("optionGroupId", og_data.get("id", 0))
+
+    ticket_resp = requests.post(
+        f"{base_url}/v1/events/{eid}/ticketItems",
+        json={
+            "payType": "무료티켓", "name": "옵션적용용티켓", "description": "옵션테스트",
+            "price": 0, "supplyCount": 10, "approveType": "선착순",
+            "isQuantityPublic": True, "purchaseLimit": 2,
+        },
+        headers=auth_headers,
+    )
+    assert ticket_resp.status_code in (200, 201)
+    _option_state["preparing_ticket_id"] = get_data(ticket_resp)["ticketItemId"]
+    print(f"[setup] PREPARING 이벤트: event={eid}, ticket={_option_state['preparing_ticket_id']}")
+
+
+def test_apply_option_to_ticket(base_url, auth_headers, state):
+    """PREPARING 이벤트의 티켓에 옵션 그룹을 적용합니다."""
+    eid = _option_state.get("preparing_event_id")
+    tid = _option_state.get("preparing_ticket_id")
+    ogid = _option_state.get("option_group_id")
+    if not eid or not tid or not ogid:
+        pytest.skip("PREPARING 이벤트 셋업이 안 됨")
+
+    url = f"{base_url}/v1/events/{eid}/ticketItems/{tid}/option"
+    payload = {"optionGroupId": ogid}
     print(f"\n[test_apply_option_to_ticket] PATCH {url}")
     resp = requests.patch(url, json=payload, headers=auth_headers)
     print(f"[test_apply_option_to_ticket] status={resp.status_code}, body={resp.text[:400]}")
@@ -90,13 +134,14 @@ def test_get_ticket_item_options(base_url, auth_headers, state):
 
 
 def test_unapply_option_from_ticket(base_url, auth_headers, state):
-    """티켓에서 옵션 그룹을 해제합니다."""
-    if not state.event_id or not state.ticket_item_id:
-        pytest.skip("event_id 또는 ticket_item_id가 없어 테스트를 건너뜁니다.")
-    if not _option_state["option_group_id"]:
-        pytest.skip("option_group_id가 없어 테스트를 건너뜁니다.")
+    """PREPARING 이벤트의 티켓에서 옵션 그룹을 해제합니다."""
+    eid = _option_state.get("preparing_event_id")
+    tid = _option_state.get("preparing_ticket_id")
+    ogid = _option_state.get("option_group_id")
+    if not eid or not tid or not ogid:
+        pytest.skip("PREPARING 이벤트 셋업이 안 됨")
 
-    url = f"{base_url}/v1/events/{state.event_id}/ticketItems/{state.ticket_item_id}/option/cancel"
+    url = f"{base_url}/v1/events/{eid}/ticketItems/{tid}/option/cancel"
     payload = {"optionGroupId": _option_state["option_group_id"]}
     print(f"\n[test_unapply_option_from_ticket] PATCH {url}")
     resp = requests.patch(url, json=payload, headers=auth_headers)

@@ -68,9 +68,21 @@ def test_change_role_manager_to_guest(base_url, auth_headers):
     if not host_id or not _role_state["user_manager_headers"]:
         pytest.skip("셋업 안 됨")
 
+    # 매니저 유저의 userId 조회
+    me_resp = requests.get(
+        f"{base_url}/v1/users/me",
+        headers=_role_state["user_manager_headers"],
+    )
+    if me_resp.status_code != 200:
+        pytest.skip(f"매니저 유저 정보 조회 실패: {me_resp.text[:200]}")
+    me_data = get_data(me_resp)
+    manager_user_id = me_data.get("userId", me_data.get("id"))
+    if not manager_user_id:
+        pytest.skip(f"매니저 userId 조회 실패: {me_data}")
+
     url = f"{base_url}/v1/hosts/{host_id}/role"
-    payload = {"email": "role-manager@dudoong.com", "role": "GUEST"}
-    print(f"\n[test_change_role] PATCH {url} MANAGER -> GUEST")
+    payload = {"userId": manager_user_id, "role": "GUEST"}
+    print(f"\n[test_change_role] PATCH {url} MANAGER -> GUEST (userId={manager_user_id})")
     resp = requests.patch(url, json=payload, headers=auth_headers)
     print(f"[test_change_role] status={resp.status_code}, body={resp.text[:400]}")
 

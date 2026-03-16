@@ -12,6 +12,7 @@ import band.gosrock.domain.domains.event.exception.CannotDeleteByOpenEventExcept
 import band.gosrock.domain.domains.event.exception.CannotModifyOpenEventException
 import band.gosrock.domain.domains.event.exception.EventNotOpenException
 import band.gosrock.domain.domains.event.exception.EventOpenTimeExpiredException
+import band.gosrock.domain.domains.event.exception.InvalidEventStatusTransitionException
 import band.gosrock.domain.domains.event.exception.EventTicketingTimeIsPassedException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -170,13 +171,22 @@ class EventStatusTransitionTest {
     // ---- status: CALCULATING ----
 
     @Test
-    fun `PREPARING 이벤트는 CALCULATING으로 변경된다`() {
+    fun `OPEN 이벤트는 CALCULATING으로 변경된다`() {
+        ReflectionTestUtils.setField(event, "status", EventStatus.OPEN)
         event.calculate()
         assertEquals(EventStatus.CALCULATING, event.status)
     }
 
     @Test
+    fun `PREPARING에서 CALCULATING으로 직접 전이는 불가하다`() {
+        assertThrows(InvalidEventStatusTransitionException::class.java) {
+            event.calculate()
+        }
+    }
+
+    @Test
     fun `이미 CALCULATING 상태에서 calculate를 호출하면 AlreadyCalculatingStatusException이 발생한다`() {
+        ReflectionTestUtils.setField(event, "status", EventStatus.OPEN)
         event.calculate()
         assertThrows(AlreadyCalculatingStatusException::class.java) {
             event.calculate()
@@ -186,15 +196,23 @@ class EventStatusTransitionTest {
     // ---- status: CLOSED ----
 
     @Test
-    fun `OPEN 이벤트는 CLOSED로 변경된다`() {
-        ReflectionTestUtils.setField(event, "status", EventStatus.OPEN)
+    fun `CALCULATING 이벤트는 CLOSED로 변경된다`() {
+        ReflectionTestUtils.setField(event, "status", EventStatus.CALCULATING)
         event.close()
         assertEquals(EventStatus.CLOSED, event.status)
     }
 
     @Test
-    fun `이미 CLOSED 상태에서 close를 호출하면 AlreadyCloseStatusException이 발생한다`() {
+    fun `OPEN에서 CLOSED로 직접 전이는 불가하다`() {
         ReflectionTestUtils.setField(event, "status", EventStatus.OPEN)
+        assertThrows(InvalidEventStatusTransitionException::class.java) {
+            event.close()
+        }
+    }
+
+    @Test
+    fun `이미 CLOSED 상태에서 close를 호출하면 AlreadyCloseStatusException이 발생한다`() {
+        ReflectionTestUtils.setField(event, "status", EventStatus.CALCULATING)
         event.close()
         assertThrows(AlreadyCloseStatusException::class.java) {
             event.close()

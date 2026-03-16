@@ -89,28 +89,25 @@ public class EventTest {
 
     @Test
     void 이벤트_정산중으로_상태변경_테스트() {
-        // given
-        final EventStatus originalStatus = event.getStatus();
+        // given: OPEN 상태에서만 CALCULATING으로 전이 가능
+        ReflectionTestUtils.setField(event, "status", EventStatus.OPEN);
         final EventStatus expectedStatus = EventStatus.CALCULATING;
         // when
         event.calculate();
         // then
         assertEquals(expectedStatus, event.getStatus());
-        assertNotEquals(originalStatus, expectedStatus);
         assertThrows(AlreadyCalculatingStatusException.class, () -> event.calculate());
     }
 
     @Test
     void 이벤트_종료로_상태변경_테스트() {
-        // given
-        ReflectionTestUtils.setField(event, "status", EventStatus.OPEN);
-        final EventStatus originalStatus = event.getStatus();
+        // given: CALCULATING 상태에서만 CLOSED로 전이 가능
+        ReflectionTestUtils.setField(event, "status", EventStatus.CALCULATING);
         final EventStatus expectedStatus = EventStatus.CLOSED;
         // when
         event.close();
         // then
         assertEquals(expectedStatus, event.getStatus());
-        assertNotEquals(originalStatus, expectedStatus);
         assertThrows(AlreadyCloseStatusException.class, () -> event.close());
     }
 
@@ -145,17 +142,10 @@ public class EventTest {
 
     @Test
     void 이벤트_준비중으로_상태변경_테스트() {
-        // given
-        // reflection
+        // given: OPEN → PREPARING 전이는 허용되지 않음
         ReflectionTestUtils.setField(event, "status", EventStatus.OPEN);
-        final EventStatus originalStatus = event.getStatus();
-        final EventStatus expectedStatus = EventStatus.PREPARING;
-        // when
-        event.prepare();
-        // then
-        assertEquals(expectedStatus, event.getStatus());
-        assertNotEquals(originalStatus, expectedStatus);
-        assertThrows(AlreadyPreparingStatusException.class, () -> event.prepare());
+        // when & then
+        assertThrows(InvalidEventStatusTransitionException.class, () -> event.prepare());
     }
 
     @Test

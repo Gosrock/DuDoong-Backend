@@ -71,7 +71,10 @@ class EventService(
 
     fun closeExpiredEventsEndAtBefore(time: LocalDateTime): List<Event> {
         val events = eventAdaptor.queryEventsByEndAtBeforeAndStatusOpen(time)
-        events.forEach { event -> updateEventStatus(event, EventStatus.CLOSED) }
+        events.forEach { event ->
+            updateEventStatus(event, EventStatus.CALCULATING)
+            updateEventStatus(event, EventStatus.CLOSED)
+        }
         eventRepository.saveAll(events)
         return events
     }

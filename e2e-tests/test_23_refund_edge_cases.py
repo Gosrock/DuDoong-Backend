@@ -12,6 +12,8 @@ from conftest import assert_status, get_data
 _refund_state: dict = {
     "refund_order_uuid": "",
     "pre_refund_stock": 0,
+    "refund_event_id": 0,
+    "refund_ticket_id": 0,
 }
 
 
@@ -40,22 +42,72 @@ def _create_and_complete_order(base_url: str, headers: dict, ticket_item_id: int
 
 def test_refund_and_verify_stock_restore(base_url, auth_headers, state):
     """무료 주문을 환불하고 재고가 복원되는지 검증합니다."""
-    if not state.ticket_item_id or not state.event_id:
-        pytest.skip("ticket_item_id 또는 event_id 없음")
+    if not state.host_id:
+        pytest.skip("host_id 없음")
+
+    from datetime import datetime, timedelta
+    future = (datetime.now() + timedelta(days=150)).strftime("%Y.%m.%d %H:%M")
+
+    # 환불 테스트 전용 이벤트 생성
+    event_resp = requests.post(
+        f"{base_url}/v1/events",
+        json={"hostId": state.host_id, "name": "환불테스트이벤트", "startAt": future, "runTime": 60},
+        headers=auth_headers,
+    )
+    assert event_resp.status_code in (200, 201), f"이벤트 생성 실패: {event_resp.text[:200]}"
+    refund_event_id = get_data(event_resp)["eventId"]
+
+    requests.patch(
+        f"{base_url}/v1/events/{refund_event_id}/basic",
+        json={"name": "환불테스트이벤트", "startAt": future, "runTime": 60,
+              "placeName": "환불테스트공연장", "placeAddress": "서울시 강남구",
+              "longitude": 127.0, "latitude": 37.5},
+        headers=auth_headers,
+    )
+    requests.patch(
+        f"{base_url}/v1/events/{refund_event_id}/details",
+        json={"posterImageKey": "test/event/e2e/poster.jpeg", "content": "환불 테스트 상세"},
+        headers=auth_headers,
+    )
+
+    ticket_resp = requests.post(
+        f"{base_url}/v1/events/{refund_event_id}/ticketItems",
+        json={
+            "payType": "무료티켓",
+            "name": "환불테스트티켓",
+            "description": "환불 테스트용 무료 티켓",
+            "price": 0,
+            "supplyCount": 20,
+            "approveType": "선착순",
+            "isQuantityPublic": True,
+            "purchaseLimit": 3,
+        },
+        headers=auth_headers,
+    )
+    assert ticket_resp.status_code in (200, 201), f"티켓 생성 실패: {ticket_resp.text[:300]}"
+    refund_ticket_id = get_data(ticket_resp)["ticketItemId"]
+
+    open_resp = requests.patch(
+        f"{base_url}/v1/events/{refund_event_id}/open",
+        headers=auth_headers,
+    )
+    assert open_resp.status_code == 200, f"이벤트 오픈 실패: {open_resp.text[:200]}"
 
     # 환불 전 재고 확인
-    stock_resp = requests.get(f"{base_url}/v1/events/{state.event_id}/ticketItems")
+    stock_resp = requests.get(f"{base_url}/v1/events/{refund_event_id}/ticketItems")
     if stock_resp.status_code == 200:
         stock_data = get_data(stock_resp)
         if "ticketItems" in stock_data:
             for item in stock_data["ticketItems"]:
-                if item.get("ticketItemId") == state.ticket_item_id:
+                if item.get("ticketItemId") == refund_ticket_id:
                     _refund_state["pre_refund_stock"] = item.get("quantity", item.get("remainingCount", 0))
                     break
 
     # 주문 생성 + 결제
-    order_uuid = _create_and_complete_order(base_url, auth_headers, state.ticket_item_id)
+    order_uuid = _create_and_complete_order(base_url, auth_headers, refund_ticket_id)
     _refund_state["refund_order_uuid"] = order_uuid
+    _refund_state["refund_event_id"] = refund_event_id
+    _refund_state["refund_ticket_id"] = refund_ticket_id
     print(f"\n[test_refund_stock_restore] 환불 대상 주문: {order_uuid}")
 
     # 환불
@@ -65,12 +117,12 @@ def test_refund_and_verify_stock_restore(base_url, auth_headers, state):
     assert_status(refund_resp, 200)
 
     # 환불 후 재고 확인
-    stock_resp2 = requests.get(f"{base_url}/v1/events/{state.event_id}/ticketItems")
+    stock_resp2 = requests.get(f"{base_url}/v1/events/{_refund_state['refund_event_id']}/ticketItems")
     if stock_resp2.status_code == 200:
         stock_data2 = get_data(stock_resp2)
         if "ticketItems" in stock_data2:
             for item in stock_data2["ticketItems"]:
-                if item.get("ticketItemId") == state.ticket_item_id:
+                if item.get("ticketItemId") == _refund_state["refund_ticket_id"]:
                     post_stock = item.get("quantity", item.get("remainingCount", 0))
                     if isinstance(post_stock, int) and isinstance(_refund_state["pre_refund_stock"], int):
                         # 환불 후 재고는 환불 전보다 같거나 많아야 함 (결제 시 차감 + 환불 복원)

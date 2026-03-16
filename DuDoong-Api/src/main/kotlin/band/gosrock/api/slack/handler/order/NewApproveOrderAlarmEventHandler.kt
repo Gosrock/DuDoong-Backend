@@ -24,7 +24,6 @@ class NewApproveOrderAlarmEventHandler(
 
     @Async
     @TransactionalEventListener(classes = [CreateOrderEvent::class], phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(readOnly = true)
     fun handle(createOrderEvent: CreateOrderEvent) {
         // 승인 방식의 결제만 알림 발송 대상.
         if (createOrderEvent.orderMethod.isPayment()) return

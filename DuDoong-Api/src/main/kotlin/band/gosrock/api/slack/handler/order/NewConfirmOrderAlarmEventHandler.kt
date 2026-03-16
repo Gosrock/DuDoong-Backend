@@ -24,7 +24,6 @@ class NewConfirmOrderAlarmEventHandler(
 
     @Async
     @TransactionalEventListener(classes = [DoneOrderEvent::class], phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(readOnly = true)
     fun handle(doneOrderEvent: DoneOrderEvent) {
         // 선착순 방식의 결제만 알림 발송 대상.
         if (!doneOrderEvent.orderMethod.isPayment()) return

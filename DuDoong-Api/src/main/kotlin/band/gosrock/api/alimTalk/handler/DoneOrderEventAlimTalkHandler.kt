@@ -25,7 +25,6 @@ class DoneOrderEventAlimTalkHandler(
 
     @Async
     @TransactionalEventListener(classes = [DoneOrderEvent::class], phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(readOnly = true)
     fun handleDoneOrderEvent(doneOrderEvent: DoneOrderEvent) {
         log.info("${doneOrderEvent.orderUuid}주문 상태 완료, 파트너의 공연이면 알림톡 전송")
         // 파트너인 호스트의 공연일 경우만 알림톡 전송

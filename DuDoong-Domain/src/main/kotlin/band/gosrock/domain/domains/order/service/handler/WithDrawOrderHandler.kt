@@ -7,7 +7,6 @@ import band.gosrock.domain.domains.order.service.WithdrawPaymentService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
 
@@ -20,7 +19,6 @@ class WithDrawOrderHandler(
 
     @Async
     @TransactionalEventListener(classes = [WithDrawOrderEvent::class], phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional
     fun handleWithDrawOrderEvent(withDrawOrderEvent: WithDrawOrderEvent) {
         log.info("${withDrawOrderEvent.orderUuid} 주문 철회 핸들러")
         val orderStatus = withDrawOrderEvent.orderStatus

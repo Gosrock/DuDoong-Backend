@@ -24,7 +24,6 @@ class WithDrawOrderEventHandler(
 
     @Async
     @TransactionalEventListener(classes = [WithDrawOrderEvent::class], phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(readOnly = true)
     fun handle(withDrawOrderEvent: WithDrawOrderEvent) {
         log.info("선착순 유료,무료  승인 무료 시에 전송되는 알람")
         if (withDrawOrderEvent.isDudoongTicketOrder) return

@@ -24,7 +24,6 @@ class OrderApprovedAlarmEventHandler(
 
     @Async
     @TransactionalEventListener(classes = [DoneOrderEvent::class], phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(readOnly = true)
     fun handle(doneOrderEvent: DoneOrderEvent) {
         if (doneOrderEvent.orderMethod.isPayment()) return
         log.info("승인 방식 완료 시에 알림 전송")

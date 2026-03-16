@@ -24,7 +24,6 @@ class DudoongTicketRefundOrderEventHandler(
 
     @Async
     @TransactionalEventListener(classes = [WithDrawOrderEvent::class], phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(readOnly = true)
     fun handle(withDrawOrderEvent: WithDrawOrderEvent) {
         log.info("두둥 티켓 환불시 전송되는 알림")
         if (!withDrawOrderEvent.isDudoongTicketOrder) return

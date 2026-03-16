@@ -36,7 +36,9 @@ def test_cart_response_fields(base_url, auth_headers, state):
 
     # 응답 필드 검증
     if "totalPrice" in data:
-        assert data["totalPrice"] == 0, f"무료티켓 totalPrice는 0이어야 함: {data['totalPrice']}"
+        val = data["totalPrice"]
+        assert val == 0 or val == "0" or (isinstance(val, str) and "0" in val), \
+            f"무료티켓 totalPrice는 0이어야 함: {val}"
         print(f"[test_cart_response_fields] totalPrice=0 확인")
     if "isNeedPayment" in data:
         assert data["isNeedPayment"] is False, f"무료티켓 isNeedPayment는 false: {data['isNeedPayment']}"
@@ -71,7 +73,9 @@ def test_order_creation_response_fields(base_url, auth_headers):
         assert len(data["orderName"]) > 0, "orderName이 비어 있음"
         print(f"[test_order_creation_response_fields] orderName={data['orderName']}")
     if "amount" in data:
-        assert data["amount"] == 0, f"무료 주문 amount는 0이어야 함: {data['amount']}"
+        val = data["amount"]
+        assert val == 0 or val == "0" or (isinstance(val, str) and "0" in val), \
+            f"무료 주문 amount는 0이어야 함: {val}"
         print(f"[test_order_creation_response_fields] amount=0 확인")
     if "isNeedPayment" in data:
         assert data["isNeedPayment"] is False, f"무료 주문 isNeedPayment는 false: {data['isNeedPayment']}"

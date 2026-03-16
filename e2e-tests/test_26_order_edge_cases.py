@@ -52,10 +52,19 @@ def test_setup_stock_exhaustion(base_url, auth_headers, state):
         pytest.skip(f"이벤트 생성 실패: {event_resp.text[:200]}")
     _edge_state["exhausted_event_id"] = get_data(event_resp)["eventId"]
 
+    # 기본 정보 설정 (장소 포함)
+    requests.patch(
+        f"{base_url}/v1/events/{_edge_state['exhausted_event_id']}/basic",
+        json={"name": "재고소진테스트이벤트", "startAt": future, "runTime": 60,
+              "placeName": "재고테스트공연장", "placeAddress": "서울시 강남구",
+              "longitude": 127.0, "latitude": 37.5},
+        headers=auth_headers,
+    )
+
     # 상세 정보 설정
     requests.patch(
-        f"{base_url}/v1/events/{_edge_state['exhausted_event_id']}/detail",
-        json={"content": "재고 소진 테스트"},
+        f"{base_url}/v1/events/{_edge_state['exhausted_event_id']}/details",
+        json={"posterImageKey": "test/event/e2e/poster.jpeg", "content": "재고 소진 테스트"},
         headers=auth_headers,
     )
 

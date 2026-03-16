@@ -49,10 +49,19 @@ def test_setup_cancel_scenario(base_url, auth_headers, state):
     assert event_resp.status_code in (200, 201), f"이벤트 생성 실패: {event_resp.text[:200]}"
     _cancel_state["event_id"] = get_data(event_resp)["eventId"]
 
+    # 기본 정보 설정 (장소 포함)
+    requests.patch(
+        f"{base_url}/v1/events/{_cancel_state['event_id']}/basic",
+        json={"name": "주문취소테스트공연", "startAt": future, "runTime": 90,
+              "placeName": "취소테스트공연장", "placeAddress": "서울시 강남구",
+              "longitude": 127.0, "latitude": 37.5},
+        headers=auth_headers,
+    )
+
     # 상세 설정
     requests.patch(
-        f"{base_url}/v1/events/{_cancel_state['event_id']}/detail",
-        json={"content": "주문 취소 테스트 상세"},
+        f"{base_url}/v1/events/{_cancel_state['event_id']}/details",
+        json={"posterImageKey": "test/event/e2e/poster.jpeg", "content": "주문 취소 테스트 상세"},
         headers=auth_headers,
     )
 
@@ -116,15 +125,17 @@ def test_create_order_for_cancel(base_url):
     print(f"[test_create_order] 주문 생성: {_cancel_state['order_uuid']}")
 
 
-def test_cancel_pending_order(base_url):
-    """승인 대기 상태의 주문을 구매자가 취소합니다."""
+def test_cancel_pending_order(base_url, auth_headers):
+    """승인 대기 상태의 주문을 호스트(어드민)가 거절(refuse)합니다.
+    PENDING_APPROVE 상태는 refuse 엔드포인트로 취소해야 합니다."""
     order_uuid = _cancel_state.get("order_uuid")
-    if not order_uuid or not _cancel_state["buyer_headers"]:
+    if not order_uuid:
         pytest.skip("주문이 없어 건너뜁니다.")
 
-    url = f"{base_url}/v1/orders/{order_uuid}/cancel"
+    event_id = _cancel_state.get("event_id")
+    url = f"{base_url}/v1/events/{event_id}/orders/{order_uuid}/refuse"
     print(f"\n[test_cancel_pending] POST {url}")
-    resp = requests.post(url, headers=_cancel_state["buyer_headers"])
+    resp = requests.post(url, headers=auth_headers)
     print(f"[test_cancel_pending] status={resp.status_code}, body={resp.text[:400]}")
 
     assert resp.status_code in (200, 201), (
@@ -146,11 +157,16 @@ def test_cancelled_order_status(base_url):
 
     assert_status(resp, 200)
     data = get_data(resp)
-    order_status = data.get("orderStatus", "")
+    # orderStatus는 top-level 또는 paymentInfo 안에 있을 수 있음
+    order_status = (
+        data.get("orderStatus")
+        or (data.get("paymentInfo") or {}).get("orderStatus")
+        or ""
+    )
     print(f"[test_cancelled_status] 주문 상태: {order_status}")
-    # 취소 상태 확인 (CANCELED, CANCELLED, CANCEL 등)
+    # 취소 상태 확인 (CANCELED, CANCELLED, CANCEL, 취소 등)
     if order_status:
-        assert "CANCEL" in order_status.upper(), (
+        assert "CANCEL" in order_status.upper() or "취소" in order_status, (
             f"취소된 주문의 상태가 CANCEL이 아닙니다: {order_status}"
         )
 

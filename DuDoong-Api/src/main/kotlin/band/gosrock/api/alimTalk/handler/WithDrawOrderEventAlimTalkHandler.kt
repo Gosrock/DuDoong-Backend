@@ -22,7 +22,6 @@ class WithDrawOrderEventAlimTalkHandler(
 ) {
     @Async
     @TransactionalEventListener(classes = [WithDrawOrderEvent::class], phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(readOnly = true)
     fun handleWithDrawOrderEvent(withDrawOrderEvent: WithDrawOrderEvent) {
         // 파트너인 호스트의 공연일 경우만 알림톡 전송
         val order = orderAdaptor.findByOrderUuid(withDrawOrderEvent.orderUuid)

@@ -20,7 +20,7 @@ def test_admin_order_table(base_url, auth_headers, state):
         pytest.skip("event_id가 없어 테스트를 건너뜁니다.")
 
     url = f"{base_url}/v1/events/{state.event_id}/orders"
-    params = {"orderStage": "ALL", "page": 0, "size": 10}
+    params = {"orderStage": "CONFIRMED", "page": 0, "size": 10}
     print(f"\n[test_admin_order_table] GET {url} params={params}")
     resp = requests.get(url, params=params, headers=auth_headers)
     print(f"[test_admin_order_table] status={resp.status_code}, body={resp.text[:500]}")
@@ -50,8 +50,8 @@ def test_admin_issued_ticket_table(base_url, auth_headers, state):
     # 입장 처리 테스트를 위해 첫 번째 티켓 UUID 저장
     if data["content"]:
         first_ticket = data["content"][0]
-        uuid_key = "issuedTicketNo" if "issuedTicketNo" in first_ticket else "uuid"
-        _admin_state["issued_ticket_uuid"] = first_ticket.get(uuid_key, "")
+        # API는 uuid (UUID 형식) 를 사용하여 입장 처리함
+        _admin_state["issued_ticket_uuid"] = first_ticket.get("uuid", first_ticket.get("issuedTicketNo", ""))
         print(f"[test_admin_issued_ticket_table] 입장 처리 대상: {_admin_state['issued_ticket_uuid']}")
 
 
