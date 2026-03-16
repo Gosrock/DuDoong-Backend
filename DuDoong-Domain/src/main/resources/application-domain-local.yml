@@ -20,7 +20,7 @@ spring:
       init:
         mode: always
     open-in-view: false
-    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    database-platform: org.hibernate.dialect.MySQLDialect
 logging:
   level:
     com.zaxxer.hikari.HikariConfig: DEBUG
