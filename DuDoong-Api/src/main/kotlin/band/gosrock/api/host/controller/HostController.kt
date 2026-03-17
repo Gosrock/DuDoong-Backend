@@ -45,7 +45,7 @@ import org.springframework.web.bind.annotation.RestController
 @SecurityRequirement(name = "access-token")
 @Tag(name = "4. [호스트]")
 @RestController
-@RequestMapping("/v1/hosts")
+@RequestMapping("/api/v1/hosts")
 @Validated
 class HostController(
     private val readHostUseCase: ReadHostUseCase,

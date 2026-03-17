@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController
 @SecurityRequirement(name = "access-token")
 @Tag(name = "a0. [쿠폰]")
 @RestController
-@RequestMapping("/v1/coupons")
+@RequestMapping("/api/v1/coupons")
 class CouponController(
     private val createCouponUseCase: CreateCouponUseCase,
     private val createUserCouponUseCase: CreateUserCouponUseCase,

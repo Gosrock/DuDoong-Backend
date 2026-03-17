@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController
 @SecurityRequirement(name = "access-token")
 @Tag(name = "6-2. [이벤트관리] 주문관리 ")
 @RestController
-@RequestMapping("/v1/events/{eventId}/orders")
+@RequestMapping("/api/v1/events/{eventId}/orders")
 class OrderAdminController(
     private val approveOrderUseCase: ApproveOrderUseCase,
     private val readOrderUseCase: ReadOrderUseCase,

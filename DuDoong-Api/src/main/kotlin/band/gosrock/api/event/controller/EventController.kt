@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.RestController
 @SecurityRequirement(name = "access-token")
 @Tag(name = "3. [이벤트(공연)]")
 @RestController
-@RequestMapping("/v1/events")
+@RequestMapping("/api/v1/events")
 class EventController(
     private val readUserHostEventListUseCase: ReadUserEventProfilesUseCase,
     private val readEventDetailUseCase: ReadEventDetailUseCase,

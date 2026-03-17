@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/v1/auth")
+@RequestMapping("/api/v1/auth")
 @Tag(name = "1-1. [인증]")
 class AuthController(
     private val registerUseCase: RegisterUseCase,

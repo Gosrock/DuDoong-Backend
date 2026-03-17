@@ -39,7 +39,7 @@ import org.springframework.web.bind.annotation.RestController
 @SecurityRequirement(name = "access-token")
 @Tag(name = "6-1. [주문]")
 @RestController
-@RequestMapping("/v1/orders")
+@RequestMapping("/api/v1/orders")
 class OrderController(
     private val createOrderUseCase: CreateOrderUseCase,
     private val confirmOrderUseCase: ConfirmOrderUseCase,
