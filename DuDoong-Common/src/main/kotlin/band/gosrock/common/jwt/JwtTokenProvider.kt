@@ -1,10 +1,10 @@
 package band.gosrock.common.jwt
 
 import band.gosrock.common.consts.DuDoongStatic.ACCESS_TOKEN
+import band.gosrock.common.consts.DuDoongStatic.ADMIN_AUDIENCE
 import band.gosrock.common.consts.DuDoongStatic.MILLI_TO_SECOND
 import band.gosrock.common.consts.DuDoongStatic.REFRESH_TOKEN
 import band.gosrock.common.consts.DuDoongStatic.TOKEN_ISSUER
-import band.gosrock.common.consts.DuDoongStatic.TOKEN_ROLE
 import band.gosrock.common.consts.DuDoongStatic.TOKEN_TYPE
 import band.gosrock.common.dto.AccessTokenInfo
 import band.gosrock.common.exception.ExpiredTokenException
@@ -40,31 +40,37 @@ class JwtTokenProvider(
     private fun getSecretKey(): SecretKey =
         Keys.hmacShaKeyFor(jwtProperties.secretKey.toByteArray(StandardCharsets.UTF_8))
 
-    private fun buildAccessToken(id: Long, issuedAt: Date, accessTokenExpiresIn: Date, role: String): String =
+    private fun buildAccessToken(id: Long, issuedAt: Date, expiresIn: Date, audience: String? = null): String =
         Jwts.builder()
             .issuer(TOKEN_ISSUER)
             .issuedAt(issuedAt)
             .subject(id.toString())
             .claim(TOKEN_TYPE, ACCESS_TOKEN)
-            .claim(TOKEN_ROLE, role)
-            .expiration(accessTokenExpiresIn)
+            .apply { if (audience != null) audience().add(audience).and() }
+            .expiration(expiresIn)
             .signWith(getSecretKey())
             .compact()
 
-    private fun buildRefreshToken(id: Long, issuedAt: Date, accessTokenExpiresIn: Date): String =
+    private fun buildRefreshToken(id: Long, issuedAt: Date, expiresIn: Date): String =
         Jwts.builder()
             .issuer(TOKEN_ISSUER)
             .issuedAt(issuedAt)
             .subject(id.toString())
             .claim(TOKEN_TYPE, REFRESH_TOKEN)
-            .expiration(accessTokenExpiresIn)
+            .expiration(expiresIn)
             .signWith(getSecretKey())
             .compact()
 
-    fun generateAccessToken(id: Long, role: String): String {
+    fun generateAccessToken(id: Long): String {
         val issuedAt = Date()
         val accessTokenExpiresIn = Date(issuedAt.time + jwtProperties.accessExp * MILLI_TO_SECOND)
-        return buildAccessToken(id, issuedAt, accessTokenExpiresIn, role)
+        return buildAccessToken(id, issuedAt, accessTokenExpiresIn)
+    }
+
+    fun generateAdminAccessToken(id: Long): String {
+        val issuedAt = Date()
+        val accessTokenExpiresIn = Date(issuedAt.time + jwtProperties.accessExp * MILLI_TO_SECOND)
+        return buildAccessToken(id, issuedAt, accessTokenExpiresIn, audience = ADMIN_AUDIENCE)
     }
 
     fun generateRefreshToken(id: Long): String {
@@ -82,9 +88,10 @@ class JwtTokenProvider(
     fun parseAccessToken(token: String): AccessTokenInfo {
         if (isAccessToken(token)) {
             val claims = getJws(token).payload
+            val audiences = claims.audience
             return AccessTokenInfo(
                 userId = claims.subject.toLong(),
-                role = claims.get(TOKEN_ROLE, String::class.java),
+                isAdmin = audiences != null && ADMIN_AUDIENCE in audiences,
             )
         }
         throw InvalidTokenException.EXCEPTION

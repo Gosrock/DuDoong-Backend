@@ -8,4 +8,5 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
     implementation(project(":DuDoong-Domain"))
     implementation(project(":DuDoong-Common"))
+    implementation(project(":DuDoong-Infrastructure"))
 }

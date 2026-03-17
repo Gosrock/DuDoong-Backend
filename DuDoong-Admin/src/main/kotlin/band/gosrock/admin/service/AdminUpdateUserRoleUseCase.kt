@@ -6,6 +6,7 @@ import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
 import band.gosrock.domain.domains.user.domain.AccountRole
 import band.gosrock.domain.domains.user.repository.UserRepository
+import band.gosrock.infrastructure.config.redis.UserRoleCacheService
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.transaction.annotation.Transactional
 
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional
 class AdminUpdateUserRoleUseCase(
     private val userAdaptor: UserAdaptor,
     private val userRepository: UserRepository,
+    private val userRoleCacheService: UserRoleCacheService,
 ) {
 
     @Transactional
@@ -25,6 +27,8 @@ class AdminUpdateUserRoleUseCase(
         val targetUser = userAdaptor.queryUser(targetUserId)
         targetUser.changeRole(request.role)
         userRepository.save(targetUser)
+        // 역할 변경 시 Redis 캐시 무효화 → 다음 요청부터 새 role 즉시 적용
+        userRoleCacheService.evict(targetUserId)
         return AdminUserResponse.from(targetUser)
     }
 }

@@ -67,7 +67,19 @@ class SecurityConfig(
                 .requestMatchers(HttpMethod.POST, "/api/v1/coupons/campaigns").hasRole("SUPER_ADMIN")
                 .requestMatchers("/internal-api/v1/auth/oauth/**").permitAll()
                 .requestMatchers("/internal-api/v1/auth/token/refresh").permitAll()
-                .requestMatchers("/internal-api/**").hasRole("MANAGER")
+                .requestMatchers("/internal-api/**").access { authentication, _ ->
+                    // MANAGER 이상 역할 + admin 토큰(aud:admin) 필수
+                    val authn = authentication.get()
+                        ?: return@access org.springframework.security.authorization.AuthorizationDecision(false)
+                    val principal = authn.principal
+                    if (principal !is AuthDetails) {
+                        return@access org.springframework.security.authorization.AuthorizationDecision(false)
+                    }
+                    val hasRole = authn.authorities.any {
+                        it.authority == "ROLE_MANAGER" || it.authority == "ROLE_ADMIN" || it.authority == "ROLE_SUPER_ADMIN"
+                    }
+                    org.springframework.security.authorization.AuthorizationDecision(hasRole && principal.isAdmin)
+                }
                 .anyRequest().hasRole("USER")
         }
 

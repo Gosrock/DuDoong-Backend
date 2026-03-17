@@ -21,6 +21,6 @@ class AdminLoginUseCase(
         if (user.accountRole == AccountRole.USER) {
             throw AdminForbiddenException.EXCEPTION
         }
-        return tokenGenerateHelper.execute(user)
+        return tokenGenerateHelper.executeAdmin(user)
     }
 }
