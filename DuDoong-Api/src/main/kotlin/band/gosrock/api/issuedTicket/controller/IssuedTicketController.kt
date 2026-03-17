@@ -1,6 +1,6 @@
 package band.gosrock.api.issuedTicket.controller
 
-import band.gosrock.api.config.security.CurrentUserId
+import band.gosrock.common.annotation.CurrentUserId
 import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketDetailResponse
 import band.gosrock.api.issuedTicket.service.ReadIssuedTicketUseCase
 import io.swagger.v3.oas.annotations.Operation

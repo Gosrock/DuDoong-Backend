@@ -1,6 +1,6 @@
 package band.gosrock.api.user.controller
 
-import band.gosrock.api.config.security.CurrentUserId
+import band.gosrock.common.annotation.CurrentUserId
 import band.gosrock.api.user.service.MarketingUserUseCase
 import band.gosrock.api.user.service.ReadUserUseCase
 import band.gosrock.domain.common.vo.UserInfoVo

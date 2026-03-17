@@ -11,7 +11,7 @@ import band.gosrock.api.comment.service.RetrieveCommentCountUseCase
 import band.gosrock.api.comment.service.RetrieveCommentUseCase
 import band.gosrock.api.comment.service.RetrieveRandomCommentUseCase
 import band.gosrock.api.common.slice.SliceResponse
-import band.gosrock.api.config.security.CurrentUserId
+import band.gosrock.common.annotation.CurrentUserId
 import band.gosrock.common.annotation.DisableSwaggerSecurity
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement

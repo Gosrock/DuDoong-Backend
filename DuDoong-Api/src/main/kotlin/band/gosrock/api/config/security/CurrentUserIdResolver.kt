@@ -1,5 +1,6 @@
 package band.gosrock.api.config.security
 
+import band.gosrock.common.annotation.CurrentUserId
 import org.springframework.core.MethodParameter
 import org.springframework.stereotype.Component
 import org.springframework.web.bind.support.WebDataBinderFactory

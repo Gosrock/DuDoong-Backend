@@ -5,7 +5,7 @@ import band.gosrock.api.cart.model.dto.request.AddCartRequest
 import band.gosrock.api.cart.model.dto.response.CartResponse
 import band.gosrock.api.cart.service.CreateCartUseCase
 import band.gosrock.api.cart.service.ReadCartUseCase
-import band.gosrock.api.config.security.CurrentUserId
+import band.gosrock.common.annotation.CurrentUserId
 import band.gosrock.common.annotation.ApiErrorExceptionsExample
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement

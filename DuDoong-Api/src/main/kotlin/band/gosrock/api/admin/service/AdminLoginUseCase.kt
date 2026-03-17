@@ -1,6 +1,6 @@
 package band.gosrock.api.admin.service
 
-import band.gosrock.api.admin.exception.AdminForbiddenException
+import band.gosrock.admin.exception.AdminForbiddenException
 import band.gosrock.api.auth.model.dto.response.TokenAndUserResponse
 import band.gosrock.api.auth.service.helper.KakaoOauthHelper
 import band.gosrock.api.auth.service.helper.TokenGenerateHelper
