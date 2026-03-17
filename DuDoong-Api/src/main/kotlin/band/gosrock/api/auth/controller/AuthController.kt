@@ -15,7 +15,7 @@ import band.gosrock.api.auth.service.RegisterUseCase
 import band.gosrock.api.auth.service.WithDrawUseCase
 import band.gosrock.api.auth.service.helper.CookieHelper
 import band.gosrock.api.config.rateLimit.UserRateLimiter
-import band.gosrock.api.config.security.CurrentUserId
+import band.gosrock.common.annotation.CurrentUserId
 import band.gosrock.common.annotation.ApiErrorCodeExample
 import band.gosrock.common.annotation.DevelopOnlyApi
 import band.gosrock.infrastructure.outer.api.oauth.exception.KakaoKauthErrorCode

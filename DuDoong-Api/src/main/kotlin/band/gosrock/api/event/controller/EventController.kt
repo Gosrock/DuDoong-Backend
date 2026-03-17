@@ -19,7 +19,7 @@ import band.gosrock.api.event.service.SearchEventsUseCase
 import band.gosrock.api.event.service.UpdateEventBasicUseCase
 import band.gosrock.api.event.service.UpdateEventDetailUseCase
 import band.gosrock.api.event.service.UpdateEventStatusUseCase
-import band.gosrock.api.config.security.CurrentUserId
+import band.gosrock.common.annotation.CurrentUserId
 import band.gosrock.common.annotation.DisableSwaggerSecurity
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement

@@ -17,7 +17,7 @@ import band.gosrock.api.order.service.CreateTossOrderUseCase
 import band.gosrock.api.order.service.FreeOrderUseCase
 import band.gosrock.api.order.service.ReadOrderUseCase
 import band.gosrock.api.order.service.RefundOrderUseCase
-import band.gosrock.api.config.security.CurrentUserId
+import band.gosrock.common.annotation.CurrentUserId
 import band.gosrock.common.annotation.ApiErrorExceptionsExample
 import band.gosrock.common.annotation.DevelopOnlyApi
 import band.gosrock.infrastructure.outer.api.tossPayments.dto.response.PaymentsResponse

@@ -1,6 +1,6 @@
 package band.gosrock.api.coupon.controller
 
-import band.gosrock.api.config.security.CurrentUserId
+import band.gosrock.common.annotation.CurrentUserId
 import band.gosrock.api.coupon.dto.reqeust.CreateCouponCampaignRequest
 import band.gosrock.api.coupon.dto.response.CreateCouponCampaignResponse
 import band.gosrock.api.coupon.dto.response.CreateUserCouponResponse

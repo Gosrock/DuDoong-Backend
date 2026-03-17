@@ -1,6 +1,6 @@
 package band.gosrock.api.admin.service
 
-import band.gosrock.api.admin.exception.AdminForbiddenException
+import band.gosrock.admin.exception.AdminForbiddenException
 import band.gosrock.api.auth.model.dto.request.RegisterRequest
 import band.gosrock.api.auth.model.dto.response.TokenAndUserResponse
 import band.gosrock.api.auth.service.helper.TokenGenerateHelper
@@ -27,6 +27,6 @@ class AdminLocalDevLoginUseCase(
         if (user.accountRole == AccountRole.USER) {
             throw AdminForbiddenException.EXCEPTION
         }
-        return tokenGenerateHelper.execute(user)
+        return tokenGenerateHelper.executeAdmin(user)
     }
 }

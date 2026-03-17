@@ -16,11 +16,20 @@ class TokenGenerateHelper(
 ) {
 
     @Transactional
-    fun execute(user: User): TokenAndUserResponse {
+    fun execute(user: User): TokenAndUserResponse =
+        generateTokenResponse(user, admin = false)
+
+    @Transactional
+    fun executeAdmin(user: User): TokenAndUserResponse =
+        generateTokenResponse(user, admin = true)
+
+    private fun generateTokenResponse(user: User, admin: Boolean): TokenAndUserResponse {
         val userId = user.id!!
-        val newAccessToken = jwtTokenProvider.generateAccessToken(
-            userId, user.accountRole.value
-        )
+        val newAccessToken = if (admin) {
+            jwtTokenProvider.generateAdminAccessToken(userId)
+        } else {
+            jwtTokenProvider.generateAccessToken(userId)
+        }
         val newRefreshToken = jwtTokenProvider.generateRefreshToken(userId)
 
         val newRefreshTokenEntity = RefreshTokenEntity.builder()

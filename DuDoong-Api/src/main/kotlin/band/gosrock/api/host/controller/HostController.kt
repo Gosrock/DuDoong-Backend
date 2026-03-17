@@ -22,7 +22,7 @@ import band.gosrock.api.host.service.RejectHostUseCase
 import band.gosrock.api.host.service.UpdateHostProfileUseCase
 import band.gosrock.api.host.service.UpdateHostSlackUrlUseCase
 import band.gosrock.api.host.service.UpdateHostUserRoleUseCase
-import band.gosrock.api.config.security.CurrentUserId
+import band.gosrock.common.annotation.CurrentUserId
 import band.gosrock.domain.common.vo.UserProfileVo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement

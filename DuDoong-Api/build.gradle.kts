@@ -6,4 +6,5 @@ dependencies {
     implementation(project(":DuDoong-Domain"))
     implementation(project(":DuDoong-Common"))
     implementation(project(":DuDoong-Infrastructure"))
+    implementation(project(":DuDoong-Admin"))
 }

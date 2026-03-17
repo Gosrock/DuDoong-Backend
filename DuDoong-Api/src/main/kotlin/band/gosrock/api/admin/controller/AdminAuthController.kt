@@ -1,14 +1,14 @@
 package band.gosrock.api.admin.controller
 
-import band.gosrock.api.admin.model.dto.response.AdminUserDetailResponse
-import band.gosrock.api.admin.service.AdminGetMeUseCase
+import band.gosrock.admin.model.dto.response.AdminUserDetailResponse
+import band.gosrock.admin.service.AdminGetMeUseCase
 import band.gosrock.api.admin.service.AdminLocalDevLoginUseCase
 import band.gosrock.api.admin.service.AdminLoginUseCase
 import band.gosrock.api.auth.model.dto.request.RegisterRequest
 import band.gosrock.api.auth.model.dto.response.TokenAndUserResponse
 import band.gosrock.api.auth.service.RefreshUseCase
 import band.gosrock.api.auth.service.helper.CookieHelper
-import band.gosrock.api.config.security.CurrentUserId
+import band.gosrock.common.annotation.CurrentUserId
 import band.gosrock.common.annotation.DevelopOnlyApi
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement

@@ -2,6 +2,7 @@ package band.gosrock.api.config.security
 
 import band.gosrock.common.consts.DuDoongStatic
 import band.gosrock.common.jwt.JwtTokenProvider
+import band.gosrock.domain.domains.user.adaptor.UserAdaptor
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -14,7 +15,8 @@ import org.springframework.web.util.WebUtils
 
 @Component
 class JwtTokenFilter(
-    private val jwtTokenProvider: JwtTokenProvider
+    private val jwtTokenProvider: JwtTokenProvider,
+    private val userAdaptor: UserAdaptor,
 ) : OncePerRequestFilter() {
 
     override fun doFilterInternal(
@@ -33,6 +35,11 @@ class JwtTokenFilter(
     }
 
     private fun resolveToken(request: HttpServletRequest): String? {
+        // Admin 전용 헤더 우선
+        val adminToken = request.getHeader(DuDoongStatic.ADMIN_TOKEN_HEADER)
+        if (adminToken != null) {
+            return adminToken
+        }
         // 쿠키방식 지원
         val accessTokenCookie = WebUtils.getCookie(request, "accessToken")
         if (accessTokenCookie != null) {
@@ -51,7 +58,13 @@ class JwtTokenFilter(
 
     fun getAuthentication(token: String): Authentication {
         val accessTokenInfo = jwtTokenProvider.parseAccessToken(token)
-        val userDetails = AuthDetails(accessTokenInfo.userId.toString(), accessTokenInfo.role)
+        val userId = accessTokenInfo.userId
+
+        // 매 요청마다 DB에서 실시간 role 조회 → 역할 변경 즉시 반영
+        val user = userAdaptor.queryUser(userId)
+        val role = user.accountRole.value
+
+        val userDetails = AuthDetails(userId.toString(), role, accessTokenInfo.isAdmin)
         return UsernamePasswordAuthenticationToken(userDetails, "user", userDetails.authorities)
     }
 }
