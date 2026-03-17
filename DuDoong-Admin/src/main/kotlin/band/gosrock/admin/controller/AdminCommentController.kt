@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/internal-api/v1/comments")
-@SecurityRequirement(name = "access-token")
+@SecurityRequirement(name = "admin-token")
 @Tag(name = "Admin")
 class AdminCommentController(
     private val adminGetCommentsUseCase: AdminGetCommentsUseCase,

@@ -70,7 +70,7 @@ class AdminAuthController(
     }
 
     @Operation(summary = "현재 어드민 유저 정보 조회")
-    @SecurityRequirement(name = "access-token")
+    @SecurityRequirement(name = "admin-token")
     @GetMapping("/me")
     fun getAdminMe(@CurrentUserId userId: Long): AdminUserDetailResponse {
         return adminGetMeUseCase.execute(userId)

@@ -65,6 +65,14 @@ class SwaggerConfig(
                     .`in`(SecurityScheme.In.HEADER)
                     .name("Authorization"),
             )
+            .addSecuritySchemes(
+                "admin-token",
+                SecurityScheme()
+                    .type(SecurityScheme.Type.APIKEY)
+                    .`in`(SecurityScheme.In.HEADER)
+                    .name("X-Admin-Token")
+                    .description("Admin JWT 토큰 (aud:admin 포함)"),
+            )
 
     @Bean
     fun modelResolver(objectMapper: ObjectMapper): ModelResolver = ModelResolver(objectMapper)

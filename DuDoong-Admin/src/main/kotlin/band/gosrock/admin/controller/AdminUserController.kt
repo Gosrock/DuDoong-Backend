@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/internal-api/v1/users")
-@SecurityRequirement(name = "access-token")
+@SecurityRequirement(name = "admin-token")
 @Tag(name = "Admin")
 class AdminUserController(
     private val adminGetUsersUseCase: AdminGetUsersUseCase,
