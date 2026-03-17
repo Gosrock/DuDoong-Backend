@@ -3,7 +3,6 @@ package band.gosrock.api.config.security
 import band.gosrock.common.consts.DuDoongStatic
 import band.gosrock.common.jwt.JwtTokenProvider
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
-import band.gosrock.infrastructure.config.redis.UserRoleCacheService
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -18,7 +17,6 @@ import org.springframework.web.util.WebUtils
 class JwtTokenFilter(
     private val jwtTokenProvider: JwtTokenProvider,
     private val userAdaptor: UserAdaptor,
-    private val userRoleCacheService: UserRoleCacheService,
 ) : OncePerRequestFilter() {
 
     override fun doFilterInternal(
@@ -62,14 +60,9 @@ class JwtTokenFilter(
         val accessTokenInfo = jwtTokenProvider.parseAccessToken(token)
         val userId = accessTokenInfo.userId
 
-        // Redis 캐시에서 role 조회, miss 시 DB 조회 후 캐시
-        val role = userRoleCacheService.getRole(userId)
-            ?: run {
-                val user = userAdaptor.queryUser(userId)
-                val fetchedRole = user.accountRole.value
-                userRoleCacheService.cacheRole(userId, fetchedRole)
-                fetchedRole
-            }
+        // 매 요청마다 DB에서 실시간 role 조회 → 역할 변경 즉시 반영
+        val user = userAdaptor.queryUser(userId)
+        val role = user.accountRole.value
 
         val userDetails = AuthDetails(userId.toString(), role, accessTokenInfo.isAdmin)
         return UsernamePasswordAuthenticationToken(userDetails, "user", userDetails.authorities)
