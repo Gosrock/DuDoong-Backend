@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/internal-api/v1")
-@SecurityRequirement(name = "access-token")
+@SecurityRequirement(name = "admin-token")
 @Tag(name = "Admin")
 class AdminDashboardController(
     private val getDashboardUseCase: GetDashboardUseCase,

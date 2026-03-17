@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/internal-api/v1/events")
-@SecurityRequirement(name = "access-token")
+@SecurityRequirement(name = "admin-token")
 @Tag(name = "Admin")
 class AdminEventController(
     private val adminGetEventsUseCase: AdminGetEventsUseCase,
