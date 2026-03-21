@@ -47,7 +47,7 @@ class IssuedTicketCustomRepositoryImpl(
                 issuedTicketStatusNotCanceled()
             )
 
-        return PageableExecutionUtils.getPage(issuedTickets, pageable) { countQuery.fetchOne()!! }
+        return PageableExecutionUtils.getPage(issuedTickets, pageable) { countQuery.fetchOne() ?: 0L }
     }
 
     override fun find(issuedTicketId: Long): Optional<IssuedTicket> {

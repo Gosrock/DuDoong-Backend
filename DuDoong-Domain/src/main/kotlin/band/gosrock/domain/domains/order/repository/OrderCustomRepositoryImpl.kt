@@ -86,7 +86,7 @@ class OrderCustomRepositoryImpl(
                 condition.getSearchStringFilter()
             )
 
-        return PageableExecutionUtils.getPage(orders, pageable) { countQuery.fetchOne()!! }
+        return PageableExecutionUtils.getPage(orders, pageable) { countQuery.fetchOne() ?: 0L }
     }
 
     override fun findRecentOrder(userId: Long): Optional<Order> {
