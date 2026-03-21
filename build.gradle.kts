@@ -33,8 +33,9 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlin.kapt")
 
     java {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        toolchain {
+            languageVersion.set(JavaLanguageVersion.of(21))
+        }
     }
 
     // JPA 엔티티 클래스를 open으로 만들어 Hibernate 프록시 및 Mockito 서브클래스 목킹 지원
@@ -54,9 +55,9 @@ subprojects {
     }
 
     tasks.withType<KotlinCompile> {
-        kotlinOptions {
-            freeCompilerArgs += "-Xjsr305=strict"
-            jvmTarget = "17"
+        compilerOptions {
+            freeCompilerArgs.add("-Xjsr305=strict")
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
         }
     }
 
