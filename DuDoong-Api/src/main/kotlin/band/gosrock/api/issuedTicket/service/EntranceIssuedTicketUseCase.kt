@@ -15,7 +15,7 @@ class EntranceIssuedTicketUseCase(
 
     @Transactional
     @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID)
-    fun execute(eventId: Long, uuid: String): IssuedTicketInfoVo {
+    fun execute(userId: Long, eventId: Long, uuid: String): IssuedTicketInfoVo {
         return issuedTicketDomainService.processingEntranceIssuedTicket(eventId, uuid)
     }
 }

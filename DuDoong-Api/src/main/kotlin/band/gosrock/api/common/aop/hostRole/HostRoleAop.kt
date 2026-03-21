@@ -37,11 +37,12 @@ internal class HostRoleAop(
         val parameterNames = signature.parameterNames
         val args = joinPoint.args
 
+        val userId = getId(parameterNames, args, "userId")
         val id = getId(parameterNames, args, identifier)
 
         return hostCallTransactionFactory
             .getCallTransaction(findHostFrom, annotation.applyTransaction)
-            .proceed(id, hostQualification, joinPoint)
+            .proceed(userId, id, hostQualification, joinPoint)
     }
 
     fun getId(parameterNames: Array<String>, args: Array<Any?>, paramName: String): Long {

@@ -15,7 +15,7 @@ class DeleteOptionGroupUseCase(
 ) {
 
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID, applyTransaction = false)
-    fun execute(eventId: Long, optionGroupId: Long): GetEventOptionsResponse {
+    fun execute(userId: Long, eventId: Long, optionGroupId: Long): GetEventOptionsResponse {
         ticketOptionService.softDeleteOptionGroup(eventId, optionGroupId)
         return ticketOptionMapper.toGetEventOptionResponse(eventId)
     }

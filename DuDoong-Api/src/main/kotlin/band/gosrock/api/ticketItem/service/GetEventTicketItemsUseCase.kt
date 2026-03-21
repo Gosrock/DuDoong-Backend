@@ -16,6 +16,6 @@ class GetEventTicketItemsUseCase(
         ticketItemMapper.toGetEventTicketItemsResponse(eventId, false)
 
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
-    fun executeForAdmin(eventId: Long): GetEventTicketItemsResponse =
+    fun executeForAdmin(userId: Long, eventId: Long): GetEventTicketItemsResponse =
         ticketItemMapper.toGetEventTicketItemsResponse(eventId, true)
 }

@@ -14,10 +14,12 @@ class AdminCancelOrderUseCase(
     private val orderValidator: OrderValidator,
     private val userAdaptor: UserAdaptor,
     private val eventAdaptor: EventAdaptor,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
     @Transactional
-    fun execute(orderUuid: String): AdminOrderResponse {
+    fun execute(userId: Long, orderUuid: String): AdminOrderResponse {
+        adminAuthValidator.validateAdminOrAbove(userId)
         val order = orderAdaptor.findByOrderUuid(orderUuid)
         order.cancel(orderValidator)
 

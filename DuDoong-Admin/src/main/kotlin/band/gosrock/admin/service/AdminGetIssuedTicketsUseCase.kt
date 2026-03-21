@@ -11,14 +11,17 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional(readOnly = true)
 class AdminGetIssuedTicketsUseCase(
     private val issuedTicketRepository: IssuedTicketRepository,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
-    fun execute(eventId: Long, pageable: Pageable): Page<AdminIssuedTicketResponse> {
+    fun execute(userId: Long, eventId: Long, pageable: Pageable): Page<AdminIssuedTicketResponse> {
+        adminAuthValidator.validateManagerOrAbove(userId)
         return issuedTicketRepository.findAllByEventId(eventId, pageable)
             .map { AdminIssuedTicketResponse.from(it) }
     }
 
-    fun executeAll(eventId: Long): List<AdminIssuedTicketResponse> {
+    fun executeAll(userId: Long, eventId: Long): List<AdminIssuedTicketResponse> {
+        adminAuthValidator.validateManagerOrAbove(userId)
         return issuedTicketRepository.findAllByEventId(eventId)
             .map { AdminIssuedTicketResponse.from(it) }
     }

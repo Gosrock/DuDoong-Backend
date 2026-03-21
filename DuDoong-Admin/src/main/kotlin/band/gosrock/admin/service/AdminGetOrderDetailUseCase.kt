@@ -13,9 +13,11 @@ class AdminGetOrderDetailUseCase(
     private val orderAdaptor: OrderAdaptor,
     private val userAdaptor: UserAdaptor,
     private val eventAdaptor: EventAdaptor,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
-    fun execute(orderUuid: String): AdminOrderResponse {
+    fun execute(userId: Long, orderUuid: String): AdminOrderResponse {
+        adminAuthValidator.validateManagerOrAbove(userId)
         val order = orderAdaptor.findByOrderUuid(orderUuid)
         val userName = order.userId?.let {
             runCatching { userAdaptor.queryUser(it).profile?.name }.getOrNull()

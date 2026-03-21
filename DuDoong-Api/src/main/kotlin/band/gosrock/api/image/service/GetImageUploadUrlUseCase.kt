@@ -14,10 +14,10 @@ class GetImageUploadUrlUseCase(
     private val presignedUrlService: S3UploadPresignedUrlService,
 ) {
     @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID)
-    fun forEvent(eventId: Long, imageFileExtension: ImageFileExtension): ImageUrlResponse =
+    fun forEvent(userId: Long, eventId: Long, imageFileExtension: ImageFileExtension): ImageUrlResponse =
         ImageUrlResponse.from(presignedUrlService.forEvent(eventId, imageFileExtension))
 
     @HostRolesAllowed(role = MANAGER, findHostFrom = HOST_ID)
-    fun forHost(hostId: Long, imageFileExtension: ImageFileExtension): ImageUrlResponse =
+    fun forHost(userId: Long, hostId: Long, imageFileExtension: ImageFileExtension): ImageUrlResponse =
         ImageUrlResponse.from(presignedUrlService.forHost(hostId, imageFileExtension))
 }

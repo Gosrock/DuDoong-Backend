@@ -11,14 +11,17 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional(readOnly = true)
 class AdminGetUsersUseCase(
     private val userRepository: UserRepository,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
-    fun executeAll(keyword: String?): List<AdminUserResponse> {
+    fun executeAll(userId: Long, keyword: String?): List<AdminUserResponse> {
+        adminAuthValidator.validateManagerOrAbove(userId)
         return userRepository.findAllByKeywordNoPage(keyword)
             .map { AdminUserResponse.from(it) }
     }
 
-    fun execute(keyword: String?, pageable: Pageable): Page<AdminUserResponse> {
+    fun execute(userId: Long, keyword: String?, pageable: Pageable): Page<AdminUserResponse> {
+        adminAuthValidator.validateManagerOrAbove(userId)
         return userRepository.findAllByKeyword(keyword, pageable)
             .map { AdminUserResponse.from(it) }
     }

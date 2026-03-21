@@ -18,7 +18,7 @@ class ReadHostEventsUseCase(
     private val eventAdaptor: EventAdaptor,
 ) {
     @HostRolesAllowed(role = GUEST, findHostFrom = HOST_ID)
-    fun execute(hostId: Long, pageable: Pageable): PageResponse<HostEventProfileResponse> {
+    fun execute(userId: Long, hostId: Long, pageable: Pageable): PageResponse<HostEventProfileResponse> {
         val host = hostAdaptor.findById(hostId)
         return PageResponse.of(
             eventAdaptor

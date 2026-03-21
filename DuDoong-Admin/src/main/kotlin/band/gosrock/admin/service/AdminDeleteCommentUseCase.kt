@@ -7,10 +7,12 @@ import org.springframework.transaction.annotation.Transactional
 @UseCase
 class AdminDeleteCommentUseCase(
     private val commentAdaptor: CommentAdaptor,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
     @Transactional
-    fun execute(commentId: Long) {
+    fun execute(userId: Long, commentId: Long) {
+        adminAuthValidator.validateAdminOrAbove(userId)
         val comment = commentAdaptor.queryComment(commentId)
         comment.delete()
     }

@@ -13,9 +13,11 @@ import org.springframework.transaction.annotation.Transactional
 class AdminGetEventsUseCase(
     private val eventRepository: EventRepository,
     private val hostAdaptor: HostAdaptor,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
-    fun executeAll(keyword: String?, status: String?): List<AdminEventResponse> {
+    fun executeAll(userId: Long, keyword: String?, status: String?): List<AdminEventResponse> {
+        adminAuthValidator.validateManagerOrAbove(userId)
         return eventRepository.findAllForAdminNoPage(keyword, status)
             .map { event ->
                 val hostName = event.hostId?.let {
@@ -25,7 +27,8 @@ class AdminGetEventsUseCase(
             }
     }
 
-    fun execute(keyword: String?, status: String?, pageable: Pageable): Page<AdminEventResponse> {
+    fun execute(userId: Long, keyword: String?, status: String?, pageable: Pageable): Page<AdminEventResponse> {
+        adminAuthValidator.validateManagerOrAbove(userId)
         return eventRepository.findAllForAdmin(keyword, status, pageable)
             .map { event ->
                 val hostName = event.hostId?.let {

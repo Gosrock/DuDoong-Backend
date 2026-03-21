@@ -13,9 +13,11 @@ import org.springframework.transaction.annotation.Transactional
 class AdminGetCommentsUseCase(
     private val commentRepository: CommentRepository,
     private val eventRepository: EventRepository,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
-    fun execute(keyword: String?, eventId: Long?, pageable: Pageable): Page<AdminCommentResponse> {
+    fun execute(userId: Long, keyword: String?, eventId: Long?, pageable: Pageable): Page<AdminCommentResponse> {
+        adminAuthValidator.validateManagerOrAbove(userId)
         val commentPage = commentRepository.findAllForAdmin(keyword, eventId, pageable)
 
         // batch fetch events to avoid N+1

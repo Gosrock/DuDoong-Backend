@@ -1,21 +1,15 @@
 package band.gosrock.admin.service
 
-import band.gosrock.admin.exception.AdminForbiddenException
 import band.gosrock.admin.model.dto.response.AdminUserDetailResponse
 import band.gosrock.common.annotation.UseCase
-import band.gosrock.domain.domains.user.adaptor.UserAdaptor
-import band.gosrock.domain.domains.user.domain.AccountRole
 
 @UseCase
 class AdminGetMeUseCase(
-    private val userAdaptor: UserAdaptor,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
     fun execute(userId: Long): AdminUserDetailResponse {
-        val user = userAdaptor.queryUser(userId)
-        if (user.accountRole != AccountRole.ADMIN && user.accountRole != AccountRole.SUPER_ADMIN) {
-            throw AdminForbiddenException.EXCEPTION
-        }
+        val user = adminAuthValidator.validateManagerOrAbove(userId)
         return AdminUserDetailResponse.from(user)
     }
 }

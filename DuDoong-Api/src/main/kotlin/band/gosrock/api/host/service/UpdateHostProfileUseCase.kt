@@ -19,7 +19,7 @@ class UpdateHostProfileUseCase(
 ) {
     @Transactional
     @HostRolesAllowed(role = MANAGER, findHostFrom = HOST_ID)
-    fun execute(hostId: Long, updateHostRequest: UpdateHostRequest): HostDetailResponse {
+    fun execute(userId: Long, hostId: Long, updateHostRequest: UpdateHostRequest): HostDetailResponse {
         val host = hostAdaptor.findById(hostId)
 
         return hostMapper.toHostDetailResponse(

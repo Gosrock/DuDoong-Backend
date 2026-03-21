@@ -16,7 +16,7 @@ class ReadEventChecklistUseCase(
     private val eventMapper: EventMapper
 ) {
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
-    fun execute(eventId: Long): EventChecklistResponse {
+    fun execute(userId: Long, eventId: Long): EventChecklistResponse {
         val event = eventAdaptor.findById(eventId)
         return eventMapper.toEventChecklistResponse(event)
     }

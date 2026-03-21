@@ -17,7 +17,7 @@ class CreateTicketOptionUseCase(
 ) {
 
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID, applyTransaction = false)
-    fun execute(createTicketOptionRequest: CreateTicketOptionRequest, eventId: Long): OptionGroupResponse {
+    fun execute(userId: Long, createTicketOptionRequest: CreateTicketOptionRequest, eventId: Long): OptionGroupResponse {
         val ticketOption = ticketOptionMapper
             .toOptionGroup(createTicketOptionRequest, eventId)
             .createTicketOption(Money.wons(createTicketOptionRequest.additionalPrice!!))

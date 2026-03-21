@@ -17,6 +17,7 @@ class ApplyTicketOptionUseCase(
 
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID, applyTransaction = false)
     fun execute(
+        userId: Long,
         applyTicketOptionRequest: ApplyTicketOptionRequest,
         eventId: Long,
         ticketItemId: Long,

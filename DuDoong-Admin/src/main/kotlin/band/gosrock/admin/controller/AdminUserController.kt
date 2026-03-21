@@ -42,9 +42,10 @@ class AdminUserController(
     @Operation(summary = "유저 목록을 엑셀로 다운로드합니다.")
     @GetMapping("/export")
     fun exportUsers(
+        @CurrentUserId currentUserId: Long,
         @RequestParam(required = false) keyword: String?,
     ): ResponseEntity<ByteArray> {
-        val users = adminGetUsersUseCase.executeAll(keyword)
+        val users = adminGetUsersUseCase.executeAll(currentUserId, keyword)
         val bytes = adminExcelService.generateUsersExcel(users)
         return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=users.xlsx")
@@ -55,16 +56,20 @@ class AdminUserController(
     @Operation(summary = "유저 목록을 조회합니다.")
     @GetMapping
     fun getUsers(
+        @CurrentUserId currentUserId: Long,
         @RequestParam(required = false) keyword: String?,
         @PageableDefault(size = 20) pageable: Pageable,
     ): Page<AdminUserResponse> {
-        return adminGetUsersUseCase.execute(keyword, pageable)
+        return adminGetUsersUseCase.execute(currentUserId, keyword, pageable)
     }
 
     @Operation(summary = "유저 상세 정보를 조회합니다.")
     @GetMapping("/{userId}")
-    fun getUserDetail(@PathVariable userId: Long): AdminUserDetailResponse {
-        return adminGetUserDetailUseCase.execute(userId)
+    fun getUserDetail(
+        @CurrentUserId currentUserId: Long,
+        @PathVariable userId: Long,
+    ): AdminUserDetailResponse {
+        return adminGetUserDetailUseCase.execute(currentUserId, userId)
     }
 
     @Operation(summary = "유저 역할을 변경합니다. (SUPER_ADMIN 전용)")
@@ -80,9 +85,10 @@ class AdminUserController(
     @Operation(summary = "유저 상태를 변경합니다.")
     @PatchMapping("/{userId}/status")
     fun updateUserStatus(
+        @CurrentUserId currentUserId: Long,
         @PathVariable userId: Long,
         @RequestBody request: AdminUpdateUserStatusRequest,
     ): AdminUserResponse {
-        return adminUpdateUserStatusUseCase.execute(userId, request)
+        return adminUpdateUserStatusUseCase.execute(currentUserId, userId, request)
     }
 }

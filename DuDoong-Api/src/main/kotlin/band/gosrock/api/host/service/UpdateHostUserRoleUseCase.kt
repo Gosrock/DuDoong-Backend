@@ -19,7 +19,7 @@ class UpdateHostUserRoleUseCase(
 ) {
     @Transactional
     @HostRolesAllowed(role = MANAGER, findHostFrom = HOST_ID)
-    fun execute(hostId: Long, updateHostUserRoleRequest: UpdateHostUserRoleRequest): HostDetailResponse {
+    fun execute(userId: Long, hostId: Long, updateHostUserRoleRequest: UpdateHostUserRoleRequest): HostDetailResponse {
         val host = hostAdaptor.findById(hostId)
         val updateUserId = updateHostUserRoleRequest.userId
         val updateUserRole = updateHostUserRoleRequest.role

@@ -11,10 +11,12 @@ import org.springframework.transaction.annotation.Transactional
 class AdminUpdateHostPartnerUseCase(
     private val hostAdaptor: HostAdaptor,
     private val hostRepository: HostRepository,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
     @Transactional
-    fun execute(hostId: Long, request: AdminUpdateHostPartnerRequest): AdminHostDetailResponse {
+    fun execute(userId: Long, hostId: Long, request: AdminUpdateHostPartnerRequest): AdminHostDetailResponse {
+        adminAuthValidator.validateAdminOrAbove(userId)
         val host = hostAdaptor.findById(hostId)
         host.changePartner(request.partner)
         hostRepository.save(host)

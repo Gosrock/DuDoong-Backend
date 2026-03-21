@@ -13,17 +13,19 @@ class AdminUpdateHostMemberRoleUseCase(
     private val hostAdaptor: HostAdaptor,
     private val hostRepository: HostRepository,
     private val userAdaptor: UserAdaptor,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
     @Transactional
-    fun execute(hostId: Long, userId: Long, request: AdminUpdateHostMemberRoleRequest): AdminHostMemberResponse {
+    fun execute(userId: Long, hostId: Long, targetUserId: Long, request: AdminUpdateHostMemberRoleRequest): AdminHostMemberResponse {
+        adminAuthValidator.validateAdminOrAbove(userId)
         val host = hostAdaptor.findById(hostId)
         // 어드민이므로 마스터 권한 체크 건너뜀
-        host.setHostUserRole(userId, request.role)
+        host.setHostUserRole(targetUserId, request.role)
         hostRepository.save(host)
 
-        val hostUser = host.getHostUserByUserId(userId)
-        val userName = runCatching { userAdaptor.queryUser(userId).profile?.name }.getOrNull()
+        val hostUser = host.getHostUserByUserId(targetUserId)
+        val userName = runCatching { userAdaptor.queryUser(targetUserId).profile?.name }.getOrNull()
         return AdminHostMemberResponse.of(hostUser, userName)
     }
 }

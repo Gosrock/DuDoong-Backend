@@ -8,9 +8,11 @@ import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor
 @UseCase
 class AdminAdjustTicketStockUseCase(
     private val ticketItemAdaptor: TicketItemAdaptor,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
     @RedissonLock(LockName = "티켓관리", identifier = "ticketItemId")
-    fun execute(ticketItemId: Long, delta: Long): AdminTicketItemResponse {
+    fun execute(userId: Long, ticketItemId: Long, delta: Long): AdminTicketItemResponse {
+        adminAuthValidator.validateAdminOrAbove(userId)
         val ticketItem = ticketItemAdaptor.queryTicketItem(ticketItemId)
         ticketItem.adminAdjustStock(delta)
         ticketItemAdaptor.save(ticketItem)

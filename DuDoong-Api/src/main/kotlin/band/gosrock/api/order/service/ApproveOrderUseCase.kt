@@ -14,7 +14,7 @@ class ApproveOrderUseCase(
     private val orderMapper: OrderMapper,
 ) {
     @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID, applyTransaction = false)
-    fun execute(eventId: Long, orderUuid: String): OrderResponse {
+    fun execute(userId: Long, eventId: Long, orderUuid: String): OrderResponse {
         val confirmOrderUuid = orderApproveService.execute(orderUuid)
         return orderMapper.toOrderResponse(confirmOrderUuid)
     }
