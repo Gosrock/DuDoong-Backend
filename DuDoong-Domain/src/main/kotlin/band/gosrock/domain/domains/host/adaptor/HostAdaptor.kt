@@ -29,6 +29,9 @@ class HostAdaptor(private val hostRepository: HostRepository) {
     fun findAllByHostUsers_UserId(userId: Long): List<Host> =
         hostRepository.findAllByHostUsers_UserId(userId)
 
+    fun findAllForAdmin(keyword: String?, pageable: Pageable): Page<Host> =
+        hostRepository.findAllForAdmin(keyword, pageable)
+
     /** 자신이 속해있는 호스트 리스트 중 초대 수락한 호스트만 가져오는 쿼리 요청 */
     fun querySliceHostsByActiveUserId(userId: Long): List<Host> =
         hostRepository.queryHostsByActiveUserId(userId)

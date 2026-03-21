@@ -31,9 +31,10 @@ class AdminCommentController(
     @GetMapping
     fun getComments(
         @RequestParam(required = false) keyword: String?,
+        @RequestParam(required = false) eventId: Long?,
         @PageableDefault(size = 20) pageable: Pageable,
     ): Page<AdminCommentResponse> {
-        return adminGetCommentsUseCase.execute(keyword, pageable)
+        return adminGetCommentsUseCase.execute(keyword, eventId, pageable)
     }
 
     @Operation(summary = "댓글을 삭제합니다. (소프트 삭제)")

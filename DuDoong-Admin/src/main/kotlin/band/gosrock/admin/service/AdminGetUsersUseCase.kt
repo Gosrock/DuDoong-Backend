@@ -13,6 +13,11 @@ class AdminGetUsersUseCase(
     private val userRepository: UserRepository,
 ) {
 
+    fun executeAll(keyword: String?): List<AdminUserResponse> {
+        return userRepository.findAllByKeywordNoPage(keyword)
+            .map { AdminUserResponse.from(it) }
+    }
+
     fun execute(keyword: String?, pageable: Pageable): Page<AdminUserResponse> {
         return userRepository.findAllByKeyword(keyword, pageable)
             .map { AdminUserResponse.from(it) }

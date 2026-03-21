@@ -9,7 +9,7 @@ data class AdminOrderResponse(
     val userName: String?,
     val eventName: String?,
     val ticketName: String?,
-    val totalAmount: String?,
+    val totalAmount: Long,
     val orderStatus: OrderStatus,
     val createdAt: LocalDateTime?,
 ) {
@@ -20,7 +20,7 @@ data class AdminOrderResponse(
                 userName = userName,
                 eventName = eventName,
                 ticketName = order.orderName,
-                totalAmount = order.getTotalPaymentPrice().toString(),
+                totalAmount = order.getTotalPaymentPrice().longValue(),
                 orderStatus = order.orderStatus,
                 createdAt = order.createdAt,
             )

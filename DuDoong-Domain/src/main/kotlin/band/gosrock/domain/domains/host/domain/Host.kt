@@ -44,7 +44,8 @@ class Host() : BaseTimeEntity() {
         protected set
 
     // 파트너 여부
-    val partner: Boolean = false
+    var partner: Boolean = false
+        protected set
 
     // 슬랙 웹훅 url
     var slackUrl: String? = null
@@ -171,6 +172,10 @@ class Host() : BaseTimeEntity() {
     }
 
     fun isPartnerHost(): Boolean = partner
+
+    fun changePartner(partner: Boolean) {
+        this.partner = partner
+    }
 
     fun toHostInfoVo(): HostInfoVo = HostInfoVo.from(this)
     fun toHostProfileVo(): HostProfileVo = HostProfileVo.from(this)

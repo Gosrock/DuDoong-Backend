@@ -7,6 +7,8 @@ import band.gosrock.domain.domains.host.domain.QHostUser.hostUser
 import com.querydsl.core.types.OrderSpecifier
 import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.jpa.impl.JPAQueryFactory
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 
@@ -41,6 +43,28 @@ class HostCustomRepositoryImpl(private val queryFactory: JPAQueryFactory) : Host
             .limit((pageable.pageSize + 1).toLong())
             .fetch()
         return SliceUtil.valueOf(hosts, pageable)
+    }
+
+    override fun findAllForAdmin(keyword: String?, pageable: Pageable): Page<Host> {
+        val keywordCondition: BooleanExpression? =
+            if (!keyword.isNullOrBlank()) host.profile.name.contains(keyword) else null
+
+        val hosts = queryFactory
+            .select(host)
+            .from(host)
+            .where(keywordCondition)
+            .offset(pageable.offset)
+            .orderBy(hostIdDesc())
+            .limit(pageable.pageSize.toLong())
+            .fetch()
+
+        val total = queryFactory
+            .select(host.count())
+            .from(host)
+            .where(keywordCondition)
+            .fetchOne() ?: 0L
+
+        return PageImpl(hosts, pageable, total)
     }
 
     private fun hostUserIdEq(userId: Long): BooleanExpression = hostUser.userId.eq(userId)

@@ -2,6 +2,7 @@ package band.gosrock.admin.controller
 
 import band.gosrock.admin.model.dto.response.AdminOrderResponse
 import band.gosrock.admin.service.AdminCancelOrderUseCase
+import band.gosrock.admin.service.AdminExcelService
 import band.gosrock.admin.service.AdminGetOrderDetailUseCase
 import band.gosrock.admin.service.AdminGetOrdersUseCase
 import band.gosrock.domain.domains.order.domain.OrderStatus
@@ -11,6 +12,9 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -26,16 +30,33 @@ class AdminOrderController(
     private val adminGetOrdersUseCase: AdminGetOrdersUseCase,
     private val adminGetOrderDetailUseCase: AdminGetOrderDetailUseCase,
     private val adminCancelOrderUseCase: AdminCancelOrderUseCase,
+    private val adminExcelService: AdminExcelService,
 ) {
+
+    @Operation(summary = "주문 목록을 엑셀로 다운로드합니다.")
+    @GetMapping("/export")
+    fun exportOrders(
+        @RequestParam(required = false) keyword: String?,
+        @RequestParam(required = false) status: OrderStatus?,
+        @RequestParam(required = false) eventId: Long?,
+    ): ResponseEntity<ByteArray> {
+        val orders = adminGetOrdersUseCase.executeAll(keyword, status, eventId)
+        val bytes = adminExcelService.generateOrdersExcel(orders)
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=orders.xlsx")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .body(bytes)
+    }
 
     @Operation(summary = "주문 목록을 조회합니다.")
     @GetMapping
     fun getOrders(
         @RequestParam(required = false) keyword: String?,
         @RequestParam(required = false) status: OrderStatus?,
+        @RequestParam(required = false) eventId: Long?,
         @PageableDefault(size = 20) pageable: Pageable,
     ): Page<AdminOrderResponse> {
-        return adminGetOrdersUseCase.execute(keyword, status, pageable)
+        return adminGetOrdersUseCase.execute(keyword, status, eventId, pageable)
     }
 
     @Operation(summary = "주문 상세 정보를 조회합니다.")

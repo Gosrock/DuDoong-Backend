@@ -31,6 +31,16 @@ interface UserRepository : JpaRepository<User, Long> {
     )
     fun findAllByKeyword(@Param("keyword") keyword: String?, pageable: Pageable): Page<User>
 
+    /** Admin: 페이지네이션 없이 전체 유저 조회 (엑셀 다운로드용) */
+    @Query(
+        "SELECT u FROM User u WHERE " +
+            "(:keyword IS NULL OR u.profile.name LIKE %:keyword% OR u.profile.email LIKE %:keyword%)"
+    )
+    fun findAllByKeywordNoPage(@Param("keyword") keyword: String?): List<User>
+
     /** Admin: 오늘 가입한 유저 수 */
     fun countByCreatedAtAfter(after: LocalDateTime): Long
+
+    /** Admin: 기간 내 가입한 유저 수 */
+    fun countByCreatedAtBetween(start: LocalDateTime, end: LocalDateTime): Long
 }

@@ -34,6 +34,10 @@ class SuccessResponseAdvice : ResponseBodyAdvice<Any> {
         val status = servletResponse.status
         val resolve = HttpStatus.resolve(status) ?: return body
 
+        if (body is ByteArray || selectedContentType == MediaType.APPLICATION_OCTET_STREAM) {
+            return body
+        }
+
         return if (resolve.is2xxSuccessful) {
             SuccessResponse(status, body)
         } else {

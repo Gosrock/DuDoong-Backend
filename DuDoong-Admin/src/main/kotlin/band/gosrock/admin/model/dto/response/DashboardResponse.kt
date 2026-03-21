@@ -7,4 +7,6 @@ data class DashboardResponse(
     val todayRevenue: Long,
     val activeEvents: Long,
     val todayRefunds: Long,
+    val recentOrders: List<AdminOrderResponse> = emptyList(),
+    val recentEvents: List<AdminEventResponse> = emptyList(),
 )

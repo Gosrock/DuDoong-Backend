@@ -5,6 +5,9 @@ import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.domains.event.exception.EventNotFoundException
 import band.gosrock.domain.domains.event.repository.EventRepository
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor
+import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepository
+import band.gosrock.domain.domains.order.repository.OrderRepository
+import band.gosrock.domain.domains.ticket_item.repository.TicketItemRepository
 import org.springframework.transaction.annotation.Transactional
 
 @UseCase
@@ -12,6 +15,9 @@ import org.springframework.transaction.annotation.Transactional
 class AdminGetEventDetailUseCase(
     private val eventRepository: EventRepository,
     private val hostAdaptor: HostAdaptor,
+    private val ticketItemRepository: TicketItemRepository,
+    private val issuedTicketRepository: IssuedTicketRepository,
+    private val orderRepository: OrderRepository,
 ) {
 
     fun execute(eventId: Long): AdminEventResponse {
@@ -21,6 +27,16 @@ class AdminGetEventDetailUseCase(
         val hostName = event.hostId?.let {
             runCatching { hostAdaptor.findById(it).profile?.name }.getOrNull()
         }
-        return AdminEventResponse.of(event, hostName)
+        val ticketItemCount = ticketItemRepository.countByEventId(eventId).toInt()
+        val issuedTicketCount = issuedTicketRepository.countByEventId(eventId).toInt()
+        val totalOrderCount = orderRepository.countByEventId(eventId).toInt()
+
+        return AdminEventResponse.ofDetail(
+            event = event,
+            hostName = hostName,
+            ticketItemCount = ticketItemCount,
+            issuedTicketCount = issuedTicketCount,
+            totalOrderCount = totalOrderCount,
+        )
     }
 }

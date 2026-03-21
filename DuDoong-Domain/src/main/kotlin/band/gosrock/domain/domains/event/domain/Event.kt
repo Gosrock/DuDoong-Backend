@@ -187,6 +187,44 @@ class Event() : BaseTimeEntity() {
 
     fun getEventName(): String? = eventBasic?.name
 
+    /** 어드민 전용: 상태 전이 밸리데이션 없이 직접 상태 변경 */
+    fun adminUpdateStatus(newStatus: EventStatus) {
+        this.status = newStatus
+    }
+
+    /** 어드민 전용: OPEN 여부 무관하게 기본 정보 부분 수정 */
+    fun adminUpdate(
+        name: String?,
+        startAt: java.time.LocalDateTime?,
+        runTime: Long?,
+        content: String?,
+        placeName: String?,
+        placeAddress: String?,
+    ) {
+        val currentBasic = this.eventBasic
+        this.eventBasic = EventBasic(
+            name = name ?: currentBasic?.name,
+            startAt = startAt ?: currentBasic?.startAt,
+            runTime = runTime ?: currentBasic?.runTime,
+        )
+        if (content != null) {
+            val currentDetail = this.eventDetail
+            this.eventDetail = EventDetail(
+                posterImageKey = currentDetail?.posterImage?.imageKey,
+                content = content,
+            )
+        }
+        if (placeName != null || placeAddress != null) {
+            val currentPlace = this.eventPlace
+            this.eventPlace = EventPlace(
+                latitude = currentPlace?.latitude,
+                longitude = currentPlace?.longitude,
+                placeName = placeName ?: currentPlace?.placeName,
+                placeAddress = placeAddress ?: currentPlace?.placeAddress,
+            )
+        }
+    }
+
     companion object {
         @JvmStatic
         fun builder() = Builder()

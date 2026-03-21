@@ -15,6 +15,16 @@ class AdminGetEventsUseCase(
     private val hostAdaptor: HostAdaptor,
 ) {
 
+    fun executeAll(keyword: String?, status: String?): List<AdminEventResponse> {
+        return eventRepository.findAllForAdminNoPage(keyword, status)
+            .map { event ->
+                val hostName = event.hostId?.let {
+                    runCatching { hostAdaptor.findById(it).profile?.name }.getOrNull()
+                }
+                AdminEventResponse.of(event, hostName)
+            }
+    }
+
     fun execute(keyword: String?, status: String?, pageable: Pageable): Page<AdminEventResponse> {
         return eventRepository.findAllForAdmin(keyword, status, pageable)
             .map { event ->

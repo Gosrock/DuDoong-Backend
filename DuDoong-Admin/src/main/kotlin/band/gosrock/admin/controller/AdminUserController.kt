@@ -4,6 +4,7 @@ import band.gosrock.admin.model.dto.request.AdminUpdateUserRoleRequest
 import band.gosrock.admin.model.dto.request.AdminUpdateUserStatusRequest
 import band.gosrock.admin.model.dto.response.AdminUserDetailResponse
 import band.gosrock.admin.model.dto.response.AdminUserResponse
+import band.gosrock.admin.service.AdminExcelService
 import band.gosrock.admin.service.AdminGetUserDetailUseCase
 import band.gosrock.admin.service.AdminGetUsersUseCase
 import band.gosrock.admin.service.AdminUpdateUserRoleUseCase
@@ -15,6 +16,9 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -32,7 +36,21 @@ class AdminUserController(
     private val adminGetUserDetailUseCase: AdminGetUserDetailUseCase,
     private val adminUpdateUserRoleUseCase: AdminUpdateUserRoleUseCase,
     private val adminUpdateUserStatusUseCase: AdminUpdateUserStatusUseCase,
+    private val adminExcelService: AdminExcelService,
 ) {
+
+    @Operation(summary = "유저 목록을 엑셀로 다운로드합니다.")
+    @GetMapping("/export")
+    fun exportUsers(
+        @RequestParam(required = false) keyword: String?,
+    ): ResponseEntity<ByteArray> {
+        val users = adminGetUsersUseCase.executeAll(keyword)
+        val bytes = adminExcelService.generateUsersExcel(users)
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=users.xlsx")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .body(bytes)
+    }
 
     @Operation(summary = "유저 목록을 조회합니다.")
     @GetMapping

@@ -15,10 +15,15 @@ interface CommentRepository : JpaRepository<Comment, Long>, CommentCustomReposit
     )
     fun findAllRandom(@Param("eventId") eventId: Long, @Param("offset") limit: Long): List<Comment>
 
-    /** Admin: 키워드(content, nickName)로 댓글 검색 */
+    /** Admin: 키워드(content, nickName) + eventId 필터로 댓글 검색 */
     @Query(
         "SELECT c FROM tbl_comment c WHERE " +
-            "(:keyword IS NULL OR c.content LIKE %:keyword% OR c.nickName LIKE %:keyword%)"
+            "(:keyword IS NULL OR c.content LIKE %:keyword% OR c.nickName LIKE %:keyword%) " +
+            "AND (:eventId IS NULL OR c.eventId = :eventId)"
     )
-    fun findAllForAdmin(@Param("keyword") keyword: String?, pageable: Pageable): Page<Comment>
+    fun findAllForAdmin(
+        @Param("keyword") keyword: String?,
+        @Param("eventId") eventId: Long?,
+        pageable: Pageable,
+    ): Page<Comment>
 }
