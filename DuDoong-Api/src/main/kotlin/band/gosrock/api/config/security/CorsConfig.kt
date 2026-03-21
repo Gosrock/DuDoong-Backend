@@ -14,6 +14,8 @@ class CorsConfig(
         val allowedOriginPatterns = mutableListOf(
             "https://dudoong.com",
             "https://staging.dudoong.com",
+            "https://internal-admin.dudoong.com",
+            "https://internal-admin.staging.dudoong.com",
             "http://localhost:3000",
             "http://localhost:5173"
         )
