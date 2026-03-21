@@ -15,6 +15,9 @@ data class AdminEventResponse(
     val ticketItemCount: Int = 0,
     val issuedTicketCount: Int = 0,
     val totalOrderCount: Int = 0,
+    val content: String? = null,
+    val placeName: String? = null,
+    val placeAddress: String? = null,
 ) {
     companion object {
         fun of(event: Event, hostName: String?): AdminEventResponse =
@@ -46,6 +49,9 @@ data class AdminEventResponse(
                 ticketItemCount = ticketItemCount,
                 issuedTicketCount = issuedTicketCount,
                 totalOrderCount = totalOrderCount,
+                content = event.eventDetail?.content,
+                placeName = event.eventPlace?.placeName,
+                placeAddress = event.eventPlace?.placeAddress,
             )
     }
 }

@@ -3,6 +3,7 @@ package band.gosrock.admin.controller
 import band.gosrock.admin.model.dto.request.AdminAddHostMemberRequest
 import band.gosrock.admin.model.dto.request.AdminUpdateHostMemberRoleRequest
 import band.gosrock.admin.model.dto.request.AdminUpdateHostPartnerRequest
+import band.gosrock.admin.model.dto.request.AdminUpdateHostProfileRequest
 import band.gosrock.admin.model.dto.response.AdminEventResponse
 import band.gosrock.admin.model.dto.response.AdminHostDetailResponse
 import band.gosrock.admin.model.dto.response.AdminHostMemberResponse
@@ -15,6 +16,7 @@ import band.gosrock.admin.service.AdminGetHostsUseCase
 import band.gosrock.admin.service.AdminRemoveHostMemberUseCase
 import band.gosrock.admin.service.AdminUpdateHostMemberRoleUseCase
 import band.gosrock.admin.service.AdminUpdateHostPartnerUseCase
+import band.gosrock.admin.service.AdminUpdateHostProfileUseCase
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -46,6 +48,7 @@ class AdminHostController(
     private val adminRemoveHostMemberUseCase: AdminRemoveHostMemberUseCase,
     private val adminGetHostEventsUseCase: AdminGetHostEventsUseCase,
     private val adminUpdateHostPartnerUseCase: AdminUpdateHostPartnerUseCase,
+    private val adminUpdateHostProfileUseCase: AdminUpdateHostProfileUseCase,
 ) {
 
     @Operation(summary = "호스트 목록을 조회합니다.")
@@ -115,5 +118,14 @@ class AdminHostController(
         @RequestBody request: AdminUpdateHostPartnerRequest,
     ): AdminHostDetailResponse {
         return adminUpdateHostPartnerUseCase.execute(hostId, request)
+    }
+
+    @Operation(summary = "호스트 프로필을 수정합니다.")
+    @PatchMapping("/{hostId}/profile")
+    fun updateHostProfile(
+        @PathVariable hostId: Long,
+        @RequestBody request: AdminUpdateHostProfileRequest,
+    ): AdminHostDetailResponse {
+        return adminUpdateHostProfileUseCase.execute(hostId, request)
     }
 }

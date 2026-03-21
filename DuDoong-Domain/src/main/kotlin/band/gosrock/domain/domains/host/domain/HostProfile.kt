@@ -45,6 +45,7 @@ class HostProfile() {
     }
 
     fun updateProfile(hostProfile: HostProfile) {
+        this.name = hostProfile.name
         this.profileImage = hostProfile.profileImage
         this.introduce = hostProfile.introduce
         this.contactEmail = hostProfile.contactEmail
