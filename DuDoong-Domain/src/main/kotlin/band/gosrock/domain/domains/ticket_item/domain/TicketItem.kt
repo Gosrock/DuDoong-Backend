@@ -248,6 +248,31 @@ class TicketItem() : BaseTimeEntity() {
 
     fun isQuantityLeft(): Boolean = quantity!! > 0
 
+    /** 어드민 전용: 재고(quantity)와 공급량(supplyCount)을 동시에 조정 */
+    fun adminAdjustStock(delta: Long) {
+        val newQuantity = this.quantity!! + delta
+        val newSupplyCount = this.supplyCount!! + delta
+        if (newQuantity < 0) throw TicketItemQuantityException.EXCEPTION
+        if (newSupplyCount < 0) throw TicketItemQuantityException.EXCEPTION
+        this.quantity = newQuantity
+        this.supplyCount = newSupplyCount
+    }
+
+    /** 어드민 전용: 이벤트 상태 체크 없이 티켓 종류 정보 수정 */
+    fun adminUpdate(
+        name: String?,
+        description: String?,
+        price: Money?,
+        quantity: Long?,
+        purchaseLimit: Long?,
+    ) {
+        if (name != null) this.name = name
+        if (description != null) this.description = description
+        if (price != null) this.price = price
+        if (quantity != null) this.quantity = quantity
+        if (purchaseLimit != null) this.purchaseLimit = purchaseLimit
+    }
+
     companion object {
         @JvmStatic
         fun builder() = Builder()

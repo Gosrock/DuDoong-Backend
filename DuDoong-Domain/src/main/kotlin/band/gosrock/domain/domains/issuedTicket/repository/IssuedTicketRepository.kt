@@ -13,5 +13,6 @@ interface IssuedTicketRepository : JpaRepository<IssuedTicket, Long>, IssuedTick
     fun existsByEventId(eventId: Long): Boolean
     fun countByEventId(eventId: Long): Long
     fun findAllByEventId(eventId: Long, pageable: Pageable): Page<IssuedTicket>
+    fun findAllByEventId(eventId: Long): List<IssuedTicket>
     fun findByUuid(uuid: String): Optional<IssuedTicket>
 }

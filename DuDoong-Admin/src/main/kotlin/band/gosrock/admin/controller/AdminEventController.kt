@@ -1,16 +1,22 @@
 package band.gosrock.admin.controller
 
+import band.gosrock.admin.model.dto.request.AdminAdjustTicketStockRequest
 import band.gosrock.admin.model.dto.request.AdminUpdateEventRequest
 import band.gosrock.admin.model.dto.request.AdminUpdateEventStatusRequest
+import band.gosrock.admin.model.dto.request.AdminUpdateTicketItemRequest
 import band.gosrock.admin.model.dto.response.AdminEventResponse
 import band.gosrock.admin.model.dto.response.AdminIssuedTicketResponse
+import band.gosrock.admin.model.dto.response.AdminTicketItemResponse
+import band.gosrock.admin.service.AdminAdjustTicketStockUseCase
 import band.gosrock.admin.service.AdminDeleteEventUseCase
 import band.gosrock.admin.service.AdminExcelService
 import band.gosrock.admin.service.AdminGetEventDetailUseCase
 import band.gosrock.admin.service.AdminGetEventsUseCase
 import band.gosrock.admin.service.AdminGetIssuedTicketsUseCase
+import band.gosrock.admin.service.AdminGetTicketItemsUseCase
 import band.gosrock.admin.service.AdminUpdateEventStatusUseCase
 import band.gosrock.admin.service.AdminUpdateEventUseCase
+import band.gosrock.admin.service.AdminUpdateTicketItemUseCase
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -25,6 +31,7 @@ import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -43,6 +50,9 @@ class AdminEventController(
     private val adminUpdateEventUseCase: AdminUpdateEventUseCase,
     private val adminGetIssuedTicketsUseCase: AdminGetIssuedTicketsUseCase,
     private val adminExcelService: AdminExcelService,
+    private val adminGetTicketItemsUseCase: AdminGetTicketItemsUseCase,
+    private val adminUpdateTicketItemUseCase: AdminUpdateTicketItemUseCase,
+    private val adminAdjustTicketStockUseCase: AdminAdjustTicketStockUseCase,
 ) {
 
     @Operation(summary = "이벤트 목록을 엑셀로 다운로드합니다.")
@@ -108,5 +118,53 @@ class AdminEventController(
         @PageableDefault(size = 20) pageable: Pageable,
     ): Page<AdminIssuedTicketResponse> {
         return adminGetIssuedTicketsUseCase.execute(eventId, pageable)
+    }
+
+    @Operation(summary = "이벤트별 티켓 종류 목록을 조회합니다.")
+    @GetMapping("/{eventId}/ticket-items")
+    fun getTicketItems(@PathVariable eventId: Long): List<AdminTicketItemResponse> {
+        return adminGetTicketItemsUseCase.execute(eventId)
+    }
+
+    @Operation(summary = "이벤트별 티켓 종류 목록을 엑셀로 다운로드합니다.")
+    @GetMapping("/{eventId}/ticket-items/export")
+    fun exportTicketItems(@PathVariable eventId: Long): ResponseEntity<ByteArray> {
+        val items = adminGetTicketItemsUseCase.execute(eventId)
+        val bytes = adminExcelService.generateTicketItemsExcel(items)
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=ticket-items-${eventId}.xlsx")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .body(bytes)
+    }
+
+    @Operation(summary = "이벤트별 발급 티켓 목록을 엑셀로 다운로드합니다.")
+    @GetMapping("/{eventId}/issued-tickets/export")
+    fun exportIssuedTickets(@PathVariable eventId: Long): ResponseEntity<ByteArray> {
+        val tickets = adminGetIssuedTicketsUseCase.executeAll(eventId)
+        val bytes = adminExcelService.generateIssuedTicketsExcel(tickets)
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=issued-tickets-${eventId}.xlsx")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .body(bytes)
+    }
+
+    @Operation(summary = "티켓 종류를 수정합니다. (어드민 전용, 이벤트 상태 체크 없이 수정 가능)")
+    @PatchMapping("/{eventId}/ticket-items/{ticketItemId}")
+    fun updateTicketItem(
+        @PathVariable eventId: Long,
+        @PathVariable ticketItemId: Long,
+        @RequestBody request: AdminUpdateTicketItemRequest,
+    ): AdminTicketItemResponse {
+        return adminUpdateTicketItemUseCase.execute(eventId, ticketItemId, request)
+    }
+
+    @Operation(summary = "티켓 재고를 조정합니다. (어드민 전용, delta 양수=증가 음수=감소)")
+    @PostMapping("/{eventId}/ticket-items/{ticketItemId}/adjust-stock")
+    fun adjustTicketStock(
+        @PathVariable eventId: Long,
+        @PathVariable ticketItemId: Long,
+        @RequestBody request: AdminAdjustTicketStockRequest,
+    ): AdminTicketItemResponse {
+        return adminAdjustTicketStockUseCase.execute(ticketItemId, request.delta)
     }
 }

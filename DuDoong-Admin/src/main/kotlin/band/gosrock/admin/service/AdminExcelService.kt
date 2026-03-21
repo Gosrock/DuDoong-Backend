@@ -1,7 +1,9 @@
 package band.gosrock.admin.service
 
 import band.gosrock.admin.model.dto.response.AdminEventResponse
+import band.gosrock.admin.model.dto.response.AdminIssuedTicketResponse
 import band.gosrock.admin.model.dto.response.AdminOrderResponse
+import band.gosrock.admin.model.dto.response.AdminTicketItemResponse
 import band.gosrock.admin.model.dto.response.AdminUserResponse
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.stereotype.Service
@@ -65,6 +67,46 @@ class AdminExcelService {
             row.createCell(3).setCellValue(user.accountRole.toString())
             row.createCell(4).setCellValue(user.accountState.toString())
             row.createCell(5).setCellValue(user.createdAt?.toString() ?: "")
+        }
+        return toByteArray(workbook)
+    }
+
+    fun generateTicketItemsExcel(items: List<AdminTicketItemResponse>): ByteArray {
+        val workbook = XSSFWorkbook()
+        val sheet = workbook.createSheet("티켓 종류 목록")
+        val headerRow = sheet.createRow(0)
+        listOf("이름", "설명", "가격", "수량", "판매수", "구매제한", "타입", "상태").forEachIndexed { i, h ->
+            headerRow.createCell(i).setCellValue(h)
+        }
+        items.forEachIndexed { idx, item ->
+            val row = sheet.createRow(idx + 1)
+            row.createCell(0).setCellValue(item.name ?: "")
+            row.createCell(1).setCellValue(item.description ?: "")
+            row.createCell(2).setCellValue(item.price?.toDouble() ?: 0.0)
+            row.createCell(3).setCellValue(item.quantity?.toDouble() ?: 0.0)
+            row.createCell(4).setCellValue(item.supplyCount?.toDouble() ?: 0.0)
+            row.createCell(5).setCellValue(item.purchaseLimit?.toDouble() ?: 0.0)
+            row.createCell(6).setCellValue(item.type?.toString() ?: "")
+            row.createCell(7).setCellValue(item.ticketItemStatus.toString())
+        }
+        return toByteArray(workbook)
+    }
+
+    fun generateIssuedTicketsExcel(tickets: List<AdminIssuedTicketResponse>): ByteArray {
+        val workbook = XSSFWorkbook()
+        val sheet = workbook.createSheet("발급 티켓 목록")
+        val headerRow = sheet.createRow(0)
+        listOf("티켓번호", "유저명", "티켓종류", "주문번호", "입장여부", "발급일").forEachIndexed { i, h ->
+            headerRow.createCell(i).setCellValue(h)
+        }
+        tickets.forEachIndexed { idx, ticket ->
+            val row = sheet.createRow(idx + 1)
+            row.createCell(0).setCellValue(ticket.issuedTicketNo ?: "")
+            row.createCell(1).setCellValue(ticket.userName ?: "")
+            row.createCell(2).setCellValue(ticket.ticketName ?: "")
+            row.createCell(3).setCellValue(ticket.orderUuid ?: "")
+            row.createCell(4).setCellValue(if (ticket.enteredAt != null) "입장" else "미입장")
+            row.createCell(5).setCellValue(ticket.createdAt?.toString() ?: "")
         }
         return toByteArray(workbook)
     }

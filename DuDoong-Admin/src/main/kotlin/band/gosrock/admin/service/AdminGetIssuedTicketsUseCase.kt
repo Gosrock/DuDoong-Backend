@@ -17,4 +17,9 @@ class AdminGetIssuedTicketsUseCase(
         return issuedTicketRepository.findAllByEventId(eventId, pageable)
             .map { AdminIssuedTicketResponse.from(it) }
     }
+
+    fun executeAll(eventId: Long): List<AdminIssuedTicketResponse> {
+        return issuedTicketRepository.findAllByEventId(eventId)
+            .map { AdminIssuedTicketResponse.from(it) }
+    }
 }
