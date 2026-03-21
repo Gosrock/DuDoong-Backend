@@ -1,9 +1,12 @@
 package band.gosrock.api.config.security
 
-import band.gosrock.common.helper.SpringEnvironmentHelper
+import band.gosrock.common.dto.ErrorResponse
+import band.gosrock.common.exception.GlobalErrorCode
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
+import org.springframework.http.MediaType
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -17,7 +20,7 @@ class SecurityConfig(
     private val jwtTokenFilter: JwtTokenFilter,
     private val accessDeniedFilter: AccessDeniedFilter,
     private val jwtExceptionFilter: JwtExceptionFilter,
-    private val springEnvironmentHelper: SpringEnvironmentHelper
+    private val objectMapper: ObjectMapper,
 ) {
 
     @Bean
@@ -27,6 +30,29 @@ class SecurityConfig(
             .cors {}
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+
+        http.exceptionHandling { exceptions ->
+            exceptions.accessDeniedHandler { request, response, _ ->
+                val errorResponse = ErrorResponse(
+                    GlobalErrorCode.ACCESS_TOKEN_NOT_EXIST.getErrorReason(),
+                    request.requestURL.toString()
+                )
+                response.characterEncoding = "UTF-8"
+                response.contentType = MediaType.APPLICATION_JSON_VALUE
+                response.status = 403
+                response.writer.write(objectMapper.writeValueAsString(errorResponse))
+            }
+            exceptions.authenticationEntryPoint { request, response, _ ->
+                val errorResponse = ErrorResponse(
+                    GlobalErrorCode.ACCESS_TOKEN_NOT_EXIST.getErrorReason(),
+                    request.requestURL.toString()
+                )
+                response.characterEncoding = "UTF-8"
+                response.contentType = MediaType.APPLICATION_JSON_VALUE
+                response.status = 401
+                response.writer.write(objectMapper.writeValueAsString(errorResponse))
+            }
+        }
 
         http.authorizeHttpRequests { auth ->
             auth
