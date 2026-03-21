@@ -19,7 +19,7 @@ class ServletFilterConfig(
 ) : WebMvcConfigurer {
 
     @Bean
-    fun securityFilterChain(
+    fun securityFilterRegistration(
         @Qualifier(AbstractSecurityWebApplicationInitializer.DEFAULT_FILTER_NAME)
         securityFilter: Filter,
     ): FilterRegistrationBean<Filter> {
