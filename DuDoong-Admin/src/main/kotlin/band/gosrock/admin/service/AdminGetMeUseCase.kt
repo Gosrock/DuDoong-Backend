@@ -13,7 +13,7 @@ class AdminGetMeUseCase(
 
     fun execute(userId: Long): AdminUserDetailResponse {
         val user = userAdaptor.queryUser(userId)
-        if (user.accountRole == AccountRole.USER) {
+        if (user.accountRole != AccountRole.ADMIN && user.accountRole != AccountRole.SUPER_ADMIN) {
             throw AdminForbiddenException.EXCEPTION
         }
         return AdminUserDetailResponse.from(user)

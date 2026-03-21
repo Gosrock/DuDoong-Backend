@@ -22,10 +22,10 @@ import band.gosrock.infrastructure.outer.api.oauth.exception.KakaoKauthErrorCode
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.CookieValue
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -155,10 +155,10 @@ class AuthController(
     @Operation(summary = "refreshToken 용입니다.")
     @PostMapping("/token/refresh")
     fun tokenRefresh(
-        @CookieValue(value = "refreshToken", required = false) refreshTokenCookie: String?,
+        request: HttpServletRequest,
         @RequestParam(value = "token", required = false, defaultValue = "") refreshToken: String
     ): ResponseEntity<TokenAndUserResponse> {
-        // 쿠키 우선시해서 리프레쉬.
+        val refreshTokenCookie = cookieHelper.getRefreshTokenFromRequest(request)
         val tokenAndUserResponse = refreshUseCase.execute(refreshTokenCookie ?: refreshToken)
         return ResponseEntity.ok()
             .headers(cookieHelper.getTokenCookies(tokenAndUserResponse))

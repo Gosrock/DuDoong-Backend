@@ -1,5 +1,6 @@
 package band.gosrock.api.config.security
 
+import band.gosrock.api.auth.service.helper.CookieHelper
 import band.gosrock.common.consts.DuDoongStatic
 import band.gosrock.common.jwt.JwtTokenProvider
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
@@ -17,6 +18,7 @@ import org.springframework.web.util.WebUtils
 class JwtTokenFilter(
     private val jwtTokenProvider: JwtTokenProvider,
     private val userAdaptor: UserAdaptor,
+    private val cookieHelper: CookieHelper,
 ) : OncePerRequestFilter() {
 
     override fun doFilterInternal(
@@ -40,8 +42,8 @@ class JwtTokenFilter(
         if (adminToken != null) {
             return adminToken
         }
-        // 쿠키방식 지원
-        val accessTokenCookie = WebUtils.getCookie(request, "accessToken")
+        // 쿠키방식 지원 (스테이징: stg_accessToken, 프로덕션: accessToken)
+        val accessTokenCookie = WebUtils.getCookie(request, cookieHelper.getAccessTokenName())
         if (accessTokenCookie != null) {
             return accessTokenCookie.value
         }
@@ -64,7 +66,7 @@ class JwtTokenFilter(
         val user = userAdaptor.queryUser(userId)
         val role = user.accountRole.value
 
-        val userDetails = AuthDetails(userId.toString(), role, accessTokenInfo.isAdmin)
+        val userDetails = AuthDetails(userId.toString(), role)
         return UsernamePasswordAuthenticationToken(userDetails, "user", userDetails.authorities)
     }
 }

@@ -65,21 +65,7 @@ class SecurityConfig(
                 .requestMatchers(HttpMethod.GET, "/api/v1/events/search").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/examples/health").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/coupons/campaigns").hasRole("SUPER_ADMIN")
-                .requestMatchers("/internal-api/v1/auth/oauth/**").permitAll()
-                .requestMatchers("/internal-api/v1/auth/token/refresh").permitAll()
-                .requestMatchers("/internal-api/**").access { authentication, _ ->
-                    // MANAGER 이상 역할 + admin 토큰(aud:admin) 필수
-                    val authn = authentication.get()
-                        ?: return@access org.springframework.security.authorization.AuthorizationDecision(false)
-                    val principal = authn.principal
-                    if (principal !is AuthDetails) {
-                        return@access org.springframework.security.authorization.AuthorizationDecision(false)
-                    }
-                    val hasRole = authn.authorities.any {
-                        it.authority == "ROLE_MANAGER" || it.authority == "ROLE_ADMIN" || it.authority == "ROLE_SUPER_ADMIN"
-                    }
-                    org.springframework.security.authorization.AuthorizationDecision(hasRole && principal.isAdmin)
-                }
+                .requestMatchers("/internal-api/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .anyRequest().hasRole("USER")
         }
 
@@ -93,7 +79,7 @@ class SecurityConfig(
     @Bean
     fun roleHierarchy(): RoleHierarchyImpl {
         val roleHierarchy = RoleHierarchyImpl()
-        roleHierarchy.setHierarchy("ROLE_SUPER_ADMIN > ROLE_ADMIN > ROLE_MANAGER > ROLE_USER")
+        roleHierarchy.setHierarchy("ROLE_SUPER_ADMIN > ROLE_ADMIN > ROLE_USER")
         return roleHierarchy
     }
 }
