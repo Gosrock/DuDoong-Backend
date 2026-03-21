@@ -1,6 +1,9 @@
 """
 어드민 역할 기반 접근 제어 E2E 테스트.
 일반 USER 역할로 어드민 API에 접근 시 403이 반환되는지 검증합니다.
+
+변경사항: 어드민 로컬 로그인 엔드포인트 삭제됨.
+일반 auth 엔드포인트로 로그인한 USER 토큰으로 admin API 접근을 테스트합니다.
 """
 import pytest
 import requests
@@ -13,15 +16,13 @@ def admin_base_url():
     """어드민 API 베이스 URL."""
     import os
     base = os.environ.get("API_BASE_URL", "http://localhost:8080/api")
-    # /api -> /internal-api 로 변환
     return base.replace("/api", "/internal-api")
 
 
 @pytest.fixture(scope="module")
-def normal_user_token(admin_base_url):
+def normal_user_token():
     """
     일반 USER 역할로 로컬 로그인하여 토큰을 획득합니다.
-    어드민 local login 엔드포인트를 사용하면 USER 역할에서 403이 발생하므로,
     일반 auth 엔드포인트로 로그인하여 토큰을 획득합니다.
     """
     import os
@@ -46,29 +47,6 @@ def normal_user_token(admin_base_url):
 def normal_user_headers(normal_user_token):
     """일반 유저의 Authorization 헤더."""
     return {"Authorization": f"Bearer {normal_user_token}"}
-
-
-def test_admin_login_as_normal_user(admin_base_url):
-    """
-    일반 USER 역할로 어드민 로컬 로그인을 시도하면 403이 반환되는지 확인합니다.
-    local login은 upsert로 유저를 생성하며, 기본 역할이 USER이므로 거부되어야 합니다.
-    """
-    url = f"{admin_base_url}/v1/auth/oauth/local/login"
-    payload = {
-        "email": "admin-test-user@dudoong.com",
-        "name": "어드민테스트유저",
-        "phoneNumber": "010-9999-0000",
-        "profileImage": None,
-        "marketingAgree": False,
-    }
-    print(f"\n[test_admin_login_as_normal_user] POST {url}")
-    resp = requests.post(url, json=payload)
-    print(f"[test_admin_login_as_normal_user] status={resp.status_code}, body={resp.text[:300]}")
-
-    assert resp.status_code == 403, (
-        f"일반 USER의 어드민 로그인이 차단되지 않았습니다. status={resp.status_code}"
-    )
-    print("[test_admin_login_as_normal_user] 일반 USER 어드민 로그인 차단 확인")
 
 
 def test_admin_dashboard_forbidden_for_user(admin_base_url, normal_user_headers):
