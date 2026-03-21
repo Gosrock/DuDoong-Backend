@@ -12,11 +12,9 @@ class CookieHelper(
     private val springEnvironmentHelper: SpringEnvironmentHelper
 ) {
 
-    fun getAccessTokenName(): String =
-        if (springEnvironmentHelper.isStagingProfile()) "stg_accessToken" else "accessToken"
+    fun getAccessTokenName(): String = "accessToken"
 
-    fun getRefreshTokenName(): String =
-        if (springEnvironmentHelper.isStagingProfile()) "stg_refreshToken" else "refreshToken"
+    fun getRefreshTokenName(): String = "refreshToken"
 
     fun getRefreshTokenFromRequest(request: HttpServletRequest): String? =
         request.cookies?.firstOrNull { it.name == getRefreshTokenName() }?.value

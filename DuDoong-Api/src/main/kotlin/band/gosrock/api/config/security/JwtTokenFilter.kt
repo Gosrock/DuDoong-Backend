@@ -42,7 +42,7 @@ class JwtTokenFilter(
         if (adminToken != null) {
             return adminToken
         }
-        // 쿠키방식 지원 (스테이징: stg_accessToken, 프로덕션: accessToken)
+        // 쿠키방식 지원
         val accessTokenCookie = WebUtils.getCookie(request, cookieHelper.getAccessTokenName())
         if (accessTokenCookie != null) {
             return accessTokenCookie.value
