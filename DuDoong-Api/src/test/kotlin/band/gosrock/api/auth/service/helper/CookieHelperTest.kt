@@ -5,7 +5,6 @@ import band.gosrock.common.helper.SpringEnvironmentHelper
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -15,6 +14,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.http.HttpHeaders
 
@@ -30,13 +30,12 @@ class CookieHelperTest {
 
     private lateinit var cookieHelper: CookieHelper
 
-    // Minimal stub for TokenAndUserResponse (no ProfileViewDto needed for cookie tests)
     private val tokenResponse = TokenAndUserResponse(
         accessToken = "access-token-value",
         accessTokenAge = 3600L,
         refreshToken = "refresh-token-value",
         refreshTokenAge = 86400L,
-        userProfile = org.mockito.Mockito.mock(band.gosrock.domain.common.dto.ProfileViewDto::class.java)
+        userProfile = mock(band.gosrock.domain.common.dto.ProfileViewDto::class.java)
     )
 
     @BeforeEach
@@ -70,54 +69,18 @@ class CookieHelperTest {
     // ---------------------------------------------------------------------------
 
     @Nested
-    @DisplayName("쿠키 이름 (프로파일별)")
+    @DisplayName("쿠키 이름 (항상 고정)")
     inner class CookieNames {
 
         @Test
-        @DisplayName("staging 프로파일: accessToken 이름은 stg_accessToken")
-        fun `staging profile returns stg_accessToken name`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(true)
-
-            assertEquals("stg_accessToken", cookieHelper.getAccessTokenName())
-        }
-
-        @Test
-        @DisplayName("staging 프로파일: refreshToken 이름은 stg_refreshToken")
-        fun `staging profile returns stg_refreshToken name`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(true)
-
-            assertEquals("stg_refreshToken", cookieHelper.getRefreshTokenName())
-        }
-
-        @Test
-        @DisplayName("prod 프로파일: accessToken 이름은 accessToken (stg_ 접두사 없음)")
-        fun `prod profile returns accessToken name without prefix`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
-
+        @DisplayName("어떤 프로파일에서도 accessToken 이름은 accessToken")
+        fun `accessToken name is always accessToken`() {
             assertEquals("accessToken", cookieHelper.getAccessTokenName())
         }
 
         @Test
-        @DisplayName("prod 프로파일: refreshToken 이름은 refreshToken (stg_ 접두사 없음)")
-        fun `prod profile returns refreshToken name without prefix`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
-
-            assertEquals("refreshToken", cookieHelper.getRefreshTokenName())
-        }
-
-        @Test
-        @DisplayName("local 프로파일: accessToken 이름은 accessToken (stg_ 접두사 없음)")
-        fun `local profile returns accessToken name without prefix`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
-
-            assertEquals("accessToken", cookieHelper.getAccessTokenName())
-        }
-
-        @Test
-        @DisplayName("local 프로파일: refreshToken 이름은 refreshToken (stg_ 접두사 없음)")
-        fun `local profile returns refreshToken name without prefix`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
-
+        @DisplayName("어떤 프로파일에서도 refreshToken 이름은 refreshToken")
+        fun `refreshToken name is always refreshToken`() {
             assertEquals("refreshToken", cookieHelper.getRefreshTokenName())
         }
     }
@@ -133,7 +96,6 @@ class CookieHelperTest {
         @Test
         @DisplayName("prod 프로파일: Set-Cookie에 domain=.dudoong.com 포함")
         fun `prod profile sets domain to dudoong com`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdProfile()).thenReturn(true)
             `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(true)
 
@@ -149,7 +111,6 @@ class CookieHelperTest {
         @Test
         @DisplayName("staging 프로파일: Set-Cookie에 domain=.dudoong.com 포함")
         fun `staging profile sets domain to dudoong com`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(true)
             `when`(springEnvironmentHelper.isProdProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(true)
 
@@ -165,7 +126,6 @@ class CookieHelperTest {
         @Test
         @DisplayName("local 프로파일: Set-Cookie에 domain 속성 없음")
         fun `local profile does not set domain`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(false)
 
@@ -190,7 +150,6 @@ class CookieHelperTest {
         @Test
         @DisplayName("prod 프로파일: SameSite=Strict")
         fun `prod profile uses SameSite Strict`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdProfile()).thenReturn(true)
             `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(true)
 
@@ -206,7 +165,6 @@ class CookieHelperTest {
         @Test
         @DisplayName("staging 프로파일: SameSite=None")
         fun `staging profile uses SameSite None`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(true)
             `when`(springEnvironmentHelper.isProdProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(true)
 
@@ -222,7 +180,6 @@ class CookieHelperTest {
         @Test
         @DisplayName("local 프로파일: SameSite=None")
         fun `local profile uses SameSite None`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(false)
 
@@ -247,7 +204,6 @@ class CookieHelperTest {
         @Test
         @DisplayName("모든 프로파일에서 Secure 플래그가 설정된다")
         fun `all profiles always set Secure flag`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(false)
 
@@ -262,7 +218,7 @@ class CookieHelperTest {
     }
 
     // ---------------------------------------------------------------------------
-    // getTokenCookies - cookie count and names
+    // getTokenCookies - cookie count, names, values, maxAge, path
     // ---------------------------------------------------------------------------
 
     @Nested
@@ -272,7 +228,6 @@ class CookieHelperTest {
         @Test
         @DisplayName("응답에 accessToken과 refreshToken 두 개의 Set-Cookie 헤더가 포함된다")
         fun `returns two Set-Cookie headers`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(false)
 
@@ -283,11 +238,10 @@ class CookieHelperTest {
         }
 
         @Test
-        @DisplayName("prod 프로파일: 쿠키 이름이 accessToken, refreshToken")
-        fun `prod profile cookie names are accessToken and refreshToken`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
-            `when`(springEnvironmentHelper.isProdProfile()).thenReturn(true)
-            `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(true)
+        @DisplayName("쿠키 이름은 항상 accessToken과 refreshToken (stg_ 접두사 없음)")
+        fun `cookie names are always accessToken and refreshToken`() {
+            `when`(springEnvironmentHelper.isProdProfile()).thenReturn(false)
+            `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(false)
 
             val headers = cookieHelper.getTokenCookies(tokenResponse)
             val cookieNames = extractSetCookieHeaders(headers).map { it.keys.first() }
@@ -297,23 +251,8 @@ class CookieHelperTest {
         }
 
         @Test
-        @DisplayName("staging 프로파일: 쿠키 이름이 stg_accessToken, stg_refreshToken")
-        fun `staging profile cookie names have stg_ prefix`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(true)
-            `when`(springEnvironmentHelper.isProdProfile()).thenReturn(false)
-            `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(true)
-
-            val headers = cookieHelper.getTokenCookies(tokenResponse)
-            val cookieNames = extractSetCookieHeaders(headers).map { it.keys.first() }
-
-            assertTrue(cookieNames.contains("stg_accessToken"))
-            assertTrue(cookieNames.contains("stg_refreshToken"))
-        }
-
-        @Test
         @DisplayName("쿠키에 올바른 토큰 값이 설정된다")
         fun `cookie values match token values`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(false)
 
@@ -328,7 +267,6 @@ class CookieHelperTest {
         @Test
         @DisplayName("쿠키에 maxAge가 TokenAndUserResponse의 값으로 설정된다")
         fun `cookie maxAge is set from token response`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(false)
 
@@ -345,7 +283,6 @@ class CookieHelperTest {
         @Test
         @DisplayName("쿠키 path는 /로 설정된다")
         fun `cookie path is root`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(false)
 
@@ -369,7 +306,6 @@ class CookieHelperTest {
         @Test
         @DisplayName("두 개의 Set-Cookie 헤더가 반환된다")
         fun `returns two Set-Cookie headers`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(false)
 
@@ -380,9 +316,21 @@ class CookieHelperTest {
         }
 
         @Test
+        @DisplayName("쿠키 이름은 항상 accessToken, refreshToken (stg_ 접두사 없음)")
+        fun `delete cookie names are always accessToken and refreshToken`() {
+            `when`(springEnvironmentHelper.isProdProfile()).thenReturn(false)
+            `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(false)
+
+            val headers = cookieHelper.deleteCookies()
+            val cookieNames = extractSetCookieHeaders(headers).map { it.keys.first() }
+
+            assertTrue(cookieNames.contains("accessToken"))
+            assertTrue(cookieNames.contains("refreshToken"))
+        }
+
+        @Test
         @DisplayName("쿠키 값이 빈 문자열로 설정된다")
         fun `cookie values are empty string`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(false)
 
@@ -397,7 +345,6 @@ class CookieHelperTest {
         @Test
         @DisplayName("maxAge=0으로 설정되어 쿠키가 즉시 만료된다")
         fun `maxAge is zero for immediate expiry`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(false)
 
@@ -410,23 +357,8 @@ class CookieHelperTest {
         }
 
         @Test
-        @DisplayName("staging 프로파일: 삭제 쿠키 이름이 stg_ 접두사를 가진다")
-        fun `staging delete cookies have stg_ prefix`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(true)
-            `when`(springEnvironmentHelper.isProdProfile()).thenReturn(false)
-            `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(true)
-
-            val headers = cookieHelper.deleteCookies()
-            val cookieNames = extractSetCookieHeaders(headers).map { it.keys.first() }
-
-            assertTrue(cookieNames.contains("stg_accessToken"))
-            assertTrue(cookieNames.contains("stg_refreshToken"))
-        }
-
-        @Test
         @DisplayName("prod 프로파일: 삭제 쿠키에도 domain=.dudoong.com 포함")
         fun `prod delete cookies include domain`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdProfile()).thenReturn(true)
             `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(true)
 
@@ -449,9 +381,8 @@ class CookieHelperTest {
     inner class GetRefreshTokenFromRequest {
 
         @Test
-        @DisplayName("prod 프로파일: refreshToken 이름으로 쿠키를 읽는다")
-        fun `prod profile reads refreshToken cookie by name`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
+        @DisplayName("refreshToken 이름으로 쿠키를 읽는다")
+        fun `reads refreshToken cookie by name`() {
             setCookiesOnRequest(Cookie("refreshToken", "my-refresh-value"))
 
             val result = cookieHelper.getRefreshTokenFromRequest(request)
@@ -460,44 +391,8 @@ class CookieHelperTest {
         }
 
         @Test
-        @DisplayName("staging 프로파일: stg_refreshToken 이름으로 쿠키를 읽는다")
-        fun `staging profile reads stg_refreshToken cookie by name`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(true)
-            setCookiesOnRequest(Cookie("stg_refreshToken", "stg-refresh-value"))
-
-            val result = cookieHelper.getRefreshTokenFromRequest(request)
-
-            assertEquals("stg-refresh-value", result)
-        }
-
-        @Test
-        @DisplayName("staging 프로파일: refreshToken 이름의 쿠키는 무시된다")
-        fun `staging profile ignores non-prefixed refreshToken cookie`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(true)
-            // Only provide non-prefixed cookie; staging expects stg_refreshToken
-            setCookiesOnRequest(Cookie("refreshToken", "should-be-ignored"))
-
-            val result = cookieHelper.getRefreshTokenFromRequest(request)
-
-            assertNull(result, "staging 프로파일에서 stg_ 접두사 없는 쿠키는 무시되어야 합니다")
-        }
-
-        @Test
-        @DisplayName("prod 프로파일: stg_refreshToken 쿠키는 무시된다")
-        fun `prod profile ignores stg prefixed cookie`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
-            setCookiesOnRequest(Cookie("stg_refreshToken", "should-be-ignored"))
-
-            val result = cookieHelper.getRefreshTokenFromRequest(request)
-
-            assertNull(result, "prod 프로파일에서 stg_ 접두사 쿠키는 무시되어야 합니다")
-        }
-
-        @Test
         @DisplayName("요청에 쿠키가 없으면 null을 반환한다")
         fun `returns null when request has no cookies`() {
-            // request.cookies returns null by default from Mockito; isStagingProfile is NOT called
-            // because the safe-call ?. short-circuits before evaluating the lambda.
             `when`(request.cookies).thenReturn(null)
 
             val result = cookieHelper.getRefreshTokenFromRequest(request)
@@ -508,7 +403,6 @@ class CookieHelperTest {
         @Test
         @DisplayName("요청에 다른 쿠키만 있을 때 null을 반환한다")
         fun `returns null when matching cookie is absent`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
             setCookiesOnRequest(
                 Cookie("someOtherCookie", "value1"),
                 Cookie("anotherCookie", "value2")
@@ -522,7 +416,6 @@ class CookieHelperTest {
         @Test
         @DisplayName("여러 쿠키 중 올바른 refreshToken 값을 반환한다")
         fun `returns correct refreshToken value among multiple cookies`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
             setCookiesOnRequest(
                 Cookie("accessToken", "access-value"),
                 Cookie("refreshToken", "correct-refresh"),
@@ -532,21 +425,6 @@ class CookieHelperTest {
             val result = cookieHelper.getRefreshTokenFromRequest(request)
 
             assertEquals("correct-refresh", result)
-        }
-
-        @Test
-        @DisplayName("staging: 여러 쿠키 중 stg_refreshToken 값만 반환한다")
-        fun `staging returns stg_refreshToken among multiple cookies`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(true)
-            setCookiesOnRequest(
-                Cookie("stg_accessToken", "stg-access"),
-                Cookie("refreshToken", "wrong-value"),
-                Cookie("stg_refreshToken", "correct-stg-refresh")
-            )
-
-            val result = cookieHelper.getRefreshTokenFromRequest(request)
-
-            assertEquals("correct-stg-refresh", result)
         }
     }
 
@@ -561,7 +439,6 @@ class CookieHelperTest {
         @Test
         @DisplayName("쿠키에 HttpOnly 플래그가 없다 (JS 접근 가능 — 현재 구현 확인)")
         fun `cookies do not have HttpOnly flag`() {
-            `when`(springEnvironmentHelper.isStagingProfile()).thenReturn(false)
             `when`(springEnvironmentHelper.isProdProfile()).thenReturn(true)
             `when`(springEnvironmentHelper.isProdAndStagingProfile()).thenReturn(true)
 
