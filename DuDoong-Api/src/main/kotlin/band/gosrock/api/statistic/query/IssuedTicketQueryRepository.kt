@@ -28,6 +28,7 @@ class IssuedTicketQueryRepository(
             )
             .from(issuedTicket)
             .fetchFirst()
+            ?: IssuedTicketStatistic(0L, 0L)
 
     private fun enteredCountEx(eventId: Long): Expression<Long> =
         ExpressionUtils.`as`(

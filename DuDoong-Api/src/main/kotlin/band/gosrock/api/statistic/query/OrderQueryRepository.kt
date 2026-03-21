@@ -31,6 +31,7 @@ class OrderQueryRepository(
             )
             .from(order)
             .fetchFirst()
+            ?: OrderStatistic(0L, 0L, BigDecimal.ZERO)
 
     private fun doneCountEx(eventId: Long): Expression<Long> =
         ExpressionUtils.`as`(
