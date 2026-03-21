@@ -24,7 +24,7 @@ import org.springframework.test.context.TestPropertySource;
 
 @ContextConfiguration
 @SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        webEnvironment = SpringBootTest.WebEnvironment.NONE,
         classes = InfraIntegrateTestConfig.class)
 @AutoConfigureWireMock(port = 0)
 @ActiveProfiles(resolver = InfraIntegrateProfileResolver.class)
