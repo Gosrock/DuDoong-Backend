@@ -26,15 +26,18 @@ class DoneOrderEventAlimTalkHandler(
     @Async
     @TransactionalEventListener(classes = [DoneOrderEvent::class], phase = TransactionPhase.AFTER_COMMIT)
     fun handleDoneOrderEvent(doneOrderEvent: DoneOrderEvent) {
-        log.info("${doneOrderEvent.orderUuid}주문 상태 완료, 파트너의 공연이면 알림톡 전송")
-        // 파트너인 호스트의 공연일 경우만 알림톡 전송
-        val order = orderAdaptor.findByOrderUuid(doneOrderEvent.orderUuid)
-        val event = eventAdaptor.findById(order.eventId!!)
-        val host = hostAdaptor.findById(event.hostId!!)
-        if (host.isPartnerHost()) {
-            val orderAlimTalkDto = orderAlimTalkInfoHelper.execute(order, event, host)
-            sendDoneOrderAlimTalkService.execute(orderAlimTalkDto)
-            log.info("${doneOrderEvent.orderUuid}주문 상태 완료, 파트너의 공연 알림톡 전송 완료")
+        try {
+            log.info("${doneOrderEvent.orderUuid}주문 상태 완료, 파트너의 공연이면 알림톡 전송")
+            val order = orderAdaptor.findByOrderUuid(doneOrderEvent.orderUuid)
+            val event = eventAdaptor.findById(order.eventId!!)
+            val host = hostAdaptor.findById(event.hostId!!)
+            if (host.isPartnerHost()) {
+                val orderAlimTalkDto = orderAlimTalkInfoHelper.execute(order, event, host)
+                sendDoneOrderAlimTalkService.execute(orderAlimTalkDto)
+                log.info("${doneOrderEvent.orderUuid}주문 상태 완료, 파트너의 공연 알림톡 전송 완료")
+            }
+        } catch (e: Exception) {
+            log.warn("주문 완료 알림톡 전송 실패 (orderUuid=${doneOrderEvent.orderUuid}): ${e.message}")
         }
     }
 }

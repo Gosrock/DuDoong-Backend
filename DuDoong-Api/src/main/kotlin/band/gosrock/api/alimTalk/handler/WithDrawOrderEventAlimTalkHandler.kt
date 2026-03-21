@@ -20,16 +20,21 @@ class WithDrawOrderEventAlimTalkHandler(
     private val eventAdaptor: EventAdaptor,
     private val hostAdaptor: HostAdaptor,
 ) {
+    private val log = org.slf4j.LoggerFactory.getLogger(WithDrawOrderEventAlimTalkHandler::class.java)
+
     @Async
     @TransactionalEventListener(classes = [WithDrawOrderEvent::class], phase = TransactionPhase.AFTER_COMMIT)
     fun handleWithDrawOrderEvent(withDrawOrderEvent: WithDrawOrderEvent) {
-        // 파트너인 호스트의 공연일 경우만 알림톡 전송
-        val order = orderAdaptor.findByOrderUuid(withDrawOrderEvent.orderUuid)
-        val event = eventAdaptor.findById(order.eventId!!)
-        val host = hostAdaptor.findById(event.hostId!!)
-        if (host.isPartnerHost()) {
-            val orderAlimTalkDto = orderAlimTalkInfoHelper.execute(order, event, host)
-            sendWithdrawOrderAlimTalkService.execute(orderAlimTalkDto)
+        try {
+            val order = orderAdaptor.findByOrderUuid(withDrawOrderEvent.orderUuid)
+            val event = eventAdaptor.findById(order.eventId!!)
+            val host = hostAdaptor.findById(event.hostId!!)
+            if (host.isPartnerHost()) {
+                val orderAlimTalkDto = orderAlimTalkInfoHelper.execute(order, event, host)
+                sendWithdrawOrderAlimTalkService.execute(orderAlimTalkDto)
+            }
+        } catch (e: Exception) {
+            log.warn("주문 취소 알림톡 전송 실패 (orderUuid=${withDrawOrderEvent.orderUuid}): ${e.message}")
         }
     }
 }

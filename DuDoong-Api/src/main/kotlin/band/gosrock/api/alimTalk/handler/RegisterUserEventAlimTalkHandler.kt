@@ -20,9 +20,13 @@ class RegisterUserEventAlimTalkHandler(
     @TransactionalEventListener(classes = [UserRegisterEvent::class], phase = TransactionPhase.AFTER_COMMIT)
     fun handleRegisterUserEvent(userRegisterEvent: UserRegisterEvent) {
         val userId = userRegisterEvent.userId
-        val user = userAdaptor.queryUser(userId)
-        log.info("${userId}유저 등록")
-        val userInfo = user.toAlimTalkUserInfo()
-        sendRegisterAlimTalkService.execute(userInfo.userName, userInfo.phoneNum)
+        try {
+            val user = userAdaptor.queryUser(userId)
+            log.info("${userId}유저 등록")
+            val userInfo = user.toAlimTalkUserInfo()
+            sendRegisterAlimTalkService.execute(userInfo.userName, userInfo.phoneNum)
+        } catch (e: Exception) {
+            log.warn("유저 등록 알림톡 전송 실패 (userId=$userId): ${e.message}")
+        }
     }
 }
