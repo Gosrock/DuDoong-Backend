@@ -5,6 +5,7 @@ import band.gosrock.common.helper.SpringEnvironmentHelper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.annotation.Order
 import org.springframework.http.HttpMethod
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -41,6 +42,29 @@ class SecurityConfig(
     fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder(8)
 
     @Bean
+    @Order(1)
+    fun swaggerFilterChain(http: HttpSecurity): SecurityFilterChain {
+        if (springEnvironmentHelper.isProdAndStagingProfile()) {
+            http
+                .securityMatcher(*SwaggerPatterns)
+                .csrf { it.disable() }
+                .authorizeHttpRequests { auth ->
+                    auth.anyRequest().authenticated()
+                }
+                .httpBasic {}
+        } else {
+            http
+                .securityMatcher(*SwaggerPatterns)
+                .csrf { it.disable() }
+                .authorizeHttpRequests { auth ->
+                    auth.anyRequest().permitAll()
+                }
+        }
+        return http.build()
+    }
+
+    @Bean
+    @Order(2)
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .formLogin { it.disable() }
@@ -48,15 +72,8 @@ class SecurityConfig(
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
 
-        if (springEnvironmentHelper.isProdAndStagingProfile()) {
-            http.authorizeHttpRequests { auth ->
-                auth.requestMatchers(*SwaggerPatterns).authenticated()
-            }.httpBasic {}
-        }
-
         http.authorizeHttpRequests { auth ->
             auth
-                .requestMatchers(*SwaggerPatterns).permitAll()
                 .requestMatchers("/api/v1/auth/oauth/**").permitAll()
                 .requestMatchers("/api/v1/auth/token/refresh").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/events/{eventId:[0-9]*$}").permitAll()
