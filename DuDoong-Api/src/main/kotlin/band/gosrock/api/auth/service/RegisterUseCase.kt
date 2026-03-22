@@ -9,6 +9,7 @@ import band.gosrock.api.auth.service.helper.KakaoOauthHelper
 import band.gosrock.api.auth.service.helper.TokenGenerateHelper
 import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.domains.user.service.UserDomainService
+import org.slf4j.LoggerFactory
 
 @UseCase
 class RegisterUseCase(
@@ -16,6 +17,7 @@ class RegisterUseCase(
     private val userDomainService: UserDomainService,
     private val tokenGenerateHelper: TokenGenerateHelper
 ) {
+    private val log = LoggerFactory.getLogger(RegisterUseCase::class.java)
 
     fun getKaKaoOauthLinkTest(): OauthLoginLinkResponse =
         OauthLoginLinkResponse(kakaoOauthHelper.getKaKaoOauthLinkTest())
@@ -42,12 +44,14 @@ class RegisterUseCase(
         idToken: String,
         registerUserRequest: RegisterRequest
     ): TokenAndUserResponse {
+        log.info("[RegisterUseCase][registerUserByOCIDToken] 회원가입")
         val oauthInfo = kakaoOauthHelper.getOauthInfoByIdToken(idToken)
         val user = userDomainService.registerUser(
             registerUserRequest.toProfile(),
             oauthInfo,
             registerUserRequest.marketingAgree
         )
+        log.info("[RegisterUseCase][registerUserByOCIDToken] 회원가입 완료 userId={}", user.id)
         return tokenGenerateHelper.execute(user)
     }
 
