@@ -11,6 +11,8 @@ data class AdminCommentResponse(
     val content: String?,
     val commentStatus: CommentStatus?,
     val createdAt: LocalDateTime?,
+    val userId: Long?,
+    val eventId: Long?,
 ) {
     companion object {
         fun of(comment: Comment, eventName: String?): AdminCommentResponse =
@@ -21,6 +23,8 @@ data class AdminCommentResponse(
                 content = comment.content,
                 commentStatus = comment.commentStatus,
                 createdAt = comment.createdAt,
+                userId = comment.user?.id,
+                eventId = comment.eventId,
             )
     }
 }

@@ -18,6 +18,10 @@ data class AdminEventResponse(
     val content: String? = null,
     val placeName: String? = null,
     val placeAddress: String? = null,
+    val hostId: Long? = null,
+    val posterImageKey: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
 ) {
     companion object {
         fun of(event: Event, hostName: String?): AdminEventResponse =
@@ -29,6 +33,10 @@ data class AdminEventResponse(
                 startAt = event.eventBasic?.startAt,
                 runTime = event.eventBasic?.runTime,
                 createdAt = event.createdAt,
+                hostId = event.hostId,
+                posterImageKey = event.eventDetail?.posterImage?.imageKey,
+                latitude = event.eventPlace?.latitude,
+                longitude = event.eventPlace?.longitude,
             )
 
         fun ofDetail(
@@ -52,6 +60,10 @@ data class AdminEventResponse(
                 content = event.eventDetail?.content,
                 placeName = event.eventPlace?.placeName,
                 placeAddress = event.eventPlace?.placeAddress,
+                hostId = event.hostId,
+                posterImageKey = event.eventDetail?.posterImage?.imageKey,
+                latitude = event.eventPlace?.latitude,
+                longitude = event.eventPlace?.longitude,
             )
     }
 }
