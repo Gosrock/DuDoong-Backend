@@ -1,6 +1,10 @@
 # commons
 api:
   prefix : ${API_PREFIX:/api}
+
+logging:
+  pattern:
+    console: "[%d{HH:mm:ss.SSS}] [%X{traceId:-no-trace}] [%-5level] %logger{36} - %msg%n"
 spring:
   profiles:
     include:
