@@ -8,6 +8,8 @@ import band.gosrock.domain.domains.order.service.WithdrawPaymentService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Propagation
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
 
@@ -21,11 +23,12 @@ class ConfirmOrderFailHandler(
     private val log = LoggerFactory.getLogger(javaClass)
 
     @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @TransactionalEventListener(classes = [DoneOrderEvent::class], phase = TransactionPhase.AFTER_ROLLBACK)
     fun handleDoneOrderFailEvent(doneOrderEvent: DoneOrderEvent) {
         log.info("${doneOrderEvent.orderUuid} 주문 실패 처리 핸들러")
         val order = orderAdaptor.findByOrderUuid(doneOrderEvent.orderUuid)
-        order.fail()
+        order.fail("결제 확인 과정에서 실패")
 
         if (order.hasCoupon()) {
             recoveryCouponService.execute(order.userId!!, order.orderCouponVo.couponId)

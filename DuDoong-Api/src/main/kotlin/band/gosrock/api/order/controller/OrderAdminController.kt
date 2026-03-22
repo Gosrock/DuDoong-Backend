@@ -10,6 +10,7 @@ import band.gosrock.api.order.service.ApproveOrderUseCase
 import band.gosrock.api.order.service.CancelOrderUseCase
 import band.gosrock.api.order.service.ReadOrderUseCase
 import band.gosrock.api.order.service.RefuseOrderUseCase
+import band.gosrock.api.order.model.dto.request.CancelReasonRequest
 import band.gosrock.common.annotation.ApiErrorExceptionsExample
 import band.gosrock.common.annotation.CurrentUserId
 import io.swagger.v3.oas.annotations.Operation
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -51,7 +53,8 @@ class OrderAdminController(
         @CurrentUserId userId: Long,
         @PathVariable("eventId") eventId: Long,
         @PathVariable("order_uuid") orderUuid: String,
-    ): OrderResponse = cancelOrderUseCase.execute(userId, eventId, orderUuid)
+        @RequestBody(required = false) request: CancelReasonRequest?,
+    ): OrderResponse = cancelOrderUseCase.execute(userId, eventId, orderUuid, request?.reason)
 
     @Operation(summary = "주문 승인하기 . 호스트 관리자가 티켓 주문을 승인합니다.")
     @ApiErrorExceptionsExample(ApproveOrderExceptionDocs::class)
@@ -68,7 +71,8 @@ class OrderAdminController(
         @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @PathVariable("order_uuid") orderUuid: String,
-    ): OrderResponse = refuseOrderUseCase.execute(userId, eventId, orderUuid)
+        @RequestBody(required = false) request: CancelReasonRequest?,
+    ): OrderResponse = refuseOrderUseCase.execute(userId, eventId, orderUuid, request?.reason)
 
     @Operation(summary = "주문관리 리스트 페이지에서 주문 상세정보 조회할때")
     @GetMapping("/{order_uuid}")

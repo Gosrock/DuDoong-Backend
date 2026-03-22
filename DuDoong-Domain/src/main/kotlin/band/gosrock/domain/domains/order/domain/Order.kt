@@ -99,10 +99,6 @@ class Order() : BaseTimeEntity() {
         protected set
 
     @Column(length = 500)
-    var userRefundReason: String? = null
-        protected set
-
-    @Column(length = 500)
     var cancelReason: String? = null
         protected set
 
@@ -192,7 +188,6 @@ class Order() : BaseTimeEntity() {
             orderMethod: OrderMethod? = null,
             eventId: Long? = null,
             failReason: String? = null,
-            userRefundReason: String? = null,
             cancelReason: String? = null,
             refundStatus: RefundStatus = RefundStatus.NONE,
         ): Order = Order().apply {
@@ -203,7 +198,6 @@ class Order() : BaseTimeEntity() {
             this.orderMethod = orderMethod
             this.eventId = eventId
             this.failReason = failReason
-            this.userRefundReason = userRefundReason
             this.cancelReason = cancelReason
             this.refundStatus = refundStatus
         }
@@ -249,7 +243,9 @@ class Order() : BaseTimeEntity() {
     fun cancel(orderValidator: OrderValidator, reason: String? = null) {
         orderValidator.validCanCancel(this)
         orderStatus = OrderStatus.CANCELED
-        cancelReason = reason
+        cancelReason = reason?.take(500)
+        refundStatus = RefundStatus.REFUND_REQUESTED
+        refundStatusChangedAt = LocalDateTime.now()
         withDrawAt = LocalDateTime.now()
         Events.raise(WithDrawOrderEvent.from(this))
     }
@@ -257,38 +253,31 @@ class Order() : BaseTimeEntity() {
     fun refuse(orderValidator: OrderValidator, reason: String? = null) {
         orderValidator.validCanRefuse(this)
         orderStatus = OrderStatus.CANCELED
-        cancelReason = reason
+        cancelReason = reason?.take(500)
+        refundStatus = RefundStatus.REFUND_REQUESTED
+        refundStatusChangedAt = LocalDateTime.now()
         withDrawAt = LocalDateTime.now()
         Events.raise(WithDrawOrderEvent.from(this))
     }
 
-    fun refund(currentUserId: Long, orderValidator: OrderValidator) {
+    fun refund(currentUserId: Long, orderValidator: OrderValidator, reason: String? = null) {
         orderValidator.validOwner(this, currentUserId)
         orderValidator.validCanRefund(this)
         orderStatus = OrderStatus.REFUND
+        cancelReason = reason?.take(500)
+        refundStatus = RefundStatus.REFUND_REQUESTED
+        refundStatusChangedAt = LocalDateTime.now()
         withDrawAt = LocalDateTime.now()
         Events.raise(WithDrawOrderEvent.from(this))
     }
 
     fun fail(reason: String? = null) {
         orderStatus = OrderStatus.FAILED
-        failReason = reason
-    }
-
-    fun requestRefund(reason: String) {
-        userRefundReason = reason
-        refundStatus = RefundStatus.REFUND_REQUESTED
-        refundStatusChangedAt = LocalDateTime.now()
+        failReason = reason?.take(500)
     }
 
     fun completeRefund() {
         refundStatus = RefundStatus.REFUND_COMPLETED
-        refundStatusChangedAt = LocalDateTime.now()
-    }
-
-    fun rejectRefund(reason: String? = null) {
-        refundStatus = RefundStatus.REFUND_REJECTED
-        cancelReason = reason
         refundStatusChangedAt = LocalDateTime.now()
     }
 

@@ -48,11 +48,12 @@ class AdminUpdateRefundStatusUseCaseTest {
         order = Order.forTest(
             userId = 10L,
             orderName = "테스트주문",
-            orderStatus = OrderStatus.CONFIRM,
+            orderStatus = OrderStatus.CANCELED,
             orderMethod = OrderMethod.PAYMENT,
             eventId = 100L,
+            cancelReason = "단순 변심",
+            refundStatus = RefundStatus.REFUND_REQUESTED,
         )
-        order.requestRefund("단순 변심")
     }
 
     private fun createAdminUser(): User {
@@ -76,22 +77,6 @@ class AdminUpdateRefundStatusUseCaseTest {
 
         assertEquals(RefundStatus.REFUND_COMPLETED, order.refundStatus)
         assertNotNull(order.refundStatusChangedAt)
-    }
-
-    @Test
-    @DisplayName("환불 거절 처리 시 refundStatus가 REFUND_REJECTED로 변경되고 reason이 저장된다")
-    fun rejectRefund() {
-        val adminUser = createAdminUser()
-        `when`(adminAuthValidator.validateAdminOrAbove(1L)).thenReturn(adminUser)
-        `when`(orderAdaptor.findByOrderUuid("test-uuid")).thenReturn(order)
-
-        ReflectionTestUtils.setField(order, "uuid", "test-uuid")
-        val request = AdminRefundStatusRequest(refundStatus = "REFUND_REJECTED", reason = "환불 불가 기간")
-
-        useCase.execute(1L, "test-uuid", request)
-
-        assertEquals(RefundStatus.REFUND_REJECTED, order.refundStatus)
-        assertEquals("환불 불가 기간", order.cancelReason)
     }
 
     @Test
