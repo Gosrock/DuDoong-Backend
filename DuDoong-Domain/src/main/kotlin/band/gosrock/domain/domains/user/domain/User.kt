@@ -70,6 +70,10 @@ class User(
         profile = newProfile
     }
 
+    fun changeName(newName: String) {
+        profile?.changeName(newName)
+    }
+
     fun withDrawUser() {
         if (accountState == AccountState.DELETED) throw AlreadyDeletedUserException.EXCEPTION
         accountState = AccountState.DELETED
