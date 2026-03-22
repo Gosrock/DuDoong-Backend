@@ -48,18 +48,14 @@ class Cart() : BaseTimeEntity() {
             updateCartName(itemName)
         }
 
+        /** 테스트 전용 팩토리 메서드 */
         @JvmStatic
-        fun builder() = Builder()
-    }
-
-    class Builder {
-        private var userId: Long? = null
-        private var cartLineItems: List<CartLineItem> = emptyList()
-        fun userId(userId: Long) = apply { this.userId = userId }
-        fun cartLineItems(cartLineItems: List<CartLineItem>) = apply { this.cartLineItems = cartLineItems }
-        fun build(): Cart = Cart().apply {
-            this.userId = this@Builder.userId
-            this.cartLineItems.addAll(this@Builder.cartLineItems)
+        fun forTest(
+            userId: Long? = null,
+            cartLineItems: List<CartLineItem> = emptyList(),
+        ): Cart = Cart().apply {
+            this.userId = userId
+            this.cartLineItems.addAll(cartLineItems)
         }
     }
 

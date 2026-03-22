@@ -31,18 +31,18 @@ class EventStatusTransitionTest {
 
     @BeforeEach
     fun setUp() {
-        event = Event.builder().build()
+        event = Event()
     }
 
     // ---- hasEventBasic ----
 
     @Test
     fun `name과 startAt과 runTime이 모두 있으면 hasEventBasic이 true다`() {
-        val basic = EventBasic.builder()
-            .name("공연명")
-            .startAt(LocalDateTime.now().plusDays(1))
-            .runTime(90L)
-            .build()
+        val basic = EventBasic(
+            name = "공연명",
+            startAt = LocalDateTime.now().plusDays(1),
+            runTime = 90L,
+        )
         event.updateEventBasic(basic)
         assertTrue(event.hasEventBasic())
     }
@@ -55,10 +55,10 @@ class EventStatusTransitionTest {
 
     @Test
     fun `name이 없으면 hasEventBasic이 false다`() {
-        val basic = EventBasic.builder()
-            .startAt(LocalDateTime.now().plusDays(1))
-            .runTime(90L)
-            .build()
+        val basic = EventBasic(
+            startAt = LocalDateTime.now().plusDays(1),
+            runTime = 90L,
+        )
         event.updateEventBasic(basic)
         assertFalse(event.hasEventBasic())
     }
@@ -67,22 +67,22 @@ class EventStatusTransitionTest {
 
     @Test
     fun `startAt이 미래이면 isTimeBeforeStartAt이 true다`() {
-        val basic = EventBasic.builder()
-            .name("공연명")
-            .startAt(LocalDateTime.now().plusDays(1))
-            .runTime(90L)
-            .build()
+        val basic = EventBasic(
+            name = "공연명",
+            startAt = LocalDateTime.now().plusDays(1),
+            runTime = 90L,
+        )
         event.updateEventBasic(basic)
         assertTrue(event.isTimeBeforeStartAt())
     }
 
     @Test
     fun `startAt이 과거이면 isTimeBeforeStartAt이 false다`() {
-        val basic = EventBasic.builder()
-            .name("공연명")
-            .startAt(LocalDateTime.now().minusMinutes(1))
-            .runTime(90L)
-            .build()
+        val basic = EventBasic(
+            name = "공연명",
+            startAt = LocalDateTime.now().minusMinutes(1),
+            runTime = 90L,
+        )
         event.updateEventBasic(basic)
         assertFalse(event.isTimeBeforeStartAt())
     }
@@ -91,11 +91,11 @@ class EventStatusTransitionTest {
 
     @Test
     fun `startAt이 과거이면 validateTicketingTime이 예외를 던진다`() {
-        val basic = EventBasic.builder()
-            .name("공연명")
-            .startAt(LocalDateTime.now().minusMinutes(1))
-            .runTime(90L)
-            .build()
+        val basic = EventBasic(
+            name = "공연명",
+            startAt = LocalDateTime.now().minusMinutes(1),
+            runTime = 90L,
+        )
         event.updateEventBasic(basic)
         assertThrows(EventTicketingTimeIsPassedException::class.java) {
             event.validateTicketingTime()
@@ -104,11 +104,11 @@ class EventStatusTransitionTest {
 
     @Test
     fun `startAt이 미래이면 validateTicketingTime이 예외를 던지지 않는다`() {
-        val basic = EventBasic.builder()
-            .name("공연명")
-            .startAt(LocalDateTime.now().plusHours(1))
-            .runTime(90L)
-            .build()
+        val basic = EventBasic(
+            name = "공연명",
+            startAt = LocalDateTime.now().plusHours(1),
+            runTime = 90L,
+        )
         event.updateEventBasic(basic)
         event.validateTicketingTime() // no exception
     }
@@ -131,11 +131,11 @@ class EventStatusTransitionTest {
 
     @Test
     fun `미래 startAt이 있는 이벤트는 open 상태로 변경된다`() {
-        val basic = EventBasic.builder()
-            .name("공연명")
-            .startAt(LocalDateTime.now().plusMinutes(10))
-            .runTime(90L)
-            .build()
+        val basic = EventBasic(
+            name = "공연명",
+            startAt = LocalDateTime.now().plusMinutes(10),
+            runTime = 90L,
+        )
         event.updateEventBasic(basic)
         event.open()
         assertEquals(EventStatus.OPEN, event.status)
@@ -143,11 +143,11 @@ class EventStatusTransitionTest {
 
     @Test
     fun `이미 OPEN 상태에서 open을 호출하면 AlreadyOpenStatusException이 발생한다`() {
-        val basic = EventBasic.builder()
-            .name("공연명")
-            .startAt(LocalDateTime.now().plusMinutes(10))
-            .runTime(90L)
-            .build()
+        val basic = EventBasic(
+            name = "공연명",
+            startAt = LocalDateTime.now().plusMinutes(10),
+            runTime = 90L,
+        )
         event.updateEventBasic(basic)
         event.open()
         assertThrows(AlreadyOpenStatusException::class.java) {
@@ -157,11 +157,11 @@ class EventStatusTransitionTest {
 
     @Test
     fun `과거 startAt이 있는 이벤트는 open을 호출하면 EventOpenTimeExpiredException이 발생한다`() {
-        val basic = EventBasic.builder()
-            .name("공연명")
-            .startAt(LocalDateTime.now().minusMinutes(1))
-            .runTime(90L)
-            .build()
+        val basic = EventBasic(
+            name = "공연명",
+            startAt = LocalDateTime.now().minusMinutes(1),
+            runTime = 90L,
+        )
         event.updateEventBasic(basic)
         assertThrows(EventOpenTimeExpiredException::class.java) {
             event.open()
@@ -270,11 +270,11 @@ class EventStatusTransitionTest {
 
     @Test
     fun `eventBasic이 있으면 getEventName이 이름을 반환한다`() {
-        val basic = EventBasic.builder()
-            .name("두둥 공연")
-            .startAt(LocalDateTime.now().plusDays(1))
-            .runTime(60L)
-            .build()
+        val basic = EventBasic(
+            name = "두둥 공연",
+            startAt = LocalDateTime.now().plusDays(1),
+            runTime = 60L,
+        )
         event.updateEventBasic(basic)
         assertEquals("두둥 공연", event.getEventName())
     }

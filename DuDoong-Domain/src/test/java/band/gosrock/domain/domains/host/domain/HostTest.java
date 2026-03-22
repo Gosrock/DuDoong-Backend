@@ -28,7 +28,7 @@ public class HostTest {
 
     @BeforeEach
     void setup() {
-        host = Host.builder().masterUserId(1L).build();
+        host = new Host(1L, null, null, null, null, null, null);
     }
 
     @Test

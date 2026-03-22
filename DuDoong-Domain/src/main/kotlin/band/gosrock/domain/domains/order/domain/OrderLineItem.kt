@@ -47,21 +47,16 @@ class OrderLineItem() : BaseTimeEntity() {
             }
         }
 
+        /** 테스트 전용 팩토리 메서드 */
         @JvmStatic
-        fun builder() = Builder()
-    }
-
-    class Builder {
-        private var orderOptionAnswer: List<OrderOptionAnswer> = emptyList()
-        private var quantity: Long? = null
-        private var orderItemVo: OrderItemVo? = null
-        fun orderOptionAnswer(orderOptionAnswer: List<OrderOptionAnswer>) = apply { this.orderOptionAnswer = orderOptionAnswer }
-        fun quantity(quantity: Long) = apply { this.quantity = quantity }
-        fun orderItemVo(orderItemVo: OrderItemVo) = apply { this.orderItemVo = orderItemVo }
-        fun build(): OrderLineItem = OrderLineItem().apply {
-            this.orderOptionAnswers.addAll(this@Builder.orderOptionAnswer)
-            this.quantity = this@Builder.quantity
-            this.orderItem = this@Builder.orderItemVo
+        fun forTest(
+            orderOptionAnswer: List<OrderOptionAnswer> = emptyList(),
+            quantity: Long? = null,
+            orderItemVo: OrderItemVo? = null,
+        ): OrderLineItem = OrderLineItem().apply {
+            this.orderOptionAnswers.addAll(orderOptionAnswer)
+            this.quantity = quantity
+            this.orderItem = orderItemVo
         }
     }
 

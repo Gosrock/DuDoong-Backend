@@ -76,10 +76,10 @@ class KakaoOauthHelper(
 
     fun getOauthInfoByIdToken(idToken: String): OauthInfo {
         val oidcDecodePayload = getOIDCDecodePayload(idToken)
-        return OauthInfo.builder()
-            .provider(OauthProvider.KAKAO)
-            .oid(oidcDecodePayload.sub)
-            .build()
+        return OauthInfo(
+            provider = OauthProvider.KAKAO,
+            oid = oidcDecodePayload.sub,
+        )
     }
 
     fun unlink(oid: String) {

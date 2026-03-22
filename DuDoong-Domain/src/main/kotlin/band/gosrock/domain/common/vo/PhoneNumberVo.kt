@@ -9,15 +9,10 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber
 import jakarta.persistence.Embeddable
 
 @Embeddable
-class PhoneNumberVo() {
+class PhoneNumberVo(
     // +82 10-xxxx-xxxx format 으로 저장.
-    var phoneNumber: String? = null
-        protected set
-
-    constructor(rawPhoneNumber: String?) : this() {
-        this.phoneNumber = rawPhoneNumber
-    }
-
+    var phoneNumber: String? = null,
+) {
     companion object {
         @JvmStatic
         fun valueOf(rawPhoneNumber: String?): PhoneNumberVo = PhoneNumberVo(rawPhoneNumber)

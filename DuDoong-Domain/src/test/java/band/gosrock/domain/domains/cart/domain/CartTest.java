@@ -28,12 +28,9 @@ class CartTest {
     @BeforeEach
     void setUp() {
         hasPriceCart =
-                Cart.builder()
-                        .cartLineItems(List.of(cartLineItem1, cartLineItem2))
-                        .userId(1L)
-                        .build();
+                Cart.forTest(1L, List.of(cartLineItem1, cartLineItem2));
 
-        freeCart = Cart.builder().cartLineItems(List.of(cartLineItem2)).userId(1L).build();
+        freeCart = Cart.forTest(1L, List.of(cartLineItem2));
     }
 
     @Test
@@ -97,7 +94,7 @@ class CartTest {
         // given
         willDoNothing().given(cartValidator).validCanCreate(any());
         List<CartLineItem> cartLineItems = List.of(cartLineItem1);
-        Cart buildCart = Cart.builder().userId(1L).cartLineItems(cartLineItems).build();
+        Cart buildCart = Cart.forTest(1L, cartLineItems);
         buildCart.updateCartName("장바구니이름");
         // when
         Cart cart = Cart.of(cartLineItems, "장바구니이름", 1L, cartValidator);
@@ -129,7 +126,7 @@ class CartTest {
     @Test
     public void 카트_카트라인_한개조회시_없으면_에러발생() {
         // given
-        Cart emptyLineCart = Cart.builder().cartLineItems(List.of()).build();
+        Cart emptyLineCart = Cart.forTest(null, List.of());
         // when
         // then
         assertThrows(CartLineItemNotFoundException.class, emptyLineCart::getCartLineItem);

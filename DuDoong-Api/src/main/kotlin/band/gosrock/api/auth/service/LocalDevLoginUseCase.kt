@@ -14,10 +14,10 @@ class LocalDevLoginUseCase(
     private val tokenGenerateHelper: TokenGenerateHelper
 ) {
     fun execute(registerRequest: RegisterRequest): TokenAndUserResponse {
-        val oauthInfo = OauthInfo.builder()
-            .provider(OauthProvider.KAKAO)
-            .oid(registerRequest.email ?: "anonymous")
-            .build()
+        val oauthInfo = OauthInfo(
+            provider = OauthProvider.KAKAO,
+            oid = registerRequest.email ?: "anonymous",
+        )
 
         val profile = registerRequest.toProfile()
         val user = userDomainService.upsertUser(profile, oauthInfo)

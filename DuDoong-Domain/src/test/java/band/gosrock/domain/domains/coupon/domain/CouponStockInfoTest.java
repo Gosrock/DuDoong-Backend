@@ -18,16 +18,16 @@ public class CouponStockInfoTest {
     @BeforeEach
     void setUp() {
         zeroCouponStockInfo =
-                CouponStockInfo.builder().remainingAmount(0L).issuedAmount(3L).build();
+                new CouponStockInfo(3L, 0L);
         leftCouponStockInfo =
-                CouponStockInfo.builder().remainingAmount(1L).issuedAmount(3L).build();
+                new CouponStockInfo(3L, 1L);
     }
 
     @Test
     public void 쿠폰_남은_재고_없음() {
         // given
         zeroCouponStockInfo =
-                CouponStockInfo.builder().remainingAmount(0L).issuedAmount(3L).build();
+                new CouponStockInfo(3L, 0L);
         // when, then
         assertThrows(
                 NoCouponStockLeftException.class, () -> zeroCouponStockInfo.decreaseCouponStock());
@@ -37,7 +37,7 @@ public class CouponStockInfoTest {
     public void 쿠폰_남은_재고_있음() {
         // given
         leftCouponStockInfo =
-                CouponStockInfo.builder().remainingAmount(1L).issuedAmount(3L).build();
+                new CouponStockInfo(3L, 1L);
         // when
         leftCouponStockInfo.decreaseCouponStock();
         // then

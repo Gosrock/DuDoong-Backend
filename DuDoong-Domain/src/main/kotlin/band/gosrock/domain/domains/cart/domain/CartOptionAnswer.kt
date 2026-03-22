@@ -37,25 +37,14 @@ class CartOptionAnswer() : BaseTimeEntity() {
             this.additionalPrice = option.additionalPrice ?: Money.ZERO
             this.answer = answer
         }
-
-        @JvmStatic
-        fun builder() = Builder()
-    }
-
-    class Builder {
-        private var option: Option? = null
-        private var answer: String? = null
-        fun option(option: Option) = apply { this.option = option }
-        fun answer(answer: String?) = apply { this.answer = answer }
-        fun build(): CartOptionAnswer = of(option!!, answer ?: "")
     }
 
     fun getOptionAnswerVo(option: Option): OptionAnswerVo =
-        OptionAnswerVo.builder()
-            .questionDescription(option.getQuestionDescription())
-            .optionGroupType(option.getQuestionType())
-            .questionName(option.getQuestionName())
-            .answer(answer)
-            .additionalPrice(option.additionalPrice)
-            .build()
+        OptionAnswerVo(
+            questionDescription = option.getQuestionDescription(),
+            optionGroupType = option.getQuestionType(),
+            questionName = option.getQuestionName(),
+            answer = answer,
+            additionalPrice = option.additionalPrice,
+        )
 }

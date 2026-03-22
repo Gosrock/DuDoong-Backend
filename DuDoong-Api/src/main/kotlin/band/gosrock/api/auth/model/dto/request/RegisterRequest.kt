@@ -12,10 +12,10 @@ data class RegisterRequest(
     val name: String? = null,
     val marketingAgree: Boolean = false
 ) {
-    fun toProfile(): Profile = Profile.builder()
-        .profileImage(profileImage)
-        .phoneNumber(phoneNumber)
-        .name(name ?: "")
-        .email(email ?: "")
-        .build()
+    fun toProfile(): Profile = Profile(
+        profileImage = profileImage,
+        phoneNumber = phoneNumber,
+        name = name ?: "",
+        email = email ?: "",
+    )
 }

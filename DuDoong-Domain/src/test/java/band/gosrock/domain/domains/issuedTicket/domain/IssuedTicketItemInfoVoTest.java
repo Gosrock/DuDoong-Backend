@@ -31,37 +31,14 @@ public class IssuedTicketItemInfoVoTest {
     @BeforeEach
     void setUp() {
         itemInfoVo =
-                IssuedTicketItemInfoVo.builder()
-                        .ticketItemId(1L)
-                        .ticketType(ticketType)
-                        .payType(payType)
-                        .ticketName("testTicket")
-                        .price(w3000)
-                        .build();
+                new IssuedTicketItemInfoVo(1L, ticketType, payType, "testTicket", w3000);
     }
 
     @Test
     public void 티켓_아이템_정보를_발급티켓_아이템_인포로_정상적으로_변환_테스트() {
         // given
         TicketItem newTicketItem =
-                TicketItem.builder()
-                        .payType(TicketPayType.DUDOONG_TICKET)
-                        .name("testTicket")
-                        .description("test")
-                        .price(w3000)
-                        .quantity(1L)
-                        .supplyCount(1L)
-                        .purchaseLimit(1L)
-                        .type(ticketType)
-                        .bankName("test")
-                        .accountHolder("test")
-                        .accountNumber("test")
-                        .isQuantityPublic(true)
-                        .isSellable(true)
-                        .saleStartAt(startAt)
-                        .saleEndAt(endAt)
-                        .eventId(1L)
-                        .build();
+                new TicketItem(TicketPayType.DUDOONG_TICKET, "testTicket", "test", w3000, 1L, 1L, 1L, ticketType, "test", "test", "test", true, true, startAt, endAt, 1L);
 
         // when
         IssuedTicketItemInfoVo itemInfoVoForTest = IssuedTicketItemInfoVo.from(newTicketItem);

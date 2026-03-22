@@ -28,7 +28,17 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OrderBy
 
 @Entity(name = "tbl_host")
-class Host() : BaseTimeEntity() {
+class Host(
+    // 마스터 유저 id
+    var masterUserId: Long? = null,
+    // 슬랙 웹훅 url
+    var slackUrl: String? = null,
+    name: String? = null,
+    introduce: String? = null,
+    profileImageKey: String? = null,
+    contactEmail: String? = null,
+    contactNumber: String? = null,
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "host_id")
@@ -36,19 +46,17 @@ class Host() : BaseTimeEntity() {
         protected set
 
     @Embedded
-    var profile: HostProfile? = null
-        protected set
-
-    // 마스터 유저 id
-    var masterUserId: Long? = null
+    var profile: HostProfile? = HostProfile(
+        name = name,
+        introduce = introduce,
+        profileImageKey = profileImageKey,
+        contactEmail = contactEmail,
+        contactNumber = contactNumber,
+    )
         protected set
 
     // 파트너 여부
     var partner: Boolean = false
-        protected set
-
-    // 슬랙 웹훅 url
-    var slackUrl: String? = null
         protected set
 
     // 단방향 oneToMany 매핑
@@ -60,26 +68,6 @@ class Host() : BaseTimeEntity() {
     )
     @OrderBy("createdAt DESC")
     val hostUsers: MutableSet<HostUser> = HashSet()
-
-    constructor(
-        name: String?,
-        introduce: String?,
-        profileImageKey: String?,
-        contactEmail: String?,
-        contactNumber: String?,
-        slackUrl: String?,
-        masterUserId: Long?,
-    ) : this() {
-        this.profile = HostProfile.builder()
-            .name(name)
-            .introduce(introduce)
-            .profileImageKey(profileImageKey)
-            .contactEmail(contactEmail)
-            .contactNumber(contactNumber)
-            .build()
-        this.masterUserId = masterUserId
-        this.slackUrl = slackUrl
-    }
 
     fun addHostUsers(hostUserList: Set<HostUser>) {
         hostUserList.forEach { validateHostUserExistence(it) }
@@ -179,28 +167,4 @@ class Host() : BaseTimeEntity() {
 
     fun toHostInfoVo(): HostInfoVo = HostInfoVo.from(this)
     fun toHostProfileVo(): HostProfileVo = HostProfileVo.from(this)
-
-    companion object {
-        @JvmStatic
-        fun builder() = Builder()
-    }
-
-    class Builder {
-        private var name: String? = null
-        private var introduce: String? = null
-        private var profileImageKey: String? = null
-        private var contactEmail: String? = null
-        private var contactNumber: String? = null
-        private var slackUrl: String? = null
-        private var masterUserId: Long? = null
-
-        fun name(name: String?) = apply { this.name = name }
-        fun introduce(introduce: String?) = apply { this.introduce = introduce }
-        fun profileImageKey(key: String?) = apply { this.profileImageKey = key }
-        fun contactEmail(email: String?) = apply { this.contactEmail = email }
-        fun contactNumber(number: String?) = apply { this.contactNumber = number }
-        fun slackUrl(url: String?) = apply { this.slackUrl = url }
-        fun masterUserId(id: Long?) = apply { this.masterUserId = id }
-        fun build() = Host(name, introduce, profileImageKey, contactEmail, contactNumber, slackUrl, masterUserId)
-    }
 }

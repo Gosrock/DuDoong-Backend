@@ -12,9 +12,9 @@ class UserTest {
     public void 유저프로필변경테스트() {
 
         // given
-        Profile profile = Profile.builder().email("t@naver.com").name("곽팔두").build();
-        User user = User.builder().profile(profile).build();
-        Profile newProfile = Profile.builder().email("a@naver.com").name("홍길동").build();
+        Profile profile = new Profile("곽팔두", "t@naver.com", null, null);
+        User user = new User(profile, null, false);
+        Profile newProfile = new Profile("홍길동", "a@naver.com", null, null);
         // when
         user.changeProfile(newProfile);
         // then

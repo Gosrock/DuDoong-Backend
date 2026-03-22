@@ -29,19 +29,20 @@ import jakarta.persistence.UniqueConstraint
     name = "tbl_user",
     uniqueConstraints = [UniqueConstraint(columnNames = ["oid", "provider"])],
 )
-class User() : BaseTimeEntity() {
+class User(
+    @Embedded
+    var profile: Profile? = null,
+
+    @Embedded
+    var oauthInfo: OauthInfo? = null,
+
+    // 마케팅 동의 여부
+    var marketingAgree: Boolean = false,
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     var id: Long? = null
-        protected set
-
-    @Embedded
-    var profile: Profile? = null
-        protected set
-
-    @Embedded
-    var oauthInfo: OauthInfo? = null
         protected set
 
     @Enumerated(EnumType.STRING)
@@ -56,22 +57,12 @@ class User() : BaseTimeEntity() {
     var receiveMail: Boolean = true
         protected set
 
-    // 마케팅 동의 여부
-    var marketingAgree: Boolean = false
-        protected set
-
     var lastLoginAt: LocalDateTime = LocalDateTime.now()
         protected set
 
-    constructor(profile: Profile, oauthInfo: OauthInfo?, marketingAgree: Boolean) : this() {
-        this.profile = profile
-        this.oauthInfo = oauthInfo
-        this.marketingAgree = marketingAgree
-    }
-
     @PostPersist
     fun registerEvent() {
-        val event = UserRegisterEvent.builder().userId(id).build()
+        val event = UserRegisterEvent(userId = id)
         Events.raise(event)
     }
 
@@ -129,20 +120,4 @@ class User() : BaseTimeEntity() {
     }
 
     fun isDeletedUser(): Boolean = accountState == AccountState.DELETED
-
-    companion object {
-        @JvmStatic
-        fun builder() = Builder()
-    }
-
-    class Builder {
-        private var profile: Profile? = null
-        private var oauthInfo: OauthInfo? = null
-        private var marketingAgree: Boolean = false
-
-        fun profile(profile: Profile?) = apply { this.profile = profile }
-        fun oauthInfo(oauthInfo: OauthInfo?) = apply { this.oauthInfo = oauthInfo }
-        fun marketingAgree(marketingAgree: Boolean?) = apply { this.marketingAgree = marketingAgree ?: false }
-        fun build() = User(profile!!, oauthInfo, marketingAgree)
-    }
 }

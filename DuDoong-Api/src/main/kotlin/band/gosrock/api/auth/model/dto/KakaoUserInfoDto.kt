@@ -12,15 +12,15 @@ data class KakaoUserInfoDto(
     val name: String?,
     val oauthProvider: OauthProvider
 ) {
-    fun toProfile(): Profile = Profile.builder()
-        .profileImage(profileImage)
-        .phoneNumber(phoneNumber)
-        .name(name ?: "")
-        .email(email ?: "")
-        .build()
+    fun toProfile(): Profile = Profile(
+        profileImage = profileImage,
+        phoneNumber = phoneNumber,
+        name = name ?: "",
+        email = email ?: "",
+    )
 
-    fun toOauthInfo(): OauthInfo = OauthInfo.builder()
-        .oid(oauthId)
-        .provider(oauthProvider)
-        .build()
+    fun toOauthInfo(): OauthInfo = OauthInfo(
+        oid = oauthId,
+        provider = oauthProvider,
+    )
 }

@@ -38,7 +38,7 @@ public class HostServiceConcurrencyFailureTest {
 
     @BeforeEach
     void setup() {
-        host = Host.builder().build();
+        host = new Host();
         ReflectionTestUtils.setField(host, "id", 1L);
         given(hostUser.getUserId()).willReturn(9L);
         given(hostRepository.save(any(Host.class))).willReturn(host);

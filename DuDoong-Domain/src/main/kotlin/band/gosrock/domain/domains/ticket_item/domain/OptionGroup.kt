@@ -20,32 +20,24 @@ import jakarta.persistence.OneToMany
 import org.hibernate.annotations.ColumnDefault
 
 @Entity(name = "tbl_option_group")
-class OptionGroup() {
+class OptionGroup(
+    var eventId: Long? = null,
+    // 옵션 그룹 응답 형식
+    @Enumerated(EnumType.STRING)
+    var type: OptionGroupType? = null,
+    // 옵션 그룹 이름
+    var name: String? = null,
+    // 옵션 그룹 설명
+    var description: String? = null,
+    // 필수 응답 여부
+    var isEssential: Boolean? = null,
+    initialOptions: List<Option> = emptyList(),
+) {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "option_group_id")
     var id: Long? = null
-        protected set
-
-    var eventId: Long? = null
-        protected set
-
-    // 옵션 그룹 응답 형식
-    @Enumerated(EnumType.STRING)
-    var type: OptionGroupType? = null
-        protected set
-
-    // 옵션 그룹 이름
-    var name: String? = null
-        protected set
-
-    // 옵션 그룹 설명
-    var description: String? = null
-        protected set
-
-    // 필수 응답 여부
-    var isEssential: Boolean? = null
         protected set
 
     // 상태
@@ -57,21 +49,11 @@ class OptionGroup() {
     @OneToMany(cascade = [CascadeType.ALL], mappedBy = "optionGroup")
     val options: MutableList<Option> = mutableListOf()
 
-    constructor(
-        eventId: Long?,
-        type: OptionGroupType?,
-        name: String?,
-        description: String?,
-        isEssential: Boolean?,
-        options: List<Option>,
-    ) : this() {
-        this.eventId = eventId
-        this.type = type
-        this.name = name
-        this.description = description
-        this.isEssential = isEssential
-        this.options.addAll(options)
-        options.forEach { it.updateOptionGroup(this) }
+    init {
+        if (initialOptions.isNotEmpty()) {
+            this.options.addAll(initialOptions)
+            initialOptions.forEach { it.updateOptionGroup(this) }
+        }
     }
 
     fun validateEventId(eventId: Long) {
@@ -100,27 +82,5 @@ class OptionGroup() {
         // 적용된 옵션은 삭제 불가
         if (this.hasApplication(ticketItems)) throw ForbiddenOptionGroupDeleteException.EXCEPTION
         this.optionGroupStatus = OptionGroupStatus.DELETED
-    }
-
-    companion object {
-        @JvmStatic
-        fun builder() = Builder()
-    }
-
-    class Builder {
-        private var eventId: Long? = null
-        private var type: OptionGroupType? = null
-        private var name: String? = null
-        private var description: String? = null
-        private var isEssential: Boolean? = null
-        private var options: List<Option> = emptyList()
-
-        fun eventId(eventId: Long?) = apply { this.eventId = eventId }
-        fun type(type: OptionGroupType?) = apply { this.type = type }
-        fun name(name: String?) = apply { this.name = name }
-        fun description(description: String?) = apply { this.description = description }
-        fun isEssential(isEssential: Boolean?) = apply { this.isEssential = isEssential }
-        fun options(options: List<Option>) = apply { this.options = options }
-        fun build() = OptionGroup(eventId, type, name, description, isEssential, options)
     }
 }

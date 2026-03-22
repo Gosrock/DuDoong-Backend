@@ -33,15 +33,15 @@ class IssuedTicketStatusTransitionTest {
 
     @BeforeEach
     fun setUp() {
-        issuedTicket = IssuedTicket.builder()
-            .eventId(1L)
-            .userInfo(userInfo)
-            .itemInfo(itemInfo)
-            .orderUuid("test-uuid")
-            .orderLineId(10L)
-            .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
-            .issuedTicketOptionAnswers(emptyList())
-            .build()
+        issuedTicket = IssuedTicket(
+            eventId = 1L,
+            userInfo = userInfo,
+            itemInfo = itemInfo,
+            orderUuid = "test-uuid",
+            orderLineId = 10L,
+            issuedTicketStatus = IssuedTicketStatus.ENTRANCE_INCOMPLETE,
+            initialOptionAnswers = emptyList(),
+        )
     }
 
     // ---- 기본 상태 ----

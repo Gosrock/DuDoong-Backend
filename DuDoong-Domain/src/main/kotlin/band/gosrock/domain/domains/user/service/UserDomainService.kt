@@ -19,11 +19,11 @@ open class UserDomainService(
     @RedissonLock(LockName = "유저등록", identifier = "oid", paramClassType = OauthInfo::class)
     open fun registerUser(profile: Profile, oauthInfo: OauthInfo, marketingAgree: Boolean): User {
         validUserCanRegister(oauthInfo)
-        val newUser = User.builder()
-            .profile(profile)
-            .marketingAgree(marketingAgree)
-            .oauthInfo(oauthInfo)
-            .build()
+        val newUser = User(
+            profile = profile,
+            marketingAgree = marketingAgree,
+            oauthInfo = oauthInfo,
+        )
         userRepository.save(newUser)
         return newUser
     }
@@ -32,11 +32,11 @@ open class UserDomainService(
     @RedissonLock(LockName = "개발용회원가입", identifier = "oid", paramClassType = OauthInfo::class)
     open fun upsertUser(profile: Profile, oauthInfo: OauthInfo): User =
         userRepository.findByOauthInfo(oauthInfo).orElseGet {
-            val newUser = User.builder()
-                .profile(profile)
-                .marketingAgree(true)
-                .oauthInfo(oauthInfo)
-                .build()
+            val newUser = User(
+                profile = profile,
+                marketingAgree = true,
+                oauthInfo = oauthInfo,
+            )
             userRepository.save(newUser)
             newUser
         }

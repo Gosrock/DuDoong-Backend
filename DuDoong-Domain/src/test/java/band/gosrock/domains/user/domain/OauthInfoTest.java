@@ -15,7 +15,7 @@ class OauthInfoTest {
         String testOid = "test";
         String withDrawOid = DuDoongStatic.WITHDRAW_PREFIX + testOid;
         OauthInfo oauthInfo =
-                OauthInfo.builder().oid(testOid).provider(OauthProvider.KAKAO).build();
+                new OauthInfo(OauthProvider.KAKAO, testOid);
 
         // when
         OauthInfo withDrawOauthInfo = oauthInfo.withDrawOauthInfo();

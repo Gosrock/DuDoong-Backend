@@ -35,11 +35,7 @@ class OrderLineItemTest {
     void setUp() {
 
         orderLineItem =
-                OrderLineItem.builder()
-                        .orderOptionAnswer(List.of(orderOptionAnswer1, orderOptionAnswer2))
-                        .quantity(quantity)
-                        .orderItemVo(orderItem)
-                        .build();
+                OrderLineItem.forTest(List.of(orderOptionAnswer1, orderOptionAnswer2), quantity, orderItem);
     }
 
     @Test
@@ -114,11 +110,7 @@ class OrderLineItemTest {
         given(orderItem.getPrice()).willReturn(Money.ZERO);
 
         orderLineItem =
-                OrderLineItem.builder()
-                        .orderOptionAnswer(List.of(orderOptionAnswer1, orderOptionAnswer2))
-                        .quantity(quantity)
-                        .orderItemVo(orderItem)
-                        .build();
+                OrderLineItem.forTest(List.of(orderOptionAnswer1, orderOptionAnswer2), quantity, orderItem);
 
         given(orderOptionAnswer1.getAdditionalPrice()).willReturn(Money.ZERO);
         given(orderOptionAnswer2.getAdditionalPrice()).willReturn(Money.ZERO);

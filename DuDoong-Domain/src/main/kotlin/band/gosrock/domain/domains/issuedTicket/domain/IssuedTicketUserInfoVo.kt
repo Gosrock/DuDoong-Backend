@@ -5,27 +5,12 @@ import band.gosrock.domain.domains.user.domain.User
 import jakarta.persistence.Embeddable
 
 @Embeddable
-class IssuedTicketUserInfoVo() {
-
-    var userId: Long? = null
-        protected set
-
-    var userName: String? = null
-        protected set
-
-    var phoneNumber: PhoneNumberVo? = null
-        protected set
-
-    var email: String? = null
-        protected set
-
-    constructor(userId: Long?, userName: String?, email: String?, phoneNumber: PhoneNumberVo?) : this() {
-        this.userId = userId
-        this.userName = userName
-        this.email = email
-        this.phoneNumber = phoneNumber
-    }
-
+class IssuedTicketUserInfoVo(
+    var userId: Long? = null,
+    var userName: String? = null,
+    var email: String? = null,
+    var phoneNumber: PhoneNumberVo? = null,
+) {
     companion object {
         @JvmStatic
         fun from(user: User): IssuedTicketUserInfoVo = IssuedTicketUserInfoVo(
@@ -34,22 +19,5 @@ class IssuedTicketUserInfoVo() {
             phoneNumber = user.profile?.phoneNumberVo,
             email = user.profile?.email,
         )
-
-        @JvmStatic
-        fun builder() = Builder()
-    }
-
-    class Builder {
-        private var userId: Long? = null
-        private var userName: String? = null
-        private var email: String? = null
-        private var phoneNumber: PhoneNumberVo? = null
-
-        fun userId(userId: Long?) = apply { this.userId = userId }
-        fun userName(userName: String?) = apply { this.userName = userName }
-        fun email(email: String?) = apply { this.email = email }
-        fun phoneNumber(phoneNumber: PhoneNumberVo?) = apply { this.phoneNumber = phoneNumber }
-
-        fun build(): IssuedTicketUserInfoVo = IssuedTicketUserInfoVo(userId, userName, email, phoneNumber)
     }
 }

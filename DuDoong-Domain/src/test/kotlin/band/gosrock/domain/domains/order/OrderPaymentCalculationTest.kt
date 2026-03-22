@@ -33,23 +33,23 @@ class OrderPaymentCalculationTest {
 
     @BeforeEach
     fun setUp() {
-        noCouponOrder = Order.builder()
-            .userId(1L)
-            .orderName("쿠폰없는주문")
-            .orderLineItems(listOf(lineItem1, lineItem2))
-            .orderStatus(OrderStatus.PENDING_PAYMENT)
-            .orderMethod(OrderMethod.PAYMENT)
-            .eventId(100L)
-            .build()
+        noCouponOrder = Order.forTest(
+            userId = 1L,
+            orderName = "쿠폰없는주문",
+            orderLineItems = listOf(lineItem1, lineItem2),
+            orderStatus = OrderStatus.PENDING_PAYMENT,
+            orderMethod = OrderMethod.PAYMENT,
+            eventId = 100L,
+        )
 
-        couponOrder = Order.builder()
-            .userId(1L)
-            .orderName("쿠폰있는주문")
-            .orderLineItems(listOf(lineItem1, lineItem2))
-            .orderStatus(OrderStatus.PENDING_PAYMENT)
-            .orderMethod(OrderMethod.PAYMENT)
-            .eventId(100L)
-            .build()
+        couponOrder = Order.forTest(
+            userId = 1L,
+            orderName = "쿠폰있는주문",
+            orderLineItems = listOf(lineItem1, lineItem2),
+            orderStatus = OrderStatus.PENDING_PAYMENT,
+            orderMethod = OrderMethod.PAYMENT,
+            eventId = 100L,
+        )
         couponOrder.attachCoupon(orderCouponVo)
     }
 
@@ -150,14 +150,14 @@ class OrderPaymentCalculationTest {
 
     @Test
     fun `결제금액이 0원이고 APPROVAL 방식이면 isDudoongTicketOrder가 false다`() {
-        val approvalOrder = Order.builder()
-            .userId(1L)
-            .orderName("승인주문")
-            .orderLineItems(listOf(lineItem1, lineItem2))
-            .orderStatus(OrderStatus.PENDING_APPROVE)
-            .orderMethod(OrderMethod.APPROVAL)
-            .eventId(100L)
-            .build()
+        val approvalOrder = Order.forTest(
+            userId = 1L,
+            orderName = "승인주문",
+            orderLineItems = listOf(lineItem1, lineItem2),
+            orderStatus = OrderStatus.PENDING_APPROVE,
+            orderMethod = OrderMethod.APPROVAL,
+            eventId = 100L,
+        )
 
         given(lineItem1.getTotalOrderLinePrice()).willReturn(Money.ZERO)
         given(lineItem2.getTotalOrderLinePrice()).willReturn(Money.ZERO)

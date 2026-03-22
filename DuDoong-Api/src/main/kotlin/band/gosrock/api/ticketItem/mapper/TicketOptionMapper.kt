@@ -19,14 +19,14 @@ class TicketOptionMapper(
 ) {
 
     fun toOptionGroup(createTicketOptionRequest: CreateTicketOptionRequest, eventId: Long): OptionGroup =
-        OptionGroup.builder()
-            .eventId(eventId)
-            .type(createTicketOptionRequest.type)
-            .name(createTicketOptionRequest.name)
-            .description(createTicketOptionRequest.description)
-            .isEssential(true)
-            .options(emptyList())
-            .build()
+        OptionGroup(
+            eventId = eventId,
+            type = createTicketOptionRequest.type,
+            name = createTicketOptionRequest.name,
+            description = createTicketOptionRequest.description,
+            isEssential = true,
+            initialOptions = emptyList(),
+        )
 
     @Transactional(readOnly = true)
     fun toGetTicketItemOptionResponse(eventId: Long, ticketItemId: Long): GetTicketItemOptionsResponse {

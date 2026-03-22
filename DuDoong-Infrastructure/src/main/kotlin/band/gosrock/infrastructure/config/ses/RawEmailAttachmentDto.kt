@@ -11,20 +11,4 @@ class RawEmailAttachmentDto(
     val fileBytes: ByteArray,
     /** 사용자가 이메일을 받았을 때 뜰 첨부파일이름. ex : 이벤트_정산서.pdf */
     val fileName: String,
-) {
-    class Builder {
-        private var type: String = ""
-        private var fileBytes: ByteArray = byteArrayOf()
-        private var fileName: String = ""
-
-        fun type(type: String) = apply { this.type = type }
-        fun fileBytes(fileBytes: ByteArray) = apply { this.fileBytes = fileBytes }
-        fun fileName(fileName: String) = apply { this.fileName = fileName }
-        fun build() = RawEmailAttachmentDto(type, fileBytes, fileName)
-    }
-
-    companion object {
-        @JvmStatic
-        fun builder() = Builder()
-    }
-}
+)

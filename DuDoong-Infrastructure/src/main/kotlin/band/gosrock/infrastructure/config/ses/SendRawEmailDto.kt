@@ -12,20 +12,4 @@ class SendRawEmailDto(
     fun addEmailAttachments(rawEmailAttachment: RawEmailAttachmentDto) {
         rawEmailAttachments.add(rawEmailAttachment)
     }
-
-    class Builder {
-        private var recipient: String = ""
-        private var subject: String = ""
-        private var bodyHtml: String = ""
-
-        fun recipient(recipient: String) = apply { this.recipient = recipient }
-        fun subject(subject: String) = apply { this.subject = subject }
-        fun bodyHtml(bodyHtml: String) = apply { this.bodyHtml = bodyHtml }
-        fun build() = SendRawEmailDto(recipient, subject, bodyHtml)
-    }
-
-    companion object {
-        @JvmStatic
-        fun builder() = Builder()
-    }
 }

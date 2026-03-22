@@ -9,16 +9,11 @@ import jakarta.persistence.Table
 
 @Table(name = "tbl_example")
 @Entity
-class ExampleEntity protected constructor() : BaseTimeEntity() {
+class ExampleEntity(
+    var content: String? = null,
+) : BaseTimeEntity() {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null
-
-    var content: String? = null
-        protected set
-
-    constructor(content: String) : this() {
-        this.content = content
-    }
 }

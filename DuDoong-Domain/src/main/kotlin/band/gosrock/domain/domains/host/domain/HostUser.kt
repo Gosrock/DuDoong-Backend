@@ -19,7 +19,15 @@ import jakarta.persistence.UniqueConstraint
 
 @Entity(name = "tbl_host_user")
 @Table(uniqueConstraints = [UniqueConstraint(columnNames = ["host_id", "user_id"])])
-class HostUser() : BaseTimeEntity() {
+class HostUser(
+    // 소속 호스트를 관리중인 유저 아이디
+    @Column(name = "user_id")
+    var userId: Long? = null,
+
+    // 유저의 권한
+    @Enumerated(EnumType.STRING)
+    var role: HostRole = HostRole.GUEST,
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "host_user_id")
@@ -32,24 +40,12 @@ class HostUser() : BaseTimeEntity() {
     var host: Host? = null
         protected set
 
-    // 소속 호스트를 관리중인 유저 아이디
-    @Column(name = "user_id")
-    var userId: Long? = null
-        protected set
-
     // 초대 승락 여부
     var active: Boolean = false
         protected set
 
-    // 유저의 권한
-    @Enumerated(EnumType.STRING)
-    var role: HostRole = HostRole.GUEST
-        protected set
-
-    constructor(host: Host, userId: Long?, role: HostRole) : this() {
+    constructor(host: Host, userId: Long?, role: HostRole) : this(userId = userId, role = role) {
         this.host = host
-        this.userId = userId
-        this.role = role
     }
 
     fun setHostRole(role: HostRole) {
@@ -60,21 +56,5 @@ class HostUser() : BaseTimeEntity() {
         if (this.active) throw AlreadyJoinedHostException.EXCEPTION
         this.active = true
         Events.raise(HostUserJoinEvent.of(this.host!!.id, this.userId))
-    }
-
-    companion object {
-        @JvmStatic
-        fun builder() = Builder()
-    }
-
-    class Builder {
-        private var host: Host? = null
-        private var userId: Long? = null
-        private var role: HostRole = HostRole.GUEST
-
-        fun host(host: Host?) = apply { this.host = host }
-        fun userId(userId: Long?) = apply { this.userId = userId }
-        fun role(role: HostRole?) = apply { this.role = role ?: HostRole.GUEST }
-        fun build() = HostUser(host!!, userId, role)
     }
 }

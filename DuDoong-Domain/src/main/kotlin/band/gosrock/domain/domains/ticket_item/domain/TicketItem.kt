@@ -34,7 +34,38 @@ import org.hibernate.annotations.ColumnDefault
 import org.springframework.util.StringUtils
 
 @Entity(name = "tbl_ticket_item")
-class TicketItem() : BaseTimeEntity() {
+class TicketItem(
+    // 티켓 지불 타입
+    @Enumerated(EnumType.STRING)
+    var payType: TicketPayType? = null,
+    // 티켓 이름
+    var name: String? = null,
+    // 티켓 설명
+    var description: String? = null,
+    // 티켓 가격
+    var price: Money? = null,
+    // 티켓 재고
+    var quantity: Long? = null,
+    // 티켓 공급량
+    var supplyCount: Long? = null,
+    // 1인당 구매 매수 제한
+    var purchaseLimit: Long? = null,
+    // 티켓 승인 타입
+    @Enumerated(EnumType.STRING)
+    var type: TicketType? = null,
+    bankName: String? = null,
+    accountNumber: String? = null,
+    accountHolder: String? = null,
+    // 재고 공개 여부
+    var isQuantityPublic: Boolean? = null,
+    // 판매 가능 여부
+    var isSellable: Boolean? = null,
+    // 판매 시작 시간
+    var saleStartAt: LocalDateTime? = null,
+    // 판매 종료 시간
+    var saleEndAt: LocalDateTime? = null,
+    var eventId: Long? = null,
+) : BaseTimeEntity() {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,58 +73,10 @@ class TicketItem() : BaseTimeEntity() {
     var id: Long? = null
         protected set
 
-    // 티켓 지불 타입
-    @Enumerated(EnumType.STRING)
-    var payType: TicketPayType? = null
-        protected set
-
-    // 티켓 이름
-    var name: String? = null
-        protected set
-
-    // 티켓 설명
-    var description: String? = null
-        protected set
-
-    // 티켓 가격
-    var price: Money? = null
-        protected set
-
-    // 티켓 재고
-    var quantity: Long? = null
-        protected set
-
-    // 티켓 공급량
-    var supplyCount: Long? = null
-        protected set
-
-    // 1인당 구매 매수 제한
-    var purchaseLimit: Long? = null
-        protected set
-
-    // 티켓 승인 타입
-    @Enumerated(EnumType.STRING)
-    var type: TicketType? = null
-        protected set
-
     @Embedded
-    var accountInfo: AccountInfoVo? = null
-        protected set
-
-    // 재고 공개 여부
-    var isQuantityPublic: Boolean? = null
-        protected set
-
-    // 판매 가능 여부
-    var isSellable: Boolean? = null
-        protected set
-
-    // 판매 시작 시간
-    var saleStartAt: LocalDateTime? = null
-        protected set
-
-    // 판매 종료 시간
-    var saleEndAt: LocalDateTime? = null
+    var accountInfo: AccountInfoVo? = if (payType == TicketPayType.DUDOONG_TICKET)
+        AccountInfoVo.valueOf(bankName, accountNumber, accountHolder)
+    else null
         protected set
 
     // 상태
@@ -102,47 +85,8 @@ class TicketItem() : BaseTimeEntity() {
     var ticketItemStatus: TicketItemStatus = TicketItemStatus.VALID
         protected set
 
-    var eventId: Long? = null
-        protected set
-
     @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER, orphanRemoval = true)
     val itemOptionGroups: MutableList<ItemOptionGroup> = mutableListOf()
-
-    constructor(
-        payType: TicketPayType?,
-        name: String?,
-        description: String?,
-        price: Money?,
-        quantity: Long?,
-        supplyCount: Long?,
-        purchaseLimit: Long?,
-        type: TicketType?,
-        bankName: String?,
-        accountNumber: String?,
-        accountHolder: String?,
-        isQuantityPublic: Boolean?,
-        isSellable: Boolean?,
-        saleStartAt: LocalDateTime?,
-        saleEndAt: LocalDateTime?,
-        eventId: Long?,
-    ) : this() {
-        this.payType = payType
-        this.name = name
-        this.description = description
-        this.price = price
-        this.quantity = quantity
-        this.supplyCount = supplyCount
-        this.purchaseLimit = purchaseLimit
-        this.type = type
-        this.accountInfo = if (payType == TicketPayType.DUDOONG_TICKET)
-            AccountInfoVo.valueOf(bankName, accountNumber, accountHolder)
-        else null
-        this.isQuantityPublic = isQuantityPublic
-        this.isSellable = isSellable
-        this.saleStartAt = saleStartAt
-        this.saleEndAt = saleEndAt
-        this.eventId = eventId
-    }
 
     fun addItemOptionGroup(optionGroup: OptionGroup) {
         // 재고 감소된 티켓상품은 옵션적용 변경 불가
@@ -158,7 +102,7 @@ class TicketItem() : BaseTimeEntity() {
         // 중복 체크
         if (hasItemOptionGroup(optionGroup.id!!)) throw DuplicatedItemOptionGroupException.EXCEPTION
 
-        val itemOptionGroup = ItemOptionGroup.builder().item(this).optionGroup(optionGroup).build()
+        val itemOptionGroup = ItemOptionGroup(item = this, optionGroup = optionGroup)
         this.itemOptionGroups.add(itemOptionGroup)
     }
 
@@ -271,51 +215,5 @@ class TicketItem() : BaseTimeEntity() {
         if (price != null) this.price = price
         if (quantity != null) this.quantity = quantity
         if (purchaseLimit != null) this.purchaseLimit = purchaseLimit
-    }
-
-    companion object {
-        @JvmStatic
-        fun builder() = Builder()
-    }
-
-    class Builder {
-        private var payType: TicketPayType? = null
-        private var name: String? = null
-        private var description: String? = null
-        private var price: Money? = null
-        private var quantity: Long? = null
-        private var supplyCount: Long? = null
-        private var purchaseLimit: Long? = null
-        private var type: TicketType? = null
-        private var bankName: String? = null
-        private var accountNumber: String? = null
-        private var accountHolder: String? = null
-        private var isQuantityPublic: Boolean? = null
-        private var isSellable: Boolean? = null
-        private var saleStartAt: LocalDateTime? = null
-        private var saleEndAt: LocalDateTime? = null
-        private var eventId: Long? = null
-
-        fun payType(payType: TicketPayType?) = apply { this.payType = payType }
-        fun name(name: String?) = apply { this.name = name }
-        fun description(description: String?) = apply { this.description = description }
-        fun price(price: Money?) = apply { this.price = price }
-        fun quantity(quantity: Long?) = apply { this.quantity = quantity }
-        fun supplyCount(supplyCount: Long?) = apply { this.supplyCount = supplyCount }
-        fun purchaseLimit(purchaseLimit: Long?) = apply { this.purchaseLimit = purchaseLimit }
-        fun type(type: TicketType?) = apply { this.type = type }
-        fun bankName(bankName: String?) = apply { this.bankName = bankName }
-        fun accountNumber(accountNumber: String?) = apply { this.accountNumber = accountNumber }
-        fun accountHolder(accountHolder: String?) = apply { this.accountHolder = accountHolder }
-        fun isQuantityPublic(isQuantityPublic: Boolean?) = apply { this.isQuantityPublic = isQuantityPublic }
-        fun isSellable(isSellable: Boolean?) = apply { this.isSellable = isSellable }
-        fun saleStartAt(saleStartAt: LocalDateTime?) = apply { this.saleStartAt = saleStartAt }
-        fun saleEndAt(saleEndAt: LocalDateTime?) = apply { this.saleEndAt = saleEndAt }
-        fun eventId(eventId: Long?) = apply { this.eventId = eventId }
-        fun build() = TicketItem(
-            payType, name, description, price, quantity, supplyCount, purchaseLimit, type,
-            bankName, accountNumber, accountHolder, isQuantityPublic, isSellable,
-            saleStartAt, saleEndAt, eventId
-        )
     }
 }
