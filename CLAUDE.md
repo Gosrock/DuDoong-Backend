@@ -161,6 +161,36 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4
 
 ---
 
+## 🧪 로컬 개발 & E2E 테스트
+
+### 서버 기동 (로컬 MySQL 사용)
+```bash
+# docker-compose 먼저 (MySQL + Redis)
+docker compose up -d
+
+# local 프로필로 기동 — 반드시 이 방식으로!
+./gradlew :DuDoong-Api:bootRun --args='--spring.profiles.active=local,infrastructure,domain,domain-local,common,common-local'
+```
+
+**주의**: `local` 프로필 없이 기동하면 **H2 인메모리 DB**를 사용하게 되어 MySQL과 불일치 발생.
+- `spring.profiles.group.local` = `infrastructure, domain-local, common-local`
+- `domain-local` 프로필이 `jdbc:mysql://127.0.0.1:13306/dudoong` 설정
+
+### E2E 테스트 (Python pytest)
+```bash
+cd e2e-tests
+pytest -v                          # 전체 실행
+pytest test_33* test_34* -v       # 권한 테스트만
+```
+
+### 디버깅 팁
+- API 안 되면 **프로필 먼저 확인** (`profiles are active` 로그)
+- DB 연결 확인: 로그에서 `jdbc:mysql` vs `jdbc:h2:mem` 확인
+- 403 나오면: DB에서 `account_role` 확인 + `hasAnyRole` 매칭 확인
+- 한번에 안 되면 **curl로 한 단계씩 확인** (로그인 → DB 확인 → role 변경 → API 호출)
+
+---
+
 ## 🔑 Kotlin 마이그레이션 핵심 원칙
 
 1. **Lombok 제거**: `@Data` → `data class`, `@Builder` → named params + `copy()`, `@RequiredArgsConstructor` → 주생성자
