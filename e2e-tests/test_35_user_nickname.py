@@ -23,8 +23,8 @@ def test_change_my_name(base_url, auth_headers):
     me_resp = requests.get(me_url, headers=auth_headers)
     assert_status(me_resp, 200)
     me_data = get_data(me_resp)
-    assert me_data.get("name") == "변경된이름", f"이름이 변경되지 않았습니다: {me_data}"
-    print(f"[test_change_my_name] 이름 변경 확인 완료: {me_data.get('name')}")
+    assert me_data.get("userName") == "변경된이름", f"이름이 변경되지 않았습니다: {me_data}"
+    print(f"[test_change_my_name] 이름 변경 확인 완료: {me_data.get('userName')}")
 
     # 원래 이름으로 복원
     restore_payload = {"name": "E2E테스터"}

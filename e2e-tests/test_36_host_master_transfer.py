@@ -85,7 +85,7 @@ def test_invite_member(base_url, transfer_state):
         pytest.skip("호스트 또는 멤버 정보 없음")
 
     url = f"{base_url}/v1/hosts/{transfer_state.host_id}/invite"
-    payload = {"userId": transfer_state.member_user_id}
+    payload = {"email": "transfer-member@dudoong.com", "role": "MANAGER"}
     headers = {"Authorization": f"Bearer {transfer_state.master_token}"}
     resp = requests.post(url, json=payload, headers=headers)
     print(f"[invite] status={resp.status_code}, body={resp.text[:400]}")

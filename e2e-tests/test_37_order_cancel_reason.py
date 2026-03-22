@@ -61,6 +61,15 @@ def test_setup_refund_reason_scenario(base_url, auth_headers, state):
     _state["admin_base_url"] = base_url.replace("/api", "/internal-api")
     _state["admin_headers"] = auth_headers
 
+    # admin 유저를 ADMIN으로 승격 (internal-api 접근을 위해)
+    import subprocess, base64, json as _json
+    token = auth_headers["Authorization"].replace("Bearer ", "")
+    p = token.split(".")[1]
+    p += "=" * (4 - len(p) % 4)
+    uid = int(_json.loads(base64.b64decode(p))["sub"])
+    subprocess.run(["mysql", "-h", "127.0.0.1", "-P", "13306", "-u", "dudoong", "-pdudoong", "dudoong", "-e", f"UPDATE tbl_user SET account_role='ADMIN' WHERE user_id={uid}"], capture_output=True)
+    _state["admin_user_id"] = uid
+
     from datetime import datetime, timedelta
     future = (datetime.now() + timedelta(days=180)).strftime("%Y.%m.%d %H:%M")
 
