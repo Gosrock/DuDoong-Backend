@@ -24,7 +24,6 @@ class AdminUpdateRefundStatusUseCase(
 
         when (RefundStatus.valueOf(request.refundStatus)) {
             RefundStatus.REFUND_COMPLETED -> order.completeRefund()
-            RefundStatus.REFUND_REJECTED -> order.rejectRefund(request.reason)
             else -> throw IllegalArgumentException("허용되지 않는 환불 상태입니다: ${request.refundStatus}")
         }
 

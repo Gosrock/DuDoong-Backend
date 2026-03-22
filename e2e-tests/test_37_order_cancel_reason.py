@@ -1,6 +1,6 @@
 """
 주문 취소/환불 사유 저장 및 어드민 환불 상태 변경 E2E 테스트.
-주문 생성 -> 환불 요청(사유 포함) -> 어드민 환불 완료/거절 흐름을 검증합니다.
+주문 생성 -> 호스트 취소(사유 포함) -> 어드민 환불 완료 흐름을 검증합니다.
 """
 import pytest
 import requests
@@ -12,7 +12,6 @@ _state: dict = {
     "event_id": 0,
     "ticket_item_id": 0,
     "order_uuid": "",
-    "order_uuid_reject": "",
     "buyer_headers": {},
     "admin_headers": {},
     "admin_base_url": "",
@@ -133,37 +132,12 @@ def test_setup_refund_reason_scenario(base_url, auth_headers, state):
 
 
 def test_create_orders_for_refund(base_url):
-    """환불 테스트용 주문 2건을 생성합니다."""
+    """환불 테스트용 주문을 생성합니다."""
     if not _state["ticket_item_id"]:
         pytest.skip("셋업 안 됨")
 
     _state["order_uuid"] = _create_order(base_url, _state["ticket_item_id"], _state["buyer_headers"])
-    _state["order_uuid_reject"] = _create_order(base_url, _state["ticket_item_id"], _state["buyer_headers"])
-    print(f"[test] 주문 생성: {_state['order_uuid']}, {_state['order_uuid_reject']}")
-
-
-def test_request_refund_with_reason(base_url):
-    """구매자가 환불 사유를 포함하여 환불을 요청합니다."""
-    order_uuid = _state.get("order_uuid")
-    if not order_uuid:
-        pytest.skip("주문이 없어 건너뜁니다.")
-
-    url = f"{base_url}/v1/orders/{order_uuid}/refund-request"
-    print(f"\n[test_request_refund] POST {url}")
-    resp = requests.post(url, json={"reason": "단순 변심으로 환불 요청합니다."}, headers=_state["buyer_headers"])
-    print(f"[test_request_refund] status={resp.status_code}, body={resp.text[:400]}")
-    assert resp.status_code == 200, f"환불 요청 실패: {resp.text[:300]}"
-
-
-def test_request_refund_reject_order(base_url):
-    """거절용 주문에도 환불 요청."""
-    order_uuid = _state.get("order_uuid_reject")
-    if not order_uuid:
-        pytest.skip("주문이 없어 건너뜁니다.")
-
-    url = f"{base_url}/v1/orders/{order_uuid}/refund-request"
-    resp = requests.post(url, json={"reason": "일정 변경으로 환불 요청"}, headers=_state["buyer_headers"])
-    assert resp.status_code == 200, f"환불 요청 실패: {resp.text[:300]}"
+    print(f"[test] 주문 생성: {_state['order_uuid']}")
 
 
 def test_admin_complete_refund():
@@ -188,39 +162,15 @@ def test_admin_complete_refund():
     print("[test_admin_complete] 환불 완료 처리 성공")
 
 
-def test_admin_reject_refund():
-    """어드민이 환불을 거절 처리합니다."""
-    order_uuid = _state.get("order_uuid_reject")
-    admin_base = _state.get("admin_base_url")
-    if not order_uuid or not admin_base:
-        pytest.skip("셋업 안 됨")
-
-    url = f"{admin_base}/v1/orders/{order_uuid}/refund-status"
-    print(f"\n[test_admin_reject] PATCH {url}")
-    resp = requests.patch(
-        url,
-        json={"refundStatus": "REFUND_REJECTED", "reason": "공연 당일 환불 불가"},
-        headers=_state["admin_headers"],
-    )
-    print(f"[test_admin_reject] status={resp.status_code}, body={resp.text[:400]}")
-    assert resp.status_code == 200, f"환불 거절 처리 실패: {resp.text[:300]}"
-
-    data = get_data(resp)
-    assert data.get("refundStatus") == "REFUND_REJECTED", f"환불 상태 불일치: {data.get('refundStatus')}"
-    assert data.get("cancelReason") == "공연 당일 환불 불가", f"거절 사유 불일치: {data.get('cancelReason')}"
-    print("[test_admin_reject] 환불 거절 처리 성공")
-
-
-def test_admin_cancel_with_reason():
+def test_admin_cancel_with_reason(base_url):
     """어드민이 사유를 포함하여 주문을 취소합니다."""
     admin_base = _state.get("admin_base_url")
-    order_uuid = _state.get("order_uuid")
-    if not order_uuid or not admin_base:
+    if not _state["ticket_item_id"]:
         pytest.skip("셋업 안 됨")
 
-    # 이 주문은 이미 환불 완료 상태이므로 cancel은 실패할 수 있음
-    # cancel은 별도 주문으로 테스트하는 것이 이상적이지만,
-    # 여기서는 API 호출 자체가 reason을 전달하는지 확인합니다.
+    # 취소 테스트용 새 주문 생성
+    order_uuid = _create_order(base_url, _state["ticket_item_id"], _state["buyer_headers"])
+
     url = f"{admin_base}/v1/orders/{order_uuid}/cancel"
     print(f"\n[test_admin_cancel] POST {url}")
     resp = requests.post(

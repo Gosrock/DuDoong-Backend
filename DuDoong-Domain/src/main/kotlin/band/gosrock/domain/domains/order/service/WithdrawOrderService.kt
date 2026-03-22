@@ -15,24 +15,27 @@ class WithdrawOrderService(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
+    @JvmOverloads
     @RedissonLock(LockName = "주문", identifier = "orderUuid")
-    fun cancelOrder(orderUuid: String): String {
+    fun cancelOrder(orderUuid: String, reason: String? = null): String {
         val order = orderAdaptor.findByOrderUuid(orderUuid)
-        order.cancel(orderValidator)
+        order.cancel(orderValidator, reason)
         return orderUuid
     }
 
+    @JvmOverloads
     @RedissonLock(LockName = "주문", identifier = "orderUuid")
-    fun refundOrder(orderUuid: String, userId: Long): String {
+    fun refundOrder(orderUuid: String, userId: Long, reason: String? = null): String {
         val order = orderAdaptor.findByOrderUuid(orderUuid)
-        order.refund(userId, orderValidator)
+        order.refund(userId, orderValidator, reason)
         return orderUuid
     }
 
+    @JvmOverloads
     @RedissonLock(LockName = "주문", identifier = "orderUuid")
-    fun refuseOrder(orderUuid: String): String {
+    fun refuseOrder(orderUuid: String, reason: String? = null): String {
         val order = orderAdaptor.findByOrderUuid(orderUuid)
-        order.refuse(orderValidator)
+        order.refuse(orderValidator, reason)
         return orderUuid
     }
 }

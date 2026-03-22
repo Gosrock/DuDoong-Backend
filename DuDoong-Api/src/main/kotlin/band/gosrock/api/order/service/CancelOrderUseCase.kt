@@ -14,8 +14,8 @@ class CancelOrderUseCase(
     private val orderMapper: OrderMapper,
 ) {
     @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID, applyTransaction = false)
-    fun execute(userId: Long, eventId: Long, orderUuid: String): OrderResponse {
-        withdrawOrderService.cancelOrder(orderUuid)
+    fun execute(userId: Long, eventId: Long, orderUuid: String, reason: String? = null): OrderResponse {
+        withdrawOrderService.cancelOrder(orderUuid, reason)
         return orderMapper.toOrderResponse(orderUuid)
     }
 }

@@ -85,7 +85,7 @@ class AdminOrderController(
         return adminCancelOrderUseCase.execute(userId, orderUuid, request?.reason)
     }
 
-    @Operation(summary = "주문의 환불 상태를 변경합니다. (REFUND_COMPLETED 또는 REFUND_REJECTED)")
+    @Operation(summary = "주문의 환불 상태를 변경합니다. (REFUND_COMPLETED)")
     @PatchMapping("/{orderUuid}/refund-status")
     fun updateRefundStatus(
         @CurrentUserId userId: Long,

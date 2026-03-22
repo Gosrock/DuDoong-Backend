@@ -11,8 +11,8 @@ class RefundOrderUseCase(
     private val withdrawOrderService: WithdrawOrderService,
     private val orderMapper: OrderMapper,
 ) {
-    fun execute(userId: Long, orderUuid: String): OrderResponse {
-        withdrawOrderService.refundOrder(orderUuid, userId)
+    fun execute(userId: Long, orderUuid: String, reason: String? = null): OrderResponse {
+        withdrawOrderService.refundOrder(orderUuid, userId, reason)
         return orderMapper.toOrderResponse(orderUuid)
     }
 }

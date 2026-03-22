@@ -14,8 +14,8 @@ class RefuseOrderUseCase(
     private val orderMapper: OrderMapper,
 ) {
     @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID, applyTransaction = false)
-    fun execute(userId: Long, eventId: Long, orderUuid: String): OrderResponse {
-        withdrawOrderService.refuseOrder(orderUuid)
+    fun execute(userId: Long, eventId: Long, orderUuid: String, reason: String? = null): OrderResponse {
+        withdrawOrderService.refuseOrder(orderUuid, reason)
         return orderMapper.toOrderResponse(orderUuid)
     }
 }
