@@ -9,6 +9,7 @@ import com.slack.api.model.block.composition.BlockCompositions.plainText
 import com.slack.api.model.block.composition.MarkdownTextObject
 import band.gosrock.infrastructure.config.slack.SlackErrorNotificationProvider
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.stereotype.Component
 import org.springframework.web.util.ContentCachingRequestWrapper
 import java.io.IOException
@@ -35,9 +36,14 @@ class SlackInternalErrorSender(
         )
         layoutBlocks.add(divider())
 
+        val traceId = MDC.get("traceId") ?: "no-trace"
+
         val errorUserIdMarkdown = MarkdownTextObject.builder().text("* User Id :*\n$userId").build()
         val errorUserIpMarkdown = MarkdownTextObject.builder().text("* User IP :*\n$errorUserIP").build()
         layoutBlocks.add(section { it.fields(listOf(errorUserIdMarkdown, errorUserIpMarkdown)) })
+
+        val traceIdMarkdown = MarkdownTextObject.builder().text("* Trace ID :*\n`$traceId`").build()
+        layoutBlocks.add(section { it.fields(listOf(traceIdMarkdown)) })
 
         val methodMarkdown = MarkdownTextObject.builder().text("* Request Addr :*\n$method : $url").build()
         val bodyMarkdown = MarkdownTextObject.builder().text("* Request Body :*\n$body").build()
