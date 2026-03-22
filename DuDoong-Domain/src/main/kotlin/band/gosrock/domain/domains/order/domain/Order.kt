@@ -94,6 +94,26 @@ class Order() : BaseTimeEntity() {
     var orderLineItems: MutableList<OrderLineItem> = mutableListOf()
         protected set
 
+    @Column(length = 500)
+    var failReason: String? = null
+        protected set
+
+    @Column(length = 500)
+    var userRefundReason: String? = null
+        protected set
+
+    @Column(length = 500)
+    var cancelReason: String? = null
+        protected set
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 30)
+    var refundStatus: RefundStatus = RefundStatus.NONE
+        protected set
+
+    var refundStatusChangedAt: LocalDateTime? = null
+        protected set
+
     @PrePersist
     fun addUUID() {
         uuid = UUID.randomUUID().toString()
@@ -163,6 +183,7 @@ class Order() : BaseTimeEntity() {
 
         /** 테스트 전용 팩토리 메서드 */
         @JvmStatic
+        @JvmOverloads
         fun forTest(
             userId: Long? = null,
             orderName: String? = null,
@@ -170,6 +191,10 @@ class Order() : BaseTimeEntity() {
             orderStatus: OrderStatus = OrderStatus.READY,
             orderMethod: OrderMethod? = null,
             eventId: Long? = null,
+            failReason: String? = null,
+            userRefundReason: String? = null,
+            cancelReason: String? = null,
+            refundStatus: RefundStatus = RefundStatus.NONE,
         ): Order = Order().apply {
             this.userId = userId
             this.orderName = orderName
@@ -177,6 +202,10 @@ class Order() : BaseTimeEntity() {
             this.orderStatus = orderStatus
             this.orderMethod = orderMethod
             this.eventId = eventId
+            this.failReason = failReason
+            this.userRefundReason = userRefundReason
+            this.cancelReason = cancelReason
+            this.refundStatus = refundStatus
         }
     }
 
@@ -217,16 +246,18 @@ class Order() : BaseTimeEntity() {
         }
     }
 
-    fun cancel(orderValidator: OrderValidator) {
+    fun cancel(orderValidator: OrderValidator, reason: String? = null) {
         orderValidator.validCanCancel(this)
         orderStatus = OrderStatus.CANCELED
+        cancelReason = reason
         withDrawAt = LocalDateTime.now()
         Events.raise(WithDrawOrderEvent.from(this))
     }
 
-    fun refuse(orderValidator: OrderValidator) {
+    fun refuse(orderValidator: OrderValidator, reason: String? = null) {
         orderValidator.validCanRefuse(this)
         orderStatus = OrderStatus.CANCELED
+        cancelReason = reason
         withDrawAt = LocalDateTime.now()
         Events.raise(WithDrawOrderEvent.from(this))
     }
@@ -239,8 +270,26 @@ class Order() : BaseTimeEntity() {
         Events.raise(WithDrawOrderEvent.from(this))
     }
 
-    fun fail() {
+    fun fail(reason: String? = null) {
         orderStatus = OrderStatus.FAILED
+        failReason = reason
+    }
+
+    fun requestRefund(reason: String) {
+        userRefundReason = reason
+        refundStatus = RefundStatus.REFUND_REQUESTED
+        refundStatusChangedAt = LocalDateTime.now()
+    }
+
+    fun completeRefund() {
+        refundStatus = RefundStatus.REFUND_COMPLETED
+        refundStatusChangedAt = LocalDateTime.now()
+    }
+
+    fun rejectRefund(reason: String? = null) {
+        refundStatus = RefundStatus.REFUND_REJECTED
+        cancelReason = reason
+        refundStatusChangedAt = LocalDateTime.now()
     }
 
     fun attachCoupon(orderCouponVo: OrderCouponVo) {

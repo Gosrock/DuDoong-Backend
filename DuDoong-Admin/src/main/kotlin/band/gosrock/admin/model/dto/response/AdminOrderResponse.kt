@@ -23,6 +23,11 @@ data class AdminOrderResponse(
     val supplyAmount: String?,
     val discountAmount: String?,
     val couponName: String?,
+    val failReason: String? = null,
+    val userRefundReason: String? = null,
+    val cancelReason: String? = null,
+    val refundStatus: String? = null,
+    val refundStatusChangedAt: String? = null,
 ) {
     companion object {
         fun of(order: Order, userName: String?, eventName: String?): AdminOrderResponse =
@@ -45,6 +50,11 @@ data class AdminOrderResponse(
                 supplyAmount = order.totalPaymentInfo?.supplyAmount?.toString(),
                 discountAmount = order.totalPaymentInfo?.discountAmount?.toString(),
                 couponName = order.orderCouponVo.name,
+                failReason = order.failReason,
+                userRefundReason = order.userRefundReason,
+                cancelReason = order.cancelReason,
+                refundStatus = order.refundStatus.name,
+                refundStatusChangedAt = order.refundStatusChangedAt?.toString(),
             )
     }
 }
