@@ -5,6 +5,7 @@ import band.gosrock.domain.domains.event.domain.QEvent.event
 import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.order.domain.OrderStatus
 import band.gosrock.domain.domains.order.domain.QOrder.order
+import band.gosrock.domain.domains.order.domain.RefundStatus
 import band.gosrock.domain.domains.order.domain.QOrderLineItem.orderLineItem
 import band.gosrock.domain.domains.order.repository.condition.FindEventOrdersCondition
 import band.gosrock.domain.domains.order.repository.condition.FindMyPageOrderCondition
@@ -110,6 +111,39 @@ class OrderCustomRepositoryImpl(
 
     private fun eqEventId(eventId: Long?): BooleanExpression? =
         if (eventId == null) null else order.eventId.eq(eventId)
+
+    override fun findRefunds(eventId: Long?, refundStatus: RefundStatus?, keyword: String?, pageable: Pageable): Page<Order> {
+        val orders = queryFactory
+            .selectFrom(order)
+            .where(
+                order.refundStatus.ne(RefundStatus.NONE),
+                eqEventId(eventId),
+                eqRefundStatus(refundStatus),
+                containsOrderNo(keyword),
+            )
+            .orderBy(order.id.desc())
+            .offset(pageable.offset)
+            .limit(pageable.pageSize.toLong())
+            .fetch()
+
+        val countQuery: JPAQuery<Long> = queryFactory
+            .select(order.count())
+            .from(order)
+            .where(
+                order.refundStatus.ne(RefundStatus.NONE),
+                eqEventId(eventId),
+                eqRefundStatus(refundStatus),
+                containsOrderNo(keyword),
+            )
+
+        return PageableExecutionUtils.getPage(orders, pageable) { countQuery.fetchOne() ?: 0L }
+    }
+
+    private fun eqRefundStatus(refundStatus: RefundStatus?): BooleanExpression? =
+        if (refundStatus == null) null else order.refundStatus.eq(refundStatus)
+
+    private fun containsOrderNo(keyword: String?): BooleanExpression? =
+        if (keyword.isNullOrBlank()) null else order.orderNo.containsIgnoreCase(keyword)
 
     private fun openingState(isShowing: Boolean?): BooleanExpression {
         val eventEndAtTemplate: DateTemplate<LocalDateTime> = Expressions.dateTemplate(
