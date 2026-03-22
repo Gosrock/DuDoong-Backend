@@ -1,6 +1,7 @@
 package band.gosrock.admin.controller
 
 import band.gosrock.admin.model.dto.request.AdminAddHostMemberRequest
+import band.gosrock.admin.model.dto.request.AdminTransferMasterRequest
 import band.gosrock.admin.model.dto.request.AdminUpdateHostMemberRoleRequest
 import band.gosrock.admin.model.dto.request.AdminUpdateHostPartnerRequest
 import band.gosrock.admin.model.dto.request.AdminUpdateHostProfileRequest
@@ -9,6 +10,7 @@ import band.gosrock.admin.model.dto.response.AdminHostDetailResponse
 import band.gosrock.admin.model.dto.response.AdminHostMemberResponse
 import band.gosrock.admin.model.dto.response.AdminHostResponse
 import band.gosrock.admin.service.AdminAddHostMemberUseCase
+import band.gosrock.admin.service.AdminTransferMasterUseCase
 import band.gosrock.admin.service.AdminGetHostDetailUseCase
 import band.gosrock.admin.service.AdminGetHostEventsUseCase
 import band.gosrock.admin.service.AdminGetHostMembersUseCase
@@ -50,6 +52,7 @@ class AdminHostController(
     private val adminGetHostEventsUseCase: AdminGetHostEventsUseCase,
     private val adminUpdateHostPartnerUseCase: AdminUpdateHostPartnerUseCase,
     private val adminUpdateHostProfileUseCase: AdminUpdateHostProfileUseCase,
+    private val adminTransferMasterUseCase: AdminTransferMasterUseCase,
 ) {
 
     @Operation(summary = "호스트 목록을 조회합니다.")
@@ -135,5 +138,15 @@ class AdminHostController(
         @RequestBody request: AdminUpdateHostProfileRequest,
     ): AdminHostDetailResponse {
         return adminUpdateHostProfileUseCase.execute(userId, hostId, request)
+    }
+
+    @Operation(summary = "호스트 마스터 권한을 강제 양도합니다. (어드민)")
+    @PostMapping("/{hostId}/transfer-master")
+    fun transferMaster(
+        @CurrentUserId userId: Long,
+        @PathVariable hostId: Long,
+        @RequestBody request: AdminTransferMasterRequest,
+    ): AdminHostDetailResponse {
+        return adminTransferMasterUseCase.execute(userId, hostId, request)
     }
 }

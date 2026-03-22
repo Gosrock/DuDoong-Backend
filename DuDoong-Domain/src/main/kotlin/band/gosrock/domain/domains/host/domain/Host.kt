@@ -159,6 +159,27 @@ class Host(
         if (!partner) throw NotPartnerHostException.EXCEPTION
     }
 
+    /** 마스터 권한을 다른 활성 멤버에게 양도합니다. 현재 마스터만 호출 가능합니다. */
+    fun transferMaster(currentMasterUserId: Long, newMasterUserId: Long) {
+        validateMasterHostUser(currentMasterUserId)
+        validateActiveHostUser(newMasterUserId)
+        // 기존 마스터 → MANAGER
+        this.hostUsers.first { it.userId == currentMasterUserId }.setHostRole(HostRole.MANAGER)
+        // 새 마스터 → MASTER
+        this.hostUsers.first { it.userId == newMasterUserId }.setHostRole(HostRole.MASTER)
+        this.masterUserId = newMasterUserId
+    }
+
+    /** 어드민이 마스터 권한을 강제 양도합니다. 권한 검증 없이 실행됩니다. */
+    fun forceTransferMaster(newMasterUserId: Long) {
+        validateActiveHostUser(newMasterUserId)
+        // 기존 마스터 → MANAGER (있으면)
+        this.hostUsers.firstOrNull { it.userId == masterUserId }?.setHostRole(HostRole.MANAGER)
+        // 새 마스터 → MASTER
+        this.hostUsers.first { it.userId == newMasterUserId }.setHostRole(HostRole.MASTER)
+        this.masterUserId = newMasterUserId
+    }
+
     fun isPartnerHost(): Boolean = partner
 
     fun changePartner(partner: Boolean) {

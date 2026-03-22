@@ -6,6 +6,7 @@ import band.gosrock.api.host.model.dto.request.CreateHostRequest
 import band.gosrock.api.host.model.dto.request.InviteHostRequest
 import band.gosrock.api.host.model.dto.request.UpdateHostRequest
 import band.gosrock.api.host.model.dto.request.UpdateHostSlackRequest
+import band.gosrock.api.host.model.dto.request.TransferMasterRequest
 import band.gosrock.api.host.model.dto.request.UpdateHostUserRoleRequest
 import band.gosrock.api.host.model.dto.response.HostDetailResponse
 import band.gosrock.api.host.model.dto.response.HostEventProfileResponse
@@ -17,6 +18,7 @@ import band.gosrock.api.host.service.JoinHostUseCase
 import band.gosrock.api.host.service.ReadHostEventsUseCase
 import band.gosrock.api.host.service.ReadHostProfilesUseCase
 import band.gosrock.api.host.service.ReadHostUseCase
+import band.gosrock.api.host.service.TransferMasterUseCase
 import band.gosrock.api.host.service.ReadInviteUsersUseCase
 import band.gosrock.api.host.service.RejectHostUseCase
 import band.gosrock.api.host.service.UpdateHostProfileUseCase
@@ -59,6 +61,7 @@ class HostController(
     private val inviteHostUseCase: InviteHostUseCase,
     private val joinHostUseCase: JoinHostUseCase,
     private val rejectHostUseCase: RejectHostUseCase,
+    private val transferMasterUseCase: TransferMasterUseCase,
 ) {
     @Operation(summary = "내가 속한 호스트 리스트를 가져옵니다.")
     @GetMapping
@@ -151,5 +154,15 @@ class HostController(
         @RequestBody @Valid updateHostSlackRequest: UpdateHostSlackRequest,
     ): HostDetailResponse {
         return updateHostSlackUrlUseCase.execute(userId, hostId, updateHostSlackRequest)
+    }
+
+    @Operation(summary = "호스트 마스터 권한을 다른 멤버에게 양도합니다. 마스터만 가능합니다.")
+    @PostMapping("/{hostId}/transfer-master")
+    fun transferMaster(
+        @CurrentUserId userId: Long,
+        @PathVariable hostId: Long,
+        @RequestBody @Valid request: TransferMasterRequest,
+    ): HostDetailResponse {
+        return transferMasterUseCase.execute(userId, hostId, request)
     }
 }
