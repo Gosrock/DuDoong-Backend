@@ -15,14 +15,14 @@ class CreateTossOrderUseCase(
 ) {
     fun execute(orderUuid: String): PaymentsResponse {
         val order = orderAdaptor.findByOrderUuid(orderUuid)
-        val createPaymentsRequest = CreatePaymentsRequest.builder()
-            .method("카드")
-            .orderName(order.orderName)
-            .orderId(orderUuid)
-            .failUrl("http://localhost:8080/failurl")
-            .successUrl("http://localhost:8080/successUrl")
-            .amount(order.getTotalPaymentPrice().longValue())
-            .build()
+        val createPaymentsRequest = CreatePaymentsRequest(
+            method = "카드",
+            orderName = order.orderName,
+            orderId = orderUuid,
+            failUrl = "http://localhost:8080/failurl",
+            successUrl = "http://localhost:8080/successUrl",
+            amount = order.getTotalPaymentPrice().longValue(),
+        )
         return paymentsCreateClient.execute(createPaymentsRequest)
     }
 }

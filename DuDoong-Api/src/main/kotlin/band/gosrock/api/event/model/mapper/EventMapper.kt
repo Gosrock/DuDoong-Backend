@@ -29,36 +29,36 @@ class EventMapper(
 ) {
 
     fun toEntity(createEventRequest: CreateEventRequest): Event {
-        return Event.builder()
-            .hostId(createEventRequest.hostId)
-            .name(createEventRequest.name)
-            .startAt(createEventRequest.startAt)
-            .runTime(createEventRequest.runTime)
-            .build()
+        return Event(
+            hostId = createEventRequest.hostId,
+            name = createEventRequest.name,
+            startAt = createEventRequest.startAt,
+            runTime = createEventRequest.runTime,
+        )
     }
 
     fun toEventBasic(updateEventBasicRequest: UpdateEventBasicRequest): EventBasic {
-        return EventBasic.builder()
-            .name(updateEventBasicRequest.name)
-            .runTime(updateEventBasicRequest.runTime)
-            .startAt(updateEventBasicRequest.startAt)
-            .build()
+        return EventBasic(
+            name = updateEventBasicRequest.name,
+            runTime = updateEventBasicRequest.runTime,
+            startAt = updateEventBasicRequest.startAt,
+        )
     }
 
     fun toEventDetail(updateEventDetailRequest: UpdateEventDetailRequest): EventDetail {
-        return EventDetail.builder()
-            .posterImageKey(updateEventDetailRequest.posterImageKey)
-            .content(updateEventDetailRequest.content)
-            .build()
+        return EventDetail(
+            posterImageKey = updateEventDetailRequest.posterImageKey,
+            content = updateEventDetailRequest.content,
+        )
     }
 
     fun toEventPlace(updateEventBasicRequest: UpdateEventBasicRequest): EventPlace {
-        return EventPlace.builder()
-            .placeName(updateEventBasicRequest.placeName)
-            .placeAddress(updateEventBasicRequest.placeAddress)
-            .latitude(updateEventBasicRequest.latitude)
-            .longitude(updateEventBasicRequest.longitude)
-            .build()
+        return EventPlace(
+            placeName = updateEventBasicRequest.placeName,
+            placeAddress = updateEventBasicRequest.placeAddress,
+            latitude = updateEventBasicRequest.latitude,
+            longitude = updateEventBasicRequest.longitude,
+        )
     }
 
     fun toEventDetailResponse(host: Host, event: Event): EventDetailResponse {

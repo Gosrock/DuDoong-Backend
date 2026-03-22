@@ -48,19 +48,6 @@ class CartLineItem() : BaseTimeEntity() {
                 this.quantity = quantity
                 this.cartOptionAnswers.addAll(cartOptionAnswers)
             }
-
-        @JvmStatic
-        fun builder() = Builder()
-    }
-
-    class Builder {
-        private var item: TicketItem? = null
-        private var quantity: Long? = null
-        private var cartOptionAnswers: List<CartOptionAnswer> = emptyList()
-        fun item(item: TicketItem) = apply { this.item = item }
-        fun quantity(quantity: Long) = apply { this.quantity = quantity }
-        fun cartOptionAnswers(cartOptionAnswers: List<CartOptionAnswer>) = apply { this.cartOptionAnswers = cartOptionAnswers }
-        fun build(): CartLineItem = of(item!!, quantity!!, cartOptionAnswers)
     }
 
     fun getTotalOptionsPrice(): Money =

@@ -161,30 +161,22 @@ class Order() : BaseTimeEntity() {
         private fun getOrderLineItems(cart: Cart, item: TicketItem): List<OrderLineItem> =
             cart.cartLineItems.map { OrderLineItem.of(it, item) }
 
+        /** 테스트 전용 팩토리 메서드 */
         @JvmStatic
-        fun builder() = Builder()
-    }
-
-    class Builder {
-        private var userId: Long? = null
-        private var orderName: String? = null
-        private var orderLineItems: List<OrderLineItem> = emptyList()
-        private var orderStatus: OrderStatus = OrderStatus.READY
-        private var orderMethod: OrderMethod? = null
-        private var eventId: Long? = null
-        fun userId(userId: Long) = apply { this.userId = userId }
-        fun orderName(orderName: String) = apply { this.orderName = orderName }
-        fun orderLineItems(orderLineItems: List<OrderLineItem>) = apply { this.orderLineItems = orderLineItems }
-        fun orderStatus(orderStatus: OrderStatus) = apply { this.orderStatus = orderStatus }
-        fun orderMethod(orderMethod: OrderMethod) = apply { this.orderMethod = orderMethod }
-        fun eventId(eventId: Long) = apply { this.eventId = eventId }
-        fun build(): Order = Order().apply {
-            this.userId = this@Builder.userId
-            this.orderName = this@Builder.orderName
-            this.orderLineItems.addAll(this@Builder.orderLineItems)
-            this.orderStatus = this@Builder.orderStatus
-            this.orderMethod = this@Builder.orderMethod
-            this.eventId = this@Builder.eventId
+        fun forTest(
+            userId: Long? = null,
+            orderName: String? = null,
+            orderLineItems: List<OrderLineItem> = emptyList(),
+            orderStatus: OrderStatus = OrderStatus.READY,
+            orderMethod: OrderMethod? = null,
+            eventId: Long? = null,
+        ): Order = Order().apply {
+            this.userId = userId
+            this.orderName = orderName
+            this.orderLineItems.addAll(orderLineItems)
+            this.orderStatus = orderStatus
+            this.orderMethod = orderMethod
+            this.eventId = eventId
         }
     }
 

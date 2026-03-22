@@ -5,14 +5,9 @@ import com.fasterxml.jackson.annotation.JsonValue
 import jakarta.persistence.Embeddable
 
 @Embeddable
-class ImageVo() {
-    var imageKey: String? = null
-        protected set
-
-    constructor(key: String?) : this() {
-        this.imageKey = key
-    }
-
+class ImageVo(
+    var imageKey: String? = null,
+) {
     @JsonValue
     fun generateImageUrl(): String? {
         val key = imageKey ?: return null

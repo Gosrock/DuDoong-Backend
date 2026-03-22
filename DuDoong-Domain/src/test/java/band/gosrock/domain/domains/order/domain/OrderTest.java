@@ -28,21 +28,9 @@ class OrderTest {
     @BeforeEach
     void setUp() {
         notHaveCouponOrder =
-                Order.builder()
-                        .userId(1L)
-                        .orderName("주문이름")
-                        .orderLineItems(List.of(orderLineItem1, orderLineItem2))
-                        .orderStatus(OrderStatus.PENDING_APPROVE)
-                        .orderMethod(OrderMethod.APPROVAL)
-                        .build();
+                Order.forTest(1L, "주문이름", List.of(orderLineItem1, orderLineItem2), OrderStatus.PENDING_APPROVE, OrderMethod.APPROVAL, null);
         couponOrder =
-                Order.builder()
-                        .userId(1L)
-                        .orderName("주문이름")
-                        .orderLineItems(List.of(orderLineItem1, orderLineItem2))
-                        .orderStatus(OrderStatus.PENDING_APPROVE)
-                        .orderMethod(OrderMethod.APPROVAL)
-                        .build();
+                Order.forTest(1L, "주문이름", List.of(orderLineItem1, orderLineItem2), OrderStatus.PENDING_APPROVE, OrderMethod.APPROVAL, null);
         couponOrder.attachCoupon(orderCouponVo);
     }
 

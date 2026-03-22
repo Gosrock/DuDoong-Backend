@@ -87,46 +87,19 @@ public class IssuedTicketDomainServiceTest {
         // Todo: orderLineItem 생성
 
         issuedTicket =
-                IssuedTicket.builder()
-                        .issuedTicketOptionAnswers(
-                                List.of(issuedTicketOptionAnswer, issuedTicketOptionAnswer1))
-                        .itemInfo(itemInfoVo)
-                        .userInfo(userInfoVo)
-                        .eventId(1L)
-                        .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
-                        .orderLineId(1L)
-                        .orderUuid(orderUuid)
-                        .build();
+                new IssuedTicket(1L, userInfoVo, orderUuid, 1L, itemInfoVo, IssuedTicketStatus.ENTRANCE_INCOMPLETE, List.of(issuedTicketOptionAnswer, issuedTicketOptionAnswer1));
 
         issuedTicket.createUUID();
         issuedTickets.add(issuedTicket);
 
         issuedTicket1 =
-                IssuedTicket.builder()
-                        .issuedTicketOptionAnswers(
-                                List.of(issuedTicketOptionAnswer, issuedTicketOptionAnswer1))
-                        .itemInfo(itemInfoVo)
-                        .userInfo(userInfoVo)
-                        .eventId(1L)
-                        .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
-                        .orderLineId(1L)
-                        .orderUuid(orderUuid)
-                        .build();
+                new IssuedTicket(1L, userInfoVo, orderUuid, 1L, itemInfoVo, IssuedTicketStatus.ENTRANCE_INCOMPLETE, List.of(issuedTicketOptionAnswer, issuedTicketOptionAnswer1));
 
         issuedTicket1.createUUID();
         issuedTickets.add(issuedTicket1);
 
         issuedTicket2 =
-                IssuedTicket.builder()
-                        .issuedTicketOptionAnswers(
-                                List.of(issuedTicketOptionAnswer, issuedTicketOptionAnswer1))
-                        .itemInfo(itemInfoVo1)
-                        .userInfo(userInfoVo)
-                        .eventId(1L)
-                        .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
-                        .orderLineId(1L)
-                        .orderUuid(orderUuid)
-                        .build();
+                new IssuedTicket(1L, userInfoVo, orderUuid, 1L, itemInfoVo1, IssuedTicketStatus.ENTRANCE_INCOMPLETE, List.of(issuedTicketOptionAnswer, issuedTicketOptionAnswer1));
 
         issuedTicket2.createUUID();
 

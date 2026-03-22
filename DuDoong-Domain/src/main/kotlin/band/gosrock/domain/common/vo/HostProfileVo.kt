@@ -2,7 +2,7 @@ package band.gosrock.domain.common.vo
 
 import band.gosrock.domain.domains.host.domain.Host
 
-class HostProfileVo private constructor(
+class HostProfileVo(
     val hostId: Long?,
     val name: String?,
     val introduce: String?,
@@ -25,21 +25,5 @@ class HostProfileVo private constructor(
                 introduce = host.profile?.introduce,
                 profileImage = host.profile?.profileImage,
             )
-
-        @JvmStatic
-        fun builder() = Builder()
-    }
-
-    class Builder {
-        private var hostId: Long? = null
-        private var name: String? = null
-        private var introduce: String? = null
-        private var profileImage: ImageVo? = null
-
-        fun hostId(v: Long?) = apply { hostId = v }
-        fun name(v: String?) = apply { name = v }
-        fun introduce(v: String?) = apply { introduce = v }
-        fun profileImage(v: ImageVo?) = apply { profileImage = v }
-        fun build() = HostProfileVo(hostId, name, introduce, profileImage)
     }
 }

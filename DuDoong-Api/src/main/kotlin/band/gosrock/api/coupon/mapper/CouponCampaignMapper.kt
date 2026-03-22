@@ -15,17 +15,17 @@ class CouponCampaignMapper {
         val couponStockInfo = toCouponStockInfo(createCouponCampaignRequest.issuedAmount)
         val dateTimePeriod = toDateTimePeriod(createCouponCampaignRequest.startAt, createCouponCampaignRequest.endAt)
 
-        return CouponCampaign.builder()
-            .userId(userId)
-            .discountType(createCouponCampaignRequest.discountType)
-            .applyTarget(createCouponCampaignRequest.applyTarget)
-            .validTerm(createCouponCampaignRequest.validTerm)
-            .dateTimePeriod(dateTimePeriod)
-            .couponStockInfo(couponStockInfo)
-            .discountAmount(createCouponCampaignRequest.discountAmount)
-            .couponCode(createCouponCampaignRequest.couponCode)
-            .minimumCost(createCouponCampaignRequest.minimumCost)
-            .build()
+        return CouponCampaign(
+            userId = userId,
+            discountType = createCouponCampaignRequest.discountType,
+            applyTarget = createCouponCampaignRequest.applyTarget,
+            validTerm = createCouponCampaignRequest.validTerm,
+            dateTimePeriod = dateTimePeriod,
+            couponStockInfo = couponStockInfo,
+            discountAmount = createCouponCampaignRequest.discountAmount,
+            couponCode = createCouponCampaignRequest.couponCode,
+            minimumCost = createCouponCampaignRequest.minimumCost,
+        )
     }
 
     companion object {
@@ -39,10 +39,10 @@ class CouponCampaignMapper {
         }
 
         fun toCouponStockInfo(issuedAmount: Long): CouponStockInfo {
-            return CouponStockInfo.builder()
-                .issuedAmount(issuedAmount)
-                .remainingAmount(issuedAmount)
-                .build()
+            return CouponStockInfo(
+                issuedAmount = issuedAmount,
+                remainingAmount = issuedAmount,
+            )
         }
 
         fun toDateTimePeriod(startAt: LocalDateTime, endAt: LocalDateTime): DateTimePeriod {

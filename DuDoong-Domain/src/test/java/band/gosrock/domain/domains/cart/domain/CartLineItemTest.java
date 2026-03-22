@@ -33,21 +33,13 @@ class CartLineItemTest {
         given(hasPriceItem.getPrice()).willReturn(itemPrice);
 
         hasPriceCartLineItem =
-                CartLineItem.builder()
-                        .quantity(itemQuantity)
-                        .cartOptionAnswers(List.of(cartOptionAnswer))
-                        .item(hasPriceItem)
-                        .build();
+                CartLineItem.of(hasPriceItem, itemQuantity, List.of(cartOptionAnswer));
 
         given(freeItem.getId()).willReturn(1L);
         given(freeItem.getPrice()).willReturn(Money.ZERO);
 
         freeCartLineItem =
-                CartLineItem.builder()
-                        .quantity(itemQuantity)
-                        .cartOptionAnswers(List.of(cartOptionAnswer))
-                        .item(freeItem)
-                        .build();
+                CartLineItem.of(freeItem, itemQuantity, List.of(cartOptionAnswer));
     }
 
     @Test

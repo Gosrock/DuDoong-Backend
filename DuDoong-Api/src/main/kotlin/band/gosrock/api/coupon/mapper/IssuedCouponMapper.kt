@@ -13,7 +13,7 @@ class IssuedCouponMapper(
     private val issuedCouponAdaptor: IssuedCouponAdaptor,
 ) {
     fun toEntity(couponCampaign: CouponCampaign, userId: Long): IssuedCoupon {
-        return IssuedCoupon.builder().couponCampaign(couponCampaign).userId(userId).build()
+        return IssuedCoupon(couponCampaign = couponCampaign, userId = userId)
     }
 
     fun toCreateUserCouponResponse(issuedCoupon: IssuedCoupon, couponCampaign: CouponCampaign): CreateUserCouponResponse {

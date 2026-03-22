@@ -45,12 +45,7 @@ class OrderApproveServiceConcurrencyFailTest {
     void setUp() {
         given(orderLineItem.getTotalOrderLinePrice()).willReturn(Money.ZERO);
         order =
-                Order.builder()
-                        .orderMethod(OrderMethod.APPROVAL)
-                        .orderStatus(OrderStatus.PENDING_APPROVE)
-                        .orderLineItems(List.of(orderLineItem))
-                        .userId(1L)
-                        .build();
+                Order.forTest(1L, null, List.of(orderLineItem), OrderStatus.PENDING_APPROVE, OrderMethod.APPROVAL, null);
         order.addUUID();
         willDoNothing().given(orderValidator).validCanDone(any());
         willDoNothing().given(orderValidator).validUserNotDeleted(any());

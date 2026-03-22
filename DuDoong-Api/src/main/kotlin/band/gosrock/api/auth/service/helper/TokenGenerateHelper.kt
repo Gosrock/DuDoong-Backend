@@ -32,11 +32,11 @@ class TokenGenerateHelper(
         }
         val newRefreshToken = jwtTokenProvider.generateRefreshToken(userId)
 
-        val newRefreshTokenEntity = RefreshTokenEntity.builder()
-            .refreshToken(newRefreshToken)
-            .id(userId)
-            .ttl(jwtTokenProvider.getRefreshTokenTTlSecond())
-            .build()
+        val newRefreshTokenEntity = RefreshTokenEntity(
+            refreshToken = newRefreshToken,
+            id = userId,
+            ttl = jwtTokenProvider.getRefreshTokenTTlSecond(),
+        )
         refreshTokenAdaptor.save(newRefreshTokenEntity)
 
         return TokenAndUserResponse(

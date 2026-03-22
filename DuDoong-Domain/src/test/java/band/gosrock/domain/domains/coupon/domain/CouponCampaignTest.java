@@ -23,13 +23,9 @@ public class CouponCampaignTest {
                 new DateTimePeriod(nowTime.minusDays(2), nowTime.minusDays(1));
 
         CouponStockInfo couponStockInfo =
-                CouponStockInfo.builder().issuedAmount(3L).remainingAmount(1L).build();
+                new CouponStockInfo(3L, 1L);
         couponCampaign =
-                CouponCampaign.builder()
-                        .discountType(DiscountType.PERCENTAGE)
-                        .couponStockInfo(couponStockInfo)
-                        .dateTimePeriod(dateTimePeriod)
-                        .build();
+                new CouponCampaign(null, DiscountType.PERCENTAGE, null, null, dateTimePeriod, couponStockInfo, null, null, null);
     }
 
     @Test

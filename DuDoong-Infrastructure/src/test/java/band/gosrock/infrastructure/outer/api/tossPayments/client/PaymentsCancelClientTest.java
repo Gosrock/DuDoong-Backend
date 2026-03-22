@@ -33,7 +33,7 @@ class PaymentsCancelClientTest {
     private static final String IDEMPOTENCY_KEY = "idempotency-key";
     private static final String PAYMENT_KEY = "1234";
     private static final CancelPaymentsRequest REQUEST =
-            CancelPaymentsRequest.builder().cancelReason("test").build();
+            new CancelPaymentsRequest("test");
     @Autowired private PaymentsCancelClient paymentsCancelClient;
 
     @Test

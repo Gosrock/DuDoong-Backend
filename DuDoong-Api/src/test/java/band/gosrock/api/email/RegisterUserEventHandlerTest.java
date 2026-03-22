@@ -6,6 +6,7 @@ import static org.mockito.Mockito.times;
 import band.gosrock.api.email.handler.RegisterUserEventEmailHandler;
 import band.gosrock.api.supports.ApiIntegrateSpringBootTest;
 import band.gosrock.domain.domains.user.domain.OauthInfo;
+import band.gosrock.domain.domains.user.domain.OauthProvider;
 import band.gosrock.domain.domains.user.domain.Profile;
 import band.gosrock.domain.domains.user.service.UserDomainService;
 import org.junit.jupiter.api.Test;
@@ -22,19 +23,8 @@ class RegisterUserEventHandlerTest {
     @Test
     void 유저등록시도메인이벤트가발생해야한다() {
         // given
-        Profile profile = Profile.builder().name("test").email("test@test.com").build();
-        OauthInfo oauthInfo = OauthInfo.builder().provider(band.gosrock.domain.domains.user.domain.OauthProvider.KAKAO).oid("test-oid").build();
-        //        BDDMockito.given(userRepository.save(any())).willReturn(null);
-        //        given(registerUserEventHandler.handleRegisterUserEvent(any())).will(new Answer() {
-        //            @Override
-        //            public UserRegisterEvent answer(InvocationOnMock invocation) throws Throwable
-        // {
-        //                Object[] args = invocation.getArguments();
-        //                UserRegisterEvent userRegisterEvent = (UserRegisterEvent) args[0];
-        //                System.out.println(userRegisterEvent.getUserId());
-        //                return UserRegisterEvent.builder().build();
-        //            }
-        //        });
+        Profile profile = new Profile("test", "test@test.com", null, null);
+        OauthInfo oauthInfo = new OauthInfo(OauthProvider.KAKAO, "test-oid");
         // when
         userDomainService.registerUser(profile, oauthInfo, Boolean.TRUE);
 

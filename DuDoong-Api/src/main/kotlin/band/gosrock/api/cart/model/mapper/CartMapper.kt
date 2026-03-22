@@ -79,11 +79,11 @@ class CartMapper(
         val addCartLineDtos = addCartRequest.items
         val itemName = getItemName(addCartLineDtos)
         val cartLineItems = addCartLineDtos.map { addCartLineDto ->
-            CartLineItem.builder()
-                .item(getTicketItem(addCartLineDto))
-                .cartOptionAnswers(getCartOptionAnswers(addCartLineDto))
-                .quantity(addCartLineDto.quantity)
-                .build()
+            CartLineItem.of(
+                item = getTicketItem(addCartLineDto),
+                quantity = addCartLineDto.quantity,
+                cartOptionAnswers = getCartOptionAnswers(addCartLineDto),
+            )
         }
         return Cart.of(cartLineItems, itemName, currentUserId, cartValidator)
     }
@@ -106,9 +106,9 @@ class CartMapper(
     }
 
     private fun getCartOptionAnswer(addCartOptionAnswerDto: AddCartOptionAnswerDto): CartOptionAnswer {
-        return CartOptionAnswer.builder()
-            .option(optionAdaptor.queryOption(addCartOptionAnswerDto.optionId))
-            .answer(addCartOptionAnswerDto.answer)
-            .build()
+        return CartOptionAnswer.of(
+            option = optionAdaptor.queryOption(addCartOptionAnswerDto.optionId),
+            answer = addCartOptionAnswerDto.answer ?: "",
+        )
     }
 }

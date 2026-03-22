@@ -36,31 +36,14 @@ class OrderOptionAnswer() : BaseTimeEntity() {
             optionId = cartOptionAnswer.optionId
             additionalPrice = cartOptionAnswer.additionalPrice
         }
-
-        @JvmStatic
-        fun builder() = Builder()
-    }
-
-    class Builder {
-        private var optionId: Long? = null
-        private var additionalPrice: band.gosrock.domain.common.vo.Money = band.gosrock.domain.common.vo.Money.ZERO
-        private var answer: String? = null
-        fun optionId(optionId: Long) = apply { this.optionId = optionId }
-        fun additionalPrice(additionalPrice: band.gosrock.domain.common.vo.Money) = apply { this.additionalPrice = additionalPrice }
-        fun answer(answer: String?) = apply { this.answer = answer }
-        fun build(): OrderOptionAnswer = OrderOptionAnswer().apply {
-            this.optionId = this@Builder.optionId
-            this.additionalPrice = this@Builder.additionalPrice
-            this.answer = this@Builder.answer
-        }
     }
 
     fun getOptionAnswerVo(option: Option): OptionAnswerVo =
-        OptionAnswerVo.builder()
-            .questionDescription(option.getQuestionDescription())
-            .answer(answer)
-            .optionGroupType(option.getQuestionType())
-            .questionName(option.getQuestionName())
-            .additionalPrice(additionalPrice)
-            .build()
+        OptionAnswerVo(
+            questionDescription = option.getQuestionDescription(),
+            answer = answer,
+            optionGroupType = option.getQuestionType(),
+            questionName = option.getQuestionName(),
+            additionalPrice = additionalPrice,
+        )
 }

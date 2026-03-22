@@ -23,18 +23,18 @@ class EventSettlementDomainService(
         val pgFee = getPgFee(transactionSettlements, totalPaymentAmount)
         val pgFeeVat = getPgFeeVat(pgFee)
 
-        val eventSettlement = EventSettlement.builder()
-            .eventId(eventId)
-            .totalSalesAmount(getTotalSalesAmount(orders))
-            .dudoongAmount(getDudoongTicketSalesAmount(orders))
-            .paymentAmount(totalPaymentAmount)
-            .couponAmount(getPaymentOrderDiscountAmount(orders))
-            .dudoongFee(Money.ZERO)
-            .pgFee(pgFee)
-            .pgFeeVat(pgFeeVat)
-            .totalAmount(getTotalSettlementAmount(totalPaymentAmount, pgFee, pgFeeVat))
-            .eventSettlementStatus(EventSettlementStatus.CALCULATED)
-            .build()
+        val eventSettlement = EventSettlement(
+            eventId = eventId,
+            totalSalesAmount = getTotalSalesAmount(orders),
+            dudoongAmount = getDudoongTicketSalesAmount(orders),
+            paymentAmount = totalPaymentAmount,
+            couponAmount = getPaymentOrderDiscountAmount(orders),
+            dudoongFee = Money.ZERO,
+            pgFee = pgFee,
+            pgFeeVat = pgFeeVat,
+            totalAmount = getTotalSettlementAmount(totalPaymentAmount, pgFee, pgFeeVat),
+            eventSettlementStatus = EventSettlementStatus.CALCULATED,
+        )
 
         // 최종 정산 금액 계산.
         eventSettlementAdaptor.save(eventSettlement)

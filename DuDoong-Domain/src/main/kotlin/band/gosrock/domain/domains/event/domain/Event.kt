@@ -43,7 +43,13 @@ import org.hibernate.annotations.Where
 
 @Where(clause = "status != 'DELETED'")
 @Entity(name = "tbl_event")
-class Event() : BaseTimeEntity() {
+class Event(
+    // 호스트 정보
+    var hostId: Long? = null,
+    name: String? = null,
+    startAt: LocalDateTime? = null,
+    runTime: Long? = null,
+) : BaseTimeEntity() {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,12 +57,10 @@ class Event() : BaseTimeEntity() {
     var id: Long? = null
         protected set
 
-    // 호스트 정보
-    var hostId: Long? = null
-        protected set
-
     @Embedded
-    var eventBasic: EventBasic? = null
+    var eventBasic: EventBasic? = if (name != null || startAt != null || runTime != null) {
+        EventBasic(name = name, startAt = startAt, runTime = runTime)
+    } else null
         protected set
 
     @Embedded
@@ -72,10 +76,10 @@ class Event() : BaseTimeEntity() {
     var status: EventStatus = PREPARING
         protected set
 
-    constructor(hostId: Long?, name: String?, startAt: LocalDateTime?, runTime: Long?) : this() {
-        this.hostId = hostId
-        this.eventBasic = EventBasic.builder().name(name).startAt(startAt).runTime(runTime).build()
-        Events.raise(EventCreationEvent.of(hostId, name))
+    init {
+        if (hostId != null && name != null) {
+            Events.raise(EventCreationEvent.of(hostId, name))
+        }
     }
 
     fun getStartAt(): LocalDateTime? = this.eventBasic?.startAt
@@ -223,23 +227,5 @@ class Event() : BaseTimeEntity() {
                 placeAddress = placeAddress ?: currentPlace?.placeAddress,
             )
         }
-    }
-
-    companion object {
-        @JvmStatic
-        fun builder() = Builder()
-    }
-
-    class Builder {
-        private var hostId: Long? = null
-        private var name: String? = null
-        private var startAt: LocalDateTime? = null
-        private var runTime: Long? = null
-
-        fun hostId(hostId: Long?) = apply { this.hostId = hostId }
-        fun name(name: String?) = apply { this.name = name }
-        fun startAt(startAt: LocalDateTime?) = apply { this.startAt = startAt }
-        fun runTime(runTime: Long?) = apply { this.runTime = runTime }
-        fun build() = Event(hostId, name, startAt, runTime)
     }
 }

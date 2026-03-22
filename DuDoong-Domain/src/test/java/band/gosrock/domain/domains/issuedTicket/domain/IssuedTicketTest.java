@@ -40,40 +40,13 @@ public class IssuedTicketTest {
     @BeforeEach
     void setUp() {
         issuedTicket =
-                IssuedTicket.builder()
-                        .issuedTicketOptionAnswers(
-                                List.of(issuedTicketOptionAnswer, issuedTicketOptionAnswer1))
-                        .itemInfo(itemInfoVo)
-                        .userInfo(userInfoVo)
-                        .eventId(1L)
-                        .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
-                        .orderLineId(1L)
-                        .orderUuid(orderUuid)
-                        .build();
+                new IssuedTicket(1L, userInfoVo, orderUuid, 1L, itemInfoVo, IssuedTicketStatus.ENTRANCE_INCOMPLETE, List.of(issuedTicketOptionAnswer, issuedTicketOptionAnswer1));
 
         canceledIssuedTicket =
-                IssuedTicket.builder()
-                        .issuedTicketOptionAnswers(
-                                List.of(issuedTicketOptionAnswer, issuedTicketOptionAnswer1))
-                        .itemInfo(itemInfoVo)
-                        .userInfo(userInfoVo)
-                        .eventId(1L)
-                        .issuedTicketStatus(IssuedTicketStatus.CANCELED)
-                        .orderLineId(1L)
-                        .orderUuid(orderUuid)
-                        .build();
+                new IssuedTicket(1L, userInfoVo, orderUuid, 1L, itemInfoVo, IssuedTicketStatus.CANCELED, List.of(issuedTicketOptionAnswer, issuedTicketOptionAnswer1));
 
         entranceIssuedTicket =
-                IssuedTicket.builder()
-                        .issuedTicketOptionAnswers(
-                                List.of(issuedTicketOptionAnswer, issuedTicketOptionAnswer1))
-                        .itemInfo(itemInfoVo)
-                        .userInfo(userInfoVo)
-                        .eventId(1L)
-                        .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_COMPLETED)
-                        .orderLineId(1L)
-                        .orderUuid(orderUuid)
-                        .build();
+                new IssuedTicket(1L, userInfoVo, orderUuid, 1L, itemInfoVo, IssuedTicketStatus.ENTRANCE_COMPLETED, List.of(issuedTicketOptionAnswer, issuedTicketOptionAnswer1));
     }
 
     @Test

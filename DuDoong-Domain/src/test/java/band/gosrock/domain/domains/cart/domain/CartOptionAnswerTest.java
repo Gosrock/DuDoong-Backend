@@ -28,7 +28,7 @@ class CartOptionAnswerTest {
         given(option.getId()).willReturn(optionId);
         given(option.getAdditionalPrice()).willReturn(W3000);
 
-        cartOptionAnswer = CartOptionAnswer.builder().answer(answer).option(option).build();
+        cartOptionAnswer = CartOptionAnswer.of(option, answer);
     }
 
     @Test
@@ -41,13 +41,7 @@ class CartOptionAnswerTest {
         given(option.getQuestionType()).willReturn(trueFalse);
         given(option.getQuestionName()).willReturn(questionName);
         OptionAnswerVo build =
-                OptionAnswerVo.builder()
-                        .answer(answer)
-                        .optionGroupType(trueFalse)
-                        .questionDescription(questionDescription)
-                        .questionName(questionName)
-                        .additionalPrice(W3000)
-                        .build();
+                new OptionAnswerVo(trueFalse, questionName, questionDescription, answer, W3000);
         // when
         OptionAnswerVo optionAnswerVo = cartOptionAnswer.getOptionAnswerVo(option);
         assertEquals(optionAnswerVo, build);

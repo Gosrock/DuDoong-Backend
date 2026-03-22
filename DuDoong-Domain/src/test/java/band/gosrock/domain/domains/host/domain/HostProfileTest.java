@@ -17,20 +17,14 @@ public class HostProfileTest {
 
     @BeforeEach
     void setup() {
-        hostProfile = HostProfile.builder().build();
+        hostProfile = new HostProfile();
     }
 
     @Test
     void 호스트_프로필_업데이트_테스트() {
         // given
         final HostProfile newHostProfile =
-                HostProfile.builder()
-                        .name("테스트")
-                        .contactEmail("22@cc.com")
-                        .contactNumber("010-0000-0000")
-                        .introduce("123")
-                        .profileImageKey("key")
-                        .build();
+                new HostProfile("테스트", "123", "key", "22@cc.com", "010-0000-0000");
         // when
         hostProfile.updateProfile(newHostProfile);
         // then

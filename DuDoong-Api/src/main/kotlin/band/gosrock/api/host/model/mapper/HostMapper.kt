@@ -22,39 +22,39 @@ class HostMapper(
     private val userAdaptor: UserAdaptor,
 ) {
     fun toEntity(createHostRequest: CreateHostRequest, masterUserId: Long): Host {
-        return Host.builder()
-            .name(createHostRequest.name)
-            .contactEmail(createHostRequest.contactEmail)
-            .contactNumber(createHostRequest.contactNumber)
-            .masterUserId(masterUserId)
-            .build()
+        return Host(
+            name = createHostRequest.name,
+            contactEmail = createHostRequest.contactEmail,
+            contactNumber = createHostRequest.contactNumber,
+            masterUserId = masterUserId,
+        )
     }
 
     fun toHostProfile(updateHostRequest: UpdateHostRequest): HostProfile {
-        return HostProfile.builder()
-            .introduce(updateHostRequest.introduce)
-            .profileImageKey(updateHostRequest.profileImageKey)
-            .contactEmail(updateHostRequest.contactEmail)
-            .contactNumber(updateHostRequest.contactNumber)
-            .build()
+        return HostProfile(
+            introduce = updateHostRequest.introduce,
+            profileImageKey = updateHostRequest.profileImageKey,
+            contactEmail = updateHostRequest.contactEmail,
+            contactNumber = updateHostRequest.contactNumber,
+        )
     }
 
     /** 호스트 역할을 지정하여 주입하는 생성자 */
     fun toHostUser(hostId: Long, userId: Long, role: HostRole): HostUser {
         val host = hostAdaptor.findById(hostId)
-        return HostUser.builder().userId(userId).host(host).role(role).build()
+        return HostUser(host = host, userId = userId, role = role)
     }
 
     /** 매니저로 주입하는 생성자 */
     fun toManagerHostUser(hostId: Long, userId: Long): HostUser {
         val host = hostAdaptor.findById(hostId)
-        return HostUser.builder().userId(userId).host(host).role(HostRole.MANAGER).build()
+        return HostUser(host = host, userId = userId, role = HostRole.MANAGER)
     }
 
     /** 마스터 주입하는 생성자 */
     fun toMasterHostUser(hostId: Long, userId: Long): HostUser {
         val host = hostAdaptor.findById(hostId)
-        return HostUser.builder().userId(userId).host(host).role(HostRole.MASTER).build()
+        return HostUser(host = host, userId = userId, role = HostRole.MASTER)
     }
 
     fun toHostInviteUserList(hostId: Long, email: String) =

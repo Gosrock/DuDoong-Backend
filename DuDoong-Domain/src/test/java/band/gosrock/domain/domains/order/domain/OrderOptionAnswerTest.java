@@ -29,20 +29,15 @@ class OrderOptionAnswerTest {
 
     @BeforeEach
     void setUp() {
-        orderOptionAnswer =
-                OrderOptionAnswer.builder()
-                        .answer(answer)
-                        .optionId(optionId)
-                        .additionalPrice(W3000)
-                        .build();
+        given(cartOptionAnswer.getAnswer()).willReturn(answer);
+        given(cartOptionAnswer.getOptionId()).willReturn(optionId);
+        given(cartOptionAnswer.getAdditionalPrice()).willReturn(W3000);
+        orderOptionAnswer = OrderOptionAnswer.from(cartOptionAnswer);
     }
 
     @Test
     void 주문옵션답변_정적팩터리_생성자_검증() {
-        // given
-        given(cartOptionAnswer.getAnswer()).willReturn(answer);
-        given(cartOptionAnswer.getOptionId()).willReturn(optionId);
-        given(cartOptionAnswer.getAdditionalPrice()).willReturn(W3000);
+        // given - already set up in @BeforeEach
         // when
         OrderOptionAnswer fromFactory = OrderOptionAnswer.from(cartOptionAnswer);
 
@@ -61,13 +56,7 @@ class OrderOptionAnswerTest {
         given(option.getQuestionType()).willReturn(trueFalse);
         given(option.getQuestionName()).willReturn(questionName);
         OptionAnswerVo build =
-                OptionAnswerVo.builder()
-                        .answer(answer)
-                        .optionGroupType(trueFalse)
-                        .questionDescription(questionDescription)
-                        .questionName(questionName)
-                        .additionalPrice(W3000)
-                        .build();
+                new OptionAnswerVo(trueFalse, questionName, questionDescription, answer, W3000);
         // when
         OptionAnswerVo optionAnswerVo = orderOptionAnswer.getOptionAnswerVo(option);
         assertEquals(optionAnswerVo, build);

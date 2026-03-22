@@ -16,7 +16,7 @@ class WithdrawPaymentService(private val paymentsCancelClient: PaymentsCancelCli
         return paymentsCancelClient.execute(
             orderUuid,
             paymentKey,
-            CancelPaymentsRequest.builder().cancelReason(reason).build(),
+            CancelPaymentsRequest(cancelReason = reason),
         )
     }
 }

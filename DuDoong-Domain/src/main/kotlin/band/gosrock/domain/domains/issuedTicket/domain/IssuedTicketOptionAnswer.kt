@@ -13,28 +13,17 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 
 @Entity(name = "tbl_issued_ticket_option_answer")
-class IssuedTicketOptionAnswer() : BaseTimeEntity() {
+class IssuedTicketOptionAnswer(
+    var optionId: Long? = null,
+    var additionalPrice: Money = Money.ZERO,
+    var answer: String? = null,
+) : BaseTimeEntity() {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "issued_ticket_option_answer_id")
     var id: Long? = null
         protected set
-
-    var optionId: Long? = null
-        protected set
-
-    var additionalPrice: Money = Money.ZERO
-        protected set
-
-    var answer: String? = null
-        protected set
-
-    constructor(optionId: Long?, additionalPrice: Money, answer: String?) : this() {
-        this.optionId = optionId
-        this.additionalPrice = additionalPrice
-        this.answer = answer
-    }
 
     companion object {
         @JvmStatic
@@ -44,32 +33,17 @@ class IssuedTicketOptionAnswer() : BaseTimeEntity() {
                 additionalPrice = orderOptionAnswer.additionalPrice,
                 answer = orderOptionAnswer.answer,
             )
-
-        @JvmStatic
-        fun builder() = Builder()
-    }
-
-    class Builder {
-        private var optionId: Long? = null
-        private var additionalPrice: Money = Money.ZERO
-        private var answer: String? = null
-
-        fun optionId(optionId: Long?) = apply { this.optionId = optionId }
-        fun additionalPrice(additionalPrice: Money) = apply { this.additionalPrice = additionalPrice }
-        fun answer(answer: String?) = apply { this.answer = answer }
-
-        fun build(): IssuedTicketOptionAnswer = IssuedTicketOptionAnswer(optionId, additionalPrice, answer)
     }
 
     fun toIssuedTicketOptionAnswerVo(): IssuedTicketOptionAnswerVo =
         IssuedTicketOptionAnswerVo.from(this)
 
     fun getOptionAnswerVo(option: Option): OptionAnswerVo =
-        OptionAnswerVo.builder()
-            .questionDescription(option.getQuestionDescription())
-            .optionGroupType(option.getQuestionType())
-            .questionName(option.getQuestionName())
-            .answer(answer)
-            .additionalPrice(option.additionalPrice)
-            .build()
+        OptionAnswerVo(
+            questionDescription = option.getQuestionDescription(),
+            optionGroupType = option.getQuestionType(),
+            questionName = option.getQuestionName(),
+            answer = answer,
+            additionalPrice = option.additionalPrice,
+        )
 }

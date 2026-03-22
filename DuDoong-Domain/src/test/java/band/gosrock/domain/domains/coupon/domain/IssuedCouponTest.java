@@ -26,7 +26,7 @@ class IssuedCouponTest {
 
     @BeforeEach
     void setUp() {
-        issuedCoupon = IssuedCoupon.builder().userId(userId).couponCampaign(couponCampaign).build();
+        issuedCoupon = new IssuedCoupon(couponCampaign, userId);
     }
 
     @Test

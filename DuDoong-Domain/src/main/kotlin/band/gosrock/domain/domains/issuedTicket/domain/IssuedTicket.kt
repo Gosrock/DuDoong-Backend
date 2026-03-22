@@ -33,7 +33,23 @@ import jakarta.persistence.PostPersist
 import jakarta.persistence.PrePersist
 
 @Entity(name = "tbl_issued_ticket")
-class IssuedTicket() : BaseTimeEntity() {
+class IssuedTicket(
+    var eventId: Long? = null,
+
+    @Embedded
+    var userInfo: IssuedTicketUserInfoVo? = null,
+
+    var orderUuid: String? = null,
+
+    var orderLineId: Long? = null,
+
+    @Embedded
+    var itemInfo: IssuedTicketItemInfoVo? = null,
+
+    issuedTicketStatus: IssuedTicketStatus? = null,
+
+    initialOptionAnswers: List<IssuedTicketOptionAnswer> = emptyList(),
+) : BaseTimeEntity() {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,24 +60,7 @@ class IssuedTicket() : BaseTimeEntity() {
     var issuedTicketNo: String? = null
         protected set
 
-    var eventId: Long? = null
-        protected set
-
-    @Embedded
-    var userInfo: IssuedTicketUserInfoVo? = null
-        protected set
-
-    @Embedded
-    var itemInfo: IssuedTicketItemInfoVo? = null
-        protected set
-
-    var orderUuid: String? = null
-        protected set
-
     var enteredAt: LocalDateTime? = null
-        protected set
-
-    var orderLineId: Long? = null
         protected set
 
     @OneToMany(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
@@ -74,25 +73,13 @@ class IssuedTicket() : BaseTimeEntity() {
         protected set
 
     @Enumerated(EnumType.STRING)
-    var issuedTicketStatus: IssuedTicketStatus = IssuedTicketStatus.ENTRANCE_INCOMPLETE
+    var issuedTicketStatus: IssuedTicketStatus = issuedTicketStatus ?: IssuedTicketStatus.ENTRANCE_INCOMPLETE
         protected set
 
-    constructor(
-        eventId: Long?,
-        userInfo: IssuedTicketUserInfoVo?,
-        orderUuid: String?,
-        orderLineId: Long?,
-        itemInfo: IssuedTicketItemInfoVo?,
-        issuedTicketStatus: IssuedTicketStatus?,
-        issuedTicketOptionAnswers: List<IssuedTicketOptionAnswer>,
-    ) : this() {
-        this.eventId = eventId
-        this.userInfo = userInfo
-        this.itemInfo = itemInfo
-        this.orderUuid = orderUuid
-        this.orderLineId = orderLineId
-        this.issuedTicketStatus = issuedTicketStatus ?: IssuedTicketStatus.ENTRANCE_INCOMPLETE
-        this.issuedTicketOptionAnswers.addAll(issuedTicketOptionAnswers)
+    init {
+        if (initialOptionAnswers.isNotEmpty()) {
+            this.issuedTicketOptionAnswers.addAll(initialOptionAnswers)
+        }
     }
 
     fun addOptionAnswers(answers: List<IssuedTicketOptionAnswer>) {
@@ -166,15 +153,15 @@ class IssuedTicket() : BaseTimeEntity() {
             orderLineItem: OrderLineItem,
         ): IssuedTicket {
             val orderOptionAnswers = orderLineItem.orderOptionAnswers
-            return builder()
-                .issuedTicketOptionAnswers(orderOptionAnswers.map { IssuedTicketOptionAnswer.from(it) })
-                .itemInfo(IssuedTicketItemInfoVo.from(ticketItem))
-                .orderLineId(orderLineItem.id)
-                .orderUuid(order.uuid)
-                .issuedTicketStatus(IssuedTicketStatus.ENTRANCE_INCOMPLETE)
-                .userInfo(IssuedTicketUserInfoVo.from(user))
-                .eventId(eventId)
-                .build()
+            return IssuedTicket(
+                initialOptionAnswers = orderOptionAnswers.map { IssuedTicketOptionAnswer.from(it) },
+                itemInfo = IssuedTicketItemInfoVo.from(ticketItem),
+                orderLineId = orderLineItem.id,
+                orderUuid = order.uuid,
+                issuedTicketStatus = IssuedTicketStatus.ENTRANCE_INCOMPLETE,
+                userInfo = IssuedTicketUserInfoVo.from(user),
+                eventId = eventId,
+            )
         }
 
         @JvmStatic
@@ -188,30 +175,5 @@ class IssuedTicket() : BaseTimeEntity() {
             val quantity = orderLineItem.quantity!!
             return (0 until quantity).map { create(ticketItem, user, order, eventId, orderLineItem) }
         }
-
-        @JvmStatic
-        fun builder() = Builder()
-    }
-
-    class Builder {
-        private var eventId: Long? = null
-        private var userInfo: IssuedTicketUserInfoVo? = null
-        private var orderUuid: String? = null
-        private var orderLineId: Long? = null
-        private var itemInfo: IssuedTicketItemInfoVo? = null
-        private var issuedTicketStatus: IssuedTicketStatus? = null
-        private var issuedTicketOptionAnswers: List<IssuedTicketOptionAnswer> = emptyList()
-
-        fun eventId(eventId: Long?) = apply { this.eventId = eventId }
-        fun userInfo(userInfo: IssuedTicketUserInfoVo?) = apply { this.userInfo = userInfo }
-        fun orderUuid(orderUuid: String?) = apply { this.orderUuid = orderUuid }
-        fun orderLineId(orderLineId: Long?) = apply { this.orderLineId = orderLineId }
-        fun itemInfo(itemInfo: IssuedTicketItemInfoVo?) = apply { this.itemInfo = itemInfo }
-        fun issuedTicketStatus(issuedTicketStatus: IssuedTicketStatus?) = apply { this.issuedTicketStatus = issuedTicketStatus }
-        fun issuedTicketOptionAnswers(issuedTicketOptionAnswers: List<IssuedTicketOptionAnswer>) = apply { this.issuedTicketOptionAnswers = issuedTicketOptionAnswers }
-
-        fun build(): IssuedTicket = IssuedTicket(
-            eventId, userInfo, orderUuid, orderLineId, itemInfo, issuedTicketStatus, issuedTicketOptionAnswers,
-        )
     }
 }

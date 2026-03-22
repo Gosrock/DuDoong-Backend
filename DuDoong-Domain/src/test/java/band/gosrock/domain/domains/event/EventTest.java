@@ -27,7 +27,7 @@ public class EventTest {
 
     @BeforeEach
     void setup() {
-        event = Event.builder().build();
+        event = new Event();
     }
 
     @Test
@@ -56,7 +56,7 @@ public class EventTest {
     void endAt_가져오기_테스트() {
         // given
         final EventBasic eventBasic =
-                EventBasic.builder().startAt(startAt).runTime(runTime).build();
+                new EventBasic(null, startAt, runTime);
         event.updateEventBasic(eventBasic);
         // when
         final LocalDateTime expectedEndAt = startAt.plusMinutes(runTime);
@@ -79,7 +79,7 @@ public class EventTest {
     public void eventBasic_업데이트_테스트() {
         // given
         EventBasic eventBasic =
-                EventBasic.builder().name("test event").startAt(startAt).runTime(runTime).build();
+                new EventBasic("test event", startAt, runTime);
         // when
         event.updateEventBasic(eventBasic);
         // then

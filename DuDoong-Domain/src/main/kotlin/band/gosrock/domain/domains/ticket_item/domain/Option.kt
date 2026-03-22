@@ -14,7 +14,10 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 
 @Entity(name = "tbl_option")
-class Option() {
+class Option(
+    var answer: String? = null,
+    var additionalPrice: Money? = null,
+) {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,20 +25,12 @@ class Option() {
     var id: Long? = null
         protected set
 
-    var answer: String? = null
-        protected set
-
-    var additionalPrice: Money? = null
-        protected set
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "option_group_id", updatable = false)
     var optionGroup: OptionGroup? = null
         protected set
 
-    constructor(answer: String?, additionalPrice: Money?, optionGroup: OptionGroup?) : this() {
-        this.answer = answer
-        this.additionalPrice = additionalPrice
+    constructor(answer: String?, additionalPrice: Money?, optionGroup: OptionGroup?) : this(answer = answer, additionalPrice = additionalPrice) {
         this.optionGroup = optionGroup
     }
 
@@ -67,19 +62,5 @@ class Option() {
         @JvmStatic
         fun create(answer: String?, additionalPrice: Money?, optionGroup: OptionGroup?): Option =
             Option(answer, additionalPrice, optionGroup)
-
-        @JvmStatic
-        fun builder() = Builder()
-    }
-
-    class Builder {
-        private var answer: String? = null
-        private var additionalPrice: Money? = null
-        private var optionGroup: OptionGroup? = null
-
-        fun answer(answer: String?) = apply { this.answer = answer }
-        fun additionalPrice(price: Money?) = apply { this.additionalPrice = price }
-        fun optionGroup(optionGroup: OptionGroup?) = apply { this.optionGroup = optionGroup }
-        fun build() = Option(answer, additionalPrice, optionGroup)
     }
 }

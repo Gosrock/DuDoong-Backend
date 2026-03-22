@@ -32,7 +32,7 @@ public class IssuedTicketOptionAnswerTest {
         given(option.getAdditionalPrice()).willReturn(W3000);
 
         issuedTicketOptionAnswer =
-                IssuedTicketOptionAnswer.builder().optionId(optionId).answer(answer).build();
+                new IssuedTicketOptionAnswer(optionId, Money.ZERO, answer);
     }
 
     @Test
@@ -47,13 +47,7 @@ public class IssuedTicketOptionAnswerTest {
         given(option.getQuestionType()).willReturn(optionGroupType);
 
         OptionAnswerVo optionAnswerVoForTest =
-                OptionAnswerVo.builder()
-                        .answer(answer)
-                        .additionalPrice(W3000)
-                        .optionGroupType(optionGroupType)
-                        .questionDescription(questionDescription)
-                        .questionName(questionName)
-                        .build();
+                new OptionAnswerVo(optionGroupType, questionName, questionDescription, answer, W3000);
 
         OptionAnswerVo optionAnswerVo = issuedTicketOptionAnswer.getOptionAnswerVo(option);
 

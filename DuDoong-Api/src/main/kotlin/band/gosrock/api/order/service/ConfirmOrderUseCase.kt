@@ -13,11 +13,11 @@ class ConfirmOrderUseCase(
     private val orderMapper: OrderMapper,
 ) {
     fun execute(userId: Long, orderUuid: String, confirmOrderRequest: ConfirmOrderRequest): OrderResponse {
-        val confirmPaymentsRequest = ConfirmPaymentsRequest.builder()
-            .paymentKey(confirmOrderRequest.paymentKey)
-            .amount(confirmOrderRequest.amount)
-            .orderId(orderUuid)
-            .build()
+        val confirmPaymentsRequest = ConfirmPaymentsRequest(
+            paymentKey = confirmOrderRequest.paymentKey,
+            amount = confirmOrderRequest.amount,
+            orderId = orderUuid,
+        )
         val confirmOrderUuid = orderConfirmService.execute(confirmPaymentsRequest, userId)
         return orderMapper.toOrderResponse(confirmOrderUuid)
     }

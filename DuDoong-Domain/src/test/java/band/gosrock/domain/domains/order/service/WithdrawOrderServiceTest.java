@@ -41,12 +41,7 @@ class WithdrawOrderServiceTest {
     @BeforeEach
     void setUp() {
         order =
-                Order.builder()
-                        .userId(userId)
-                        .orderStatus(OrderStatus.CONFIRM)
-                        .orderMethod(OrderMethod.PAYMENT)
-                        .orderLineItems(List.of(orderLineItem))
-                        .build();
+                Order.forTest(userId, null, List.of(orderLineItem), OrderStatus.CONFIRM, OrderMethod.PAYMENT, null);
         order.addUUID();
         given(orderAdaptor.findByOrderUuid(any())).willReturn(order);
         given(orderLineItem.getTotalOrderLinePrice()).willReturn(Money.ZERO);

@@ -18,15 +18,14 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 
 @Entity(name = "tbl_issued_coupon")
-class IssuedCoupon() : BaseTimeEntity() {
+class IssuedCoupon(
+    var userId: Long? = null,
+) : BaseTimeEntity() {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "issued_coupon_id")
     var id: Long? = null
-        protected set
-
-    var userId: Long? = null
         protected set
 
     var usageStatus: Boolean = false
@@ -37,9 +36,8 @@ class IssuedCoupon() : BaseTimeEntity() {
     var couponCampaign: CouponCampaign? = null
         protected set
 
-    constructor(couponCampaign: CouponCampaign?, userId: Long?) : this() {
+    constructor(couponCampaign: CouponCampaign?, userId: Long?) : this(userId = userId) {
         this.couponCampaign = couponCampaign
-        this.userId = userId
         this.usageStatus = false
     }
 
@@ -91,19 +89,4 @@ class IssuedCoupon() : BaseTimeEntity() {
 
     fun calculateValidTerm(): LocalDateTime =
         createdAtKt().plusDays(this.couponCampaign!!.validTerm!!)
-
-    companion object {
-        @JvmStatic
-        fun builder() = Builder()
-    }
-
-    class Builder {
-        private var couponCampaign: CouponCampaign? = null
-        private var userId: Long? = null
-
-        fun couponCampaign(couponCampaign: CouponCampaign?) = apply { this.couponCampaign = couponCampaign }
-        fun userId(userId: Long?) = apply { this.userId = userId }
-
-        fun build(): IssuedCoupon = IssuedCoupon(couponCampaign, userId)
-    }
 }

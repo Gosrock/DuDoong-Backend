@@ -2,7 +2,7 @@ package band.gosrock.domain.common.vo
 
 import band.gosrock.domain.domains.user.domain.User
 
-class UserProfileVo private constructor(
+class UserProfileVo(
     val userId: Long?,
     val userName: String?,
     val email: String?,
@@ -17,21 +17,5 @@ class UserProfileVo private constructor(
                 email = user.profile?.email,
                 profileImage = user.profile?.profileImage,
             )
-
-        @JvmStatic
-        fun builder() = Builder()
-    }
-
-    class Builder {
-        private var userId: Long? = null
-        private var userName: String? = null
-        private var email: String? = null
-        private var profileImage: ImageVo? = null
-
-        fun userId(v: Long?) = apply { userId = v }
-        fun userName(v: String?) = apply { userName = v }
-        fun email(v: String?) = apply { email = v }
-        fun profileImage(v: ImageVo?) = apply { profileImage = v }
-        fun build() = UserProfileVo(userId, userName, email, profileImage)
     }
 }

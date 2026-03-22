@@ -8,17 +8,12 @@ import jakarta.persistence.Convert
 import jakarta.persistence.Embeddable
 
 @Embeddable
-class Money() {
+class Money(
     // DECIMAL(21,6) 타입에 대한 맵핑 상세 정의
     @Column(name = "amount", nullable = false, precision = 21, scale = 6)
     @Convert(converter = BigDecimalScale6WithBankersRoundingConverter::class)
-    var amount: BigDecimal = BigDecimal.ZERO
-        protected set
-
-    constructor(amount: BigDecimal) : this() {
-        this.amount = amount
-    }
-
+    var amount: BigDecimal = BigDecimal.ZERO,
+) {
     companion object {
         @JvmField
         val ZERO: Money = Money.wons(0)

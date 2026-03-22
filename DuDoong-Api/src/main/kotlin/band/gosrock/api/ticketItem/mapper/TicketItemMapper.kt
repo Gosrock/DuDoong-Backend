@@ -20,22 +20,22 @@ class TicketItemMapper(
 ) {
 
     fun toTicketItem(createTicketItemRequest: CreateTicketItemRequest, eventId: Long): TicketItem =
-        TicketItem.builder()
-            .payType(createTicketItemRequest.payType)
-            .name(createTicketItemRequest.name)
-            .description(createTicketItemRequest.description)
-            .price(Money.wons(createTicketItemRequest.price!!))
-            .quantity(createTicketItemRequest.supplyCount)
-            .supplyCount(createTicketItemRequest.supplyCount)
-            .purchaseLimit(createTicketItemRequest.purchaseLimit)
-            .type(createTicketItemRequest.approveType)
-            .bankName(createTicketItemRequest.bankName)
-            .accountNumber(createTicketItemRequest.accountNumber)
-            .accountHolder(createTicketItemRequest.accountHolder)
-            .isQuantityPublic(createTicketItemRequest.isQuantityPublic)
-            .isSellable(true)
-            .eventId(eventId)
-            .build()
+        TicketItem(
+            payType = createTicketItemRequest.payType,
+            name = createTicketItemRequest.name,
+            description = createTicketItemRequest.description,
+            price = Money.wons(createTicketItemRequest.price!!),
+            quantity = createTicketItemRequest.supplyCount,
+            supplyCount = createTicketItemRequest.supplyCount,
+            purchaseLimit = createTicketItemRequest.purchaseLimit,
+            type = createTicketItemRequest.approveType,
+            bankName = createTicketItemRequest.bankName,
+            accountNumber = createTicketItemRequest.accountNumber,
+            accountHolder = createTicketItemRequest.accountHolder,
+            isQuantityPublic = createTicketItemRequest.isQuantityPublic,
+            isSellable = true,
+            eventId = eventId,
+        )
 
     @Transactional(readOnly = true)
     fun toGetEventTicketItemsResponse(eventId: Long, isAdmin: Boolean): GetEventTicketItemsResponse {

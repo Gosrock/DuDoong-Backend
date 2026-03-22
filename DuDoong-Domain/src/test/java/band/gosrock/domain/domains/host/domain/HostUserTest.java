@@ -21,7 +21,7 @@ public class HostUserTest {
 
     @BeforeEach
     void setup() {
-        hostUser = HostUser.builder().host(host).role(MASTER).build();
+        hostUser = new HostUser(host, null, MASTER);
     }
 
     @Test

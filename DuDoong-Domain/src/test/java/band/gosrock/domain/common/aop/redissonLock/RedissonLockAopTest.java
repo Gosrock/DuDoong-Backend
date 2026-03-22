@@ -27,7 +27,7 @@ class RedissonLockAopTest {
     @Test
     public void 커스텀오브젝트에서_클래스타입과_식별자로_키를_가져와야한다()
             throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        ProfileViewDto profileViewDto = ProfileViewDto.builder().id(1000L).build();
+        ProfileViewDto profileViewDto = new ProfileViewDto(1000L, null, null);
         String otherParam = "param";
 
         Object[] testArgs = {profileViewDto, otherParam};
@@ -40,7 +40,7 @@ class RedissonLockAopTest {
 
     @Test
     public void 기본오브젝트에서_식별자로_키를_가져와야한다() {
-        ProfileViewDto profileViewDto = ProfileViewDto.builder().id(1000L).build();
+        ProfileViewDto profileViewDto = new ProfileViewDto(1000L, null, null);
         String keyParamName = "다이내믹키가될값";
 
         Object[] testArgs = {profileViewDto, keyParamName};
@@ -54,7 +54,7 @@ class RedissonLockAopTest {
 
     @Test
     public void 잘못된_인자를_설정하면_오류가_발생해야한다() {
-        ProfileViewDto profileViewDto = ProfileViewDto.builder().id(1000L).build();
+        ProfileViewDto profileViewDto = new ProfileViewDto(1000L, null, null);
         // 키값
         String keyParamName = "다른값";
         // 실제 인자로 넘겨질 값들

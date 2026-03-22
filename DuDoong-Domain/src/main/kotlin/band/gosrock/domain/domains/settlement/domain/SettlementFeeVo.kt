@@ -8,21 +8,13 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 
 @Embeddable
-class SettlementFeeVo protected constructor() {
-
+class SettlementFeeVo(
     @Enumerated(EnumType.STRING)
-    var type: FeeCode? = null
-        protected set
+    var type: FeeCode? = null,
 
     @Column(name = "fee")
-    var fee: Long? = null
-        protected set
-
-    constructor(type: FeeCode, fee: Long) : this() {
-        this.type = type
-        this.fee = fee
-    }
-
+    var fee: Long? = null,
+) {
     companion object {
         @JvmStatic
         fun from(settlementFeeDto: SettlementFeeDto): SettlementFeeVo =

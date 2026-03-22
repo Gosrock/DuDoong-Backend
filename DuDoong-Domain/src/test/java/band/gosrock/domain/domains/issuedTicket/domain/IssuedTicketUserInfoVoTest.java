@@ -27,19 +27,9 @@ public class IssuedTicketUserInfoVoTest {
     @BeforeEach
     void setUp() {
         userInfoVo =
-                IssuedTicketUserInfoVo.builder()
-                        .userId(1L)
-                        .userName("test")
-                        .phoneNumber(phoneNumberVo)
-                        .email("test@test.com")
-                        .build();
+                new IssuedTicketUserInfoVo(1L, "test", "test@test.com", phoneNumberVo);
         profile =
-                Profile.builder()
-                        .profileImage("test")
-                        .phoneNumber("010-1234-5678")
-                        .name("test")
-                        .email("test@test.com")
-                        .build();
+                new Profile("test", "test@test.com", "010-1234-5678", "test");
     }
 
     @Test
