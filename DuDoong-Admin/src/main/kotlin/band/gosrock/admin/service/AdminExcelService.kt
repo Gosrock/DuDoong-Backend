@@ -5,6 +5,8 @@ import band.gosrock.admin.model.dto.response.AdminIssuedTicketResponse
 import band.gosrock.admin.model.dto.response.AdminOrderResponse
 import band.gosrock.admin.model.dto.response.AdminTicketItemResponse
 import band.gosrock.admin.model.dto.response.AdminUserResponse
+import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket
+import band.gosrock.domain.domains.ticket_item.domain.Option
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.stereotype.Service
 import java.io.ByteArrayOutputStream
@@ -16,18 +18,28 @@ class AdminExcelService {
         val workbook = XSSFWorkbook()
         val sheet = workbook.createSheet("주문 목록")
         val headerRow = sheet.createRow(0)
-        listOf("주문번호", "사용자", "이벤트", "티켓", "금액", "상태", "주문일").forEachIndexed { i, h ->
-            headerRow.createCell(i).setCellValue(h)
-        }
+        val headers = listOf(
+            "주문번호", "주문번호(읽기용)", "사용자", "이벤트", "티켓", "금액", "상태",
+            "주문방식", "결제수단", "승인일시", "취소일시", "할인금액", "쿠폰명", "주문일",
+        )
+        headers.forEachIndexed { i, h -> headerRow.createCell(i).setCellValue(h) }
         orders.forEachIndexed { idx, order ->
             val row = sheet.createRow(idx + 1)
-            row.createCell(0).setCellValue(order.orderId ?: "")
-            row.createCell(1).setCellValue(order.userName ?: "")
-            row.createCell(2).setCellValue(order.eventName ?: "")
-            row.createCell(3).setCellValue(order.ticketName ?: "")
-            row.createCell(4).setCellValue(order.totalAmount.toDouble())
-            row.createCell(5).setCellValue(order.orderStatus.toString())
-            row.createCell(6).setCellValue(order.createdAt?.toString() ?: "")
+            var col = 0
+            row.createCell(col++).setCellValue(order.orderId ?: "")
+            row.createCell(col++).setCellValue(order.orderNo ?: "")
+            row.createCell(col++).setCellValue(order.userName ?: "")
+            row.createCell(col++).setCellValue(order.eventName ?: "")
+            row.createCell(col++).setCellValue(order.ticketName ?: "")
+            row.createCell(col++).setCellValue(order.totalAmount.toDouble())
+            row.createCell(col++).setCellValue(order.orderStatus.toString())
+            row.createCell(col++).setCellValue(order.orderMethod ?: "")
+            row.createCell(col++).setCellValue(order.paymentMethod ?: "")
+            row.createCell(col++).setCellValue(order.approvedAt?.toString() ?: "")
+            row.createCell(col++).setCellValue(order.withDrawAt?.toString() ?: "")
+            row.createCell(col++).setCellValue(order.discountAmount ?: "")
+            row.createCell(col++).setCellValue(order.couponName ?: "")
+            row.createCell(col++).setCellValue(order.createdAt?.toString() ?: "")
         }
         return toByteArray(workbook)
     }
@@ -93,20 +105,58 @@ class AdminExcelService {
     }
 
     fun generateIssuedTicketsExcel(tickets: List<AdminIssuedTicketResponse>): ByteArray {
+        return generateIssuedTicketsExcelWithOptions(tickets, emptyList(), emptyList())
+    }
+
+    /**
+     * 발급 티켓 엑셀에 옵션 응답을 동적 컬럼으로 포함하여 생성합니다.
+     *
+     * @param tickets 발급 티켓 응답 목록
+     * @param options 이벤트에 등록된 옵션 목록 (동적 컬럼 헤더용)
+     * @param issuedTickets 발급 티켓 엔티티 목록 (옵션 응답 데이터 접근용)
+     */
+    fun generateIssuedTicketsExcelWithOptions(
+        tickets: List<AdminIssuedTicketResponse>,
+        options: List<Option>,
+        issuedTickets: List<IssuedTicket>,
+    ): ByteArray {
         val workbook = XSSFWorkbook()
         val sheet = workbook.createSheet("발급 티켓 목록")
         val headerRow = sheet.createRow(0)
-        listOf("티켓번호", "유저명", "티켓종류", "주문번호", "입장여부", "발급일").forEachIndexed { i, h ->
-            headerRow.createCell(i).setCellValue(h)
+
+        // 기본 헤더
+        val baseHeaders = listOf("티켓번호", "유저명", "티켓종류", "주문번호", "입장여부", "발급일")
+        baseHeaders.forEachIndexed { i, h -> headerRow.createCell(i).setCellValue(h) }
+
+        // 옵션 동적 헤더
+        val optionHeaders = options.map { it.getQuestionName() ?: "옵션(${it.id})" }
+        optionHeaders.forEachIndexed { i, h ->
+            headerRow.createCell(baseHeaders.size + i).setCellValue(h)
         }
+
+        // IssuedTicket id -> IssuedTicket 맵 (옵션 응답 조회용)
+        val ticketEntityMap = issuedTickets.associateBy { it.id }
+
         tickets.forEachIndexed { idx, ticket ->
             val row = sheet.createRow(idx + 1)
-            row.createCell(0).setCellValue(ticket.issuedTicketNo ?: "")
-            row.createCell(1).setCellValue(ticket.userName ?: "")
-            row.createCell(2).setCellValue(ticket.ticketName ?: "")
-            row.createCell(3).setCellValue(ticket.orderUuid ?: "")
-            row.createCell(4).setCellValue(if (ticket.enteredAt != null) "입장" else "미입장")
-            row.createCell(5).setCellValue(ticket.createdAt?.toString() ?: "")
+            var col = 0
+            row.createCell(col++).setCellValue(ticket.issuedTicketNo ?: "")
+            row.createCell(col++).setCellValue(ticket.userName ?: "")
+            row.createCell(col++).setCellValue(ticket.ticketName ?: "")
+            row.createCell(col++).setCellValue(ticket.orderUuid ?: "")
+            row.createCell(col++).setCellValue(if (ticket.enteredAt != null) "입장" else "미입장")
+            row.createCell(col++).setCellValue(ticket.createdAt?.toString() ?: "")
+
+            // 옵션 응답 채우기
+            if (options.isNotEmpty()) {
+                val entity = ticketEntityMap[ticket.id]
+                val answerMap = entity?.issuedTicketOptionAnswers
+                    ?.associateBy { it.optionId } ?: emptyMap()
+                options.forEach { option ->
+                    val answer = answerMap[option.id]?.answer ?: ""
+                    row.createCell(col++).setCellValue(answer)
+                }
+            }
         }
         return toByteArray(workbook)
     }
