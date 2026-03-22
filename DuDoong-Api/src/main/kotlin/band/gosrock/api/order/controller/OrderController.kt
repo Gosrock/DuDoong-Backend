@@ -7,6 +7,7 @@ import band.gosrock.api.order.docs.FreeOrderExceptionDocs
 import band.gosrock.api.order.docs.RefundOrderExceptionDocs
 import band.gosrock.api.order.model.dto.request.ConfirmOrderRequest
 import band.gosrock.api.order.model.dto.request.CreateOrderRequest
+import band.gosrock.api.order.model.dto.request.RefundRequest
 import band.gosrock.api.order.model.dto.response.CreateOrderResponse
 import band.gosrock.api.order.model.dto.response.OrderBriefElement
 import band.gosrock.api.order.model.dto.response.OrderResponse
@@ -14,6 +15,7 @@ import band.gosrock.api.order.model.dto.response.OrderTicketResponse
 import band.gosrock.api.order.service.ConfirmOrderUseCase
 import band.gosrock.api.order.service.CreateOrderUseCase
 import band.gosrock.api.order.service.CreateTossOrderUseCase
+import band.gosrock.api.order.service.RequestRefundUseCase
 import band.gosrock.api.order.service.FreeOrderUseCase
 import band.gosrock.api.order.service.ReadOrderUseCase
 import band.gosrock.api.order.service.RefundOrderUseCase
@@ -47,6 +49,7 @@ class OrderController(
     private val refundOrderUseCase: RefundOrderUseCase,
     private val readOrderUseCase: ReadOrderUseCase,
     private val createTossOrderUseCase: CreateTossOrderUseCase,
+    private val requestRefundUseCase: RequestRefundUseCase,
 ) {
     @Operation(summary = "토스페이먼츠에서 주문서를 생성합니다.(테스트용)")
     @DevelopOnlyApi
@@ -80,6 +83,16 @@ class OrderController(
     @PostMapping("/{order_uuid}/refund")
     fun refundOrder(@CurrentUserId userId: Long, @PathVariable("order_uuid") orderUuid: String): OrderResponse =
         refundOrderUseCase.execute(userId, orderUuid)
+
+    @Operation(summary = "환불 사유를 포함하여 환불을 요청합니다. (본인 주문)")
+    @PostMapping("/{order_uuid}/refund-request")
+    fun requestRefund(
+        @CurrentUserId userId: Long,
+        @PathVariable("order_uuid") orderUuid: String,
+        @RequestBody @Valid request: RefundRequest,
+    ) {
+        requestRefundUseCase.execute(userId, orderUuid, request)
+    }
 
     @Operation(summary = "결제 조회. 결제 조회 권한은 주문 본인")
     @GetMapping("/{order_uuid}")
