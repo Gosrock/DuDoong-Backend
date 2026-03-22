@@ -13,7 +13,16 @@ import org.springframework.web.servlet.resource.ResourceUrlEncodingFilter
 class ServletFilterConfig(
     private val httpContentCacheFilter: HttpContentCacheFilter,
     private val forwardedHeaderFilter: ForwardedHeaderFilter,
+    private val mdcFilter: MdcFilter,
 ) : WebMvcConfigurer {
+
+    @Bean
+    fun setMdcFilterOrder(): FilterRegistrationBean<MdcFilter> {
+        val registrationBean = FilterRegistrationBean<MdcFilter>()
+        registrationBean.filter = mdcFilter
+        registrationBean.order = Int.MIN_VALUE
+        return registrationBean
+    }
 
     @Bean
     fun setResourceUrlEncodingFilter(): FilterRegistrationBean<ResourceUrlEncodingFilter> {

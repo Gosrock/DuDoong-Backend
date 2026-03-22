@@ -7,6 +7,7 @@ import band.gosrock.common.jwt.JwtTokenProvider
 import band.gosrock.domain.domains.user.adaptor.RefreshTokenAdaptor
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
 import band.gosrock.domain.domains.user.service.UserDomainService
+import org.slf4j.LoggerFactory
 
 @UseCase
 class RefreshUseCase(
@@ -16,10 +17,12 @@ class RefreshUseCase(
     private val refreshTokenAdaptor: RefreshTokenAdaptor,
     private val tokenGenerateHelper: TokenGenerateHelper
 ) {
+    private val log = LoggerFactory.getLogger(RefreshUseCase::class.java)
 
     fun execute(refreshToken: String): TokenAndUserResponse {
         val savedRefreshTokenEntity = refreshTokenAdaptor.queryRefreshToken(refreshToken)
         val refreshUserId = jwtTokenProvider.parseRefreshToken(savedRefreshTokenEntity.refreshToken!!)
+        log.info("[RefreshUseCase][execute] 토큰 갱신 userId={}", refreshUserId)
         val user = userAdaptor.queryUser(refreshUserId)
         // 리프레쉬 시에도 last로그인 정보 업데이트
         userDomainService.loginUser(user.oauthInfo!!)
