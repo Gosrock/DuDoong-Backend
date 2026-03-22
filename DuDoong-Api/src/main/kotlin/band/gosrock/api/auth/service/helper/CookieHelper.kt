@@ -3,13 +3,15 @@ package band.gosrock.api.auth.service.helper
 import band.gosrock.api.auth.model.dto.response.TokenAndUserResponse
 import band.gosrock.common.annotation.Helper
 import band.gosrock.common.helper.SpringEnvironmentHelper
+import band.gosrock.common.properties.CookieProperties
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseCookie
 
 @Helper
 class CookieHelper(
-    private val springEnvironmentHelper: SpringEnvironmentHelper
+    private val springEnvironmentHelper: SpringEnvironmentHelper,
+    private val cookieProperties: CookieProperties,
 ) {
 
     fun getAccessTokenName(): String = "accessToken"
@@ -48,8 +50,8 @@ class CookieHelper(
     }
 
     private fun buildCookie(name: String, value: String, maxAge: Long): ResponseCookie {
-        val isProdOrStaging = springEnvironmentHelper.isProdAndStagingProfile()
         val sameSite = if (springEnvironmentHelper.isProdProfile()) "Strict" else "None"
+        val domain = cookieProperties.domain
 
         return ResponseCookie.from(name, value)
             .path("/")
@@ -57,8 +59,8 @@ class CookieHelper(
             .sameSite(sameSite)
             .secure(true)
             .apply {
-                if (isProdOrStaging) {
-                    domain(".dudoong.com")
+                if (domain.isNotBlank()) {
+                    domain(domain)
                 }
             }
             .build()

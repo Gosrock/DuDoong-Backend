@@ -4,6 +4,10 @@ auth:
     access-exp: ${JWT_ACCESS_EXP:3600}
     refresh-exp: ${JWT_REFRESH_EXP:3600}
 
+app:
+  cookie:
+    domain: ${COOKIE_DOMAIN:}
+
 oauth:
   kakao:
     base-url: ${KAKAO_BASE_URL}

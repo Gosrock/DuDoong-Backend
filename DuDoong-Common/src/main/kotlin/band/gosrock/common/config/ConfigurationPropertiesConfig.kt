@@ -1,5 +1,6 @@
 package band.gosrock.common.config
 
+import band.gosrock.common.properties.CookieProperties
 import band.gosrock.common.properties.JwtProperties
 import band.gosrock.common.properties.OauthProperties
 import band.gosrock.common.properties.TossPaymentsProperties
@@ -10,6 +11,7 @@ import org.springframework.context.annotation.Configuration
     JwtProperties::class,
     OauthProperties::class,
     TossPaymentsProperties::class,
+    CookieProperties::class,
 )
 @Configuration
 class ConfigurationPropertiesConfig
