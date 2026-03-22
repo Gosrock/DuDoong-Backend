@@ -3,6 +3,7 @@ package band.gosrock.domain.domains.order.adaptor
 import band.gosrock.common.annotation.Adaptor
 import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.order.domain.OrderStatus
+import band.gosrock.domain.domains.order.domain.RefundStatus
 import band.gosrock.domain.domains.order.exception.OrderNotFoundException
 import band.gosrock.domain.domains.order.repository.OrderRepository
 import band.gosrock.domain.domains.order.repository.condition.FindEventOrdersCondition
@@ -43,4 +44,7 @@ class OrderAdaptor(private val orderRepository: OrderRepository) {
 
     fun findByEventIdAndOrderStatusAndUserId(eventId: Long, userId: Long, orderStatus: OrderStatus): List<Order> =
         orderRepository.findByEventIdAndUserIdAndOrderStatus(eventId, userId, orderStatus)
+
+    fun findRefunds(eventId: Long?, refundStatus: RefundStatus?, keyword: String?, pageable: Pageable): Page<Order> =
+        orderRepository.findRefunds(eventId, refundStatus, keyword, pageable)
 }
