@@ -10,6 +10,7 @@ import band.gosrock.admin.model.dto.response.AdminTicketItemResponse
 import band.gosrock.admin.service.AdminAdjustTicketStockUseCase
 import band.gosrock.admin.service.AdminDeleteEventUseCase
 import band.gosrock.admin.service.AdminExcelService
+import band.gosrock.admin.service.AdminExportIssuedTicketsUseCase
 import band.gosrock.admin.service.AdminGetEventDetailUseCase
 import band.gosrock.admin.service.AdminGetEventsUseCase
 import band.gosrock.admin.service.AdminGetIssuedTicketsUseCase
@@ -51,6 +52,7 @@ class AdminEventController(
     private val adminUpdateEventUseCase: AdminUpdateEventUseCase,
     private val adminGetIssuedTicketsUseCase: AdminGetIssuedTicketsUseCase,
     private val adminExcelService: AdminExcelService,
+    private val adminExportIssuedTicketsUseCase: AdminExportIssuedTicketsUseCase,
     private val adminGetTicketItemsUseCase: AdminGetTicketItemsUseCase,
     private val adminUpdateTicketItemUseCase: AdminUpdateTicketItemUseCase,
     private val adminAdjustTicketStockUseCase: AdminAdjustTicketStockUseCase,
@@ -143,11 +145,10 @@ class AdminEventController(
             .body(bytes)
     }
 
-    @Operation(summary = "이벤트별 발급 티켓 목록을 엑셀로 다운로드합니다.")
+    @Operation(summary = "이벤트별 발급 티켓 목록을 엑셀로 다운로드합니다. (옵션 응답 동적 컬럼 포함)")
     @GetMapping("/{eventId}/issued-tickets/export")
     fun exportIssuedTickets(@CurrentUserId userId: Long, @PathVariable eventId: Long): ResponseEntity<ByteArray> {
-        val tickets = adminGetIssuedTicketsUseCase.executeAll(userId, eventId)
-        val bytes = adminExcelService.generateIssuedTicketsExcel(tickets)
+        val bytes = adminExportIssuedTicketsUseCase.execute(userId, eventId)
         return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=issued-tickets-${eventId}.xlsx")
             .contentType(MediaType.APPLICATION_OCTET_STREAM)
