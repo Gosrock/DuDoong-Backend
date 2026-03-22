@@ -9,7 +9,7 @@ class AdminGetMeUseCase(
 ) {
 
     fun execute(userId: Long): AdminUserDetailResponse {
-        val user = adminAuthValidator.validateManagerOrAbove(userId)
+        val user = adminAuthValidator.validateAdminOrAbove(userId)
         return AdminUserDetailResponse.from(user)
     }
 }

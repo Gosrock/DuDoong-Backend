@@ -39,55 +39,6 @@ class AdminAuthValidatorTest {
     }
 
     @Nested
-    @DisplayName("validateManagerOrAbove")
-    inner class ValidateManagerOrAboveTest {
-
-        @Test
-        @DisplayName("USER 역할이면 예외 발생")
-        fun userRoleDenied() {
-            val user = createUser(1L, AccountRole.USER)
-            `when`(userAdaptor.queryUser(1L)).thenReturn(user)
-
-            assertThrows(DuDoongCodeException::class.java) {
-                adminAuthValidator.validateManagerOrAbove(1L)
-            }
-        }
-
-        @Test
-        @DisplayName("MANAGER 역할이면 허용")
-        fun managerRoleAllowed() {
-            val user = createUser(1L, AccountRole.MANAGER)
-            `when`(userAdaptor.queryUser(1L)).thenReturn(user)
-
-            val result = adminAuthValidator.validateManagerOrAbove(1L)
-            assertNotNull(result)
-            assertEquals(AccountRole.MANAGER, result.accountRole)
-        }
-
-        @Test
-        @DisplayName("ADMIN 역할이면 허용")
-        fun adminRoleAllowed() {
-            val user = createUser(1L, AccountRole.ADMIN)
-            `when`(userAdaptor.queryUser(1L)).thenReturn(user)
-
-            val result = adminAuthValidator.validateManagerOrAbove(1L)
-            assertNotNull(result)
-            assertEquals(AccountRole.ADMIN, result.accountRole)
-        }
-
-        @Test
-        @DisplayName("SUPER_ADMIN 역할이면 허용")
-        fun superAdminRoleAllowed() {
-            val user = createUser(1L, AccountRole.SUPER_ADMIN)
-            `when`(userAdaptor.queryUser(1L)).thenReturn(user)
-
-            val result = adminAuthValidator.validateManagerOrAbove(1L)
-            assertNotNull(result)
-            assertEquals(AccountRole.SUPER_ADMIN, result.accountRole)
-        }
-    }
-
-    @Nested
     @DisplayName("validateAdminOrAbove")
     inner class ValidateAdminOrAboveTest {
 

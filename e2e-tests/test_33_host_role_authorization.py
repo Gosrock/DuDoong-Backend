@@ -1,26 +1,46 @@
 """
 HostRole AOP 호스트 권한 E2E 테스트.
 - 호스트 멤버가 아닌 유저는 호스트 관리 API 접근 불가
-- GUEST 호스트유저는 조회만 가능, 수정 불가
-- SUPER_ADMIN은 모든 호스트/이벤트 접근 가능
+- MASTER는 모든 호스트 관리 API 접근 가능
+- SUPER_ADMIN은 호스트 멤버가 아니어도 모든 접근 가능
+
+NOTE: DB에서 OID 기반으로 user_id를 직접 조회합니다 (me API userId 불일치 방지).
 """
 import os
 import subprocess
 import pytest
 import requests
+from datetime import datetime, timedelta
 from conftest import assert_status, get_data
 
-MYSQL_CMD = "mysql -h 127.0.0.1 -P 13306 -u dudoong -pdudoong dudoong -e"
+
+def _future_date_str(days_ahead=30):
+    future = datetime.now() + timedelta(days=days_ahead)
+    return future.strftime("%Y.%m.%d %H:%M")
+
+
+def mysql_query(sql):
+    """MySQL 쿼리 실행 후 stdout 반환"""
+    result = subprocess.run(
+        ["mysql", "-h", "127.0.0.1", "-P", "13306", "-u", "dudoong", "-pdudoong",
+         "dudoong", "-N", "-e", sql],
+        capture_output=True, text=True
+    )
+    return result.stdout.strip()
+
 
 def mysql_exec(sql):
-    """로컬 MySQL에 SQL 실행"""
-    result = subprocess.run(
-        f'{MYSQL_CMD} "{sql}"', shell=True, capture_output=True, text=True
+    """MySQL 실행 (결과 불필요)"""
+    subprocess.run(
+        ["mysql", "-h", "127.0.0.1", "-P", "13306", "-u", "dudoong", "-pdudoong",
+         "dudoong", "-e", sql],
+        capture_output=True, text=True
     )
-    return result.stdout
+
 
 def login_user(base_url, email, name):
-    """로컬 로그인하여 accessToken 반환"""
+    """로컬 로그인하여 (accessToken, jwt_user_id) 반환"""
+    import base64, json as _json
     url = f"{base_url}/v1/auth/oauth/local/login"
     payload = {
         "email": email,
@@ -31,32 +51,33 @@ def login_user(base_url, email, name):
     }
     resp = requests.post(url, json=payload)
     assert resp.status_code == 200, f"로그인 실패: {resp.text}"
-    data = get_data(resp)
-    return data["accessToken"]
+    token = get_data(resp)["accessToken"]
+    # JWT sub에서 userId 추출
+    payload_part = token.split(".")[1]
+    payload_part += "=" * (4 - len(payload_part) % 4)
+    jwt_payload = _json.loads(base64.b64decode(payload_part))
+    user_id = int(jwt_payload["sub"])
+    return token, user_id
 
-def get_user_id_from_token(base_url, token):
-    """토큰으로 유저 ID 조회"""
-    url = f"{base_url}/v1/users/me"
-    resp = requests.get(url, headers={"Authorization": f"Bearer {token}"})
-    if resp.status_code == 200:
-        return get_data(resp).get("userId") or get_data(resp).get("id")
-    return None
 
 @pytest.fixture(scope="module")
 def api_base():
     return os.environ.get("API_BASE_URL", "http://localhost:8080/api")
 
+
 @pytest.fixture(scope="module")
 def user_a(api_base):
     """호스트 MASTER 유저"""
-    token = login_user(api_base, "host-master@dudoong.com", "호스트마스터")
-    return {"token": token, "headers": {"Authorization": f"Bearer {token}"}}
+    token, user_id = login_user(api_base, "host-master-v2@dudoong.com", "호스트마스터")
+    return {"token": token, "user_id": user_id, "headers": {"Authorization": f"Bearer {token}"}}
+
 
 @pytest.fixture(scope="module")
 def user_b(api_base):
     """외부 유저 (호스트 멤버 아님)"""
-    token = login_user(api_base, "outsider@dudoong.com", "외부유저")
-    return {"token": token, "headers": {"Authorization": f"Bearer {token}"}}
+    token, user_id = login_user(api_base, "outsider-v2@dudoong.com", "외부유저")
+    return {"token": token, "user_id": user_id, "headers": {"Authorization": f"Bearer {token}"}}
+
 
 @pytest.fixture(scope="module")
 def host_and_event(api_base, user_a):
@@ -65,8 +86,8 @@ def host_and_event(api_base, user_a):
     resp = requests.post(
         f"{api_base}/v1/hosts",
         json={
-            "name": "E2E권한테스트호스트",
-            "contactEmail": "auth-test@dudoong.com",
+            "name": "E2E권한테스트호스트v2",
+            "contactEmail": "auth-test-v2@dudoong.com",
             "contactNumber": "010-0000-0000",
         },
         headers=user_a["headers"],
@@ -77,7 +98,12 @@ def host_and_event(api_base, user_a):
     # 이벤트 생성
     resp = requests.post(
         f"{api_base}/v1/events",
-        json={"name": "E2E권한테스트이벤트", "hostId": host_id},
+        json={
+            "name": "E2E권한테스트이벤트v2",
+            "hostId": host_id,
+            "startAt": _future_date_str(30),
+            "runTime": 90,
+        },
         headers=user_a["headers"],
     )
     assert_status(resp, 200)
@@ -131,8 +157,7 @@ class TestSuperAdminBypass:
 
     def test_super_admin_can_access_any_host(self, api_base, user_b, host_and_event):
         """SUPER_ADMIN으로 승격된 유저는 아무 호스트에도 접근 가능"""
-        # 유저 B의 ID를 얻기 위해 me API 호출
-        user_id = get_user_id_from_token(api_base, user_b["token"])
+        user_id = user_b["user_id"]
         if not user_id:
             pytest.skip("유저 ID를 가져올 수 없음")
 

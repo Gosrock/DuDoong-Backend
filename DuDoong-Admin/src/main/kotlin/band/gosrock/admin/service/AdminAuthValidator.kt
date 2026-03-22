@@ -13,16 +13,6 @@ class AdminAuthValidator(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun validateManagerOrAbove(userId: Long): User {
-        val user = userAdaptor.queryUser(userId)
-        if (user.accountRole == AccountRole.USER) {
-            log.info("[ADMIN-AUTH] DENIED - userId={}, role={}, required=MANAGER+", userId, user.accountRole)
-            throw AdminForbiddenException.EXCEPTION
-        }
-        log.info("[ADMIN-AUTH] GRANTED - userId={}, role={}", userId, user.accountRole)
-        return user
-    }
-
     fun validateAdminOrAbove(userId: Long): User {
         val user = userAdaptor.queryUser(userId)
         if (user.accountRole != AccountRole.ADMIN && user.accountRole != AccountRole.SUPER_ADMIN) {

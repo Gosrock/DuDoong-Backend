@@ -17,7 +17,7 @@ class AdminGetCommentsUseCase(
 ) {
 
     fun execute(userId: Long, keyword: String?, eventId: Long?, pageable: Pageable): Page<AdminCommentResponse> {
-        adminAuthValidator.validateManagerOrAbove(userId)
+        adminAuthValidator.validateAdminOrAbove(userId)
         val commentPage = commentRepository.findAllForAdmin(keyword, eventId, pageable)
 
         // batch fetch events to avoid N+1

@@ -17,7 +17,7 @@ class AdminGetEventsUseCase(
 ) {
 
     fun executeAll(userId: Long, keyword: String?, status: String?): List<AdminEventResponse> {
-        adminAuthValidator.validateManagerOrAbove(userId)
+        adminAuthValidator.validateAdminOrAbove(userId)
         return eventRepository.findAllForAdminNoPage(keyword, status)
             .map { event ->
                 val hostName = event.hostId?.let {
@@ -28,7 +28,7 @@ class AdminGetEventsUseCase(
     }
 
     fun execute(userId: Long, keyword: String?, status: String?, pageable: Pageable): Page<AdminEventResponse> {
-        adminAuthValidator.validateManagerOrAbove(userId)
+        adminAuthValidator.validateAdminOrAbove(userId)
         return eventRepository.findAllForAdmin(keyword, status, pageable)
             .map { event ->
                 val hostName = event.hostId?.let {

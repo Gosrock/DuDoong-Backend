@@ -11,10 +11,10 @@
 ## 🏗️ 프로젝트 아키텍처
 
 ### 기술 스택
-- **언어**: Java 17 (→ Kotlin 1.9.x로 마이그레이션 중)
-- **프레임워크**: Spring Boot 2.7.7
-- **빌드**: Gradle Groovy DSL (→ Kotlin DSL로 전환 예정)
-- **코드 단순화**: Lombok (→ Kotlin data class로 대체)
+- **언어**: Kotlin 1.9.22 (Java → Kotlin 마이그레이션 완료)
+- **프레임워크**: Spring Boot 3.2.0
+- **런타임**: Java 21
+- **빌드**: Gradle 8.5 Kotlin DSL
 - **DB**: MySQL + Spring Data JPA + QueryDSL
 - **캐시/락**: Redis + Redisson (분산락)
 - **외부 API**: Toss Payments (OpenFeign), AWS S3/SES, NCP AlimTalk, Slack API
@@ -111,6 +111,53 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4
 | Phase 5 | [#602](https://github.com/Gosrock/DuDoong-Backend/issues/602) | Socket: WebSocket 서버 | ⬜ 대기 |
 | Phase 6-1 | [#603](https://github.com/Gosrock/DuDoong-Backend/issues/603) | Batch: 정산 Job | ⬜ 대기 |
 | Phase 6-2 | [#604](https://github.com/Gosrock/DuDoong-Backend/issues/604) | Batch: 만료/엑셀/Slack 통계 | ⬜ 대기 |
+
+---
+
+## 🔐 인증 및 권한 체계
+
+### 인증 방식
+- **로그인**: 카카오 OAuth (`/api/v1/auth/oauth/kakao`) 또는 로컬 개발용 (`/api/v1/auth/oauth/local/login`, dev 전용)
+- **토큰 전달**: `accessToken` 쿠키 (기본) 또는 `Authorization: Bearer` 헤더
+- **토큰 갱신**: `POST /api/v1/auth/token/refresh`
+
+### 역할 (AccountRole)
+| 역할 | 설명 |
+|------|------|
+| `USER` | 일반 유저 |
+| `ADMIN` | 어드민 (내부 관리자) |
+| `SUPER_ADMIN` | 최고 관리자 |
+
+- **MANAGER 역할은 삭제됨** (호스트 멤버십의 HostRole과 혼동 방지)
+- Role hierarchy: `SUPER_ADMIN > ADMIN > USER`
+
+### API 접근 제어 (SecurityConfig)
+| 경로 | 접근 권한 |
+|------|----------|
+| `/api/v1/auth/oauth/**` | permitAll |
+| `/api/v1/events/{id}` (GET) | permitAll |
+| `/api/v1/events/search` (GET) | permitAll |
+| `/internal-api/**` | **ADMIN, SUPER_ADMIN만** |
+| 나머지 `/api/**` | USER 이상 (인증 필수) |
+
+### 호스트 권한 (HostRole AOP)
+- `@HostRolesAllowed` AOP로 호스트 멤버십 기반 권한 체크
+- **userId를 메서드 파라미터로 명시적 전달** (SecurityContext 미사용)
+- `SUPER_ADMIN`은 호스트 멤버가 아니어도 모든 이벤트/호스트 접근 가능 (바이패스)
+- HostQualification: `MASTER` > `MANAGER` > `GUEST`
+
+### Admin API (internal-api)
+- SecurityConfig 레벨: ADMIN/SUPER_ADMIN role 체크
+- UseCase 레벨: `AdminAuthValidator`로 이중 권한 체크
+  - 읽기: `validateAdminOrAbove` (ADMIN+)
+  - 쓰기: `validateAdminOrAbove` (ADMIN+)
+  - 역할 변경: `validateSuperAdmin` (SUPER_ADMIN만)
+- 어드민 전용 로그인 엔드포인트 없음 — 일반 로그인 쿠키 사용
+
+### 어드민 토큰 관련 (레거시)
+- `X-Admin-Token` 헤더, `aud:admin` JWT claim — **사용하지 않음**
+- `AdminLoginUseCase`, `AdminLocalDevLoginUseCase` — **삭제됨**
+- 어드민 접근은 쿠키 기반 + DB role 체크로 통일
 
 ---
 

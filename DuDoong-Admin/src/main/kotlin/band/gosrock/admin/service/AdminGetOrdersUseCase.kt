@@ -20,7 +20,7 @@ class AdminGetOrdersUseCase(
 ) {
 
     fun executeAll(userId: Long, keyword: String?, status: OrderStatus?, eventId: Long?): List<AdminOrderResponse> {
-        adminAuthValidator.validateManagerOrAbove(userId)
+        adminAuthValidator.validateAdminOrAbove(userId)
         val orders = orderRepository.findAllForAdminNoPage(keyword, status, eventId)
         val userIds = orders.mapNotNull { it.userId }
         val eventIds = orders.mapNotNull { it.eventId }
@@ -34,7 +34,7 @@ class AdminGetOrdersUseCase(
     }
 
     fun execute(userId: Long, keyword: String?, status: OrderStatus?, eventId: Long?, pageable: Pageable): Page<AdminOrderResponse> {
-        adminAuthValidator.validateManagerOrAbove(userId)
+        adminAuthValidator.validateAdminOrAbove(userId)
         val orderPage = orderRepository.findAllForAdmin(keyword, status, eventId, pageable)
 
         // batch fetch users and events to avoid N+1

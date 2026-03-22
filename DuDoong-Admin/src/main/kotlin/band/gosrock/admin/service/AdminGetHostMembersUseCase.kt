@@ -15,7 +15,7 @@ class AdminGetHostMembersUseCase(
 ) {
 
     fun execute(userId: Long, hostId: Long): List<AdminHostMemberResponse> {
-        adminAuthValidator.validateManagerOrAbove(userId)
+        adminAuthValidator.validateAdminOrAbove(userId)
         val host = hostAdaptor.findById(hostId)
         val userIds = host.getHostUser_UserIds()
         val userMap = userAdaptor.queryUserListByIdIn(userIds)

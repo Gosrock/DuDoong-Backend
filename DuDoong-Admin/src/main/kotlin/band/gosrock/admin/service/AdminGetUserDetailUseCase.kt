@@ -13,7 +13,7 @@ class AdminGetUserDetailUseCase(
 ) {
 
     fun execute(userId: Long, targetUserId: Long): AdminUserDetailResponse {
-        adminAuthValidator.validateManagerOrAbove(userId)
+        adminAuthValidator.validateAdminOrAbove(userId)
         val user = userAdaptor.queryUser(targetUserId)
         return AdminUserDetailResponse.from(user)
     }

@@ -13,7 +13,7 @@ class AdminGetHostDetailUseCase(
 ) {
 
     fun execute(userId: Long, hostId: Long): AdminHostDetailResponse {
-        adminAuthValidator.validateManagerOrAbove(userId)
+        adminAuthValidator.validateAdminOrAbove(userId)
         val host = hostAdaptor.findById(hostId)
         return AdminHostDetailResponse.from(host)
     }

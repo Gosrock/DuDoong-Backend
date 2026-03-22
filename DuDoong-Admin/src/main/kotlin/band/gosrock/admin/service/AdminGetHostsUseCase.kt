@@ -15,7 +15,7 @@ class AdminGetHostsUseCase(
 ) {
 
     fun execute(userId: Long, keyword: String?, pageable: Pageable): Page<AdminHostResponse> {
-        adminAuthValidator.validateManagerOrAbove(userId)
+        adminAuthValidator.validateAdminOrAbove(userId)
         return hostAdaptor.findAllForAdmin(keyword, pageable)
             .map { AdminHostResponse.from(it) }
     }

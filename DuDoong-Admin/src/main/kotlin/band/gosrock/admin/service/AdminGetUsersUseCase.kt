@@ -15,13 +15,13 @@ class AdminGetUsersUseCase(
 ) {
 
     fun executeAll(userId: Long, keyword: String?): List<AdminUserResponse> {
-        adminAuthValidator.validateManagerOrAbove(userId)
+        adminAuthValidator.validateAdminOrAbove(userId)
         return userRepository.findAllByKeywordNoPage(keyword)
             .map { AdminUserResponse.from(it) }
     }
 
     fun execute(userId: Long, keyword: String?, pageable: Pageable): Page<AdminUserResponse> {
-        adminAuthValidator.validateManagerOrAbove(userId)
+        adminAuthValidator.validateAdminOrAbove(userId)
         return userRepository.findAllByKeyword(keyword, pageable)
             .map { AdminUserResponse.from(it) }
     }

@@ -22,7 +22,7 @@ class AdminGetEventDetailUseCase(
 ) {
 
     fun execute(userId: Long, eventId: Long): AdminEventResponse {
-        adminAuthValidator.validateManagerOrAbove(userId)
+        adminAuthValidator.validateAdminOrAbove(userId)
         val event = eventRepository.findByIdForAdmin(eventId)
             ?: throw EventNotFoundException.EXCEPTION
 

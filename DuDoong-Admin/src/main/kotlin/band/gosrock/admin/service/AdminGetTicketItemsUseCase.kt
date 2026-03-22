@@ -13,7 +13,7 @@ class AdminGetTicketItemsUseCase(
 ) {
 
     fun execute(userId: Long, eventId: Long): List<AdminTicketItemResponse> {
-        adminAuthValidator.validateManagerOrAbove(userId)
+        adminAuthValidator.validateAdminOrAbove(userId)
         return ticketItemAdaptor.findAllByEventId(eventId)
             .map { AdminTicketItemResponse.from(it) }
     }

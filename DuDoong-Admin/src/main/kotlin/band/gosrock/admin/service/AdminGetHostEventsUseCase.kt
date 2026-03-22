@@ -17,7 +17,7 @@ class AdminGetHostEventsUseCase(
 ) {
 
     fun execute(userId: Long, hostId: Long, pageable: Pageable): Page<AdminEventResponse> {
-        adminAuthValidator.validateManagerOrAbove(userId)
+        adminAuthValidator.validateAdminOrAbove(userId)
         val host = hostAdaptor.findById(hostId)
         val hostName = host.profile?.name
         return eventRepository.findAllByHostId(hostId, pageable)

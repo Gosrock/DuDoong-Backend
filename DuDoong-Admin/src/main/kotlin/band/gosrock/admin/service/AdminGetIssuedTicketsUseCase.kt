@@ -15,13 +15,13 @@ class AdminGetIssuedTicketsUseCase(
 ) {
 
     fun execute(userId: Long, eventId: Long, pageable: Pageable): Page<AdminIssuedTicketResponse> {
-        adminAuthValidator.validateManagerOrAbove(userId)
+        adminAuthValidator.validateAdminOrAbove(userId)
         return issuedTicketRepository.findAllByEventId(eventId, pageable)
             .map { AdminIssuedTicketResponse.from(it) }
     }
 
     fun executeAll(userId: Long, eventId: Long): List<AdminIssuedTicketResponse> {
-        adminAuthValidator.validateManagerOrAbove(userId)
+        adminAuthValidator.validateAdminOrAbove(userId)
         return issuedTicketRepository.findAllByEventId(eventId)
             .map { AdminIssuedTicketResponse.from(it) }
     }
