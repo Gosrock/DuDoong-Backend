@@ -1,9 +1,11 @@
 package band.gosrock.admin.controller
 
+import band.gosrock.admin.model.dto.request.AdminChangeNameRequest
 import band.gosrock.admin.model.dto.request.AdminUpdateUserRoleRequest
 import band.gosrock.admin.model.dto.request.AdminUpdateUserStatusRequest
 import band.gosrock.admin.model.dto.response.AdminUserDetailResponse
 import band.gosrock.admin.model.dto.response.AdminUserResponse
+import band.gosrock.admin.service.AdminChangeNameUseCase
 import band.gosrock.admin.service.AdminExcelService
 import band.gosrock.admin.service.AdminGetUserDetailUseCase
 import band.gosrock.admin.service.AdminGetUsersUseCase
@@ -13,6 +15,7 @@ import band.gosrock.common.annotation.CurrentUserId
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.Valid
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
@@ -36,6 +39,7 @@ class AdminUserController(
     private val adminGetUserDetailUseCase: AdminGetUserDetailUseCase,
     private val adminUpdateUserRoleUseCase: AdminUpdateUserRoleUseCase,
     private val adminUpdateUserStatusUseCase: AdminUpdateUserStatusUseCase,
+    private val adminChangeNameUseCase: AdminChangeNameUseCase,
     private val adminExcelService: AdminExcelService,
 ) {
 
@@ -90,5 +94,15 @@ class AdminUserController(
         @RequestBody request: AdminUpdateUserStatusRequest,
     ): AdminUserResponse {
         return adminUpdateUserStatusUseCase.execute(currentUserId, userId, request)
+    }
+
+    @Operation(summary = "유저 이름 변경")
+    @PatchMapping("/{userId}/name")
+    fun changeUserName(
+        @CurrentUserId adminUserId: Long,
+        @PathVariable userId: Long,
+        @Valid @RequestBody request: AdminChangeNameRequest,
+    ) {
+        adminChangeNameUseCase.execute(adminUserId, userId, request)
     }
 }
