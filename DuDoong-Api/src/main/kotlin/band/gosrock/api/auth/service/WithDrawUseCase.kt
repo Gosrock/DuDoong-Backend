@@ -5,6 +5,7 @@ import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.domains.user.adaptor.RefreshTokenAdaptor
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
 import band.gosrock.domain.domains.user.service.UserDomainService
+import org.slf4j.LoggerFactory
 import org.springframework.transaction.annotation.Transactional
 
 @UseCase
@@ -14,9 +15,11 @@ class WithDrawUseCase(
     private val userAdaptor: UserAdaptor,
     private val kakaoOauthHelper: KakaoOauthHelper
 ) {
+    private val log = LoggerFactory.getLogger(WithDrawUseCase::class.java)
 
     @Transactional
     fun execute(userId: Long) {
+        log.info("[WithDrawUseCase][execute] 회원 탈퇴 userId={}", userId)
         refreshTokenAdaptor.deleteByUserId(userId)
         val user = userAdaptor.queryUser(userId)
         val oid = user.oauthInfo!!.oid!!

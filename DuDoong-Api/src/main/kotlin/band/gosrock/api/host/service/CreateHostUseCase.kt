@@ -6,6 +6,7 @@ import band.gosrock.api.host.model.mapper.HostMapper
 import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.domains.host.service.HostService
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
+import org.slf4j.LoggerFactory
 import org.springframework.transaction.annotation.Transactional
 
 @UseCase
@@ -14,8 +15,11 @@ class CreateHostUseCase(
     private val hostService: HostService,
     private val hostMapper: HostMapper,
 ) {
+    private val log = LoggerFactory.getLogger(CreateHostUseCase::class.java)
+
     @Transactional
     fun execute(userId: Long, createHostRequest: CreateHostRequest): HostResponse {
+        log.info("[CreateHostUseCase][execute] 호스트 생성 userId={}", userId)
         // 존재하는 유저인지 검증
         userAdaptor.queryUser(userId)
         // 호스트 생성
