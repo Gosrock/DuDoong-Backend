@@ -12,6 +12,17 @@ data class AdminOrderResponse(
     val totalAmount: Long,
     val orderStatus: OrderStatus,
     val createdAt: LocalDateTime?,
+    val orderNo: String?,
+    val orderMethod: String?,
+    val userId: Long?,
+    val eventId: Long?,
+    val approvedAt: LocalDateTime?,
+    val withDrawAt: LocalDateTime?,
+    val paymentMethod: String?,
+    val receiptUrl: String?,
+    val supplyAmount: String?,
+    val discountAmount: String?,
+    val couponName: String?,
 ) {
     companion object {
         fun of(order: Order, userName: String?, eventName: String?): AdminOrderResponse =
@@ -23,6 +34,17 @@ data class AdminOrderResponse(
                 totalAmount = order.getTotalPaymentPrice().longValue(),
                 orderStatus = order.orderStatus,
                 createdAt = order.createdAt,
+                orderNo = order.orderNo,
+                orderMethod = order.orderMethod?.name,
+                userId = order.userId,
+                eventId = order.eventId,
+                approvedAt = order.approvedAt,
+                withDrawAt = order.withDrawAt,
+                paymentMethod = order.pgPaymentInfo.paymentMethod.name,
+                receiptUrl = order.pgPaymentInfo.receiptUrl,
+                supplyAmount = order.totalPaymentInfo?.supplyAmount?.toString(),
+                discountAmount = order.totalPaymentInfo?.discountAmount?.toString(),
+                couponName = order.orderCouponVo.name,
             )
     }
 }

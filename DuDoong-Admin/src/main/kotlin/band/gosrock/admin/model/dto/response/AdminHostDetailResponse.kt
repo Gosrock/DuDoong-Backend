@@ -14,6 +14,7 @@ data class AdminHostDetailResponse(
     val masterUserId: Long?,
     val createdAt: LocalDateTime?,
     val memberCount: Int,
+    val slackUrl: String?,
 ) {
     companion object {
         fun from(host: Host): AdminHostDetailResponse =
@@ -28,6 +29,7 @@ data class AdminHostDetailResponse(
                 masterUserId = host.masterUserId,
                 createdAt = host.createdAt,
                 memberCount = host.hostUsers.size,
+                slackUrl = host.slackUrl,
             )
     }
 }

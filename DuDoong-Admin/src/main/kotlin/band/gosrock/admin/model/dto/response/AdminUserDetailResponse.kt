@@ -17,6 +17,8 @@ data class AdminUserDetailResponse(
     val phoneNumber: String?,
     val marketingAgree: Boolean,
     val oauthProvider: OauthProvider?,
+    val lastLoginAt: LocalDateTime?,
+    val receiveMail: Boolean,
 ) {
     companion object {
         fun from(user: User): AdminUserDetailResponse =
@@ -31,6 +33,8 @@ data class AdminUserDetailResponse(
                 phoneNumber = user.profile?.phoneNumberVo?.phoneNumber,
                 marketingAgree = user.marketingAgree,
                 oauthProvider = user.oauthInfo?.provider,
+                lastLoginAt = user.lastLoginAt,
+                receiveMail = user.receiveMail,
             )
     }
 }
