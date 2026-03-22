@@ -13,10 +13,12 @@ class AdminUpdateEventUseCase(
     private val eventAdaptor: EventAdaptor,
     private val eventRepository: EventRepository,
     private val hostAdaptor: HostAdaptor,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
     @Transactional
-    fun execute(eventId: Long, request: AdminUpdateEventRequest): AdminEventResponse {
+    fun execute(userId: Long, eventId: Long, request: AdminUpdateEventRequest): AdminEventResponse {
+        adminAuthValidator.validateAdminOrAbove(userId)
         val event = eventAdaptor.findById(eventId)
         // 어드민은 OPEN 상태에서도 수정 가능하도록 직접 필드 수정
         event.adminUpdate(

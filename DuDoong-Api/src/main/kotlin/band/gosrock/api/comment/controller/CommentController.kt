@@ -63,9 +63,10 @@ class CommentController(
     @Operation(summary = "[어드민 기능] 응원글을 삭제합니다.")
     @DeleteMapping("/{commentId}")
     fun deleteComment(
+        @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @PathVariable commentId: Long,
-    ): Unit = deleteCommentUseCase.execute(eventId, commentId)
+    ): Unit = deleteCommentUseCase.execute(userId, eventId, commentId)
 
     @DisableSwaggerSecurity
     @Operation(summary = "응원글 개수를 카운팅합니다.")

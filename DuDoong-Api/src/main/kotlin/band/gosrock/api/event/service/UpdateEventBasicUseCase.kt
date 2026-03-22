@@ -19,7 +19,7 @@ class UpdateEventBasicUseCase(
 ) {
     @Transactional
     @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID)
-    fun execute(eventId: Long, updateEventBasicRequest: UpdateEventBasicRequest): EventResponse {
+    fun execute(userId: Long, eventId: Long, updateEventBasicRequest: UpdateEventBasicRequest): EventResponse {
         val event = eventAdaptor.findById(eventId)
         val eventBasic = eventMapper.toEventBasic(updateEventBasicRequest)
         val eventPlace = eventMapper.toEventPlace(updateEventBasicRequest)

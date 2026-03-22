@@ -17,6 +17,7 @@ import band.gosrock.admin.service.AdminRemoveHostMemberUseCase
 import band.gosrock.admin.service.AdminUpdateHostMemberRoleUseCase
 import band.gosrock.admin.service.AdminUpdateHostPartnerUseCase
 import band.gosrock.admin.service.AdminUpdateHostProfileUseCase
+import band.gosrock.common.annotation.CurrentUserId
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -54,78 +55,85 @@ class AdminHostController(
     @Operation(summary = "호스트 목록을 조회합니다.")
     @GetMapping
     fun getHosts(
+        @CurrentUserId userId: Long,
         @RequestParam(required = false) keyword: String?,
         @PageableDefault(size = 20) pageable: Pageable,
     ): Page<AdminHostResponse> {
-        return adminGetHostsUseCase.execute(keyword, pageable)
+        return adminGetHostsUseCase.execute(userId, keyword, pageable)
     }
 
     @Operation(summary = "호스트 상세 정보를 조회합니다.")
     @GetMapping("/{hostId}")
-    fun getHostDetail(@PathVariable hostId: Long): AdminHostDetailResponse {
-        return adminGetHostDetailUseCase.execute(hostId)
+    fun getHostDetail(@CurrentUserId userId: Long, @PathVariable hostId: Long): AdminHostDetailResponse {
+        return adminGetHostDetailUseCase.execute(userId, hostId)
     }
 
     @Operation(summary = "호스트 소속 멤버 목록을 조회합니다.")
     @GetMapping("/{hostId}/members")
-    fun getHostMembers(@PathVariable hostId: Long): List<AdminHostMemberResponse> {
-        return adminGetHostMembersUseCase.execute(hostId)
+    fun getHostMembers(@CurrentUserId userId: Long, @PathVariable hostId: Long): List<AdminHostMemberResponse> {
+        return adminGetHostMembersUseCase.execute(userId, hostId)
     }
 
     @Operation(summary = "호스트 멤버 역할을 변경합니다.")
-    @PatchMapping("/{hostId}/members/{userId}/role")
+    @PatchMapping("/{hostId}/members/{targetUserId}/role")
     fun updateHostMemberRole(
+        @CurrentUserId userId: Long,
         @PathVariable hostId: Long,
-        @PathVariable userId: Long,
+        @PathVariable targetUserId: Long,
         @RequestBody request: AdminUpdateHostMemberRoleRequest,
     ): AdminHostMemberResponse {
-        return adminUpdateHostMemberRoleUseCase.execute(hostId, userId, request)
+        return adminUpdateHostMemberRoleUseCase.execute(userId, hostId, targetUserId, request)
     }
 
     @Operation(summary = "호스트에 멤버를 추가합니다.")
     @PostMapping("/{hostId}/members")
     @ResponseStatus(HttpStatus.CREATED)
     fun addHostMember(
+        @CurrentUserId userId: Long,
         @PathVariable hostId: Long,
         @RequestBody request: AdminAddHostMemberRequest,
     ): AdminHostMemberResponse {
-        return adminAddHostMemberUseCase.execute(hostId, request)
+        return adminAddHostMemberUseCase.execute(userId, hostId, request)
     }
 
     @Operation(summary = "호스트에서 멤버를 제거합니다.")
-    @DeleteMapping("/{hostId}/members/{userId}")
+    @DeleteMapping("/{hostId}/members/{targetUserId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun removeHostMember(
+        @CurrentUserId userId: Long,
         @PathVariable hostId: Long,
-        @PathVariable userId: Long,
+        @PathVariable targetUserId: Long,
     ) {
-        adminRemoveHostMemberUseCase.execute(hostId, userId)
+        adminRemoveHostMemberUseCase.execute(userId, hostId, targetUserId)
     }
 
     @Operation(summary = "호스트별 이벤트 목록을 조회합니다.")
     @GetMapping("/{hostId}/events")
     fun getHostEvents(
+        @CurrentUserId userId: Long,
         @PathVariable hostId: Long,
         @PageableDefault(size = 20) pageable: Pageable,
     ): Page<AdminEventResponse> {
-        return adminGetHostEventsUseCase.execute(hostId, pageable)
+        return adminGetHostEventsUseCase.execute(userId, hostId, pageable)
     }
 
     @Operation(summary = "호스트의 파트너 여부를 변경합니다.")
     @PatchMapping("/{hostId}/partner")
     fun updateHostPartner(
+        @CurrentUserId userId: Long,
         @PathVariable hostId: Long,
         @RequestBody request: AdminUpdateHostPartnerRequest,
     ): AdminHostDetailResponse {
-        return adminUpdateHostPartnerUseCase.execute(hostId, request)
+        return adminUpdateHostPartnerUseCase.execute(userId, hostId, request)
     }
 
     @Operation(summary = "호스트 프로필을 수정합니다.")
     @PatchMapping("/{hostId}/profile")
     fun updateHostProfile(
+        @CurrentUserId userId: Long,
         @PathVariable hostId: Long,
         @RequestBody request: AdminUpdateHostProfileRequest,
     ): AdminHostDetailResponse {
-        return adminUpdateHostProfileUseCase.execute(hostId, request)
+        return adminUpdateHostProfileUseCase.execute(userId, hostId, request)
     }
 }

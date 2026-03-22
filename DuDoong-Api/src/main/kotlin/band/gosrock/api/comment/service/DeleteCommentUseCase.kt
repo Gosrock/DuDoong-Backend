@@ -17,7 +17,7 @@ class DeleteCommentUseCase(
 ) {
     @Transactional
     @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID)
-    fun execute(eventId: Long, commentId: Long) {
+    fun execute(userId: Long, eventId: Long, commentId: Long) {
         val comment = commentMapper.retrieveComment(commentId)
         commentDomainService.deleteComment(comment, eventId)
     }

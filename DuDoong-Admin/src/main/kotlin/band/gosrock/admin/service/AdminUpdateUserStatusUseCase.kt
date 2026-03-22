@@ -11,10 +11,12 @@ import org.springframework.transaction.annotation.Transactional
 class AdminUpdateUserStatusUseCase(
     private val userAdaptor: UserAdaptor,
     private val userRepository: UserRepository,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
     @Transactional
-    fun execute(targetUserId: Long, request: AdminUpdateUserStatusRequest): AdminUserResponse {
+    fun execute(userId: Long, targetUserId: Long, request: AdminUpdateUserStatusRequest): AdminUserResponse {
+        adminAuthValidator.validateAdminOrAbove(userId)
         val targetUser = userAdaptor.queryUser(targetUserId)
         targetUser.changeAccountState(request.status)
         userRepository.save(targetUser)

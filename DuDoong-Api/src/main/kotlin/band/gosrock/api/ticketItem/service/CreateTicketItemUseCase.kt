@@ -20,7 +20,7 @@ class CreateTicketItemUseCase(
 ) {
 
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID, applyTransaction = false)
-    fun execute(createTicketItemRequest: CreateTicketItemRequest, eventId: Long): TicketItemResponse {
+    fun execute(userId: Long, createTicketItemRequest: CreateTicketItemRequest, eventId: Long): TicketItemResponse {
         val event = eventAdaptor.findById(eventId)
         val host = hostAdaptor.findById(event.hostId!!)
         val isPartner = host.partner

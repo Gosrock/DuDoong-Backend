@@ -15,7 +15,7 @@ class DeleteTicketItemUseCase(
 ) {
 
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID, applyTransaction = false)
-    fun execute(eventId: Long, ticketItemId: Long): GetEventTicketItemsResponse {
+    fun execute(userId: Long, eventId: Long, ticketItemId: Long): GetEventTicketItemsResponse {
         ticketItemService.softDeleteTicketItem(eventId, ticketItemId)
         return ticketItemMapper.toGetEventTicketItemsResponse(eventId, true)
     }

@@ -17,6 +17,7 @@ import band.gosrock.admin.service.AdminGetTicketItemsUseCase
 import band.gosrock.admin.service.AdminUpdateEventStatusUseCase
 import band.gosrock.admin.service.AdminUpdateEventUseCase
 import band.gosrock.admin.service.AdminUpdateTicketItemUseCase
+import band.gosrock.common.annotation.CurrentUserId
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -58,10 +59,11 @@ class AdminEventController(
     @Operation(summary = "이벤트 목록을 엑셀로 다운로드합니다.")
     @GetMapping("/export")
     fun exportEvents(
+        @CurrentUserId userId: Long,
         @RequestParam(required = false) keyword: String?,
         @RequestParam(required = false) status: String?,
     ): ResponseEntity<ByteArray> {
-        val events = adminGetEventsUseCase.executeAll(keyword, status)
+        val events = adminGetEventsUseCase.executeAll(userId, keyword, status)
         val bytes = adminExcelService.generateEventsExcel(events)
         return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=events.xlsx")
@@ -72,64 +74,68 @@ class AdminEventController(
     @Operation(summary = "이벤트 목록을 조회합니다.")
     @GetMapping
     fun getEvents(
+        @CurrentUserId userId: Long,
         @RequestParam(required = false) keyword: String?,
         @RequestParam(required = false) status: String?,
         @PageableDefault(size = 20) pageable: Pageable,
     ): Page<AdminEventResponse> {
-        return adminGetEventsUseCase.execute(keyword, status, pageable)
+        return adminGetEventsUseCase.execute(userId, keyword, status, pageable)
     }
 
     @Operation(summary = "이벤트 상세 정보를 조회합니다.")
     @GetMapping("/{eventId}")
-    fun getEventDetail(@PathVariable eventId: Long): AdminEventResponse {
-        return adminGetEventDetailUseCase.execute(eventId)
+    fun getEventDetail(@CurrentUserId userId: Long, @PathVariable eventId: Long): AdminEventResponse {
+        return adminGetEventDetailUseCase.execute(userId, eventId)
     }
 
     @Operation(summary = "이벤트를 소프트 삭제합니다.")
     @DeleteMapping("/{eventId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteEvent(@PathVariable eventId: Long) {
-        adminDeleteEventUseCase.execute(eventId)
+    fun deleteEvent(@CurrentUserId userId: Long, @PathVariable eventId: Long) {
+        adminDeleteEventUseCase.execute(userId, eventId)
     }
 
     @Operation(summary = "이벤트 상태를 변경합니다. (어드민 전용, 밸리데이션 우회)")
     @PatchMapping("/{eventId}/status")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun updateEventStatus(
+        @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @RequestBody request: AdminUpdateEventStatusRequest,
     ) {
-        adminUpdateEventStatusUseCase.execute(eventId, request)
+        adminUpdateEventStatusUseCase.execute(userId, eventId, request)
     }
 
     @Operation(summary = "이벤트 정보를 수정합니다. (어드민 전용, OPEN 상태에서도 수정 가능)")
     @PatchMapping("/{eventId}")
     fun updateEvent(
+        @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @RequestBody request: AdminUpdateEventRequest,
     ): AdminEventResponse {
-        return adminUpdateEventUseCase.execute(eventId, request)
+        return adminUpdateEventUseCase.execute(userId, eventId, request)
     }
 
     @Operation(summary = "이벤트별 발급 티켓 목록을 조회합니다.")
     @GetMapping("/{eventId}/issued-tickets")
     fun getIssuedTickets(
+        @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @PageableDefault(size = 20) pageable: Pageable,
     ): Page<AdminIssuedTicketResponse> {
-        return adminGetIssuedTicketsUseCase.execute(eventId, pageable)
+        return adminGetIssuedTicketsUseCase.execute(userId, eventId, pageable)
     }
 
     @Operation(summary = "이벤트별 티켓 종류 목록을 조회합니다.")
     @GetMapping("/{eventId}/ticket-items")
-    fun getTicketItems(@PathVariable eventId: Long): List<AdminTicketItemResponse> {
-        return adminGetTicketItemsUseCase.execute(eventId)
+    fun getTicketItems(@CurrentUserId userId: Long, @PathVariable eventId: Long): List<AdminTicketItemResponse> {
+        return adminGetTicketItemsUseCase.execute(userId, eventId)
     }
 
     @Operation(summary = "이벤트별 티켓 종류 목록을 엑셀로 다운로드합니다.")
     @GetMapping("/{eventId}/ticket-items/export")
-    fun exportTicketItems(@PathVariable eventId: Long): ResponseEntity<ByteArray> {
-        val items = adminGetTicketItemsUseCase.execute(eventId)
+    fun exportTicketItems(@CurrentUserId userId: Long, @PathVariable eventId: Long): ResponseEntity<ByteArray> {
+        val items = adminGetTicketItemsUseCase.execute(userId, eventId)
         val bytes = adminExcelService.generateTicketItemsExcel(items)
         return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=ticket-items-${eventId}.xlsx")
@@ -139,8 +145,8 @@ class AdminEventController(
 
     @Operation(summary = "이벤트별 발급 티켓 목록을 엑셀로 다운로드합니다.")
     @GetMapping("/{eventId}/issued-tickets/export")
-    fun exportIssuedTickets(@PathVariable eventId: Long): ResponseEntity<ByteArray> {
-        val tickets = adminGetIssuedTicketsUseCase.executeAll(eventId)
+    fun exportIssuedTickets(@CurrentUserId userId: Long, @PathVariable eventId: Long): ResponseEntity<ByteArray> {
+        val tickets = adminGetIssuedTicketsUseCase.executeAll(userId, eventId)
         val bytes = adminExcelService.generateIssuedTicketsExcel(tickets)
         return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=issued-tickets-${eventId}.xlsx")
@@ -151,20 +157,22 @@ class AdminEventController(
     @Operation(summary = "티켓 종류를 수정합니다. (어드민 전용, 이벤트 상태 체크 없이 수정 가능)")
     @PatchMapping("/{eventId}/ticket-items/{ticketItemId}")
     fun updateTicketItem(
+        @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @PathVariable ticketItemId: Long,
         @RequestBody request: AdminUpdateTicketItemRequest,
     ): AdminTicketItemResponse {
-        return adminUpdateTicketItemUseCase.execute(eventId, ticketItemId, request)
+        return adminUpdateTicketItemUseCase.execute(userId, eventId, ticketItemId, request)
     }
 
     @Operation(summary = "티켓 재고를 조정합니다. (어드민 전용, delta 양수=증가 음수=감소)")
     @PostMapping("/{eventId}/ticket-items/{ticketItemId}/adjust-stock")
     fun adjustTicketStock(
+        @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @PathVariable ticketItemId: Long,
         @RequestBody request: AdminAdjustTicketStockRequest,
     ): AdminTicketItemResponse {
-        return adminAdjustTicketStockUseCase.execute(ticketItemId, request.delta)
+        return adminAdjustTicketStockUseCase.execute(userId, ticketItemId, request.delta)
     }
 }

@@ -3,6 +3,7 @@ package band.gosrock.admin.controller
 import band.gosrock.admin.model.dto.response.AdminCommentResponse
 import band.gosrock.admin.service.AdminDeleteCommentUseCase
 import band.gosrock.admin.service.AdminGetCommentsUseCase
+import band.gosrock.common.annotation.CurrentUserId
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -30,17 +31,18 @@ class AdminCommentController(
     @Operation(summary = "댓글 목록을 조회합니다.")
     @GetMapping
     fun getComments(
+        @CurrentUserId userId: Long,
         @RequestParam(required = false) keyword: String?,
         @RequestParam(required = false) eventId: Long?,
         @PageableDefault(size = 20) pageable: Pageable,
     ): Page<AdminCommentResponse> {
-        return adminGetCommentsUseCase.execute(keyword, eventId, pageable)
+        return adminGetCommentsUseCase.execute(userId, keyword, eventId, pageable)
     }
 
     @Operation(summary = "댓글을 삭제합니다. (소프트 삭제)")
     @DeleteMapping("/{commentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteComment(@PathVariable commentId: Long) {
-        adminDeleteCommentUseCase.execute(commentId)
+    fun deleteComment(@CurrentUserId userId: Long, @PathVariable commentId: Long) {
+        adminDeleteCommentUseCase.execute(userId, commentId)
     }
 }

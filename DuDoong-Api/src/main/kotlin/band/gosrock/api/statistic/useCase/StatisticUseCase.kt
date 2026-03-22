@@ -16,7 +16,7 @@ class StatisticUseCase(
     private val orderQueryRepository: OrderQueryRepository,
 ) {
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
-    fun execute(eventId: Long): DashBoardStatisticResponse =
+    fun execute(userId: Long, eventId: Long): DashBoardStatisticResponse =
         DashBoardStatisticResponse.of(
             orderQueryRepository.statistic(eventId),
             issuedTicketQueryRepository.statistic(eventId),

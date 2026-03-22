@@ -11,10 +11,12 @@ import org.springframework.transaction.annotation.Transactional
 class AdminUpdateEventStatusUseCase(
     private val eventAdaptor: EventAdaptor,
     private val eventRepository: EventRepository,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
     @Transactional
-    fun execute(eventId: Long, request: AdminUpdateEventStatusRequest) {
+    fun execute(userId: Long, eventId: Long, request: AdminUpdateEventStatusRequest) {
+        adminAuthValidator.validateAdminOrAbove(userId)
         val event = eventAdaptor.findById(eventId)
         // 어드민은 DELETED 제외 모든 상태로 직접 변경 가능 (밸리데이션 우회)
         require(request.status != EventStatus.DELETED) {

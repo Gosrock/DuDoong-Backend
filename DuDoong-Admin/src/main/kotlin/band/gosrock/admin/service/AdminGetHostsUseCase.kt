@@ -11,9 +11,11 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional(readOnly = true)
 class AdminGetHostsUseCase(
     private val hostAdaptor: HostAdaptor,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
-    fun execute(keyword: String?, pageable: Pageable): Page<AdminHostResponse> {
+    fun execute(userId: Long, keyword: String?, pageable: Pageable): Page<AdminHostResponse> {
+        adminAuthValidator.validateAdminOrAbove(userId)
         return hostAdaptor.findAllForAdmin(keyword, pageable)
             .map { AdminHostResponse.from(it) }
     }

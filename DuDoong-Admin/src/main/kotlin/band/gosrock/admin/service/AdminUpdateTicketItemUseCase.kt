@@ -10,10 +10,12 @@ import org.springframework.transaction.annotation.Transactional
 @UseCase
 class AdminUpdateTicketItemUseCase(
     private val ticketItemAdaptor: TicketItemAdaptor,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
     @Transactional
-    fun execute(eventId: Long, ticketItemId: Long, request: AdminUpdateTicketItemRequest): AdminTicketItemResponse {
+    fun execute(userId: Long, eventId: Long, ticketItemId: Long, request: AdminUpdateTicketItemRequest): AdminTicketItemResponse {
+        adminAuthValidator.validateAdminOrAbove(userId)
         val ticketItem = ticketItemAdaptor.queryTicketItem(ticketItemId)
         ticketItem.validateEventId(eventId)
 

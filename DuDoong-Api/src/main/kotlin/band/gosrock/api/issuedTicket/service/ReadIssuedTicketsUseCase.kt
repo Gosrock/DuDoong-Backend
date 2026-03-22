@@ -21,6 +21,7 @@ class ReadIssuedTicketsUseCase(
      */
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
     fun execute(
+        userId: Long,
         pageable: Pageable,
         eventId: Long,
         queryRequest: AdminIssuedTicketTableQueryRequest,

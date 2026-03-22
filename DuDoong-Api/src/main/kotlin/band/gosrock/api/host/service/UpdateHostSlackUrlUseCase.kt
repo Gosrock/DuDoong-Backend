@@ -23,7 +23,7 @@ class UpdateHostSlackUrlUseCase(
 ) {
     @Transactional
     @HostRolesAllowed(role = MANAGER, findHostFrom = HOST_ID)
-    fun execute(hostId: Long, updateHostSlackRequest: UpdateHostSlackRequest): HostDetailResponse {
+    fun execute(userId: Long, hostId: Long, updateHostSlackRequest: UpdateHostSlackRequest): HostDetailResponse {
         val host = hostAdaptor.findById(hostId)
         val slackUrl = updateHostSlackRequest.slackUrl
         hostService.validateDuplicatedSlackUrl(host, slackUrl)

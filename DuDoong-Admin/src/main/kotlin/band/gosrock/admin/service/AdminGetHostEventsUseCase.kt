@@ -13,9 +13,11 @@ import org.springframework.transaction.annotation.Transactional
 class AdminGetHostEventsUseCase(
     private val eventRepository: EventRepository,
     private val hostAdaptor: HostAdaptor,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
-    fun execute(hostId: Long, pageable: Pageable): Page<AdminEventResponse> {
+    fun execute(userId: Long, hostId: Long, pageable: Pageable): Page<AdminEventResponse> {
+        adminAuthValidator.validateAdminOrAbove(userId)
         val host = hostAdaptor.findById(hostId)
         val hostName = host.profile?.name
         return eventRepository.findAllByHostId(hostId, pageable)

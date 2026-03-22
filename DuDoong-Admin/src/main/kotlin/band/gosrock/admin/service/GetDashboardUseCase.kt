@@ -24,9 +24,11 @@ class GetDashboardUseCase(
     private val eventRepository: EventRepository,
     private val userAdaptor: UserAdaptor,
     private val hostAdaptor: HostAdaptor,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
-    fun execute(startDate: LocalDate? = null, endDate: LocalDate? = null): DashboardResponse {
+    fun execute(userId: Long, startDate: LocalDate? = null, endDate: LocalDate? = null): DashboardResponse {
+        adminAuthValidator.validateAdminOrAbove(userId)
         val totalUsers = userRepository.count()
         val activeEvents = eventRepository.countByStatusNative(EventStatus.OPEN.statusName)
 

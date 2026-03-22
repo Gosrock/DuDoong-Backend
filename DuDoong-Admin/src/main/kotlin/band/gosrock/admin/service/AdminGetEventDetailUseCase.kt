@@ -18,9 +18,11 @@ class AdminGetEventDetailUseCase(
     private val ticketItemRepository: TicketItemRepository,
     private val issuedTicketRepository: IssuedTicketRepository,
     private val orderRepository: OrderRepository,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
-    fun execute(eventId: Long): AdminEventResponse {
+    fun execute(userId: Long, eventId: Long): AdminEventResponse {
+        adminAuthValidator.validateAdminOrAbove(userId)
         val event = eventRepository.findByIdForAdmin(eventId)
             ?: throw EventNotFoundException.EXCEPTION
 

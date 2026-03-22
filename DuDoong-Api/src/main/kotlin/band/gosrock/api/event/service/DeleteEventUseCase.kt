@@ -16,7 +16,7 @@ class DeleteEventUseCase(
 ) {
     @Transactional
     @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID)
-    fun execute(eventId: Long): EventResponse {
+    fun execute(userId: Long, eventId: Long): EventResponse {
         val event = eventAdaptor.findById(eventId)
         return EventResponse.of(eventService.deleteEventSoft(event))
     }

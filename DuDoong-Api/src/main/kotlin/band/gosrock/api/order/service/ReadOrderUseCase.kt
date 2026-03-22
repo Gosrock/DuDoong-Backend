@@ -57,6 +57,7 @@ class ReadOrderUseCase(
 
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
     fun getEventOrders(
+        userId: Long,
         eventId: Long,
         adminOrderTableQueryRequest: AdminOrderTableQueryRequest,
         pageable: Pageable,
@@ -66,7 +67,7 @@ class ReadOrderUseCase(
     }
 
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
-    fun getEventOrderDetail(eventId: Long, orderUuid: String): OrderResponse {
+    fun getEventOrderDetail(userId: Long, eventId: Long, orderUuid: String): OrderResponse {
         val order = orderAdaptor.findByOrderUuid(orderUuid)
         return orderMapper.toOrderResponse(order)
     }

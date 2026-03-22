@@ -11,9 +11,11 @@ import org.springframework.transaction.annotation.Transactional
 class AdminGetHostMembersUseCase(
     private val hostAdaptor: HostAdaptor,
     private val userAdaptor: UserAdaptor,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
-    fun execute(hostId: Long): List<AdminHostMemberResponse> {
+    fun execute(userId: Long, hostId: Long): List<AdminHostMemberResponse> {
+        adminAuthValidator.validateAdminOrAbove(userId)
         val host = hostAdaptor.findById(hostId)
         val userIds = host.getHostUser_UserIds()
         val userMap = userAdaptor.queryUserListByIdIn(userIds)

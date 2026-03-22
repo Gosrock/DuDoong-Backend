@@ -5,6 +5,7 @@ import band.gosrock.api.issuedTicket.dto.request.AdminIssuedTicketTableQueryRequ
 import band.gosrock.api.issuedTicket.dto.response.IssuedTicketAdminTableElement
 import band.gosrock.api.issuedTicket.service.EntranceIssuedTicketUseCase
 import band.gosrock.api.issuedTicket.service.ReadIssuedTicketsUseCase
+import band.gosrock.common.annotation.CurrentUserId
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -29,19 +30,21 @@ class AdminIssuedTicketController(
     @Operation(summary = "[어드민 기능] 발급 티켓 리스트 가져오기 API 입니다.")
     @GetMapping
     fun getIssuedTickets(
+        @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @ParameterObject queryRequest: AdminIssuedTicketTableQueryRequest,
         @ParameterObject pageable: Pageable,
     ): PageResponse<IssuedTicketAdminTableElement> {
-        return readIssuedTicketsUseCase.execute(pageable, eventId, queryRequest)
+        return readIssuedTicketsUseCase.execute(userId, pageable, eventId, queryRequest)
     }
 
     @Operation(summary = "[어드민 기능] 발급 티켓 입장 처리 API 입니다.")
     @PatchMapping(value = ["/{uuid}"])
     fun patchIssuedTicketStatus(
+        @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @PathVariable uuid: String,
     ): IssuedTicketInfoVo {
-        return entranceIssuedTicketUseCase.execute(eventId, uuid)
+        return entranceIssuedTicketUseCase.execute(userId, eventId, uuid)
     }
 }

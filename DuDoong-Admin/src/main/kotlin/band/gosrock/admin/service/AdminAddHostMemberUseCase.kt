@@ -14,10 +14,12 @@ class AdminAddHostMemberUseCase(
     private val hostAdaptor: HostAdaptor,
     private val hostRepository: HostRepository,
     private val userAdaptor: UserAdaptor,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
     @Transactional
-    fun execute(hostId: Long, request: AdminAddHostMemberRequest): AdminHostMemberResponse {
+    fun execute(userId: Long, hostId: Long, request: AdminAddHostMemberRequest): AdminHostMemberResponse {
+        adminAuthValidator.validateAdminOrAbove(userId)
         val host = hostAdaptor.findById(hostId)
         val hostUser = HostUser(host, request.userId, request.role)
         host.addHostUsers(setOf(hostUser))

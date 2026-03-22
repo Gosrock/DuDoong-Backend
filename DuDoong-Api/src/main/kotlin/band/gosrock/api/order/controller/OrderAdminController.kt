@@ -11,6 +11,7 @@ import band.gosrock.api.order.service.CancelOrderUseCase
 import band.gosrock.api.order.service.ReadOrderUseCase
 import band.gosrock.api.order.service.RefuseOrderUseCase
 import band.gosrock.common.annotation.ApiErrorExceptionsExample
+import band.gosrock.common.annotation.CurrentUserId
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -36,39 +37,44 @@ class OrderAdminController(
     @Operation(summary = "어드민 목록 내 테이블 조회 OrderStage 는 꼭 보내주삼!")
     @GetMapping
     fun getEventOrders(
+        @CurrentUserId userId: Long,
         @ParameterObject @Valid adminOrderTableQueryRequest: AdminOrderTableQueryRequest,
         @ParameterObject pageable: Pageable,
         @PathVariable eventId: Long,
     ): PageResponse<OrderAdminTableElement> =
-        readOrderUseCase.getEventOrders(eventId, adminOrderTableQueryRequest, pageable)
+        readOrderUseCase.getEventOrders(userId, eventId, adminOrderTableQueryRequest, pageable)
 
     @Operation(summary = "결제 취소요청. 호스트 관리자가 결제를 취소 시킵니다.! (호스트 관리자용(관리자쪽에서 사용))")
     @ApiErrorExceptionsExample(CancelOrderExceptionDocs::class)
     @PostMapping("/{order_uuid}/cancel")
     fun cancelOrder(
+        @CurrentUserId userId: Long,
         @PathVariable("eventId") eventId: Long,
         @PathVariable("order_uuid") orderUuid: String,
-    ): OrderResponse = cancelOrderUseCase.execute(eventId, orderUuid)
+    ): OrderResponse = cancelOrderUseCase.execute(userId, eventId, orderUuid)
 
     @Operation(summary = "주문 승인하기 . 호스트 관리자가 티켓 주문을 승인합니다.")
     @ApiErrorExceptionsExample(ApproveOrderExceptionDocs::class)
     @PostMapping("/{order_uuid}/approve")
     fun confirmOrder(
+        @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @PathVariable("order_uuid") orderUuid: String,
-    ): OrderResponse = approveOrderUseCase.execute(eventId, orderUuid)
+    ): OrderResponse = approveOrderUseCase.execute(userId, eventId, orderUuid)
 
     @Operation(summary = "승인 주문 거절하기 . 호스트 관리자가 승인 대기중인 주문을 거절합니다.")
     @PostMapping("/{order_uuid}/refuse")
     fun refuseOrder(
+        @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @PathVariable("order_uuid") orderUuid: String,
-    ): OrderResponse = refuseOrderUseCase.execute(eventId, orderUuid)
+    ): OrderResponse = refuseOrderUseCase.execute(userId, eventId, orderUuid)
 
     @Operation(summary = "주문관리 리스트 페이지에서 주문 상세정보 조회할때")
     @GetMapping("/{order_uuid}")
     fun getEventOrderDetail(
+        @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @PathVariable("order_uuid") orderUuid: String,
-    ): OrderResponse = readOrderUseCase.getEventOrderDetail(eventId, orderUuid)
+    ): OrderResponse = readOrderUseCase.getEventOrderDetail(userId, eventId, orderUuid)
 }

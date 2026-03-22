@@ -9,10 +9,12 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional(readOnly = true)
 class AdminGetUserDetailUseCase(
     private val userAdaptor: UserAdaptor,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
-    fun execute(userId: Long): AdminUserDetailResponse {
-        val user = userAdaptor.queryUser(userId)
+    fun execute(userId: Long, targetUserId: Long): AdminUserDetailResponse {
+        adminAuthValidator.validateAdminOrAbove(userId)
+        val user = userAdaptor.queryUser(targetUserId)
         return AdminUserDetailResponse.from(user)
     }
 }

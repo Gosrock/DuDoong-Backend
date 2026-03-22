@@ -10,10 +10,12 @@ import org.springframework.transaction.annotation.Transactional
 class AdminDeleteEventUseCase(
     private val eventAdaptor: EventAdaptor,
     private val eventRepository: EventRepository,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
     @Transactional
-    fun execute(eventId: Long) {
+    fun execute(userId: Long, eventId: Long) {
+        adminAuthValidator.validateAdminOrAbove(userId)
         val event = eventAdaptor.findById(eventId)
         // 어드민은 밸리데이션 없이 직접 DELETED 상태로 변경
         event.adminUpdateStatus(EventStatus.DELETED)

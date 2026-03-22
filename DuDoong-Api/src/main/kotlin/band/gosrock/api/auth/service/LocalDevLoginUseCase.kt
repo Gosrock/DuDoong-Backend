@@ -16,7 +16,7 @@ class LocalDevLoginUseCase(
     fun execute(registerRequest: RegisterRequest): TokenAndUserResponse {
         val oauthInfo = OauthInfo.builder()
             .provider(OauthProvider.KAKAO)
-            .oid("LOCAL_DEV_${registerRequest.email ?: "anonymous"}")
+            .oid(registerRequest.email ?: "anonymous")
             .build()
 
         val profile = registerRequest.toProfile()

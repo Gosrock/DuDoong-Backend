@@ -87,46 +87,49 @@ class EventController(
 
     @Operation(summary = "공연 체크리스트 가져오기")
     @GetMapping("/{eventId}/checklist")
-    fun getEventChecklistById(@PathVariable eventId: Long): EventChecklistResponse {
-        return readEventChecklistUseCase.execute(eventId)
+    fun getEventChecklistById(@CurrentUserId userId: Long, @PathVariable eventId: Long): EventChecklistResponse {
+        return readEventChecklistUseCase.execute(userId, eventId)
     }
 
     @Operation(summary = "공연 기본 정보를 등록하여, 새로운 이벤트(공연)를 생성합니다")
     @PatchMapping("/{eventId}/basic")
     fun updateEventBasic(
+        @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @RequestBody @Valid updateEventBasicRequest: UpdateEventBasicRequest
     ): EventResponse {
-        return updateEventBasicUseCase.execute(eventId, updateEventBasicRequest)
+        return updateEventBasicUseCase.execute(userId, eventId, updateEventBasicRequest)
     }
 
     @Operation(summary = "공연 상세 정보를 등록합니다.")
     @PatchMapping("/{eventId}/details")
     fun updateEventDetail(
+        @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @RequestBody @Valid updateEventDetailRequest: UpdateEventDetailRequest
     ): EventResponse {
-        return updateEventDetailUseCase.execute(eventId, updateEventDetailRequest)
+        return updateEventDetailUseCase.execute(userId, eventId, updateEventDetailRequest)
     }
 
     @Operation(summary = "공연을 오픈 상태로 변경합니다. 모든 체크리스트를 달성해야 합니다.")
     @PatchMapping("/{eventId}/open")
-    fun updateEventOpen(@PathVariable eventId: Long): EventResponse {
-        return openEventUseCase.execute(eventId)
+    fun updateEventOpen(@CurrentUserId userId: Long, @PathVariable eventId: Long): EventResponse {
+        return openEventUseCase.execute(userId, eventId)
     }
 
     @Operation(summary = "공연 상태를 변경합니다. (OPEN 제외)")
     @PatchMapping("/{eventId}/status")
     fun updateEventStatus(
+        @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @RequestBody @Valid updateEventDetailRequest: UpdateEventStatusRequest
     ): EventResponse {
-        return updateEventStatusUseCase.execute(eventId, updateEventDetailRequest)
+        return updateEventStatusUseCase.execute(userId, eventId, updateEventDetailRequest)
     }
 
     @Operation(summary = "공연을 삭제합니다. 조건에 맞지 않을 경우 삭제할 수 없습니다.")
     @PatchMapping("/{eventId}/delete")
-    fun deleteEvent(@PathVariable eventId: Long): EventResponse {
-        return deleteEventUseCase.execute(eventId)
+    fun deleteEvent(@CurrentUserId userId: Long, @PathVariable eventId: Long): EventResponse {
+        return deleteEventUseCase.execute(userId, eventId)
     }
 }

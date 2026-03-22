@@ -9,9 +9,11 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional(readOnly = true)
 class AdminGetHostDetailUseCase(
     private val hostAdaptor: HostAdaptor,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
-    fun execute(hostId: Long): AdminHostDetailResponse {
+    fun execute(userId: Long, hostId: Long): AdminHostDetailResponse {
+        adminAuthValidator.validateAdminOrAbove(userId)
         val host = hostAdaptor.findById(hostId)
         return AdminHostDetailResponse.from(host)
     }

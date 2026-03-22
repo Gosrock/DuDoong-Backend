@@ -19,7 +19,7 @@ class InviteHostUseCase(
     private val hostMapper: HostMapper,
 ) {
     @HostRolesAllowed(role = MANAGER, findHostFrom = HOST_ID)
-    fun execute(hostId: Long, inviteHostRequest: InviteHostRequest): HostDetailResponse {
+    fun execute(userId: Long, hostId: Long, inviteHostRequest: InviteHostRequest): HostDetailResponse {
         val host = hostAdaptor.findById(hostId)
         val invitedUser = userAdaptor.queryUserByEmail(inviteHostRequest.email)
         val invitedUserId = invitedUser.id!!

@@ -9,9 +9,11 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional(readOnly = true)
 class AdminGetTicketItemsUseCase(
     private val ticketItemAdaptor: TicketItemAdaptor,
+    private val adminAuthValidator: AdminAuthValidator,
 ) {
 
-    fun execute(eventId: Long): List<AdminTicketItemResponse> {
+    fun execute(userId: Long, eventId: Long): List<AdminTicketItemResponse> {
+        adminAuthValidator.validateAdminOrAbove(userId)
         return ticketItemAdaptor.findAllByEventId(eventId)
             .map { AdminTicketItemResponse.from(it) }
     }

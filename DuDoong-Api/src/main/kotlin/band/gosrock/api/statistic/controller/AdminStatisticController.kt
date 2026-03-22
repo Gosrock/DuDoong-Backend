@@ -2,6 +2,7 @@ package band.gosrock.api.statistic.controller
 
 import band.gosrock.api.statistic.dto.DashBoardStatisticResponse
 import band.gosrock.api.statistic.useCase.StatisticUseCase
+import band.gosrock.common.annotation.CurrentUserId
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -19,6 +20,6 @@ class AdminStatisticController(
 ) {
     @Operation(summary = "대시보드 통계를 불러옵니다.")
     @GetMapping
-    fun getStatistic(@PathVariable eventId: Long): DashBoardStatisticResponse =
-        statisticUseCase.execute(eventId)
+    fun getStatistic(@CurrentUserId userId: Long, @PathVariable eventId: Long): DashBoardStatisticResponse =
+        statisticUseCase.execute(userId, eventId)
 }

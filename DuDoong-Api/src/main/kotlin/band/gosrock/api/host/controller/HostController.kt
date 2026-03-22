@@ -78,19 +78,21 @@ class HostController(
     @Operation(summary = "해당 호스트에 가입하지 않은 유저를 이메일로 검색합니다.")
     @GetMapping("/{hostId}/invite/users")
     fun getInviteUserListByEmail(
+        @CurrentUserId userId: Long,
         @PathVariable hostId: Long,
         @RequestParam(value = "email") @Email email: String,
     ): UserProfileVo {
-        return readInviteUsersUseCase.execute(hostId, email)
+        return readInviteUsersUseCase.execute(userId, hostId, email)
     }
 
     @Operation(summary = "해당 호스트가 관리중인 이벤트 리스트를 가져옵니다.")
     @GetMapping("/{hostId}/events")
     fun getHostEventsById(
+        @CurrentUserId userId: Long,
         @PathVariable hostId: Long,
         @ParameterObject @PageableDefault(size = 10) pageable: Pageable,
     ): PageResponse<HostEventProfileResponse> {
-        return readHostEventsUseCase.execute(hostId, pageable)
+        return readHostEventsUseCase.execute(userId, hostId, pageable)
     }
 
     @Operation(summary = "호스트 간편 생성. 호스트를 생성한 유저 자신은 마스터 호스트가 됩니다.")
@@ -114,36 +116,40 @@ class HostController(
     @Operation(summary = "다른 유저를 호스트 유저로 초대합니다.")
     @PostMapping("/{hostId}/invite")
     fun inviteHost(
+        @CurrentUserId userId: Long,
         @PathVariable hostId: Long,
         @RequestBody @Valid inviteHostRequest: InviteHostRequest,
     ): HostDetailResponse {
-        return inviteHostUseCase.execute(hostId, inviteHostRequest)
+        return inviteHostUseCase.execute(userId, hostId, inviteHostRequest)
     }
 
     @Operation(summary = "호스트 유저의 권한을 변경합니다. 매니저 이상만 가능합니다.")
     @PatchMapping("/{hostId}/role")
     fun patchHostUserRole(
+        @CurrentUserId userId: Long,
         @PathVariable hostId: Long,
         @RequestBody @Valid updateHostUserRoleRequest: UpdateHostUserRoleRequest,
     ): HostDetailResponse {
-        return updateHostUserRoleUseCase.execute(hostId, updateHostUserRoleRequest)
+        return updateHostUserRoleUseCase.execute(userId, hostId, updateHostUserRoleRequest)
     }
 
     @Operation(summary = "호스트 정보를 변경합니다. 매니저 이상만 가능합니다.")
     @PatchMapping("/{hostId}/profile")
     fun patchHostById(
+        @CurrentUserId userId: Long,
         @PathVariable hostId: Long,
         @RequestBody @Valid updateHostRequest: UpdateHostRequest,
     ): HostDetailResponse {
-        return updateHostProfileUseCase.execute(hostId, updateHostRequest)
+        return updateHostProfileUseCase.execute(userId, hostId, updateHostRequest)
     }
 
     @Operation(summary = "호스트 슬랙 알람 URL 을 변경합니다. 매니저 이상만 가능합니다.")
     @PatchMapping("/{hostId}/slack")
     fun patchHostSlackUrlById(
+        @CurrentUserId userId: Long,
         @PathVariable hostId: Long,
         @RequestBody @Valid updateHostSlackRequest: UpdateHostSlackRequest,
     ): HostDetailResponse {
-        return updateHostSlackUrlUseCase.execute(hostId, updateHostSlackRequest)
+        return updateHostSlackUrlUseCase.execute(userId, hostId, updateHostSlackRequest)
     }
 }

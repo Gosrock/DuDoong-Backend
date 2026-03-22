@@ -14,7 +14,7 @@ class ReadInviteUsersUseCase(
 ) {
     @Transactional(readOnly = true)
     @HostRolesAllowed(role = GUEST, findHostFrom = HOST_ID)
-    fun execute(hostId: Long, email: String): UserProfileVo {
+    fun execute(userId: Long, hostId: Long, email: String): UserProfileVo {
         return hostMapper.toHostInviteUserList(hostId, email)
     }
 }

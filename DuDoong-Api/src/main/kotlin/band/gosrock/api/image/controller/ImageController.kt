@@ -2,6 +2,7 @@ package band.gosrock.api.image.controller
 
 import band.gosrock.api.image.dto.ImageUrlResponse
 import band.gosrock.api.image.service.GetImageUploadUrlUseCase
+import band.gosrock.common.annotation.CurrentUserId
 import band.gosrock.infrastructure.config.s3.ImageFileExtension
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -22,14 +23,16 @@ class ImageController(
     @Operation(summary = "이벤트 관련 이미지 업로드 url 요청할수 있는 api 입니다.")
     @PostMapping(value = ["/events/{eventId}/images"])
     fun getIssuedTickets(
+        @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @RequestParam imageFileExtension: ImageFileExtension,
-    ): ImageUrlResponse = getImageUploadUrlUseCase.forEvent(eventId, imageFileExtension)
+    ): ImageUrlResponse = getImageUploadUrlUseCase.forEvent(userId, eventId, imageFileExtension)
 
     @Operation(summary = "호스트 관련 이미지 업로드 url 요청할수 있는 api 입니다.")
     @PostMapping(value = ["/hosts/{hostId}/images"])
     fun patchIssuedTicketStatus(
+        @CurrentUserId userId: Long,
         @PathVariable hostId: Long,
         @RequestParam imageFileExtension: ImageFileExtension,
-    ): ImageUrlResponse = getImageUploadUrlUseCase.forHost(hostId, imageFileExtension)
+    ): ImageUrlResponse = getImageUploadUrlUseCase.forHost(userId, hostId, imageFileExtension)
 }

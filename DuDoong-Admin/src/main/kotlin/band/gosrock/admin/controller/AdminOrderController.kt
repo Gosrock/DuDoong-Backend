@@ -5,6 +5,7 @@ import band.gosrock.admin.service.AdminCancelOrderUseCase
 import band.gosrock.admin.service.AdminExcelService
 import band.gosrock.admin.service.AdminGetOrderDetailUseCase
 import band.gosrock.admin.service.AdminGetOrdersUseCase
+import band.gosrock.common.annotation.CurrentUserId
 import band.gosrock.domain.domains.order.domain.OrderStatus
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -36,11 +37,12 @@ class AdminOrderController(
     @Operation(summary = "주문 목록을 엑셀로 다운로드합니다.")
     @GetMapping("/export")
     fun exportOrders(
+        @CurrentUserId userId: Long,
         @RequestParam(required = false) keyword: String?,
         @RequestParam(required = false) status: OrderStatus?,
         @RequestParam(required = false) eventId: Long?,
     ): ResponseEntity<ByteArray> {
-        val orders = adminGetOrdersUseCase.executeAll(keyword, status, eventId)
+        val orders = adminGetOrdersUseCase.executeAll(userId, keyword, status, eventId)
         val bytes = adminExcelService.generateOrdersExcel(orders)
         return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=orders.xlsx")
@@ -51,23 +53,24 @@ class AdminOrderController(
     @Operation(summary = "주문 목록을 조회합니다.")
     @GetMapping
     fun getOrders(
+        @CurrentUserId userId: Long,
         @RequestParam(required = false) keyword: String?,
         @RequestParam(required = false) status: OrderStatus?,
         @RequestParam(required = false) eventId: Long?,
         @PageableDefault(size = 20) pageable: Pageable,
     ): Page<AdminOrderResponse> {
-        return adminGetOrdersUseCase.execute(keyword, status, eventId, pageable)
+        return adminGetOrdersUseCase.execute(userId, keyword, status, eventId, pageable)
     }
 
     @Operation(summary = "주문 상세 정보를 조회합니다.")
     @GetMapping("/{orderUuid}")
-    fun getOrderDetail(@PathVariable orderUuid: String): AdminOrderResponse {
-        return adminGetOrderDetailUseCase.execute(orderUuid)
+    fun getOrderDetail(@CurrentUserId userId: Long, @PathVariable orderUuid: String): AdminOrderResponse {
+        return adminGetOrderDetailUseCase.execute(userId, orderUuid)
     }
 
     @Operation(summary = "주문을 취소합니다.")
     @PostMapping("/{orderUuid}/cancel")
-    fun cancelOrder(@PathVariable orderUuid: String): AdminOrderResponse {
-        return adminCancelOrderUseCase.execute(orderUuid)
+    fun cancelOrder(@CurrentUserId userId: Long, @PathVariable orderUuid: String): AdminOrderResponse {
+        return adminCancelOrderUseCase.execute(userId, orderUuid)
     }
 }

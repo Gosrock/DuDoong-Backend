@@ -14,6 +14,7 @@ import band.gosrock.api.ticketItem.service.GetEventTicketItemsUseCase
 import band.gosrock.api.ticketItem.service.GetTicketOptionsUseCase
 import band.gosrock.api.ticketItem.service.UnapplyTicketOptionUseCase
 import band.gosrock.api.ticketItem.service.CreateTicketItemUseCase
+import band.gosrock.common.annotation.CurrentUserId
 import band.gosrock.common.annotation.DisableSwaggerSecurity
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -47,25 +48,28 @@ class TicketItemController(
     )
     @PostMapping
     fun createTicketItem(
+        @CurrentUserId userId: Long,
         @RequestBody @Valid createTicketItemRequest: CreateTicketItemRequest,
         @PathVariable eventId: Long,
-    ): TicketItemResponse = createTicketItemUseCase.execute(createTicketItemRequest, eventId)
+    ): TicketItemResponse = createTicketItemUseCase.execute(userId, createTicketItemRequest, eventId)
 
     @Operation(summary = "옵션을 티켓상품에 적용합니다.")
     @PatchMapping("/{ticketItemId}/option")
     fun applyTicketOption(
+        @CurrentUserId userId: Long,
         @RequestBody @Valid applyTicketOptionRequest: ApplyTicketOptionRequest,
         @PathVariable eventId: Long,
         @PathVariable ticketItemId: Long,
-    ): GetTicketItemOptionsResponse = applyTicketOptionUseCase.execute(applyTicketOptionRequest, eventId, ticketItemId)
+    ): GetTicketItemOptionsResponse = applyTicketOptionUseCase.execute(userId, applyTicketOptionRequest, eventId, ticketItemId)
 
     @Operation(summary = "옵션을 티켓상품에 적용 취소합니다.")
     @PatchMapping("/{ticketItemId}/option/cancel")
     fun unapplyTicketOption(
+        @CurrentUserId userId: Long,
         @RequestBody @Valid unapplyTicketOptionRequest: UnapplyTicketOptionRequest,
         @PathVariable eventId: Long,
         @PathVariable ticketItemId: Long,
-    ): GetTicketItemOptionsResponse = unapplyTicketOptionUseCase.execute(unapplyTicketOptionRequest, eventId, ticketItemId)
+    ): GetTicketItemOptionsResponse = unapplyTicketOptionUseCase.execute(userId, unapplyTicketOptionRequest, eventId, ticketItemId)
 
     @Operation(summary = "해당 이벤트의 티켓상품을 모두 조회합니다.")
     @DisableSwaggerSecurity
@@ -75,8 +79,8 @@ class TicketItemController(
 
     @Operation(summary = "해당 이벤트의 티켓상품을 모두 조회합니다. (어드민용)", description = "재고 정보가 무조건 공개됩니다.")
     @GetMapping("/admin")
-    fun getEventTicketItemsForAdmin(@PathVariable eventId: Long): GetEventTicketItemsResponse =
-        getEventTicketItemsUseCase.executeForAdmin(eventId)
+    fun getEventTicketItemsForAdmin(@CurrentUserId userId: Long, @PathVariable eventId: Long): GetEventTicketItemsResponse =
+        getEventTicketItemsUseCase.executeForAdmin(userId, eventId)
 
     @Operation(summary = "해당 티켓상품의 옵션을 모두 조회합니다.")
     @GetMapping("/{ticketItemId}/options")
@@ -93,7 +97,8 @@ class TicketItemController(
     @Operation(summary = "해당 티켓상품을 삭제합니다.")
     @PatchMapping("/{ticketItemId}")
     fun deleteTicketItem(
+        @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @PathVariable ticketItemId: Long,
-    ): GetEventTicketItemsResponse = deleteTicketItemUseCase.execute(eventId, ticketItemId)
+    ): GetEventTicketItemsResponse = deleteTicketItemUseCase.execute(userId, eventId, ticketItemId)
 }
