@@ -9,6 +9,7 @@ import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
@@ -24,6 +25,7 @@ class DoneOrderEventAlimTalkHandler(
     private val log = LoggerFactory.getLogger(DoneOrderEventAlimTalkHandler::class.java)
 
     @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     @TransactionalEventListener(classes = [DoneOrderEvent::class], phase = TransactionPhase.AFTER_COMMIT)
     fun handleDoneOrderEvent(doneOrderEvent: DoneOrderEvent) {
         try {
