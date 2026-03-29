@@ -90,7 +90,7 @@ class EventMapper(
     }
 
     fun toEventResponseSliceByKeyword(keyword: String?, pageable: Pageable): Slice<EventResponse> {
-        val events = eventAdaptor.querySliceEventsByKeyword(keyword!!, pageable)
+        val events = eventAdaptor.querySliceEventsByKeyword(keyword, pageable)
         return events.map { EventResponse.of(it) }
     }
 

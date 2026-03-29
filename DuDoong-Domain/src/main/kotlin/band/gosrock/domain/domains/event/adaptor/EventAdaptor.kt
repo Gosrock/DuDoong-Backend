@@ -28,7 +28,7 @@ class EventAdaptor(private val eventRepository: EventRepository) {
     fun querySliceEventsByStatus(status: EventStatus, pageable: Pageable): Slice<Event> =
         eventRepository.querySliceEventsByStatus(status, pageable)
 
-    fun querySliceEventsByKeyword(keyword: String, pageable: Pageable): Slice<Event> =
+    fun querySliceEventsByKeyword(keyword: String?, pageable: Pageable): Slice<Event> =
         eventRepository.querySliceEventsByKeyword(keyword, pageable)
 
     fun queryEventsByEndAtBeforeAndStatusOpen(time: LocalDateTime): List<Event> =

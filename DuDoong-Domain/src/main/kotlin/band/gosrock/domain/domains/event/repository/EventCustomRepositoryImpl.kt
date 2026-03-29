@@ -41,7 +41,7 @@ class EventCustomRepositoryImpl(
         return SliceUtil.valueOf(events, pageable)
     }
 
-    override fun querySliceEventsByKeyword(keyword: String, pageable: Pageable): Slice<Event> {
+    override fun querySliceEventsByKeyword(keyword: String?, pageable: Pageable): Slice<Event> {
         val openEvents = queryFactory
             .selectFrom(event)
             .where(eqStatusOpen().and(nameContains(keyword)))
@@ -60,7 +60,7 @@ class EventCustomRepositoryImpl(
     override fun queryEventsByEndAtBeforeAndStatusOpen(time: LocalDateTime): List<Event> =
         queryFactory.selectFrom(event).where(endAtBefore(time), statusEq(OPEN)).fetch()
 
-    private fun queryClosedEventsByKeywordAndSize(keyword: String, pageable: Pageable, size: Long): List<Event> {
+    private fun queryClosedEventsByKeywordAndSize(keyword: String?, pageable: Pageable, size: Long): List<Event> {
         val totalOpenEventsSize = queryCountByKeywordAndStatus(keyword, OPEN)
         val closedEventsOffset = maxOf(pageable.offset - totalOpenEventsSize, 0L)
         return queryFactory
@@ -72,7 +72,7 @@ class EventCustomRepositoryImpl(
             .fetch()
     }
 
-    private fun queryCountByKeywordAndStatus(keyword: String, status: EventStatus): Long =
+    private fun queryCountByKeywordAndStatus(keyword: String?, status: EventStatus): Long =
         queryFactory
             .from(event)
             .where(statusEq(status).and(nameContains(keyword)))
