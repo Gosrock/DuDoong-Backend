@@ -3,6 +3,7 @@ package band.gosrock.api.config
 import band.gosrock.api.config.security.CurrentUserIdResolver
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.method.support.HandlerMethodArgumentResolver
+import org.springframework.web.servlet.config.annotation.PathMatchConfigurer
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 @Configuration
@@ -12,5 +13,9 @@ class WebMvcConfig(
 
     override fun addArgumentResolvers(resolvers: MutableList<HandlerMethodArgumentResolver>) {
         resolvers.add(currentUserIdResolver)
+    }
+
+    override fun configurePathMatch(configurer: PathMatchConfigurer) {
+        configurer.setUseTrailingSlashMatch(true)
     }
 }
