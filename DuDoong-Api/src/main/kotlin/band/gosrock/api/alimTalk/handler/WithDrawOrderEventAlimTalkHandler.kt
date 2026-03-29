@@ -8,6 +8,7 @@ import band.gosrock.domain.domains.host.adaptor.HostAdaptor
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
@@ -23,6 +24,7 @@ class WithDrawOrderEventAlimTalkHandler(
     private val log = org.slf4j.LoggerFactory.getLogger(WithDrawOrderEventAlimTalkHandler::class.java)
 
     @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     @TransactionalEventListener(classes = [WithDrawOrderEvent::class], phase = TransactionPhase.AFTER_COMMIT)
     fun handleWithDrawOrderEvent(withDrawOrderEvent: WithDrawOrderEvent) {
         try {

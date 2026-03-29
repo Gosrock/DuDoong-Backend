@@ -31,7 +31,7 @@ class OrderLineItem() : BaseTimeEntity() {
     var quantity: Long? = null
         protected set
 
-    @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
     @JoinColumn(name = "order_line_item_id")
     var orderOptionAnswers: MutableList<OrderOptionAnswer> = mutableListOf()
         protected set
