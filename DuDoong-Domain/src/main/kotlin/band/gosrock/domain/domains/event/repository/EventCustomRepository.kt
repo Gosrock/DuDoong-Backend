@@ -11,7 +11,7 @@ interface EventCustomRepository {
 
     fun querySliceEventsByStatus(status: EventStatus, pageable: Pageable): Slice<Event>
 
-    fun querySliceEventsByKeyword(keyword: String, pageable: Pageable): Slice<Event>
+    fun querySliceEventsByKeyword(keyword: String?, pageable: Pageable): Slice<Event>
 
     fun queryEventsByEndAtBeforeAndStatusOpen(time: LocalDateTime): List<Event>
 }
