@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
 
 /** v2 티켓 API 통합 테스트 (#707): T-1 ~ T-6 + v1 호환 */
@@ -467,6 +468,30 @@ class V2TicketItemControllerTest : V2TicketApiTestSupport() {
             assertEquals("SUSPENDED", after.at("/saleState").asText())
             assertEquals(true, after.at("/isSold").asBoolean())
             assertEquals(false, after.at("/hasPendingOrders").asBoolean())
+        }
+
+        @Test
+        fun `승인 대기 주문이 있으면 v2 삭제 400, 거절로 대기 주문이 없어지면 삭제된다 (v1 삭제 규칙은 그대로)`() {
+            val team = Team()
+            val ticket = createTicket(team.manager, team.eventId, dudoongBody(supplyCount = 10))
+            setEventStatus(team.eventId, EventStatus.OPEN)
+            val orderUuid = v1Order(newUser("구매자"), team.eventId, ticket)
+            deleteTicket(team.manager, team.eventId, ticket).andExpect {
+                status { isBadRequest() }
+                jsonPath("$.code") { value("Ticket_Item_400_7") }
+            }
+            assertEquals(TicketItemStatus.VALID, ticketItemRepository.findById(ticket).get().ticketItemStatus)
+            // v1 삭제는 재고 감소만 보므로 그대로 동작 (v1 규칙 불변) — 다른 티켓으로 확인
+            val v1Target = createTicket(team.manager, team.eventId, dudoongBody(name = "v1삭제", supplyCount = 10))
+            v1Order(newUser("구매자2"), team.eventId, v1Target)
+            mockMvc.patch("/api/v1/events/${team.eventId}/ticketItems/$v1Target") { with(auth(team.master)) }
+                .andExpect { status { isOk() } }
+            assertEquals(TicketItemStatus.DELETED, ticketItemRepository.findById(v1Target).get().ticketItemStatus)
+
+            mockMvc.post("/api/v1/events/${team.eventId}/orders/$orderUuid/refuse") { with(auth(team.master)) }
+                .andExpect { status { isOk() } }
+            deleteTicket(team.manager, team.eventId, ticket).andExpect { status { isOk() } }
+            assertEquals(TicketItemStatus.DELETED, ticketItemRepository.findById(ticket).get().ticketItemStatus)
         }
 
         @Test

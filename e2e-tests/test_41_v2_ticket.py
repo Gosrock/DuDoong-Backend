@@ -323,6 +323,11 @@ def test_07b_pending_approve_lock(base_url, s):
     assert_status(resp, 400)
     assert _code(resp) == "Item_Option_Group_400_2"
     assert _options(base_url, s)[option_id]["isLocked"] is True
+    # 승인 대기 주문이 있으면 v2 삭제도 불가
+    resp = requests.delete(_ticket_url(base_url, s, ticket_id), headers=_h(s, "manager"))
+    assert_status(resp, 400)
+    assert _code(resp) == "Ticket_Item_400_7"
+    assert ticket_id in _tickets(base_url, s)
     # 판매 중단 후에도 기존 주문 승인은 된다
     assert_status(requests.post(_ticket_url(base_url, s, ticket_id, "/suspend"), headers=_h(s, "manager")), 200)
     assert_status(requests.post(f"{base_url}/v1/events/{s.event_id}/orders/{order}/approve", headers=_h(s, "master")), 200)

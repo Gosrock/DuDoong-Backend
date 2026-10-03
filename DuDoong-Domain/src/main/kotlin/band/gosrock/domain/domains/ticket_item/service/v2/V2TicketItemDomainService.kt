@@ -20,6 +20,7 @@ import band.gosrock.domain.domains.ticket_item.exception.EmptyAccountInfoExcepti
 import band.gosrock.domain.domains.ticket_item.exception.ForbiddenOptionChangeException
 import band.gosrock.domain.domains.ticket_item.exception.ForbiddenOptionPriceException
 import band.gosrock.domain.domains.ticket_item.exception.ForbiddenSoldTicketItemChangeException
+import band.gosrock.domain.domains.ticket_item.exception.ForbiddenTicketItemDeleteException
 import band.gosrock.domain.domains.ticket_item.exception.InvalidOptionGroupException
 import band.gosrock.domain.domains.ticket_item.exception.InvalidTicketItemFieldException
 import band.gosrock.domain.domains.ticket_item.exception.InvalidTicketPriceException
@@ -159,11 +160,18 @@ class V2TicketItemDomainService(
         ticketItemAdaptor.save(item)
     }
 
-    /** 삭제: 판매 전만 (v1 [TicketItemService.softDeleteTicketItem] 규칙·락 그대로) */
+    /**
+     * 삭제: 잠기지 않은 티켓만 (재고 감소 OR 승인 대기 주문이면 Ticket_Item_400_7, v1 '삭제 불가' 코드 재사용).
+     * 재고 감소 검사는 v1 과 같은 [TicketItem.softDeleteTicketItem]. 승인 대기 검사는 v2 에만 있다 (v1 삭제 규칙 불변).
+     * 승인 처리(재고 감소)와 같은 락 안에서 판정·삭제한다
+     */
+    @RedissonLock(LockName = TICKET_LOCK, identifier = "ticketItemId")
     fun deleteTicketItem(eventId: Long, ticketItemId: Long) {
         v2EventDomainService.validateEditable(eventAdaptor.findById(eventId))
-        queryTicketItem(eventId, ticketItemId)
-        ticketItemService.softDeleteTicketItem(eventId, ticketItemId)
+        val item = queryTicketItem(eventId, ticketItemId)
+        if (hasPendingOrders(ticketItemId)) throw ForbiddenTicketItemDeleteException.EXCEPTION
+        item.softDeleteTicketItem()
+        ticketItemAdaptor.save(item)
     }
 
     /** 판매 중단 / 재개. 이미 그 상태면 아무것도 하지 않는다 (멱등) */

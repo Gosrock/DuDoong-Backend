@@ -12,7 +12,7 @@ class V2DeleteTicketItemUseCase(
     private val v2TicketItemDomainService: V2TicketItemDomainService,
     private val readTicketItemsUseCase: V2ReadTicketItemsUseCase,
 ) {
-    /** 판매 전만 (v1 규칙, Ticket_Item_400_7). 남은 티켓 목록을 돌려준다 */
+    /** 잠기지 않은 티켓만 (재고 감소 또는 승인 대기 주문이면 Ticket_Item_400_7). 남은 티켓 목록을 돌려준다 */
     @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID, applyTransaction = false)
     fun execute(userId: Long, eventId: Long, ticketItemId: Long): List<V2TicketItemManageResponse> {
         v2TicketItemDomainService.deleteTicketItem(eventId, ticketItemId)

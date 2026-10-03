@@ -60,7 +60,7 @@ class V2TicketItemController(
         @RequestBody @Valid request: V2TicketItemRequest,
     ): V2TicketItemManageResponse = updateTicketItemUseCase.execute(userId, eventId, ticketItemId, request)
 
-    @Operation(summary = "[T-4] 티켓 삭제 (매니저 이상). 판매 전만. 남은 티켓 목록 반환")
+    @Operation(summary = "[T-4] 티켓 삭제 (매니저 이상). 재고 감소·승인 대기 주문이 없을 때만. 남은 티켓 목록 반환")
     @DeleteMapping("/{ticketItemId}")
     fun deleteTicketItem(
         @CurrentUserId userId: Long,

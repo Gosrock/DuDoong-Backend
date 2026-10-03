@@ -53,7 +53,7 @@ enum class TicketItemErrorCode(
     @ExplainError("이미 재고가 감소되어 옵션 변경이 불가능할 경우 발생하는 오류입니다.")
     FORBIDDEN_OPTION_CHANGE(BAD_REQUEST, "Item_Option_Group_400_2", "옵션 변경이 불가능한 상태입니다."),
 
-    @ExplainError("이미 재고가 감소되어 티켓상품 삭제가 불가능할 경우 발생하는 오류입니다.")
+    @ExplainError("이미 재고가 감소되어 티켓상품 삭제가 불가능할 경우 발생하는 오류입니다. v2 삭제는 승인 대기 주문이 있어도 발생합니다.")
     FORBIDDEN_TICKET_ITEM_DELETE(BAD_REQUEST, "Ticket_Item_400_7", "티켓상품 삭제가 불가능한 상태입니다."),
 
     @ExplainError("이미 적용되어 옵션그룹 삭제가 불가능할 경우 발생하는 오류입니다.")
