@@ -37,11 +37,13 @@ import jakarta.persistence.Table
 /**
  * (event_id, user_id): v2 공연별 발급 티켓 목록·통계, 셀프 체크인 본인 티켓 조회 (#712, V004)
  * uuid unique: QR 스캔(v1/v2 입장 처리)·티켓 상세의 단건 조회 (#712, V004)
+ * order_uuid: 주문의 발급 티켓 조회 (v1 승인·취소 시 티켓 철회, v2 주문 상세) (#712, V004)
  */
 @Table(
     indexes = [
         Index(name = "idx_issued_ticket_event_id_user_id", columnList = "event_id, user_id"),
         Index(name = "uk_issued_ticket_uuid", columnList = "uuid", unique = true),
+        Index(name = "idx_issued_ticket_order_uuid", columnList = "order_uuid"),
     ],
 )
 @Entity(name = "tbl_issued_ticket")
