@@ -234,7 +234,7 @@ class Host(
      * 연락처 전체 교체. 개수·길이 검증은 V2HostDomainService 에서 한다.
      * v1 호환: 첫 EMAIL → contactEmail, 첫 PHONE → contactNumber 에도 기록한다. 해당 유형이 없으면 기존 v1 값을 유지한다.
      */
-    fun replaceContacts(newContacts: List<HostContact>) {
+    internal fun replaceContacts(newContacts: List<HostContact>) {
         this.contacts.clear()
         newContacts.forEachIndexed { index, contact ->
             contact.assignTo(this, index)
