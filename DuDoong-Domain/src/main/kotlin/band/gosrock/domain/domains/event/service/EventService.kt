@@ -4,19 +4,14 @@ import band.gosrock.common.annotation.DomainService
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.event.domain.EventBasic
-import band.gosrock.domain.domains.event.domain.EventChecklist
 import band.gosrock.domain.domains.event.domain.EventDetail
 import band.gosrock.domain.domains.event.domain.EventPlace
 import band.gosrock.domain.domains.event.domain.EventStatus
 import band.gosrock.domain.domains.event.exception.CannotDeleteByIssuedTicketException
-import band.gosrock.domain.domains.event.exception.CannotDeleteNotPreparingEventException
 import band.gosrock.domain.domains.event.exception.CannotOpenEventException
-import band.gosrock.domain.domains.event.exception.InvalidEventTagException
 import band.gosrock.domain.domains.event.exception.UseOtherApiException
 import band.gosrock.domain.domains.event.repository.EventRepository
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor
-import band.gosrock.domain.domains.tag.adaptor.TagAdaptor
-import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor
 import band.gosrock.domain.domains.ticket_item.service.TicketItemService
 import java.time.LocalDateTime
 import org.springframework.transaction.annotation.Transactional
@@ -28,8 +23,6 @@ class EventService(
     private val eventAdaptor: EventAdaptor,
     private val ticketItemService: TicketItemService,
     private val issuedTicketAdaptor: IssuedTicketAdaptor,
-    private val ticketItemAdaptor: TicketItemAdaptor,
-    private val tagAdaptor: TagAdaptor,
 ) {
 
     fun createEvent(event: Event): Event = eventRepository.save(event)
@@ -91,34 +84,5 @@ class EventService(
         if (issuedTicketAdaptor.existsByEventId(event.id!!)) throw CannotDeleteByIssuedTicketException.EXCEPTION
         event.deleteSoft()
         return eventRepository.save(event)
-    }
-
-    // ===== v2 =====
-
-    /** v2 체크리스트. 티켓은 유효(삭제 안 된) 티켓만 센다 */
-    fun getChecklistV2(event: Event, now: LocalDateTime = LocalDateTime.now()): EventChecklist =
-        event.checklistV2(hasValidTicket = ticketItemAdaptor.existsValidByEventId(event.id!!), now = now)
-
-    /**
-     * v2 등록(OPEN). 준비중이면 체크리스트(hasTicket=false 면 티켓 면제)를 먼저 확인하고,
-     * 상태 전이·시작 시각 검증은 v1 과 같은 [Event.open] 에 맡긴다. v1 [openEvent] 는 바꾸지 않는다
-     */
-    fun openEventV2(event: Event): Event {
-        if (event.isPreparing() && !getChecklistV2(event).isFilled()) throw CannotOpenEventException.EXCEPTION
-        event.open()
-        return eventRepository.save(event)
-    }
-
-    /** v2 삭제: 준비중 공연만. 발급 티켓 확인 등 나머지는 v1 [deleteEventSoft] 규칙 그대로 */
-    fun deleteEventSoftV2(event: Event): Event {
-        if (!event.isPreparing()) throw CannotDeleteNotPreparingEventException.EXCEPTION
-        return deleteEventSoft(event)
-    }
-
-    /** 태그 전체 교체. 존재하지 않는 태그 id 가 하나라도 있으면 400 */
-    fun replaceTagsV2(event: Event, tagIds: List<Long>) {
-        val distinctIds = tagIds.distinct()
-        if (tagAdaptor.findAllByIdIn(distinctIds).size != distinctIds.size) throw InvalidEventTagException.EXCEPTION
-        event.replaceTagIdsV2(distinctIds)
     }
 }

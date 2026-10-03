@@ -1,6 +1,6 @@
 package band.gosrock.api.v2.event.dto.response
 
-import band.gosrock.domain.domains.event.domain.EventChecklist
+import band.gosrock.domain.domains.event.service.v2.EventChecklist
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class V2EventChecklistResponse(

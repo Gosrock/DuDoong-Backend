@@ -1,4 +1,4 @@
-package band.gosrock.domain.domains.event.domain
+package band.gosrock.domain.domains.event.service.v2
 
 /**
  * v2 공연 등록 체크리스트.

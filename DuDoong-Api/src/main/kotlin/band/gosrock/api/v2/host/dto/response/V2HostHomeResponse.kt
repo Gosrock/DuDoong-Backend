@@ -27,14 +27,14 @@ data class V2HostHomeResponse(
     val myRole: String?,
 ) {
     companion object {
-        fun of(host: Host, followerCount: Long, isFollowing: Boolean, userId: Long): V2HostHomeResponse =
+        fun of(host: Host, contacts: List<HostContactVo>, followerCount: Long, isFollowing: Boolean, userId: Long): V2HostHomeResponse =
             V2HostHomeResponse(
                 hostId = host.id!!,
                 name = host.profile?.name,
                 introduce = host.profile?.introduce,
                 profileImageUrl = host.profile?.profileImage?.generateImageUrl(),
                 coverImageUrl = host.profile?.coverImage?.generateImageUrl(),
-                contacts = host.displayContacts(),
+                contacts = contacts,
                 createdAt = host.createdAt,
                 memberCount = host.getActiveHostUsers().size,
                 followerCount = followerCount,

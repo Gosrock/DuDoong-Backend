@@ -10,6 +10,7 @@ import band.gosrock.domain.domains.host.adaptor.HostAdaptor
 import band.gosrock.domain.domains.host.adaptor.HostFollowAdaptor
 import band.gosrock.domain.domains.host.exception.InvalidHostImageKeyException
 import band.gosrock.domain.domains.host.repository.HostRepository
+import band.gosrock.domain.domains.host.service.v2.V2HostDomainService
 import band.gosrock.infrastructure.config.s3.S3UploadPresignedUrlService
 import org.springframework.transaction.annotation.Transactional
 
@@ -19,6 +20,7 @@ class V2UpdateHostUseCase(
     private val hostRepository: HostRepository,
     private val hostFollowAdaptor: HostFollowAdaptor,
     private val presignedUrlService: S3UploadPresignedUrlService,
+    private val v2HostDomainService: V2HostDomainService,
 ) {
     @Transactional
     @HostRolesAllowed(role = MANAGER, findHostFrom = HOST_ID)
@@ -26,16 +28,18 @@ class V2UpdateHostUseCase(
         validateImageKey(hostId, request.profileImageKey)
         validateImageKey(hostId, request.coverImageKey)
         val host = hostAdaptor.findById(hostId)
-        host.updateProfileV2(
+        v2HostDomainService.updateProfile(
+            host = host,
             name = request.name?.trim(),
             introduce = request.introduce,
             profileImageKey = request.profileImageKey,
             coverImageKey = request.coverImageKey,
         )
-        request.contacts?.let { contacts -> host.replaceContacts(contacts.map { it.toEntity() }) }
+        request.contacts?.let { contacts -> v2HostDomainService.replaceContacts(host, contacts.map { it.toEntity() }) }
         hostRepository.save(host)
         return V2HostHomeResponse.of(
             host = host,
+            contacts = v2HostDomainService.displayContacts(host),
             followerCount = hostFollowAdaptor.countFollowers(hostId),
             isFollowing = hostFollowAdaptor.isFollowing(hostId, userId),
             userId = userId,

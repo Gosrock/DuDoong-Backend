@@ -4,18 +4,12 @@ import band.gosrock.domain.common.aop.domainEvent.Events
 import band.gosrock.domain.common.events.host.HostRegisterSlackEvent
 import band.gosrock.domain.common.events.host.HostUserInvitationEvent
 import band.gosrock.domain.common.model.BaseTimeEntity
-import band.gosrock.domain.common.vo.HostContactVo
 import band.gosrock.domain.common.vo.HostInfoVo
 import band.gosrock.domain.common.vo.HostProfileVo
-import band.gosrock.domain.common.vo.ImageVo
 import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException
-import band.gosrock.domain.domains.host.exception.CannotAssignMasterRoleException
 import band.gosrock.domain.domains.host.exception.CannotModifyMasterHostRoleException
-import band.gosrock.domain.domains.host.exception.CannotRemoveMasterException
 import band.gosrock.domain.domains.host.exception.ForbiddenHostException
 import band.gosrock.domain.domains.host.exception.HostUserNotFoundException
-import band.gosrock.domain.domains.host.exception.InvalidHostContactException
-import band.gosrock.domain.domains.host.exception.ManagerCanManageGuestOnlyException
 import band.gosrock.domain.domains.host.exception.NotAcceptedHostException
 import band.gosrock.domain.domains.host.exception.NotManagerHostException
 import band.gosrock.domain.domains.host.exception.NotMasterHostException
@@ -77,7 +71,7 @@ class Host(
     @BatchSize(size = 100)
     val hostUsers: MutableSet<HostUser> = HashSet()
 
-    // v2 대표 연락처 (N개). 비어 있으면 v1 contactEmail/contactNumber 로 대체 표시한다 (displayContacts)
+    // v2 대표 연락처 (N개). 비어 있으면 v1 contactEmail/contactNumber 로 대체 표시한다 (V2HostDomainService.displayContacts)
     @OneToMany(mappedBy = "host", cascade = [CascadeType.ALL], orphanRemoval = true)
     @OrderBy("sortOrder ASC")
     val contacts: MutableList<HostContact> = mutableListOf()
@@ -224,7 +218,7 @@ class Host(
         this.partner = partner
     }
 
-    // ===== v2 =====
+    // ===== v2 공유 데이터 (검증·조합 규칙은 service.v2.V2HostDomainService) =====
 
     /** 활성(초대 수락) 멤버 목록 */
     fun getActiveHostUsers(): List<HostUser> = this.hostUsers.filter { it.active }
@@ -233,91 +227,22 @@ class Host(
     fun getActiveRoleOf(userId: Long): HostRole? =
         this.hostUsers.firstOrNull { it.userId == userId && it.active }?.role
 
-    /**
-     * v2 프로필 수정. null 인 항목은 변경하지 않는다.
-     * introduce / 이미지 key 는 빈 문자열이면 비운다 (기본 이미지로 변경).
-     */
-    fun updateProfileV2(name: String?, introduce: String?, profileImageKey: String?, coverImageKey: String?) {
-        val profile = this.profile ?: HostProfile().also { this.profile = it }
-        name?.let { profile.name = it }
-        introduce?.let { profile.introduce = it.ifBlank { null } }
-        profileImageKey?.let { profile.profileImage = ImageVo.valueOf(it.ifBlank { null }) }
-        coverImageKey?.let { profile.coverImage = ImageVo.valueOf(it.ifBlank { null }) }
-    }
+    /** 프로필 embeddable 이 없는 호스트면 빈 프로필을 만들어 돌려준다 (v2 부분 수정용) */
+    internal fun getOrInitProfile(): HostProfile = this.profile ?: HostProfile().also { this.profile = it }
 
     /**
-     * 연락처 전체 교체 (v2). 1개 이상 [MAX_CONTACT_COUNT]개 이하.
+     * 연락처 전체 교체. 개수·길이 검증은 V2HostDomainService 에서 한다.
      * v1 호환: 첫 EMAIL → contactEmail, 첫 PHONE → contactNumber 에도 기록한다. 해당 유형이 없으면 기존 v1 값을 유지한다.
      */
     fun replaceContacts(newContacts: List<HostContact>) {
-        validateContacts(newContacts)
         this.contacts.clear()
         newContacts.forEachIndexed { index, contact ->
             contact.assignTo(this, index)
             this.contacts.add(contact)
         }
-        val profile = this.profile ?: HostProfile().also { this.profile = it }
+        val profile = getOrInitProfile()
         newContacts.firstOrNull { it.type == HostContactType.EMAIL }?.let { profile.contactEmail = it.value }
         newContacts.firstOrNull { it.type == HostContactType.PHONE }?.let { profile.contactNumber = it.value }
-    }
-
-    /** v2 연락처 표시. 연락처 테이블이 비어 있는 기존 호스트는 v1 contactNumber / contactEmail 로 대체한다 */
-    fun displayContacts(): List<HostContactVo> {
-        if (this.contacts.isNotEmpty()) return this.contacts.map { it.toHostContactVo() }
-        return listOfNotNull(
-            this.profile?.contactNumber?.takeIf { it.isNotBlank() }?.let { HostContactVo(HostContactType.PHONE, it) },
-            this.profile?.contactEmail?.takeIf { it.isNotBlank() }?.let { HostContactVo(HostContactType.EMAIL, it) },
-        )
-    }
-
-    /**
-     * 요청자가 해당 역할의 멤버를 추가/삭제할 수 있는지 검증합니다.
-     * MASTER 역할은 지정 대상이 될 수 없고, GUEST 가 아닌 역할(MANAGER)은 마스터만 다룰 수 있습니다.
-     * (요청자의 매니저 이상 권한 자체는 @HostRolesAllowed 에서 검증)
-     */
-    fun validateCanManageRole(requesterUserId: Long, targetRole: HostRole) {
-        if (targetRole == HostRole.MASTER) throw CannotAssignMasterRoleException.EXCEPTION
-        if (targetRole != HostRole.GUEST && this.masterUserId != requesterUserId) {
-            throw ManagerCanManageGuestOnlyException.EXCEPTION
-        }
-    }
-
-    /** 수락 단계 없이 즉시 활성 멤버로 추가합니다 (DEC-015). 이미 멤버(초대 대기 포함)이면 예외 */
-    fun addActiveHostUsers(requesterUserId: Long, newHostUsers: List<HostUser>) {
-        newHostUsers.forEach { validateCanManageRole(requesterUserId, it.role) }
-        if (newHostUsers.map { it.userId }.distinct().size != newHostUsers.size) {
-            throw AlreadyJoinedHostException.EXCEPTION
-        }
-        newHostUsers.forEach {
-            validateHostUserExistence(it)
-            it.activate()
-        }
-        this.hostUsers.addAll(newHostUsers)
-    }
-
-    /** 활성 멤버의 역할을 GUEST ↔ MANAGER 로 변경합니다. 마스터 대상 / MASTER 지정 불가 */
-    fun changeActiveHostUserRole(targetUserId: Long, role: HostRole) {
-        if (role == HostRole.MASTER) throw CannotAssignMasterRoleException.EXCEPTION
-        if (!isActiveHostUserId(targetUserId)) throw HostUserNotFoundException.EXCEPTION
-        setHostUserRole(targetUserId, role)
-    }
-
-    /** 멤버를 삭제합니다 (초대 대기 포함). 마스터는 삭제 불가, 매니저 요청자는 GUEST 만 삭제 가능 */
-    fun removeMember(requesterUserId: Long, targetUserId: Long) {
-        val target = getHostUserByUserId(targetUserId)
-        if (this.masterUserId == targetUserId || target.role == HostRole.MASTER) {
-            throw CannotRemoveMasterException.EXCEPTION
-        }
-        validateCanManageRole(requesterUserId, target.role)
-        this.hostUsers.remove(target)
-    }
-
-    private fun validateContacts(newContacts: List<HostContact>) {
-        if (newContacts.isEmpty() || newContacts.size > MAX_CONTACT_COUNT) throw InvalidHostContactException.EXCEPTION
-        newContacts.forEach {
-            val maxLength = if (it.type == HostContactType.PHONE) HostContact.PHONE_MAX_LENGTH else HostContact.VALUE_MAX_LENGTH
-            if (it.value.isBlank() || it.value.length > maxLength) throw InvalidHostContactException.EXCEPTION
-        }
     }
 
     fun toHostInfoVo(): HostInfoVo = HostInfoVo.from(this)

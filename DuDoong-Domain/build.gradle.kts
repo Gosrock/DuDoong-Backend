@@ -17,6 +17,9 @@ dependencies {
 
     // for @Nullable
     implementation("com.google.code.findbugs:jsr305:3.0.2")
+
+    // v1/v2 경계 아키텍처 테스트 (DEC-018)
+    testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
 }
 
 // QueryDSL Q클래스 생성 경로 (KAPT 전환 - src/main/generated 제거)

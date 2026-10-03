@@ -1,9 +1,9 @@
 package band.gosrock.api.v2.event.dto.request
 
 import band.gosrock.common.annotation.DateFormat
-import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.event.domain.EventContact
 import band.gosrock.domain.domains.event.domain.EventPlace
+import band.gosrock.domain.domains.event.service.v2.V2EventDomainService
 import band.gosrock.domain.domains.host.domain.HostContactType
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.Valid
@@ -36,15 +36,15 @@ data class V2UpdateEventBasicRequest(
     @field:Valid
     val place: V2EventPlaceRequest? = null,
 
-    @field:Schema(description = "문의처 전체 교체 (0~${Event.MAX_CONTACT_COUNT}개)")
-    @field:Size(max = Event.MAX_CONTACT_COUNT)
+    @field:Schema(description = "문의처 전체 교체 (0~${V2EventDomainService.MAX_CONTACT_COUNT}개)")
+    @field:Size(max = V2EventDomainService.MAX_CONTACT_COUNT)
     @field:Valid
     val contacts: List<V2EventContactRequest?>? = null,
 
     @field:Schema(description = "티켓 여부. 준비중일 때만 변경 가능 (같은 값은 허용)")
     val hasTicket: Boolean? = null,
 
-    @field:Schema(description = "태그 id 전체 교체 (중복 제거 후 최대 ${Event.MAX_TAG_COUNT}개)")
+    @field:Schema(description = "태그 id 전체 교체 (중복 제거 후 최대 ${V2EventDomainService.MAX_TAG_COUNT}개)")
     @field:Size(max = TAG_IDS_RAW_MAX)
     val tagIds: List<Long?>? = null,
 ) {

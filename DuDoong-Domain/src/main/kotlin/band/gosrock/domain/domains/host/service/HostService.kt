@@ -56,24 +56,6 @@ open class HostService(
         return hostRepository.save(host)
     }
 
-    // ===== v2 =====
-
-    /** 수락 없이 즉시 활성 멤버로 추가 (DEC-015) */
-    open fun addActiveHostUsers(host: Host, requesterUserId: Long, hostUsers: List<HostUser>): Host {
-        host.addActiveHostUsers(requesterUserId, hostUsers)
-        return hostRepository.save(host)
-    }
-
-    open fun changeActiveHostUserRole(host: Host, targetUserId: Long, role: HostRole): Host {
-        host.changeActiveHostUserRole(targetUserId, role)
-        return hostRepository.save(host)
-    }
-
-    open fun removeMember(host: Host, requesterUserId: Long, targetUserId: Long): Host {
-        host.removeMember(requesterUserId, targetUserId)
-        return hostRepository.save(host)
-    }
-
     fun validateDuplicatedSlackUrl(host: Host, url: String) {
         if (StringUtils.equals(host.slackUrl, url)) throw InvalidSlackUrlException.EXCEPTION
     }

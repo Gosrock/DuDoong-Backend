@@ -4,6 +4,7 @@ import band.gosrock.api.supports.ApiIntegrateSpringBootTest
 import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.domains.event.domain.EventStatus
 import band.gosrock.domain.domains.event.repository.EventRepository
+import band.gosrock.domain.domains.event.service.v2.V2EventDomainService
 import band.gosrock.domain.domains.host.domain.HostRole
 import band.gosrock.domain.domains.host.domain.HostUser
 import band.gosrock.domain.domains.host.repository.HostRepository
@@ -68,6 +69,8 @@ class V2EventControllerTest {
     @Autowired private lateinit var hostRepository: HostRepository
 
     @Autowired private lateinit var eventRepository: EventRepository
+
+    @Autowired private lateinit var v2EventDomainService: V2EventDomainService
 
     @Autowired private lateinit var tagRepository: TagRepository
 
@@ -798,7 +801,7 @@ class V2EventControllerTest {
             mockMvc.get("/api/v2/events/$eventId/checklist") { with(auth(teamA.outsider)) }.andExpect { status { isForbidden() } }
 
             val event = eventRepository.findById(eventId).get()
-            event.updateBasicV2(startAt = LocalDateTime.now().minusHours(1).withSecond(0).withNano(0))
+            v2EventDomainService.updateBasic(event, startAt = LocalDateTime.now().minusHours(1).withSecond(0).withNano(0))
             eventRepository.save(event)
             assertFalse(checklist(teamA.master, eventId)["canOpen"].asBoolean())
             openV2(teamA.master, eventId).andExpect { jsonPath("$.code") { value("Event_400_15") } }

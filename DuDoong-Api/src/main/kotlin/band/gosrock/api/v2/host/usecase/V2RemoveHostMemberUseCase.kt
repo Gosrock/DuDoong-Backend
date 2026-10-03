@@ -6,13 +6,13 @@ import band.gosrock.api.common.aop.hostRole.HostRolesAllowed
 import band.gosrock.api.v2.host.dto.response.V2HostMemberResponse
 import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor
-import band.gosrock.domain.domains.host.service.HostService
+import band.gosrock.domain.domains.host.service.v2.V2HostDomainService
 import org.springframework.transaction.annotation.Transactional
 
 @UseCase
 class V2RemoveHostMemberUseCase(
     private val hostAdaptor: HostAdaptor,
-    private val hostService: HostService,
+    private val v2HostDomainService: V2HostDomainService,
     private val readHostMembersUseCase: V2ReadHostMembersUseCase,
 ) {
     /**
@@ -23,6 +23,6 @@ class V2RemoveHostMemberUseCase(
     @HostRolesAllowed(role = MANAGER, findHostFrom = HOST_ID)
     fun execute(userId: Long, hostId: Long, targetUserId: Long): List<V2HostMemberResponse> {
         val host = hostAdaptor.findByIdForUpdate(hostId)
-        return readHostMembersUseCase.toMemberResponses(hostService.removeMember(host, userId, targetUserId))
+        return readHostMembersUseCase.toMemberResponses(v2HostDomainService.removeMember(host, userId, targetUserId))
     }
 }

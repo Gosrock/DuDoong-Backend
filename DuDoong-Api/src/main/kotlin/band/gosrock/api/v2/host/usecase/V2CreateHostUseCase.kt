@@ -7,6 +7,7 @@ import band.gosrock.domain.domains.host.domain.Host
 import band.gosrock.domain.domains.host.domain.HostRole
 import band.gosrock.domain.domains.host.domain.HostUser
 import band.gosrock.domain.domains.host.service.HostService
+import band.gosrock.domain.domains.host.service.v2.V2HostDomainService
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
 import org.springframework.transaction.annotation.Transactional
 
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional
 class V2CreateHostUseCase(
     private val userAdaptor: UserAdaptor,
     private val hostService: HostService,
+    private val v2HostDomainService: V2HostDomainService,
 ) {
     /** 생성자는 마스터(활성)로 등록된다 */
     @Transactional
@@ -21,7 +23,7 @@ class V2CreateHostUseCase(
         userAdaptor.queryUser(userId)
         val newHost = Host(masterUserId = userId, name = request.name!!.trim(), introduce = request.introduce?.ifBlank { null })
         // 연락처 저장 + v1 contactEmail / contactNumber 동기화
-        newHost.replaceContacts(request.contacts!!.map { it.toEntity() })
+        v2HostDomainService.replaceContacts(newHost, request.contacts!!.map { it.toEntity() })
         val host = hostService.createHost(newHost)
         val master = HostUser(host = host, userId = userId, role = HostRole.MASTER)
         master.activate()

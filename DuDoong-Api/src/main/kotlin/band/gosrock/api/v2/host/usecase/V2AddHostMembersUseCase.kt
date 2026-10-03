@@ -10,7 +10,7 @@ import band.gosrock.domain.domains.host.adaptor.HostAdaptor
 import band.gosrock.domain.domains.host.domain.HostUser
 import band.gosrock.domain.domains.host.exception.HostErrorCode
 import band.gosrock.domain.domains.host.repository.HostRepository
-import band.gosrock.domain.domains.host.service.HostService
+import band.gosrock.domain.domains.host.service.v2.V2HostDomainService
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.transaction.annotation.Transactional
@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional
 class V2AddHostMembersUseCase(
     private val hostAdaptor: HostAdaptor,
     private val userAdaptor: UserAdaptor,
-    private val hostService: HostService,
+    private val v2HostDomainService: V2HostDomainService,
     private val hostRepository: HostRepository,
     private val readHostMembersUseCase: V2ReadHostMembersUseCase,
 ) {
@@ -34,7 +34,7 @@ class V2AddHostMembersUseCase(
         val members = request.members!!.map { it.email!!.trim() to it.role!! }
 
         // 역할 검증 먼저 (MASTER 지정 불가, 매니저 요청자는 GUEST 만)
-        members.forEach { (_, role) -> host.validateCanManageRole(userId, role) }
+        members.forEach { (_, role) -> v2HostDomainService.validateCanManageRole(host, userId, role) }
 
         val duplicated = members.groupBy { it.first.lowercase() }.filterValues { it.size > 1 }.keys
         if (duplicated.isNotEmpty()) {
@@ -65,7 +65,7 @@ class V2AddHostMembersUseCase(
         val saved = try {
             // 호스트 락 밖(v1 초대 등)에서 같은 유저가 동시에 들어온 경우 unique(host_id, user_id) 위반.
             // IDENTITY 라 insert 는 save 시점에 나가고, 남은 변경은 flush 로 여기서 확인한다
-            hostService.addActiveHostUsers(host, userId, hostUsers).also { hostRepository.flushChanges() }
+            v2HostDomainService.addActiveHostUsers(host, userId, hostUsers).also { hostRepository.flushChanges() }
         } catch (e: DataIntegrityViolationException) {
             throw HostErrorCode.ALREADY_HOST_MEMBER_EMAIL.toDetailException(members.joinToString(", ") { it.first })
         }

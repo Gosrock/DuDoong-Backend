@@ -7,7 +7,7 @@ import band.gosrock.api.v2.event.dto.response.V2EventManageResponse
 import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.event.domain.Event
-import band.gosrock.domain.domains.event.service.EventService
+import band.gosrock.domain.domains.event.service.v2.V2EventDomainService
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor
 import band.gosrock.domain.domains.tag.adaptor.TagAdaptor
 import java.time.LocalDateTime
@@ -18,7 +18,7 @@ class V2ReadEventManageUseCase(
     private val eventAdaptor: EventAdaptor,
     private val hostAdaptor: HostAdaptor,
     private val tagAdaptor: TagAdaptor,
-    private val eventService: EventService,
+    private val v2EventDomainService: V2EventDomainService,
 ) {
     @Transactional(readOnly = true)
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
@@ -34,7 +34,7 @@ class V2ReadEventManageUseCase(
             host = hostAdaptor.findById(event.hostId!!),
             userId = userId,
             tags = tags,
-            checklist = eventService.getChecklistV2(event, now),
+            checklist = v2EventDomainService.checklist(event, now),
             now = now,
         )
     }

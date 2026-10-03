@@ -1,4 +1,4 @@
-package band.gosrock.domain.domains.host.service
+package band.gosrock.domain.domains.host.service.v2
 
 import band.gosrock.common.annotation.DomainService
 import band.gosrock.domain.domains.host.domain.HostFollow
@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 
 @DomainService
-class HostFollowService(
+class V2HostFollowDomainService(
     private val hostFollowRepository: HostFollowRepository,
 ) {
     /**

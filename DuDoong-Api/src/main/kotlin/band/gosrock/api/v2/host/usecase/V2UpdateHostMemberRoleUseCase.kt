@@ -7,13 +7,13 @@ import band.gosrock.api.v2.host.dto.request.V2UpdateHostMemberRoleRequest
 import band.gosrock.api.v2.host.dto.response.V2HostMemberResponse
 import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor
-import band.gosrock.domain.domains.host.service.HostService
+import band.gosrock.domain.domains.host.service.v2.V2HostDomainService
 import org.springframework.transaction.annotation.Transactional
 
 @UseCase
 class V2UpdateHostMemberRoleUseCase(
     private val hostAdaptor: HostAdaptor,
-    private val hostService: HostService,
+    private val v2HostDomainService: V2HostDomainService,
     private val readHostMembersUseCase: V2ReadHostMembersUseCase,
 ) {
     /** GUEST ↔ MANAGER. 마스터 대상 / MASTER 지정 불가 */
@@ -27,7 +27,7 @@ class V2UpdateHostMemberRoleUseCase(
     ): List<V2HostMemberResponse> {
         val host = hostAdaptor.findByIdForUpdate(hostId)
         return readHostMembersUseCase.toMemberResponses(
-            hostService.changeActiveHostUserRole(host, targetUserId, request.role!!)
+            v2HostDomainService.changeActiveHostUserRole(host, targetUserId, request.role!!)
         )
     }
 }
