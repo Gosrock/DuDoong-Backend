@@ -10,6 +10,7 @@ import band.gosrock.domain.domains.ticket_item.adaptor.OptionGroupAdaptor
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor
 import band.gosrock.domain.domains.ticket_item.domain.OptionGroup
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem
+import band.gosrock.domain.domains.ticket_item.service.v2.V2TicketItemDomainService
 import band.gosrock.domain.domains.ticket_item.service.v2.V2TicketOptionDomainService
 import org.springframework.transaction.annotation.Transactional
 
@@ -18,6 +19,7 @@ class V2ReadTicketOptionsUseCase(
     private val optionGroupAdaptor: OptionGroupAdaptor,
     private val ticketItemAdaptor: TicketItemAdaptor,
     private val v2TicketOptionDomainService: V2TicketOptionDomainService,
+    private val v2TicketItemDomainService: V2TicketItemDomainService,
 ) {
     /** 공연 옵션 풀 (유효 옵션, 생성 순) */
     @Transactional(readOnly = true)
@@ -28,14 +30,18 @@ class V2ReadTicketOptionsUseCase(
     @Transactional(readOnly = true)
     fun readAll(eventId: Long): List<V2TicketOptionResponse> {
         val ticketItems = ticketItemAdaptor.findAllByEventId(eventId)
-        return optionGroupAdaptor.findAllByEventId(eventId).sortedBy { it.id }.map { toResponse(it, ticketItems) }
+        val pending = v2TicketItemDomainService.pendingOrderItemIds(ticketItems.mapNotNull { it.id })
+        return optionGroupAdaptor.findAllByEventId(eventId).sortedBy { it.id }.map { toResponse(it, ticketItems, pending) }
     }
 
     @Transactional(readOnly = true)
-    fun readOne(eventId: Long, optionGroupId: Long): V2TicketOptionResponse =
-        toResponse(v2TicketOptionDomainService.queryOptionGroup(eventId, optionGroupId), ticketItemAdaptor.findAllByEventId(eventId))
+    fun readOne(eventId: Long, optionGroupId: Long): V2TicketOptionResponse {
+        val ticketItems = ticketItemAdaptor.findAllByEventId(eventId)
+        val pending = v2TicketItemDomainService.pendingOrderItemIds(ticketItems.mapNotNull { it.id })
+        return toResponse(v2TicketOptionDomainService.queryOptionGroup(eventId, optionGroupId), ticketItems, pending)
+    }
 
-    private fun toResponse(optionGroup: OptionGroup, ticketItems: List<TicketItem>): V2TicketOptionResponse =
+    private fun toResponse(optionGroup: OptionGroup, ticketItems: List<TicketItem>, pending: Set<Long>): V2TicketOptionResponse =
         V2TicketOptionResponse(
             optionId = optionGroup.id!!,
             name = optionGroup.name,
@@ -43,6 +49,6 @@ class V2ReadTicketOptionsUseCase(
             type = V2TicketOptionType.of(optionGroup.type),
             yesAdditionalPrice = v2TicketOptionDomainService.yesAdditionalPrice(optionGroup),
             appliedTicketItemIds = v2TicketOptionDomainService.appliedTicketItems(optionGroup, ticketItems).mapNotNull { it.id }.sorted(),
-            isLocked = v2TicketOptionDomainService.isLocked(optionGroup, ticketItems),
+            isLocked = v2TicketOptionDomainService.isLocked(optionGroup, ticketItems, pending),
         )
 }

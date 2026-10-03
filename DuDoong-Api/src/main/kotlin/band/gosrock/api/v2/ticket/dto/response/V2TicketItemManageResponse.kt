@@ -34,8 +34,10 @@ data class V2TicketItemManageResponse(
     val saleEndAt: LocalDateTime?,
     @field:Schema(description = "BEFORE_SALE(재고 감소 없음) / SOLD(재고 감소) / SUSPENDED(판매 중단)")
     val saleState: V2TicketSaleState,
-    @field:Schema(description = "재고 감소 여부. true 면 설명·판매기간·재고공개·매수제한·수량 증가만 수정, 삭제·옵션 변경 불가 (중단 상태여도 유지)")
+    @field:Schema(description = "재고 감소 여부. true 면 삭제 불가 (중단 상태여도 유지)")
     val isSold: Boolean,
+    @field:Schema(description = "승인 대기 주문 존재 여부. isSold 또는 이 값이 true 면 잠김: 설명·판매기간·재고공개·매수제한·수량 증가만 수정, 옵션 변경·옵션 추가금 변경 불가")
+    val hasPendingOrders: Boolean,
     @field:Schema(description = "지금 사용자가 살 수 있는지: 판매 중 + 판매 기간 + 공연 등록 + 공연 시작 전 + 재고 > 0")
     val isPurchasable: Boolean,
     @field:Schema(description = "입금 계좌 (DUDOONG 만)")
@@ -68,6 +70,6 @@ data class V2TicketOptionResponse(
     val yesAdditionalPrice: Long?,
     @field:Schema(description = "이 옵션이 붙은 유효 티켓 id")
     val appliedTicketItemIds: List<Long>,
-    @field:Schema(description = "판매된 티켓에 붙어 있으면 true: 이름·설명만 수정, 삭제 불가")
+    @field:Schema(description = "잠긴 티켓(판매됨 또는 승인 대기 주문 있음)에 붙어 있으면 true: 이름·설명만 수정, 삭제·떼기 불가")
     val isLocked: Boolean,
 )

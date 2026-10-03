@@ -38,15 +38,22 @@ class V2ReadTicketItemsUseCase(
     fun readAll(eventId: Long): List<V2TicketItemManageResponse> {
         val event = eventAdaptor.findById(eventId)
         val now = LocalDateTime.now()
-        return ticketItemAdaptor.findAllByEventId(eventId).sortedBy { it.id }.map { toResponse(it, event, now) }
+        val items = ticketItemAdaptor.findAllByEventId(eventId).sortedBy { it.id }
+        val pending = v2TicketItemDomainService.pendingOrderItemIds(items.mapNotNull { it.id })
+        return items.map { toResponse(it, event, it.id in pending, now) }
     }
 
     @Transactional(readOnly = true)
     fun readOne(eventId: Long, ticketItemId: Long): V2TicketItemManageResponse =
-        toResponse(v2TicketItemDomainService.queryTicketItem(eventId, ticketItemId), eventAdaptor.findById(eventId), LocalDateTime.now())
+        toResponse(
+            item = v2TicketItemDomainService.queryTicketItem(eventId, ticketItemId),
+            event = eventAdaptor.findById(eventId),
+            hasPendingOrders = v2TicketItemDomainService.hasPendingOrders(ticketItemId),
+            now = LocalDateTime.now(),
+        )
 
-    private fun toResponse(item: TicketItem, event: Event, now: LocalDateTime): V2TicketItemManageResponse {
-        val unlimited = v2TicketItemDomainService.isUnlimitedSupply(item)
+    private fun toResponse(item: TicketItem, event: Event, hasPendingOrders: Boolean, now: LocalDateTime): V2TicketItemManageResponse {
+        val unlimited = item.isUnlimitedSupply()
         val supplyCount = item.supplyCount!!
         val quantity = item.quantity!!
         return V2TicketItemManageResponse(
@@ -60,11 +67,12 @@ class V2ReadTicketItemsUseCase(
             soldCount = supplyCount - quantity,
             approvalRequired = item.type == TicketType.APPROVAL,
             isQuantityPublic = item.isQuantityPublic == true,
-            purchaseLimit = if (v2TicketItemDomainService.hasNoPurchaseLimit(item)) null else item.purchaseLimit,
+            purchaseLimit = if (item.hasNoPurchaseLimit()) null else item.purchaseLimit,
             saleStartAt = item.saleStartAt,
             saleEndAt = item.saleEndAt,
             saleState = v2TicketItemDomainService.saleState(item),
             isSold = item.isSold(),
+            hasPendingOrders = hasPendingOrders,
             isPurchasable = v2TicketItemDomainService.isPurchasable(item, event, now),
             account = item.accountInfo?.takeIf { item.payType == TicketPayType.DUDOONG_TICKET }
                 ?.let { V2TicketAccountResponse(bank = it.bankName, holder = it.accountHolder, number = it.accountNumber) },

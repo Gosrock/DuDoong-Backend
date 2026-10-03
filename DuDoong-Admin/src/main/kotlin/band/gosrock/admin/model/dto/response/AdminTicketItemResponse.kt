@@ -15,6 +15,10 @@ data class AdminTicketItemResponse(
     val quantity: Long?,
     val supplyCount: Long?,
     val purchaseLimit: Long?,
+    /** 무제한 수량(v2) — supplyCount/quantity 는 저장값(1,000,000 이상) */
+    val isUnlimitedSupply: Boolean,
+    /** 1인 매수 제한 없음(v2) — purchaseLimit 는 저장값(1,000,000 이상) */
+    val hasNoPurchaseLimit: Boolean,
     val payType: TicketPayType?,
     val type: TicketType?,
     val isQuantityPublic: Boolean?,
@@ -34,6 +38,8 @@ data class AdminTicketItemResponse(
                 quantity = ticketItem.quantity,
                 supplyCount = ticketItem.supplyCount,
                 purchaseLimit = ticketItem.purchaseLimit,
+                isUnlimitedSupply = ticketItem.isUnlimitedSupply(),
+                hasNoPurchaseLimit = ticketItem.hasNoPurchaseLimit(),
                 payType = ticketItem.payType,
                 type = ticketItem.type,
                 isQuantityPublic = ticketItem.isQuantityPublic,

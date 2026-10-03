@@ -4,7 +4,7 @@ import band.gosrock.api.supports.ApiIntegrateSpringBootTest
 import band.gosrock.domain.domains.event.domain.EventStatus
 import band.gosrock.domain.domains.ticket_item.domain.TicketItemStatus
 import band.gosrock.domain.domains.ticket_item.domain.TicketType
-import band.gosrock.domain.domains.ticket_item.service.v2.V2TicketItemDomainService
+import band.gosrock.domain.domains.ticket_item.domain.TicketItem
 import java.time.LocalDateTime
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -65,7 +65,7 @@ class V2TicketItemControllerTest : V2TicketApiTestSupport() {
             val saleEnd = eventStart.minusDays(1)
             val id = postTicket(
                 team.manager, team.eventId,
-                freeBody(supplyCount = null, overrides = mapOf("purchaseLimit" to null, "account" to account, "saleEndAt" to saleEnd.f())),
+                freeBody(supplyCount = null, overrides = mapOf("purchaseLimit" to null, "account" to account, "saleEndAt" to saleEnd.f(), "isQuantityPublic" to false)),
             ).andExpect {
                 status { isOk() }
                 jsonPath("$.data.payType") { value("FREE") }
@@ -79,11 +79,21 @@ class V2TicketItemControllerTest : V2TicketApiTestSupport() {
                 jsonPath("$.data.saleEndAt") { value(saleEnd.f()) }
             }.data().at("/ticketItemId").asLong()
             val item = ticketItemRepository.findById(id).get()
-            assertEquals(V2TicketItemDomainService.UNLIMITED_SUPPLY_COUNT, item.supplyCount)
-            assertEquals(V2TicketItemDomainService.UNLIMITED_SUPPLY_COUNT, item.quantity)
-            assertEquals(V2TicketItemDomainService.NO_PURCHASE_LIMIT, item.purchaseLimit)
+            assertEquals(TicketItem.UNLIMITED_SUPPLY_COUNT, item.supplyCount)
+            assertEquals(TicketItem.UNLIMITED_SUPPLY_COUNT, item.quantity)
+            assertEquals(TicketItem.NO_PURCHASE_LIMIT, item.purchaseLimit)
             assertEquals(TicketType.FIRST_COME_FIRST_SERVED, item.type)
             assertTrue(item.isSellable!!)
+            // 무제한 + 재고 공개는 400 (조용히 끄지 않음)
+            postTicket(team.manager, team.eventId, freeBody(supplyCount = null, overrides = mapOf("isQuantityPublic" to true)))
+                .andExpect { status { isBadRequest() }; jsonPath("$.code") { value("Ticket_Item_400_15") } }
+            // v1 공개 목록: 숫자는 그대로(하위 호환), 무제한·제한 없음 boolean 으로 판정
+            setEventStatus(team.eventId, EventStatus.OPEN)
+            mockMvc.get("/api/v1/events/${team.eventId}/ticketItems").andExpect {
+                jsonPath("$.data.ticketItems[0].supplyCount") { value(TicketItem.UNLIMITED_SUPPLY_COUNT) }
+                jsonPath("$.data.ticketItems[0].isUnlimitedSupply") { value(true) }
+                jsonPath("$.data.ticketItems[0].hasNoPurchaseLimit") { value(true) }
+            }
         }
 
         @Test
@@ -102,7 +112,9 @@ class V2TicketItemControllerTest : V2TicketApiTestSupport() {
                 .andExpect { status { isBadRequest() }; jsonPath("$.code") { value("Ticket_Item_400_3") } }
             postTicket(team.manager, team.eventId, freeBody(overrides = mapOf("price" to 1000)))
                 .andExpect { status { isBadRequest() }; jsonPath("$.code") { value("Ticket_Item_400_3") } }
-            postTicket(team.manager, team.eventId, dudoongBody(name = "가".repeat(13))).andExpect { status { isBadRequest() } }
+            postTicket(team.manager, team.eventId, dudoongBody(name = "가".repeat(13)))
+                .andExpect { status { isBadRequest() }; jsonPath("$.code") { value("Ticket_Item_400_15") } }
+            postTicket(team.manager, team.eventId, dudoongBody(price = 10_000_001)).andExpect { status { isBadRequest() } }
             postTicket(team.manager, team.eventId, dudoongBody(name = "  ")).andExpect { status { isBadRequest() } }
             postTicket(team.manager, team.eventId, dudoongBody(overrides = mapOf("description" to "가".repeat(31)))).andExpect { status { isBadRequest() } }
             postTicket(team.manager, team.eventId, dudoongBody(supplyCount = 0)).andExpect { status { isBadRequest() } }
@@ -365,6 +377,8 @@ class V2TicketItemControllerTest : V2TicketApiTestSupport() {
                 jsonPath("$.data.ticketItems[0].accountInfo.bankName") { value("신한은행") }
                 jsonPath("$.data.ticketItems[1].payType") { value("무료티켓") }
                 jsonPath("$.data.ticketItems[1].approveType") { value("선착순") }
+                jsonPath("$.data.ticketItems[0].isUnlimitedSupply") { value(false) }
+                jsonPath("$.data.ticketItems[0].hasNoPurchaseLimit") { value(false) }
             }
 
             val buyer = newUser("구매자")
@@ -410,6 +424,132 @@ class V2TicketItemControllerTest : V2TicketApiTestSupport() {
                 jsonPath("$.data.name") { value("v2수정") }
                 jsonPath("$.data.remaining") { value(12) }
             }
+        }
+    }
+
+    @Nested
+    @DisplayName("리뷰 반영 (#707): 승인 대기 잠금 / v1 공개 목록 / v1 긴 이름 / v1 회귀")
+    inner class ReviewRegression {
+
+        @Test
+        fun `승인 대기 주문이 있으면 재고 감소 전이어도 잠김 - 가격·계좌 변경, 옵션 추가금 변경·삭제·떼기 400`() {
+            val team = Team()
+            val option = createOption(team.manager, team.eventId, yesAdditionalPrice = 1000)
+            val ticket = createTicket(team.manager, team.eventId, dudoongBody(supplyCount = 10))
+            putOptions(team.manager, team.eventId, ticket, listOf(option)).andExpect { status { isOk() } }
+            setEventStatus(team.eventId, EventStatus.OPEN)
+            val orderUuid = v1Order(newUser("구매자"), team.eventId, ticket)
+
+            val item = manageItem(team.guest, team.eventId, ticket)
+            assertEquals("BEFORE_SALE", item.at("/saleState").asText())
+            assertEquals(true, item.at("/hasPendingOrders").asBoolean())
+            assertEquals(false, item.at("/isSold").asBoolean())
+
+            patchTicket(team.manager, team.eventId, ticket, dudoongBody(price = 7000, supplyCount = 10))
+                .andExpect { status { isBadRequest() }; jsonPath("$.code") { value("Ticket_Item_400_14") } }
+            patchTicket(team.manager, team.eventId, ticket, dudoongBody(supplyCount = 10, overrides = mapOf("account" to account + ("number" to "999"))))
+                .andExpect { jsonPath("$.code") { value("Ticket_Item_400_14") } }
+            patchOption(team.manager, team.eventId, option, mapOf("yesAdditionalPrice" to 2000))
+                .andExpect { status { isBadRequest() }; jsonPath("$.code") { value("Option_Group_400_5") } }
+            deleteOption(team.manager, team.eventId, option)
+                .andExpect { status { isBadRequest() }; jsonPath("$.code") { value("Option_Group_400_2") } }
+            putOptions(team.manager, team.eventId, ticket, emptyList())
+                .andExpect { status { isBadRequest() }; jsonPath("$.code") { value("Item_Option_Group_400_2") } }
+            options(team.guest, team.eventId).andExpect { jsonPath("$.data[0].isLocked") { value(true) } }
+            // 허용 필드는 수정 가능
+            patchTicket(team.manager, team.eventId, ticket, dudoongBody(supplyCount = 12, overrides = mapOf("description" to "설명")))
+                .andExpect { status { isOk() }; jsonPath("$.data.description") { value("설명") } }
+
+            // 판매 중단해도 이미 만든 주문의 승인은 된다 (판매 중 검사는 주문 생성 시점만)
+            suspend(team.manager, team.eventId, ticket).andExpect { status { isOk() } }
+            v1Approve(team.master, team.eventId, orderUuid).andExpect { status { isOk() } }
+            val after = manageItem(team.guest, team.eventId, ticket)
+            assertEquals("SUSPENDED", after.at("/saleState").asText())
+            assertEquals(true, after.at("/isSold").asBoolean())
+            assertEquals(false, after.at("/hasPendingOrders").asBoolean())
+        }
+
+        @Test
+        fun `무료 주문을 만든 뒤 판매 중단해도 무료 확정은 된다`() {
+            val team = Team()
+            val ticket = createTicket(team.manager, team.eventId, freeBody())
+            setEventStatus(team.eventId, EventStatus.OPEN)
+            val buyer = newUser("구매자")
+            val orderUuid = v1Order(buyer, team.eventId, ticket)
+            // 결제 대기(PENDING_PAYMENT)는 만료 기준이 없어 잠금 판정에서 제외
+            assertEquals(false, manageItem(team.guest, team.eventId, ticket).at("/hasPendingOrders").asBoolean())
+            suspend(team.manager, team.eventId, ticket).andExpect { status { isOk() } }
+            v1FreeConfirm(buyer, orderUuid).andExpect { status { isOk() } }
+            assertEquals(1L, manageItem(team.guest, team.eventId, ticket).at("/soldCount").asLong())
+        }
+
+        @Test
+        fun `is_sellable 이 NULL 인 v1 티켓도 장바구니·주문·무료 확정이 된다`() {
+            val team = Team()
+            val ticket = saveV1FreeTicket(team.eventId, isSellable = null)
+            setEventStatus(team.eventId, EventStatus.OPEN)
+            v1Buy(newUser("구매자"), team.master, team.eventId, ticket.id!!, approval = false)
+            assertTrue(ticketItemRepository.findById(ticket.id!!).get().isSold())
+            mockMvc.get("/api/v1/events/${team.eventId}/ticketItems").andExpect { jsonPath("$.data.ticketItems.length()") { value(1) } }
+        }
+
+        @Test
+        fun `장바구니를 담은 뒤 판매 종료가 지나면 주문 생성 400`() {
+            val team = Team()
+            val ticket = createTicket(team.manager, team.eventId, freeBody())
+            setEventStatus(team.eventId, EventStatus.OPEN)
+            val buyer = newUser("구매자")
+            val cartId = v1Cart(buyer, ticket).andExpect { status { isOk() } }.data().at("/cartId").asLong()
+            ticketItemRepository.findById(ticket).get().let {
+                it.saleEndAt = LocalDateTime.now().minusMinutes(1)
+                ticketItemRepository.save(it)
+            }
+            v1CreateOrder(buyer, cartId).andExpect {
+                status { isBadRequest() }
+                jsonPath("$.code") { value("Ticket_Item_400_10") }
+            }
+        }
+
+        @Test
+        fun `v1 공개 목록은 판매 중인 티켓만, v1 어드민 목록은 전부`() {
+            val team = Team()
+            val onSale = createTicket(team.manager, team.eventId, freeBody(name = "판매중"))
+            val suspended = createTicket(team.manager, team.eventId, freeBody(name = "중단"))
+            val notStarted = createTicket(team.manager, team.eventId, freeBody(name = "판매전", overrides = mapOf("saleStartAt" to LocalDateTime.now().plusDays(1).f())))
+            suspend(team.manager, team.eventId, suspended).andExpect { status { isOk() } }
+            mockMvc.get("/api/v1/events/${team.eventId}/ticketItems").andExpect {
+                jsonPath("$.data.ticketItems.length()") { value(1) }
+                jsonPath("$.data.ticketItems[0].ticketItemId") { value(onSale) }
+            }
+            mockMvc.get("/api/v1/events/${team.eventId}/ticketItems/admin") { with(auth(team.guest)) }.andExpect {
+                status { isOk() }
+                jsonPath("$.data.ticketItems.length()") { value(3) }
+            }
+            manage(team.guest, team.eventId).andExpect { jsonPath("$.data.length()") { value(3) } }
+            assertTrue(listOf(onSale, suspended, notStarted).all { ticketItemRepository.existsById(it) })
+        }
+
+        @Test
+        fun `13자 이름·앞뒤 공백이 있는 판매된 v1 티켓을 v2 폼 그대로 재전송해 설명만 바꾸면 200`() {
+            val team = Team()
+            val longName = " 열세글자이름입니다아아아아 "
+            val ticket = saveV1FreeTicket(team.eventId, name = longName)
+            setEventStatus(team.eventId, EventStatus.OPEN)
+            v1Buy(newUser("구매자"), team.master, team.eventId, ticket.id!!, approval = false)
+            val current = manageItem(team.guest, team.eventId, ticket.id!!)
+            assertEquals(longName, current.at("/name").asText())
+
+            patchTicket(
+                team.manager, team.eventId, ticket.id!!,
+                freeBody(name = current.at("/name").asText(), supplyCount = 10, overrides = mapOf("description" to "새 설명", "purchaseLimit" to 2)),
+            ).andExpect {
+                status { isOk() }
+                jsonPath("$.data.name") { value(longName) }
+                jsonPath("$.data.description") { value("새 설명") }
+            }
+            // 이름을 실제로 바꾸면 잠긴 필드라 400
+            patchTicket(team.manager, team.eventId, ticket.id!!, freeBody(name = "새이름", supplyCount = 10, overrides = mapOf("purchaseLimit" to 2)))
+                .andExpect { jsonPath("$.code") { value("Ticket_Item_400_14") } }
         }
     }
 }

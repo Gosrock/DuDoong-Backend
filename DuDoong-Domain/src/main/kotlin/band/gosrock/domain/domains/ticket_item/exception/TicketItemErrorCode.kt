@@ -90,13 +90,16 @@ enum class TicketItemErrorCode(
     @ExplainError("판매 시작이 종료보다 늦거나 같은 경우, 판매 시작·종료가 공연 시작 이후인 경우, 새로 정한 판매 종료가 현재 이전인 경우")
     INVALID_TICKET_SALE_PERIOD(BAD_REQUEST, "Ticket_Item_400_13", "판매 기간이 올바르지 않습니다."),
 
-    @ExplainError("판매된(재고 감소) 티켓의 티켓 종류·이름·가격·계좌·승인 여부를 바꾸거나 수량을 줄이려는 경우 (DEC-006)")
+    @ExplainError("잠긴 티켓(재고 감소 또는 승인 대기 주문 있음)의 티켓 종류·이름·가격·계좌·승인 여부를 바꾸거나 수량을 줄이려는 경우 (DEC-006)")
     FORBIDDEN_SOLD_TICKET_ITEM_CHANGE(BAD_REQUEST, "Ticket_Item_400_14", "판매된 티켓은 설명·판매기간·재고공개·매수제한·수량 증가만 수정할 수 있습니다."),
+
+    @ExplainError("값을 바꾼 이름(1~12자)·설명(~30자)이 길이를 넘는 경우, 무제한 티켓의 재고 공개를 켜려는 경우")
+    INVALID_TICKET_ITEM_FIELD(BAD_REQUEST, "Ticket_Item_400_15", "티켓 입력값이 올바르지 않습니다."),
 
     @ExplainError("v2 에서 지원하지 않는 옵션 응답 형식(객관식)으로 만들려는 경우")
     UNSUPPORTED_V2_OPTION_TYPE(BAD_REQUEST, "Option_Group_400_4", "v2 에서는 주관식·네/아니오 옵션만 만들 수 있습니다."),
 
-    @ExplainError("판매된 티켓에 붙은 옵션의 추가 금액을 바꾸려는 경우 (DEC-012). 이름·설명만 수정 가능")
+    @ExplainError("잠긴 티켓(재고 감소 또는 승인 대기 주문 있음)에 붙은 옵션의 추가 금액을 바꾸려는 경우 (DEC-012). 이름·설명만 수정 가능")
     FORBIDDEN_LOCKED_OPTION_CHANGE(BAD_REQUEST, "Option_Group_400_5", "판매된 티켓에 붙은 옵션은 이름·설명만 수정할 수 있습니다.");
 
     override fun getErrorReason(): ErrorReason =

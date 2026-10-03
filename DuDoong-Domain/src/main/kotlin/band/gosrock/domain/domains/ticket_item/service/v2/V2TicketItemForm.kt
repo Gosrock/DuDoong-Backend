@@ -6,9 +6,10 @@ import java.time.LocalDateTime
 
 /**
  * v2 티켓 생성·수정 입력 (수정은 폼 전체를 보낸다).
- * @property supplyCount null 이면 무제한 ([V2TicketItemDomainService.UNLIMITED_SUPPLY_COUNT] 로 저장)
- * @property purchaseLimit null 이면 1인 매수 제한 없음 ([V2TicketItemDomainService.NO_PURCHASE_LIMIT] 로 저장)
+ * @property supplyCount null 이면 무제한 ([band.gosrock.domain.domains.ticket_item.domain.TicketItem.UNLIMITED_SUPPLY_COUNT] 로 저장)
+ * @property purchaseLimit null 이면 1인 매수 제한 없음 ([band.gosrock.domain.domains.ticket_item.domain.TicketItem.NO_PURCHASE_LIMIT] 로 저장)
  * @property approvalRequired 두둥티켓은 항상 true 로 저장
+ * @property isQuantityPublic 무제한(supplyCount=null)이면 true 불가 (400)
  * @property saleStartAt null 이면 등록 즉시, saleEndAt null 이면 공연 시작까지
  */
 data class V2TicketItemForm(

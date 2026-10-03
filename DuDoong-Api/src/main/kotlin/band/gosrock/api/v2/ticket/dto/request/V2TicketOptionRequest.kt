@@ -1,7 +1,9 @@
 package band.gosrock.api.v2.ticket.dto.request
 
 import band.gosrock.api.v2.ticket.dto.V2TicketOptionType
+import band.gosrock.domain.domains.ticket_item.service.v2.V2TicketItemDomainService
 import band.gosrock.domain.domains.ticket_item.service.v2.V2TicketOptionDomainService
+import jakarta.validation.constraints.Max
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
@@ -25,8 +27,9 @@ data class V2CreateTicketOptionRequest(
     @field:NotNull
     val type: V2TicketOptionType?,
 
-    @field:Schema(description = "'네' 선택 시 추가 금액 (YES_NO 만, 0 이상, 없으면 0)", example = "10000")
+    @field:Schema(description = "'네' 선택 시 추가 금액 (YES_NO 만, 0 ~ ${V2TicketItemDomainService.MAX_PRICE}, 없으면 0)", example = "10000")
     @field:PositiveOrZero
+    @field:Max(V2TicketItemDomainService.MAX_PRICE)
     val yesAdditionalPrice: Long? = null,
 )
 
@@ -42,7 +45,8 @@ data class V2UpdateTicketOptionRequest(
     @field:Pattern(regexp = "(?s).*\\S.*", message = "설명을 입력해주세요")
     val description: String? = null,
 
-    @field:Schema(description = "'네' 선택 시 추가 금액 (YES_NO 만). 판매된 티켓에 붙은 옵션은 바꿀 수 없음")
+    @field:Schema(description = "'네' 선택 시 추가 금액 (YES_NO 만). 잠긴 티켓(판매됨·승인 대기)에 붙은 옵션은 바꿀 수 없음")
     @field:PositiveOrZero
+    @field:Max(V2TicketItemDomainService.MAX_PRICE)
     val yesAdditionalPrice: Long? = null,
 )

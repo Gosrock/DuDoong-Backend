@@ -95,9 +95,19 @@ class AdminExcelService {
             row.createCell(0).setCellValue(item.name ?: "")
             row.createCell(1).setCellValue(item.description ?: "")
             row.createCell(2).setCellValue(item.price?.toDouble() ?: 0.0)
-            row.createCell(3).setCellValue(item.quantity?.toDouble() ?: 0.0)
-            row.createCell(4).setCellValue(item.supplyCount?.toDouble() ?: 0.0)
-            row.createCell(5).setCellValue(item.purchaseLimit?.toDouble() ?: 0.0)
+            // v2 무제한·제한 없음은 저장값(1,000,000 이상) 대신 문구로
+            if (item.isUnlimitedSupply) {
+                row.createCell(3).setCellValue(UNLIMITED_LABEL)
+                row.createCell(4).setCellValue(UNLIMITED_LABEL)
+            } else {
+                row.createCell(3).setCellValue(item.quantity?.toDouble() ?: 0.0)
+                row.createCell(4).setCellValue(item.supplyCount?.toDouble() ?: 0.0)
+            }
+            if (item.hasNoPurchaseLimit) {
+                row.createCell(5).setCellValue(NO_PURCHASE_LIMIT_LABEL)
+            } else {
+                row.createCell(5).setCellValue(item.purchaseLimit?.toDouble() ?: 0.0)
+            }
             row.createCell(6).setCellValue(item.type?.toString() ?: "")
             row.createCell(7).setCellValue(item.ticketItemStatus.toString())
         }
@@ -166,5 +176,10 @@ class AdminExcelService {
         workbook.write(out)
         workbook.close()
         return out.toByteArray()
+    }
+
+    companion object {
+        const val UNLIMITED_LABEL = "무제한"
+        const val NO_PURCHASE_LIMIT_LABEL = "제한 없음"
     }
 }

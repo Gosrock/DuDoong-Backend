@@ -8,6 +8,10 @@ import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.event.repository.EventRepository
 import band.gosrock.domain.domains.event.service.EventService
 import band.gosrock.domain.domains.event.service.v2.V2EventDomainService
+import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
+import band.gosrock.domain.domains.ticket_item.service.TicketItemService
+import org.redisson.api.RedissonClient
+import org.springframework.transaction.PlatformTransactionManager
 import band.gosrock.domain.domains.tag.adaptor.TagAdaptor
 import band.gosrock.domain.domains.ticket_item.adaptor.OptionGroupAdaptor
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor
@@ -40,11 +44,23 @@ class V2TicketOptionDomainServiceTest {
         tagAdaptor = mock(TagAdaptor::class.java),
     )
 
+    private val v2TicketItemDomainService = V2TicketItemDomainService(
+        ticketItemAdaptor = mock(TicketItemAdaptor::class.java),
+        optionGroupAdaptor = mock(OptionGroupAdaptor::class.java),
+        eventAdaptor = mock(EventAdaptor::class.java),
+        orderAdaptor = mock(OrderAdaptor::class.java),
+        ticketItemService = mock(TicketItemService::class.java),
+        v2EventDomainService = v2EventDomainService,
+    )
+
     private val service = V2TicketOptionDomainService(
         optionGroupAdaptor = mock(OptionGroupAdaptor::class.java),
         ticketItemAdaptor = mock(TicketItemAdaptor::class.java),
         eventAdaptor = mock(EventAdaptor::class.java),
         v2EventDomainService = v2EventDomainService,
+        v2TicketItemDomainService = v2TicketItemDomainService,
+        redissonClient = mock(RedissonClient::class.java),
+        transactionManager = mock(PlatformTransactionManager::class.java),
     )
 
     private val start: LocalDateTime = LocalDateTime.of(2030, 5, 11, 18, 0)
@@ -77,6 +93,8 @@ class V2TicketOptionDomainServiceTest {
     fun `주관식 추가금, 음수 추가금, 객관식은 400`() {
         assertThrows<InvalidOptionPriceException> { service.newOptionGroup(event(), "a", "b", OptionGroupType.SUBJECTIVE, 1000) }
         assertThrows<InvalidOptionPriceException> { service.newOptionGroup(event(), "a", "b", OptionGroupType.TRUE_FALSE, -1) }
+        assertThrows<InvalidOptionPriceException> { service.newOptionGroup(event(), "a", "b", OptionGroupType.TRUE_FALSE, 10_000_001) }
+        assertEquals(10_000_000L, service.yesAdditionalPrice(service.newOptionGroup(event(), "a", "b", OptionGroupType.TRUE_FALSE, 10_000_000)))
         assertThrows<UnsupportedV2OptionTypeException> { service.newOptionGroup(event(), "a", "b", OptionGroupType.MULTIPLE_CHOICE, null) }
     }
 
@@ -85,12 +103,12 @@ class V2TicketOptionDomainServiceTest {
         val option = yesNo(price = 1000)
         val soldTicket = ticket(TicketPayType.DUDOONG_TICKET, option).also { it.reduceQuantity(1) }
         val tickets = listOf(soldTicket)
-        assertTrue(service.isLocked(option, tickets))
+        assertTrue(service.isLocked(option, tickets, emptySet()))
 
-        service.applyUpdate(option, tickets, name = "새이름", description = "새설명", yesAdditionalPrice = 1000)
+        service.applyUpdate(option, tickets, emptySet(), name = "새이름", description = "새설명", yesAdditionalPrice = 1000)
         assertEquals("새이름", option.name)
         assertEquals("새설명", option.description)
-        assertThrows<ForbiddenLockedOptionChangeException> { service.applyUpdate(option, tickets, null, null, 2000) }
+        assertThrows<ForbiddenLockedOptionChangeException> { service.applyUpdate(option, tickets, emptySet(), null, null, 2000) }
         assertEquals(1000L, service.yesAdditionalPrice(option))
     }
 
@@ -98,18 +116,30 @@ class V2TicketOptionDomainServiceTest {
     fun `판매 전 티켓에만 붙으면 추가금 변경 가능, 무료티켓에 붙은 옵션은 0 초과 불가`() {
         val option = yesNo(price = 0)
         val paid = ticket(TicketPayType.DUDOONG_TICKET, option)
-        assertFalse(service.isLocked(option, listOf(paid)))
-        service.applyUpdate(option, listOf(paid), null, null, 5000)
+        assertFalse(service.isLocked(option, listOf(paid), emptySet()))
+        service.applyUpdate(option, listOf(paid), emptySet(), null, null, 5000)
         assertEquals(5000L, service.yesAdditionalPrice(option))
         assertEquals(Money.ZERO, option.options.first { it.answer == KR_NO }.additionalPrice)
 
         val freeOption = yesNo(price = 0, id = 2L)
         val free = ticket(TicketPayType.FREE_TICKET, freeOption)
-        assertThrows<ForbiddenOptionPriceException> { service.applyUpdate(freeOption, listOf(free), null, null, 1) }
+        assertThrows<ForbiddenOptionPriceException> { service.applyUpdate(freeOption, listOf(free), emptySet(), null, null, 1) }
         // 주관식은 0 만
         val subjective = service.newOptionGroup(event(), "a", "b", OptionGroupType.SUBJECTIVE, null)
         ReflectionTestUtils.setField(subjective, "id", 3L)
-        service.applyUpdate(subjective, emptyList(), null, null, 0)
-        assertThrows<InvalidOptionPriceException> { service.applyUpdate(subjective, emptyList(), null, null, 100) }
+        service.applyUpdate(subjective, emptyList(), emptySet(), null, null, 0)
+        assertThrows<InvalidOptionPriceException> { service.applyUpdate(subjective, emptyList(), emptySet(), null, null, 100) }
+    }
+
+    @Test
+    fun `승인 대기 주문이 있는 티켓에 붙으면 재고 감소가 없어도 잠김 - 추가금 변경 400`() {
+        val option = yesNo(price = 1000)
+        val ticket = ticket(TicketPayType.DUDOONG_TICKET, option)
+        ReflectionTestUtils.setField(ticket, "id", 99L)
+        assertFalse(service.isLocked(option, listOf(ticket), emptySet()))
+        assertTrue(service.isLocked(option, listOf(ticket), setOf(99L)))
+        assertThrows<ForbiddenLockedOptionChangeException> { service.applyUpdate(option, listOf(ticket), setOf(99L), null, null, 2000) }
+        service.applyUpdate(option, listOf(ticket), setOf(99L), "이름만", null, null)
+        assertEquals("이름만", option.name)
     }
 }

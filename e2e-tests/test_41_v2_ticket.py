@@ -195,7 +195,11 @@ def test_03_create_tickets(base_url, s):
     assert_status(resp, 200)
     s.free_id = get_data(resp)["ticketItemId"]
 
-    resp = requests.post(url, json=_free(name="무제한", supplyCount=None, purchaseLimit=None, saleEndAt=_f(START)), headers=_h(s, "master"))
+    # 무제한 + 재고 공개는 400
+    resp = requests.post(url, json=_free(name="무제한", supplyCount=None, isQuantityPublic=True), headers=_h(s, "master"))
+    assert_status(resp, 400)
+    assert _code(resp) == "Ticket_Item_400_15"
+    resp = requests.post(url, json=_free(name="무제한", supplyCount=None, isQuantityPublic=False, purchaseLimit=None, saleEndAt=_f(START)), headers=_h(s, "master"))
     assert_status(resp, 200)
     data = get_data(resp)
     s.unlimited_id = data["ticketItemId"]
@@ -269,6 +273,10 @@ def test_06_v1_list_compat(base_url, s):
     assert items[s.dudoong_id]["payType"] == "두둥티켓" and items[s.dudoong_id]["approveType"] == "승인"
     assert items[s.free_id]["payType"] == "무료티켓" and items[s.free_id]["approveType"] == "선착순"
     assert items[s.dudoong_id]["supplyCount"] == 10
+    # v1 프론트용 무제한 판정 필드 (숫자 필드는 하위 호환으로 유지)
+    assert items[s.dudoong_id]["isUnlimitedSupply"] is False and items[s.dudoong_id]["hasNoPurchaseLimit"] is False
+    assert items[s.unlimited_id]["isUnlimitedSupply"] is True and items[s.unlimited_id]["hasNoPurchaseLimit"] is True
+    assert items[s.unlimited_id]["supplyCount"] >= 1_000_000
 
 
 def test_07_v1_order_reduces_stock(base_url, s):
@@ -285,6 +293,41 @@ def test_07_v1_order_reduces_stock(base_url, s):
         assert tickets[ticket_id]["isSold"] is True
         assert tickets[ticket_id]["remaining"] == 9 and tickets[ticket_id]["soldCount"] == 1
     assert tickets[s.unlimited_id]["saleState"] == "BEFORE_SALE"
+
+
+def test_07b_pending_approve_lock(base_url, s):
+    """승인 대기 주문만 있어도(재고 감소 전) 잠김: 가격·계좌·옵션 추가금 변경, 옵션 삭제·떼기 400"""
+    resp = requests.post(f"{base_url}/v2/events/{s.event_id}/options", json={"name": "굿즈", "description": "굿즈 구매?", "type": "YES_NO", "yesAdditionalPrice": 3000}, headers=_h(s, "manager"))
+    assert_status(resp, 200)
+    option_id = get_data(resp)["optionId"]
+    resp = requests.post(f"{base_url}/v2/events/{s.event_id}/ticket-items", json=_dudoong(name="승인대기"), headers=_h(s, "manager"))
+    assert_status(resp, 200)
+    ticket_id = get_data(resp)["ticketItemId"]
+    assert_status(requests.put(_ticket_url(base_url, s, ticket_id, "/options"), json={"optionIds": [option_id]}, headers=_h(s, "manager")), 200)
+    order = _v1_order(base_url, s, ticket_id)
+
+    t = _tickets(base_url, s)[ticket_id]
+    assert t["saleState"] == "BEFORE_SALE" and t["isSold"] is False and t["hasPendingOrders"] is True
+    for body in [_dudoong(name="승인대기", price=7000), _dudoong(name="승인대기", account={**ACCOUNT, "number": "999"})]:
+        resp = requests.patch(_ticket_url(base_url, s, ticket_id), json=body, headers=_h(s, "manager"))
+        assert_status(resp, 400)
+        assert _code(resp) == "Ticket_Item_400_14"
+    opt_url = f"{base_url}/v2/events/{s.event_id}/options/{option_id}"
+    resp = requests.patch(opt_url, json={"yesAdditionalPrice": 5000}, headers=_h(s, "manager"))
+    assert_status(resp, 400)
+    assert _code(resp) == "Option_Group_400_5"
+    resp = requests.delete(opt_url, headers=_h(s, "manager"))
+    assert_status(resp, 400)
+    assert _code(resp) == "Option_Group_400_2"
+    resp = requests.put(_ticket_url(base_url, s, ticket_id, "/options"), json={"optionIds": []}, headers=_h(s, "manager"))
+    assert_status(resp, 400)
+    assert _code(resp) == "Item_Option_Group_400_2"
+    assert _options(base_url, s)[option_id]["isLocked"] is True
+    # 판매 중단 후에도 기존 주문 승인은 된다
+    assert_status(requests.post(_ticket_url(base_url, s, ticket_id, "/suspend"), headers=_h(s, "manager")), 200)
+    assert_status(requests.post(f"{base_url}/v1/events/{s.event_id}/orders/{order}/approve", headers=_h(s, "master")), 200)
+    t = _tickets(base_url, s)[ticket_id]
+    assert t["saleState"] == "SUSPENDED" and t["isSold"] is True and t["hasPendingOrders"] is False
 
 
 def test_08_sold_ticket_restrictions(base_url, s):
@@ -317,12 +360,19 @@ def test_09_suspend_resume(base_url, s):
     resp = _v1_cart(base_url, s, s.free_id)
     assert_status(resp, 400)
     assert _code(resp) == "Ticket_Item_400_10"
+    # v1 공개 목록에서는 빠지고, v1 어드민 목록에는 보인다
+    public_ids = {t["ticketItemId"] for t in get_data(requests.get(f"{base_url}/v1/events/{s.event_id}/ticketItems"))["ticketItems"]}
+    assert s.free_id not in public_ids and s.dudoong_id in public_ids
+    admin_ids = {t["ticketItemId"] for t in get_data(requests.get(f"{base_url}/v1/events/{s.event_id}/ticketItems/admin", headers=_h(s, "guest")))["ticketItems"]}
+    assert s.free_id in admin_ids
 
     resp = requests.post(_ticket_url(base_url, s, s.free_id, "/resume"), headers=_h(s, "manager"))
     assert_status(resp, 200)
     assert get_data(resp)["saleState"] == "SOLD"
     resp = _v1_cart(base_url, s, s.free_id)
     assert resp.status_code in (200, 201), resp.text[:300]
+    public_ids = {t["ticketItemId"] for t in get_data(requests.get(f"{base_url}/v1/events/{s.event_id}/ticketItems"))["ticketItems"]}
+    assert s.free_id in public_ids
 
 
 def test_10_option_lock(base_url, s):
@@ -374,3 +424,28 @@ def test_12_v1_create_on_no_ticket_event_unchanged(base_url, s):
     assert checklist["ticketRequired"] is False and checklist["ticket"] is True
     tickets = _tickets(base_url, s, event_id=s.no_ticket_event_id)
     assert len(tickets) == 1 and list(tickets.values())[0]["payType"] == "FREE"
+
+
+def test_13_v1_long_name_resend(base_url, s):
+    """v1 로 만든 13자 이름(앞뒤 공백) 티켓이 판매된 뒤 v2 폼을 그대로 재전송해 설명만 바꿀 수 있다 (양쪽 trim 비교, 바뀐 값만 길이 검증)"""
+    long_name = " 열세글자이름입니다아아아아 "
+    resp = requests.post(
+        f"{base_url}/v1/events/{s.event_id}/ticketItems",
+        json={"payType": "무료티켓", "name": long_name, "description": "v1", "price": 0, "supplyCount": 10,
+              "approveType": "선착순", "isQuantityPublic": True, "purchaseLimit": 2},
+        headers=_h(s, "master"),
+    )
+    assert resp.status_code in (200, 201), resp.text[:300]
+    ticket_id = get_data(resp)["ticketItemId"]
+    order = _v1_order(base_url, s, ticket_id)
+    assert_status(requests.post(f"{base_url}/v1/orders/{order}/free", headers=_h(s, "buyer")), 200)
+    current = _tickets(base_url, s)[ticket_id]
+    assert current["saleState"] == "SOLD" and current["name"] == long_name
+
+    form = _free(name=current["name"], description="새 설명", supplyCount=10, purchaseLimit=2)
+    resp = requests.patch(_ticket_url(base_url, s, ticket_id), json=form, headers=_h(s, "manager"))
+    assert_status(resp, 200)
+    assert get_data(resp)["name"] == long_name and get_data(resp)["description"] == "새 설명"
+    resp = requests.patch(_ticket_url(base_url, s, ticket_id), json={**form, "name": "새이름"}, headers=_h(s, "manager"))
+    assert_status(resp, 400)
+    assert _code(resp) == "Ticket_Item_400_14"

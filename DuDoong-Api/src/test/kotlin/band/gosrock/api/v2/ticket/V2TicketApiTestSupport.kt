@@ -238,28 +238,46 @@ abstract class V2TicketApiTestSupport {
      * v1 사용자 구매: 카트 → 주문 → (무료 선착순) 무료 확정 / (승인형) 호스트 승인. 재고가 감소한다.
      * 공연은 OPEN 이어야 한다.
      */
-    protected fun v1Buy(buyer: User, host: User, eventId: Long, ticketItemId: Long, quantity: Long = 1, approval: Boolean): String {
+    /** v1 카트 → 주문 생성 (확정·승인 전). 승인형이면 PENDING_APPROVE, 무료 선착순이면 PENDING_PAYMENT */
+    protected fun v1Order(buyer: User, eventId: Long, ticketItemId: Long, quantity: Long = 1): String {
         val answers = v1Answers(buyer, eventId, ticketItemId)
         val cartId = v1Cart(buyer, ticketItemId, quantity, answers).andExpect { status { isOk() } }.data().at("/cartId").asLong()
-        val orderUuid = mockMvc.post("/api/v1/orders/") {
+        return v1CreateOrder(buyer, cartId).andExpect { status { isOk() } }.data().at("/orderId").asText()
+    }
+
+    protected fun v1CreateOrder(buyer: User, cartId: Long): ResultActionsDsl =
+        mockMvc.post("/api/v1/orders/") {
             with(auth(buyer))
             contentType = MediaType.APPLICATION_JSON
             content = json(mapOf("cartId" to cartId, "couponId" to null))
-        }.andExpect { status { isOk() } }.data().at("/orderId").asText()
+        }
+
+    protected fun v1Approve(host: User, eventId: Long, orderUuid: String): ResultActionsDsl =
+        mockMvc.post("/api/v1/events/$eventId/orders/$orderUuid/approve") { with(auth(host)) }
+
+    protected fun v1FreeConfirm(buyer: User, orderUuid: String): ResultActionsDsl =
+        mockMvc.post("/api/v1/orders/$orderUuid/free") { with(auth(buyer)) }
+
+    /**
+     * v1 사용자 구매: 카트 → 주문 → (무료 선착순) 무료 확정 / (승인형) 호스트 승인. 재고가 감소한다.
+     * 공연은 OPEN 이어야 한다.
+     */
+    protected fun v1Buy(buyer: User, host: User, eventId: Long, ticketItemId: Long, quantity: Long = 1, approval: Boolean): String {
+        val orderUuid = v1Order(buyer, eventId, ticketItemId, quantity)
         if (approval) {
-            mockMvc.post("/api/v1/events/$eventId/orders/$orderUuid/approve") { with(auth(host)) }.andExpect { status { isOk() } }
+            v1Approve(host, eventId, orderUuid).andExpect { status { isOk() } }
         } else {
-            mockMvc.post("/api/v1/orders/$orderUuid/free") { with(auth(buyer)) }.andExpect { status { isOk() } }
+            v1FreeConfirm(buyer, orderUuid).andExpect { status { isOk() } }
         }
         return orderUuid
     }
 
     /** v1 API 로 만든 것과 같은 티켓(v1 매퍼와 같은 값)을 직접 저장 */
-    protected fun saveV1FreeTicket(eventId: Long, supplyCount: Long = 10): TicketItem =
+    protected fun saveV1FreeTicket(eventId: Long, supplyCount: Long = 10, name: String = "v1무료", isSellable: Boolean? = true): TicketItem =
         ticketItemRepository.save(
             TicketItem(
                 payType = TicketPayType.FREE_TICKET,
-                name = "v1무료",
+                name = name,
                 description = "v1",
                 price = Money.ZERO,
                 quantity = supplyCount,
@@ -267,7 +285,7 @@ abstract class V2TicketApiTestSupport {
                 purchaseLimit = 2L,
                 type = TicketType.FIRST_COME_FIRST_SERVED,
                 isQuantityPublic = true,
-                isSellable = true,
+                isSellable = isSellable,
                 eventId = eventId,
             ),
         )

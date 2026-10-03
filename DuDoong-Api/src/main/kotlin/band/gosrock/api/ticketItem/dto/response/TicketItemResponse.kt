@@ -46,6 +46,12 @@ data class TicketItemResponse(
 
     @field:Schema(description = "재고가 남아있는지 리턴")
     val isQuantityLeft: Boolean?,
+
+    @field:Schema(description = "무제한 수량 티켓인지 (v2). true 면 supplyCount/quantity 는 저장값(1,000,000 이상)이라 표시하지 않는다")
+    val isUnlimitedSupply: Boolean,
+
+    @field:Schema(description = "1인 구매 매수 제한이 없는지 (v2). true 면 purchaseLimit 는 저장값(1,000,000 이상)")
+    val hasNoPurchaseLimit: Boolean,
 ) {
     companion object {
         @JvmStatic
@@ -63,6 +69,8 @@ data class TicketItemResponse(
             accountInfo = ticketItem.accountInfo,
             isSold = ticketItem.isSold(),
             isQuantityLeft = ticketItem.isQuantityLeft(),
+            isUnlimitedSupply = ticketItem.isUnlimitedSupply(),
+            hasNoPurchaseLimit = ticketItem.hasNoPurchaseLimit(),
         )
     }
 }

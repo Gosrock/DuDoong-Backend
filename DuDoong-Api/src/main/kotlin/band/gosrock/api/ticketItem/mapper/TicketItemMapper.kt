@@ -11,6 +11,7 @@ import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem
+import java.time.LocalDateTime
 import org.springframework.transaction.annotation.Transactional
 
 @Mapper
@@ -40,7 +41,10 @@ class TicketItemMapper(
     @Transactional(readOnly = true)
     fun toGetEventTicketItemsResponse(eventId: Long, isAdmin: Boolean): GetEventTicketItemsResponse {
         val event = eventAdaptor.findById(eventId)
+        val now = LocalDateTime.now()
+        // 공개 목록에는 판매 중(판매 중단 아님 + 판매 기간 안)인 티켓만. 어드민 목록은 전부
         val ticketItems = ticketItemAdaptor.findAllByEventId(event.id!!)
+            .filter { isAdmin || it.isOnSale(now) }
         return GetEventTicketItemsResponse.from(
             ticketItems.map { TicketItemResponse.from(it, isAdmin) }
         )

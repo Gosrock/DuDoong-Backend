@@ -24,18 +24,19 @@ data class V2TicketItemRequest(
     @field:NotNull
     val payType: V2TicketPayType?,
 
-    @field:Schema(description = "티켓 이름 (1~${V2TicketItemDomainService.NAME_MAX_LENGTH}자)", example = "일반 티켓")
+    @field:Schema(description = "티켓 이름 (1~${V2TicketItemDomainService.NAME_MAX_LENGTH}자). 길이는 값이 바뀔 때만 검증 (v1 의 긴 이름은 그대로 재전송 가능)", example = "일반 티켓")
     @field:NotBlank
-    @field:Size(max = V2TicketItemDomainService.NAME_MAX_LENGTH)
+    @field:Size(max = RAW_TEXT_MAX)
     val name: String?,
 
-    @field:Schema(description = "티켓 설명 (~${V2TicketItemDomainService.DESCRIPTION_MAX_LENGTH}자)", example = "일반 입장 티켓")
-    @field:Size(max = V2TicketItemDomainService.DESCRIPTION_MAX_LENGTH)
+    @field:Schema(description = "티켓 설명 (~${V2TicketItemDomainService.DESCRIPTION_MAX_LENGTH}자). 길이는 값이 바뀔 때만 검증", example = "일반 입장 티켓")
+    @field:Size(max = RAW_TEXT_MAX)
     val description: String? = null,
 
-    @field:Schema(description = "가격(원). DUDOONG 은 1 이상, FREE 는 0", example = "6000")
+    @field:Schema(description = "가격(원). DUDOONG 은 1 ~ ${V2TicketItemDomainService.MAX_PRICE}, FREE 는 0", example = "6000")
     @field:NotNull
     @field:PositiveOrZero
+    @field:Max(V2TicketItemDomainService.MAX_PRICE)
     val price: Long?,
 
     @field:Schema(description = "판매 수량. null 이면 무제한", example = "100")
@@ -51,7 +52,7 @@ data class V2TicketItemRequest(
     @field:NotNull
     val approvalRequired: Boolean?,
 
-    @field:Schema(description = "재고(잔여 매수) 공개 여부. 무제한 티켓은 false 로 저장", example = "true")
+    @field:Schema(description = "재고(잔여 매수) 공개 여부. 무제한(supplyCount=null)이면 true 불가 (400)", example = "true")
     @field:NotNull
     val isQuantityPublic: Boolean?,
 
@@ -81,6 +82,11 @@ data class V2TicketItemRequest(
         saleStartAt = saleStartAt,
         saleEndAt = saleEndAt,
     )
+
+    companion object {
+        /** 길이 규칙은 도메인에서 (값이 바뀔 때만). 여기서는 과도한 입력만 막는다 (컬럼 varchar(255)) */
+        private const val RAW_TEXT_MAX = 255
+    }
 }
 
 data class V2TicketAccountRequest(
