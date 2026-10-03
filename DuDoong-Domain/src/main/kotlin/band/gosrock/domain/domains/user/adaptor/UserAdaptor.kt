@@ -29,6 +29,10 @@ class UserAdaptor(private val userRepository: UserRepository) {
         userRepository.findByProfileEmailAndAccountState(email, AccountState.NORMAL)
             .orElseThrow { UserNotFoundException.EXCEPTION }
 
+    /** 이메일 목록으로 정상 상태 유저를 가져오는 쿼리. 없는 이메일은 결과에 없음 */
+    fun queryUsersByEmailIn(emails: Collection<String>): List<User> =
+        if (emails.isEmpty()) emptyList() else userRepository.findAllByProfileEmailInAndAccountState(emails, AccountState.NORMAL)
+
     fun countNormalUserCreatedBefore(before: LocalDateTime): Long =
         userRepository.countByAccountStateAndCreatedAtBefore(AccountState.NORMAL, before)
 

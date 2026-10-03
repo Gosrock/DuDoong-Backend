@@ -20,6 +20,8 @@ interface UserRepository : JpaRepository<User, Long> {
     /** email 로 유저를 가져오는 쿼리 */
     fun findByProfileEmailAndAccountState(email: String, accountState: AccountState): Optional<User>
 
+    fun findAllByProfileEmailInAndAccountState(emails: Collection<String>, accountState: AccountState): List<User>
+
     fun countByAccountStateAndCreatedAtBefore(accountState: AccountState, before: LocalDateTime): Long
 
     fun findByIdIn(userIds: List<Long>): List<User>

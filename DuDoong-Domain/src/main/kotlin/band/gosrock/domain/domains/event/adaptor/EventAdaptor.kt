@@ -19,6 +19,12 @@ class EventAdaptor(private val eventRepository: EventRepository) {
     fun findAllByHostId(hostId: Long, pageable: Pageable): Page<Event> =
         eventRepository.findAllByHostId(hostId, pageable)
 
+    fun findAllByHostIdAndStatusIn(hostId: Long, statuses: Collection<EventStatus>, pageable: Pageable): Page<Event> =
+        eventRepository.findAllByHostIdAndStatusIn(hostId, statuses, pageable)
+
+    fun queryEventCountsByHostIdIn(hostIds: List<Long>): Map<Long, Long> =
+        eventRepository.queryEventCountsByHostIdIn(hostIds)
+
     fun findAllByHostIdIn(hostId: List<Long>, pageable: Pageable): Page<Event> =
         eventRepository.findAllByHostIdIn(hostId, pageable)
 

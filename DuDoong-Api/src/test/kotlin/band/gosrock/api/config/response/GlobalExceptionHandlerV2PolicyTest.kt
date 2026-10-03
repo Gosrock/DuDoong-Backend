@@ -44,7 +44,7 @@ class GlobalExceptionHandlerV2PolicyTest {
     }
 
     @ParameterizedTest(name = "{0}: v2 핸들러는 403")
-    @ValueSource(strings = ["FORBIDDEN_HOST", "NOT_ACCEPTED_HOST", "NOT_MANAGER_HOST", "NOT_MASTER_HOST", "NOT_PARTNER_HOST"])
+    @ValueSource(strings = ["FORBIDDEN_HOST", "NOT_ACCEPTED_HOST", "NOT_MANAGER_HOST", "NOT_MASTER_HOST", "NOT_PARTNER_HOST", "MANAGER_CAN_MANAGE_GUEST_ONLY"])
     fun v2HandlerReturnsForbidden(name: String) {
         val errorCode = HostErrorCode.valueOf(name)
 
@@ -60,7 +60,7 @@ class GlobalExceptionHandlerV2PolicyTest {
     }
 
     @ParameterizedTest(name = "{0}: v1 핸들러는 기존 400 유지")
-    @ValueSource(strings = ["FORBIDDEN_HOST", "NOT_ACCEPTED_HOST", "NOT_MANAGER_HOST", "NOT_MASTER_HOST", "NOT_PARTNER_HOST"])
+    @ValueSource(strings = ["FORBIDDEN_HOST", "NOT_ACCEPTED_HOST", "NOT_MANAGER_HOST", "NOT_MASTER_HOST", "NOT_PARTNER_HOST", "MANAGER_CAN_MANAGE_GUEST_ONLY"])
     fun v1HandlerKeepsBadRequest(name: String) {
         val errorCode = HostErrorCode.valueOf(name)
 

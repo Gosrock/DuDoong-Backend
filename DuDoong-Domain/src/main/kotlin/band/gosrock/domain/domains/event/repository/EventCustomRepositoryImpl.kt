@@ -60,6 +60,18 @@ class EventCustomRepositoryImpl(
     override fun queryEventsByEndAtBeforeAndStatusOpen(time: LocalDateTime): List<Event> =
         queryFactory.selectFrom(event).where(endAtBefore(time), statusEq(OPEN)).fetch()
 
+    override fun queryEventCountsByHostIdIn(hostIds: List<Long>): Map<Long, Long> {
+        if (hostIds.isEmpty()) return emptyMap()
+        val eventCount = event.count()
+        return queryFactory
+            .select(event.hostId, eventCount)
+            .from(event)
+            .where(hostIdIn(hostIds), event.status.ne(EventStatus.DELETED))
+            .groupBy(event.hostId)
+            .fetch()
+            .associate { it.get(event.hostId)!! to (it.get(eventCount) ?: 0L) }
+    }
+
     private fun queryClosedEventsByKeywordAndSize(keyword: String?, pageable: Pageable, size: Long): List<Event> {
         val totalOpenEventsSize = queryCountByKeywordAndStatus(keyword, OPEN)
         val closedEventsOffset = maxOf(pageable.offset - totalOpenEventsSize, 0L)

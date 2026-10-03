@@ -10,4 +10,5 @@ interface HostCustomRepository {
     fun queryHostsByActiveUserId(id: Long): List<Host>
     fun querySliceHostsByActiveUserId(id: Long, pageable: Pageable): Slice<Host>
     fun findAllForAdmin(keyword: String?, pageable: Pageable): Page<Host>
+    fun queryPageHostsByActiveUserId(userId: Long, keyword: String?, pageable: Pageable): Page<Host>
 }

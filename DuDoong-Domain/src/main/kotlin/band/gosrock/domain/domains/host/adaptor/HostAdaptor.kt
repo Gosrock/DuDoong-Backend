@@ -38,4 +38,8 @@ class HostAdaptor(private val hostRepository: HostRepository) {
 
     fun querySliceHostsByActiveUserId(userId: Long, pageable: Pageable): Slice<Host> =
         hostRepository.querySliceHostsByActiveUserId(userId, pageable)
+
+    /** 초대 수락한(활성) 호스트를 이름 부분일치로 페이지 조회 (v2) */
+    fun queryPageHostsByActiveUserId(userId: Long, keyword: String?, pageable: Pageable): Page<Host> =
+        hostRepository.queryPageHostsByActiveUserId(userId, keyword, pageable)
 }

@@ -67,6 +67,28 @@ class HostCustomRepositoryImpl(private val queryFactory: JPAQueryFactory) : Host
         return PageImpl(hosts, pageable, total)
     }
 
+    override fun queryPageHostsByActiveUserId(userId: Long, keyword: String?, pageable: Pageable): Page<Host> {
+        val keywordCondition: BooleanExpression? =
+            if (!keyword.isNullOrBlank()) host.profile.name.contains(keyword) else null
+
+        val hosts = queryFactory
+            .select(host)
+            .from(host, hostUser)
+            .where(hostUserIdEq(userId), host.hostUsers.contains(hostUser), hostUserActive(), keywordCondition)
+            .offset(pageable.offset)
+            .orderBy(hostIdDesc())
+            .limit(pageable.pageSize.toLong())
+            .fetch()
+
+        val total = queryFactory
+            .select(host.count())
+            .from(host, hostUser)
+            .where(hostUserIdEq(userId), host.hostUsers.contains(hostUser), hostUserActive(), keywordCondition)
+            .fetchOne() ?: 0L
+
+        return PageImpl(hosts, pageable, total)
+    }
+
     private fun hostUserIdEq(userId: Long): BooleanExpression = hostUser.userId.eq(userId)
     private fun hostUserActive(): BooleanExpression = hostUser.active.isTrue
     private fun hostIdDesc(): OrderSpecifier<Long> = host.id.desc()
