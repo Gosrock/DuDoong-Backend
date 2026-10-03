@@ -35,8 +35,16 @@ import jakarta.persistence.PostPersist
 import jakarta.persistence.PrePersist
 import jakarta.persistence.Table
 
-/** (event_id, order_status): v2 공연별 주문 목록·상태별 건수·대시보드 (#712, V004) */
-@Table(indexes = [Index(name = "idx_order_event_id_status", columnList = "event_id, order_status")])
+/**
+ * (event_id, order_status): v2 공연별 주문 목록·상태별 건수·대시보드 (#712, V004)
+ * uuid unique: 주문 조회(승인·거절·취소·상세, v1/v2 공통)의 단건 조회 (#712, V004)
+ */
+@Table(
+    indexes = [
+        Index(name = "idx_order_event_id_status", columnList = "event_id, order_status"),
+        Index(name = "uk_order_uuid", columnList = "uuid", unique = true),
+    ],
+)
 @Entity(name = "tbl_order")
 class Order() : BaseTimeEntity() {
 
