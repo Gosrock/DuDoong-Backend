@@ -1,0 +1,65 @@
+package band.gosrock.api.v2.notification.dto
+
+import band.gosrock.common.annotation.DateFormat
+import band.gosrock.domain.domains.notification.domain.Notification
+import band.gosrock.domain.domains.notification.domain.NotificationTargetType
+import band.gosrock.domain.domains.notification.domain.NotificationType
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.validation.constraints.Size
+import java.time.LocalDateTime
+
+data class V2NotificationResponse(
+    val id: Long,
+    @field:Schema(description = "HOST_MEMBER_ADDED / ORDER_PENDING_APPROVE / ORDER_APPROVED / ORDER_REFUSED")
+    val type: NotificationType,
+    val title: String,
+    val body: String,
+    val target: V2NotificationTarget,
+    @field:Schema(description = "부가 정보 (hostName, role, eventName, orderNo, refuseReasonType, refuseReason 등 종류별)")
+    val extra: Map<String, String>,
+    val isRead: Boolean,
+    @field:DateFormat
+    @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm")
+    val createdAt: LocalDateTime?,
+) {
+    companion object {
+        private val OBJECT_MAPPER = ObjectMapper()
+
+        fun of(notification: Notification) = V2NotificationResponse(
+            id = notification.id!!,
+            type = notification.type,
+            title = notification.title,
+            body = notification.body,
+            target = V2NotificationTarget(type = notification.targetType, id = notification.targetId, eventId = notification.eventId),
+            extra = notification.extra?.let { runCatching { OBJECT_MAPPER.readValue<Map<String, String>>(it) }.getOrNull() }.orEmpty(),
+            isRead = notification.isRead,
+            createdAt = notification.createdAt,
+        )
+    }
+}
+
+data class V2NotificationTarget(
+    @field:Schema(description = "HOST: id = hostId, ORDER: id = orderUuid (+ eventId)")
+    val type: NotificationTargetType,
+    val id: String,
+    val eventId: Long?,
+)
+
+data class V2UnreadCountResponse(val count: Long)
+
+data class V2ReadNotificationsRequest(
+    @field:Schema(description = "읽음 처리할 알림 id. 본인 것이 아니거나 없는 id 는 무시")
+    @field:Size(max = 100)
+    val notificationIds: List<Long>? = null,
+    @field:Schema(description = "true 면 전체 읽음 (notificationIds 무시)")
+    val all: Boolean? = null,
+)
+
+data class V2ReadNotificationsResponse(
+    @field:Schema(description = "이번 요청으로 읽음 처리된 건수 (이미 읽은 것·남의 것 제외)")
+    val updatedCount: Int,
+    @field:Schema(description = "처리 후 안읽음 수")
+    val unreadCount: Long,
+)

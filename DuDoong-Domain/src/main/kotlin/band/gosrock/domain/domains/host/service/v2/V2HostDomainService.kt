@@ -1,6 +1,7 @@
 package band.gosrock.domain.domains.host.service.v2
 
 import band.gosrock.common.annotation.DomainService
+import band.gosrock.domain.common.aop.domainEvent.Events
 import band.gosrock.domain.common.vo.HostContactVo
 import band.gosrock.domain.common.vo.ImageVo
 import band.gosrock.domain.domains.host.domain.Host
@@ -74,7 +75,7 @@ class V2HostDomainService(
         }
     }
 
-    /** 수락 단계 없이 즉시 활성 멤버로 추가합니다 (DEC-015). 이미 멤버(초대 대기 포함)이면 예외 */
+    /** 수락 단계 없이 즉시 활성 멤버로 추가합니다 (DEC-015). 이미 멤버(초대 대기 포함)이면 예외. 추가된 사람 알림용 [V2HostMembersAddedEvent] 발행 */
     fun addActiveHostUsers(host: Host, requesterUserId: Long, newHostUsers: List<HostUser>): Host {
         newHostUsers.forEach { validateCanManageRole(host, requesterUserId, it.role) }
         if (newHostUsers.map { it.userId }.distinct().size != newHostUsers.size) {
@@ -85,6 +86,7 @@ class V2HostDomainService(
             it.activate()
         }
         host.hostUsers.addAll(newHostUsers)
+        Events.raise(V2HostMembersAddedEvent(hostId = host.id!!, userIds = newHostUsers.map { it.userId!! }))
         return hostRepository.save(host)
     }
 

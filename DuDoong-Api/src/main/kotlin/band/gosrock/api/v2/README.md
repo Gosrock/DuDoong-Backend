@@ -49,6 +49,9 @@ band.gosrock.api.v2
   - `V2CheckInDomainService` (#712): 체크인 결과 판정(ENTERED / ALREADY_ENTERED / OTHER_EVENT / CANCELED, 셀프 전용 SELECT_TICKET), 입장은 v1 `IssuedTicket.entrance` + 행 잠금(`SELECT ... FOR UPDATE`)으로 동시 스캔 1회만 입장. 호스트 스캔은 OPEN·CALCULATING(지각 입장) 공연만(그 외 `Event_400_27`), 셀프 체크인은 OPEN 만
   - 셀프 체크인 토큰(Q-4)은 공연 등록 때가 아니라 **최초 조회 시 생성**한다(조건부 UPDATE, 동시 조회도 토큰 1개). `Event.checkInToken` 은 읽기 전용 매핑이라 생성 직후 엔티티 값은 stale 일 수 있다
   - 조회 쿼리 `V2OrderQuery` / `V2IssuedTicketQuery` 도 `service.v2` 에 둔다 (v2 만 사용)
+  - `V2NotificationDomainService` (#714): 알림센터(테이블 `tbl_notification` 은 v2 전용). 저장(`notify*`)은 커밋된 데이터를 다시 읽어 수신자·문구를 정하고 조건이 안 맞으면 저장 안 함, 목록(Slice)·안읽음 수·읽음(본인 것만, 남의 id 무시, 멱등)
+    - 저장 핸들러 `api.v2.notification.handler.V2NotificationEventHandler`: 기존 도메인 이벤트(`CreateOrderEvent`·`DoneOrderEvent`·`WithDrawOrderEvent`, v1 경로 포함)와 v2 전용 `V2HostMembersAddedEvent`(`V2HostDomainService.addActiveHostUsers` 에서만 발행)에 붙는다. `@Async` + `@TransactionalEventListener(AFTER_COMMIT)`, 예외는 삼키고 로그만 (원 트랜잭션 영향 없음)
+    - 중복 방지 uk(user_id, type, dedup_key): 주문 = orderUuid, 멤버 추가 = `host_user:{id}`. 일괄 저장은 `NotificationBulkRepository`(multi-row INSERT, 이미 있는 키는 건너뜀)
 - **open-in-view**: test·staging·prod 는 켜져 있다(기본값). 요청 영속성 컨텍스트에 먼저 올린 엔티티는 락 트랜잭션(REQUIRES_NEW)에서 바뀌어도 같은 요청 안에서 갱신되지 않으므로, 락 서비스를 부르기 전 검사는 엔티티 대신 스칼라 조회로 한다 (`V2OrderDomainService.validateEventOrder`)
 - 티켓 공통 불변식(엔티티 `TicketItem`): 재고 감소 = 판매됨(`isSold`), 판매된 티켓 옵션 변경·삭제 불가, 무제한·매수 제한 없음 저장값(`TicketItem.UNLIMITED_SUPPLY_COUNT` / `NO_PURCHASE_LIMIT` = 1,000,000, `isUnlimitedSupply()` / `hasNoPurchaseLimit()` — v1 응답·어드민·v2 공통), **판매 중 판정(`isOnSale`: isSellable + 판매 기간)**
   - v1 장바구니·주문 생성(`CartValidator`/`OrderValidator.validCanCreate`)이 이 검사를 하고, v1 공개 티켓 목록은 판매 중인 티켓만 보여 준다(어드민 목록은 전부). v1 로 만든 티켓은 isSellable=true·기간 null 이라 영향 없음

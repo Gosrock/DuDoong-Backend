@@ -1,5 +1,6 @@
 package band.gosrock.domain.domains.host.service.v2
 
+import band.gosrock.domain.common.aop.domainEvent.Events
 import band.gosrock.domain.common.vo.HostContactVo
 import band.gosrock.domain.domains.host.domain.Host
 import band.gosrock.domain.domains.host.domain.HostContact
@@ -62,6 +63,30 @@ class V2HostDomainServiceTest {
 
             assertTrue(host.isActiveHostUserId(10L))
             assertEquals(HostRole.MANAGER, host.getActiveRoleOf(10L))
+        }
+
+        @Test
+        fun `추가 성공 시 추가된 유저 목록으로 V2HostMembersAddedEvent 1건, 실패 시 발행 안 함 (#714 알림)`() {
+            val published = mutableListOf<Any>()
+            Events.setPublisher { published.add(it) }
+            try {
+                service.addActiveHostUsers(
+                    host,
+                    masterId,
+                    listOf(HostUser(host = host, userId = 10L, role = HostRole.MANAGER), HostUser(host = host, userId = 11L, role = HostRole.GUEST)),
+                )
+                val event = published.filterIsInstance<V2HostMembersAddedEvent>().single()
+                assertEquals(100L, event.hostId)
+                assertEquals(listOf(10L, 11L), event.userIds)
+
+                published.clear()
+                assertThrows<AlreadyJoinedHostException> {
+                    service.addActiveHostUsers(host, masterId, listOf(HostUser(host = host, userId = 12L, role = HostRole.GUEST), HostUser(host = host, userId = guestId, role = HostRole.GUEST)))
+                }
+                assertTrue(published.filterIsInstance<V2HostMembersAddedEvent>().isEmpty())
+            } finally {
+                Events.reset()
+            }
         }
 
         @Test
