@@ -12,6 +12,7 @@ import band.gosrock.domain.domains.event.exception.InvalidEventImageKeyException
 import band.gosrock.domain.domains.event.exception.InvalidEventTagException
 import band.gosrock.domain.domains.event.repository.EventRepository
 import band.gosrock.domain.domains.event.service.EventService
+import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor
 import band.gosrock.infrastructure.config.s3.S3UploadPresignedUrlService
 import org.springframework.transaction.annotation.Transactional
 
@@ -20,10 +21,11 @@ class V2UpdateEventBasicUseCase(
     private val eventAdaptor: EventAdaptor,
     private val eventRepository: EventRepository,
     private val eventService: EventService,
+    private val ticketItemAdaptor: TicketItemAdaptor,
     private val presignedUrlService: S3UploadPresignedUrlService,
     private val readEventManageUseCase: V2ReadEventManageUseCase,
 ) {
-    /** 등록(OPEN) 후에도 수정 가능 (DEC-007). hasTicket 은 준비중일 때만, 정산중·지난공연은 수정 불가 */
+    /** 등록(OPEN) 후에도 수정 가능 (DEC-007, 단 시작 시각은 현재 이후로만). hasTicket 은 준비중일 때만(유효 티켓이 있으면 false 불가), 정산중·지난공연은 수정 불가 */
     @Transactional
     @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID)
     fun execute(userId: Long, eventId: Long, request: V2UpdateEventBasicRequest): V2EventManageResponse {
@@ -36,6 +38,8 @@ class V2UpdateEventBasicUseCase(
             hasTicket = request.hasTicket,
             posterImageKey = request.posterImageKey,
             place = request.place?.toEventPlace(),
+            // '티켓 없음' 으로 바꿀 때만 유효 티켓을 조회한다
+            hasValidTicket = request.hasTicket == false && event.hasTicket && ticketItemAdaptor.existsValidByEventId(eventId),
         )
         // 배열 안의 null 원소는 형식 오류 (500 방지)
         request.contacts?.let { contacts ->

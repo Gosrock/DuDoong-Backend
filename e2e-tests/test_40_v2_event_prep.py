@@ -80,8 +80,15 @@ def _patch_basic(base_url, s, event_id, body, who="manager"):
     return requests.patch(f"{base_url}/v2/events/{event_id}/basic", json=body, headers=_h(s, who))
 
 
+def _poster_key(base_url, s, event_id):
+    resp = requests.post(f"{base_url}/v2/events/{event_id}/images", json={"purpose": "POSTER", "extension": "PNG"}, headers=_h(s, "manager"))
+    assert_status(resp, 200)
+    return get_data(resp)["key"]
+
+
 def _fill(base_url, s, event_id):
-    assert_status(_patch_basic(base_url, s, event_id, {"place": PLACE, "contacts": [{"type": "EMAIL", "value": "a@a.com"}]}), 200)
+    body = {"posterImageKey": _poster_key(base_url, s, event_id), "place": PLACE, "contacts": [{"type": "EMAIL", "value": "a@a.com"}]}
+    assert_status(_patch_basic(base_url, s, event_id, body), 200)
     assert_status(requests.put(f"{base_url}/v2/events/{event_id}/sections", json=SECTIONS, headers=_h(s, "manager")), 200)
 
 
@@ -181,6 +188,11 @@ def test_05_basic_info_contacts_tags(base_url, s):
     assert f"/event/{s.event_id}/" in poster_key
 
     tag_ids = [s.tag_ids[("AREA", "홍대")], s.tag_ids[("EVENT_TYPE", "정기공연")], s.tag_ids[("GENRE", "락밴드")]]
+    # 포스터 없이 장소·문의처만 있으면 기본 정보 미충족
+    resp = _patch_basic(base_url, s, s.event_id, {"place": PLACE, "contacts": [{"type": "EMAIL", "value": "a@a.com"}]})
+    assert_status(resp, 200)
+    assert _checklist(base_url, s, s.event_id)["basic"] is False
+
     resp = _patch_basic(
         base_url,
         s,
@@ -213,13 +225,24 @@ def test_05_basic_info_contacts_tags(base_url, s):
         assert resp.json()["code"] == code
     assert_status(_patch_basic(base_url, s, s.event_id, {"name": "가" * 26}), 400)
     assert_status(_patch_basic(base_url, s, s.event_id, {"contacts": [{"type": "ETC", "value": str(i)} for i in range(11)]}), 400)
+    # 태그는 중복 제거 후 개수 검증
+    resp = _patch_basic(base_url, s, s.event_id, {"tagIds": tag_ids * 4})
+    assert_status(resp, 200)
+    assert len(get_data(resp)["tags"]) == 3
 
 
 def test_06_sections(base_url, s):
     url = f"{base_url}/v2/events/{s.event_id}/sections"
+    # HTML 은 서버에서 sanitize
+    dirty = [{"title": "공연 소개", "content": '<p>x<script>alert(1)</script></p><img src="https://a.com/a.png" onerror="alert(2)">', "sortOrder": 0}]
+    saved = get_data(requests.put(url, json=dirty, headers=_h(s, "manager")))[0]
+    assert "<script" not in saved["content"] and "onerror" not in saved["content"]
+    assert '<img src="https://a.com/a.png">' in saved["content"]
+
     resp = requests.put(url, json=SECTIONS, headers=_h(s, "manager"))
     assert_status(resp, 200)
     assert [x["title"] for x in get_data(resp)] == ["공연 소개", "예매안내", "세트리스트", "유의사항"]
+    assert {x["contentFormat"] for x in get_data(resp)} == {"HTML"}
 
     # 준비중 공연 섹션: 비로그인/비멤버 404, 멤버 200
     assert_status(requests.get(url), 404)
@@ -253,7 +276,9 @@ def test_08_public_sections_after_open(base_url, s):
     resp = requests.get(f"{base_url}/v2/events/{s.event_id}/sections")
     assert_status(resp, 200)
     sections = get_data(resp)
-    assert sections[0] == {"sectionId": sections[0]["sectionId"], "title": "공연 소개", "content": "<p>v2 소개</p>", "sortOrder": 0}
+    assert sections[0] == {
+        "sectionId": sections[0]["sectionId"], "title": "공연 소개", "content": "<p>v2 소개</p>", "contentFormat": "HTML", "sortOrder": 0,
+    }
     assert sections[0]["sectionId"]
 
 
@@ -269,6 +294,13 @@ def test_09_edit_after_open(base_url, s):
     resp = _patch_basic(base_url, s, s.event_id, {"hasTicket": False})
     assert_status(resp, 400)
     assert resp.json()["code"] == "Event_400_18"
+
+    # 등록된 공연의 시작 시각은 현재 이후로만
+    past = datetime.now() - timedelta(hours=1)
+    resp = _patch_basic(base_url, s, s.event_id, {"startAt": _f(past), "endAt": _f(past + timedelta(hours=2))})
+    assert_status(resp, 400)
+    assert resp.json()["code"] == "Event_400_24"
+    assert_status(_patch_basic(base_url, s, s.event_id, {"startAt": _f(START), "name": "v2등록후수정"}), 200)
 
     # v1 PATCH basic 은 OPEN 이면 여전히 불가
     resp = requests.patch(
@@ -301,6 +333,7 @@ def test_10_v1_detail_compat(base_url, s):
     assert_status(resp, 200)
     sections = get_data(requests.get(f"{base_url}/v2/events/{s.event_id}/sections"))
     assert [x["content"] for x in sections[:2]] == ["v1에서 고친 소개", "예매 안내"]
+    assert [x["contentFormat"] for x in sections[:2]] == ["MARKDOWN", "HTML"]
 
 
 def test_11_no_ticket_event(base_url, s):
@@ -335,6 +368,16 @@ def test_11_no_ticket_event(base_url, s):
     assert get_data(resp)["status"] == "OPEN"
 
 
+def test_11b_has_ticket_false_blocked_by_ticket(base_url, s):
+    resp = _create_event(base_url, s, name="v2티켓있음")
+    event_id = get_data(resp)["eventId"]
+    _v1_free_ticket(base_url, s, event_id)
+    resp = _patch_basic(base_url, s, event_id, {"hasTicket": False})
+    assert_status(resp, 400)
+    assert resp.json()["code"] == "Event_400_25"
+    assert get_data(requests.get(f"{base_url}/v2/events/{event_id}/manage", headers=_h(s, "master")))["hasTicket"] is True
+
+
 def test_12_delete_rules(base_url, s):
     assert_status(requests.delete(f"{base_url}/v2/events/{s.event_id}", headers=_h(s, "master")), 400)
     resp = requests.delete(f"{base_url}/v2/events/{s.no_ticket_event_id}", headers=_h(s, "master"))
@@ -352,14 +395,17 @@ def test_12_delete_rules(base_url, s):
 
 
 def test_13_my_events(base_url, s):
+    before = datetime.now().date()
     resp = requests.get(f"{base_url}/v2/me/events", headers=_h(s, "guest"))
+    after = datetime.now().date()
     assert_status(resp, 200)
     data = get_data(resp)
     names = [e["name"] for e in data["content"]]
     assert "v2삭제할공연" not in names
     by_id = {e["eventId"]: e for e in data["content"]}
     assert by_id[s.event_id]["displayStatus"] == "UPCOMING"
-    assert by_id[s.event_id]["dDay"] == (START.date() - datetime.now().date()).days
+    # 자정 경계: 요청 전후 날짜 중 하나 기준이면 된다
+    assert by_id[s.event_id]["dDay"] in {(START.date() - before).days, (START.date() - after).days}
     assert by_id[s.event_id]["placeName"] == "롤링홀"
     assert by_id[s.event_id]["hostName"].startswith("공연준비")
     ids = [e["eventId"] for e in data["content"]]
@@ -367,6 +413,12 @@ def test_13_my_events(base_url, s):
 
     resp = requests.get(f"{base_url}/v2/me/events", params={"keyword": "버스킹"}, headers=_h(s, "guest"))
     assert [e["eventId"] for e in get_data(resp)["content"]] == [s.no_ticket_event_id]
+
+    # LIKE 와일드카드는 문자 그대로 (MySQL)
+    pct_id = get_data(_create_event(base_url, s, name=f"100%_{RUN[:4]}"))["eventId"]
+    for kw in ("%", "_"):
+        found = [e["eventId"] for e in get_data(requests.get(f"{base_url}/v2/me/events", params={"keyword": kw}, headers=_h(s, "guest")))["content"]]
+        assert found == [pct_id], (kw, found)
 
     # 비멤버에게는 이 호스트 공연이 없다
     outsider = get_data(requests.get(f"{base_url}/v2/me/events", headers=_h(s, "outsider")))

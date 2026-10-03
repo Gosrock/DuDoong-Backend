@@ -47,6 +47,10 @@ enum class EventErrorCode(
     INVALID_EVENT_IMAGE_KEY(BAD_REQUEST, "Event_400_22", "이 공연에 업로드한 이미지가 아닙니다."),
     @ExplainError("존재하지 않는 태그 id 가 있거나 태그 최대 개수를 넘는 경우")
     INVALID_EVENT_TAG(BAD_REQUEST, "Event_400_23", "태그가 올바르지 않습니다."),
+    @ExplainError("등록(OPEN)된 공연의 시작 시각을 현재 이전으로 바꾸려는 경우 (같은 값은 허용)")
+    CANNOT_MOVE_OPEN_EVENT_START_TO_PAST(BAD_REQUEST, "Event_400_24", "등록된 공연의 시작 시각은 현재 이후여야 합니다."),
+    @ExplainError("유효 티켓이 있는 공연을 '티켓 없음'(hasTicket=false) 으로 바꾸려는 경우")
+    CANNOT_DISABLE_TICKET_WITH_TICKETS(BAD_REQUEST, "Event_400_25", "티켓이 있는 공연은 티켓 없음으로 바꿀 수 없습니다."),
 
     USE_OTHER_API(BAD_REQUEST, "Event_400_8", "잘못된 접근입니다.");
 

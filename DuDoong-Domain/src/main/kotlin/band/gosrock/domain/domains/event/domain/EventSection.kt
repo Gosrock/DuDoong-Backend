@@ -3,16 +3,20 @@ package band.gosrock.domain.domains.event.domain
 import band.gosrock.domain.common.model.BaseTimeEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import org.hibernate.annotations.ColumnDefault
 
 /**
  * 공연 상세 정보 섹션 (v2). 순서는 [sortOrder] 오름차순.
- * 제목이 [INTRO_TITLE] 인 첫 섹션이 '공연 소개' 이고, 그 본문이 v1 `tbl_event.content` 와 동기화된다.
+ * 첫 섹션(sortOrder 최소)이 '공연 소개' 이고, 그 본문이 v1 `tbl_event.content` 와 동기화된다.
+ * [contentFormat]: v2 저장은 HTML(서버에서 sanitize), v1 에서 온 본문(이관 / v1 → v2 동기화)은 MARKDOWN.
  */
 @Entity(name = "tbl_event_section")
 class EventSection(
@@ -21,6 +25,11 @@ class EventSection(
 
     @Column(columnDefinition = "LONGTEXT")
     var content: String? = null,
+
+    @Enumerated(EnumType.STRING)
+    @ColumnDefault("'HTML'")
+    @Column(length = 20, nullable = false)
+    var contentFormat: EventSectionContentFormat = EventSectionContentFormat.HTML,
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,14 +51,14 @@ class EventSection(
         this.sortOrder = sortOrder
     }
 
-    fun isIntro(): Boolean = this.title == INTRO_TITLE
-
-    fun changeContent(content: String?) {
+    /** v1 content 로 갱신. v1 본문은 마크다운이므로 형식도 MARKDOWN */
+    fun changeContentFromV1(content: String?) {
         this.content = content
+        this.contentFormat = EventSectionContentFormat.MARKDOWN
     }
 
     companion object {
-        /** v1 content 와 동기화되는 섹션 제목 */
+        /** 섹션이 없는 공연의 v1 content 대체 표시 / 이관 섹션 제목 */
         const val INTRO_TITLE = "공연 소개"
 
         /** 기본 섹션 제목 (프론트 기본 탭). 서버는 강제하지 않는다 */

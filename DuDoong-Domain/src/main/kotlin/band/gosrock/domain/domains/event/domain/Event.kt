@@ -25,6 +25,8 @@ import band.gosrock.domain.domains.event.exception.AlreadyDeletedStatusException
 import band.gosrock.domain.domains.event.exception.AlreadyOpenStatusException
 import band.gosrock.domain.domains.event.exception.AlreadyPreparingStatusException
 import band.gosrock.domain.domains.event.exception.CannotChangeHasTicketException
+import band.gosrock.domain.domains.event.exception.CannotDisableTicketWithTicketsException
+import band.gosrock.domain.domains.event.exception.CannotMoveOpenEventStartToPastException
 import band.gosrock.domain.domains.event.exception.CannotDeleteByOpenEventException
 import band.gosrock.domain.domains.event.exception.CannotModifyEndedEventException
 import band.gosrock.domain.domains.event.exception.CannotModifyOpenEventException
@@ -77,8 +79,8 @@ class Event(
         protected set
 
     /**
-     * 종료 시각 (v2, tbl_event.end_at). v1 경로(생성 / PATCH basic / 어드민 수정)에서도 startAt + runTime 으로 함께 갱신해
-     * 항상 `startAt + runTime(분)` 과 같은 값을 유지한다. null 이면 V002 이전에 만든 공연 → [getEndAt] 이 계산값으로 대체
+     * 종료 시각 비정규화 컬럼 (v2, tbl_event.end_at). **쓰기 전용** — v1 이 살아있는 동안 기준값은 [getEndAt] (startAt + runTime) 이다.
+     * v1 / v2 / 어드민 어느 경로로 저장해도 startAt + runTime(분) 으로 함께 기록한다. 조회·정산·종료 배치는 이 컬럼을 읽지 않는다
      */
     @Column(name = "end_at")
     var storedEndAt: LocalDateTime? = eventBasic?.endAt()
@@ -126,8 +128,11 @@ class Event(
 
     fun getStartAt(): LocalDateTime? = this.eventBasic?.startAt
 
-    /** 저장된 종료 시각, 없으면(V002 이전 공연) startAt + runTime. 두 값은 v1/v2 어느 경로로 저장해도 같다 */
-    fun getEndAt(): LocalDateTime? = this.storedEndAt ?: this.eventBasic?.endAt()
+    /**
+     * 종료 시각 기준값 = startAt + runTime(분). v1 이 살아있는 동안 end_at 컬럼([storedEndAt])이 아니라 이 계산값을 쓴다.
+     * 종료 배치(queryEventsByEndAtBeforeAndStatusOpen 의 TIMESTAMPADD) / 정산 배치(getEndAt) 와 같은 기준
+     */
+    fun getEndAt(): LocalDateTime? = this.eventBasic?.endAt()
 
     fun hasEventBasic(): Boolean = this.eventBasic?.isUpdated() == true
 
@@ -297,16 +302,25 @@ class Event(
         hasTicket: Boolean? = null,
         posterImageKey: String? = null,
         place: EventPlace? = null,
+        hasValidTicket: Boolean = false,
+        now: LocalDateTime = LocalDateTime.now(),
     ) {
         validateEditableV2()
         if (hasTicket != null && hasTicket != this.hasTicket) {
             if (this.status != PREPARING) throw CannotChangeHasTicketException.EXCEPTION
+            // 유효 티켓이 있는데 '티켓 없음' 으로 바꾸면 티켓이 판매되는 무티켓 공연이 된다
+            if (!hasTicket && hasValidTicket) throw CannotDisableTicketWithTicketsException.EXCEPTION
             this.hasTicket = hasTicket
         }
         if (name != null || startAt != null || endAt != null) {
+            val newStartAt = startAt?.truncatedTo(ChronoUnit.MINUTES)
+            // 등록된 공연은 시작 시각을 과거로 옮길 수 없다 (같은 값은 허용 — 시작 후 다른 필드만 수정하는 경우)
+            if (this.status == OPEN && newStartAt != null && newStartAt != getStartAt() && !newStartAt.isAfter(now)) {
+                throw CannotMoveOpenEventStartToPastException.EXCEPTION
+            }
             applyScheduleV2(
                 name = name ?: getEventName(),
-                startAt = startAt?.truncatedTo(ChronoUnit.MINUTES) ?: getStartAt(),
+                startAt = newStartAt ?: getStartAt(),
                 endAt = endAt?.truncatedTo(ChronoUnit.MINUTES) ?: getEndAt(),
             )
         }
@@ -319,7 +333,7 @@ class Event(
     private fun applyScheduleV2(name: String?, startAt: LocalDateTime?, endAt: LocalDateTime?) {
         val runTime = if (startAt != null && endAt != null) runTimeMinutesOf(startAt, endAt) else this.eventBasic?.runTime
         this.eventBasic = EventBasic(name = name, startAt = startAt, runTime = runTime)
-        this.storedEndAt = endAt ?: this.eventBasic?.endAt()
+        this.storedEndAt = this.eventBasic?.endAt()
     }
 
     /** 문의처 전체 교체 (0~[MAX_CONTACT_COUNT]개). 체크리스트 기본 정보는 1개 이상이어야 충족 */
@@ -353,7 +367,7 @@ class Event(
 
     /**
      * 섹션 전체 교체 (1~[MAX_SECTION_COUNT]개, 순서는 들어온 순서). 제목 앞뒤 공백은 제거한다.
-     * v1 호환: '공연 소개' 섹션이 있으면 그 본문을 tbl_event.content 에도 기록한다 (없으면 v1 content 유지)
+     * v1 호환: 첫 섹션('공연 소개') 본문을 tbl_event.content 에도 그대로 기록한다
      */
     fun replaceSectionsV2(newSections: List<EventSection>) {
         validateEditableV2()
@@ -374,26 +388,31 @@ class Event(
         Events.raise(EventContentChangeEvent.of(this))
     }
 
-    /** '공연 소개' 섹션 = 제목이 [EventSection.INTRO_TITLE] 인 첫 섹션 */
-    fun findIntroSection(): EventSection? = this.sections.firstOrNull { it.isIntro() }
+    /** '공연 소개' 섹션 = 첫 번째 섹션 (sortOrder 최소, 제목 무관). v1 content 와 동기화되는 섹션 */
+    fun findIntroSection(): EventSection? = this.sections.minByOrNull { it.sortOrder }
 
-    /** v1 에서 content 가 바뀌면 v2 '공연 소개' 섹션에도 반영 (섹션이 없거나 공연 소개 섹션이 없으면 그대로) */
+    /** v1 에서 content 가 바뀌면 v2 첫 섹션에도 반영하고 형식을 MARKDOWN 으로 표시 (섹션이 없으면 그대로 — 조회 시 대체 표시) */
     private fun syncIntroSectionFromV1(content: String?) {
-        findIntroSection()?.changeContent(content)
+        findIntroSection()?.changeContentFromV1(content)
     }
 
     /** v2 섹션 표시. 섹션이 없는 기존 공연은 v1 content(비어 있지 않으면)를 '공연 소개' 섹션으로 대체 */
     fun displaySectionsV2(): List<EventSectionVo> {
         if (this.sections.isNotEmpty()) {
-            return this.sections.map { EventSectionVo(sectionId = it.id, title = it.title, content = it.content, sortOrder = it.sortOrder) }
+            return this.sections.map {
+                EventSectionVo(sectionId = it.id, title = it.title, content = it.content, contentFormat = it.contentFormat, sortOrder = it.sortOrder)
+            }
         }
         val content = this.eventDetail?.content?.takeIf { it.isNotBlank() } ?: return emptyList()
-        return listOf(EventSectionVo(sectionId = null, title = EventSection.INTRO_TITLE, content = content, sortOrder = 0))
+        return listOf(
+            EventSectionVo(sectionId = null, title = EventSection.INTRO_TITLE, content = content, contentFormat = EventSectionContentFormat.MARKDOWN, sortOrder = 0),
+        )
     }
 
-    /** 기본 정보 충족: 이름·일정(시작/종료)·장소(이름/주소/좌표)·문의처 1개 이상 */
+    /** 기본 정보 충족: 포스터·이름·일정(시작/종료)·장소(이름/주소/좌표)·문의처 1개 이상 (포스터는 v1 공개 목록/v1 open 과 같은 조건) */
     fun hasBasicV2(): Boolean =
-        !getEventName().isNullOrBlank() && getStartAt() != null && getEndAt() != null && hasEventPlace() && this.contacts.isNotEmpty()
+        this.eventDetail?.posterImage?.imageKey != null &&
+            !getEventName().isNullOrBlank() && getStartAt() != null && getEndAt() != null && hasEventPlace() && this.contacts.isNotEmpty()
 
     /** 상세 정보 충족: 본문이 비어 있지 않은 섹션 1개 이상 (섹션이 없는 기존 공연은 v1 content) */
     fun hasDetailV2(): Boolean = displaySectionsV2().any { !it.content.isNullOrBlank() }

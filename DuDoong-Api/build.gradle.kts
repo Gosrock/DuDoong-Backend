@@ -7,6 +7,8 @@ dependencies {
     implementation(project(":DuDoong-Common"))
     implementation(project(":DuDoong-Infrastructure"))
     implementation(project(":DuDoong-Admin"))
+    // v2 섹션 HTML sanitize (XSS)
+    implementation("org.jsoup:jsoup:1.17.2")
 
     testImplementation("org.springframework.security:spring-security-test")
 }

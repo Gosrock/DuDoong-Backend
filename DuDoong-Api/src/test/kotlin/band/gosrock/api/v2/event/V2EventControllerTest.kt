@@ -187,10 +187,15 @@ class V2EventControllerTest {
         mapOf("title" to "유의사항", "content" to null, "sortOrder" to 3),
     )
 
-    /** 기본 정보 + 문의처 + 섹션까지 채운다 */
+    private fun posterKey(eventId: Long) = "${presignedUrlService.eventImageKeyPrefix(eventId)}poster.png"
+
+    /** 기본 정보(포스터·장소·문의처) + 섹션까지 채운다 */
     private fun fillBasicAndDetail(requester: User, eventId: Long) {
-        patchBasic(requester, eventId, mapOf("place" to placeBody, "contacts" to listOf(mapOf("type" to "INSTAGRAM", "value" to "@gosrock"))))
-            .andExpect { status { isOk() } }
+        patchBasic(
+            requester,
+            eventId,
+            mapOf("posterImageKey" to posterKey(eventId), "place" to placeBody, "contacts" to listOf(mapOf("type" to "INSTAGRAM", "value" to "@gosrock"))),
+        ).andExpect { status { isOk() } }
         putSections(requester, eventId, defaultSections).andExpect { status { isOk() } }
     }
 
@@ -320,8 +325,10 @@ class V2EventControllerTest {
             saveTicket(a1)
             openV2(teamA.master, a1).andExpect { status { isOk() } }
 
+            val before = LocalDate.now()
             val data = mockMvc.get("/api/v2/me/events") { with(auth(teamA.guest)) }
                 .andExpect { status { isOk() } }.body().at("/data")
+            val after = LocalDate.now()
             val ids = data["content"].map { it["eventId"].asLong() }
             assertEquals(listOf(a2, b1, a1), ids)
             assertFalse(ids.contains(hiddenC))
@@ -335,7 +342,9 @@ class V2EventControllerTest {
             assertEquals("PREPARING", byId.getValue(b1)["displayStatus"].asText())
             assertTrue(byId.getValue(b1)["dDay"].isNull)
             assertEquals("UPCOMING", byId.getValue(a1)["displayStatus"].asText())
-            assertEquals(30, byId.getValue(a1)["dDay"].asInt())
+            // 자정 경계: 요청 전후 날짜 중 하나 기준이면 된다
+            val expectedDDays = setOf(before, after).map { java.time.temporal.ChronoUnit.DAYS.between(it, baseStart.toLocalDate()) }
+            assertTrue(byId.getValue(a1)["dDay"].asLong() in expectedDDays, byId.getValue(a1)["dDay"].toString())
             assertEquals(baseStart.plusMinutes(200).f(), byId.getValue(a1)["endAt"].asText())
         }
 
@@ -351,6 +360,19 @@ class V2EventControllerTest {
             assertEquals(listOf(autumn), data["content"].map { it["eventId"].asLong() })
             assertEquals(2, data["totalElements"].asInt())
             assertTrue(data["hasNext"].asBoolean())
+
+            // LIKE 와일드카드(%, _)는 문자 그대로 검색 (E-1, H-1)
+            val percent = createEvent(team.master, team.hostId, "100%_라이브")
+            fun ids(path: String, keyword: String, key: String): List<Long> =
+                mockMvc.get(path) {
+                    with(auth(team.guest))
+                    param("keyword", keyword)
+                }.andExpect { status { isOk() } }.body().at("/data/content").map { it[key].asLong() }
+            assertEquals(listOf(percent), ids("/api/v2/me/events", "%", "eventId"))
+            assertEquals(listOf(percent), ids("/api/v2/me/events", "_", "eventId"))
+            val wildHost = createHost(team.guest, "a%b_c")
+            createHost(team.guest, "abxc")
+            assertEquals(listOf(wildHost), ids("/api/v2/me/hosts", "%b_", "hostId"))
 
             mockMvc.get("/api/v2/me/events?keyword=없는공연") { with(auth(team.guest)) }
                 .andExpect { jsonPath("$.data.content.length()") { value(0) } }
@@ -421,6 +443,11 @@ class V2EventControllerTest {
                 jsonPath("$.data.checklist.ticketRequired") { value(false) }
             }
 
+            // 중복 제거 후 개수로 검증: 원소 11개라도 중복 제거하면 1개
+            patchBasic(team.manager, eventId, mapOf("tagIds" to List(11) { rock })).andExpect {
+                status { isOk() }
+                jsonPath("$.data.tags.length()") { value(1) }
+            }
             // null 필드는 그대로, 빈 포스터는 제거, 태그 일부 교체
             patchBasic(team.manager, eventId, mapOf("posterImageKey" to "", "tagIds" to listOf(rock))).andExpect {
                 status { isOk() }
@@ -508,11 +535,43 @@ class V2EventControllerTest {
                 status { isBadRequest() }
                 jsonPath("$.code") { value("Event_400_18") }
             }
+            // 등록된 공연의 시작 시각은 현재 이후로만 옮길 수 있다 (같은 값은 허용)
+            val past = LocalDateTime.now().minusHours(1)
+            patchBasic(team.manager, eventId, mapOf("startAt" to past.f(), "endAt" to past.plusHours(2).f())).andExpect {
+                status { isBadRequest() }
+                jsonPath("$.code") { value("Event_400_24") }
+            }
+            patchBasic(team.manager, eventId, mapOf("startAt" to baseStart.f(), "name" to "같은 시작")).andExpect { status { isOk() } }
+            patchBasic(team.manager, eventId, mapOf("startAt" to baseStart.plusDays(1).f(), "endAt" to baseStart.plusDays(1).plusHours(2).f()))
+                .andExpect {
+                    status { isOk() }
+                    jsonPath("$.data.startAt") { value(baseStart.plusDays(1).f()) }
+                    jsonPath("$.data.runTime") { value(120) }
+                }
             // v1 PATCH basic 은 여전히 OPEN 이면 불가 (v1 동작 유지)
             v1PatchBasic(team.master, eventId, runTime = 30).andExpect {
                 status { isBadRequest() }
                 jsonPath("$.code") { value("Event_400_4") }
             }
+        }
+
+        @Test
+        fun `준비중 공연은 지난 시작 시각으로도 수정되고, 유효 티켓이 있으면 티켓 없음으로 못 바꾼다`() {
+            val team = Team()
+            val eventId = createEvent(team.master, team.hostId)
+            val past = LocalDateTime.now().minusDays(1)
+            patchBasic(team.master, eventId, mapOf("startAt" to past.f(), "endAt" to past.plusHours(1).f())).andExpect { status { isOk() } }
+
+            val deleted = saveTicket(eventId, TicketItemStatus.DELETED)
+            patchBasic(team.master, eventId, mapOf("hasTicket" to false)).andExpect { status { isOk() } }
+            patchBasic(team.master, eventId, mapOf("hasTicket" to true)).andExpect { status { isOk() } }
+            saveTicket(eventId)
+            patchBasic(team.master, eventId, mapOf("hasTicket" to false)).andExpect {
+                status { isBadRequest() }
+                jsonPath("$.code") { value("Event_400_25") }
+            }
+            assertTrue(eventRepository.findById(eventId).get().hasTicket)
+            assertEquals(TicketItemStatus.DELETED, deleted.ticketItemStatus)
         }
 
         @Test
@@ -567,7 +626,10 @@ class V2EventControllerTest {
                 jsonPath("$.data[4].title") { value("유의사항") }
                 jsonPath("$.data[4].sortOrder") { value(4) }
                 jsonPath("$.data[1].sectionId") { exists() }
+                jsonPath("$.data[0].contentFormat") { value("HTML") }
             }
+            // 제목과 무관하게 첫 섹션 본문이 v1 content
+            assertEquals("게스트 소개", eventRepository.findById(eventId).get().eventDetail!!.content)
 
             // 전체 교체
             putSections(team.manager, eventId, listOf(mapOf("title" to "공연 소개", "content" to "교체", "sortOrder" to 0)))
@@ -577,6 +639,28 @@ class V2EventControllerTest {
                 jsonPath("$.data.length()") { value(1) }
                 jsonPath("$.data[0].content") { value("교체") }
             }
+        }
+
+        @Test
+        fun `HTML 본문은 sanitize 된다 - script, on 이벤트, javascript 링크, http 이미지 제거`() {
+            val team = Team()
+            val eventId = createEvent(team.master, team.hostId)
+            val dirty = "<p onclick=\"x()\">안녕<script>alert(1)</script></p>" +
+                "<img src=\"https://cdn.dudoong.com/a.png\" onerror=\"alert(2)\">" +
+                "<img src=\"http://evil.com/b.png\"><a href=\"javascript:alert(3)\">링크</a>" +
+                "<a href=\"https://dudoong.com\">두둥</a><iframe src=\"https://evil.com\"></iframe>"
+
+            val saved = putSections(team.master, eventId, listOf(mapOf("title" to "공연 소개", "content" to dirty, "sortOrder" to 0)))
+                .andExpect { status { isOk() } }.body().at("/data/0/content").asText()
+
+            listOf("<script", "alert(1)", "onclick", "onerror", "javascript:", "http://evil.com", "<iframe").forEach {
+                assertFalse(saved.contains(it), "sanitize 누락 [$it]: $saved")
+            }
+            assertTrue(saved.contains("<p>안녕</p>"), saved)
+            assertTrue(saved.contains("<img src=\"https://cdn.dudoong.com/a.png\">"), saved)
+            assertTrue(saved.contains("<a href=\"https://dudoong.com\">두둥</a>"), saved)
+            // v1 content 에도 sanitize 된 값이 들어간다
+            assertEquals(saved, eventRepository.findById(eventId).get().eventDetail!!.content)
         }
 
         @Test
@@ -653,6 +737,9 @@ class V2EventControllerTest {
             patchBasic(team.master, eventId, mapOf("place" to placeBody)).andExpect { status { isOk() } }
             assertFalse(checklist(team.guest, eventId)["basic"].asBoolean())
             patchBasic(team.master, eventId, mapOf("contacts" to listOf(mapOf("type" to "EMAIL", "value" to "a@a.com"))))
+            // 포스터 필수
+            assertFalse(checklist(team.guest, eventId)["basic"].asBoolean())
+            patchBasic(team.master, eventId, mapOf("posterImageKey" to posterKey(eventId))).andExpect { status { isOk() } }
             c = checklist(team.guest, eventId)
             assertTrue(c["basic"].asBoolean())
             assertFalse(c["detail"].asBoolean())
@@ -837,6 +924,25 @@ class V2EventControllerTest {
         }
 
         @Test
+        fun `end_at 컬럼이 어긋나도 v1, v2 응답과 종료 배치 조회는 startAt + runTime 기준이다`() {
+            val team = Team()
+            val eventId = createEvent(team.master, team.hostId)
+            val event = eventRepository.findById(eventId).get()
+            ReflectionTestUtils.setField(event, "storedEndAt", baseStart.plusDays(10))
+            eventRepository.save(event)
+
+            mockMvc.get("/api/v2/events/$eventId/manage") { with(auth(team.master)) }
+                .andExpect { jsonPath("$.data.endAt") { value(baseStart.plusMinutes(200).f()) } }
+            mockMvc.get("/api/v1/events/$eventId") { with(auth(team.master)) }
+                .andExpect { jsonPath("$.data.endAt") { value(baseStart.plusMinutes(200).f()) } }
+            setStatus(eventId, EventStatus.OPEN)
+            // 종료 배치 조회(TIMESTAMPADD(run_time, start_at))도 같은 기준: 계산 종료 직후 시각이면 대상, 직전이면 아님
+            val endedIds = { time: LocalDateTime -> eventRepository.queryEventsByEndAtBeforeAndStatusOpen(time).map { it.id } }
+            assertTrue(eventId in endedIds(baseStart.plusMinutes(201)))
+            assertFalse(eventId in endedIds(baseStart.plusMinutes(199)))
+        }
+
+        @Test
         fun `v1 PATCH basic, details 로 바꾸면 v2 상세 endAt 과 공연 소개 섹션에 반영된다`() {
             val team = Team()
             val eventId = createEvent(team.master, team.hostId)
@@ -855,7 +961,9 @@ class V2EventControllerTest {
             mockMvc.get("/api/v2/events/$eventId/sections") { with(auth(team.master)) }.andExpect {
                 jsonPath("$.data.length()") { value(4) }
                 jsonPath("$.data[0].content") { value("v1 본문") }
+                jsonPath("$.data[0].contentFormat") { value("MARKDOWN") }
                 jsonPath("$.data[1].content") { value("예매") }
+                jsonPath("$.data[1].contentFormat") { value("HTML") }
             }
         }
 
@@ -875,6 +983,7 @@ class V2EventControllerTest {
                 jsonPath("$.data[0].sectionId") { value(null as Any?) }
                 jsonPath("$.data[0].title") { value("공연 소개") }
                 jsonPath("$.data[0].content") { value("v1 기존 본문") }
+                jsonPath("$.data[0].contentFormat") { value("MARKDOWN") }
             }
             mockMvc.get("/api/v2/events/$eventId/manage") { with(auth(team.guest)) }.andExpect {
                 jsonPath("$.data.endAt") { value(baseStart.plusMinutes(90).f()) }

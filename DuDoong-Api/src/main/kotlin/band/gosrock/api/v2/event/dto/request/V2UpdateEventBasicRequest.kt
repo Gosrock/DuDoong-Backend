@@ -44,10 +44,15 @@ data class V2UpdateEventBasicRequest(
     @field:Schema(description = "티켓 여부. 준비중일 때만 변경 가능 (같은 값은 허용)")
     val hasTicket: Boolean? = null,
 
-    @field:Schema(description = "태그 id 전체 교체 (최대 ${Event.MAX_TAG_COUNT}개, 중복은 하나로)")
-    @field:Size(max = Event.MAX_TAG_COUNT)
+    @field:Schema(description = "태그 id 전체 교체 (중복 제거 후 최대 ${Event.MAX_TAG_COUNT}개)")
+    @field:Size(max = TAG_IDS_RAW_MAX)
     val tagIds: List<Long?>? = null,
-)
+) {
+    companion object {
+        // 개수 검증은 중복 제거 후 도메인에서 한다. 여기서는 과도한 요청만 막는다
+        private const val TAG_IDS_RAW_MAX = 100
+    }
+}
 
 data class V2EventPlaceRequest(
     @field:Schema(description = "공연장 이름", example = "롤링홀")

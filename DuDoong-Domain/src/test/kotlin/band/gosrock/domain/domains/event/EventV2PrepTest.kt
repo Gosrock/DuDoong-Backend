@@ -6,8 +6,11 @@ import band.gosrock.domain.domains.event.domain.EventContact
 import band.gosrock.domain.domains.event.domain.EventDetail
 import band.gosrock.domain.domains.event.domain.EventPlace
 import band.gosrock.domain.domains.event.domain.EventSection
+import band.gosrock.domain.domains.event.domain.EventSectionContentFormat
 import band.gosrock.domain.domains.event.domain.EventStatus
 import band.gosrock.domain.domains.event.exception.CannotChangeHasTicketException
+import band.gosrock.domain.domains.event.exception.CannotDisableTicketWithTicketsException
+import band.gosrock.domain.domains.event.exception.CannotMoveOpenEventStartToPastException
 import band.gosrock.domain.domains.event.exception.CannotModifyEndedEventException
 import band.gosrock.domain.domains.event.exception.EventCannotEndBeforeStartException
 import band.gosrock.domain.domains.event.exception.InvalidEventContactException
@@ -74,6 +77,17 @@ class EventV2PrepTest {
         }
 
         @Test
+        fun `end_at 컬럼이 stale 이어도 기준값은 startAt + runTime 이다 (v1 이 살아있는 동안 end_at 은 쓰기 전용)`() {
+            val event = v2Event()
+            ReflectionTestUtils.setField(event, "storedEndAt", end.plusHours(5))
+            assertEquals(end, event.getEndAt())
+            assertEquals(event.eventBasic!!.endAt(), event.getEndAt())
+            // 다음 저장에서 end_at 도 기준값으로 다시 기록된다
+            event.updateBasicV2(name = "이름만")
+            assertEquals(end, event.storedEndAt)
+        }
+
+        @Test
         fun `end_at 이 없는 기존 공연은 startAt + runTime 으로 대체`() {
             val event = Event(hostId = 1L, name = "레거시", startAt = start, runTime = 60L)
             ReflectionTestUtils.setField(event, "storedEndAt", null)
@@ -126,6 +140,30 @@ class EventV2PrepTest {
 
     @Nested
     inner class Basic {
+
+        @Test
+        fun `OPEN 공연은 시작 시각을 현재 이전으로 옮길 수 없고 같은 값-미래는 허용, 준비중은 검증 안 함`() {
+            val event = v2Event().withStatus(EventStatus.OPEN)
+            assertThrows<CannotMoveOpenEventStartToPastException> { event.updateBasicV2(startAt = now.minusMinutes(1), now = now) }
+            assertThrows<CannotMoveOpenEventStartToPastException> { event.updateBasicV2(startAt = now, now = now) }
+            // 시작이 지난 뒤에도 같은 startAt 을 함께 보내는 수정은 허용
+            event.updateBasicV2(startAt = start, name = "같은 시작", now = start.plusMinutes(10))
+            event.updateBasicV2(startAt = start.plusDays(1), endAt = end.plusDays(1), now = now)
+            assertEquals(start.plusDays(1), event.getStartAt())
+
+            val preparing = v2Event()
+            preparing.updateBasicV2(startAt = now.minusDays(1), now = now)
+            assertEquals(now.minusDays(1), preparing.getStartAt())
+        }
+
+        @Test
+        fun `유효 티켓이 있으면 티켓 없음으로 바꿀 수 없다`() {
+            val event = v2Event()
+            assertThrows<CannotDisableTicketWithTicketsException> { event.updateBasicV2(hasTicket = false, hasValidTicket = true) }
+            assertTrue(event.hasTicket)
+            event.updateBasicV2(hasTicket = false, hasValidTicket = false)
+            assertFalse(event.hasTicket)
+        }
 
         @Test
         fun `OPEN 공연도 v2 기본 정보는 수정되지만 v1 updateEventBasic 은 여전히 막힌다`() {
@@ -196,31 +234,30 @@ class EventV2PrepTest {
     inner class Sections {
 
         @Test
-        fun `섹션 저장 시 공연 소개 본문이 v1 content 로 기록되고 순서가 다시 매겨진다`() {
+        fun `섹션 저장 시 제목과 무관하게 첫 섹션 본문이 v1 content 로 기록되고 순서가 다시 매겨진다`() {
             val event = v2Event()
+            event.updateEventDetail(EventDetail(posterImageKey = "p.png", content = "v1 본문"))
             event.replaceSectionsV2(
-                listOf(EventSection(" 예매안내 ", "예매"), EventSection("공연 소개", "<p>소개</p>"), EventSection("추가", null)),
+                listOf(EventSection(" 예매안내 ", "<p>예매</p>"), EventSection("공연 소개", "<p>소개</p>"), EventSection("추가", null)),
             )
             assertEquals(listOf("예매안내", "공연 소개", "추가"), event.sections.map { it.title })
             assertEquals(listOf(0, 1, 2), event.sections.map { it.sortOrder })
-            assertEquals("<p>소개</p>", event.eventDetail!!.content)
-        }
-
-        @Test
-        fun `공연 소개 섹션이 없으면 v1 content 는 유지된다`() {
-            val event = v2Event()
-            event.updateEventDetail(EventDetail(posterImageKey = "p.png", content = "v1 본문"))
-            event.replaceSectionsV2(listOf(EventSection("세트리스트", "곡")))
-            assertEquals("v1 본문", event.eventDetail!!.content)
+            assertEquals("예매안내", event.findIntroSection()!!.title)
+            assertEquals("<p>예매</p>", event.eventDetail!!.content)
             assertEquals("p.png", event.eventDetail!!.posterImage!!.imageKey)
+            assertTrue(event.sections.all { it.contentFormat == EventSectionContentFormat.HTML })
         }
 
         @Test
-        fun `v1 content 가 바뀌면 공연 소개 섹션도 갱신되고 다른 섹션은 그대로`() {
+        fun `v1 content 가 바뀌면 첫 섹션이 갱신되어 MARKDOWN 이 되고 다른 섹션은 그대로`() {
             val event = v2Event()
-            event.replaceSectionsV2(listOf(EventSection("공연 소개", "old"), EventSection("유의사항", "주의")))
+            event.replaceSectionsV2(listOf(EventSection("소개", "old"), EventSection("유의사항", "주의")))
             event.updateEventDetail(EventDetail(posterImageKey = "p.png", content = "v1 new"))
             assertEquals(listOf("v1 new", "주의"), event.displaySectionsV2().map { it.content })
+            assertEquals(
+                listOf(EventSectionContentFormat.MARKDOWN, EventSectionContentFormat.HTML),
+                event.displaySectionsV2().map { it.contentFormat },
+            )
 
             event.adminUpdate(name = null, startAt = null, runTime = null, content = "admin new", placeName = null, placeAddress = null)
             assertEquals("admin new", event.findIntroSection()!!.content)
@@ -237,6 +274,7 @@ class EventV2PrepTest {
             assertNull(display.sectionId)
             assertEquals(EventSection.INTRO_TITLE, display.title)
             assertEquals("기존 본문", display.content)
+            assertEquals(EventSectionContentFormat.MARKDOWN, display.contentFormat)
         }
 
         @Test
@@ -258,7 +296,7 @@ class EventV2PrepTest {
     inner class Checklist {
 
         private fun filledEvent(hasTicket: Boolean = true): Event = v2Event(hasTicket).also {
-            it.updateBasicV2(place = place())
+            it.updateBasicV2(place = place(), posterImageKey = "event/1/poster.png")
             it.replaceContactsV2(listOf(contact()))
             it.replaceSectionsV2(listOf(EventSection("공연 소개", "소개")))
         }
@@ -271,11 +309,15 @@ class EventV2PrepTest {
         }
 
         @Test
-        fun `기본 정보는 장소와 문의처가 모두 있어야 한다`() {
-            val noContact = v2Event().also { it.updateBasicV2(place = place()) }
+        fun `기본 정보는 포스터-장소-문의처가 모두 있어야 한다`() {
+            val noContact = v2Event().also { it.updateBasicV2(place = place(), posterImageKey = "p.png") }
             assertFalse(noContact.checklistV2(true, now).basic)
-            val noPlace = v2Event().also { it.replaceContactsV2(listOf(contact())) }
+            val noPlace = v2Event().also { it.replaceContactsV2(listOf(contact())); it.updateBasicV2(posterImageKey = "p.png") }
             assertFalse(noPlace.checklistV2(true, now).basic)
+            val noPoster = filledEvent().also { it.updateBasicV2(posterImageKey = "") }
+            assertFalse(noPoster.checklistV2(true, now).basic)
+            noPoster.updateBasicV2(posterImageKey = "p.png")
+            assertTrue(noPoster.checklistV2(true, now).basic)
         }
 
         @Test
