@@ -43,6 +43,10 @@ class HostContact(
         this.sortOrder = sortOrder
     }
 
+    fun changeValue(value: String) {
+        this.value = value
+    }
+
     fun toHostContactVo(): HostContactVo = HostContactVo(type = type, value = value)
 
     companion object {

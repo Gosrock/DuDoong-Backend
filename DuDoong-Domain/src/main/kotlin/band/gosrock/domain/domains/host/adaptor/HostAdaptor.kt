@@ -14,6 +14,10 @@ class HostAdaptor(private val hostRepository: HostRepository) {
     fun findById(hostId: Long): Host =
         hostRepository.findById(hostId).orElseThrow { HostNotFoundException.EXCEPTION }
 
+    /** 멤버 변경(추가/삭제/역할/양도)용. 트랜잭션 안에서 호출해야 하며 커밋까지 호스트 행을 잠근다 (v2) */
+    fun findByIdForUpdate(hostId: Long): Host =
+        hostRepository.findByIdForUpdate(hostId) ?: throw HostNotFoundException.EXCEPTION
+
     /** 자신이 속해있는 호스트 리스트를 무한스크롤로 가져오는 쿼리 요청 */
     fun querySliceHostsByUserId(userId: Long, pageable: Pageable): Slice<Host> =
         hostRepository.querySliceHostsByUserId(userId, pageable)

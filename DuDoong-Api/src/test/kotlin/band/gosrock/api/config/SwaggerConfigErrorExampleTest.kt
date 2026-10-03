@@ -39,7 +39,7 @@ class SwaggerConfigErrorExampleTest {
 
         assertEquals(setOf("HOST_400_1", "HOST_400_2", "HOST_400_4", "HOST_400_6", "HOST_400_7", "HOST_400_11"), examples["403"])
         assertEquals(
-            setOf("HOST_400_3", "HOST_400_5", "HOST_400_8", "HOST_400_9", "HOST_400_10", "HOST_400_12", "HOST_400_13", "HOST_400_14", "HOST_400_15", "HOST_400_16"),
+            setOf("HOST_400_3", "HOST_400_5", "HOST_400_8", "HOST_400_9", "HOST_400_10", "HOST_400_12", "HOST_400_13", "HOST_400_14", "HOST_400_15", "HOST_400_16", "HOST_400_17", "HOST_400_18"),
             examples["400"],
         )
         assertEquals(setOf("Host_404_1", "HOST_404_2"), examples["404"])
@@ -52,7 +52,7 @@ class SwaggerConfigErrorExampleTest {
 
         assertNull(examples["403"])
         assertEquals(
-            (1..16).map { "HOST_400_$it" }.toSet(),
+            (1..18).map { "HOST_400_$it" }.toSet(),
             examples["400"],
         )
     }

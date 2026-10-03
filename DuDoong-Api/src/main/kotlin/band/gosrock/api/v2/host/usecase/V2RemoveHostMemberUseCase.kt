@@ -22,7 +22,7 @@ class V2RemoveHostMemberUseCase(
     @Transactional
     @HostRolesAllowed(role = MANAGER, findHostFrom = HOST_ID)
     fun execute(userId: Long, hostId: Long, targetUserId: Long): List<V2HostMemberResponse> {
-        val host = hostAdaptor.findById(hostId)
+        val host = hostAdaptor.findByIdForUpdate(hostId)
         return readHostMembersUseCase.toMemberResponses(hostService.removeMember(host, userId, targetUserId))
     }
 }

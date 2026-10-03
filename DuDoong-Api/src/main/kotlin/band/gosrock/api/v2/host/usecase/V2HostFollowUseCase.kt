@@ -5,6 +5,8 @@ import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor
 import band.gosrock.domain.domains.host.adaptor.HostFollowAdaptor
 import band.gosrock.domain.domains.host.service.HostFollowService
+import org.slf4j.LoggerFactory
+import org.springframework.dao.DataIntegrityViolationException
 
 @UseCase
 class V2HostFollowUseCase(
@@ -12,10 +14,17 @@ class V2HostFollowUseCase(
     private val hostFollowAdaptor: HostFollowAdaptor,
     private val hostFollowService: HostFollowService,
 ) {
+    private val log = LoggerFactory.getLogger(V2HostFollowUseCase::class.java)
+
     /** 멱등 팔로우 */
     fun follow(userId: Long, hostId: Long): V2HostFollowResponse {
         hostAdaptor.findById(hostId)
-        hostFollowService.follow(hostId, userId)
+        try {
+            hostFollowService.follow(hostId, userId)
+        } catch (e: DataIntegrityViolationException) {
+            // 동시 팔로우로 unique(host_id, user_id) 위반: 이미 팔로우된 상태이므로 성공으로 본다
+            log.debug("[V2HostFollowUseCase] 동시 팔로우 중복 무시 hostId={}, userId={}", hostId, userId)
+        }
         return toResponse(hostId, isFollowing = true)
     }
 

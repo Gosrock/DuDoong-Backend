@@ -4,6 +4,7 @@ import band.gosrock.domain.common.vo.HostContactVo
 import band.gosrock.domain.domains.host.domain.Host
 import band.gosrock.domain.domains.host.domain.HostContact
 import band.gosrock.domain.domains.host.domain.HostContactType
+import band.gosrock.domain.domains.host.domain.HostProfile
 import band.gosrock.domain.domains.host.domain.HostRole
 import band.gosrock.domain.domains.host.domain.HostUser
 import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException
@@ -154,13 +155,53 @@ class HostV2MemberAndContactTest {
         }
 
         @Test
-        fun `교체 후 EMAIL, PHONE 이 없으면 v1 필드는 null 로 비워진다`() {
+        fun `교체 후 EMAIL, PHONE 이 없으면 v1 필드는 기존 값을 유지한다`() {
             host.replaceContacts(listOf(HostContact(HostContactType.EMAIL, "a@gosrock.band"), HostContact(HostContactType.PHONE, "010")))
             host.replaceContacts(listOf(HostContact(HostContactType.YOUTUBE, "youtube.com/@gosrock")))
 
             assertEquals(1, host.contacts.size)
-            assertNull(host.profile!!.contactEmail)
-            assertNull(host.profile!!.contactNumber)
+            assertEquals("a@gosrock.band", host.profile!!.contactEmail)
+            assertEquals("010", host.profile!!.contactNumber)
+        }
+
+        @Test
+        fun `v1 프로필 수정은 v2 연락처의 첫 EMAIL, PHONE 값을 갱신한다`() {
+            host.replaceContacts(
+                listOf(
+                    HostContact(HostContactType.EMAIL, "a@gosrock.band"),
+                    HostContact(HostContactType.PHONE, "010-1"),
+                    HostContact(HostContactType.EMAIL, "b@gosrock.band"),
+                ),
+            )
+
+            host.updateProfile(HostProfile(name = "고스락", contactEmail = "new@gosrock.band", contactNumber = "010-2"))
+
+            assertEquals(listOf("new@gosrock.band", "010-2", "b@gosrock.band"), host.contacts.map { it.value })
+            assertEquals("new@gosrock.band", host.profile!!.contactEmail)
+        }
+
+        @Test
+        fun `v1 프로필 수정 시 해당 유형이 없으면 끝에 추가하고, 비었거나 최대 개수면 추가하지 않는다`() {
+            host.replaceContacts(listOf(HostContact(HostContactType.INSTAGRAM, "@gosrock")))
+
+            host.updateProfile(HostProfile(name = "고스락", contactEmail = "new@gosrock.band", contactNumber = null))
+
+            assertEquals(listOf(HostContactType.INSTAGRAM, HostContactType.EMAIL), host.contacts.map { it.type })
+            assertEquals(listOf(0, 1), host.contacts.map { it.sortOrder })
+            assertTrue(host.contacts.all { it.host === host })
+
+            host.replaceContacts((1..Host.MAX_CONTACT_COUNT).map { HostContact(HostContactType.ETC, "v$it") })
+            host.updateProfile(HostProfile(name = "고스락", contactEmail = "x@gosrock.band", contactNumber = "010"))
+            assertEquals(Host.MAX_CONTACT_COUNT, host.contacts.size)
+            assertTrue(host.contacts.none { it.type == HostContactType.EMAIL })
+        }
+
+        @Test
+        fun `v2 연락처가 없는 호스트는 v1 프로필 수정이 연락처 테이블을 만들지 않는다`() {
+            host.updateProfile(HostProfile(name = "고스락", contactEmail = "new@gosrock.band", contactNumber = "010"))
+
+            assertTrue(host.contacts.isEmpty())
+            assertEquals(HostContactType.PHONE, host.displayContacts().first().type)
         }
 
         @Test

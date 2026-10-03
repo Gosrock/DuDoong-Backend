@@ -32,6 +32,7 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OrderBy
+import org.hibernate.annotations.BatchSize
 
 @Entity(name = "tbl_host")
 class Host(
@@ -73,6 +74,7 @@ class Host(
         fetch = FetchType.EAGER,
     )
     @OrderBy("createdAt DESC")
+    @BatchSize(size = 100)
     val hostUsers: MutableSet<HostUser> = HashSet()
 
     // v2 대표 연락처 (N개). 비어 있으면 v1 contactEmail/contactNumber 로 대체 표시한다 (displayContacts)
@@ -105,6 +107,31 @@ class Host(
 
     fun updateProfile(hostProfile: HostProfile) {
         this.profile?.updateProfile(hostProfile)
+        syncContactsFromV1(hostProfile.contactEmail, hostProfile.contactNumber)
+    }
+
+    /**
+     * v1(호스트 프로필 수정 / 어드민 수정)에서 바뀐 contactEmail / contactNumber 를 v2 연락처에 반영합니다.
+     * v2 연락처가 없는 호스트는 조회 시 v1 값으로 대체 표시하므로 건드리지 않습니다.
+     * 첫 EMAIL / PHONE 항목 값을 갱신하고, 해당 유형이 없으면 끝에 추가합니다 (최대 개수·길이 초과 시 추가 안 함).
+     */
+    fun syncContactsFromV1(contactEmail: String?, contactNumber: String?) {
+        if (this.contacts.isEmpty()) return
+        syncContactFromV1(HostContactType.EMAIL, contactEmail, HostContact.VALUE_MAX_LENGTH)
+        syncContactFromV1(HostContactType.PHONE, contactNumber, HostContact.PHONE_MAX_LENGTH)
+    }
+
+    private fun syncContactFromV1(type: HostContactType, value: String?, maxLength: Int) {
+        if (value.isNullOrBlank() || value.length > maxLength) return
+        val existing = this.contacts.firstOrNull { it.type == type }
+        if (existing != null) {
+            existing.changeValue(value)
+            return
+        }
+        if (this.contacts.size >= MAX_CONTACT_COUNT) return
+        val contact = HostContact(type = type, value = value)
+        contact.assignTo(this, (this.contacts.maxOfOrNull { it.sortOrder } ?: -1) + 1)
+        this.contacts.add(contact)
     }
 
     fun updateSlackUrl(slackUrl: String) {
@@ -220,7 +247,7 @@ class Host(
 
     /**
      * 연락처 전체 교체 (v2). 1개 이상 [MAX_CONTACT_COUNT]개 이하.
-     * v1 호환: 첫 EMAIL → contactEmail, 첫 PHONE → contactNumber 에도 기록하고, 해당 유형이 없으면 null 로 비운다.
+     * v1 호환: 첫 EMAIL → contactEmail, 첫 PHONE → contactNumber 에도 기록한다. 해당 유형이 없으면 기존 v1 값을 유지한다.
      */
     fun replaceContacts(newContacts: List<HostContact>) {
         validateContacts(newContacts)
@@ -230,8 +257,8 @@ class Host(
             this.contacts.add(contact)
         }
         val profile = this.profile ?: HostProfile().also { this.profile = it }
-        profile.contactEmail = newContacts.firstOrNull { it.type == HostContactType.EMAIL }?.value
-        profile.contactNumber = newContacts.firstOrNull { it.type == HostContactType.PHONE }?.value
+        newContacts.firstOrNull { it.type == HostContactType.EMAIL }?.let { profile.contactEmail = it.value }
+        newContacts.firstOrNull { it.type == HostContactType.PHONE }?.let { profile.contactNumber = it.value }
     }
 
     /** v2 연락처 표시. 연락처 테이블이 비어 있는 기존 호스트는 v1 contactNumber / contactEmail 로 대체한다 */

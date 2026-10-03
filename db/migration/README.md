@@ -50,4 +50,4 @@ db/
 ### 기준선에서 확인된 참고 사항 (2026-10-03)
 - `tbl_host.name`은 `varchar(15)`, `tbl_event.name`은 `varchar(30)`
 - `tbl_ticket_item_item_option_groups`는 **사용 중**: `TicketItem.itemOptionGroups`가 `mappedBy`/`@JoinColumn` 없는 단방향 `@OneToMany`라 Hibernate가 조인 테이블로 매핑함. 지우면 안 됨
-- `tbl_host_host_users`는 현재 `Host.hostUsers`가 `mappedBy="host"`라 쓰이지 않는 과거 조인 테이블로 보임 (정리는 v1 종료 후 검토)
+- `tbl_host_host_users`는 현재 `Host.hostUsers`가 `mappedBy="host"`라 쓰이지 않는 과거 조인 테이블로 보임 (정리는 v1 종료 후 검토). 2026-10-04 prod 0행 확인

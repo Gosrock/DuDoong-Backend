@@ -12,7 +12,11 @@ import band.gosrock.domain.domains.user.domain.OauthInfo
 import band.gosrock.domain.domains.user.domain.OauthProvider
 import band.gosrock.domain.domains.user.domain.Profile
 import band.gosrock.domain.domains.user.domain.User
+import band.gosrock.domain.domains.user.domain.AccountRole
 import band.gosrock.domain.domains.user.repository.UserRepository
+import band.gosrock.infrastructure.config.s3.S3UploadPresignedUrlService
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.LocalDateTime
@@ -57,10 +61,11 @@ class V2HostControllerTest {
 
     @Autowired private lateinit var eventRepository: EventRepository
 
+    @Autowired private lateinit var presignedUrlService: S3UploadPresignedUrlService
+
     // ===== fixtures =====
 
-    private fun newUser(name: String = "유저"): User {
-        val email = "v2host-${UUID.randomUUID()}@test.com"
+    private fun newUser(name: String = "유저", email: String = "v2host-${UUID.randomUUID()}@test.com"): User {
         return userRepository.save(
             User(
                 profile = Profile(name = name, email = email, phoneNumber = null, profileImage = null),
@@ -113,6 +118,13 @@ class V2HostControllerTest {
             contentType = MediaType.APPLICATION_JSON
             content = json(mapOf("members" to members.map { mapOf("email" to it.first, "role" to it.second) }))
         }
+
+    /** v1 초대 대기(비활성) 멤버를 직접 넣는다 */
+    private fun addPendingMember(hostId: Long, user: User, role: HostRole) {
+        val host = hostRepository.findById(hostId).get()
+        host.hostUsers.add(HostUser(host = host, userId = user.id, role = role))
+        hostRepository.save(host)
+    }
 
     private fun saveEvent(hostId: Long, status: EventStatus, startAt: LocalDateTime?): Event {
         val event = Event(hostId = hostId, name = "공연-$status", startAt = startAt, runTime = 60L)
@@ -243,7 +255,7 @@ class V2HostControllerTest {
         }
 
         @Test
-        fun `v2 수정으로 PHONE 이 빠지면 v1 contactNumber 도 비워진다`() {
+        fun `v2 수정으로 PHONE 이 빠져도 v1 contactNumber 는 기존 값을 유지한다`() {
             val master = newUser()
             val hostId = createHost(master)
 
@@ -255,7 +267,39 @@ class V2HostControllerTest {
 
             mockMvc.get("/api/v1/hosts/$hostId") { with(auth(master)) }.andExpect {
                 jsonPath("$.data.contactEmail") { value("new@gosrock.band") }
-                jsonPath("$.data.contactNumber") { value(null as Any?) }
+                jsonPath("$.data.contactNumber") { value("010-1234-5678") }
+            }
+        }
+
+        @Test
+        fun `v2 연락처가 있는 호스트를 v1 PATCH profile 로 수정하면 v2 홈의 첫 EMAIL, PHONE 이 바뀐다`() {
+            val master = newUser()
+            val hostId = createHost(master)
+
+            mockMvc.patch("/api/v1/hosts/$hostId/profile") {
+                with(auth(master))
+                contentType = MediaType.APPLICATION_JSON
+                content = json(
+                    mapOf(
+                        "profileImageKey" to "v1/profile.png",
+                        "introduce" to "v1 소개",
+                        "contactNumber" to "010-9999-8888",
+                        "contactEmail" to "v1@gosrock.band",
+                    ),
+                )
+            }.andExpect {
+                status { isOk() }
+                // v1 응답 형식 그대로
+                jsonPath("$.data.contactEmail") { value("v1@gosrock.band") }
+                jsonPath("$.data.contacts") { doesNotExist() }
+            }
+
+            mockMvc.get("/api/v2/hosts/$hostId").andExpect {
+                jsonPath("$.data.contacts.length()") { value(4) }
+                jsonPath("$.data.contacts[0].value") { value("@gosrock") }
+                jsonPath("$.data.contacts[1].value") { value("v1@gosrock.band") }
+                jsonPath("$.data.contacts[2].value") { value("010-9999-8888") }
+                jsonPath("$.data.contacts[3].value") { value("second@gosrock.band") }
             }
         }
 
@@ -341,18 +385,19 @@ class V2HostControllerTest {
         @Test
         fun `매니저가 부분 수정하면 null 필드는 유지되고 빈 문자열은 비운다`() {
             val team = Team()
+            val prefix = presignedUrlService.hostImageKeyPrefix(team.hostId)
 
             mockMvc.patch("/api/v2/hosts/${team.hostId}") {
                 with(auth(team.manager))
                 contentType = MediaType.APPLICATION_JSON
-                content = json(mapOf("name" to "새이름", "profileImageKey" to "host/1/profile.png", "coverImageKey" to "host/1/cover.png"))
+                content = json(mapOf("name" to "새이름", "profileImageKey" to "${prefix}profile.png", "coverImageKey" to "${prefix}cover.png"))
             }.andExpect {
                 status { isOk() }
                 jsonPath("$.data.name") { value("새이름") }
                 jsonPath("$.data.introduce") { value("소개") }
                 jsonPath("$.data.contacts.length()") { value(4) }
-                jsonPath("$.data.profileImageUrl") { value(org.hamcrest.Matchers.endsWith("host/1/profile.png")) }
-                jsonPath("$.data.coverImageUrl") { value(org.hamcrest.Matchers.endsWith("host/1/cover.png")) }
+                jsonPath("$.data.profileImageUrl") { value(org.hamcrest.Matchers.endsWith("${prefix}profile.png")) }
+                jsonPath("$.data.coverImageUrl") { value(org.hamcrest.Matchers.endsWith("${prefix}cover.png")) }
             }
 
             mockMvc.patch("/api/v2/hosts/${team.hostId}") {
@@ -364,13 +409,35 @@ class V2HostControllerTest {
                 jsonPath("$.data.name") { value("새이름") }
                 jsonPath("$.data.introduce") { value(null as Any?) }
                 jsonPath("$.data.coverImageUrl") { value(null as Any?) }
-                jsonPath("$.data.profileImageUrl") { value(org.hamcrest.Matchers.endsWith("host/1/profile.png")) }
+                jsonPath("$.data.profileImageUrl") { value(org.hamcrest.Matchers.endsWith("${prefix}profile.png")) }
             }
 
             // 실제 저장 확인
             mockMvc.get("/api/v2/hosts/${team.hostId}").andExpect {
                 jsonPath("$.data.name") { value("새이름") }
                 jsonPath("$.data.coverImageUrl") { value(null as Any?) }
+            }
+        }
+
+        @Test
+        fun `이미지 key 는 이 호스트 prefix 만 허용하고 외부 URL, 다른 호스트 key, 경로 이동은 400`() {
+            val team = Team()
+            val otherHostId = createHost(newUser())
+            listOf(
+                "https://evil.example.com/a.png",
+                "${presignedUrlService.hostImageKeyPrefix(otherHostId)}a.png",
+                "${presignedUrlService.hostImageKeyPrefix(team.hostId)}../$otherHostId/a.png",
+            ).forEach { key ->
+                listOf("profileImageKey", "coverImageKey").forEach { field ->
+                    mockMvc.patch("/api/v2/hosts/${team.hostId}") {
+                        with(auth(team.master))
+                        contentType = MediaType.APPLICATION_JSON
+                        content = json(mapOf(field to key))
+                    }.andExpect {
+                        status { isBadRequest() }
+                        jsonPath("$.code") { value("HOST_400_17") }
+                    }
+                }
             }
         }
 
@@ -476,6 +543,43 @@ class V2HostControllerTest {
         }
 
         @Test
+        fun `같은 이메일의 정상 계정이 여러 개면 400 이고 해당 이메일이 담긴다`() {
+            val team = Team()
+            val email = "dup-${UUID.randomUUID()}@test.com"
+            newUser(email = email)
+            newUser(email = email)
+
+            addMembers(team.master, team.hostId, listOf(email to "GUEST")).andExpect {
+                status { isBadRequest() }
+                jsonPath("$.code") { value("HOST_400_18") }
+                jsonPath("$.reason") { value(org.hamcrest.Matchers.containsString(email)) }
+            }
+        }
+
+        @Test
+        fun `같은 멤버를 동시에 추가하면 하나만 성공하고 나머지는 이미 멤버 400 이다 (500 아님)`() {
+            val team = Team()
+            val target = newUser()
+            val pool = Executors.newFixedThreadPool(4)
+            try {
+                val statuses = (1..4).map {
+                    pool.submit(
+                        Callable {
+                            addMembers(team.master, team.hostId, listOf(target.email() to "GUEST"))
+                                .andReturn().response.status
+                        },
+                    )
+                }.map { it.get() }
+
+                assertEquals(1, statuses.count { it == 200 }, "statuses=$statuses")
+                assertEquals(3, statuses.count { it == 400 }, "statuses=$statuses")
+            } finally {
+                pool.shutdown()
+            }
+            assertEquals(1, hostRepository.findById(team.hostId).get().hostUsers.count { it.userId == target.id })
+        }
+
+        @Test
         fun `이미 멤버인 이메일, 요청 내 중복 이메일은 400 이고 해당 이메일이 담긴다`() {
             val team = Team()
             addMembers(team.master, team.hostId, listOf(team.guest.email() to "GUEST")).andExpect {
@@ -573,7 +677,7 @@ class V2HostControllerTest {
         }
 
         @Test
-        fun `마스터 양도 후 기존 마스터는 매니저, 비멤버 대상은 403, 매니저 요청은 403`() {
+        fun `마스터 양도 후 기존 마스터는 매니저, 비멤버-대기 멤버 대상은 404, 매니저 요청은 403`() {
             val team = Team()
             fun transfer(requester: User, target: User) =
                 mockMvc.post("/api/v2/hosts/${team.hostId}/master-transfer") {
@@ -583,13 +687,133 @@ class V2HostControllerTest {
                 }
 
             transfer(team.manager, team.guest).andExpect { status { isForbidden() } }
-            transfer(team.master, team.outsider).andExpect { status { isForbidden() } }
+            transfer(team.master, team.outsider).andExpect {
+                status { isNotFound() }
+                jsonPath("$.code") { value("HOST_404_2") }
+            }
+            val pending = newUser()
+            addPendingMember(team.hostId, pending, HostRole.GUEST)
+            transfer(team.master, pending).andExpect { status { isNotFound() } }
 
             val body = transfer(team.master, team.guest).andExpect { status { isOk() } }.body()
             val roles = memberRoles(body)
             assertEquals("MASTER", roles[team.guest.id])
             assertEquals("MANAGER", roles[team.master.id])
             assertEquals(team.guest.id, hostRepository.findById(team.hostId).get().masterUserId)
+        }
+    }
+
+    // ===== 권한 경계 =====
+
+    @Nested
+    @DisplayName("권한 경계 (대기 멤버 / SUPER_ADMIN / IDOR)")
+    inner class PermissionEdges {
+
+        @Test
+        fun `초대 대기 멤버는 G+, M+ API 모두 403`() {
+            val team = Team()
+            val pendingManager = newUser()
+            addPendingMember(team.hostId, pendingManager, HostRole.MANAGER)
+
+            mockMvc.get("/api/v2/hosts/${team.hostId}/members") { with(auth(pendingManager)) }.andExpect {
+                status { isForbidden() }
+                jsonPath("$.code") { value("HOST_400_6") }
+            }
+            mockMvc.patch("/api/v2/hosts/${team.hostId}") {
+                with(auth(pendingManager))
+                contentType = MediaType.APPLICATION_JSON
+                content = json(mapOf("name" to "x"))
+            }.andExpect { status { isForbidden() } }
+            addMembers(pendingManager, team.hostId, listOf(newUser().email() to "GUEST"))
+                .andExpect { status { isForbidden() } }
+            // 공개 홈에서도 대기 멤버는 역할 없음
+            mockMvc.get("/api/v2/hosts/${team.hostId}") { with(auth(pendingManager)) }
+                .andExpect { jsonPath("$.data.myRole") { value(null as Any?) } }
+        }
+
+        @Test
+        fun `매니저는 MANAGER 역할의 초대 대기 멤버를 삭제할 수 없고 마스터는 할 수 있다`() {
+            val team = Team()
+            val pendingManager = newUser()
+            addPendingMember(team.hostId, pendingManager, HostRole.MANAGER)
+
+            mockMvc.delete("/api/v2/hosts/${team.hostId}/members/${pendingManager.id}") { with(auth(team.manager)) }
+                .andExpect {
+                    status { isForbidden() }
+                    jsonPath("$.code") { value("HOST_400_11") }
+                }
+            mockMvc.delete("/api/v2/hosts/${team.hostId}/members/${pendingManager.id}") { with(auth(team.master)) }
+                .andExpect { status { isOk() } }
+            assertFalse(hostRepository.findById(team.hostId).get().hasHostUserId(pendingManager.id!!))
+        }
+
+        @Test
+        fun `다른 호스트 hostId 로 요청하면 403, 내 호스트에서 다른 호스트 소속 userId 를 대상으로 하면 404`() {
+            val mine = Team()
+            val other = Team()
+
+            mockMvc.get("/api/v2/hosts/${other.hostId}/members") { with(auth(mine.master)) }
+                .andExpect { status { isForbidden() } }
+            mockMvc.delete("/api/v2/hosts/${other.hostId}/members/${other.guest.id}") { with(auth(mine.master)) }
+                .andExpect { status { isForbidden() } }
+            mockMvc.patch("/api/v2/hosts/${other.hostId}/members/${other.guest.id}/role") {
+                with(auth(mine.master))
+                contentType = MediaType.APPLICATION_JSON
+                content = json(mapOf("role" to "MANAGER"))
+            }.andExpect { status { isForbidden() } }
+
+            mockMvc.delete("/api/v2/hosts/${mine.hostId}/members/${other.guest.id}") { with(auth(mine.master)) }
+                .andExpect {
+                    status { isNotFound() }
+                    jsonPath("$.code") { value("HOST_404_2") }
+                }
+            mockMvc.patch("/api/v2/hosts/${mine.hostId}/members/${other.guest.id}/role") {
+                with(auth(mine.master))
+                contentType = MediaType.APPLICATION_JSON
+                content = json(mapOf("role" to "MANAGER"))
+            }.andExpect { status { isNotFound() } }
+            // 다른 호스트 멤버는 그대로
+            assertTrue(hostRepository.findById(other.hostId).get().isActiveHostUserId(other.guest.id!!))
+        }
+
+        /** 현재 동작 고정: AOP 권한 검사만 바이패스하고, 요청자 역할을 보는 도메인 규칙은 그대로 적용된다 */
+        @Test
+        fun `SUPER_ADMIN 비멤버는 조회-GUEST 추가-삭제-역할 변경은 되고 매니저 추가-삭제, 마스터 양도는 막힌다`() {
+            val team = Team()
+            val admin = newUser().also { it.changeRole(AccountRole.SUPER_ADMIN) }.let { userRepository.save(it) }
+            val newGuest = newUser()
+            val newManager = newUser()
+
+            mockMvc.get("/api/v2/hosts/${team.hostId}/members") { with(auth(admin)) }.andExpect { status { isOk() } }
+            addMembers(admin, team.hostId, listOf(newGuest.email() to "GUEST")).andExpect { status { isOk() } }
+            addMembers(admin, team.hostId, listOf(newManager.email() to "MANAGER")).andExpect { status { isForbidden() } }
+            mockMvc.delete("/api/v2/hosts/${team.hostId}/members/${team.manager.id}") { with(auth(admin)) }
+                .andExpect { status { isForbidden() } }
+            mockMvc.patch("/api/v2/hosts/${team.hostId}/members/${team.guest.id}/role") {
+                with(auth(admin))
+                contentType = MediaType.APPLICATION_JSON
+                content = json(mapOf("role" to "MANAGER"))
+            }.andExpect { status { isOk() } }
+            mockMvc.post("/api/v2/hosts/${team.hostId}/master-transfer") {
+                with(auth(admin))
+                contentType = MediaType.APPLICATION_JSON
+                content = json(mapOf("userId" to team.manager.id))
+            }.andExpect {
+                status { isForbidden() }
+                jsonPath("$.code") { value("HOST_400_2") }
+            }
+            mockMvc.delete("/api/v2/hosts/${team.hostId}/members/${newGuest.id}") { with(auth(admin)) }
+                .andExpect { status { isOk() } }
+            // 공개 홈에서 SUPER_ADMIN 은 멤버가 아니므로 역할 없음
+            mockMvc.get("/api/v2/hosts/${team.hostId}") { with(auth(admin)) }
+                .andExpect { jsonPath("$.data.myRole") { value(null as Any?) } }
+        }
+
+        @Test
+        fun `공개 경로는 숫자 hostId 만 허용한다`() {
+            mockMvc.get("/api/v2/hosts/abc").andExpect { status { isUnauthorized() } }
+            mockMvc.get("/api/v2/hosts/abc/events").andExpect { status { isUnauthorized() } }
+            mockMvc.get("/api/v2/hosts/1/members").andExpect { status { isUnauthorized() } }
         }
     }
 

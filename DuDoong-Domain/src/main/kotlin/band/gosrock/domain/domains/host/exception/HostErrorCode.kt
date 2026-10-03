@@ -37,6 +37,10 @@ enum class HostErrorCode(
     ALREADY_HOST_MEMBER_EMAIL(BAD_REQUEST, "HOST_400_15", "이미 호스트 멤버인 이메일입니다."),
     @ExplainError("연락처가 0개 또는 최대 개수 초과, 값이 비었거나 너무 긴 경우 (전화번호는 15자 이하)")
     INVALID_HOST_CONTACT(BAD_REQUEST, "HOST_400_16", "연락처 형식이 올바르지 않습니다."),
+    @ExplainError("이미지 key 가 빈 문자열이 아니면서 이 호스트의 이미지 업로드 API 가 발급한 경로(host/{hostId}/)로 시작하지 않는 경우")
+    INVALID_HOST_IMAGE_KEY(BAD_REQUEST, "HOST_400_17", "이 호스트에 업로드한 이미지가 아닙니다."),
+    @ExplainError("같은 이메일로 가입된 정상 계정이 여러 개라 멤버를 특정할 수 없는 경우. reason 뒤에 해당 이메일 목록이 붙습니다.")
+    AMBIGUOUS_MEMBER_EMAIL(BAD_REQUEST, "HOST_400_18", "같은 이메일로 가입된 계정이 여러 개입니다."),
 
     HOST_NOT_FOUND(NOT_FOUND, "Host_404_1", "해당 호스트를 찾을 수 없습니다."),
     HOST_USER_NOT_FOUND(NOT_FOUND, "HOST_404_2", "가입된 호스트 유저가 아닙니다.");

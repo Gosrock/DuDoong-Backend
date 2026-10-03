@@ -9,8 +9,10 @@ import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor
 import band.gosrock.domain.domains.host.domain.HostUser
 import band.gosrock.domain.domains.host.exception.HostErrorCode
+import band.gosrock.domain.domains.host.repository.HostRepository
 import band.gosrock.domain.domains.host.service.HostService
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.transaction.annotation.Transactional
 
 @UseCase
@@ -18,6 +20,7 @@ class V2AddHostMembersUseCase(
     private val hostAdaptor: HostAdaptor,
     private val userAdaptor: UserAdaptor,
     private val hostService: HostService,
+    private val hostRepository: HostRepository,
     private val readHostMembersUseCase: V2ReadHostMembersUseCase,
 ) {
     /**
@@ -27,7 +30,7 @@ class V2AddHostMembersUseCase(
     @Transactional
     @HostRolesAllowed(role = MANAGER, findHostFrom = HOST_ID)
     fun execute(userId: Long, hostId: Long, request: V2AddHostMembersRequest): List<V2HostMemberResponse> {
-        val host = hostAdaptor.findById(hostId)
+        val host = hostAdaptor.findByIdForUpdate(hostId)
         val members = request.members!!.map { it.email!!.trim() to it.role!! }
 
         // 역할 검증 먼저 (MASTER 지정 불가, 매니저 요청자는 GUEST 만)
@@ -38,8 +41,14 @@ class V2AddHostMembersUseCase(
             throw HostErrorCode.DUPLICATED_MEMBER_EMAIL.toDetailException(duplicated.joinToString(", "))
         }
 
-        val usersByEmail = userAdaptor.queryUsersByEmailIn(members.map { it.first })
-            .associateBy { it.profile?.email?.lowercase() }
+        val usersByEmailGroup = userAdaptor.queryUsersByEmailIn(members.map { it.first })
+            .groupBy { it.profile?.email?.lowercase() }
+        // 같은 이메일의 정상 계정이 여러 개면 누구를 추가할지 알 수 없다
+        val ambiguous = members.map { it.first }.filter { (usersByEmailGroup[it.lowercase()]?.size ?: 0) > 1 }
+        if (ambiguous.isNotEmpty()) {
+            throw HostErrorCode.AMBIGUOUS_MEMBER_EMAIL.toDetailException(ambiguous.joinToString(", "))
+        }
+        val usersByEmail = usersByEmailGroup.mapValues { it.value.single() }
         val notFound = members.map { it.first }.filter { usersByEmail[it.lowercase()] == null }
         if (notFound.isNotEmpty()) {
             throw HostErrorCode.MEMBER_EMAIL_NOT_FOUND.toDetailException(notFound.joinToString(", "))
@@ -53,6 +62,13 @@ class V2AddHostMembersUseCase(
         val hostUsers = members.map { (email, role) ->
             HostUser(host = host, userId = usersByEmail.getValue(email.lowercase()).id, role = role)
         }
-        return readHostMembersUseCase.toMemberResponses(hostService.addActiveHostUsers(host, userId, hostUsers))
+        val saved = try {
+            // 호스트 락 밖(v1 초대 등)에서 같은 유저가 동시에 들어온 경우 unique(host_id, user_id) 위반.
+            // IDENTITY 라 insert 는 save 시점에 나가고, 남은 변경은 flush 로 여기서 확인한다
+            hostService.addActiveHostUsers(host, userId, hostUsers).also { hostRepository.flushChanges() }
+        } catch (e: DataIntegrityViolationException) {
+            throw HostErrorCode.ALREADY_HOST_MEMBER_EMAIL.toDetailException(members.joinToString(", ") { it.first })
+        }
+        return readHostMembersUseCase.toMemberResponses(saved)
     }
 }

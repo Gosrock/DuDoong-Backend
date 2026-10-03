@@ -7,6 +7,7 @@ v2 호스트 / 멤버 API E2E 테스트 (#704).
 
 재실행해도 충돌하지 않도록 유저 이메일에 실행마다 다른 접미사를 붙인다.
 """
+import subprocess
 import uuid
 from datetime import datetime, timedelta
 
@@ -67,6 +68,15 @@ def _add_members(base_url, s, who, members):
         json={"members": [{"email": e, "role": r} for e, r in members]},
         headers=_h(s, who),
     )
+
+
+def _mysql_exec(sql):
+    """로컬 MySQL(docker, 기존 E2E 와 같은 접속 정보)에 직접 실행"""
+    result = subprocess.run(
+        ["mysql", "-h", "127.0.0.1", "-P", "13306", "-u", "dudoong", "-pdudoong", "dudoong", "-e", sql],
+        capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def _future(days):
@@ -137,15 +147,23 @@ def test_05_public_home_master_role(base_url, s):
 
 
 def test_06_update_host_partial(base_url, s):
+    # 커버 key 는 H-15 가 이 호스트에 발급한 것만 허용
+    upload = requests.post(
+        f"{base_url}/v2/hosts/{s.host_id}/images",
+        json={"purpose": "COVER", "extension": "PNG"},
+        headers=_h(s, "master"),
+    )
+    assert_status(upload, 200)
+    cover_key = get_data(upload)["key"]
     resp = requests.patch(
         f"{base_url}/v2/hosts/{s.host_id}",
-        json={"introduce": "수정된 소개", "coverImageKey": "e2e/host/cover.png"},
+        json={"introduce": "수정된 소개", "coverImageKey": cover_key},
         headers=_h(s, "master"),
     )
     assert_status(resp, 200)
     data = get_data(resp)
     assert data["introduce"] == "수정된 소개"
-    assert data["coverImageUrl"].endswith("e2e/host/cover.png")
+    assert data["coverImageUrl"].endswith(cover_key)
     assert data["name"].startswith("브이투")  # null 필드는 유지
     assert len(data["contacts"]) == 4
 
@@ -174,6 +192,21 @@ def test_08_add_members_errors_rollback(base_url, s):
     resp = _add_members(base_url, s, "master", [(s.emails["guest2"], "MASTER")])
     assert_status(resp, 400)
     assert resp.json()["code"] == "HOST_400_10"
+
+
+def test_08b_add_member_ambiguous_email(base_url, s):
+    """같은 이메일의 정상 계정이 2개 이상이면 누구인지 특정할 수 없어 400 (HOST_400_18)"""
+    email = f"v2host-dup-{RUN}@dudoong.com"
+    for i in range(2):
+        _mysql_exec(
+            "INSERT INTO tbl_user (created_at, updated_at, account_role, account_state, last_login_at, "
+            "marketing_agree, oid, provider, email, name, receive_mail) VALUES "
+            f"(NOW(), NOW(), 'USER', 'NORMAL', NOW(), b'0', 'v2host-dup-{RUN}-{i}', 'KAKAO', '{email}', '중복{i}', b'1')"
+        )
+    resp = _add_members(base_url, s, "master", [(email, "GUEST")])
+    assert_status(resp, 400)
+    assert resp.json()["code"] == "HOST_400_18"
+    assert email in resp.json()["reason"]
 
 
 def test_09_manager_permission_boundary(base_url, s):
@@ -358,7 +391,10 @@ def test_17_image_upload_url(base_url, s):
 def test_18_master_transfer(base_url, s):
     url = f"{base_url}/v2/hosts/{s.host_id}/master-transfer"
     assert_status(requests.post(url, json={"userId": s.user_ids["guest"]}, headers=_h(s, "manager")), 403)
-    assert_status(requests.post(url, json={"userId": s.user_ids["outsider"]}, headers=_h(s, "master")), 403)
+    # 비멤버 대상은 권한 문제가 아니라 대상 없음 → 404
+    resp = requests.post(url, json={"userId": s.user_ids["outsider"]}, headers=_h(s, "master"))
+    assert_status(resp, 404)
+    assert resp.json()["code"] == "HOST_404_2"
 
     resp = requests.post(url, json={"userId": s.user_ids["manager"]}, headers=_h(s, "master"))
     assert_status(resp, 200)
@@ -375,7 +411,7 @@ def test_19_v1_compat_contacts_and_members(base_url, s):
     assert data["contactNumber"] == "010-1234-5678"
     assert data["masterUser"]["userId"] == s.user_ids["manager"]
 
-    # v2 로 연락처를 바꾸면 v1 필드도 따라간다 (PHONE 이 빠지면 null)
+    # v2 로 연락처를 바꾸면 v1 필드도 따라간다. PHONE 이 빠지면 v1 contactNumber 는 기존 값 유지
     resp = requests.patch(
         f"{base_url}/v2/hosts/{s.host_id}",
         json={"contacts": [{"type": "EMAIL", "value": "changed@dudoong.com"}]},
@@ -384,4 +420,32 @@ def test_19_v1_compat_contacts_and_members(base_url, s):
     assert_status(resp, 200)
     data = get_data(requests.get(f"{base_url}/v1/hosts/{s.host_id}", headers=_h(s, "master")))
     assert data["contactEmail"] == "changed@dudoong.com"
-    assert data["contactNumber"] is None
+    assert data["contactNumber"] == "010-1234-5678"
+
+
+def test_20_v1_profile_patch_syncs_v2_contacts(base_url, s):
+    """v1 PATCH profile 로 바뀐 전화번호/이메일이 v2 연락처(첫 EMAIL/PHONE, 없으면 추가)에 반영된다"""
+    resp = requests.patch(
+        f"{base_url}/v1/hosts/{s.host_id}/profile",
+        json={
+            "profileImageKey": "e2e/v1/profile.png",
+            "introduce": "v1 소개",
+            "contactNumber": "010-9999-8888",
+            "contactEmail": "v1@dudoong.com",
+        },
+        headers=_h(s, "manager"),
+    )
+    assert_status(resp, 200)
+    assert "contacts" not in get_data(resp)  # v1 응답 형식 불변
+    contacts = get_data(requests.get(f"{base_url}/v2/hosts/{s.host_id}"))["contacts"]
+    assert contacts == [
+        {"type": "EMAIL", "value": "v1@dudoong.com"},
+        {"type": "PHONE", "value": "010-9999-8888"},
+    ]
+
+
+def test_21_image_key_must_be_host_prefixed(base_url, s):
+    for key in ["https://evil.example.com/a.png", "e2e/host/cover.png"]:
+        resp = requests.patch(f"{base_url}/v2/hosts/{s.host_id}", json={"coverImageKey": key}, headers=_h(s, "manager"))
+        assert_status(resp, 400)
+        assert resp.json()["code"] == "HOST_400_17"

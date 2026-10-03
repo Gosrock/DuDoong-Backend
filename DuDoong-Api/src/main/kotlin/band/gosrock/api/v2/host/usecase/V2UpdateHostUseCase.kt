@@ -8,7 +8,9 @@ import band.gosrock.api.v2.host.dto.response.V2HostHomeResponse
 import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor
 import band.gosrock.domain.domains.host.adaptor.HostFollowAdaptor
+import band.gosrock.domain.domains.host.exception.InvalidHostImageKeyException
 import band.gosrock.domain.domains.host.repository.HostRepository
+import band.gosrock.infrastructure.config.s3.S3UploadPresignedUrlService
 import org.springframework.transaction.annotation.Transactional
 
 @UseCase
@@ -16,10 +18,13 @@ class V2UpdateHostUseCase(
     private val hostAdaptor: HostAdaptor,
     private val hostRepository: HostRepository,
     private val hostFollowAdaptor: HostFollowAdaptor,
+    private val presignedUrlService: S3UploadPresignedUrlService,
 ) {
     @Transactional
     @HostRolesAllowed(role = MANAGER, findHostFrom = HOST_ID)
     fun execute(userId: Long, hostId: Long, request: V2UpdateHostRequest): V2HostHomeResponse {
+        validateImageKey(hostId, request.profileImageKey)
+        validateImageKey(hostId, request.coverImageKey)
         val host = hostAdaptor.findById(hostId)
         host.updateProfileV2(
             name = request.name?.trim(),
@@ -35,5 +40,13 @@ class V2UpdateHostUseCase(
             isFollowing = hostFollowAdaptor.isFollowing(hostId, userId),
             userId = userId,
         )
+    }
+
+    /** 빈 문자열(기본 이미지)이거나, H-15 가 이 호스트에 발급한 key 여야 한다. 외부 URL / 다른 호스트 key 거부 */
+    private fun validateImageKey(hostId: Long, key: String?) {
+        if (key == null || key.isEmpty()) return
+        if (!key.startsWith(presignedUrlService.hostImageKeyPrefix(hostId)) || key.contains("..")) {
+            throw InvalidHostImageKeyException.EXCEPTION
+        }
     }
 }
