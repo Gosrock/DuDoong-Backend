@@ -17,7 +17,7 @@ band.gosrock.api.v2
 
 - v2 클래스는 모두 `V2` 접두사를 붙인다 (`V2EventController`, `V2GetEventUseCase`, `V2EventResponse`).
   - Spring 기본 빈 이름은 단순 클래스명 기반이라, v1과 같은 이름이면 패키지가 달라도 빈 이름 충돌로 기동 실패한다.
-- v2 컨트롤러 경로는 반드시 `/api/v2/` 로 시작한다 (Swagger `v2` 그룹, 403 정책이 경로 기준).
+- v2 컨트롤러 경로는 반드시 `/api/v2/` 로 시작하고 (Swagger `v2` 그룹, 공개 경로가 경로 기준), 클래스는 이 패키지 아래에 둔다 (403 정책이 핸들러 패키지 기준).
 
 ## 공통 동작
 
