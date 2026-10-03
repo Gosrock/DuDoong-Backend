@@ -39,6 +39,9 @@ band.gosrock.api.v2
   - `V2EventDomainService`: 생성, 수정 가능 상태, 기본 정보 수정(hasTicket 잠금, 시작 시각), 문의처·태그·섹션 교체 검증, 섹션 대체 표시, 체크리스트, 등록, 삭제
   - `V2HostDomainService`: 프로필 부분 수정, 연락처 교체 검증·대체 표시, 멤버 즉시 추가·역할 변경·삭제
   - `V2HostFollowDomainService`: 팔로우 / 언팔로우
+  - `V2TicketItemDomainService`: 티켓 생성(티켓 없음 공연 거부, DUDOONG/FREE), 폼 전체 수정(판매됨이면 DEC-006 허용 필드만), 판매 기간 검증, 판매 상태(`saleState`)·구매 가능 판정, 무제한(`UNLIMITED_SUPPLY_COUNT`)·매수 제한 없음(`NO_PURCHASE_LIMIT`) 저장값, 판매 중단·재개, 옵션 전체 지정
+  - `V2TicketOptionDomainService`: 옵션 생성(SUBJECTIVE / YES_NO=TRUE_FALSE), 부분 수정(잠긴 옵션은 이름·설명만, DEC-012), 삭제(판매 전 티켓에서는 떼고 삭제), 잠김 판정
+- 티켓 공통 불변식(엔티티 `TicketItem`): 재고 감소 = 판매됨(`isSold`), 판매된 티켓 옵션 변경·삭제 불가, **판매 중 판정(`isOnSale`: isSellable + 판매 기간)** — v1 장바구니·주문 생성(`CartValidator`/`OrderValidator.validCanCreate`)도 이 검사를 한다. v1 로 만든 티켓은 isSellable=true·기간 null 이라 영향 없음
 - v1 코드(v1 api, Admin, Domain 의 엔티티·v1 서비스)는 `..service.v2..` 를 호출하지 않는다. v2 서비스는 공유 v1 도메인 서비스(`EventService` 등)를 호출할 수 있다.
 
 ### 아키텍처 테스트
@@ -49,7 +52,7 @@ band.gosrock.api.v2
 | 예외: `GlobalExceptionHandler` / `SwaggerConfig` 는 `api.v2` 중 `V2ErrorPolicy` 에만 의존 가능 | 〃 |
 | `api.v2` 는 `api.common` / `api.config` 외 v1 api 에 의존하지 않음 | 〃 |
 | `domain..service.v2..` 에는 `api.v2..` 와 `domain..service.v2..` 만 의존 가능 (허용 목록. v1 api, Admin, Domain, Infrastructure, Common 전부 금지) | 〃 (Api classpath), `DuDoong-Domain/.../architecture/V2DomainServiceArchitectureTest.kt`, `DuDoong-Batch/src/test/kotlin/band/gosrock/architecture/V2BatchArchitectureTest.kt` |
-| 엔티티의 v2 `internal` mutator(`changeHasTicket`, `changeSchedule`, `changePosterImage`, `changePlace`, `replaceContacts`, `replaceTagIds`, `replaceSections`, `getOrInitProfile`)는 `service.v2` 와 엔티티 자신(`Event`/`Host`)만 호출 | `DuDoong-Domain/src/test/kotlin/band/gosrock/domain/architecture/V2DomainServiceArchitectureTest.kt` |
+| 엔티티의 v2 `internal` mutator(`changeHasTicket`, `changeSchedule`, `changePosterImage`, `changePlace`, `replaceContacts`, `replaceTagIds`, `replaceSections`, `getOrInitProfile`, `TicketItem.changeAccountInfo`, `TicketItem.changeSupplyCount`)는 `service.v2` 와 엔티티 자신(`Event`/`Host`/`TicketItem`)만 호출 | `DuDoong-Domain/src/test/kotlin/band/gosrock/domain/architecture/V2DomainServiceArchitectureTest.kt` |
 | `V2*DomainService` 는 `..service.v2..` 패키지에 둔다 | 〃 |
 
 - 예외를 늘려야 하면 테스트에 클래스를 명시적으로 추가하고 이유를 주석으로 남긴다.

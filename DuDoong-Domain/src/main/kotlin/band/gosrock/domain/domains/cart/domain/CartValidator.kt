@@ -27,6 +27,8 @@ class CartValidator(
         validAnswerToAllQuestion(cart, item)
         validEventIsOpen(event)
         validTicketingTime(event)
+        // 판매 중단·판매 기간 (v2 설정). v1 티켓은 항상 통과
+        item.validateOnSale()
         validItemStockEnough(cart, item)
         validItemPurchaseLimit(cart, item)
     }

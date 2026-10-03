@@ -1,0 +1,38 @@
+package band.gosrock.domain.domains.ticket_item.service.v2
+
+import band.gosrock.domain.common.vo.AccountInfoVo
+import band.gosrock.domain.domains.ticket_item.domain.TicketPayType
+import java.time.LocalDateTime
+
+/**
+ * v2 티켓 생성·수정 입력 (수정은 폼 전체를 보낸다).
+ * @property supplyCount null 이면 무제한 ([V2TicketItemDomainService.UNLIMITED_SUPPLY_COUNT] 로 저장)
+ * @property purchaseLimit null 이면 1인 매수 제한 없음 ([V2TicketItemDomainService.NO_PURCHASE_LIMIT] 로 저장)
+ * @property approvalRequired 두둥티켓은 항상 true 로 저장
+ * @property saleStartAt null 이면 등록 즉시, saleEndAt null 이면 공연 시작까지
+ */
+data class V2TicketItemForm(
+    val payType: TicketPayType,
+    val name: String,
+    val description: String?,
+    val price: Long,
+    val supplyCount: Long?,
+    val account: AccountInfoVo?,
+    val approvalRequired: Boolean,
+    val isQuantityPublic: Boolean,
+    val purchaseLimit: Long?,
+    val saleStartAt: LocalDateTime?,
+    val saleEndAt: LocalDateTime?,
+)
+
+/** 관리 화면 티켓 상태 (01-호스팅센터 6-3) */
+enum class V2TicketSaleState {
+    /** 재고 감소 없음: 모든 필드 수정·삭제 가능 */
+    BEFORE_SALE,
+
+    /** 재고 감소 발생 (v1 isSold): 일부 필드만 수정, 삭제 불가 */
+    SOLD,
+
+    /** 판매 중단 (isSellable=false). 판매 여부는 [band.gosrock.domain.domains.ticket_item.domain.TicketItem.isSold] 로 따로 본다 */
+    SUSPENDED,
+}

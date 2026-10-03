@@ -14,6 +14,7 @@ import band.gosrock.domain.domains.ticket_item.exception.InvalidTicketItemExcept
 import band.gosrock.domain.domains.ticket_item.exception.InvalidTicketPriceException
 import band.gosrock.domain.domains.ticket_item.exception.InvalidTicketTypeException
 import band.gosrock.domain.domains.ticket_item.exception.NotAppliedItemOptionGroupException
+import band.gosrock.domain.domains.ticket_item.exception.TicketItemNotOnSaleException
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityException
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLackException
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLargeException
@@ -191,6 +192,32 @@ class TicketItem(
     fun isSold(): Boolean = quantity!! < supplyCount!!
 
     fun isQuantityLeft(): Boolean = quantity!! > 0
+
+    /**
+     * 판매 중인지 (v1/v2 공통 구매 조건): 판매 중단(isSellable=false)이 아니고, 판매 기간이 설정돼 있으면 그 안.
+     * v1 로 만든 티켓은 isSellable=true · 판매 기간 null 이라 항상 true. 재고·공연 상태·공연 시작 전 여부는 별도 검증
+     */
+    fun isOnSale(now: LocalDateTime): Boolean =
+        isSellable != false &&
+            saleStartAt.let { it == null || !now.isBefore(it) } &&
+            saleEndAt.let { it == null || now.isBefore(it) }
+
+    fun validateOnSale(now: LocalDateTime = LocalDateTime.now()) {
+        if (!isOnSale(now)) throw TicketItemNotOnSaleException.EXCEPTION
+    }
+
+    /** v2 전용 최소 mutator: 계좌 (두둥티켓만, 그 외는 null). 검증은 V2TicketItemDomainService */
+    internal fun changeAccountInfo(accountInfo: AccountInfoVo?) {
+        this.accountInfo = accountInfo
+    }
+
+    /** v2 전용 최소 mutator: 공급량 변경. 판매된 만큼(공급량 - 재고)은 유지하고 재고를 같이 옮긴다 */
+    internal fun changeSupplyCount(newSupplyCount: Long) {
+        val soldCount = this.supplyCount!! - this.quantity!!
+        if (newSupplyCount < soldCount) throw TicketItemQuantityException.EXCEPTION
+        this.supplyCount = newSupplyCount
+        this.quantity = newSupplyCount - soldCount
+    }
 
     /** 어드민 전용: 재고(quantity)와 공급량(supplyCount)을 동시에 조정 */
     fun adminAdjustStock(delta: Long) {
