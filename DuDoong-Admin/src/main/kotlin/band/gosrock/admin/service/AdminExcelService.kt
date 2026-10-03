@@ -171,6 +171,28 @@ class AdminExcelService {
         return toByteArray(workbook)
     }
 
+    /**
+     * 헤더 + 행으로 된 단순 표 시트 (v2 호스트 주문·발급 티켓 엑셀, #712).
+     * 숫자는 숫자 셀, null 은 빈 칸, 그 외는 문자열 셀.
+     */
+    fun generateTableExcel(sheetName: String, headers: List<String>, rows: List<List<Any?>>): ByteArray {
+        val workbook = XSSFWorkbook()
+        val sheet = workbook.createSheet(sheetName)
+        val headerRow = sheet.createRow(0)
+        headers.forEachIndexed { i, h -> headerRow.createCell(i).setCellValue(h) }
+        rows.forEachIndexed { idx, values ->
+            val row = sheet.createRow(idx + 1)
+            values.forEachIndexed { col, value ->
+                when (value) {
+                    null -> row.createCell(col).setCellValue("")
+                    is Number -> row.createCell(col).setCellValue(value.toDouble())
+                    else -> row.createCell(col).setCellValue(value.toString())
+                }
+            }
+        }
+        return toByteArray(workbook)
+    }
+
     private fun toByteArray(workbook: XSSFWorkbook): ByteArray {
         val out = ByteArrayOutputStream()
         workbook.write(out)

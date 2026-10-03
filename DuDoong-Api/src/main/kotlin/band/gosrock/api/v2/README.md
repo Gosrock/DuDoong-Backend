@@ -24,7 +24,8 @@ band.gosrock.api.v2
 - 성공 응답: 기존 `SuccessResponseAdvice` 래핑을 그대로 사용 (`{success,status,data,timeStamp}`).
 - 에러 응답: 기존 `ErrorResponse` 포맷 그대로. 단, 호스트 권한 실패(`V2ErrorPolicy.HOST_FORBIDDEN_CODES`)는 v2 핸들러(이 패키지의 컨트롤러)에서만 HTTP 403.
   - 403 정책은 MVC 핸들러 예외(`GlobalExceptionHandler`)에만 적용된다. 필터 단계에서 나는 예외는 대상이 아니다.
-- 페이징: `V2PageResponse` 하나로 통일. `Slice` 기반이면 `totalElements`/`totalPages`가 `null`.
+- 페이징: `V2PageResponse` 하나로 통일 (`Slice` 기반이면 `totalElements`/`totalPages`가 `null`). 건수가 함께 필요한 목록(주문·발급 티켓)은 `{counts, orders|tickets: V2PageResponse}`.
+- 엑셀: 운영 어드민 `AdminExcelService.generateTableExcel` 재사용, `ResponseEntity<ByteArray>` 로 내려 성공 응답 래핑을 타지 않는다.
 - 공개(비인증) 경로: `SecurityConfig.V2_PUBLIC_GET_PATHS` 에 추가.
 - SUPER_ADMIN: `@HostRolesAllowed` 권한 검사만 건너뛴다. 요청자 역할을 보는 도메인 규칙은 그대로라, 멤버가 아니면 마스터 전용 규칙(매니저 추가·삭제, 마스터 양도)은 막히고 GUEST 추가·삭제, 역할 변경, 조회·수정은 된다.
 
@@ -41,6 +42,10 @@ band.gosrock.api.v2
   - `V2HostFollowDomainService`: 팔로우 / 언팔로우
   - `V2TicketItemDomainService`: 티켓 생성(티켓 없음 공연 거부, DUDOONG/FREE), 폼 전체 수정(잠기면 DEC-006 허용 필드만, 잠긴 필드는 양쪽 trim 비교·바뀐 값만 길이 검증), 판매 기간 검증, 판매 상태(`saleState`)·구매 가능 판정, **잠금 판정(`isLocked` = 재고 감소 OR 승인 대기 주문)**, 판매 중단·재개(멱등), 옵션 전체 지정
   - `V2TicketOptionDomainService`: 옵션 생성(SUBJECTIVE / YES_NO=TRUE_FALSE), 부분 수정(잠긴 티켓에 붙으면 이름·설명만, DEC-012), 삭제(잠긴 티켓에 붙으면 불가, 판매 전 티켓에서는 떼고 삭제). 수정·삭제는 붙은 티켓들의 `티켓관리:{id}` 락을 id 순으로 잡고 판정
+  - `V2OrderDomainService` (#712): 주문의 공연 소속 확인(다른 공연 주문은 404), 승인·취소(v1 `OrderApproveService`·`WithdrawOrderService` 그대로 호출), 거절(사유 종류 검증 + `Order.recordRefuseReasonType`, 표시 문구는 v1 `cancel_reason`), 환불 완료(요청 상태만, 완료는 멱등). 상태 분류는 `V2OrderStatus` (v1 상태값 유지, REFUSED = CANCELED + 사유 종류 있음 또는 approved_at 없음)
+  - `V2CheckInDomainService` (#712): 체크인 결과 판정(ENTERED / ALREADY_ENTERED / OTHER_EVENT / CANCELED, 셀프 전용 SELECT_TICKET), 입장은 v1 `IssuedTicket.entrance` + 행 잠금(`SELECT ... FOR UPDATE`)으로 동시 스캔 1회만 입장, 셀프 체크인 토큰 생성(조건부 UPDATE)
+  - 조회 쿼리 `V2OrderQuery` / `V2IssuedTicketQuery` 도 `service.v2` 에 둔다 (v2 만 사용)
+- **open-in-view**: test·staging·prod 는 켜져 있다(기본값). 요청 영속성 컨텍스트에 먼저 올린 엔티티는 락 트랜잭션(REQUIRES_NEW)에서 바뀌어도 같은 요청 안에서 갱신되지 않으므로, 락 서비스를 부르기 전 검사는 엔티티 대신 스칼라 조회로 한다 (`V2OrderDomainService.validateEventOrder`)
 - 티켓 공통 불변식(엔티티 `TicketItem`): 재고 감소 = 판매됨(`isSold`), 판매된 티켓 옵션 변경·삭제 불가, 무제한·매수 제한 없음 저장값(`TicketItem.UNLIMITED_SUPPLY_COUNT` / `NO_PURCHASE_LIMIT` = 1,000,000, `isUnlimitedSupply()` / `hasNoPurchaseLimit()` — v1 응답·어드민·v2 공통), **판매 중 판정(`isOnSale`: isSellable + 판매 기간)**
   - v1 장바구니·주문 생성(`CartValidator`/`OrderValidator.validCanCreate`)이 이 검사를 하고, v1 공개 티켓 목록은 판매 중인 티켓만 보여 준다(어드민 목록은 전부). v1 로 만든 티켓은 isSellable=true·기간 null 이라 영향 없음
 - v1 코드(v1 api, Admin, Domain 의 엔티티·v1 서비스)는 `..service.v2..` 를 호출하지 않는다. v2 서비스는 공유 v1 도메인 서비스(`EventService` 등)를 호출할 수 있다.
@@ -53,7 +58,7 @@ band.gosrock.api.v2
 | 예외: `GlobalExceptionHandler` / `SwaggerConfig` 는 `api.v2` 중 `V2ErrorPolicy` 에만 의존 가능 | 〃 |
 | `api.v2` 는 `api.common` / `api.config` 외 v1 api 에 의존하지 않음 | 〃 |
 | `domain..service.v2..` 에는 `api.v2..` 와 `domain..service.v2..` 만 의존 가능 (허용 목록. v1 api, Admin, Domain, Infrastructure, Common 전부 금지) | 〃 (Api classpath), `DuDoong-Domain/.../architecture/V2DomainServiceArchitectureTest.kt`, `DuDoong-Batch/src/test/kotlin/band/gosrock/architecture/V2BatchArchitectureTest.kt` |
-| 엔티티의 v2 `internal` mutator(`changeHasTicket`, `changeSchedule`, `changePosterImage`, `changePlace`, `replaceContacts`, `replaceTagIds`, `replaceSections`, `getOrInitProfile`, `TicketItem.changeAccountInfo`, `TicketItem.changeSupplyCount`)는 `service.v2` 와 엔티티 자신(`Event`/`Host`/`TicketItem`)만 호출 | `DuDoong-Domain/src/test/kotlin/band/gosrock/domain/architecture/V2DomainServiceArchitectureTest.kt` |
+| 엔티티의 v2 `internal` mutator(`changeHasTicket`, `changeSchedule`, `changePosterImage`, `changePlace`, `replaceContacts`, `replaceTagIds`, `replaceSections`, `getOrInitProfile`, `TicketItem.changeAccountInfo`, `TicketItem.changeSupplyCount`, `Order.recordRefuseReasonType`)는 `service.v2` 와 엔티티 자신(`Event`/`Host`/`TicketItem`/`Order`)만 호출 | `DuDoong-Domain/src/test/kotlin/band/gosrock/domain/architecture/V2DomainServiceArchitectureTest.kt` |
 | `V2*DomainService` 는 `..service.v2..` 패키지에 둔다 | 〃 |
 
 - 예외를 늘려야 하면 테스트에 클래스를 명시적으로 추가하고 이유를 주석으로 남긴다.

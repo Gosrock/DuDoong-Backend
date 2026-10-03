@@ -40,11 +40,15 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Index
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OrderBy
+import jakarta.persistence.Table
 import org.hibernate.annotations.ColumnDefault
 import org.hibernate.annotations.Where
 
+/** check_in_token unique: 셀프 체크인 QR 토큰 (v2, #712, V004) */
+@Table(indexes = [Index(name = "uk_event_check_in_token", columnList = "check_in_token", unique = true)])
 @Where(clause = "status != 'DELETED'")
 @Entity(name = "tbl_event")
 class Event(
@@ -79,6 +83,15 @@ class Event(
     @ColumnDefault("1")
     @Column(nullable = false)
     var hasTicket: Boolean = true
+        protected set
+
+    /**
+     * 셀프 체크인 QR 토큰 (v2, DEC-011). 공연별 고정, 최초 조회 시 생성.
+     * 엔티티 저장으로는 쓰지 않는다(insertable/updatable=false): v1·v2 의 공연 저장(전체 컬럼 UPDATE)이 동시에 만든 토큰을 덮어쓰지 않도록
+     * V2CheckInDomainService 가 `check_in_token IS NULL` 조건부 UPDATE 로만 기록한다
+     */
+    @Column(name = "check_in_token", length = 64, insertable = false, updatable = false)
+    var checkInToken: String? = null
         protected set
 
     // v2 문의처 (N개)

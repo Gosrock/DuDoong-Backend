@@ -110,6 +110,12 @@ class Order() : BaseTimeEntity() {
     var refundStatusChangedAt: LocalDateTime? = null
         protected set
 
+    /** 거절 사유 종류 (v2, #712). v1 거절·취소 주문은 null. 표시 문구는 [cancelReason] 에 함께 기록된다 */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "refuse_reason_type", length = 30)
+    var refuseReasonType: OrderRefuseReasonType? = null
+        protected set
+
     @PrePersist
     fun addUUID() {
         uuid = UUID.randomUUID().toString()
@@ -336,4 +342,11 @@ class Order() : BaseTimeEntity() {
 
     fun toAlimTalkOrderInfo(): AlimTalkOrderInfo =
         AlimTalkOrderInfo(orderName!!, getTotalQuantity(), getTotalPaymentPrice().toString(), createdAtKt())
+
+    // ===== v2 공유 데이터 (검증·조합 규칙은 service.v2.V2OrderDomainService) =====
+
+    /** 거절 사유 종류 기록. [refuse] 와 같은 트랜잭션·락 안에서 V2OrderDomainService 가 호출한다 */
+    internal fun recordRefuseReasonType(type: OrderRefuseReasonType) {
+        this.refuseReasonType = type
+    }
 }

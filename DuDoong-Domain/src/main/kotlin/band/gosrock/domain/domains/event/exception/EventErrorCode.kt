@@ -51,6 +51,8 @@ enum class EventErrorCode(
     CANNOT_MOVE_OPEN_EVENT_START_TO_PAST(BAD_REQUEST, "Event_400_24", "등록된 공연의 시작 시각은 현재 이후여야 합니다."),
     @ExplainError("유효 티켓이 있는 공연을 '티켓 없음'(hasTicket=false) 으로 바꾸려는 경우")
     CANNOT_DISABLE_TICKET_WITH_TICKETS(BAD_REQUEST, "Event_400_25", "티켓이 있는 공연은 티켓 없음으로 바꿀 수 없습니다."),
+    @ExplainError("셀프 체크인 QR 토큰이 어느 공연(삭제 제외)의 토큰과도 일치하지 않는 경우")
+    INVALID_CHECK_IN_TOKEN(BAD_REQUEST, "Event_400_26", "유효하지 않은 체크인 QR 입니다."),
 
     USE_OTHER_API(BAD_REQUEST, "Event_400_8", "잘못된 접근입니다.");
 

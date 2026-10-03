@@ -4,6 +4,7 @@ import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.event.domain.EventStatus
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
 import org.springframework.data.repository.query.Param
@@ -73,4 +74,24 @@ interface EventRepository : CrudRepository<Event, Long>, EventCustomRepository {
         @Param("keyword") keyword: String?,
         @Param("status") status: String?,
     ): List<Event>
+
+    // ===== v2 셀프 체크인 토큰 (#712). @Where 를 타지 않는 native 쿼리라 호출 측에서 공연 존재(삭제 제외)를 먼저 확인한다 =====
+
+    @Query(value = "SELECT e.check_in_token FROM tbl_event e WHERE e.event_id = :eventId", nativeQuery = true)
+    fun findCheckInTokenById(@Param("eventId") eventId: Long): String?
+
+    /** 토큰이 없을 때만 기록 (동시 최초 조회 시 먼저 커밋한 쪽이 이김). 반환: 바뀐 행 수 */
+    @Modifying
+    @Query(
+        value = "UPDATE tbl_event SET check_in_token = :token WHERE event_id = :eventId AND check_in_token IS NULL",
+        nativeQuery = true,
+    )
+    fun assignCheckInTokenIfAbsent(@Param("eventId") eventId: Long, @Param("token") token: String): Int
+
+    /** 잠금 읽기: REPEATABLE READ 스냅샷이 아니라 최신 커밋 값을 읽는다 (경합에서 진 쪽이 이긴 토큰을 받도록) */
+    @Query(value = "SELECT e.check_in_token FROM tbl_event e WHERE e.event_id = :eventId FOR UPDATE", nativeQuery = true)
+    fun lockAndFindCheckInTokenById(@Param("eventId") eventId: Long): String?
+
+    /** 토큰으로 공연 조회 (삭제된 공연 제외, @Where 적용) */
+    fun findByCheckInToken(checkInToken: String): Event?
 }

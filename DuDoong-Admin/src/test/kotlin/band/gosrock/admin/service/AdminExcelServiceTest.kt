@@ -273,4 +273,28 @@ class AdminExcelServiceTest {
         ReflectionTestUtils.setField(ticket, "id", id)
         return ticket
     }
+
+    @Nested
+    @DisplayName("generateTableExcel (v2 호스트 엑셀, #712)")
+    inner class GenerateTableExcelTest {
+
+        @Test
+        @DisplayName("헤더·행을 그대로 쓰고 숫자는 숫자 셀, null 은 빈 칸")
+        fun writesHeadersAndRows() {
+            val bytes = adminExcelService.generateTableExcel(
+                "주문",
+                listOf("주문번호", "금액", "사유"),
+                listOf(listOf("R1", 6000L, null), listOf("R2", 0, "입금 미확인")),
+            )
+            XSSFWorkbook(ByteArrayInputStream(bytes)).use { wb ->
+                val sheet = wb.getSheet("주문")
+                assertEquals(2, sheet.lastRowNum)
+                assertEquals(listOf("주문번호", "금액", "사유"), (0..2).map { sheet.getRow(0).getCell(it).stringCellValue })
+                assertEquals("R1", sheet.getRow(1).getCell(0).stringCellValue)
+                assertEquals(6000.0, sheet.getRow(1).getCell(1).numericCellValue)
+                assertEquals("", sheet.getRow(1).getCell(2).stringCellValue)
+                assertEquals("입금 미확인", sheet.getRow(2).getCell(2).stringCellValue)
+            }
+        }
+    }
 }
