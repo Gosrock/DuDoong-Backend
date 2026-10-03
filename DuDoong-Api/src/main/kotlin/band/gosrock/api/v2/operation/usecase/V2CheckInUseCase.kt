@@ -47,7 +47,7 @@ class V2CheckInUseCase(
 
     fun selfCheckIn(userId: Long, token: String, ticketUuid: String?): V2CheckInResponse {
         val outcome = v2CheckInDomainService.selfCheckIn(userId, token, ticketUuid)
-        log.info("[V2CheckInUseCase] 셀프 체크인 userId={} ticketUuid={} result={}", userId, ticketUuid, outcome.result)
+        log.info("[V2CheckInUseCase] 셀프 체크인 userId={} eventId={} ticketUuid={} result={}", userId, outcome.eventId, ticketUuid, outcome.result)
         return toResponse(outcome)
     }
 

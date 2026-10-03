@@ -41,7 +41,10 @@ enum class OrderErrorCode(
     ORDER_REFUND_NOT_REQUESTED(BAD_REQUEST, "Order_400_17", "환불 요청된 주문이 아닙니다."),
 
     @ExplainError("거절 사유가 기타(ETC)인데 직접 입력 사유가 비었거나 20자를 넘는 경우")
-    INVALID_REFUSE_REASON(BAD_REQUEST, "Order_400_18", "거절 사유가 올바르지 않습니다.");
+    INVALID_REFUSE_REASON(BAD_REQUEST, "Order_400_18", "거절 사유가 올바르지 않습니다."),
+
+    @ExplainError("v2 주문 엑셀 다운로드 대상이 행 상한(10,000)을 넘는 경우. 상태 필터·검색어로 줄여서 받는다")
+    EXPORT_TOO_MANY_ORDERS(BAD_REQUEST, "Order_400_19", "엑셀로 내려받을 주문이 너무 많습니다. 필터로 줄여 주세요.");
 
     override fun getErrorReason(): ErrorReason =
         ErrorReason(status = status, code = code, reason = reason)

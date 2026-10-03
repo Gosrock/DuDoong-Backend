@@ -53,6 +53,8 @@ enum class EventErrorCode(
     CANNOT_DISABLE_TICKET_WITH_TICKETS(BAD_REQUEST, "Event_400_25", "티켓이 있는 공연은 티켓 없음으로 바꿀 수 없습니다."),
     @ExplainError("셀프 체크인 QR 토큰이 어느 공연(삭제 제외)의 토큰과도 일치하지 않는 경우")
     INVALID_CHECK_IN_TOKEN(BAD_REQUEST, "Event_400_26", "유효하지 않은 체크인 QR 입니다."),
+    @ExplainError("호스트 QR 스캔(v2)을 등록(OPEN)·정산중(CALCULATING, 종료 직후 지각 입장)이 아닌 공연(준비중·지난공연)에서 하려는 경우")
+    CANNOT_CHECK_IN_EVENT_STATUS(BAD_REQUEST, "Event_400_27", "입장 처리를 할 수 없는 공연 상태입니다."),
 
     USE_OTHER_API(BAD_REQUEST, "Event_400_8", "잘못된 접근입니다.");
 

@@ -1,6 +1,20 @@
 package band.gosrock.api.v2.operation
 
 import band.gosrock.api.supports.ApiIntegrateSpringBootTest
+import band.gosrock.common.exception.DuDoongCodeException
+import band.gosrock.domain.common.vo.Money
+import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus
+import band.gosrock.domain.domains.order.domain.Order
+import band.gosrock.domain.domains.order.domain.OrderMethod
+import band.gosrock.domain.domains.order.domain.PaymentInfo
+import band.gosrock.domain.domains.order.service.v2.V2OrderDomainService
+import java.time.LocalDateTime
+import java.util.Collections
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.test.util.ReflectionTestUtils
 import band.gosrock.domain.domains.order.domain.OrderRefuseReasonType
 import band.gosrock.domain.domains.order.domain.OrderStatus
 import band.gosrock.domain.domains.order.domain.RefundStatus
@@ -21,6 +35,8 @@ import org.springframework.test.web.servlet.post
 @AutoConfigureMockMvc
 @DisplayName("v2 공연 운영 - 주문")
 class V2OrderManageControllerTest : V2OperationTestSupport() {
+
+    @Autowired private lateinit var v2OrderDomainService: V2OrderDomainService
 
     /** 승인 대기 1, 승인 1, v2 거절 1, v1 거절 1, 승인 후 v2 취소 1 */
     private inner class Mixed {
@@ -216,6 +232,43 @@ class V2OrderManageControllerTest : V2OperationTestSupport() {
         }
 
         @Test
+        fun `승인과 거절을 동시에 요청하면 하나만 성공 (같은 주문 락)`() {
+            val shop = Shop()
+            repeat(3) { round ->
+                val order = shop.order(newBuyer("동시$round"))
+                val start = CountDownLatch(1)
+                val pool = Executors.newFixedThreadPool(2)
+                val outcomes = Collections.synchronizedMap(mutableMapOf<String, String>())
+                pool.submit {
+                    start.await()
+                    outcomes["approve"] = runCatching { v2OrderDomainService.approve(shop.eventId, order) }.fold({ "OK" }, { codeOf(it) })
+                }
+                pool.submit {
+                    start.await()
+                    outcomes["refuse"] = runCatching { v2OrderDomainService.refuse(shop.eventId, order, OrderRefuseReasonType.SOLD_OUT, null) }.fold({ "OK" }, { codeOf(it) })
+                }
+                start.countDown()
+                pool.shutdown()
+                assertTrue(pool.awaitTermination(30, TimeUnit.SECONDS))
+                assertEquals(1, outcomes.values.count { it == "OK" }, "round=$round $outcomes")
+                val saved = orderRepository.findByOrderUuid(order).get()
+                val tickets = issuedTicketRepository.findAllByOrderUuid(order).filter { it.issuedTicketStatus != IssuedTicketStatus.CANCELED }
+                if (outcomes["approve"] == "OK") {
+                    assertEquals(OrderStatus.APPROVED, saved.orderStatus)
+                    assertEquals("Order_400_5", outcomes["refuse"])
+                    assertEquals(1, tickets.size)
+                } else {
+                    assertEquals(OrderStatus.CANCELED, saved.orderStatus)
+                    assertEquals(OrderRefuseReasonType.SOLD_OUT, saved.refuseReasonType)
+                    assertEquals("Order_400_3", outcomes["approve"])
+                    assertEquals(0, tickets.size)
+                }
+            }
+        }
+
+        private fun codeOf(e: Throwable): String = (e as? DuDoongCodeException)?.errorCode?.getErrorReason()?.code ?: e.toString()
+
+        @Test
         fun `취소 - 발급 티켓 취소, 재고 복구, 환불 요청 (사유 없이도 가능)`() {
             val shop = Shop()
             val order = shop.approved(newBuyer(), quantity = 2)
@@ -339,6 +392,20 @@ class V2OrderManageControllerTest : V2OperationTestSupport() {
 
             v2Get(m.shop.team.outsider, "/events/${m.shop.eventId}/dashboard").andExpect { status { isForbidden() } }
         }
+
+        @Test
+        fun `판매금액은 할인 후 결제금액 합 (쿠폰 할인 주문)`() {
+            val shop = Shop()
+            shop.approved(newBuyer()) // 7000
+            // v1 쿠폰 주문은 PG(유료) 선착순 티켓 전용이라 v1 API 로 만들 수 없어, 결제 완료(CONFIRM) + 할인 1000원 주문을 직접 저장한다
+            val coupon = Order.forTest(userId = newBuyer().id, orderName = "쿠폰주문", orderStatus = OrderStatus.CONFIRM, orderMethod = OrderMethod.PAYMENT, eventId = shop.eventId)
+            ReflectionTestUtils.setField(coupon, "totalPaymentInfo", PaymentInfo.of(paymentAmount = Money.wons(4000), supplyAmount = Money.wons(5000), discountAmount = Money.wons(1000)))
+            ReflectionTestUtils.setField(coupon, "approvedAt", LocalDateTime.now())
+            orderRepository.save(coupon)
+            val data = v2Get(shop.team.guest, "/events/${shop.eventId}/dashboard").andExpect { status { isOk() } }.data()
+            assertEquals(11000, data.at("/salesAmount").asLong())
+            assertEquals(2, data.at("/orders/approved").asLong())
+        }
     }
 
     @Nested
@@ -353,7 +420,8 @@ class V2OrderManageControllerTest : V2OperationTestSupport() {
                 header { string("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") }
                 header { string("Content-Disposition", "attachment; filename=\"orders-${m.shop.eventId}.xlsx\"") }
             }.sheet()
-            assertEquals(listOf("주문번호", "주문자", "연락처", "이메일", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유"), all.headers())
+            // 이메일은 엑셀에 넣지 않는다 (주문 상세에서만)
+            assertEquals(listOf("주문번호", "주문자", "연락처", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유"), all.headers())
             assertEquals(5, all.lastRowNum)
             assertEquals(setOf("승인 대기", "승인 완료", "승인 거절", "취소"), all.column("상태").toSet())
             assertTrue("010-3333-4444" in all.column("연락처"))
@@ -363,7 +431,25 @@ class V2OrderManageControllerTest : V2OperationTestSupport() {
             assertEquals(setOf("티켓 매진", "v1 사유"), refused.column("거절·취소 사유").toSet())
             assertEquals(setOf("환불 요청"), refused.column("환불").toSet())
 
+            for (who in listOf(m.shop.team.guest, m.shop.team.manager, m.shop.team.master, superAdmin())) {
+                v2Get(who, "/events/${m.shop.eventId}/orders/export").andExpect { status { isOk() } }
+            }
             v2Get(m.shop.team.outsider, "/events/${m.shop.eventId}/orders/export").andExpect { status { isForbidden() } }
+            v2Get(null, "/events/${m.shop.eventId}/orders/export").andExpect { status { isUnauthorized() } }
+            v2Get(Shop("남의호스트").team.master, "/events/${m.shop.eventId}/orders/export").andExpect { status { isForbidden() } }
+        }
+
+        @Test
+        fun `수식 인젝션 방어 - = + - @ 로 시작하는 사용자 입력은 앞에 작은따옴표`() {
+            val shop = Shop()
+            val evil = newBuyer("=HYPERLINK(\"x\")")
+            val order = shop.order(evil)
+            refuse(shop.team.manager, shop.eventId, order, "ETC", "+SUM(A1:A9)").andExpect { status { isOk() } }
+            val sheet = v2Get(shop.team.guest, "/events/${shop.eventId}/orders/export").andExpect { status { isOk() } }.sheet()
+            assertEquals(listOf("'=HYPERLINK(\"x\")"), sheet.column("주문자"))
+            assertEquals(listOf("'+SUM(A1:A9)"), sheet.column("거절·취소 사유"))
+            // 화면(JSON)에는 원문 그대로
+            assertEquals("=HYPERLINK(\"x\")", orders(shop.team.guest, shop.eventId).at("/orders/content/0/buyerName").asText())
         }
     }
 

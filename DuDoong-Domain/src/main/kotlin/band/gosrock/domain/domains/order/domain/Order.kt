@@ -28,11 +28,15 @@ import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Index
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.OneToMany
 import jakarta.persistence.PostPersist
 import jakarta.persistence.PrePersist
+import jakarta.persistence.Table
 
+/** (event_id, order_status): v2 공연별 주문 목록·상태별 건수·대시보드 (#712, V004) */
+@Table(indexes = [Index(name = "idx_order_event_id_status", columnList = "event_id, order_status")])
 @Entity(name = "tbl_order")
 class Order() : BaseTimeEntity() {
 

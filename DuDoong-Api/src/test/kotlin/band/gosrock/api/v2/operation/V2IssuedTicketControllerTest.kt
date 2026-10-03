@@ -97,8 +97,9 @@ class V2IssuedTicketControllerTest : V2OperationTestSupport() {
         @Test
         fun `엑셀 - 기본 헤더 + 옵션 컬럼, 행 수는 필터와 같다`() {
             val shop = Shop()
+            // 1인 4장 제한에 한 주문 3장은 H2 에서만 승인 실패한다 (V2OperationTestSupport.Shop 주석). 2장 + 1장으로 3행을 만든다
             val order = shop.approved(newBuyer("엑셀", "010-7777-8888"), quantity = 2)
-            shop.approved(newBuyer("엑셀2", "010-7777-8888"))
+            shop.approved(newBuyer("=엑셀2", "010-7777-8888"))
             result(shop.team.guest, shop.eventId, shop.ticketUuids(order)[0])
             val sheet = v2Get(shop.team.guest, "/events/${shop.eventId}/issued-tickets/export").andExpect {
                 status { isOk() }
@@ -112,10 +113,17 @@ class V2IssuedTicketControllerTest : V2OperationTestSupport() {
             assertEquals(setOf("예"), sheet.column("뒷풀이").toSet())
             assertEquals(setOf("홍길동"), sheet.column("입금자명").toSet())
             assertEquals(setOf("010-7777-8888"), sheet.column("연락처").toSet())
+            // 이메일 컬럼 없음, 수식으로 해석될 이름은 작은따옴표
+            assertTrue("이메일" !in sheet.headers())
+            assertTrue("'=엑셀2" in sheet.column("주문자"))
             assertEquals(listOf("입장 완료", "입장 전", "입장 전").sorted(), sheet.column("입장").sorted())
             val done = v2Get(shop.team.guest, "/events/${shop.eventId}/issued-tickets/export", mapOf("entrance" to "DONE")).andExpect { status { isOk() } }.sheet()
             assertEquals(1, done.lastRowNum)
+            for (who in listOf(shop.team.guest, shop.team.manager, shop.team.master, superAdmin())) {
+                v2Get(who, "/events/${shop.eventId}/issued-tickets/export").andExpect { status { isOk() } }
+            }
             v2Get(shop.team.outsider, "/events/${shop.eventId}/issued-tickets/export").andExpect { status { isForbidden() } }
+            v2Get(null, "/events/${shop.eventId}/issued-tickets/export").andExpect { status { isUnauthorized() } }
         }
     }
 
@@ -178,6 +186,22 @@ class V2IssuedTicketControllerTest : V2OperationTestSupport() {
             assertEquals(IssuedTicketStatus.ENTRANCE_INCOMPLETE, issuedTicketRepository.findByUuid(tickets[0]).get().issuedTicketStatus)
             assertEquals("ENTERED", result(shop.team.guest, shop.eventId, tickets[0]).at("/result").asText())
             assertEquals("ENTERED", result(superAdmin(), shop.eventId, tickets[1]).at("/result").asText())
+        }
+
+        @Test
+        fun `공연 상태 - OPEN·CALCULATING(지각 입장)만 입장 처리, 준비중·지난공연 Event_400_27, 삭제된 공연 404`() {
+            val shop = Shop()
+            val tickets = shop.ticketUuids(shop.approved(newBuyer(), quantity = 2))
+            for (status in listOf(EventStatus.PREPARING, EventStatus.CLOSED)) {
+                setEventStatus(shop.eventId, status)
+                assertEquals("Event_400_27", checkIn(shop.team.guest, shop.eventId, tickets[0]).andExpect { status { isBadRequest() } }.code())
+            }
+            assertEquals(IssuedTicketStatus.ENTRANCE_INCOMPLETE, issuedTicketRepository.findByUuid(tickets[0]).get().issuedTicketStatus)
+            setEventStatus(shop.eventId, EventStatus.CALCULATING)
+            assertEquals("ENTERED", result(shop.team.guest, shop.eventId, tickets[0]).at("/result").asText())
+            setEventStatus(shop.eventId, EventStatus.DELETED)
+            checkIn(superAdmin(), shop.eventId, tickets[1]).andExpect { status { isNotFound() } }
+            assertEquals(IssuedTicketStatus.ENTRANCE_INCOMPLETE, issuedTicketRepository.findByUuid(tickets[1]).get().issuedTicketStatus)
         }
 
         @Test
@@ -320,9 +344,14 @@ class V2IssuedTicketControllerTest : V2OperationTestSupport() {
             v2Post(shop.team.manager, "/events/${shop.eventId}/orders/$canceled/cancel").andExpect { status { isOk() } }
             selfCheckIn(canceledBuyer, token).andExpect { jsonPath("$.data.result") { value("CANCELED") } }
 
+            // 셀프 체크인은 OPEN 만 (호스트 스캔과 달리 정산중 불가)
             setEventStatus(shop.eventId, EventStatus.CALCULATING)
             assertEquals("Event_400_5", selfCheckIn(buyer, token).andExpect { status { isBadRequest() } }.code())
             assertEquals(IssuedTicketStatus.ENTRANCE_INCOMPLETE, issuedTicketRepository.findByUuid(ticket).get().issuedTicketStatus)
+            // 삭제된 공연의 토큰은 잘못된 토큰과 같다 (@Where 로 조회 안 됨), QR 조회도 404
+            setEventStatus(shop.eventId, EventStatus.DELETED)
+            assertEquals("Event_400_26", selfCheckIn(buyer, token).andExpect { status { isBadRequest() } }.code())
+            v2Get(superAdmin(), "/events/${shop.eventId}/check-in-qr").andExpect { status { isNotFound() } }
         }
     }
 

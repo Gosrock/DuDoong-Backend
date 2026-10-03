@@ -9,6 +9,10 @@ import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.assertThrows
+import band.gosrock.domain.domains.event.domain.EventStatus
+import band.gosrock.domain.domains.event.exception.CannotCheckInEventStatusException
 import org.mockito.Mockito.mock
 
 /** v2 체크인 규칙 (#712): 결과 코드 판정, 토큰 생성, 입장률 */
@@ -30,6 +34,15 @@ class V2CheckInDomainServiceTest {
         assertEquals(V2CheckInResult.CANCELED, service.classify(ticket(1L, IssuedTicketStatus.CANCELED), 1L))
         assertEquals(V2CheckInResult.ALREADY_ENTERED, service.classify(ticket(1L, IssuedTicketStatus.ENTRANCE_COMPLETED), 1L))
         assertEquals(V2CheckInResult.ENTERED, service.classify(ticket(1L, IssuedTicketStatus.ENTRANCE_INCOMPLETE), 1L))
+    }
+
+    @Test
+    fun `호스트 스캔 가능 공연 상태 - OPEN, CALCULATING 만`() {
+        assertDoesNotThrow { service.validateHostCheckInStatus(EventStatus.OPEN) }
+        assertDoesNotThrow { service.validateHostCheckInStatus(EventStatus.CALCULATING) }
+        for (status in listOf(EventStatus.PREPARING, EventStatus.CLOSED, EventStatus.DELETED)) {
+            assertThrows<CannotCheckInEventStatusException> { service.validateHostCheckInStatus(status) }
+        }
     }
 
     @Test

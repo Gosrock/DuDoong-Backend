@@ -28,6 +28,7 @@ PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", 
 SECTIONS = [{"title": "공연 소개", "content": "<p>운영 테스트</p>", "sortOrder": 0}]
 ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-123-456789"}
 BUYERS = ["approved", "refused", "v1refused", "canceled", "pending", "self", "multi"]
+EXTRA = ["boundary"]
 
 
 class OpState:
@@ -144,7 +145,7 @@ def _xlsx_rows(content):
 
 def test_01_setup(base_url, s):
     people = [("master", "운영마스터"), ("manager", "운영매니저"), ("guest", "운영일반"), ("outsider", "운영외부"), ("other", "운영남호스트")]
-    people += [(b, f"구매{i}") for i, b in enumerate(BUYERS)]
+    people += [(b, f"구매{i}") for i, b in enumerate(BUYERS + EXTRA)]
     for who, name in people:
         email = f"v2op-{who}-{RUN}@dudoong.com"
         phone = "010-4242-0001" if who == "approved" else "010-0000-0000"
@@ -399,10 +400,11 @@ def test_10_excel(base_url, s):
     assert resp.headers["Content-Type"].startswith("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     assert f"orders-{s.event_id}.xlsx" in resp.headers["Content-Disposition"]
     rows = _xlsx_rows(resp.content)
-    assert rows[0] == ["주문번호", "주문자", "연락처", "이메일", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유"]
+    # 이메일은 엑셀에 넣지 않는다 (주문 상세에서만)
+    assert rows[0] == ["주문번호", "주문자", "연락처", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유"]
     assert len(rows) - 1 == 7
     rows = _xlsx_rows(requests.get(_ev(base_url, s, "/orders/export"), params={"status": "REFUSED"}, headers=_h(s, "guest")).content)
-    assert len(rows) - 1 == 2 and {r[8] for r in rows[1:]} == {"승인 거절"}
+    assert len(rows) - 1 == 2 and {r[7] for r in rows[1:]} == {"승인 거절"}
 
     resp = requests.get(_ev(base_url, s, "/issued-tickets/export"), headers=_h(s, "guest"))
     assert_status(resp, 200)
@@ -413,3 +415,23 @@ def test_10_excel(base_url, s):
     rows = _xlsx_rows(requests.get(_ev(base_url, s, "/issued-tickets/export"), params={"entrance": "DONE"}, headers=_h(s, "guest")).content)
     assert len(rows) - 1 == 3
     assert_status(requests.get(_ev(base_url, s, "/orders/export"), headers=_h(s, "outsider")), 403)
+
+
+def test_11_approve_purchase_limit_boundary_on_mysql(base_url, s):
+    """1인 4장 제한 티켓에 한 주문 3장(제한 절반 초과) 승인 — MySQL 에서는 성공해야 한다.
+
+    Kotlin 통합 테스트(H2)에서는 v1 승인이 Ticket_Item_400_6 으로 실패한다: 승인 트랜잭션 안에서 발급(REQUIRES_NEW 커밋) 후 매수 제한을 세는데
+    H2(READ COMMITTED)는 방금 커밋된 발급분까지 세고, MySQL(REPEATABLE READ)은 트랜잭션 첫 조회 시점 스냅샷이라 세지 않는다.
+    prod 데이터로도 반증됨(2026-03-15 이후 제한 절반 초과 수량 승인이 매달 성공). 그래서 경계값은 MySQL E2E 에서 확인한다.
+    다른 호스트 공연(구매 제한 4장)을 써서 위 시나리오의 건수에 영향을 주지 않는다.
+    """
+    order = _v1_order(base_url, s, "boundary", s.other_ticket_id, event_id=s.other_event_id, quantity=3)
+    resp = requests.post(_ev(base_url, s, f"/orders/{order}/approve", s.other_event_id), headers=_h(s, "other"))
+    assert_status(resp, 200)
+    data = get_data(resp)
+    assert data["order"]["status"] == "APPROVED" and len(data["issuedTickets"]) == 3
+    # 4장째(1장 추가)는 제한 안, 5장째는 제한 초과로 장바구니에서 막힌다
+    resp = requests.post(
+        f"{base_url}/v1/carts", json={"items": [{"itemId": s.other_ticket_id, "quantity": 2, "options": []}]}, headers=_h(s, "boundary"),
+    )
+    assert_status(resp, 400)

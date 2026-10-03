@@ -2,6 +2,8 @@ package band.gosrock.domain.domains.issuedTicket.service.v2
 
 import band.gosrock.common.annotation.DomainService
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
+import band.gosrock.domain.domains.event.domain.EventStatus
+import band.gosrock.domain.domains.event.exception.CannotCheckInEventStatusException
 import band.gosrock.domain.domains.event.exception.InvalidCheckInTokenException
 import band.gosrock.domain.domains.event.repository.EventRepository
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket
@@ -23,10 +25,12 @@ enum class V2CheckInResult {
 }
 
 /**
+ * @property eventId 판정한 공연 (호스트 스캔은 경로의 공연, 셀프는 토큰의 공연)
  * @property ticket 판정한 티켓. OTHER_EVENT 면 null (다른 공연 티켓 정보를 내보내지 않는다)
  * @property candidates SELECT_TICKET 일 때 입장 전 본인 티켓 (발급 순)
  */
 data class V2CheckInOutcome(
+    val eventId: Long,
     val result: V2CheckInResult,
     val ticket: IssuedTicket?,
     val candidates: List<IssuedTicket> = emptyList(),
@@ -35,6 +39,7 @@ data class V2CheckInOutcome(
 /**
  * v2 QR 체크인 규칙 (DEC-009 / 010 / 011, #712). v1 코드는 이 서비스를 호출하지 않는다.
  *
+ * - 호스트 스캔은 OPEN·CALCULATING 공연만, 셀프 체크인은 OPEN 만.
  * - 입장 처리는 v1 과 같은 [IssuedTicket.entrance] (상태·입장 시각·입장 메일 이벤트)를 쓴다.
  * - 동시 스캔: 티켓 행을 `SELECT ... FOR UPDATE` 로 다시 읽은 뒤 판정하므로 같은 티켓은 한 요청만 ENTERED, 나머지는 ALREADY_ENTERED.
  *   (v1 입장 API 는 락이 없다. v1 동작은 바꾸지 않는다)
@@ -58,10 +63,17 @@ class V2CheckInDomainService(
         else -> V2CheckInResult.ENTERED
     }
 
-    /** 호스트 스캔 (Q-2) */
+    /** 호스트 스캔 가능 공연: 등록(OPEN) + 정산중(CALCULATING, 공연 종료 직후 지각 입장). 준비중·지난공연은 400 */
+    fun validateHostCheckInStatus(status: EventStatus) {
+        if (status != EventStatus.OPEN && status != EventStatus.CALCULATING) throw CannotCheckInEventStatusException.EXCEPTION
+    }
+
+    /** 호스트 스캔 (Q-2). 없는·삭제된 공연은 404 */
     @Transactional
-    fun checkIn(eventId: Long, ticketUuid: String): V2CheckInOutcome =
-        enter(eventId, issuedTicketRepository.findByUuid(ticketUuid).orElse(null))
+    fun checkIn(eventId: Long, ticketUuid: String): V2CheckInOutcome {
+        validateHostCheckInStatus(eventAdaptor.findById(eventId).status)
+        return enter(eventId, issuedTicketRepository.findByUuid(ticketUuid).orElse(null))
+    }
 
     /**
      * 관객 셀프 체크인 (Q-5). 토큰의 공연이 OPEN 이어야 한다.
@@ -83,13 +95,13 @@ class V2CheckInDomainService(
         val before = mine.filter { it.issuedTicketStatus.isBeforeEntrance() }
         return when {
             before.size == 1 -> enter(eventId, before.single())
-            before.size > 1 -> V2CheckInOutcome(V2CheckInResult.SELECT_TICKET, ticket = null, candidates = before)
+            before.size > 1 -> V2CheckInOutcome(eventId, V2CheckInResult.SELECT_TICKET, ticket = null, candidates = before)
             else -> {
                 val entered = mine.filter { it.issuedTicketStatus.isAfterEntrance() }.maxByOrNull { it.enteredAt ?: java.time.LocalDateTime.MIN }
                 when {
-                    entered != null -> V2CheckInOutcome(V2CheckInResult.ALREADY_ENTERED, entered)
-                    mine.isNotEmpty() -> V2CheckInOutcome(V2CheckInResult.CANCELED, mine.last())
-                    else -> V2CheckInOutcome(V2CheckInResult.OTHER_EVENT, ticket = null)
+                    entered != null -> V2CheckInOutcome(eventId, V2CheckInResult.ALREADY_ENTERED, entered)
+                    mine.isNotEmpty() -> V2CheckInOutcome(eventId, V2CheckInResult.CANCELED, mine.last())
+                    else -> V2CheckInOutcome(eventId, V2CheckInResult.OTHER_EVENT, ticket = null)
                 }
             }
         }
@@ -97,11 +109,11 @@ class V2CheckInDomainService(
 
     /** 이 공연 티켓이면 행 잠금 + 최신 상태로 다시 읽고 판정, 입장 가능하면 입장 처리 */
     private fun enter(eventId: Long, ticket: IssuedTicket?): V2CheckInOutcome {
-        if (ticket == null || ticket.eventId != eventId) return V2CheckInOutcome(V2CheckInResult.OTHER_EVENT, ticket = null)
+        if (ticket == null || ticket.eventId != eventId) return V2CheckInOutcome(eventId, V2CheckInResult.OTHER_EVENT, ticket = null)
         entityManager.refresh(ticket, LockModeType.PESSIMISTIC_WRITE)
         val result = classify(ticket, eventId)
         if (result == V2CheckInResult.ENTERED) ticket.entrance()
-        return V2CheckInOutcome(result, ticket)
+        return V2CheckInOutcome(eventId, result, ticket)
     }
 
     /**

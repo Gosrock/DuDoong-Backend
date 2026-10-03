@@ -23,6 +23,8 @@ import band.gosrock.domain.domains.order.service.v2.V2OrderDomainService
 import band.gosrock.domain.domains.order.service.v2.V2OrderQuery
 import band.gosrock.domain.domains.order.service.v2.V2OrderSearch
 import java.time.format.DateTimeFormatter
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.PageRequest
 import org.springframework.transaction.annotation.Transactional
 
@@ -35,7 +37,10 @@ class V2ReadOrdersUseCase(
     private val v2OrderDomainService: V2OrderDomainService,
     private val mapper: V2OperationMapper,
     private val excelService: AdminExcelService,
+    @Value("\${v2.export.max-rows:${V2OrderQuery.EXPORT_MAX_ROWS}}") private val exportMaxRows: Int,
 ) {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     /** R-1 주문 목록 (최신 순) + 상태별 건수 */
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
     fun execute(
@@ -66,24 +71,32 @@ class V2ReadOrdersUseCase(
     fun readDetail(eventId: Long, orderUuid: String): V2OrderDetailResponse {
         val order = v2OrderDomainService.queryEventOrder(eventId, orderUuid)
         val user = mapper.usersOf(listOf(order.userId))[order.userId]
-        val lines = order.orderLineItems.sortedBy { it.id }.map { line ->
+        val orderLines = order.orderLineItems.sortedBy { it.id }
+        val lineAnswers = orderLines.associate { line ->
+            line.id to line.orderOptionAnswers.sortedBy { it.id }.map { Triple(it.optionId, it.answer, it.additionalPrice.longValue()) }
+        }
+        val issued = issuedTicketAdaptor.findAllByOrderUuid(orderUuid).sortedBy { it.id }
+        val ticketAnswers = issued.associate { it.id to mapper.ticketAnswerRows(it) }
+        // 라인·발급 티켓 답변의 옵션 이름을 한 번에 조회
+        val names = mapper.optionNamesOf((lineAnswers.values + ticketAnswers.values).flatten().map { it.first })
+        val lines = orderLines.map { line ->
             V2OrderLineResponse(
                 ticketItemId = line.orderItem?.itemId,
                 ticketName = line.orderItem?.name,
                 unitPrice = line.orderItem?.price?.longValue() ?: 0L,
                 quantity = line.quantity ?: 0L,
                 linePrice = line.getTotalOrderLinePrice().longValue(),
-                optionAnswers = mapper.toOptionAnswers(line.orderOptionAnswers.sortedBy { it.id }.map { Triple(it.optionId, it.answer, it.additionalPrice.longValue()) }),
+                optionAnswers = mapper.toOptionAnswers(lineAnswers.getValue(line.id), names),
             )
         }
-        val tickets = issuedTicketAdaptor.findAllByOrderUuid(orderUuid).sortedBy { it.id }.map { t ->
+        val tickets = issued.map { t ->
             V2OrderIssuedTicketResponse(
                 ticketUuid = t.uuid,
                 issuedTicketNo = t.issuedTicketNo,
                 ticketName = t.itemInfo?.ticketName,
                 entrance = V2EntranceState.of(t.issuedTicketStatus),
                 enteredAt = t.enteredAt,
-                optionAnswers = mapper.ticketOptionAnswers(t),
+                optionAnswers = mapper.toOptionAnswers(ticketAnswers.getValue(t.id), names),
             )
         }
         return V2OrderDetailResponse(
@@ -97,21 +110,26 @@ class V2ReadOrdersUseCase(
         )
     }
 
-    /** R-6 엑셀 (R-1 과 같은 필터, 전체 행) */
+    /**
+     * R-6 엑셀 (R-1 과 같은 필터, 전체 행, 상한 [exportMaxRows] 초과 시 Order_400_19).
+     * 개인정보: 연락처는 입금 확인용으로 포함(v1 수준), 이메일은 넣지 않는다(주문 상세에서만). 다운로드는 감사 로그를 남긴다
+     */
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
     fun export(userId: Long, eventId: Long, status: V2OrderStatusFilter, searchType: AdminTableSearchType?, keyword: String?): ByteArray {
         eventAdaptor.findById(eventId)
-        val orders = v2OrderQuery.findAll(V2OrderSearch(eventId = eventId, status = status.domain, searchType = searchType, keyword = keyword))
+        val search = V2OrderSearch(eventId = eventId, status = status.domain, searchType = searchType, keyword = keyword)
+        val orders = v2OrderQuery.findAllForExport(search, exportMaxRows)
         val users = mapper.usersOf(orders.map { it.userId })
         val rows = orders.map { order ->
             val e = mapper.toOrderElement(order, users[order.userId])
             listOf(
-                e.orderNo, e.buyerName, e.buyerPhone, users[order.userId]?.profile?.email, e.ticketName, e.totalQuantity, e.totalPaymentAmount,
+                e.orderNo, e.buyerName, e.buyerPhone, e.ticketName, e.totalQuantity, e.totalPaymentAmount,
                 e.orderedAt?.format(EXCEL_DATE), e.status?.let { STATUS_LABELS[it.name] }, REFUND_LABELS[e.refundStatus.name],
                 e.refuseReason ?: e.cancelReason,
             )
         }
-        return excelService.generateTableExcel("주문 목록", ORDER_HEADERS, rows)
+        log.info("[V2 엑셀] 주문 다운로드 userId={} eventId={} status={} rows={}", userId, eventId, status, rows.size)
+        return excelService.generateTableExcel("주문 목록", ORDER_HEADERS, rows, escapeFormula = true)
     }
 
     /** F-1 환불 목록 (v1 환불 조회 쿼리 재사용, 최신 순) */
@@ -125,7 +143,7 @@ class V2ReadOrdersUseCase(
 
     companion object {
         val EXCEL_DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm")
-        val ORDER_HEADERS = listOf("주문번호", "주문자", "연락처", "이메일", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유")
+        val ORDER_HEADERS = listOf("주문번호", "주문자", "연락처", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유")
         private val STATUS_LABELS = mapOf(
             "PENDING_APPROVE" to "승인 대기", "APPROVED" to "승인 완료", "REFUSED" to "승인 거절", "CANCELED" to "취소", "FAILED" to "주문 실패",
         )

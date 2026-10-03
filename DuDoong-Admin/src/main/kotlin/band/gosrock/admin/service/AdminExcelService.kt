@@ -174,8 +174,11 @@ class AdminExcelService {
     /**
      * 헤더 + 행으로 된 단순 표 시트 (v2 호스트 주문·발급 티켓 엑셀, #712).
      * 숫자는 숫자 셀, null 은 빈 칸, 그 외는 문자열 셀.
+     *
+     * @param escapeFormula true 면 `= + - @ 탭 CR` 로 시작하는 문자열 앞에 `'` 를 붙인다 (CSV/수식 인젝션 방어).
+     *   사용자 입력(이름·옵션 답변·사유)이 들어가는 v2 호스트 엑셀에서 켠다. 기존 운영 어드민 엑셀은 이 메서드를 쓰지 않아 동작 그대로
      */
-    fun generateTableExcel(sheetName: String, headers: List<String>, rows: List<List<Any?>>): ByteArray {
+    fun generateTableExcel(sheetName: String, headers: List<String>, rows: List<List<Any?>>, escapeFormula: Boolean = false): ByteArray {
         val workbook = XSSFWorkbook()
         val sheet = workbook.createSheet(sheetName)
         val headerRow = sheet.createRow(0)
@@ -186,12 +189,15 @@ class AdminExcelService {
                 when (value) {
                     null -> row.createCell(col).setCellValue("")
                     is Number -> row.createCell(col).setCellValue(value.toDouble())
-                    else -> row.createCell(col).setCellValue(value.toString())
+                    else -> row.createCell(col).setCellValue(value.toString().let { if (escapeFormula) escapeFormula(it) else it })
                 }
             }
         }
         return toByteArray(workbook)
     }
+
+    private fun escapeFormula(text: String): String =
+        if (text.isNotEmpty() && text[0] in FORMULA_PREFIXES) "'$text" else text
 
     private fun toByteArray(workbook: XSSFWorkbook): ByteArray {
         val out = ByteArrayOutputStream()
@@ -203,5 +209,8 @@ class AdminExcelService {
     companion object {
         const val UNLIMITED_LABEL = "무제한"
         const val NO_PURCHASE_LIMIT_LABEL = "제한 없음"
+
+        /** 스프레드시트가 수식으로 해석할 수 있는 첫 글자 */
+        private val FORMULA_PREFIXES = setOf('=', '+', '-', '@', '\t', '\r')
     }
 }

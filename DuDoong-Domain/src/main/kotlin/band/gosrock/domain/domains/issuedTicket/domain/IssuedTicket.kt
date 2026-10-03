@@ -27,11 +27,15 @@ import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Index
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.OneToMany
 import jakarta.persistence.PostPersist
 import jakarta.persistence.PrePersist
+import jakarta.persistence.Table
 
+/** (event_id, user_id): v2 공연별 발급 티켓 목록·통계, 셀프 체크인 본인 티켓 조회 (#712, V004) */
+@Table(indexes = [Index(name = "idx_issued_ticket_event_id_user_id", columnList = "event_id, user_id")])
 @Entity(name = "tbl_issued_ticket")
 class IssuedTicket(
     var eventId: Long? = null,

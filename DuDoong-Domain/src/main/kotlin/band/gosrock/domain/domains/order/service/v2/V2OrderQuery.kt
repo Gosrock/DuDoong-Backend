@@ -3,6 +3,8 @@ package band.gosrock.domain.domains.order.service.v2
 import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.order.domain.OrderStatus
 import band.gosrock.domain.domains.order.domain.QOrder.order
+import band.gosrock.domain.domains.order.domain.QOrderLineItem.orderLineItem
+import band.gosrock.domain.domains.order.exception.ExportTooManyOrdersException
 import band.gosrock.domain.domains.order.domain.RefundStatus
 import band.gosrock.domain.domains.order.repository.condition.AdminTableSearchType
 import band.gosrock.domain.domains.user.domain.QUser.user
@@ -43,6 +45,11 @@ data class V2OrderCounts(
 @Component
 class V2OrderQuery(private val queryFactory: JPAQueryFactory) {
 
+    companion object {
+        /** v2 엑셀 행 상한 (주문·발급 티켓 공통) */
+        const val EXPORT_MAX_ROWS = 10_000
+    }
+
     fun findPage(search: V2OrderSearch, pageable: Pageable): Page<Order> {
         val content = base(queryFactory.selectFrom(order), search, withStatus = true)
             .orderBy(order.id.desc())
@@ -53,9 +60,16 @@ class V2OrderQuery(private val queryFactory: JPAQueryFactory) {
         return PageableExecutionUtils.getPage(content, pageable) { countQuery.fetchOne() ?: 0L }
     }
 
-    /** 엑셀용 전체 (최신 순) */
-    fun findAll(search: V2OrderSearch): List<Order> =
-        base(queryFactory.selectFrom(order), search, withStatus = true).orderBy(order.id.desc()).fetch()
+    /**
+     * 엑셀용 전체 (최신 순, 주문 라인 fetch join). [maxRows] 를 넘으면 조회하지 않고 400 (Order_400_19)
+     */
+    fun findAllForExport(search: V2OrderSearch, maxRows: Int): List<Order> {
+        val total = base(queryFactory.select(order.count()).from(order), search, withStatus = true).fetchOne() ?: 0L
+        if (total > maxRows) throw ExportTooManyOrdersException.EXCEPTION
+        return base(queryFactory.selectFrom(order).distinct().leftJoin(order.orderLineItems, orderLineItem).fetchJoin(), search, withStatus = true)
+            .orderBy(order.id.desc())
+            .fetch()
+    }
 
     fun counts(search: V2OrderSearch): V2OrderCounts {
         val buckets = listOf(V2OrderStatus.visiblePredicate()) + V2OrderStatus.entries.map { it.predicate() }

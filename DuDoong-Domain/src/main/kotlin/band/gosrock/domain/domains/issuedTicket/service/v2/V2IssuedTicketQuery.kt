@@ -3,6 +3,8 @@ package band.gosrock.domain.domains.issuedTicket.service.v2
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus
 import band.gosrock.domain.domains.issuedTicket.domain.QIssuedTicket.issuedTicket
+import band.gosrock.domain.domains.issuedTicket.domain.QIssuedTicketOptionAnswer.issuedTicketOptionAnswer
+import band.gosrock.domain.domains.issuedTicket.exception.ExportTooManyIssuedTicketsException
 import band.gosrock.domain.domains.order.repository.condition.AdminTableSearchType
 import band.gosrock.domain.domains.user.domain.QUser.user
 import com.querydsl.core.types.dsl.BooleanExpression
@@ -62,8 +64,18 @@ class V2IssuedTicketQuery(private val queryFactory: JPAQueryFactory) {
         return PageableExecutionUtils.getPage(content, pageable) { countQuery.fetchOne() ?: 0L }
     }
 
-    fun findAll(search: V2IssuedTicketSearch): List<IssuedTicket> =
-        base(queryFactory.selectFrom(issuedTicket), search, withEntrance = true).orderBy(issuedTicket.id.desc()).fetch()
+    /**
+     * 엑셀용 전체 (최신 순, 옵션 답변 fetch join — 행마다 답변을 따로 읽지 않는다). [maxRows] 를 넘으면 조회하지 않고 400 (IssuedTicket_400_7)
+     */
+    fun findAllForExport(search: V2IssuedTicketSearch, maxRows: Int): List<IssuedTicket> {
+        val total = base(queryFactory.select(issuedTicket.count()).from(issuedTicket), search, withEntrance = true).fetchOne() ?: 0L
+        if (total > maxRows) throw ExportTooManyIssuedTicketsException.EXCEPTION
+        return base(
+            queryFactory.selectFrom(issuedTicket).distinct().leftJoin(issuedTicket.issuedTicketOptionAnswers, issuedTicketOptionAnswer).fetchJoin(),
+            search,
+            withEntrance = true,
+        ).orderBy(issuedTicket.id.desc()).fetch()
+    }
 
     /** 검색어를 반영한 입장 상태별 건수 (입장 필터는 무시) */
     fun stats(search: V2IssuedTicketSearch): V2EntranceStats {

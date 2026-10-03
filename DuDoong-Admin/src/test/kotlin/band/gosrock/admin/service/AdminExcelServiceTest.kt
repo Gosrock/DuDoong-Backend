@@ -296,5 +296,21 @@ class AdminExcelServiceTest {
                 assertEquals("입금 미확인", sheet.getRow(2).getCell(2).stringCellValue)
             }
         }
+
+        @Test
+        @DisplayName("escapeFormula=true 면 = + - @ 탭 CR 로 시작하는 문자열 앞에 ' , 아니면 그대로")
+        fun escapesFormula() {
+            val values = listOf("=1+1", "+82", "-3", "@SUM(A1)", "\tx", "\rx", "홍길동", "010-1234-5678", "")
+            val escaped = readRow(adminExcelService.generateTableExcel("s", values.map { "h" }, listOf(values), escapeFormula = true))
+            assertEquals(listOf("'=1+1", "'+82", "'-3", "'@SUM(A1)", "'\tx", "'\rx", "홍길동", "010-1234-5678", ""), escaped)
+            val raw = readRow(adminExcelService.generateTableExcel("s", values.map { "h" }, listOf(values)))
+            assertEquals(values, raw)
+        }
+
+        private fun readRow(bytes: ByteArray): List<String> =
+            XSSFWorkbook(ByteArrayInputStream(bytes)).use { wb ->
+                val row = wb.getSheetAt(0).getRow(1)
+                (0 until row.lastCellNum).map { row.getCell(it).stringCellValue }
+            }
     }
 }

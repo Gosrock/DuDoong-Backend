@@ -18,6 +18,9 @@ import band.gosrock.domain.domains.issuedTicket.service.v2.V2IssuedTicketQuery
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2IssuedTicketSearch
 import band.gosrock.domain.domains.order.repository.condition.AdminTableSearchType
 import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor
+import band.gosrock.domain.domains.order.service.v2.V2OrderQuery
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.PageRequest
 
 @UseCase
@@ -28,7 +31,10 @@ class V2ReadIssuedTicketsUseCase(
     private val v2IssuedTicketQuery: V2IssuedTicketQuery,
     private val mapper: V2OperationMapper,
     private val excelService: AdminExcelService,
+    @Value("\${v2.export.max-rows:${V2OrderQuery.EXPORT_MAX_ROWS}}") private val exportMaxRows: Int,
 ) {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     /** I-1 발급 티켓 목록 (유효 티켓, 최신 순) + 입장 상태별 건수 */
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
     fun execute(
@@ -65,13 +71,15 @@ class V2ReadIssuedTicketsUseCase(
     }
 
     /**
-     * I-3 엑셀 (I-1 과 같은 필터, 전체 행). 기본 컬럼 + 이 공연 티켓에 붙은 옵션별 응답 컬럼
-     * (옵션 이름이 같으면 옵션 그룹 id 를 붙여 구분)
+     * I-3 엑셀 (I-1 과 같은 필터, 전체 행, 상한 [exportMaxRows] 초과 시 IssuedTicket_400_7). 기본 컬럼 + 답변이 있는 옵션별 응답 컬럼
+     * (옵션 이름이 같으면 옵션 그룹 id 를 붙여 구분). 답변은 fetch join, 옵션 이름은 한 번에 조회.
+     * 개인정보: 연락처 포함(입금 확인용, v1 수준), 이메일 제외. 다운로드는 감사 로그를 남긴다
      */
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
     fun export(userId: Long, eventId: Long, entrance: V2EntranceFilter, searchType: AdminTableSearchType?, keyword: String?): ByteArray {
         eventAdaptor.findById(eventId)
-        val tickets = v2IssuedTicketQuery.findAll(V2IssuedTicketSearch(eventId = eventId, entrance = entrance.domain, searchType = searchType, keyword = keyword))
+        val search = V2IssuedTicketSearch(eventId = eventId, entrance = entrance.domain, searchType = searchType, keyword = keyword)
+        val tickets = v2IssuedTicketQuery.findAllForExport(search, exportMaxRows)
         val users = mapper.usersOf(tickets.map { it.getUserId() })
         val orderNos = mapper.orderNosOf(tickets.map { it.orderUuid })
         // 답변의 optionId(옵션 행) → 옵션 그룹. 컬럼은 옵션 그룹 단위
@@ -89,7 +97,8 @@ class V2ReadIssuedTicketsUseCase(
                 e.enteredAt?.format(V2ReadOrdersUseCase.EXCEL_DATE),
             ) + groups.map { (groupId, _) -> answers[groupId] }
         }
-        return excelService.generateTableExcel("발급 티켓 목록", TICKET_HEADERS + optionHeaders, rows)
+        log.info("[V2 엑셀] 발급 티켓 다운로드 userId={} eventId={} entrance={} rows={}", userId, eventId, entrance, rows.size)
+        return excelService.generateTableExcel("발급 티켓 목록", TICKET_HEADERS + optionHeaders, rows, escapeFormula = true)
     }
 
     companion object {

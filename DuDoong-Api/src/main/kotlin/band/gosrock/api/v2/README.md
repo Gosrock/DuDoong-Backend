@@ -25,7 +25,10 @@ band.gosrock.api.v2
 - 에러 응답: 기존 `ErrorResponse` 포맷 그대로. 단, 호스트 권한 실패(`V2ErrorPolicy.HOST_FORBIDDEN_CODES`)는 v2 핸들러(이 패키지의 컨트롤러)에서만 HTTP 403.
   - 403 정책은 MVC 핸들러 예외(`GlobalExceptionHandler`)에만 적용된다. 필터 단계에서 나는 예외는 대상이 아니다.
 - 페이징: `V2PageResponse` 하나로 통일 (`Slice` 기반이면 `totalElements`/`totalPages`가 `null`). 건수가 함께 필요한 목록(주문·발급 티켓)은 `{counts, orders|tickets: V2PageResponse}`.
-- 엑셀: 운영 어드민 `AdminExcelService.generateTableExcel` 재사용, `ResponseEntity<ByteArray>` 로 내려 성공 응답 래핑을 타지 않는다.
+- 엑셀: 운영 어드민 `AdminExcelService.generateTableExcel(escapeFormula = true)` 재사용, `ResponseEntity<ByteArray>` 로 내려 성공 응답 래핑을 타지 않는다.
+  - 수식 인젝션 방어: `= + - @ 탭 CR` 로 시작하는 문자열 셀 앞에 `'` (v2 엑셀만, 기존 운영 어드민 엑셀은 그대로)
+  - 행 상한 10,000 (`v2.export.max-rows`), 넘으면 400 (`Order_400_19` / `IssuedTicket_400_7`). 연관 데이터는 fetch join
+  - 개인정보: 연락처는 포함(입금 확인용, v1 수준), 이메일은 제외(주문 상세에서만). 다운로드마다 감사 로그(userId, eventId, 필터, 행 수)
 - 공개(비인증) 경로: `SecurityConfig.V2_PUBLIC_GET_PATHS` 에 추가.
 - SUPER_ADMIN: `@HostRolesAllowed` 권한 검사만 건너뛴다. 요청자 역할을 보는 도메인 규칙은 그대로라, 멤버가 아니면 마스터 전용 규칙(매니저 추가·삭제, 마스터 양도)은 막히고 GUEST 추가·삭제, 역할 변경, 조회·수정은 된다.
 
@@ -43,7 +46,8 @@ band.gosrock.api.v2
   - `V2TicketItemDomainService`: 티켓 생성(티켓 없음 공연 거부, DUDOONG/FREE), 폼 전체 수정(잠기면 DEC-006 허용 필드만, 잠긴 필드는 양쪽 trim 비교·바뀐 값만 길이 검증), 판매 기간 검증, 판매 상태(`saleState`)·구매 가능 판정, **잠금 판정(`isLocked` = 재고 감소 OR 승인 대기 주문)**, 판매 중단·재개(멱등), 옵션 전체 지정
   - `V2TicketOptionDomainService`: 옵션 생성(SUBJECTIVE / YES_NO=TRUE_FALSE), 부분 수정(잠긴 티켓에 붙으면 이름·설명만, DEC-012), 삭제(잠긴 티켓에 붙으면 불가, 판매 전 티켓에서는 떼고 삭제). 수정·삭제는 붙은 티켓들의 `티켓관리:{id}` 락을 id 순으로 잡고 판정
   - `V2OrderDomainService` (#712): 주문의 공연 소속 확인(다른 공연 주문은 404), 승인·취소(v1 `OrderApproveService`·`WithdrawOrderService` 그대로 호출), 거절(사유 종류 검증 + `Order.recordRefuseReasonType`, 표시 문구는 v1 `cancel_reason`), 환불 완료(요청 상태만, 완료는 멱등). 상태 분류는 `V2OrderStatus` (v1 상태값 유지, REFUSED = CANCELED + 사유 종류 있음 또는 approved_at 없음)
-  - `V2CheckInDomainService` (#712): 체크인 결과 판정(ENTERED / ALREADY_ENTERED / OTHER_EVENT / CANCELED, 셀프 전용 SELECT_TICKET), 입장은 v1 `IssuedTicket.entrance` + 행 잠금(`SELECT ... FOR UPDATE`)으로 동시 스캔 1회만 입장, 셀프 체크인 토큰 생성(조건부 UPDATE)
+  - `V2CheckInDomainService` (#712): 체크인 결과 판정(ENTERED / ALREADY_ENTERED / OTHER_EVENT / CANCELED, 셀프 전용 SELECT_TICKET), 입장은 v1 `IssuedTicket.entrance` + 행 잠금(`SELECT ... FOR UPDATE`)으로 동시 스캔 1회만 입장. 호스트 스캔은 OPEN·CALCULATING(지각 입장) 공연만(그 외 `Event_400_27`), 셀프 체크인은 OPEN 만
+  - 셀프 체크인 토큰(Q-4)은 공연 등록 때가 아니라 **최초 조회 시 생성**한다(조건부 UPDATE, 동시 조회도 토큰 1개). `Event.checkInToken` 은 읽기 전용 매핑이라 생성 직후 엔티티 값은 stale 일 수 있다
   - 조회 쿼리 `V2OrderQuery` / `V2IssuedTicketQuery` 도 `service.v2` 에 둔다 (v2 만 사용)
 - **open-in-view**: test·staging·prod 는 켜져 있다(기본값). 요청 영속성 컨텍스트에 먼저 올린 엔티티는 락 트랜잭션(REQUIRES_NEW)에서 바뀌어도 같은 요청 안에서 갱신되지 않으므로, 락 서비스를 부르기 전 검사는 엔티티 대신 스칼라 조회로 한다 (`V2OrderDomainService.validateEventOrder`)
 - 티켓 공통 불변식(엔티티 `TicketItem`): 재고 감소 = 판매됨(`isSold`), 판매된 티켓 옵션 변경·삭제 불가, 무제한·매수 제한 없음 저장값(`TicketItem.UNLIMITED_SUPPLY_COUNT` / `NO_PURCHASE_LIMIT` = 1,000,000, `isUnlimitedSupply()` / `hasNoPurchaseLimit()` — v1 응답·어드민·v2 공통), **판매 중 판정(`isOnSale`: isSellable + 판매 기간)**
