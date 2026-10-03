@@ -1,5 +1,6 @@
 package band.gosrock.api.config
 
+import band.gosrock.api.v2.common.V2ErrorPolicy
 import band.gosrock.common.annotation.ApiErrorCodeExample
 import band.gosrock.common.annotation.ApiErrorExceptionsExample
 import band.gosrock.common.annotation.DisableSwaggerSecurity
@@ -23,7 +24,7 @@ import io.swagger.v3.oas.models.responses.ApiResponse
 import io.swagger.v3.oas.models.responses.ApiResponses
 import io.swagger.v3.oas.models.security.SecurityScheme
 import io.swagger.v3.oas.models.servers.Server
-import org.springdoc.core.customizers.OperationCustomizer
+import org.springdoc.core.customizers.GlobalOperationCustomizer
 import org.springdoc.core.models.GroupedOpenApi
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
@@ -91,9 +92,10 @@ class SwaggerConfig(
     @Bean
     fun modelResolver(objectMapper: ObjectMapper): ModelResolver = ModelResolver(objectMapper)
 
+    /** GroupedOpenApi 그룹 문서에도 적용되도록 GlobalOperationCustomizer 로 등록한다. */
     @Bean
-    fun customize(): OperationCustomizer =
-        OperationCustomizer { operation: Operation, handlerMethod: HandlerMethod ->
+    fun customize(): GlobalOperationCustomizer =
+        GlobalOperationCustomizer { operation: Operation, handlerMethod: HandlerMethod ->
             val methodAnnotation = handlerMethod.getMethodAnnotation(DisableSwaggerSecurity::class.java)
             val apiErrorExceptionsExample = handlerMethod.getMethodAnnotation(ApiErrorExceptionsExample::class.java)
             val apiErrorCodeExample = handlerMethod.getMethodAnnotation(ApiErrorCodeExample::class.java)
@@ -110,11 +112,11 @@ class SwaggerConfig(
             }
             // ApiErrorExceptionsExample 어노테이션 단 메소드 적용
             if (apiErrorExceptionsExample != null) {
-                generateExceptionResponseExample(operation, apiErrorExceptionsExample.value.java)
+                generateExceptionResponseExample(operation, apiErrorExceptionsExample.value.java, handlerMethod.beanType)
             }
             // ApiErrorCodeExample 어노테이션 단 메소드 적용
             if (apiErrorCodeExample != null) {
-                generateErrorCodeResponseExample(operation, apiErrorCodeExample.value.java)
+                generateErrorCodeResponseExample(operation, apiErrorCodeExample.value.java, handlerMethod.beanType)
             }
             operation
         }
@@ -126,13 +128,14 @@ class SwaggerConfig(
     private fun generateErrorCodeResponseExample(
         operation: Operation,
         type: Class<out BaseErrorCode>,
+        handlerType: Class<*>,
     ) {
         val responses = operation.responses
         val errorCodes = type.enumConstants
 
         val statusWithExampleHolders = errorCodes
             .map { baseErrorCode ->
-                val errorReason = baseErrorCode.getErrorReason()
+                val errorReason = V2ErrorPolicy.resolve(handlerType, baseErrorCode)
                 ExampleHolder(
                     holder = getSwaggerExample(baseErrorCode.getExplainError(), errorReason),
                     code = errorReason.status,
@@ -149,7 +152,7 @@ class SwaggerConfig(
      * SwaggerExampleExceptions 타입의 클래스는 필드로 DuDoongCodeException 타입을 가지며,
      * DuDoongCodeException 의 errorReason 와, ExplainError 의 설명을 문서화시킵니다.
      */
-    private fun generateExceptionResponseExample(operation: Operation, type: Class<*>) {
+    private fun generateExceptionResponseExample(operation: Operation, type: Class<*>, handlerType: Class<*>) {
         val responses = operation.responses
         val bean = applicationContext.getBean(type)
         val declaredFields = bean.javaClass.declaredFields
@@ -158,10 +161,12 @@ class SwaggerConfig(
             .filter { field -> field.getAnnotation(ExplainError::class.java) != null }
             .filter { field -> field.type == DuDoongCodeException::class.java }
             .map { field ->
+                // Kotlin 프로퍼티의 backing field 는 private 이므로 접근 허용 필요
+                field.isAccessible = true
                 val exception = field.get(bean) as DuDoongCodeException
                 val annotation = field.getAnnotation(ExplainError::class.java)
                 val value = annotation.value
-                val errorReason = exception.getErrorReason()
+                val errorReason = V2ErrorPolicy.resolve(handlerType, exception.errorCode)
                 ExampleHolder(
                     holder = getSwaggerExample(value, errorReason),
                     code = errorReason.status,

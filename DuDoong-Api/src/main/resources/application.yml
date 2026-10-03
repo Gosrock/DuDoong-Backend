@@ -20,6 +20,7 @@ springdoc:
   default-consumes-media-type: application/json
   swagger-ui:
     tags-sorter: alpha
+    urls-primary-name: v1
 
 server:
   forward-headers-strategy: framework

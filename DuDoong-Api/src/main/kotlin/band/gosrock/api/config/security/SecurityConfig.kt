@@ -63,7 +63,7 @@ class SecurityConfig(
                 .requestMatchers(HttpMethod.GET, "/api/v1/events/{eventId:[0-9]*$}/comments/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/events/search").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/examples/health").permitAll()
-                .requestMatchers(HttpMethod.GET, *V2_PUBLIC_GET_PATHS).permitAll()
+                .requestMatchers(HttpMethod.GET, *V2_PUBLIC_GET_PATHS.toTypedArray()).permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/coupons/campaigns").hasRole("SUPER_ADMIN")
                 .requestMatchers("/internal-api/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .anyRequest().hasRole("USER")
@@ -85,7 +85,7 @@ class SecurityConfig(
 
     companion object {
         /** 인증 없이 접근 가능한 v2 GET 경로. v2 공개 API 추가 시 여기에만 등록한다. */
-        val V2_PUBLIC_GET_PATHS: Array<String> = arrayOf(
+        private val V2_PUBLIC_GET_PATHS: List<String> = listOf(
             "/api/v2/health",
         )
     }
