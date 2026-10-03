@@ -2,6 +2,7 @@ package band.gosrock.api.config.response
 
 import band.gosrock.api.config.security.SecurityUtils
 import band.gosrock.api.slack.sender.SlackInternalErrorSender
+import band.gosrock.api.v2.common.V2ErrorPolicy
 import band.gosrock.common.dto.ErrorReason
 import band.gosrock.common.dto.ErrorResponse
 import band.gosrock.common.exception.BaseErrorCode
@@ -76,7 +77,7 @@ class GlobalExceptionHandler(
         request: HttpServletRequest,
     ): ResponseEntity<ErrorResponse> {
         val code: BaseErrorCode = e.errorCode
-        val errorReason: ErrorReason = code.getErrorReason()
+        val errorReason: ErrorReason = V2ErrorPolicy.resolve(request.requestURI.removePrefix(request.contextPath), code)
         val errorResponse = ErrorResponse(errorReason, request.requestURL.toString())
         return ResponseEntity.status(HttpStatus.valueOf(errorReason.status)).body(errorResponse)
     }

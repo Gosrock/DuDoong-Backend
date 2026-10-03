@@ -24,6 +24,7 @@ import io.swagger.v3.oas.models.responses.ApiResponses
 import io.swagger.v3.oas.models.security.SecurityScheme
 import io.swagger.v3.oas.models.servers.Server
 import org.springdoc.core.customizers.OperationCustomizer
+import org.springdoc.core.models.GroupedOpenApi
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -74,6 +75,18 @@ class SwaggerConfig(
                     .name("X-Admin-Token")
                     .description("Admin JWT 토큰 (aud:admin 포함)"),
             )
+
+    @Bean
+    fun v1Api(): GroupedOpenApi =
+        GroupedOpenApi.builder().group("v1").pathsToMatch("/api/v1/**").build()
+
+    @Bean
+    fun v2Api(): GroupedOpenApi =
+        GroupedOpenApi.builder().group("v2").pathsToMatch("/api/v2/**").build()
+
+    @Bean
+    fun internalApi(): GroupedOpenApi =
+        GroupedOpenApi.builder().group("internal").pathsToMatch("/internal-api/**").build()
 
     @Bean
     fun modelResolver(objectMapper: ObjectMapper): ModelResolver = ModelResolver(objectMapper)
