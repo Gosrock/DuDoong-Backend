@@ -90,6 +90,9 @@ class SecurityConfig(
             // 공개 호스트 홈 / 호스트 공연 리스트 (비로그인 시 userId = 0)
             "/api/v2/hosts/{hostId:[0-9]+}",
             "/api/v2/hosts/{hostId:[0-9]+}/events",
+            // 공연 태그 목록 / 공연 섹션 (준비중 공연 섹션은 유스케이스에서 멤버만 허용)
+            "/api/v2/tags",
+            "/api/v2/events/{eventId:[0-9]+}/sections",
         )
     }
 }

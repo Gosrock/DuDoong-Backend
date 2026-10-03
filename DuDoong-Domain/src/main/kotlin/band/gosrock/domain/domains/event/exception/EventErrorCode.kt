@@ -32,6 +32,22 @@ enum class EventErrorCode(
 
     INVALID_EVENT_STATUS_TRANSITION(BAD_REQUEST, "Event_400_16", "허용되지 않는 상태 전이입니다."),
 
+    // v2
+    @ExplainError("정산중(CALCULATING) / 지난공연(CLOSED) 공연의 기본 정보·섹션·이미지를 수정하려는 경우. 준비중·등록된(OPEN) 공연만 수정할 수 있습니다.")
+    CANNOT_MODIFY_ENDED_EVENT(BAD_REQUEST, "Event_400_17", "종료된 공연은 수정할 수 없습니다."),
+    @ExplainError("등록(OPEN) 이후 티켓 여부(hasTicket)를 바꾸려는 경우 (DEC-007). 같은 값은 허용")
+    CANNOT_CHANGE_HAS_TICKET(BAD_REQUEST, "Event_400_18", "등록된 공연은 티켓 여부를 바꿀 수 없습니다."),
+    @ExplainError("준비중이 아닌 공연을 v2 삭제 API 로 삭제하려는 경우")
+    CANNOT_DELETE_NOT_PREPARING_EVENT(BAD_REQUEST, "Event_400_19", "준비중인 공연만 삭제할 수 있습니다."),
+    @ExplainError("문의처가 최대 개수를 넘거나 값이 비었거나 너무 긴 경우")
+    INVALID_EVENT_CONTACT(BAD_REQUEST, "Event_400_20", "문의처 형식이 올바르지 않습니다."),
+    @ExplainError("섹션이 0개이거나 최대 개수 초과, 제목이 비었거나 20자 초과, 본문이 너무 긴 경우")
+    INVALID_EVENT_SECTION(BAD_REQUEST, "Event_400_21", "섹션 형식이 올바르지 않습니다."),
+    @ExplainError("이미지 key 가 빈 문자열이 아니면서 이 공연의 이미지 업로드 API 가 발급한 경로(event/{eventId}/)로 시작하지 않는 경우")
+    INVALID_EVENT_IMAGE_KEY(BAD_REQUEST, "Event_400_22", "이 공연에 업로드한 이미지가 아닙니다."),
+    @ExplainError("존재하지 않는 태그 id 가 있거나 태그 최대 개수를 넘는 경우")
+    INVALID_EVENT_TAG(BAD_REQUEST, "Event_400_23", "태그가 올바르지 않습니다."),
+
     USE_OTHER_API(BAD_REQUEST, "Event_400_8", "잘못된 접근입니다.");
 
     override fun getErrorReason(): ErrorReason =

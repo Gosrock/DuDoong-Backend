@@ -12,6 +12,8 @@ import com.querydsl.core.types.dsl.DateTemplate
 import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.jpa.impl.JPAQueryFactory
 import java.time.LocalDateTime
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 
@@ -70,6 +72,20 @@ class EventCustomRepositoryImpl(
             .groupBy(event.hostId)
             .fetch()
             .associate { it.get(event.hostId)!! to (it.get(eventCount) ?: 0L) }
+    }
+
+    override fun queryPageEventsByHostIdInAndKeyword(hostIds: List<Long>, keyword: String?, pageable: Pageable): Page<Event> {
+        if (hostIds.isEmpty()) return PageImpl(emptyList(), pageable, 0L)
+        val condition = hostIdIn(hostIds).and(event.status.ne(EventStatus.DELETED)).and(nameContains(keyword?.ifBlank { null }))
+        val events = queryFactory
+            .selectFrom(event)
+            .where(condition)
+            .orderBy(event.id.desc())
+            .offset(pageable.offset)
+            .limit(pageable.pageSize.toLong())
+            .fetch()
+        val total = queryFactory.select(event.count()).from(event).where(condition).fetchOne() ?: 0L
+        return PageImpl(events, pageable, total)
     }
 
     private fun queryClosedEventsByKeywordAndSize(keyword: String?, pageable: Pageable, size: Long): List<Event> {
