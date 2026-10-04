@@ -3,6 +3,20 @@ package band.gosrock.api.architecture
 import band.gosrock.api.config.SwaggerConfig
 import band.gosrock.api.config.response.GlobalExceptionHandler
 import band.gosrock.api.v2.common.V2ErrorPolicy
+import band.gosrock.api.v2.event.controller.V2EventBrowseController
+import band.gosrock.api.v2.event.dto.response.V2EventDetailResponse
+import band.gosrock.api.v2.event.dto.response.V2EventHostSummaryResponse
+import band.gosrock.api.v2.event.dto.response.V2EventListItemResponse
+import band.gosrock.api.v2.event.dto.response.V2HomeEventResponse
+import band.gosrock.api.v2.event.dto.response.V2HomeResponse
+import band.gosrock.api.v2.event.dto.response.V2PublicTicketItemResponse
+import band.gosrock.api.v2.event.dto.response.V2PublicTicketOptionResponse
+import band.gosrock.api.v2.event.usecase.V2ReadEventDetailUseCase
+import band.gosrock.api.v2.event.usecase.V2ReadHomeUseCase
+import band.gosrock.api.v2.event.usecase.V2ReadOnSaleTicketItemsUseCase
+import band.gosrock.api.v2.event.usecase.V2SearchEventsUseCase
+import band.gosrock.api.v2.ticket.dto.response.V2TicketAccountResponse
+import band.gosrock.domain.common.vo.AccountInfoVo
 import com.tngtech.archunit.base.DescribedPredicate.not
 import com.tngtech.archunit.core.domain.JavaClass.Predicates.belongToAnyOf
 import com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage
@@ -54,6 +68,13 @@ class V2ApiArchitectureTest {
             .check(classes)
     }
 
+    @Test
+    fun `공개 공연 탐색(P-1~P-5) 은 계좌 정보(AccountInfoVo, V2TicketAccountResponse)에 의존하지 않는다 (#716, 계좌는 주문 단계)`() {
+        noClasses().that().belongToAnyOf(*PUBLIC_BROWSE_CLASSES)
+            .should().dependOnClassesThat().belongToAnyOf(AccountInfoVo::class.java, V2TicketAccountResponse::class.java)
+            .check(classes)
+    }
+
     companion object {
         private const val API = "band.gosrock.api.."
         private const val API_V2 = "band.gosrock.api.v2.."
@@ -61,6 +82,22 @@ class V2ApiArchitectureTest {
 
         /** V2ErrorPolicy 를 쓰는 공통 설정 (403 정책 / v2 Swagger 그룹 에러 예시) */
         private val V2_ERROR_POLICY_USERS = arrayOf(GlobalExceptionHandler::class.java, SwaggerConfig::class.java)
+
+        /** 비로그인 공개 공연 탐색 API (응답 DTO 포함) */
+        private val PUBLIC_BROWSE_CLASSES = arrayOf(
+            V2EventBrowseController::class.java,
+            V2ReadHomeUseCase::class.java,
+            V2SearchEventsUseCase::class.java,
+            V2ReadEventDetailUseCase::class.java,
+            V2ReadOnSaleTicketItemsUseCase::class.java,
+            V2HomeResponse::class.java,
+            V2HomeEventResponse::class.java,
+            V2EventListItemResponse::class.java,
+            V2EventDetailResponse::class.java,
+            V2EventHostSummaryResponse::class.java,
+            V2PublicTicketItemResponse::class.java,
+            V2PublicTicketOptionResponse::class.java,
+        )
 
         private val classes: JavaClasses = ClassFileImporter()
             .withImportOption(ImportOption.DoNotIncludeTests())

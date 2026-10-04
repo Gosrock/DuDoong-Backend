@@ -1,0 +1,68 @@
+package band.gosrock.api.v2.event.controller
+
+import band.gosrock.api.v2.common.V2PageResponse
+import band.gosrock.api.v2.event.dto.request.V2EventSort
+import band.gosrock.api.v2.event.dto.response.V2EventDetailResponse
+import band.gosrock.api.v2.event.dto.response.V2EventListItemResponse
+import band.gosrock.api.v2.event.dto.response.V2HomeResponse
+import band.gosrock.api.v2.event.dto.response.V2PublicTicketItemResponse
+import band.gosrock.api.v2.event.usecase.V2ReadEventDetailUseCase
+import band.gosrock.api.v2.event.usecase.V2ReadHomeUseCase
+import band.gosrock.api.v2.event.usecase.V2ReadOnSaleTicketItemsUseCase
+import band.gosrock.api.v2.event.usecase.V2SearchEventsUseCase
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.constraints.Max
+import jakarta.validation.constraints.Min
+import org.springframework.validation.annotation.Validated
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
+
+/** 사용자 앱 공연 탐색 (#716). 모두 비로그인 허용 (SecurityConfig.V2_PUBLIC_GET_PATHS). P-4 섹션은 [V2EventController] E-5 */
+@Tag(name = "v2. 공연 탐색")
+@RestController
+@RequestMapping("/api/v2")
+@Validated
+class V2EventBrowseController(
+    private val readHomeUseCase: V2ReadHomeUseCase,
+    private val searchEventsUseCase: V2SearchEventsUseCase,
+    private val readEventDetailUseCase: V2ReadEventDetailUseCase,
+    private val readOnSaleTicketItemsUseCase: V2ReadOnSaleTicketItemsUseCase,
+) {
+    @Operation(summary = "[P-1] 홈: 등록(OPEN)·시작 전 공연 시작 임박순 최대 10개 (비로그인 허용)")
+    @GetMapping("/home")
+    fun getHome(): V2HomeResponse = readHomeUseCase.execute()
+
+    @Operation(
+        summary = "[P-2] 공연 리스트 (비로그인 허용)",
+        description = "keyword = 공연명 OR 호스트명 부분일치. tagIds = 같은 분류 OR / 분류끼리 AND (없는 태그 id 는 400). " +
+            "includePast=false 면 등록(OPEN) 공연만, true 면 정산중·지난공연 포함. " +
+            "sort=UPCOMING: 다가오는 공연(OPEN·시작 전) 시작 임박순 → 지난 공연(시작한 OPEN·정산중·지난공연) 최근 시작 순",
+    )
+    @GetMapping("/events")
+    fun searchEvents(
+        @RequestParam(required = false) keyword: String?,
+        @Parameter(description = "태그 id (쉼표 구분, 예: 1,2)")
+        @RequestParam(required = false) tagIds: List<Long>?,
+        @RequestParam(defaultValue = "false") includePast: Boolean,
+        @RequestParam(defaultValue = "UPCOMING") sort: V2EventSort,
+        @RequestParam(defaultValue = "0") @Min(0) page: Int,
+        @RequestParam(defaultValue = "10") @Min(1) @Max(MAX_PAGE_SIZE) size: Int,
+    ): V2PageResponse<V2EventListItemResponse> = searchEventsUseCase.execute(keyword, tagIds.orEmpty(), includePast, page, size)
+
+    @Operation(summary = "[P-3] 공개 공연 상세 (비로그인 허용). 준비중·삭제 공연은 404")
+    @GetMapping("/events/{eventId}")
+    fun getEventDetail(@PathVariable eventId: Long): V2EventDetailResponse = readEventDetailUseCase.execute(eventId)
+
+    @Operation(summary = "[P-5] 판매 중인 티켓 (비로그인 허용). 판매 중단·판매 기간 밖·삭제 티켓 제외, 계좌 미노출. 준비중·삭제 공연은 404")
+    @GetMapping("/events/{eventId}/ticket-items")
+    fun getOnSaleTicketItems(@PathVariable eventId: Long): List<V2PublicTicketItemResponse> = readOnSaleTicketItemsUseCase.execute(eventId)
+
+    companion object {
+        private const val MAX_PAGE_SIZE = 50L
+    }
+}

@@ -93,6 +93,11 @@ class SecurityConfig(
             // 공연 태그 목록 / 공연 섹션 (준비중 공연 섹션은 유스케이스에서 멤버만 허용)
             "/api/v2/tags",
             "/api/v2/events/{eventId:[0-9]+}/sections",
+            // 사용자 앱 공연 탐색 (#716): 홈 / 공연 리스트 / 공개 상세 / 판매 중 티켓 (준비중·삭제 공연은 유스케이스에서 404)
+            "/api/v2/home",
+            "/api/v2/events",
+            "/api/v2/events/{eventId:[0-9]+}",
+            "/api/v2/events/{eventId:[0-9]+}/ticket-items",
         )
     }
 }

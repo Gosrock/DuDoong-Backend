@@ -47,8 +47,16 @@ import jakarta.persistence.Table
 import org.hibernate.annotations.ColumnDefault
 import org.hibernate.annotations.Where
 
-/** check_in_token unique: 셀프 체크인 QR 토큰 (v2, #712, V004) */
-@Table(indexes = [Index(name = "uk_event_check_in_token", columnList = "check_in_token", unique = true)])
+/**
+ * check_in_token unique: 셀프 체크인 QR 토큰 (v2, #712, V004)
+ * (status, start_at): 사용자 앱 홈·공연 리스트 (v2, #716, V006)
+ */
+@Table(
+    indexes = [
+        Index(name = "uk_event_check_in_token", columnList = "check_in_token", unique = true),
+        Index(name = "idx_event_status_start_at", columnList = "status, start_at"),
+    ],
+)
 @Where(clause = "status != 'DELETED'")
 @Entity(name = "tbl_event")
 class Event(
