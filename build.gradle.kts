@@ -83,6 +83,8 @@ subprojects {
 
     tasks.test {
         useJUnitPlatform()
+        // Api 통합 테스트는 컨텍스트 여러 개(설정별 캐시) + 공유 H2 를 한 JVM 에 올린다. 기본 512MB 로는 #719 테스트 추가 후 OOM (2026-10-05)
+        maxHeapSize = "1g"
     }
 }
 
