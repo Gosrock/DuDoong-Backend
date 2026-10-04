@@ -2,6 +2,7 @@ package band.gosrock.api.config.response
 
 import band.gosrock.api.config.security.SecurityUtils
 import band.gosrock.api.slack.sender.SlackInternalErrorSender
+import band.gosrock.api.v2.common.V2ErrorPolicy
 import band.gosrock.common.dto.ErrorReason
 import band.gosrock.common.dto.ErrorResponse
 import band.gosrock.common.exception.BaseErrorCode
@@ -21,6 +22,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.context.request.ServletWebRequest
 import org.springframework.web.context.request.WebRequest
+import org.springframework.web.method.HandlerMethod
+import org.springframework.web.servlet.HandlerMapping
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
 import org.springframework.web.util.ContentCachingRequestWrapper
 import org.springframework.web.util.UriComponentsBuilder
@@ -76,7 +79,9 @@ class GlobalExceptionHandler(
         request: HttpServletRequest,
     ): ResponseEntity<ErrorResponse> {
         val code: BaseErrorCode = e.errorCode
-        val errorReason: ErrorReason = code.getErrorReason()
+        // 핸들러 메서드 파라미터(HandlerMethod)는 핸들러가 없을 때 Spring 이 인자 해석에 실패하므로 request attribute 로 조회한다.
+        val handlerMethod = request.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE) as? HandlerMethod
+        val errorReason: ErrorReason = V2ErrorPolicy.resolve(handlerMethod?.beanType, code)
         val errorResponse = ErrorResponse(errorReason, request.requestURL.toString())
         return ResponseEntity.status(HttpStatus.valueOf(errorReason.status)).body(errorResponse)
     }

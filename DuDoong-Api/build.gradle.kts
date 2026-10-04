@@ -7,4 +7,6 @@ dependencies {
     implementation(project(":DuDoong-Common"))
     implementation(project(":DuDoong-Infrastructure"))
     implementation(project(":DuDoong-Admin"))
+
+    testImplementation("org.springframework.security:spring-security-test")
 }
