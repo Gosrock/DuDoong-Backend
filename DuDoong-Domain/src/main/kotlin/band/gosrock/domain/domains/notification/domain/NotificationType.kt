@@ -19,4 +19,10 @@ enum class NotificationType {
 
     /** 사용자 취소 — 돌려줄 돈 없음(v2 무료 주문 취소, REFUND + 환불 NONE). 수신자: 호스트 활성 마스터·매니저 (#718) */
     ORDER_CANCELED_BY_USER,
+
+    /** 승인 완료 주문을 호스트가 취소 (v1/v2, 승인형). 수신자: 주문자 (#726) */
+    ORDER_CANCELED_BY_HOST,
+
+    /** 환불 완료 — 호스트가 송금 후 환불 완료 처리 (v1/v2, 돌려준 돈이 있는 주문만, 카드(PG) 결제 제외). 수신자: 주문자 (#726) */
+    ORDER_REFUND_COMPLETED,
 }

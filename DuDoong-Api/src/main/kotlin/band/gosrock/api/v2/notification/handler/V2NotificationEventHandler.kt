@@ -3,6 +3,7 @@ package band.gosrock.api.v2.notification.handler
 import band.gosrock.api.v2.notification.handler.V2NotificationAsyncConfig.Companion.NOTIFICATION_EXECUTOR
 import band.gosrock.domain.common.events.order.CreateOrderEvent
 import band.gosrock.domain.common.events.order.DoneOrderEvent
+import band.gosrock.domain.common.events.order.RefundCompletedOrderEvent
 import band.gosrock.domain.common.events.order.WithDrawOrderEvent
 import band.gosrock.domain.domains.host.service.v2.V2HostMembersAddedEvent
 import band.gosrock.domain.domains.notification.service.v2.V2NotificationDomainService
@@ -47,6 +48,18 @@ class V2NotificationEventHandler(
     @TransactionalEventListener(classes = [WithDrawOrderEvent::class], phase = TransactionPhase.AFTER_COMMIT, condition = APPROVAL_CANCELED_ORDER)
     fun handleWithDrawOrder(event: WithDrawOrderEvent) =
         save("ORDER_REFUSED", event.orderUuid) { notificationDomainService.notifyOrderRefused(event.orderUuid) }
+
+    /** 승인 후 호스트 취소 → 주문자 (#726). 거절과 같은 이벤트·condition 이고, 거절/취소 구분은 서비스가 커밋된 주문으로 판정 (둘 중 하나만 저장) */
+    @Async(NOTIFICATION_EXECUTOR)
+    @TransactionalEventListener(classes = [WithDrawOrderEvent::class], phase = TransactionPhase.AFTER_COMMIT, condition = APPROVAL_CANCELED_ORDER)
+    fun handleHostCanceledOrder(event: WithDrawOrderEvent) =
+        save("ORDER_CANCELED_BY_HOST", event.orderUuid) { notificationDomainService.notifyOrderCanceledByHost(event.orderUuid) }
+
+    /** 환불 완료(v1 호스트 환불 완료 포함) → 주문자 (#726). 결제 방식·금액 판정은 서비스가 커밋된 주문으로 한다 (이벤트에 uuid 만 있음) */
+    @Async(NOTIFICATION_EXECUTOR)
+    @TransactionalEventListener(classes = [RefundCompletedOrderEvent::class], phase = TransactionPhase.AFTER_COMMIT)
+    fun handleRefundCompleted(event: RefundCompletedOrderEvent) =
+        save("ORDER_REFUND_COMPLETED", event.orderUuid) { notificationDomainService.notifyOrderRefundCompleted(event.orderUuid) }
 
     /** 사용자 취소·환불 요청(REFUND, v1 사용자 환불 포함) → 호스트 마스터·매니저 (#718). 카드(PG) 결제 주문은 condition 으로 거른다 */
     @Async(NOTIFICATION_EXECUTOR)

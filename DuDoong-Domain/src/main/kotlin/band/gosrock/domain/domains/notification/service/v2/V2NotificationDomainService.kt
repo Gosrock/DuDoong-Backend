@@ -160,6 +160,54 @@ class V2NotificationDomainService(
         return notificationBulkRepository.insertSkippingDuplicates(notifications)
     }
 
+    /**
+     * 승인 완료 주문의 호스트 취소 → 주문자 (#726, v1 취소·v2 R-5 공통, [V2OrderStatus.CANCELED] 중 CANCELED 상태). 거절·사용자 취소(REFUND)는 저장 안 함.
+     * 승인형만 (핸들러 condition). 사유는 호스트가 입력한 cancel_reason (없을 수 있음)
+     */
+    @Transactional
+    fun notifyOrderCanceledByHost(orderUuid: String): Int {
+        val order = orderAdaptor.findByOrderUuid(orderUuid)
+        if (order.orderStatus != OrderStatus.CANCELED || V2OrderStatus.of(order) != V2OrderStatus.CANCELED) return 0
+        val eventName = eventName(order)
+        val reason = order.cancelReason?.takeIf { it.isNotBlank() }
+        return notificationBulkRepository.insertSkippingDuplicates(
+            listOf(
+                orderDraft(
+                    userId = order.userId!!,
+                    order = order,
+                    type = NotificationType.ORDER_CANCELED_BY_HOST,
+                    title = "티켓 주문이 취소되었습니다",
+                    body = "'$eventName' ${order.orderName.orEmpty()} 주문이 호스트에 의해 취소되었어요." + (reason?.let { " 사유: ${ellipsis(it, BODY_REASON_MAX_LENGTH)}" } ?: ""),
+                    extra = mapOf("eventName" to eventName, "orderNo" to order.orderNo, "cancelReason" to reason),
+                ),
+            ),
+        )
+    }
+
+    /**
+     * 환불 완료 → 주문자 (#726, v1 환불 완료·v2 F-2 공통). 환불 완료 상태 + 돌려준 돈이 있는 주문만.
+     * 카드(PG) 결제 주문은 결제 취소로 자동 환불되므로 저장 안 함 ([notifyOrderWithdrawnByUser] 와 같은 기준)
+     */
+    @Transactional
+    fun notifyOrderRefundCompleted(orderUuid: String): Int {
+        val order = orderAdaptor.findByOrderUuid(orderUuid)
+        if (order.refundStatus != RefundStatus.REFUND_COMPLETED || !order.getTotalPaymentPrice().isGreaterThan(Money.ZERO)) return 0
+        if (order.orderMethod == OrderMethod.PAYMENT) return 0
+        val eventName = eventName(order)
+        return notificationBulkRepository.insertSkippingDuplicates(
+            listOf(
+                orderDraft(
+                    userId = order.userId!!,
+                    order = order,
+                    type = NotificationType.ORDER_REFUND_COMPLETED,
+                    title = "환불이 완료되었습니다",
+                    body = "'$eventName' ${order.orderName.orEmpty()} 주문(${order.orderNo.orEmpty()})의 환불이 완료되었어요.",
+                    extra = mapOf("eventName" to eventName, "orderNo" to order.orderNo),
+                ),
+            ),
+        )
+    }
+
     // ===== 조회 / 읽음 =====
 
     fun querySlice(userId: Long, pageable: Pageable): Slice<Notification> =

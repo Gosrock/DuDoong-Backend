@@ -4,6 +4,7 @@ import band.gosrock.api.v2.notification.handler.V2NotificationEventHandler
 import band.gosrock.domain.common.aop.domainEvent.DomainEvent
 import band.gosrock.domain.common.events.order.CreateOrderEvent
 import band.gosrock.domain.common.events.order.DoneOrderEvent
+import band.gosrock.domain.common.events.order.RefundCompletedOrderEvent
 import band.gosrock.domain.common.events.order.WithDrawOrderEvent
 import band.gosrock.domain.domains.host.service.v2.V2HostMembersAddedEvent
 import band.gosrock.domain.domains.notification.service.v2.V2NotificationDomainService
@@ -82,6 +83,22 @@ class V2NotificationEventConditionTest {
         verifyNoInteractions(service)
         publishInTransaction(withDraw(OrderMethod.APPROVAL, OrderStatus.CANCELED))
         verify(service).notifyOrderRefused("uuid")
+        // 호스트 취소 알림도 같은 조건으로 함께 호출되고, 거절/취소 구분은 서비스가 한다 (#726)
+        verify(service).notifyOrderCanceledByHost("uuid")
+    }
+
+    @Test
+    fun `사용자 철회(REFUND)는 호스트 취소 알림을 호출하지 않는다 (#726)`() {
+        publishInTransaction(withDraw(OrderMethod.APPROVAL, OrderStatus.REFUND))
+        verify(service, never()).notifyOrderCanceledByHost("uuid")
+    }
+
+    @Test
+    fun `환불 완료 - 조건 없이 호출 (판정은 서비스), 롤백되면 호출 안 함 (#726)`() {
+        publishInTransaction(RefundCompletedOrderEvent("uuid"), commit = false)
+        verify(service, never()).notifyOrderRefundCompleted("uuid")
+        publishInTransaction(RefundCompletedOrderEvent("uuid"))
+        verify(service).notifyOrderRefundCompleted("uuid")
     }
 
     @Test

@@ -75,7 +75,7 @@ data class V2EventHostSummaryResponse(
     val profileImageUrl: String?,
 )
 
-/** P-5 판매 중인 티켓 (사용자용). 입금 계좌는 주문 단계에서 제공하므로 여기서는 내려주지 않는다 */
+/** P-5 판매 중인 티켓 (사용자용, 비로그인). 입금 계좌는 로그인한 사용자의 결제 화면(O-0)에서만 제공하므로 여기서는 내려주지 않는다 */
 data class V2PublicTicketItemResponse(
     val ticketItemId: Long,
     val name: String?,
@@ -86,10 +86,11 @@ data class V2PublicTicketItemResponse(
     val payType: V2TicketPayType?,
     @field:Schema(description = "true = 호스트 승인 후 확정, false = 구매 후 자동 확정")
     val approvalRequired: Boolean,
-    @field:Schema(description = "잔여 수량. 재고 공개 + 수량 지정 티켓만, 아니면 null")
+    @field:Schema(description = "잔여 수량 = 재고 - 승인 대기 수량. 재고 공개 + 수량 지정 티켓만, 아니면 null")
     val remaining: Long?,
+    @field:Schema(description = "매진 (재고 - 승인 대기 수량 <= 0). 재고 비공개여도 판정한다")
     val isSoldOut: Boolean,
-    @field:Schema(description = "지금 살 수 있는지: v2 결제 방식(DUDOONG/FREE) + 공연 등록(OPEN) + 공연 시작 전 + 판매 중 + 매진 아님")
+    @field:Schema(description = "지금 살 수 있는지: v2 결제 방식(DUDOONG/FREE) + 공연 등록(OPEN) + 공연 시작 전 + 판매 중 + 매진 아님(승인 대기 차감)")
     val isPurchasable: Boolean,
     @field:Schema(description = "1인 구매 매수 제한. null 이면 제한 없음")
     val purchaseLimit: Long?,

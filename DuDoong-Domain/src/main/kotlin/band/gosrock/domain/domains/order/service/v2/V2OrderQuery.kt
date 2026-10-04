@@ -6,7 +6,6 @@ import band.gosrock.domain.domains.order.domain.QOrder.order
 import band.gosrock.domain.domains.order.domain.QOrderLineItem.orderLineItem
 import band.gosrock.domain.domains.order.exception.ExportTooManyOrdersException
 import band.gosrock.domain.domains.order.domain.RefundStatus
-import band.gosrock.domain.domains.order.repository.condition.AdminTableSearchType
 import band.gosrock.domain.domains.user.domain.QUser.user
 import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.core.types.dsl.CaseBuilder
@@ -22,14 +21,27 @@ import org.springframework.stereotype.Component
 /**
  * v2 호스트 주문 목록 검색 조건 (#712).
  * @property status null 이면 전체 ([V2OrderStatus.visiblePredicate])
- * @property searchType 검색어가 있을 때 기준. null 이면 이름. v1 어드민 목록과 같은 기준(현재 회원 정보, 연락처는 부분 일치)
+ * @property searchType 검색어가 있을 때 기준. null 이면 이름 ([V2OrderSearchType])
  */
 data class V2OrderSearch(
     val eventId: Long,
     val status: V2OrderStatus? = null,
-    val searchType: AdminTableSearchType? = null,
+    val searchType: V2OrderSearchType? = null,
     val keyword: String? = null,
 )
+
+/**
+ * v2 호스트 주문 검색 기준 (#726). 이름·연락처는 v1 어드민 목록([band.gosrock.domain.domains.order.repository.condition.AdminTableSearchType])과 같은 기준
+ * (현재 회원 정보, 부분 일치). 입금자명은 v2 주문에 저장된 값(`tbl_order.depositor_name`, DEC-022 #6) 부분 일치라 v1 주문은 걸리지 않는다.
+ * v1 검색 enum 은 v1·v2 발급 티켓 목록이 같이 쓰므로 건드리지 않고 v2 주문 목록 전용으로 둔다
+ */
+enum class V2OrderSearchType(val needsUserJoin: Boolean, private val expression: (String) -> BooleanExpression) {
+    PHONE(true, { keyword -> user.profile.phoneNumberVo.phoneNumber.contains(keyword) }),
+    NAME(true, { keyword -> user.profile.name.contains(keyword) }),
+    DEPOSITOR_NAME(false, { keyword -> order.depositorName.contains(keyword) });
+
+    fun contains(keyword: String): BooleanExpression = expression(keyword)
+}
 
 /** 상태별 주문 건수. 검색어는 반영하고 상태 필터는 무시한다 (탭 건수) */
 data class V2OrderCounts(
@@ -109,8 +121,8 @@ class V2OrderQuery(private val queryFactory: JPAQueryFactory) {
 
     private fun <T> base(query: JPAQuery<T>, search: V2OrderSearch, withStatus: Boolean): JPAQuery<T> {
         val searchFilter = keywordFilter(search)
-        // 검색할 때만 회원 조인 (v1 어드민 목록과 같은 기준)
-        val joined = if (searchFilter == null) query else query.join(user).on(user.id.eq(order.userId))
+        // 회원 정보로 검색할 때만 회원 조인 (v1 어드민 목록과 같은 기준)
+        val joined = if (searchFilter == null || !searchType(search).needsUserJoin) query else query.join(user).on(user.id.eq(order.userId))
         return joined.where(
             order.eventId.eq(search.eventId),
             if (withStatus) search.status?.predicate() ?: V2OrderStatus.visiblePredicate() else V2OrderStatus.visiblePredicate(),
@@ -121,6 +133,8 @@ class V2OrderQuery(private val queryFactory: JPAQueryFactory) {
     private fun keywordFilter(search: V2OrderSearch): BooleanExpression? {
         val keyword = search.keyword?.trim()
         if (keyword.isNullOrEmpty()) return null
-        return (search.searchType ?: AdminTableSearchType.NAME).getContains(keyword)
+        return searchType(search).contains(keyword)
     }
+
+    private fun searchType(search: V2OrderSearch): V2OrderSearchType = search.searchType ?: V2OrderSearchType.NAME
 }

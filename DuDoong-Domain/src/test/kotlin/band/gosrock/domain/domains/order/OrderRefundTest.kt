@@ -1,5 +1,7 @@
 package band.gosrock.domain.domains.order
 
+import band.gosrock.domain.common.aop.domainEvent.Events
+import band.gosrock.domain.common.events.order.RefundCompletedOrderEvent
 import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.order.domain.OrderMethod
 import band.gosrock.domain.domains.order.domain.OrderStatus
@@ -8,6 +10,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
+import org.springframework.test.util.ReflectionTestUtils
 
 class OrderRefundTest {
 
@@ -67,6 +70,31 @@ class OrderRefundTest {
 
         assertEquals(RefundStatus.REFUND_COMPLETED, order.refundStatus)
         assertNotNull(order.refundStatusChangedAt)
+    }
+
+    @Test
+    fun `completeRefund 는 환불 완료 이벤트를 발행한다 (v1·v2 공통 경로, #726), 저장 전 주문(uuid 없음)은 발행 안 함`() {
+        val published = mutableListOf<Any>()
+        Events.setPublisher { published.add(it) }
+        try {
+            val order = Order.forTest(
+                userId = 1L,
+                orderName = "테스트주문",
+                orderStatus = OrderStatus.CANCELED,
+                orderMethod = OrderMethod.APPROVAL,
+                eventId = 100L,
+                refundStatus = RefundStatus.REFUND_REQUESTED,
+            )
+            order.completeRefund()
+            assertEquals(emptyList<Any>(), published)
+
+            ReflectionTestUtils.setField(order, "uuid", "order-uuid")
+            order.completeRefund()
+            assertEquals("order-uuid", (published.single() as RefundCompletedOrderEvent).orderUuid)
+            assertEquals(RefundStatus.REFUND_COMPLETED, order.refundStatus)
+        } finally {
+            Events.reset()
+        }
     }
 
     @Test

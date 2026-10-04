@@ -39,25 +39,33 @@ class V2NotificationHandlerThreadTest : V2OperationTestSupport() {
     @Autowired private lateinit var handler: V2NotificationEventHandler
 
     @Test
-    fun `멤버 추가·주문 생성·승인·거절 알림 저장은 notification- 스레드에서 실행된다`() {
+    fun `멤버 추가·주문 생성·승인·거절·호스트 취소·환불 완료 알림 저장은 notification- 스레드에서 실행된다`() {
         val threads = ConcurrentHashMap<String, String>()
         fun record(name: String): Int = 0.also { threads[name] = Thread.currentThread().name }
         given(notificationDomainService.notifyHostMembersAdded(anyLong(), anyList())).willAnswer { record("membersAdded") }
         given(notificationDomainService.notifyOrderPendingApprove(anyString())).willAnswer { record("pendingApprove") }
         given(notificationDomainService.notifyOrderApproved(anyString())).willAnswer { record("approved") }
         given(notificationDomainService.notifyOrderRefused(anyString())).willAnswer { record("refused") }
+        given(notificationDomainService.notifyOrderCanceledByHost(anyString())).willAnswer { record("canceledByHost") }
+        given(notificationDomainService.notifyOrderRefundCompleted(anyString())).willAnswer { record("refundCompleted") }
 
         val shop = Shop()
         val approved = shop.approved(newBuyer())
         val refused = shop.order(newBuyer())
         refuse(shop.team.manager, shop.eventId, refused, "SOLD_OUT").andExpect { status { isOk() } }
+        // #726: 호스트 취소 → 환불 완료
+        val canceled = shop.approved(newBuyer())
+        v2Post(shop.team.manager, "/events/${shop.eventId}/orders/$canceled/cancel").andExpect { status { isOk() } }
+        v2Post(shop.team.manager, "/events/${shop.eventId}/refunds/$canceled/complete").andExpect { status { isOk() } }
 
         verify(notificationDomainService, timeout(10_000)).notifyHostMembersAdded(anyLong(), anyList())
         verify(notificationDomainService, timeout(10_000)).notifyOrderApproved(approved)
         verify(notificationDomainService, timeout(10_000)).notifyOrderPendingApprove(refused)
         verify(notificationDomainService, timeout(10_000)).notifyOrderRefused(refused)
+        verify(notificationDomainService, timeout(10_000)).notifyOrderCanceledByHost(canceled)
+        verify(notificationDomainService, timeout(10_000)).notifyOrderRefundCompleted(canceled)
 
-        assertEquals(setOf("membersAdded", "pendingApprove", "approved", "refused"), threads.keys)
+        assertEquals(setOf("membersAdded", "pendingApprove", "approved", "refused", "canceledByHost", "refundCompleted"), threads.keys)
         threads.forEach { (name, thread) ->
             assertTrue(thread.startsWith("notification-"), "$name 알림이 전용 풀이 아닌 스레드에서 실행됨: $thread")
         }
@@ -70,7 +78,7 @@ class V2NotificationHandlerThreadTest : V2OperationTestSupport() {
         val listeners = AopUtils.getTargetClass(handler).declaredMethods.filter {
             AnnotatedElementUtils.hasAnnotation(it, TransactionalEventListener::class.java)
         }
-        assertEquals(5, listeners.size, "리스너 수가 바뀌면 이 테스트와 실행 스레드 테스트를 갱신: ${listeners.map { it.name }}")
+        assertEquals(7, listeners.size, "리스너 수가 바뀌면 이 테스트와 실행 스레드 테스트를 갱신: ${listeners.map { it.name }}")
         listeners.forEach {
             val async = AnnotatedElementUtils.findMergedAnnotation(it, Async::class.java)
             assertEquals(V2NotificationAsyncConfig.NOTIFICATION_EXECUTOR, async?.value, "${it.name} 의 @Async executor")

@@ -3,6 +3,7 @@ package band.gosrock.api.v2.event.dto.response
 import band.gosrock.api.v2.tag.dto.V2TagResponse
 import band.gosrock.common.annotation.DateFormat
 import band.gosrock.domain.domains.event.domain.Event
+import band.gosrock.domain.domains.event.domain.EventPlace
 import band.gosrock.domain.domains.event.service.v2.EventChecklist
 import band.gosrock.domain.domains.event.service.v2.V2EventDisplayRule
 import band.gosrock.domain.domains.event.service.v2.V2EventDisplayStatus
@@ -53,9 +54,7 @@ data class V2EventManageResponse(
                 startAt = event.getStartAt(),
                 endAt = event.getEndAt(),
                 runTime = event.eventBasic?.runTime,
-                place = event.eventPlace?.takeIf { it.placeName != null || it.placeAddress != null }?.let {
-                    V2EventPlaceResponse(name = it.placeName, address = it.placeAddress, latitude = it.latitude, longitude = it.longitude)
-                },
+                place = V2EventPlaceResponse.of(event.eventPlace),
                 contacts = event.contacts.map { V2EventContactResponse(type = it.type, value = it.value) },
                 hasTicket = event.hasTicket,
                 tags = tags.map { V2TagResponse.from(it) },
@@ -71,7 +70,15 @@ data class V2EventPlaceResponse(
     val address: String?,
     val latitude: Double?,
     val longitude: Double?,
-)
+) {
+    companion object {
+        /** 이름·주소가 모두 없으면(미입력) null. E-3·P-3·H-14 공통 */
+        fun of(place: EventPlace?): V2EventPlaceResponse? =
+            place?.takeIf { it.placeName != null || it.placeAddress != null }?.let {
+                V2EventPlaceResponse(name = it.placeName, address = it.placeAddress, latitude = it.latitude, longitude = it.longitude)
+            }
+    }
+}
 
 data class V2EventContactResponse(
     val type: HostContactType,

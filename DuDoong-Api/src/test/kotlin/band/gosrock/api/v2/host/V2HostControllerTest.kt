@@ -2,6 +2,7 @@ package band.gosrock.api.v2.host
 
 import band.gosrock.api.supports.ApiIntegrateSpringBootTest
 import band.gosrock.domain.domains.event.domain.Event
+import band.gosrock.domain.domains.event.domain.EventPlace
 import band.gosrock.domain.domains.event.domain.EventStatus
 import band.gosrock.domain.domains.event.repository.EventRepository
 import band.gosrock.domain.domains.host.domain.HostRole
@@ -930,6 +931,36 @@ class V2HostControllerTest {
             assertEquals("PAST", display[closed.id])
             assertEquals("PAST", display[calculating.id])
             assertEquals("OPEN", memberContent.first { it["eventId"].asLong() == upcoming.id }["status"].asText())
+        }
+
+        @Test
+        fun `카드 장소는 공연 상세와 같은 place 형태, 미입력이면 null, 주소만 있어도 표시 (#726)`() {
+            val team = Team()
+            val now = LocalDateTime.now()
+            val withPlace = saveEvent(team.hostId, EventStatus.OPEN, now.plusDays(7)).also {
+                ReflectionTestUtils.setField(it, "eventPlace", EventPlace(latitude = 37.548369, longitude = 126.920036, placeName = "롤링홀", placeAddress = "서울 마포구 어울마당로 35"))
+                eventRepository.save(it)
+            }
+            val addressOnly = saveEvent(team.hostId, EventStatus.OPEN, now.plusDays(8)).also {
+                ReflectionTestUtils.setField(it, "eventPlace", EventPlace(placeAddress = "서울 마포구"))
+                eventRepository.save(it)
+            }
+            val noPlace = saveEvent(team.hostId, EventStatus.OPEN, now.plusDays(9))
+
+            val byId = mockMvc.get("/api/v2/hosts/${team.hostId}/events").andExpect { status { isOk() } }
+                .body().at("/data/content").associateBy { it["eventId"].asLong() }
+            val place = byId.getValue(withPlace.id!!)["place"]
+            assertEquals("롤링홀", place["name"].asText())
+            assertEquals("서울 마포구 어울마당로 35", place["address"].asText())
+            assertEquals(37.548369, place["latitude"].asDouble())
+            assertEquals(126.920036, place["longitude"].asDouble())
+            assertTrue(byId.getValue(addressOnly.id!!)["place"]["name"].isNull)
+            assertEquals("서울 마포구", byId.getValue(addressOnly.id!!)["place"]["address"].asText())
+            assertTrue(byId.getValue(noPlace.id!!)["place"].isNull)
+
+            // P-3 공개 상세와 같은 값
+            val detail = mockMvc.get("/api/v2/events/${withPlace.id}").andExpect { status { isOk() } }.body().at("/data/place")
+            assertEquals(detail, place)
         }
     }
 

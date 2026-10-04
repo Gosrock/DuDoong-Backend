@@ -1,0 +1,379 @@
+package band.gosrock.api.v2.order
+
+import band.gosrock.api.supports.ApiIntegrateSpringBootTest
+import band.gosrock.domain.domains.event.domain.EventStatus
+import band.gosrock.domain.domains.notification.domain.NotificationType
+import band.gosrock.domain.domains.notification.repository.NotificationRepository
+import band.gosrock.domain.domains.user.domain.User
+import com.fasterxml.jackson.databind.JsonNode
+import java.util.Collections
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
+import org.springframework.http.MediaType
+import org.springframework.test.util.ReflectionTestUtils
+import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.patch
+import org.springframework.test.web.servlet.post
+
+/**
+ * v2 삼자 검증 후속 (#726): 입금자명 검색·엑셀, 결제 화면 계좌(O-0), 잔여·매진의 승인 대기 차감, 승인형 1인 제한(동시성), 사용자 알림(호스트 취소·환불 완료).
+ * [V2UserOrderTestSupport.Shop] = 두둥티켓 6000원(재고 20, 1인 4장, 승인) + 옵션 2개. H2 주의: 승인할 주문은 2장 이하
+ */
+@ApiIntegrateSpringBootTest
+@AutoConfigureMockMvc
+@DisplayName("v2 검증 후속 (#726)")
+class V2VerifyFollowupTest : V2UserOrderTestSupport() {
+
+    @Autowired private lateinit var notificationRepository: NotificationRepository
+
+    private fun uuidsOf(data: JsonNode): List<String> = data.at("/orders/content").map { it.at("/orderUuid").asText() }
+
+    private fun publicTickets(eventId: Long): JsonNode =
+        mockMvc.get("/api/v2/events/$eventId/ticket-items").andExpect { status { isOk() } }.data()
+
+    private fun checkout(requester: User?, eventId: Long, ticketItemId: Long) =
+        v2Get(requester, "/events/$eventId/ticket-items/$ticketItemId/checkout")
+
+    @Nested
+    @DisplayName("R-1·R-6 입금자명 검색·엑셀")
+    inner class Depositor {
+
+        @Test
+        fun `searchType=DEPOSITOR_NAME 은 주문에 저장된 입금자명 부분일치, 건수도 같은 기준, 이름 검색과 섞이지 않는다`() {
+            val shop = Shop()
+            val a = v2OrderOk(newBuyer("가나다"), shopBody(shop, depositorName = "128구구")).at("/orderUuid").asText()
+            val b = v2OrderOk(newBuyer("라마바"), shopBody(shop, depositorName = "김구구")).at("/orderUuid").asText()
+            v2OrderOk(newBuyer("구구"), shopBody(shop, depositorName = "박철수"))
+            shop.order(newBuyer("v1주문자")) // v1 주문 (입금자명 null)
+
+            val byDepositor = orders(shop.team.guest, shop.eventId, mapOf("searchType" to "DEPOSITOR_NAME", "keyword" to "구구"))
+            assertEquals(setOf(a, b), uuidsOf(byDepositor).toSet())
+            assertEquals(2, byDepositor.at("/counts/all").asLong())
+            assertEquals(2, byDepositor.at("/counts/pendingApprove").asLong())
+            assertEquals(listOf("김구구", "128구구"), byDepositor.at("/orders/content").map { it.at("/depositorName").asText() })
+            // 앞뒤 공백은 v1 검색과 같이 무시
+            assertEquals(listOf(a), uuidsOf(orders(shop.team.guest, shop.eventId, mapOf("searchType" to "DEPOSITOR_NAME", "keyword" to " 128 "))))
+            // 이름 검색은 회원 이름 기준 그대로 (입금자명 '박철수' 주문의 회원 이름이 '구구')
+            assertEquals(1, orders(shop.team.guest, shop.eventId, mapOf("keyword" to "구구")).at("/counts/all").asLong())
+            assertEquals(0, orders(shop.team.guest, shop.eventId, mapOf("searchType" to "DEPOSITOR_NAME", "keyword" to "v1")).at("/counts/all").asLong())
+            v2Get(shop.team.guest, "/events/${shop.eventId}/orders", mapOf("searchType" to "EMAIL", "keyword" to "x")).andExpect { status { isBadRequest() } }
+        }
+
+        @Test
+        fun `v1 어드민 주문 목록의 검색 종류는 그대로 - DEPOSITOR_NAME 은 받지 않는다`() {
+            val shop = Shop()
+            shop.order(newBuyer())
+            mockMvc.get("/api/v1/events/${shop.eventId}/orders") {
+                with(auth(shop.team.master))
+                param("orderStage", "APPROVE_WAITING")
+                param("searchType", "DEPOSITOR_NAME")
+                param("searchString", "구구")
+            }.andExpect { status { isBadRequest() } }
+            mockMvc.get("/api/v1/events/${shop.eventId}/orders") {
+                with(auth(shop.team.master))
+                param("orderStage", "APPROVE_WAITING")
+                param("searchType", "NAME")
+                param("searchString", "구매자")
+            }.andExpect { status { isOk() } }
+        }
+
+        @Test
+        fun `엑셀에 입금자명 열 (연락처 다음), 수식으로 시작하는 입금자명은 작은따옴표, 검색 필터도 같다`() {
+            val shop = Shop()
+            v2OrderOk(newBuyer("정상"), shopBody(shop, depositorName = "128구구"))
+            v2OrderOk(newBuyer("악성"), shopBody(shop, depositorName = "=HYPERLINK(\"x\")"))
+            shop.order(newBuyer("v1주문자"))
+            val sheet = v2Get(shop.team.guest, "/events/${shop.eventId}/orders/export").andExpect { status { isOk() } }.sheet()
+            assertEquals(listOf("주문번호", "주문자", "연락처", "입금자명", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유"), sheet.headers())
+            assertEquals(listOf("", "'=HYPERLINK(\"x\")", "128구구"), sheet.column("입금자명"))
+            // 화면(JSON)은 원문
+            assertTrue(orders(shop.team.guest, shop.eventId).at("/orders/content").any { it.at("/depositorName").asText() == "=HYPERLINK(\"x\")" })
+
+            val filtered = v2Get(shop.team.guest, "/events/${shop.eventId}/orders/export", mapOf("searchType" to "DEPOSITOR_NAME", "keyword" to "구구"))
+                .andExpect { status { isOk() } }.sheet()
+            assertEquals(listOf("128구구"), filtered.column("입금자명"))
+        }
+    }
+
+    @Nested
+    @DisplayName("O-0 결제 화면 계좌")
+    inner class Checkout {
+
+        @Test
+        fun `로그인 사용자에게 두둥티켓 계좌·예금주 + P-5 와 같은 티켓, 비로그인 401, 공개 P-5 에는 계좌가 없다`() {
+            val shop = Shop()
+            val buyer = newBuyer()
+            checkout(null, shop.eventId, shop.ticketId).andExpect { status { isUnauthorized() } }
+
+            val data = checkout(buyer, shop.eventId, shop.ticketId).andExpect { status { isOk() } }.data()
+            assertEquals("신한은행", data.at("/account/bankName").asText())
+            assertEquals("고스락", data.at("/account/accountHolder").asText())
+            assertEquals("110-123-456789", data.at("/account/accountNumber").asText())
+            val publicItem = publicTickets(shop.eventId).single { it.at("/ticketItemId").asLong() == shop.ticketId }
+            assertEquals(publicItem, data.at("/ticket"))
+
+            // 주문 후 O-1 응답 계좌와 같은 형태·값 (토스 송금 링크를 결제 전에 같은 값으로 만든다)
+            val order = v2OrderOk(buyer, shopBody(shop, method = "TOSS_TRANSFER"))
+            assertEquals(order.at("/payment/account"), data.at("/account"))
+
+            val raw = mockMvc.get("/api/v2/events/${shop.eventId}/ticket-items").andExpect { status { isOk() } }.andReturn().response.getContentAsString(Charsets.UTF_8)
+            assertFalse(raw.contains("110-123-456789"), raw)
+            assertFalse(raw.contains("account"), raw)
+        }
+
+        @Test
+        fun `무료 티켓은 계좌 null, 판매 중단·다른 공연 티켓·준비중 공연은 404`() {
+            val shop = Shop()
+            val buyer = newBuyer()
+            val free = freeTicket(shop, approvalRequired = true)
+            val freeData = checkout(buyer, shop.eventId, free).andExpect { status { isOk() } }.data()
+            assertTrue(freeData.at("/account").isNull)
+            assertEquals("FREE", freeData.at("/ticket/payType").asText())
+
+            val other = Shop("남의호스트")
+            checkout(buyer, shop.eventId, other.ticketId).andExpect { status { isNotFound() } }
+            suspend(shop.team.manager, shop.eventId, shop.ticketId).andExpect { status { isOk() } }
+            checkout(buyer, shop.eventId, shop.ticketId).andExpect { status { isNotFound() } }
+            setEventStatus(other.eventId, EventStatus.PREPARING)
+            checkout(buyer, other.eventId, other.ticketId).andExpect { status { isNotFound() } }
+        }
+    }
+
+    @Nested
+    @DisplayName("P-5 잔여·매진 (승인 대기 차감)")
+    inner class Remaining {
+
+        private fun item(eventId: Long, ticketItemId: Long): JsonNode =
+            publicTickets(eventId).single { it.at("/ticketItemId").asLong() == ticketItemId }
+
+        @Test
+        fun `잔여 = 재고 - 승인 대기, 승인되면 재고가 줄고 대기에서 빠지며, 거절되면 돌아온다`() {
+            val shop = Shop()
+            val buyerA = newBuyer()
+            val a = v2OrderOk(buyerA, shopBody(shop, quantity = 2)).at("/orderUuid").asText()
+            val b = v2OrderOk(newBuyer(), shopBody(shop, quantity = 3)).at("/orderUuid").asText()
+            assertEquals(15, item(shop.eventId, shop.ticketId).at("/remaining").asLong())
+            assertEquals(20, stock(shop.ticketId), "재고는 승인 전까지 그대로 (DEC-020 #1)")
+
+            v1Approve(shop.team.master, shop.eventId, a).andExpect { status { isOk() } }
+            assertEquals(15, item(shop.eventId, shop.ticketId).at("/remaining").asLong())
+            refuse(shop.team.manager, shop.eventId, b, "SOLD_OUT").andExpect { status { isOk() } }
+            assertEquals(18, item(shop.eventId, shop.ticketId).at("/remaining").asLong())
+            // 결제 화면(O-0)도 같은 값
+            assertEquals(18, checkout(buyerA, shop.eventId, shop.ticketId).andExpect { status { isOk() } }.data().at("/ticket/remaining").asLong())
+        }
+
+        @Test
+        fun `승인 대기가 재고를 다 채우면 매진·구매 불가이고 주문도 재고 부족 - 다른 티켓 대기는 세지 않는다`() {
+            val shop = Shop()
+            val item = ticketItemRepository.findById(shop.ticketId).get()
+            ReflectionTestUtils.setField(item, "quantity", 3L)
+            ticketItemRepository.save(item)
+            val other = createTicket(shop.team.manager, shop.eventId, dudoongBody(name = "다른티켓", supplyCount = 10))
+            v2OrderOk(newBuyer(), orderBody(shop.eventId, other, quantity = 3))
+
+            v2OrderOk(newBuyer(), shopBody(shop, quantity = 2))
+            item(shop.eventId, shop.ticketId).let {
+                assertEquals(1, it.at("/remaining").asLong())
+                assertFalse(it.at("/isSoldOut").asBoolean())
+                assertTrue(it.at("/isPurchasable").asBoolean())
+            }
+            v2OrderOk(newBuyer(), shopBody(shop, quantity = 1))
+            item(shop.eventId, shop.ticketId).let {
+                assertEquals(0, it.at("/remaining").asLong())
+                assertTrue(it.at("/isSoldOut").asBoolean())
+                assertFalse(it.at("/isPurchasable").asBoolean())
+            }
+            // 화면 판정과 주문 재고 검사(#723)가 같은 기준
+            assertEquals("Ticket_Item_400_1", v2CreateOrder(newBuyer(), shopBody(shop)).andExpect { status { isBadRequest() } }.code())
+            item(shop.eventId, other).let {
+                assertEquals(7, it.at("/remaining").asLong())
+                assertTrue(it.at("/isPurchasable").asBoolean())
+            }
+        }
+
+        @Test
+        fun `재고 비공개 티켓은 remaining null 이어도 매진은 승인 대기로 판정`() {
+            val shop = Shop()
+            val hidden = createTicket(shop.team.manager, shop.eventId, dudoongBody(name = "비공개", supplyCount = 2, overrides = mapOf("isQuantityPublic" to false)))
+            v2OrderOk(newBuyer(), orderBody(shop.eventId, hidden, quantity = 2))
+            item(shop.eventId, hidden).let {
+                assertTrue(it.at("/remaining").isNull)
+                assertTrue(it.at("/isSoldOut").asBoolean())
+                assertFalse(it.at("/isPurchasable").asBoolean())
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("승인형 1인 제한 (승인 대기 합산)")
+    inner class PurchaseLimit {
+
+        private fun concurrently(n: Int, block: (Int) -> String): List<String> {
+            val start = CountDownLatch(1)
+            val pool = Executors.newFixedThreadPool(n)
+            val results = Collections.synchronizedList(mutableListOf<String>())
+            repeat(n) { i ->
+                pool.submit {
+                    start.await()
+                    results += runCatching { block(i) }.getOrElse { "ERR:$it" }
+                }
+            }
+            start.countDown()
+            pool.shutdown()
+            assertTrue(pool.awaitTermination(60, TimeUnit.SECONDS))
+            return results
+        }
+
+        private fun respond(buyer: User, body: Map<String, Any?>): String =
+            v2CreateOrder(buyer, body).andReturn().response.let {
+                if (it.status == 200) "200" else objectMapper.readTree(it.getContentAsString(Charsets.UTF_8)).at("/code").asText()
+            }
+
+        @Test
+        fun `같은 사용자의 승인 대기 2건이 동시에 와서 합이 제한(4)을 넘으면 1건만 접수 (같은 티켓 락)`() {
+            repeat(3) {
+                val shop = Shop()
+                val buyer = newBuyer()
+                // 2장 + 3장 = 5 > 4. 수량이 달라 중복 요청으로 묶이지 않는다
+                val results = concurrently(2) { i -> respond(buyer, shopBody(shop, quantity = if (i == 0) 2 else 3)) }
+                assertEquals(1, results.count { it == "200" }, "$results")
+                assertEquals(listOf("Order_400_15"), results.filter { it != "200" }, "$results")
+                val pending = myOrders(buyer).at("/content").sumOf { it.at("/quantity").asLong() }
+                assertTrue(pending in 2..3, "pending=$pending $results")
+            }
+        }
+
+        @Test
+        fun `제한 안의 동시 주문은 모두 접수, 다른 티켓의 대기는 이 티켓 제한에 세지 않는다`() {
+            val shop = Shop()
+            val buyer = newBuyer()
+            val other = createTicket(shop.team.manager, shop.eventId, dudoongBody(name = "다른티켓", supplyCount = 10))
+            v2OrderOk(buyer, orderBody(shop.eventId, other, quantity = 4))
+            val results = concurrently(2) { i -> respond(buyer, shopBody(shop, quantity = 2, yes = i == 0)) }
+            assertEquals(listOf("200", "200"), results)
+            assertEquals("Order_400_15", respond(buyer, shopBody(shop)))
+        }
+
+        @Test
+        fun `v1 주문 경로도 같은 승인 대기 합산 검사 (v1 동작 고정)`() {
+            val shop = Shop()
+            val buyer = newBuyer()
+            shop.order(buyer, quantity = 2)
+            shop.order(buyer, quantity = 2)
+            val answers = v1Answers(buyer, shop.eventId, shop.ticketId)
+            val cartId = v1Cart(buyer, shop.ticketId, 1, answers).andExpect { status { isOk() } }.data().at("/cartId").asLong()
+            assertEquals("Order_400_15", v1CreateOrder(buyer, cartId).andExpect { status { isBadRequest() } }.code())
+            // v1 승인 대기 4장이 있으면 v2 주문도 막힌다 (같은 합산 검사)
+            assertEquals("Order_400_15", respond(buyer, shopBody(shop)))
+        }
+    }
+
+    @Nested
+    @DisplayName("사용자 알림 - 호스트 취소·환불 완료")
+    inner class Notifications {
+
+        private fun count(user: User, type: NotificationType) = notificationRepository.findAllByUserId(user.id!!).count { it.type == type }
+
+        /** 처음 보일 때까지 기다린 뒤 [STABLE_MS] 더 기다려 최종 개수를 센다 (뒤늦은 중복 저장도 잡는다) */
+        private fun await(user: User, type: NotificationType): Int {
+            val deadline = System.currentTimeMillis() + 10_000
+            while (System.currentTimeMillis() < deadline && count(user, type) == 0) Thread.sleep(50)
+            Thread.sleep(STABLE_MS)
+            return count(user, type)
+        }
+
+        private fun only(user: User, type: NotificationType) = notificationRepository.findAllByUserId(user.id!!).single { it.type == type }
+
+        private fun complete(requester: User, eventId: Long, orderUuid: String) =
+            v2Post(requester, "/events/$eventId/refunds/$orderUuid/complete").andExpect { status { isOk() } }
+
+        @Test
+        fun `v2 승인 후 호스트 취소 → 주문자 ORDER_CANCELED_BY_HOST (사유 포함), 거절 알림은 없다`() {
+            val shop = Shop()
+            val buyer = newBuyer()
+            val order = shop.approved(buyer)
+            v2Post(shop.team.manager, "/events/${shop.eventId}/orders/$order/cancel", mapOf("reason" to "공연 취소")).andExpect { status { isOk() } }
+            assertEquals(1, await(buyer, NotificationType.ORDER_CANCELED_BY_HOST))
+            val n = only(buyer, NotificationType.ORDER_CANCELED_BY_HOST)
+            assertEquals(order, n.targetId)
+            assertTrue(n.body.contains("호스트에 의해 취소") && n.body.endsWith("사유: 공연 취소"), n.body)
+            assertEquals(0, count(buyer, NotificationType.ORDER_REFUSED))
+            // 호스트 쪽(마스터·매니저)에는 보내지 않는다
+            assertEquals(0, count(shop.team.manager, NotificationType.ORDER_CANCELED_BY_HOST))
+        }
+
+        @Test
+        fun `v1 호스트 취소 경로도 같은 알림, 승인 대기 거절은 거절 알림만`() {
+            val shop = Shop()
+            val buyer = newBuyer()
+            val order = shop.approved(buyer)
+            mockMvc.post("/api/v1/events/${shop.eventId}/orders/$order/cancel") {
+                with(auth(shop.team.master))
+                contentType = MediaType.APPLICATION_JSON
+                content = json(mapOf("reason" to "v1 취소"))
+            }.andExpect { status { isOk() } }
+            assertEquals(1, await(buyer, NotificationType.ORDER_CANCELED_BY_HOST))
+
+            val refusedBuyer = newBuyer()
+            val refused = shop.order(refusedBuyer)
+            refuse(shop.team.manager, shop.eventId, refused, "SOLD_OUT").andExpect { status { isOk() } }
+            assertEquals(1, await(refusedBuyer, NotificationType.ORDER_REFUSED))
+            assertEquals(0, count(refusedBuyer, NotificationType.ORDER_CANCELED_BY_HOST))
+        }
+
+        @Test
+        fun `v2 환불 완료 → 주문자 ORDER_REFUND_COMPLETED 1건 (다시 눌러도 멱등), 사용자 환불 요청 주문도 같다`() {
+            val shop = Shop()
+            val buyer = newBuyer()
+            val refused = shop.order(buyer)
+            refuse(shop.team.manager, shop.eventId, refused, "DEPOSIT_UNCONFIRMED").andExpect { status { isOk() } }
+            complete(shop.team.manager, shop.eventId, refused)
+            assertEquals(1, await(buyer, NotificationType.ORDER_REFUND_COMPLETED))
+            complete(shop.team.manager, shop.eventId, refused)
+            Thread.sleep(STABLE_MS)
+            assertEquals(1, count(buyer, NotificationType.ORDER_REFUND_COMPLETED))
+            val n = only(buyer, NotificationType.ORDER_REFUND_COMPLETED)
+            assertEquals(refused, n.targetId)
+            assertEquals(shop.eventId, n.eventId)
+
+            val requester = newBuyer()
+            val paid = v2OrderOk(requester, shopBody(shop)).at("/orderUuid").asText()
+            cancelMy(requester, paid, refundAccount).andExpect { status { isOk() } }
+            complete(shop.team.manager, shop.eventId, paid)
+            assertEquals(1, await(requester, NotificationType.ORDER_REFUND_COMPLETED))
+        }
+
+        @Test
+        fun `v1 환불 완료 경로도 같은 알림, 돌려줄 돈 없는 무료 주문은 알림 없음`() {
+            val shop = Shop()
+            val buyer = newBuyer()
+            val order = shop.approved(buyer)
+            v2Post(shop.team.manager, "/events/${shop.eventId}/orders/$order/cancel", mapOf("reason" to "x")).andExpect { status { isOk() } }
+            mockMvc.patch("/api/v1/events/${shop.eventId}/refunds/$order/complete") { with(auth(shop.team.master)) }.andExpect { status { isOk() } }
+            assertEquals(1, await(buyer, NotificationType.ORDER_REFUND_COMPLETED))
+
+            val freeBuyer = newBuyer()
+            val free = freeTicket(shop, approvalRequired = true)
+            val freeOrder = v2OrderOk(freeBuyer, freeBodyOf(shop, free)).at("/orderUuid").asText()
+            refuse(shop.team.manager, shop.eventId, freeOrder, "SOLD_OUT").andExpect { status { isOk() } }
+            assertEquals(1, await(freeBuyer, NotificationType.ORDER_REFUSED))
+            complete(shop.team.manager, shop.eventId, freeOrder)
+            Thread.sleep(STABLE_MS * 2)
+            assertEquals(0, count(freeBuyer, NotificationType.ORDER_REFUND_COMPLETED))
+        }
+    }
+
+    companion object {
+        private const val STABLE_MS = 500L
+    }
+}

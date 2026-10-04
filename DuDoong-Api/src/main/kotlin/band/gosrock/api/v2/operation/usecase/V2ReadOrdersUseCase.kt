@@ -18,10 +18,10 @@ import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2EntranceState
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
-import band.gosrock.domain.domains.order.repository.condition.AdminTableSearchType
 import band.gosrock.domain.domains.order.service.v2.V2OrderDomainService
 import band.gosrock.domain.domains.order.service.v2.V2OrderQuery
 import band.gosrock.domain.domains.order.service.v2.V2OrderSearch
+import band.gosrock.domain.domains.order.service.v2.V2OrderSearchType
 import band.gosrock.domain.domains.order.service.v2.V2UserOrderDomainService
 import java.time.format.DateTimeFormatter
 import org.slf4j.LoggerFactory
@@ -49,7 +49,7 @@ class V2ReadOrdersUseCase(
         userId: Long,
         eventId: Long,
         status: V2OrderStatusFilter,
-        searchType: AdminTableSearchType?,
+        searchType: V2OrderSearchType?,
         keyword: String?,
         page: Int,
         size: Int,
@@ -119,10 +119,11 @@ class V2ReadOrdersUseCase(
 
     /**
      * R-6 엑셀 (R-1 과 같은 필터, 전체 행, 상한 [exportMaxRows] 초과 시 Order_400_19).
-     * 개인정보: 연락처는 입금 확인용으로 포함(v1 수준), 이메일은 넣지 않는다(주문 상세에서만). 다운로드는 감사 로그를 남긴다
+     * 개인정보: 연락처·입금자명(v2 두둥티켓 주문, #726)은 입금 확인용으로 포함(v1 수준), 이메일은 넣지 않는다(주문 상세에서만). 다운로드는 감사 로그를 남긴다.
+     * 입금자명은 사용자가 입력한 값이라 수식 인젝션 방어(escapeFormula)가 필요하다
      */
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
-    fun export(userId: Long, eventId: Long, status: V2OrderStatusFilter, searchType: AdminTableSearchType?, keyword: String?): ByteArray {
+    fun export(userId: Long, eventId: Long, status: V2OrderStatusFilter, searchType: V2OrderSearchType?, keyword: String?): ByteArray {
         eventAdaptor.findById(eventId)
         val search = V2OrderSearch(eventId = eventId, status = status.domain, searchType = searchType, keyword = keyword)
         val orders = v2OrderQuery.findAllForExport(search, exportMaxRows)
@@ -130,7 +131,7 @@ class V2ReadOrdersUseCase(
         val rows = orders.map { order ->
             val e = mapper.toOrderElement(order, users[order.userId])
             listOf(
-                e.orderNo, e.buyerName, e.buyerPhone, e.ticketName, e.totalQuantity, e.totalPaymentAmount,
+                e.orderNo, e.buyerName, e.buyerPhone, e.depositorName, e.ticketName, e.totalQuantity, e.totalPaymentAmount,
                 e.orderedAt?.format(EXCEL_DATE), e.status?.let { STATUS_LABELS[it.name] }, REFUND_LABELS[e.refundStatus.name],
                 e.refuseReason ?: e.cancelReason,
             )
@@ -151,7 +152,7 @@ class V2ReadOrdersUseCase(
 
     companion object {
         val EXCEL_DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm")
-        val ORDER_HEADERS = listOf("주문번호", "주문자", "연락처", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유")
+        val ORDER_HEADERS = listOf("주문번호", "주문자", "연락처", "입금자명", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유")
         private val STATUS_LABELS = mapOf(
             "PENDING_APPROVE" to "승인 대기", "APPROVED" to "승인 완료", "REFUSED" to "승인 거절", "CANCELED" to "취소", "FAILED" to "주문 실패",
         )

@@ -68,11 +68,21 @@ class V2TicketItemDomainService(
     }
 
     /**
-     * 사용자 앱(P-5)에서 지금 살 수 있는지: v2 주문이 지원하는 결제 방식(DUDOONG / FREE) + [isPurchasable].
+     * 사용자 앱(P-5)에서 지금 살 수 있는지: v2 주문이 지원하는 결제 방식(DUDOONG / FREE) + [isPurchasable] + 승인 대기를 뺀 잔여([availableQuantity]) > 0.
      * 기존 PG 티켓(PRICE)은 v2 주문 경로가 없어 false (#716 L-5). 관리 화면(T-1)의 isPurchasable 은 결제 방식과 무관하게 [isPurchasable]
      */
-    fun isPurchasableInV2App(item: TicketItem, event: Event, now: LocalDateTime): Boolean =
-        item.payType in V2_ORDER_PAY_TYPES && isPurchasable(item, event, now)
+    fun isPurchasableInV2App(item: TicketItem, event: Event, now: LocalDateTime, pendingApproveQuantity: Long): Boolean =
+        item.payType in V2_ORDER_PAY_TYPES && isPurchasable(item, event, now) && availableQuantity(item, pendingApproveQuantity) > 0
+
+    /**
+     * 사용자에게 보이는 잔여 = 재고 - 승인 대기 수량 (0 미만은 0, #726). 승인 전에는 재고가 줄지 않으므로(DEC-020 #1) 빼서 보여 준다.
+     * 승인형 주문 생성 재고 검사(v1 `OrderValidator.validApproveOrderCreateTotalStock`, #723: 같은 티켓 승인 대기 + 이번 수량 <= 재고)와 같은 기준이라,
+     * 잔여 n 이면 n 장까지 주문이 들어간다
+     */
+    fun availableQuantity(item: TicketItem, pendingApproveQuantity: Long): Long = maxOf(0L, item.quantity!! - pendingApproveQuantity)
+
+    /** 티켓별 승인 대기 수량 (한 번의 그룹 쿼리). 승인 대기가 없는 티켓은 맵에 없다(= 0) */
+    fun pendingApproveQuantities(itemIds: Collection<Long>): Map<Long, Long> = orderAdaptor.sumPendingApproveQuantities(itemIds)
 
     /** 잠김: 재고 감소(판매됨) 또는 승인 대기 주문 있음. 잠기면 금액·결제 조건 필드와 옵션을 바꿀 수 없다 */
     fun isLocked(item: TicketItem, hasPendingOrders: Boolean): Boolean = item.isSold() || hasPendingOrders

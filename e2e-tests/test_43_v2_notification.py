@@ -177,11 +177,12 @@ def test_03_approved_refused(base_url, s):
     n = _wait(base_url, s, "v1refused", "ORDER_REFUSED")[0]
     assert n["body"].endswith("사유: v1 거절") and "refuseReasonType" not in n["extra"]
 
-    # 승인 후 취소는 거절 알림 아님
+    # 승인 후 취소는 거절 알림이 아니라 호스트 취소 알림 (#726)
     _wait(base_url, s, "canceled", "ORDER_APPROVED")
     assert_status(requests.post(_ev(base_url, s, f"/orders/{o['canceled']}/cancel"), json={"reason": "일정 변경"}, headers=_h(s, "manager")), 200)
+    _wait(base_url, s, "canceled", "ORDER_CANCELED_BY_HOST")
     time.sleep(1.5)
-    assert [n["type"] for n in _list(base_url, s, "canceled")["content"]] == ["ORDER_APPROVED"]
+    assert [n["type"] for n in _list(base_url, s, "canceled")["content"]] == ["ORDER_CANCELED_BY_HOST", "ORDER_APPROVED"]
 
 
 def test_04_list_paging(base_url, s):
