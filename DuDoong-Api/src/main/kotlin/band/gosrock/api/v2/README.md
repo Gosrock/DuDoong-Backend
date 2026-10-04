@@ -55,8 +55,9 @@ band.gosrock.api.v2
     - 저장 핸들러는 알림 전용 executor(`notificationExecutor`, core 2 / max 4 / queue 200, 가득 차면 버리고 warn — 호출 스레드 실행 안 함)에서 돈다. 기존 `@Async` 기본 풀은 그대로. 결제형 주문·환불 등 이벤트 필드로 알 수 있는 비대상은 `condition`(SpEL)으로 큐에 넣기 전에 거른다
     - 중복 방지 uk(type, dedup_key, user_id): 주문 = orderUuid, 멤버 추가 = `host_user:{id}`. 일괄 저장은 `NotificationBulkRepository`(multi-row INSERT, 이미 있는 키는 건너뜀, 경합으로 uk 에 걸리면 행 단위 재시도)
     - 사용자 취소·환불 요청(#718, REFUND — v1 사용자 환불 포함) → 호스트 활성 마스터·매니저: 환불 요청이 걸리면 `ORDER_REFUND_REQUESTED`, 무료 취소는 `ORDER_CANCELED_BY_USER`. 카드(PG) 결제 주문은 condition 으로 제외
+    - 두 알림 모두 엔티티가 발행하는 공통 도메인 이벤트에 붙으므로 v1 호스트 API·운영 어드민(`/internal-api/v1/orders/{uuid}/cancel`, `/internal-api/v1/refunds/{uuid}/complete`, `/internal-api/v1/orders/{uuid}/refund-status`) 경로도 저장된다. 운영 어드민(DuDoong-Admin 모듈)은 Api 서버에 같이 올라가 같은 `EventPublisherAspect`·핸들러를 쓴다
     - 호스트의 승인 후 취소(#726, v1 취소 포함) → 주문자 `ORDER_CANCELED_BY_HOST`: 거절과 같은 `WithDrawOrderEvent`·condition(승인형 CANCELED)에 핸들러를 하나 더 붙이고, 거절/취소 구분은 서비스가 `V2OrderStatus` 로 판정(둘 중 하나만 저장)
-    - 환불 완료(#726, v1 호스트 환불 완료 포함) → 주문자 `ORDER_REFUND_COMPLETED`: `Order.completeRefund` 가 `RefundCompletedOrderEvent`(uuid 만)를 발행. 돌려준 돈이 있는 승인형 주문만(0원·카드 결제 제외, 서비스가 판정). 다시 완료해도 uk 로 1건. 운영 어드민(DuDoong-Admin)은 별도 앱이라 저장 핸들러가 없다(기존 알림과 같음)
+    - 환불 완료(#726, v1 호스트 환불 완료 포함) → 주문자 `ORDER_REFUND_COMPLETED`: `Order.completeRefund` 가 `RefundCompletedOrderEvent`(uuid 만)를 발행. 돌려준 돈이 있는 승인형 주문만(0원·카드 결제 제외, 서비스가 판정). 다시 완료해도 uk 로 1건
     - 알림 없음: v1 초대 → 수락 경로(본인이 수락하므로 "추가됨" 알림 대상 아님, `HostUserJoinEvent` 는 슬랙만)
     - 처리가 끝난 승인 대기 알림(승인·거절된 주문)을 자동으로 읽음 처리하지 않는다 (후속)
     - 거절 사유는 본문에 100자 + `…`, extra 값은 각각 300자 + `…` 로 자른 뒤 직렬화

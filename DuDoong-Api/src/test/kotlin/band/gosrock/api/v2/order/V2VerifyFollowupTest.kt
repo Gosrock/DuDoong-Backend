@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.http.MediaType
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
 import org.springframework.test.util.ReflectionTestUtils
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
@@ -292,6 +293,9 @@ class V2VerifyFollowupTest : V2UserOrderTestSupport() {
             return count(user, type)
         }
 
+        /** 운영 어드민(/internal-api)은 SecurityConfig 에서 ADMIN 이상 역할을 본다 (DB 역할은 UseCase 의 AdminAuthValidator) */
+        private fun adminAuth(u: User) = SecurityMockMvcRequestPostProcessors.user(u.id.toString()).roles("SUPER_ADMIN")
+
         private fun only(user: User, type: NotificationType) = notificationRepository.findAllByUserId(user.id!!).single { it.type == type }
 
         private fun complete(requester: User, eventId: Long, orderUuid: String) =
@@ -351,6 +355,34 @@ class V2VerifyFollowupTest : V2UserOrderTestSupport() {
             cancelMy(requester, paid, refundAccount).andExpect { status { isOk() } }
             complete(shop.team.manager, shop.eventId, paid)
             assertEquals(1, await(requester, NotificationType.ORDER_REFUND_COMPLETED))
+        }
+
+        @Test
+        fun `운영 어드민 경로(취소, 환불 확인, 환불 상태 변경)도 같은 알림 - Admin 모듈이 같은 도메인 이벤트를 발행`() {
+            val shop = Shop()
+            val admin = superAdmin()
+            val buyer = newBuyer()
+            val order = shop.approved(buyer)
+            mockMvc.post("/internal-api/v1/orders/$order/cancel") {
+                with(adminAuth(admin))
+                contentType = MediaType.APPLICATION_JSON
+                content = json(mapOf("reason" to "운영 취소"))
+            }.andExpect { status { isOk() } }
+            assertEquals(1, await(buyer, NotificationType.ORDER_CANCELED_BY_HOST))
+            assertTrue(only(buyer, NotificationType.ORDER_CANCELED_BY_HOST).body.endsWith("사유: 운영 취소"))
+            mockMvc.patch("/internal-api/v1/refunds/$order/complete") { with(adminAuth(admin)) }.andExpect { status { isOk() } }
+            assertEquals(1, await(buyer, NotificationType.ORDER_REFUND_COMPLETED))
+
+            val other = newBuyer()
+            val refused = shop.order(other)
+            refuse(shop.team.manager, shop.eventId, refused, "DEPOSIT_UNCONFIRMED").andExpect { status { isOk() } }
+            mockMvc.patch("/internal-api/v1/orders/$refused/refund-status") {
+                with(adminAuth(admin))
+                contentType = MediaType.APPLICATION_JSON
+                content = json(mapOf("refundStatus" to "REFUND_COMPLETED"))
+            }.andExpect { status { isOk() } }
+            assertEquals(1, await(other, NotificationType.ORDER_REFUND_COMPLETED))
+            assertEquals(0, count(other, NotificationType.ORDER_CANCELED_BY_HOST), "거절 주문은 호스트 취소 알림 대상 아님")
         }
 
         @Test
