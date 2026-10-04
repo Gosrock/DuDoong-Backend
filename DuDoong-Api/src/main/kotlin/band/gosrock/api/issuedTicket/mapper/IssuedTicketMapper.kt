@@ -5,6 +5,7 @@ import band.gosrock.api.issuedTicket.dto.response.IssuedTicketAdminTableElement
 import band.gosrock.api.issuedTicket.dto.response.RetrieveIssuedTicketDetailResponse
 import band.gosrock.common.annotation.Mapper
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
+import band.gosrock.domain.domains.gift.service.TicketGiftGuard
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket
 import band.gosrock.domain.domains.issuedTicket.repository.condition.FindEventIssuedTicketsCondition
@@ -21,6 +22,7 @@ class IssuedTicketMapper(
     private val eventAdaptor: EventAdaptor,
     private val userAdaptor: UserAdaptor,
     private val orderAdaptor: OrderAdaptor,
+    private val ticketGiftGuard: TicketGiftGuard,
 ) {
 
     @Transactional(readOnly = true)
@@ -57,6 +59,8 @@ class IssuedTicketMapper(
         uuid: String,
     ): RetrieveIssuedTicketDetailResponse {
         val issuedTicket = issuedTicketAdaptor.findForUser(currentUserId, uuid)
+        // 선물 대기 중인 티켓은 v1 상세(QR)를 주지 않는다 (#719)
+        ticketGiftGuard.validateNotGiftPending(issuedTicket)
         val event = eventAdaptor.findById(issuedTicket.eventId!!)
         return RetrieveIssuedTicketDetailResponse.of(issuedTicket, event)
     }

@@ -99,6 +99,8 @@ class SecurityConfig(
             "/api/v2/events/{eventId:[0-9]+}",
             "/api/v2/events/{eventId:[0-9]+}/ticket-items",
             // 주의: 결제 화면 O-0 `/api/v2/events/{eventId}/ticket-items/{ticketItemId}/checkout` 은 입금 계좌를 주므로 공개 경로에 넣지 말 것 (#726)
+            // 선물 랜딩 G-3 (#719): 비로그인 허용, 로그인했으면 사용자를 읽는다(본인 링크·받은 본인 판정). 수락·거절(POST)은 인증 필요
+            "/api/v2/gifts/{giftToken}",
         )
     }
 }

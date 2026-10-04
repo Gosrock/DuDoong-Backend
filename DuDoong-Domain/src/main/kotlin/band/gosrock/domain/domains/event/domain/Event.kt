@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.event.domain
 
 import band.gosrock.common.exception.DuDoongCodeException
 import band.gosrock.domain.common.aop.domainEvent.Events
+import band.gosrock.domain.common.events.event.EventAdminStatusChangeEvent
 import band.gosrock.domain.common.events.event.EventContentChangeEvent
 import band.gosrock.domain.common.events.event.EventCreationEvent
 import band.gosrock.domain.common.events.event.EventDeletionEvent
@@ -258,6 +259,7 @@ class Event(
     /** 어드민 전용: 상태 전이 밸리데이션 없이 직접 상태 변경 */
     fun adminUpdateStatus(newStatus: EventStatus) {
         this.status = newStatus
+        id?.let { Events.raise(EventAdminStatusChangeEvent(it, newStatus)) }
     }
 
     /** 어드민 전용: OPEN 여부 무관하게 기본 정보 부분 수정 */

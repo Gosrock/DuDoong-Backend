@@ -22,7 +22,10 @@ enum class IssuedTicketErrorCode(
 
     // v2
     @ExplainError("v2 발급 티켓 엑셀 다운로드 대상이 행 상한(10,000)을 넘는 경우. 입장 필터·검색어로 줄여서 받는다")
-    EXPORT_TOO_MANY_ISSUED_TICKETS(BAD_REQUEST, "IssuedTicket_400_7", "엑셀로 내려받을 티켓이 너무 많습니다. 필터로 줄여 주세요.");
+    EXPORT_TOO_MANY_ISSUED_TICKETS(BAD_REQUEST, "IssuedTicket_400_7", "엑셀로 내려받을 티켓이 너무 많습니다. 필터로 줄여 주세요."),
+
+    @ExplainError("선물 대기 중인 티켓 (#719). v1 입장 처리·v1 티켓 상세에서 거부. 보낸 사람이 선물을 취소(회수)하면 다시 쓸 수 있다")
+    ISSUED_TICKET_GIFT_PENDING(BAD_REQUEST, "IssuedTicket_400_8", "선물 대기 중인 티켓입니다.");
 
     override fun getErrorReason(): ErrorReason =
         ErrorReason(status = status, code = code, reason = reason)

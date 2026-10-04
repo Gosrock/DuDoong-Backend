@@ -11,8 +11,8 @@ import band.gosrock.domain.common.vo.IssuedTicketInfoVo
 import band.gosrock.domain.common.vo.OptionAnswerVo
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.event.domain.Event
+import band.gosrock.domain.domains.gift.service.TicketGiftGuard
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor
-import band.gosrock.domain.domains.issuedTicket.domain.IssuedTickets
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
 import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.order.domain.OrderLineItem
@@ -34,6 +34,7 @@ class OrderMapper(
     private val ticketItemAdaptor: TicketItemAdaptor,
     private val optionAdaptor: OptionAdaptor,
     private val eventAdaptor: EventAdaptor,
+    private val ticketGiftGuard: TicketGiftGuard,
 ) {
     @Transactional(readOnly = true)
     fun toOrderResponse(orderUuid: String): OrderResponse {
@@ -105,10 +106,17 @@ class OrderMapper(
 
     private fun getEvent(order: Order): Event = eventAdaptor.findById(order.getItemGroupId())
 
+    /**
+     * v1 주문 티켓(QR) 목록 — 주문자 본인 요청. 선물 보호 (#719, 11 문서 8-3): 주문자가 **지금 소유한** 티켓만 내보내고
+     * (선물 완료 티켓은 받은 사람 것), 선물 대기 중인 티켓은 QR 값(uuid)을 비운다. 선물이 없는 주문은 기존과 같다
+     */
     fun toOrderTicketResponse(order: Order): OrderTicketResponse {
-        val orderIssuedTickets = issuedTicketAdaptor.findOrderIssuedTickets(order.uuid!!)
+        val owned = issuedTicketAdaptor.findAllByOrderUuid(order.uuid!!).filter { it.getUserId() == order.userId }
         val event = getEvent(order)
-        val issuedTicketInfoVos: List<IssuedTicketInfoVo> = orderIssuedTickets.getIssuedTicketInfoVos()
+        val pending = ticketGiftGuard.pendingTicketIds(owned.mapNotNull { it.id })
+        val issuedTicketInfoVos: List<IssuedTicketInfoVo> = owned.map { ticket ->
+            ticket.toIssuedTicketInfoVo().let { if (ticket.id in pending) it.copy(uuid = null) else it }
+        }
         return OrderTicketResponse.of(order, event, issuedTicketInfoVos)
     }
 }

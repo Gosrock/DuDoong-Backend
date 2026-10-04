@@ -3,8 +3,11 @@ package band.gosrock.domain.domains.issuedTicket.service
 import band.gosrock.common.annotation.DomainService
 import band.gosrock.domain.common.aop.redissonLock.RedissonLock
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo
+import band.gosrock.domain.domains.gift.service.TicketGiftGuard
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket
+import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketNotFoundException
+import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepository
 import band.gosrock.domain.domains.issuedTicket.validator.IssuedTicketValidator
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor
@@ -19,6 +22,8 @@ class IssuedTicketDomainService(
     private val userAdaptor: UserAdaptor,
     private val orderAdaptor: OrderAdaptor,
     private val issuedTicketValidator: IssuedTicketValidator,
+    private val issuedTicketRepository: IssuedTicketRepository,
+    private val ticketGiftGuard: TicketGiftGuard,
 ) {
 
     @RedissonLock(LockName = "티켓관리", identifier = "itemId")
@@ -40,9 +45,14 @@ class IssuedTicketDomainService(
         }
     }
 
+    /**
+     * v1 입장 처리. 티켓 행을 잠그고(#719 — 선물 생성·수락과 같은 행 잠금) 선물 대기 중이면 IssuedTicket_400_8.
+     * 선물로 uuid 가 바뀐 옛 QR 은 없는 티켓(IssuedTicket_404_1)
+     */
     fun processingEntranceIssuedTicket(eventId: Long, uuid: String): IssuedTicketInfoVo {
-        val issuedTicket = issuedTicketAdaptor.queryByIssuedTicketUuid(uuid)
+        val issuedTicket = issuedTicketRepository.findByUuidForUpdate(uuid) ?: throw IssuedTicketNotFoundException.EXCEPTION
         issuedTicketValidator.validIssuedTicketEventIdEqualEvent(issuedTicket, eventId)
+        ticketGiftGuard.validateNotGiftPending(issuedTicket)
         issuedTicket.entrance()
         return issuedTicket.toIssuedTicketInfoVo()
     }

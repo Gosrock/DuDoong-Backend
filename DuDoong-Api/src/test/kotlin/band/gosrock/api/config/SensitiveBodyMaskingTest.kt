@@ -39,6 +39,34 @@ class SensitiveBodyMaskingTest {
     }
 
     @Test
+    fun `선물 링크 토큰은 경로·URL 에서 가리고, 선물 메모는 본문에서 가린다 (#719)`() {
+        val token = "AbC-_123xyzAbC-_123xyzAbC-_123xyzAbC-_123x"
+        assertEquals("/api/v2/gifts/***", SensitiveBodyMasker.maskPath("/api/v2/gifts/$token"))
+        assertEquals("/api/v2/gifts/***/accept", SensitiveBodyMasker.maskPath("/api/v2/gifts/$token/accept"))
+        assertEquals("http://localhost/api/v2/gifts/***/reject?x=1", SensitiveBodyMasker.maskPath("http://localhost/api/v2/gifts/$token/reject?x=1"))
+        // 선물 id 경로(G-2·G-8)와 그 밖 경로는 그대로
+        assertEquals("/api/v2/me/gifts/12", SensitiveBodyMasker.maskPath("/api/v2/me/gifts/12"))
+        assertEquals("/api/v2/me/tickets/abc/gift", SensitiveBodyMasker.maskPath("/api/v2/me/tickets/abc/gift"))
+        assertEquals("""{"memo":"***"}""", SensitiveBodyMasker.mask("""{"memo":"엄마"}"""))
+    }
+
+    @Test
+    fun `MdcFilter 요청 로그에 선물 토큰이 남지 않는다 (#719)`() {
+        val logger = LoggerFactory.getLogger(MdcFilter::class.java) as Logger
+        val appender = ListAppender<ILoggingEvent>().also { it.start() }
+        logger.addAppender(appender)
+        try {
+            val request = MockHttpServletRequest("POST", "/api/v2/gifts/SECRET_TOKEN_719/accept")
+            MdcFilter().doFilter(request, MockHttpServletResponse(), MockFilterChain())
+            val lines = appender.list.map { it.formattedMessage }
+            assertTrue(lines.any { it.contains("/api/v2/gifts/***/accept") }, lines.toString())
+            assertFalse(lines.any { it.contains("SECRET_TOKEN_719") }, lines.toString())
+        } finally {
+            logger.detachAppender(appender)
+        }
+    }
+
+    @Test
     fun `잘린 본문·숫자 값·대소문자·공백 있는 JSON 도 가린다`() {
         // 로그 상한에서 잘린 값도 가린다 (닫는 따옴표를 붙여 준다)
         assertEquals("{\"accountNumber\":\"***\"", SensitiveBodyMasker.mask("""{"accountNumber":"123-45-6"""))

@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.issuedTicket.service.v2
 
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.event.repository.EventRepository
+import band.gosrock.domain.domains.gift.service.TicketGiftGuard
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus
 import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepository
@@ -23,6 +24,7 @@ class V2CheckInDomainServiceTest {
         mock(EventRepository::class.java),
         mock(EventAdaptor::class.java),
         mock(EntityManager::class.java),
+        mock(TicketGiftGuard::class.java),
     )
 
     private fun ticket(eventId: Long, status: IssuedTicketStatus) = IssuedTicket(eventId = eventId, issuedTicketStatus = status)
@@ -34,6 +36,14 @@ class V2CheckInDomainServiceTest {
         assertEquals(V2CheckInResult.CANCELED, service.classify(ticket(1L, IssuedTicketStatus.CANCELED), 1L))
         assertEquals(V2CheckInResult.ALREADY_ENTERED, service.classify(ticket(1L, IssuedTicketStatus.ENTRANCE_COMPLETED), 1L))
         assertEquals(V2CheckInResult.ENTERED, service.classify(ticket(1L, IssuedTicketStatus.ENTRANCE_INCOMPLETE), 1L))
+    }
+
+    @Test
+    fun `결과 코드 - 선물 대기 중인 입장 전 티켓은 GIFT_PENDING, 취소·입장·다른 공연 판정이 먼저 (#719)`() {
+        assertEquals(V2CheckInResult.GIFT_PENDING, service.classify(ticket(1L, IssuedTicketStatus.ENTRANCE_INCOMPLETE), 1L, giftPending = true))
+        assertEquals(V2CheckInResult.OTHER_EVENT, service.classify(ticket(2L, IssuedTicketStatus.ENTRANCE_INCOMPLETE), 1L, giftPending = true))
+        assertEquals(V2CheckInResult.CANCELED, service.classify(ticket(1L, IssuedTicketStatus.CANCELED), 1L, giftPending = true))
+        assertEquals(V2CheckInResult.ALREADY_ENTERED, service.classify(ticket(1L, IssuedTicketStatus.ENTRANCE_COMPLETED), 1L, giftPending = true))
     }
 
     @Test
