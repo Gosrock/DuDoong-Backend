@@ -102,7 +102,7 @@ if boot "$DB" validate "$LOG_DIR/validate-boot.log"; then
   ok "validate 기동 성공"
   VALIDATE_RESULT="성공"
 else
-  VALIDATE_RESULT=$(grep -m1 -oE "Schema-validation: [^]\"]*" "$LOG_DIR/validate-boot.log" || echo "기동 실패 (로그 참고)")
+  VALIDATE_RESULT=$(grep -m1 -oE "Schema-validation: [^\"]{0,200}" "$LOG_DIR/validate-boot.log" || echo "기동 실패 (로그 참고)")
   echo "  [INFO] validate 실패: $VALIDATE_RESULT"
   echo "         (baseline 기존 구조 차이일 수 있음 → 3) 의 v2 대조 결과로 판정. 로그: $LOG_DIR/validate-boot.log)"
 fi
