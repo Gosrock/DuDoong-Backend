@@ -40,6 +40,8 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.http.MediaType
@@ -240,39 +242,41 @@ class V2UserOrderControllerTest : V2UserOrderTestSupport() {
             v2CreateOrder(newBuyer(), orderBody(other.eventId, shop.ticketId, answers = answers(shop))).andExpect { status { isNotFound() } }
         }
 
-        @Test
-        fun `판매 불가 - 판매 중단·판매 기간 밖·매진·1인 제한 초과·공연 시작 후·준비중 공연은 400`() {
+        /** 판매 불가 사유별 오류 코드 (#721: 한 테스트에 몰려 있던 6종을 사유별로 분리, 1인 제한은 단건·승인 대기 합산 2가지) */
+        @ParameterizedTest(name = "{0} → {1}")
+        @CsvSource(
+            "판매 중단, Ticket_Item_400_10",
+            "판매 기간 전, Ticket_Item_400_10",
+            "매진(잔여 1장에 2장), Ticket_Item_400_1",
+            "1인 제한 초과(한 주문 5장 > 4), Ticket_Item_400_6",
+            "1인 제한 초과(승인 대기 2장 + 3장 > 4), Order_400_15",
+            "공연 시작 후, Event_400_6",
+            "준비중 공연, Event_400_5",
+        )
+        fun `판매 불가 주문은 사유별 코드로 400`(case: String, expectedCode: String) {
             val buyer = newBuyer()
+            val shop = Shop()
+            var quantity = 1L
+            when (case) {
+                "판매 중단" -> suspend(shop.team.manager, shop.eventId, shop.ticketId).andExpect { status { isOk() } }
+                "판매 기간 전" -> ticketItemRepository.save(
+                    ticketItemRepository.findById(shop.ticketId).get().also { ReflectionTestUtils.setField(it, "saleStartAt", LocalDateTime.now().plusDays(1)) },
+                )
+                "매진(잔여 1장에 2장)" -> {
+                    ticketItemRepository.save(ticketItemRepository.findById(shop.ticketId).get().also { ReflectionTestUtils.setField(it, "quantity", 1L) })
+                    quantity = 2
+                }
+                "1인 제한 초과(한 주문 5장 > 4)" -> quantity = 5
+                "1인 제한 초과(승인 대기 2장 + 3장 > 4)" -> {
+                    v2OrderOk(buyer, shopBody(shop, quantity = 2))
+                    quantity = 3
+                }
+                "공연 시작 후" -> setEventStart(shop.eventId, LocalDateTime.now().minusMinutes(1))
+                "준비중 공연" -> setEventStatus(shop.eventId, EventStatus.PREPARING)
+                else -> error("unknown case $case")
+            }
 
-            val suspended = Shop()
-            suspend(suspended.team.manager, suspended.eventId, suspended.ticketId).andExpect { status { isOk() } }
-            assertEquals("Ticket_Item_400_10", codeOf(buyer, shopBody(suspended)))
-
-            val period = Shop()
-            val item = ticketItemRepository.findById(period.ticketId).get()
-            ReflectionTestUtils.setField(item, "saleStartAt", LocalDateTime.now().plusDays(1))
-            ticketItemRepository.save(item)
-            assertEquals("Ticket_Item_400_10", codeOf(buyer, shopBody(period)))
-
-            val soldOut = Shop()
-            val soldItem = ticketItemRepository.findById(soldOut.ticketId).get()
-            ReflectionTestUtils.setField(soldItem, "quantity", 1L)
-            ticketItemRepository.save(soldItem)
-            assertEquals("Ticket_Item_400_1", codeOf(buyer, shopBody(soldOut, quantity = 2)))
-
-            val limit = Shop()
-            assertEquals("Ticket_Item_400_6", codeOf(buyer, shopBody(limit, quantity = 5)))
-            // 승인 대기 2장 + 3장 = 5 > 4 (v1 승인 대기 1인 제한)
-            v2OrderOk(buyer, shopBody(limit, quantity = 2))
-            assertEquals("Order_400_15", codeOf(buyer, shopBody(limit, quantity = 3)))
-
-            val started = Shop()
-            setEventStart(started.eventId, LocalDateTime.now().minusMinutes(1))
-            assertEquals("Event_400_6", codeOf(buyer, shopBody(started)))
-
-            val preparing = Shop()
-            setEventStatus(preparing.eventId, EventStatus.PREPARING)
-            assertEquals("Event_400_5", codeOf(buyer, shopBody(preparing)))
+            assertEquals(expectedCode, codeOf(buyer, shopBody(shop, quantity = quantity)))
         }
 
         @Test
@@ -626,27 +630,62 @@ class V2UserOrderControllerTest : V2UserOrderTestSupport() {
     @DisplayName("호스트 환불 계좌 노출 범위")
     inner class HostRefundAccount {
 
+        /** 취소(환불 요청)된 유료 주문 하나 → orderUuid */
+        private fun refundRequested(shop: Shop): String {
+            val buyer = newBuyer()
+            val uuid = v2OrderOk(buyer, shopBody(shop)).at("/orderUuid").asText()
+            cancelMy(buyer, uuid, refundAccount).andExpect { status { isOk() } }
+            return uuid
+        }
+
+        private fun requester(shop: Shop, role: String): User = when (role) {
+            "MASTER" -> shop.team.master
+            "MANAGER" -> shop.team.manager
+            "GUEST" -> shop.team.guest
+            "SUPER_ADMIN" -> superAdmin()
+            else -> error("unknown role $role")
+        }
+
+        @ParameterizedTest(name = "{0} → 전체 계좌 {1}")
+        @CsvSource("MASTER, true", "MANAGER, true", "SUPER_ADMIN, true", "GUEST, false")
+        fun `주문 상세(R-2) 환불 계좌는 매니저 이상(+SUPER_ADMIN)만 전체, 일반 멤버는 null`(role: String, visible: Boolean) {
+            val shop = Shop()
+            val uuid = refundRequested(shop)
+
+            val account = hostDetail(requester(shop, role), shop.eventId, uuid).at("/refundAccount")
+
+            if (visible) assertEquals("123-45-678901", account.at("/accountNumber").asText()) else assertTrue(account.isNull)
+        }
+
+        @ParameterizedTest(name = "{0} → 전체 계좌 {1}")
+        @CsvSource("MASTER, true", "MANAGER, true", "GUEST, false")
+        fun `환불 목록(F-1) 환불 계좌는 매니저 이상만 전체, 일반 멤버는 주문만 보이고 계좌 null`(role: String, visible: Boolean) {
+            val shop = Shop()
+            val uuid = refundRequested(shop)
+
+            val first = v2Get(requester(shop, role), "/events/${shop.eventId}/refunds").andExpect { status { isOk() } }.data().at("/content/0")
+
+            assertEquals(uuid, first.at("/orderUuid").asText())
+            if (visible) assertEquals("홍길동", first.at("/refundAccount/accountHolder").asText()) else assertTrue(first.at("/refundAccount").isNull)
+        }
+
         @Test
-        fun `마스터·매니저만 주문 상세(R-2)·환불 목록(F-1)에서 환불 계좌 전체, 일반 멤버는 null`() {
+        fun `외부인은 주문 상세 403`() {
+            val shop = Shop()
+            val uuid = refundRequested(shop)
+
+            v2Get(shop.team.outsider, "/events/${shop.eventId}/orders/$uuid").andExpect { status { isForbidden() } }
+        }
+
+        @Test
+        fun `환불 완료(F-2) 응답에 계좌가 있고 주문자 화면도 COMPLETED`() {
             val shop = Shop()
             val buyer = newBuyer()
             val uuid = v2OrderOk(buyer, shopBody(shop)).at("/orderUuid").asText()
             cancelMy(buyer, uuid, refundAccount).andExpect { status { isOk() } }
 
-            listOf(shop.team.master, shop.team.manager).forEach {
-                assertEquals("123-45-678901", hostDetail(it, shop.eventId, uuid).at("/refundAccount/accountNumber").asText())
-                val refunds = v2Get(it, "/events/${shop.eventId}/refunds").andExpect { status { isOk() } }.data()
-                assertEquals("홍길동", refunds.at("/content/0/refundAccount/accountHolder").asText())
-            }
-            assertTrue(hostDetail(shop.team.guest, shop.eventId, uuid).at("/refundAccount").isNull)
-            val guestRefunds = v2Get(shop.team.guest, "/events/${shop.eventId}/refunds").andExpect { status { isOk() } }.data()
-            assertEquals(uuid, guestRefunds.at("/content/0/orderUuid").asText())
-            assertTrue(guestRefunds.at("/content/0/refundAccount").isNull)
-            v2Get(shop.team.outsider, "/events/${shop.eventId}/orders/$uuid").andExpect { status { isForbidden() } }
-            assertEquals("123-45-678901", hostDetail(superAdmin(), shop.eventId, uuid).at("/refundAccount/accountNumber").asText())
-
-            // 환불 완료(F-2) 응답에도 계좌
             val done = v2Post(shop.team.manager, "/events/${shop.eventId}/refunds/$uuid/complete").andExpect { status { isOk() } }.data()
+
             assertEquals("COMPLETED", done.at("/order/refundStatus").asText())
             assertEquals("국민은행", done.at("/refundAccount/bankName").asText())
             assertEquals("COMPLETED", myOrder(buyer, uuid).andExpect { status { isOk() } }.data().at("/refundStatus").asText())

@@ -27,6 +27,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.http.MediaType
@@ -561,34 +563,49 @@ class V2EventBrowseControllerTest : V2TicketApiTestSupport() {
             assertTrue(tickets(team.eventId).data().any { it.at("/ticketItemId").asLong() == suspended })
         }
 
-        @Test
-        fun `준비중·삭제 공연은 404 (멤버여도), 시작한·지난 공연은 조회되지만 isPurchasable=false`() {
+        @ParameterizedTest(name = "{0}")
+        @EnumSource(EventStatus::class, names = ["PREPARING", "DELETED"])
+        fun `준비중·삭제 공연의 공개 티켓은 비로그인·멤버 모두 404`(eventStatus: EventStatus) {
             val team = Team()
             createTicket(team.manager, team.eventId, freeBody())
+            setEventStatus(team.eventId, eventStatus)
+
             tickets(team.eventId).andExpect {
                 status { isNotFound() }
                 jsonPath("$.code") { value("Event_404_1") }
             }
             mockMvc.get("/api/v2/events/${team.eventId}/ticket-items") { with(auth(team.master)) }.andExpect { status { isNotFound() } }
+        }
 
-            // 시작한 등록 공연 / 정산중 / 지난공연: 목록은 보이지만 구매 불가
+        @Test
+        fun `없는 공연의 공개 티켓은 404`() {
+            tickets(999_999_999L).andExpect { status { isNotFound() } }
+        }
+
+        @Test
+        fun `시작 전 등록 공연의 판매 중 티켓은 isPurchasable=true`() {
+            val team = Team()
+            createTicket(team.manager, team.eventId, freeBody())
             setEventStatus(team.eventId, EventStatus.OPEN)
+
             tickets(team.eventId).andExpect { jsonPath("$.data[0].isPurchasable") { value(true) } }
+        }
+
+        @ParameterizedTest(name = "{0}")
+        @EnumSource(EventStatus::class, names = ["OPEN", "CALCULATING", "CLOSED"])
+        fun `시작한 등록·정산중·지난 공연은 티켓 목록이 보이지만 isPurchasable=false`(eventStatus: EventStatus) {
+            val team = Team()
+            createTicket(team.manager, team.eventId, freeBody())
             val event = eventRepository.findById(team.eventId).get()
             ReflectionTestUtils.setField(event, "eventBasic", EventBasic(name = event.getEventName(), startAt = now.minusMinutes(1), runTime = 120))
             eventRepository.save(event)
-            listOf(EventStatus.OPEN, EventStatus.CALCULATING, EventStatus.CLOSED).forEach { eventStatus ->
-                setEventStatus(team.eventId, eventStatus)
-                tickets(team.eventId).andExpect {
-                    status { isOk() }
-                    jsonPath("$.data.length()") { value(1) }
-                    jsonPath("$.data[0].isPurchasable") { value(false) }
-                }
-            }
+            setEventStatus(team.eventId, eventStatus)
 
-            setEventStatus(team.eventId, EventStatus.DELETED)
-            tickets(team.eventId).andExpect { status { isNotFound() } }
-            tickets(999_999_999L).andExpect { status { isNotFound() } }
+            tickets(team.eventId).andExpect {
+                status { isOk() }
+                jsonPath("$.data.length()") { value(1) }
+                jsonPath("$.data[0].isPurchasable") { value(false) }
+            }
         }
 
         @Test

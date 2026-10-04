@@ -11,7 +11,9 @@ v2 공연 운영 API E2E 테스트 (#712).
 import io
 import re
 import uuid
+import threading
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from xml.etree import ElementTree
 
@@ -28,7 +30,7 @@ PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", 
 SECTIONS = [{"title": "공연 소개", "content": "<p>운영 테스트</p>", "sortOrder": 0}]
 ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-123-456789"}
 BUYERS = ["approved", "refused", "v1refused", "canceled", "pending", "self", "multi"]
-EXTRA = ["boundary"]
+EXTRA = ["boundary", "conc_checkin", "conc0", "conc1", "conc2"]
 
 
 class OpState:
@@ -435,3 +437,74 @@ def test_11_approve_purchase_limit_boundary_on_mysql(base_url, s):
         f"{base_url}/v1/carts", json={"items": [{"itemId": s.other_ticket_id, "quantity": 2, "options": []}]}, headers=_h(s, "boundary"),
     )
     assert_status(resp, 400)
+
+
+def _concurrently(fns):
+    """fns 를 동시에 실행하고 결과를 순서대로 돌려준다 (test_45 방식 + Barrier).
+    모든 스레드가 준비될 때까지 Barrier 에서 기다렸다가 한꺼번에 요청을 시작한다. 작업 중 예외는 future.result() 로 그대로 올라온다"""
+    barrier = threading.Barrier(len(fns))
+
+    def run(fn):
+        barrier.wait(timeout=30)
+        return fn()
+
+    with ThreadPoolExecutor(max_workers=len(fns)) as pool:
+        futures = [pool.submit(run, fn) for fn in fns]
+        return [f.result(timeout=60) for f in futures]
+
+
+def test_12_concurrent_check_in_enters_once(base_url, s):
+    """DEC-021 #6 (#721): 같은 티켓을 동시에 10번 스캔해도 입장은 1번 (행 잠금). 나머지는 ALREADY_ENTERED, 500 없음.
+    전용 구매자(conc_checkin)가 다른 호스트 공연에 1장 주문 → 승인해 새 티켓을 만들고 그 티켓만 스캔한다
+    (위 시나리오의 입장 수·test_11 구매자의 1인 제한에 영향 없음)."""
+    order = _v1_order(base_url, s, "conc_checkin", s.other_ticket_id, event_id=s.other_event_id)
+    assert_status(requests.post(_ev(base_url, s, f"/orders/{order}/approve", s.other_event_id), headers=_h(s, "other")), 200)
+    ticket = get_data(requests.get(_ev(base_url, s, f"/orders/{order}", s.other_event_id), headers=_h(s, "other")))["issuedTickets"][0]["ticketUuid"]
+    url = _ev(base_url, s, "/check-ins", s.other_event_id)
+
+    results = _concurrently([lambda: requests.post(url, json={"ticketUuid": ticket}, headers=_h(s, "other")) for _ in range(10)])
+
+    assert [r.status_code for r in results] == [200] * 10, [r.text[:200] for r in results]
+    outcomes = sorted(get_data(r)["result"] for r in results)
+    assert outcomes == ["ALREADY_ENTERED"] * 9 + ["ENTERED"], outcomes
+    detail = get_data(requests.get(_ev(base_url, s, f"/issued-tickets/{ticket}", s.other_event_id), headers=_h(s, "other")))
+    assert detail["ticket"]["entrance"] == "DONE"
+
+
+def test_13_concurrent_first_qr_token_converges(base_url, s):
+    """DEC-021 #7 (#721): 토큰이 없는 공연에 QR 최초 조회를 동시에 10번 → 모두 같은 토큰 1개 (조건부 UPDATE)."""
+    resp = requests.post(
+        f"{base_url}/v2/events",
+        json={"hostId": s.other_host_id, "name": "v2토큰동시", "startAt": _f(START), "endAt": _f(END), "hasTicket": True},
+        headers=_h(s, "other"),
+    )
+    assert_status(resp, 200)
+    url = _ev(base_url, s, "/check-in-qr", get_data(resp)["eventId"])
+
+    results = _concurrently([lambda: requests.get(url, headers=_h(s, "other")) for _ in range(10)])
+
+    assert [r.status_code for r in results] == [200] * 10, [r.text[:200] for r in results]
+    tokens = {get_data(r)["token"] for r in results}
+    assert len(tokens) == 1 and len(next(iter(tokens))) == 43, tokens
+    assert get_data(requests.get(url, headers=_h(s, "other")))["token"] in tokens
+
+
+@pytest.mark.parametrize("round_", range(3))
+def test_14_concurrent_approve_and_refuse_one_wins(base_url, s, round_):
+    """같은 주문에 승인·거절 동시 요청 → 하나만 200 (주문 락). 승인이 이기면 거절은 Order_400_5, 거절이 이기면 승인은 Order_400_3.
+    순서가 매번 달라질 수 있어 3회 반복한다."""
+    order = _v1_order(base_url, s, f"conc{round_}", s.other_ticket_id, event_id=s.other_event_id)
+    approve = _ev(base_url, s, f"/orders/{order}/approve", s.other_event_id)
+    refuse = _ev(base_url, s, f"/orders/{order}/refuse", s.other_event_id)
+
+    approved, refused = _concurrently([
+        lambda: requests.post(approve, headers=_h(s, "other")),
+        lambda: requests.post(refuse, json={"reasonType": "SOLD_OUT"}, headers=_h(s, "other")),
+    ])
+
+    assert sorted([approved.status_code, refused.status_code]) == [200, 400], (approved.text[:200], refused.text[:200])
+    status = get_data(requests.get(_ev(base_url, s, f"/orders/{order}", s.other_event_id), headers=_h(s, "other")))["order"]["status"]
+    if approved.status_code == 200:
+        assert _code(refused) == "Order_400_5" and status == "APPROVED", refused.text[:200]
+    else:
+        assert _code(approved) == "Order_400_3" and status == "REFUSED", approved.text[:200]

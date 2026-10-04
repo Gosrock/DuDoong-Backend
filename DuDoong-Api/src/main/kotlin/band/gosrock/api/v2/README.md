@@ -96,8 +96,11 @@ band.gosrock.api.v2
 | `V2*DomainService` 는 `..service.v2..` 패키지에 둔다 | 〃 |
 | 공개 공연 탐색 컨트롤러·유스케이스·응답은 계좌(`AccountInfoVo`, `V2TicketAccountResponse`)에 의존하지 않음 | `V2ApiArchitectureTest` |
 | 공개 공연 탐색 응답 DTO 는 `@Entity` 클래스에 의존하지 않음 | 〃 |
-| 공개 GET 추가로 호스트 전용 경로·다른 메서드가 열리지 않음 (비로그인 401) | `DuDoong-Api/src/test/kotlin/band/gosrock/api/v2/V2AuthRequiredPathsTest.kt` |
+| 엔티티의 **모든** Kotlin `internal` 메서드(`*$DuDoong_Domain`, 자동 수집)는 `service.v2` 와 그 엔티티 자신만 호출, 수집 결과 = 위 목록 (#721) | `V2DomainServiceArchitectureTest` |
+| 공개 GET 추가로 호스트 전용 경로·다른 메서드가 열리지 않음 (비로그인 401). `RequestMappingHandlerMapping` 의 `/api/v2/` 매핑을 자동 열거해 공개 GET 밖 전부 검사 (#721) | `DuDoong-Api/src/test/kotlin/band/gosrock/api/v2/V2AuthRequiredPathsTest.kt` |
+| DEC-013 호스트 삭제 미제공: `DELETE /api/v2/hosts/{id}` 매핑 없음, 호출 시 405 | `V2HostControllerTest.NoHostDelete` |
 
 - 예외를 늘려야 하면 테스트에 클래스를 명시적으로 추가하고 이유를 주석으로 남긴다.
-- 새 v2 internal mutator 를 엔티티에 추가하면 Domain 테스트의 `V2_INTERNAL_MUTATORS` 목록에도 추가한다 (Kotlin `internal` 은 JVM 이름이 `name$모듈명` 으로 맹글링되어 접두로 매칭).
-- **한계**: ArchUnit 은 바이트코드 의존만 본다. `const val` 상수(예: `V2EventDomainService.MAX_CONTACT_COUNT` 를 v2 DTO 어노테이션에서 사용)와 `inline` 함수는 호출 측에 값·본문이 인라인되어 의존이 남지 않으므로 검사되지 않는다. 같은 모듈 안의 `internal` 호출 제한도 위 목록 기반 규칙으로만 잡힌다.
+- 새 v2 internal mutator 를 엔티티에 추가하면 Domain 테스트의 `V2_INTERNAL_MUTATORS_BY_OWNER`(엔티티별) 에도 추가한다 (Kotlin `internal` 은 JVM 이름이 `name$모듈명` 으로 맹글링되어 접두로 매칭). 빠뜨리면 자동 수집 대조 테스트가 실패한다.
+- 공개(비인증) v2 경로를 추가하면 `V2AuthRequiredPathsTest.PUBLIC_GET` 에도 추가한다 (기대값을 SecurityConfig 에서 읽지 않는다). 새 인증 필요 경로는 목록 수정 없이 자동 검사된다.
+- **한계**: ArchUnit 은 바이트코드 의존만 본다. `const val` 상수(예: `V2EventDomainService.MAX_CONTACT_COUNT` 를 v2 DTO 어노테이션에서 사용)와 `inline` 함수는 호출 측에 값·본문이 인라인되어 의존이 남지 않으므로 검사되지 않는다. 같은 모듈 안의 `internal` 호출 제한은 `@Entity` 클래스의 internal 메서드만 대상이다 (엔티티 밖 internal 은 검사 안 함).
