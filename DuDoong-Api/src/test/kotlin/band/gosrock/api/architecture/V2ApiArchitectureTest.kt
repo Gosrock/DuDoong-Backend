@@ -17,6 +17,7 @@ import band.gosrock.api.v2.event.usecase.V2ReadOnSaleTicketItemsUseCase
 import band.gosrock.api.v2.event.usecase.V2SearchEventsUseCase
 import band.gosrock.api.v2.ticket.dto.response.V2TicketAccountResponse
 import band.gosrock.domain.common.vo.AccountInfoVo
+import band.gosrock.domain.domains.order.repository.OrderRefundAccountRepository
 import com.tngtech.archunit.base.DescribedPredicate.not
 import com.tngtech.archunit.core.domain.JavaClass.Predicates.belongToAnyOf
 import com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage
@@ -59,6 +60,14 @@ class V2ApiArchitectureTest {
             .should().dependOnClassesThat(
                 resideInAPackage(API).and(resideOutsideOfPackages(API_V2, "band.gosrock.api.common..", "band.gosrock.api.config..")),
             )
+            .check(classes)
+    }
+
+    @Test
+    fun `환불 계좌 저장소는 v2 도메인 서비스만 접근한다 (#718, api·Admin·Batch 포함)`() {
+        noClasses().that().resideOutsideOfPackage(DOMAIN_SERVICE_V2)
+            .and().doNotBelongToAnyOf(OrderRefundAccountRepository::class.java)
+            .should().dependOnClassesThat().belongToAnyOf(OrderRefundAccountRepository::class.java)
             .check(classes)
     }
 

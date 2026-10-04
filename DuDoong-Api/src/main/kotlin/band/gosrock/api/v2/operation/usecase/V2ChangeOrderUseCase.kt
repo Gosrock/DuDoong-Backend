@@ -22,27 +22,27 @@ class V2ChangeOrderUseCase(
     fun approve(userId: Long, eventId: Long, orderUuid: String): V2OrderDetailResponse {
         log.info("[V2ChangeOrderUseCase] 승인 userId={} eventId={} orderUuid={}", userId, eventId, orderUuid)
         v2OrderDomainService.approve(eventId, orderUuid)
-        return readOrdersUseCase.readDetail(eventId, orderUuid)
+        return readOrdersUseCase.readDetail(eventId, orderUuid, showRefundAccount = true)
     }
 
     @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID, applyTransaction = false)
     fun refuse(userId: Long, eventId: Long, orderUuid: String, request: V2RefuseOrderRequest): V2OrderDetailResponse {
         log.info("[V2ChangeOrderUseCase] 거절 userId={} eventId={} orderUuid={} reasonType={}", userId, eventId, orderUuid, request.reasonType)
         v2OrderDomainService.refuse(eventId, orderUuid, request.reasonType!!, request.reasonText)
-        return readOrdersUseCase.readDetail(eventId, orderUuid)
+        return readOrdersUseCase.readDetail(eventId, orderUuid, showRefundAccount = true)
     }
 
     @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID, applyTransaction = false)
     fun cancel(userId: Long, eventId: Long, orderUuid: String, request: V2CancelOrderRequest?): V2OrderDetailResponse {
         log.info("[V2ChangeOrderUseCase] 취소 userId={} eventId={} orderUuid={}", userId, eventId, orderUuid)
         v2OrderDomainService.cancel(eventId, orderUuid, request?.reason)
-        return readOrdersUseCase.readDetail(eventId, orderUuid)
+        return readOrdersUseCase.readDetail(eventId, orderUuid, showRefundAccount = true)
     }
 
     @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID, applyTransaction = false)
     fun completeRefund(userId: Long, eventId: Long, orderUuid: String): V2OrderDetailResponse {
         log.info("[V2ChangeOrderUseCase] 환불 완료 userId={} eventId={} orderUuid={}", userId, eventId, orderUuid)
         v2OrderDomainService.completeRefund(eventId, orderUuid)
-        return readOrdersUseCase.readDetail(eventId, orderUuid)
+        return readOrdersUseCase.readDetail(eventId, orderUuid, showRefundAccount = true)
     }
 }

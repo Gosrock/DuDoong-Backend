@@ -1,0 +1,74 @@
+package band.gosrock.api.v2.order.controller
+
+import band.gosrock.api.v2.common.V2PageResponse
+import band.gosrock.api.v2.order.dto.V2MyOrderStatusFilter
+import band.gosrock.api.v2.order.dto.request.V2CancelMyOrderRequest
+import band.gosrock.api.v2.order.dto.request.V2CreateOrderRequest
+import band.gosrock.api.v2.order.dto.response.V2MyOrderDetailResponse
+import band.gosrock.api.v2.order.dto.response.V2MyOrderElement
+import band.gosrock.api.v2.order.usecase.V2CancelMyOrderUseCase
+import band.gosrock.api.v2.order.usecase.V2CreateOrderUseCase
+import band.gosrock.api.v2.order.usecase.V2ReadMyOrdersUseCase
+import band.gosrock.common.annotation.CurrentUserId
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.Valid
+import jakarta.validation.constraints.Max
+import jakarta.validation.constraints.Min
+import org.springframework.validation.annotation.Validated
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
+
+@SecurityRequirement(name = "access-token")
+@Tag(name = "v2. 사용자 앱 - 주문·주문내역·취소")
+@RestController
+@RequestMapping("/api/v2")
+@Validated
+class V2OrderController(
+    private val createOrderUseCase: V2CreateOrderUseCase,
+    private val readMyOrdersUseCase: V2ReadMyOrdersUseCase,
+    private val cancelMyOrderUseCase: V2CancelMyOrderUseCase,
+) {
+    @Operation(
+        summary = "[O-1] 주문 생성 (로그인). 두둥티켓은 '입금했어요' 시점에 승인 대기로, 무료는 승인 ON 이면 승인 대기·OFF 면 즉시 발급. " +
+            "같은 사용자의 같은 주문이 10초 안에 다시 오면 앞 주문을 돌려준다. 응답은 O-3 과 같은 주문 상세",
+    )
+    @PostMapping("/orders")
+    fun createOrder(@CurrentUserId userId: Long, @RequestBody @Valid request: V2CreateOrderRequest): V2MyOrderDetailResponse =
+        createOrderUseCase.execute(userId, request)
+
+    @Operation(summary = "[O-2] 내 주문 목록 (로그인). 최신 순, status 기본 ALL")
+    @GetMapping("/me/orders")
+    fun getMyOrders(
+        @CurrentUserId userId: Long,
+        @RequestParam(defaultValue = "ALL") status: V2MyOrderStatusFilter,
+        @RequestParam(defaultValue = "0") @Min(0) page: Int,
+        @RequestParam(defaultValue = "20") @Min(1) @Max(MAX_PAGE_SIZE) size: Int,
+    ): V2PageResponse<V2MyOrderElement> = readMyOrdersUseCase.execute(userId, status.domain, page, size)
+
+    @Operation(summary = "[O-3] 내 주문 상세 (로그인, 본인 주문만 — 남의 주문은 404). 거절 사유, 결제 계좌(유료), 본인 발급 티켓, canCancel")
+    @GetMapping("/me/orders/{orderUuid}")
+    fun getMyOrder(@CurrentUserId userId: Long, @PathVariable orderUuid: String): V2MyOrderDetailResponse =
+        readMyOrdersUseCase.detail(userId, orderUuid)
+
+    @Operation(
+        summary = "[O-4] 취소·환불 요청 (로그인, 본인 주문). 승인 대기: 공연 시작 전, 승인 완료: 공연 시작 전 + 입장한 티켓 없음. " +
+            "유료는 환불 계좌 필수(호스트가 송금 후 환불 완료 처리). 이미 취소된 주문은 Order_400_5",
+    )
+    @PostMapping("/me/orders/{orderUuid}/cancel")
+    fun cancelMyOrder(
+        @CurrentUserId userId: Long,
+        @PathVariable orderUuid: String,
+        @RequestBody(required = false) @Valid request: V2CancelMyOrderRequest?,
+    ): V2MyOrderDetailResponse = cancelMyOrderUseCase.execute(userId, orderUuid, request)
+
+    companion object {
+        const val MAX_PAGE_SIZE = 50L
+    }
+}

@@ -6,16 +6,22 @@ import band.gosrock.api.v2.operation.dto.response.V2CheckInTicketResponse
 import band.gosrock.api.v2.operation.dto.response.V2IssuedTicketElement
 import band.gosrock.api.v2.operation.dto.response.V2OptionAnswerResponse
 import band.gosrock.api.v2.operation.dto.response.V2OrderElement
+import band.gosrock.api.v2.operation.dto.response.V2RefundAccountResponse
 import band.gosrock.api.v2.operation.dto.response.V2RefundElement
 import band.gosrock.api.v2.ticket.dto.V2TicketPayType
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2CheckInOutcome
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2EntranceState
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
+import band.gosrock.domain.domains.event.adaptor.EventAdaptor
+import band.gosrock.domain.domains.host.adaptor.HostAdaptor
+import band.gosrock.domain.domains.host.domain.HostRole
 import band.gosrock.domain.domains.order.domain.Order
+import band.gosrock.domain.domains.order.domain.OrderRefundAccount
 import band.gosrock.domain.domains.order.service.v2.V2OrderStatus
 import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
+import band.gosrock.domain.domains.user.domain.AccountRole
 import band.gosrock.domain.domains.user.domain.User
 import org.springframework.stereotype.Component
 
@@ -28,6 +34,8 @@ import org.springframework.stereotype.Component
 @Component
 class V2OperationMapper(
     private val userAdaptor: UserAdaptor,
+    private val eventAdaptor: EventAdaptor,
+    private val hostAdaptor: HostAdaptor,
     private val orderAdaptor: OrderAdaptor,
     private val optionAdaptor: OptionAdaptor,
 ) {
@@ -54,10 +62,12 @@ class V2OperationMapper(
             refuseReasonType = order.refuseReasonType,
             refuseReason = order.cancelReason.takeIf { status == V2OrderStatus.REFUSED },
             cancelReason = order.cancelReason.takeIf { status == V2OrderStatus.CANCELED },
+            paymentChannel = order.paymentChannel,
+            depositorName = order.depositorName,
         )
     }
 
-    fun toRefundElement(order: Order, user: User?) = V2RefundElement(
+    fun toRefundElement(order: Order, user: User?, refundAccount: OrderRefundAccount?) = V2RefundElement(
         orderUuid = order.uuid,
         orderNo = order.orderNo,
         buyerName = user?.profile?.name,
@@ -68,7 +78,21 @@ class V2OperationMapper(
         reason = order.cancelReason,
         withdrawnAt = order.withDrawAt,
         refundStatusChangedAt = order.refundStatusChangedAt,
+        refundAccount = refundAccount?.let(::toRefundAccount),
     )
+
+    fun toRefundAccount(account: OrderRefundAccount) =
+        V2RefundAccountResponse(bankName = account.bankName, accountHolder = account.accountHolder, accountNumber = account.accountNumber)
+
+    /**
+     * 사용자 환불 계좌를 볼 수 있는지 (#718): 공연 호스트의 활성 마스터·매니저 또는 SUPER_ADMIN.
+     * 일반 멤버(G+ 조회 API)에게는 숨긴다 — 송금·환불 완료(F-2)가 매니저 이상 권한이라 계좌도 그 범위만 (DEC-009 정신)
+     */
+    fun canSeeRefundAccount(userId: Long, eventId: Long): Boolean {
+        if (userAdaptor.queryUser(userId).accountRole == AccountRole.SUPER_ADMIN) return true
+        val host = hostAdaptor.findById(eventAdaptor.findById(eventId).hostId!!)
+        return host.getActiveRoleOf(userId).let { it == HostRole.MASTER || it == HostRole.MANAGER }
+    }
 
     fun toTicketElement(ticket: IssuedTicket, user: User?, orderNo: String?) = V2IssuedTicketElement(
         ticketUuid = ticket.uuid,

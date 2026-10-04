@@ -7,6 +7,7 @@ import com.slack.api.model.block.Blocks.section
 import com.slack.api.model.block.LayoutBlock
 import com.slack.api.model.block.composition.BlockCompositions.plainText
 import com.slack.api.model.block.composition.MarkdownTextObject
+import band.gosrock.api.config.SensitiveBodyMasker
 import band.gosrock.infrastructure.config.slack.SlackErrorNotificationProvider
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -25,7 +26,8 @@ class SlackInternalErrorSender(
     fun execute(cachingRequest: ContentCachingRequestWrapper, e: Exception, userId: Long) {
         val url = cachingRequest.requestURL.toString()
         val method = cachingRequest.method
-        val body = objectMapper.readTree(cachingRequest.contentAsByteArray).toString()
+        // 민감 키(계좌·입금자명·연락처) 값은 마스킹해서 보낸다
+        val body = SensitiveBodyMasker.mask(objectMapper.readTree(cachingRequest.contentAsByteArray).toString())
         val errorMessage = e.message
         val errorStack = slackProvider.getErrorStack(e)
         val errorUserIP = cachingRequest.remoteAddr

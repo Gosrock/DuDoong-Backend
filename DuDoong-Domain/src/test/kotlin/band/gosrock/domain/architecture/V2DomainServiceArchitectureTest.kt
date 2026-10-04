@@ -3,6 +3,7 @@ package band.gosrock.domain.architecture
 import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.host.domain.Host
 import band.gosrock.domain.domains.order.domain.Order
+import band.gosrock.domain.domains.order.repository.OrderRefundAccountRepository
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem
 import com.tngtech.archunit.base.DescribedPredicate
 import com.tngtech.archunit.core.domain.JavaClasses
@@ -35,6 +36,14 @@ class V2DomainServiceArchitectureTest {
     }
 
     @Test
+    fun `환불 계좌 저장소(v2 전용 테이블)는 v2 도메인 서비스만 접근한다 (#718)`() {
+        noClasses().that().resideOutsideOfPackage(DOMAIN_SERVICE_V2)
+            .and().doNotBelongToAnyOf(OrderRefundAccountRepository::class.java)
+            .should().dependOnClassesThat().belongToAnyOf(OrderRefundAccountRepository::class.java)
+            .check(classes)
+    }
+
+    @Test
     fun `V2 로 시작하는 DomainService 는 service v2 패키지에 있다`() {
         classes().that().haveSimpleNameStartingWith("V2").and().haveSimpleNameEndingWith("DomainService")
             .should().resideInAPackage(DOMAIN_SERVICE_V2)
@@ -51,8 +60,8 @@ class V2DomainServiceArchitectureTest {
             "replaceContacts", "replaceTagIds", "replaceSections", "getOrInitProfile",
             // TicketItem (#707)
             "changeAccountInfo", "changeSupplyCount",
-            // Order (#712)
-            "recordRefuseReasonType",
+            // Order (#712, #718)
+            "recordRefuseReasonType", "recordV2Payment", "withdrawByUser",
         )
 
         /** Kotlin internal 은 JVM 이름이 `name$모듈명` 으로 맹글링되므로 `name$` 접두도 같은 메서드로 본다 */

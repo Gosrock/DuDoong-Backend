@@ -46,7 +46,8 @@ class MdcFilter : OncePerRequestFilter() {
         val body = if (shouldLogBody(uri, method)) {
             val content = request.contentAsByteArray
             if (content.isNotEmpty()) {
-                String(content, Charsets.UTF_8).take(MAX_BODY_LOG_SIZE)
+                // 민감 키(계좌·입금자명·연락처) 값은 마스킹해서 남긴다
+                SensitiveBodyMasker.mask(String(content, Charsets.UTF_8).take(MAX_BODY_LOG_SIZE))
             } else {
                 null
             }
