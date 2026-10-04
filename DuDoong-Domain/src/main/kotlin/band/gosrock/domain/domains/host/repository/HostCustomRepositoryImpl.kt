@@ -7,12 +7,28 @@ import band.gosrock.domain.domains.host.domain.QHostUser.hostUser
 import com.querydsl.core.types.OrderSpecifier
 import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.jpa.impl.JPAQueryFactory
+import jakarta.persistence.EntityManager
+import jakarta.persistence.LockModeType
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 
-class HostCustomRepositoryImpl(private val queryFactory: JPAQueryFactory) : HostCustomRepository {
+class HostCustomRepositoryImpl(
+    private val queryFactory: JPAQueryFactory,
+    private val entityManager: EntityManager,
+) : HostCustomRepository {
+
+    override fun findByIdForUpdate(hostId: Long): Host? {
+        val found = entityManager.find(Host::class.java, hostId) ?: return null
+        // 권한 AOP 등에서 먼저 읽어 캐시된 엔티티일 수 있으므로 락과 함께 다시 읽는다
+        entityManager.refresh(found, LockModeType.PESSIMISTIC_WRITE)
+        return found
+    }
+
+    override fun flushChanges() {
+        entityManager.flush()
+    }
 
     override fun querySliceHostsByUserId(userId: Long, pageable: Pageable): Slice<Host> {
         val hosts = queryFactory
@@ -62,6 +78,28 @@ class HostCustomRepositoryImpl(private val queryFactory: JPAQueryFactory) : Host
             .select(host.count())
             .from(host)
             .where(keywordCondition)
+            .fetchOne() ?: 0L
+
+        return PageImpl(hosts, pageable, total)
+    }
+
+    override fun queryPageHostsByActiveUserId(userId: Long, keyword: String?, pageable: Pageable): Page<Host> {
+        val keywordCondition: BooleanExpression? =
+            if (!keyword.isNullOrBlank()) host.profile.name.contains(keyword) else null
+
+        val hosts = queryFactory
+            .select(host)
+            .from(host, hostUser)
+            .where(hostUserIdEq(userId), host.hostUsers.contains(hostUser), hostUserActive(), keywordCondition)
+            .offset(pageable.offset)
+            .orderBy(hostIdDesc())
+            .limit(pageable.pageSize.toLong())
+            .fetch()
+
+        val total = queryFactory
+            .select(host.count())
+            .from(host, hostUser)
+            .where(hostUserIdEq(userId), host.hostUsers.contains(hostUser), hostUserActive(), keywordCondition)
             .fetchOne() ?: 0L
 
         return PageImpl(hosts, pageable, total)

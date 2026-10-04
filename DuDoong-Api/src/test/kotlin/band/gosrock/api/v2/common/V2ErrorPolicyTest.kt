@@ -13,7 +13,7 @@ import org.junit.jupiter.params.provider.EnumSource
 class V2ErrorPolicyTest {
 
     @ParameterizedTest(name = "{0}: v2 핸들러면 status 만 403, code/reason 유지")
-    @EnumSource(HostErrorCode::class, names = ["FORBIDDEN_HOST", "NOT_ACCEPTED_HOST", "NOT_MANAGER_HOST", "NOT_MASTER_HOST", "NOT_PARTNER_HOST"])
+    @EnumSource(HostErrorCode::class, names = ["FORBIDDEN_HOST", "NOT_ACCEPTED_HOST", "NOT_MANAGER_HOST", "NOT_MASTER_HOST", "NOT_PARTNER_HOST", "MANAGER_CAN_MANAGE_GUEST_ONLY"])
     fun v2HandlerForbidden(code: HostErrorCode) {
         val result = V2ErrorPolicy.resolve(V2HealthController::class.java, code)
 
@@ -21,7 +21,7 @@ class V2ErrorPolicyTest {
     }
 
     @ParameterizedTest(name = "{0}: v1 핸들러면 원래 ErrorReason 그대로")
-    @EnumSource(HostErrorCode::class, names = ["FORBIDDEN_HOST", "NOT_ACCEPTED_HOST", "NOT_MANAGER_HOST", "NOT_MASTER_HOST", "NOT_PARTNER_HOST"])
+    @EnumSource(HostErrorCode::class, names = ["FORBIDDEN_HOST", "NOT_ACCEPTED_HOST", "NOT_MANAGER_HOST", "NOT_MASTER_HOST", "NOT_PARTNER_HOST", "MANAGER_CAN_MANAGE_GUEST_ONLY"])
     fun v1HandlerUnchanged(code: HostErrorCode) {
         assertEquals(code.getErrorReason(), V2ErrorPolicy.resolve(ExampleController::class.java, code))
     }

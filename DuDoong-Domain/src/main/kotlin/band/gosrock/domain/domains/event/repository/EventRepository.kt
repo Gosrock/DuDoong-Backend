@@ -17,6 +17,8 @@ interface EventRepository : CrudRepository<Event, Long>, EventCustomRepository {
 
     fun findAllByHostIdIn(hostIds: List<Long>, pageable: Pageable): Page<Event>
 
+    fun findAllByHostIdAndStatusIn(hostId: Long, statuses: Collection<EventStatus>, pageable: Pageable): Page<Event>
+
     /** Admin: 키워드(이벤트명/호스트명) + 상태 필터로 이벤트 검색 (@Where 바이패스를 위해 native query 사용) */
     @Query(
         value = "SELECT e.* FROM tbl_event e " +

@@ -47,8 +47,11 @@ class S3UploadPresignedUrlService(
     private fun getForUserFileName(userId: Long, fileExtension: String): String =
         "$baseUrl/user/$userId/${UUID.randomUUID()}.$fileExtension"
 
+    /** forHost 가 발급하는 호스트 이미지 key 의 공통 prefix */
+    fun hostImageKeyPrefix(hostId: Long): String = "$baseUrl/host/$hostId/"
+
     private fun getForHostFileName(hostId: Long, fileExtension: String): String =
-        "$baseUrl/host/$hostId/${UUID.randomUUID()}.$fileExtension"
+        "${hostImageKeyPrefix(hostId)}${UUID.randomUUID()}.$fileExtension"
 
     private fun getForEventFileName(eventId: Long, fileExtension: String): String =
         "$baseUrl/event/$eventId/${UUID.randomUUID()}.$fileExtension"

@@ -20,6 +20,7 @@ object V2ErrorPolicy {
         HostErrorCode.NOT_MANAGER_HOST,
         HostErrorCode.NOT_MASTER_HOST,
         HostErrorCode.NOT_PARTNER_HOST,
+        HostErrorCode.MANAGER_CAN_MANAGE_GUEST_ONLY,
     )
 
     private const val FORBIDDEN = 403

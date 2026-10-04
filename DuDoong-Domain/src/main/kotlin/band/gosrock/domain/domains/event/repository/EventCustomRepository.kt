@@ -14,4 +14,7 @@ interface EventCustomRepository {
     fun querySliceEventsByKeyword(keyword: String?, pageable: Pageable): Slice<Event>
 
     fun queryEventsByEndAtBeforeAndStatusOpen(time: LocalDateTime): List<Event>
+
+    /** 호스트별 공연 수 (삭제된 공연 제외). 공연이 없는 호스트는 결과에 없음 */
+    fun queryEventCountsByHostIdIn(hostIds: List<Long>): Map<Long, Long>
 }

@@ -6,6 +6,7 @@ import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException
 import band.gosrock.domain.domains.host.exception.ForbiddenHostException
 import band.gosrock.domain.domains.host.exception.HostErrorCode
 import band.gosrock.domain.domains.host.exception.HostNotFoundException
+import band.gosrock.domain.domains.host.exception.ManagerCanManageGuestOnlyException
 import band.gosrock.domain.domains.host.exception.NotAcceptedHostException
 import band.gosrock.domain.domains.host.exception.NotManagerHostException
 import band.gosrock.domain.domains.host.exception.NotMasterHostException
@@ -23,6 +24,7 @@ val HOST_ERROR_EXCEPTIONS: Map<String, DuDoongCodeException> = mapOf(
     "NOT_PARTNER_HOST" to NotPartnerHostException.EXCEPTION,
     "ALREADY_JOINED_HOST" to AlreadyJoinedHostException.EXCEPTION,
     "HOST_NOT_FOUND" to HostNotFoundException.EXCEPTION,
+    "MANAGER_CAN_MANAGE_GUEST_ONLY" to ManagerCanManageGuestOnlyException.EXCEPTION,
 )
 
 /**

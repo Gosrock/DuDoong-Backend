@@ -87,6 +87,9 @@ class SecurityConfig(
         /** 인증 없이 접근 가능한 v2 GET 경로. v2 공개 API 추가 시 여기에만 등록한다. */
         private val V2_PUBLIC_GET_PATHS: List<String> = listOf(
             "/api/v2/health",
+            // 공개 호스트 홈 / 호스트 공연 리스트 (비로그인 시 userId = 0)
+            "/api/v2/hosts/{hostId:[0-9]+}",
+            "/api/v2/hosts/{hostId:[0-9]+}/events",
         )
     }
 }

@@ -1,6 +1,7 @@
 package band.gosrock.domain.domains.host.domain
 
 import band.gosrock.domain.common.vo.ImageVo
+import jakarta.persistence.AttributeOverride
 import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
 import jakarta.persistence.Embedded
@@ -22,6 +23,11 @@ class HostProfile(
     // 프로필 이미지 url
     @Embedded
     var profileImage: ImageVo? = ImageVo.valueOf(profileImageKey)
+
+    // 커버 이미지 url (v2). v1 프로필 수정(updateProfile)은 건드리지 않는다
+    @Embedded
+    @AttributeOverride(name = "imageKey", column = Column(name = "cover_image_key"))
+    var coverImage: ImageVo? = null
 
     fun updateProfile(hostProfile: HostProfile) {
         this.name = hostProfile.name
