@@ -13,7 +13,6 @@ interface OrderRepository : CrudRepository<Order, Long>, OrderCustomRepository {
     fun countByEventId(eventId: Long): Long
 
     fun findByEventId(eventId: Long): List<Order>
-    fun findByEventIdAndOrderStatus(eventId: Long, orderStatus: OrderStatus): List<Order>
     fun findByEventIdAndUserIdAndOrderStatus(eventId: Long, userId: Long, orderStatus: OrderStatus): List<Order>
     fun findByUuidIn(uuids: List<String>): List<Order>
 
@@ -23,6 +22,13 @@ interface OrderRepository : CrudRepository<Order, Long>, OrderCustomRepository {
             WHERE l.orderItem.itemId IN :itemIds AND o.orderStatus = :orderStatus"""
     )
     fun findItemIdsHavingOrderStatus(@Param("itemIds") itemIds: Collection<Long>, @Param("orderStatus") orderStatus: OrderStatus): List<Long>
+
+    /** 티켓(item) 하나의 해당 상태 주문 수량 합 (tbl_order_line.item_id 인덱스 사용, #720) */
+    @Query(
+        """SELECT COALESCE(SUM(l.quantity), 0L) FROM tbl_order o JOIN o.orderLineItems l
+            WHERE l.orderItem.itemId = :itemId AND o.orderStatus = :orderStatus"""
+    )
+    fun sumQuantityByItemIdAndOrderStatus(@Param("itemId") itemId: Long, @Param("orderStatus") orderStatus: OrderStatus): Long
 
     /** Admin: 키워드(orderName/유저명/이벤트명) + 상태 + 이벤트 필터로 주문 검색 */
     @Query(
