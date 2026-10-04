@@ -177,7 +177,9 @@ def test_02_home(base_url, s):
 def test_03_list_sort_and_include_past(base_url, s):
     # 다가오는 공연 임박순 → 지난 공연. 준비중 제외. 호스트명(밴드{RUN})으로도 걸린다
     assert _ids(_list(base_url, RUN)) == [s.open_b, s.open_a, s.band_c, s.closed]
-    assert _ids(_list(base_url, RUN, include_past=False)) == [s.open_b, s.open_a, s.band_c]
+    upcoming = _list(base_url, RUN, include_past=False)
+    assert _ids(upcoming) == [s.open_b, s.open_a, s.band_c]
+    assert all(e["displayStatus"] == "UPCOMING" for e in upcoming["content"])
     page = _list(base_url, RUN)
     assert [e["displayStatus"] for e in page["content"]] == ["UPCOMING", "UPCOMING", "UPCOMING", "PAST"]
     a = next(e for e in page["content"] if e["eventId"] == s.open_a)
@@ -265,6 +267,7 @@ def test_10_tickets(base_url, s):
     free, dudoong = items
     assert free["payType"] == "FREE" and free["approvalRequired"] is False
     assert free["remaining"] == 10 and free["isSoldOut"] is False and free["purchaseLimit"] == 2
+    assert free["isPurchasable"] is True and dudoong["isPurchasable"] is True
     assert dudoong["payType"] == "DUDOONG" and dudoong["approvalRequired"] is True and dudoong["price"] == 8000
     assert dudoong["remaining"] is None and dudoong["purchaseLimit"] is None
     # 계좌 미노출
@@ -276,3 +279,7 @@ def test_10_tickets(base_url, s):
     ids = [i["ticketItemId"] for i in get_data(requests.get(f"{base_url}/v2/events/{s.open_a}/ticket-items"))]
     assert ids == [s.free_id, s.dudoong_id, s.suspended_id]
     assert s.future_id not in ids
+
+    # 지난 공연: 판매 중 티켓 목록은 보이지만 구매 불가
+    closed = get_data(requests.get(f"{base_url}/v2/events/{s.closed}/ticket-items"))
+    assert len(closed) == 1 and closed[0]["isPurchasable"] is False

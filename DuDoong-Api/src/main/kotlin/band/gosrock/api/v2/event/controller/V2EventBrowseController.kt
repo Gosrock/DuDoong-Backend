@@ -40,7 +40,7 @@ class V2EventBrowseController(
     @Operation(
         summary = "[P-2] 공연 리스트 (비로그인 허용)",
         description = "keyword = 공연명 OR 호스트명 부분일치. tagIds = 같은 분류 OR / 분류끼리 AND (없는 태그 id 는 400). " +
-            "includePast=false 면 등록(OPEN) 공연만, true 면 정산중·지난공연 포함. " +
+            "includePast=false 면 다가오는 공연(OPEN·시작 전)만, true 면 시작한 OPEN·정산중·지난공연 포함. " +
             "sort=UPCOMING: 다가오는 공연(OPEN·시작 전) 시작 임박순 → 지난 공연(시작한 OPEN·정산중·지난공연) 최근 시작 순",
     )
     @GetMapping("/events")

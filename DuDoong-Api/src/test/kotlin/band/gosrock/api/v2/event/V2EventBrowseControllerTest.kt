@@ -200,12 +200,15 @@ class V2EventBrowseControllerTest : V2TicketApiTestSupport() {
         }
 
         @Test
-        fun `includePast=false(기본) 면 등록(OPEN) 공연만 - 시작한 OPEN 은 다가오는 공연 뒤에 PAST 로`() {
+        fun `includePast=false(기본) 면 다가오는 공연(OPEN·시작 전)만 - 시작한 OPEN 은 제외`() {
             val w = World()
-            assertEquals(listOf(w.soon1, w.soon2, w.soon3, w.bandSoon4, w.started), list(w.tok, includePast = false).ids())
+            val upcoming = list(w.tok, includePast = false)
+            assertEquals(listOf(w.soon1, w.soon2, w.soon3, w.bandSoon4), upcoming.ids())
+            assertTrue(upcoming.at("/content").all { it.at("/displayStatus").asText() == "UPCOMING" })
+            assertEquals(4, upcoming.at("/totalElements").asInt())
             // 파라미터 생략 = false
             val defaults = anonymousGet("/api/v2/events", mapOf("keyword" to w.tok)).andExpect { status { isOk() } }.data()
-            assertEquals(listOf(w.soon1, w.soon2, w.soon3, w.bandSoon4, w.started), defaults.ids())
+            assertEquals(listOf(w.soon1, w.soon2, w.soon3, w.bandSoon4), defaults.ids())
         }
 
         @Test
@@ -499,6 +502,7 @@ class V2EventBrowseControllerTest : V2TicketApiTestSupport() {
             assertTrue(d.at("/approvalRequired").asBoolean())
             assertEquals(100, d.at("/remaining").asInt())
             assertFalse(d.at("/isSoldOut").asBoolean())
+            assertTrue(d.at("/isPurchasable").asBoolean())
             assertEquals(4, d.at("/purchaseLimit").asInt())
             assertEquals(
                 listOf("$yesNo:뒷풀이:참석하나요?:YES_NO:1000", "$subjective:입금자명:참석하나요?:SUBJECTIVE:null"),
@@ -513,6 +517,7 @@ class V2EventBrowseControllerTest : V2TicketApiTestSupport() {
             assertTrue(u.at("/remaining").isNull, "무제한은 null")
             assertTrue(u.at("/purchaseLimit").isNull, "제한 없음은 null")
             assertFalse(u.at("/isSoldOut").asBoolean())
+            assertTrue(u.at("/isPurchasable").asBoolean())
             assertEquals(0, u.at("/options").size())
 
             assertTrue(data[2].at("/remaining").isNull, "재고 비공개는 null")
@@ -520,6 +525,8 @@ class V2EventBrowseControllerTest : V2TicketApiTestSupport() {
 
             assertEquals(0, data[3].at("/remaining").asInt())
             assertTrue(data[3].at("/isSoldOut").asBoolean())
+            assertFalse(data[3].at("/isPurchasable").asBoolean(), "매진은 구매 불가")
+            assertTrue(data[2].at("/isPurchasable").asBoolean())
 
             listOf(suspended, future, ended, deleted).forEach { hiddenId -> assertFalse(data.any { it.at("/ticketItemId").asLong() == hiddenId }) }
 
@@ -529,7 +536,7 @@ class V2EventBrowseControllerTest : V2TicketApiTestSupport() {
         }
 
         @Test
-        fun `준비중·삭제 공연은 404 (멤버여도), 지난 공연은 조회`() {
+        fun `준비중·삭제 공연은 404 (멤버여도), 시작한·지난 공연은 조회되지만 isPurchasable=false`() {
             val team = Team()
             createTicket(team.manager, team.eventId, freeBody())
             tickets(team.eventId).andExpect {
@@ -538,10 +545,19 @@ class V2EventBrowseControllerTest : V2TicketApiTestSupport() {
             }
             mockMvc.get("/api/v2/events/${team.eventId}/ticket-items") { with(auth(team.master)) }.andExpect { status { isNotFound() } }
 
-            setEventStatus(team.eventId, EventStatus.CLOSED)
-            tickets(team.eventId).andExpect {
-                status { isOk() }
-                jsonPath("$.data.length()") { value(1) }
+            // 시작한 등록 공연 / 정산중 / 지난공연: 목록은 보이지만 구매 불가
+            setEventStatus(team.eventId, EventStatus.OPEN)
+            tickets(team.eventId).andExpect { jsonPath("$.data[0].isPurchasable") { value(true) } }
+            val event = eventRepository.findById(team.eventId).get()
+            ReflectionTestUtils.setField(event, "eventBasic", EventBasic(name = event.getEventName(), startAt = now.minusMinutes(1), runTime = 120))
+            eventRepository.save(event)
+            listOf(EventStatus.OPEN, EventStatus.CALCULATING, EventStatus.CLOSED).forEach { eventStatus ->
+                setEventStatus(team.eventId, eventStatus)
+                tickets(team.eventId).andExpect {
+                    status { isOk() }
+                    jsonPath("$.data.length()") { value(1) }
+                    jsonPath("$.data[0].isPurchasable") { value(false) }
+                }
             }
 
             setEventStatus(team.eventId, EventStatus.DELETED)

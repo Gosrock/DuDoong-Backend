@@ -59,11 +59,11 @@ band.gosrock.api.v2
 - `V2EventBrowseDomainService` / `V2EventBrowseQuery` (#716): 사용자 앱 공연 탐색(P-1~P-5, 모두 비로그인)
   - 공개 공연 = OPEN·CALCULATING·CLOSED. 준비중·삭제는 상세(P-3)·티켓(P-5)에서 멤버여도 404, 홈·리스트에 절대 미포함 (호스트는 E-3 관리 화면)
   - 표시 상태: OPEN·시작 전 = UPCOMING, 그 외 공개 공연(시작한 OPEN, CALCULATING, CLOSED) = PAST
-  - P-2 정렬 UPCOMING: UPCOMING 그룹 시작 임박순 → PAST 그룹 최근 시작 순, 같은 시작이면 id 순. includePast=false 면 status=OPEN 만(시작한 OPEN 은 뒤에 PAST 로)
+  - P-2 정렬 UPCOMING: UPCOMING 그룹 시작 임박순 → PAST 그룹 최근 시작 순, 같은 시작이면 id 순. includePast=false 면 UPCOMING(OPEN + 시작 전)만, true 면 시작한 OPEN·CALCULATING·CLOSED 를 PAST 로 포함
   - 검색어 = 공연명 OR 호스트명 부분일치(대소문자 무시, `%`·`_`·`!` 는 QueryDSL contains 가 이스케이프). 태그 = 같은 분류 OR / 분류끼리 AND(분류별 EXISTS), 없는 태그 id 는 400
   - 목록의 태그·호스트명은 페이지 단위 일괄 조회(호스트는 스칼라 조회 — `Host.hostUsers` EAGER 회피)
   - 문의처: 공연 문의처, 없으면 `V2HostDomainService.displayContacts`(v2 연락처 → v1 전화/이메일)
-  - P-5: 유효 + `TicketItem.isOnSale` 티켓만. 계좌는 주문 단계에서 제공(응답에 없음, ArchUnit 으로 고정). 잔여 = 재고 공개 + 수량 지정일 때만
+  - P-5: 유효 + `TicketItem.isOnSale` 티켓만(지난 공연도 목록은 보임). `isPurchasable` = `V2TicketItemDomainService.isPurchasable`(공연 OPEN + 시작 전 + 판매 중 + 재고 > 0). 계좌는 주문 단계에서 제공(응답에 없음, ArchUnit 으로 고정). 잔여 = 재고 공개 + 수량 지정일 때만
 - **open-in-view**: test·staging·prod 는 켜져 있다(기본값). 요청 영속성 컨텍스트에 먼저 올린 엔티티는 락 트랜잭션(REQUIRES_NEW)에서 바뀌어도 같은 요청 안에서 갱신되지 않으므로, 락 서비스를 부르기 전 검사는 엔티티 대신 스칼라 조회로 한다 (`V2OrderDomainService.validateEventOrder`)
 - 티켓 공통 불변식(엔티티 `TicketItem`): 재고 감소 = 판매됨(`isSold`), 판매된 티켓 옵션 변경·삭제 불가, 무제한·매수 제한 없음 저장값(`TicketItem.UNLIMITED_SUPPLY_COUNT` / `NO_PURCHASE_LIMIT` = 1,000,000, `isUnlimitedSupply()` / `hasNoPurchaseLimit()` — v1 응답·어드민·v2 공통), **판매 중 판정(`isOnSale`: isSellable + 판매 기간)**
   - v1 장바구니·주문 생성(`CartValidator`/`OrderValidator.validCanCreate`)이 이 검사를 하고, v1 공개 티켓 목록은 판매 중인 티켓만 보여 준다(어드민 목록은 전부). v1 로 만든 티켓은 isSellable=true·기간 null 이라 영향 없음

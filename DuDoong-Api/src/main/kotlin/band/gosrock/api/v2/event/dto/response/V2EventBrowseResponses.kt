@@ -87,6 +87,8 @@ data class V2PublicTicketItemResponse(
     @field:Schema(description = "잔여 수량. 재고 공개 + 수량 지정 티켓만, 아니면 null")
     val remaining: Long?,
     val isSoldOut: Boolean,
+    @field:Schema(description = "지금 살 수 있는지: 공연 등록(OPEN) + 공연 시작 전 + 판매 중 + 매진 아님")
+    val isPurchasable: Boolean,
     @field:Schema(description = "1인 구매 매수 제한. null 이면 제한 없음")
     val purchaseLimit: Long?,
     @field:Schema(description = "붙은 옵션 (id 순)")

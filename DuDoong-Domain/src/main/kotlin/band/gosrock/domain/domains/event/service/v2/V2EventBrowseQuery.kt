@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component
  * 공개 공연 리스트(P-2) 검색 조건 (#716).
  * @property keyword 공연명 OR 호스트명 부분일치 (대소문자 무시, `%`·`_` 는 문자 그대로 — QueryDSL contains 가 이스케이프)
  * @property tagIdGroups 분류별 태그 id 묶음. 묶음 안은 OR, 묶음끼리는 AND ([V2EventBrowseDomainService.tagFilterGroups])
- * @property includePast false 면 OPEN 만, true 면 OPEN + CALCULATING + CLOSED
+ * @property includePast false 면 다가오는 공연(OPEN + 시작 전)만, true 면 OPEN(시작한 것 포함) + CALCULATING + CLOSED
  */
 data class V2EventBrowseSearch(
     val keyword: String? = null,
@@ -36,7 +36,7 @@ class V2EventBrowseQuery(private val queryFactory: JPAQueryFactory) {
     /** P-1: 등록(OPEN)·시작 전 공연, 시작 임박순 (같으면 id 순) 최대 [limit]개 */
     fun findUpcoming(now: LocalDateTime, limit: Int): List<Event> =
         queryFactory.selectFrom(event)
-            .where(event.status.eq(EventStatus.OPEN), event.eventBasic.startAt.gt(now))
+            .where(upcoming(now))
             .orderBy(event.eventBasic.startAt.asc(), event.id.asc())
             .limit(limit.toLong())
             .fetch()
@@ -47,8 +47,8 @@ class V2EventBrowseQuery(private val queryFactory: JPAQueryFactory) {
      * 같은 시작 시각은 id 순. 표시 상태([V2EventBrowseDomainService.displayStatusOf])와 같은 기준
      */
     fun search(search: V2EventBrowseSearch, now: LocalDateTime, pageable: Pageable): Page<Event> {
-        val upcoming = event.status.eq(EventStatus.OPEN).and(event.eventBasic.startAt.gt(now))
-        val content = base(queryFactory.selectFrom(event), search)
+        val upcoming = upcoming(now)
+        val content = base(queryFactory.selectFrom(event), search, now)
             .orderBy(
                 CaseBuilder().`when`(upcoming).then(0).otherwise(1).asc(),
                 CaseBuilder().`when`(upcoming).then(event.eventBasic.startAt)
@@ -59,7 +59,7 @@ class V2EventBrowseQuery(private val queryFactory: JPAQueryFactory) {
             .offset(pageable.offset)
             .limit(pageable.pageSize.toLong())
             .fetch()
-        val countQuery = base(queryFactory.select(event.count()).from(event), search)
+        val countQuery = base(queryFactory.select(event.count()).from(event), search, now)
         return PageableExecutionUtils.getPage(content, pageable) { countQuery.fetchOne() ?: 0L }
     }
 
@@ -82,16 +82,20 @@ class V2EventBrowseQuery(private val queryFactory: JPAQueryFactory) {
             .associate { it.get(host.id)!! to it.get(host.profile.name) }
     }
 
-    private fun <T> base(query: JPAQuery<T>, search: V2EventBrowseSearch): JPAQuery<T> {
+    private fun <T> base(query: JPAQuery<T>, search: V2EventBrowseSearch, now: LocalDateTime): JPAQuery<T> {
         val keyword = search.keyword?.trim()?.ifEmpty { null }
         // 검색어가 있을 때만 호스트 조인 (PK eq_ref)
         val joined = if (keyword == null) query else query.leftJoin(host).on(host.id.eq(event.hostId))
         return joined.where(
-            event.status.`in`(if (search.includePast) PUBLIC_STATUSES else UPCOMING_STATUSES),
+            if (search.includePast) event.status.`in`(PUBLIC_STATUSES) else upcoming(now),
             keyword?.let { event.eventBasic.name.containsIgnoreCase(it).or(host.profile.name.containsIgnoreCase(it)) },
             *search.tagIdGroups.map { hasAnyTag(it) }.toTypedArray(),
         )
     }
+
+    /** 다가오는 공연 = 등록(OPEN) + 시작 전. 표시 상태 UPCOMING 과 같은 기준 */
+    private fun upcoming(now: LocalDateTime): BooleanExpression =
+        event.status.eq(EventStatus.OPEN).and(event.eventBasic.startAt.gt(now))
 
     /** 태그 묶음 중 하나라도 붙은 공연 (EXISTS, uk(event_id, tag_id) 사용) */
     private fun hasAnyTag(tagIds: List<Long>): BooleanExpression =
@@ -100,7 +104,6 @@ class V2EventBrowseQuery(private val queryFactory: JPAQueryFactory) {
             .exists()
 
     companion object {
-        private val UPCOMING_STATUSES = listOf(EventStatus.OPEN)
         private val PUBLIC_STATUSES = V2EventBrowseDomainService.PUBLIC_STATUSES.toList()
     }
 }
