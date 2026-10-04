@@ -28,6 +28,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
@@ -39,6 +40,8 @@ import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.put
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
 
 /**
  * v2 호스트/멤버 API 통합 테스트 (#704).
@@ -62,6 +65,9 @@ class V2HostControllerTest {
     @Autowired private lateinit var eventRepository: EventRepository
 
     @Autowired private lateinit var presignedUrlService: S3UploadPresignedUrlService
+
+    @Autowired @Qualifier("requestMappingHandlerMapping")
+    private lateinit var handlerMapping: RequestMappingHandlerMapping
 
     // ===== fixtures =====
 
@@ -814,6 +820,30 @@ class V2HostControllerTest {
             mockMvc.get("/api/v2/hosts/abc").andExpect { status { isUnauthorized() } }
             mockMvc.get("/api/v2/hosts/abc/events").andExpect { status { isUnauthorized() } }
             mockMvc.get("/api/v2/hosts/1/members").andExpect { status { isUnauthorized() } }
+        }
+    }
+
+    // ===== DEC-013 호스트 삭제 미제공 (#721) =====
+
+    @Nested
+    @DisplayName("DEC-013 호스트 삭제 미제공")
+    inner class NoHostDelete {
+
+        @Test
+        fun `호스트 경로에 DELETE 매핑이 없다`() {
+            val deletePatterns = handlerMapping.handlerMethods.keys
+                .filter { RequestMethod.DELETE in it.methodsCondition.methods }
+                .flatMap { it.pathPatternsCondition?.patternValues ?: it.patternsCondition?.patterns.orEmpty() }
+            assertTrue(deletePatterns.none { it.matches(Regex("/api/v2/hosts/\\{[^}]+}/?")) }, "호스트 삭제 매핑이 생김: $deletePatterns")
+        }
+
+        @Test
+        fun `마스터가 DELETE 호출해도 405 또는 404 이고 호스트는 남아 있다`() {
+            val team = Team()
+            val status = mockMvc.delete("/api/v2/hosts/${team.hostId}") { with(auth(team.master)) }
+                .andReturn().response.status
+            assertTrue(status == 405 || status == 404, "status=$status")
+            assertTrue(hostRepository.findById(team.hostId).isPresent)
         }
     }
 
