@@ -459,7 +459,7 @@ def test_12_concurrent_check_in_enters_once(base_url, s):
     outcomes = sorted(get_data(r)["result"] for r in results)
     assert outcomes == ["ALREADY_ENTERED"] * 9 + ["ENTERED"], outcomes
     detail = get_data(requests.get(_ev(base_url, s, f"/issued-tickets/{ticket}", s.other_event_id), headers=_h(s, "other")))
-    assert detail["entrance"] == "DONE"
+    assert detail["ticket"]["entrance"] == "DONE"
 
 
 def test_13_concurrent_first_qr_token_converges(base_url, s):
@@ -494,7 +494,7 @@ def test_14_concurrent_approve_and_refuse_one_wins(base_url, s, round_):
     ])
 
     assert sorted([approved.status_code, refused.status_code]) == [200, 400], (approved.text[:200], refused.text[:200])
-    status = get_data(requests.get(_ev(base_url, s, f"/orders/{order}", s.other_event_id), headers=_h(s, "other")))["status"]
+    status = get_data(requests.get(_ev(base_url, s, f"/orders/{order}", s.other_event_id), headers=_h(s, "other")))["order"]["status"]
     if approved.status_code == 200:
         assert _code(refused) == "Order_400_5" and status == "APPROVED", refused.text[:200]
     else:
