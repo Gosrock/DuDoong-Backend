@@ -1,5 +1,6 @@
 package band.gosrock.domain.domains.notification.service.v2
 
+import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor
@@ -13,9 +14,12 @@ import band.gosrock.domain.domains.notification.repository.NotificationBulkRepos
 import band.gosrock.domain.domains.notification.repository.NotificationRepository
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
 import band.gosrock.domain.domains.order.domain.Order
+import band.gosrock.domain.domains.order.domain.OrderItemVo
+import band.gosrock.domain.domains.order.domain.OrderLineItem
 import band.gosrock.domain.domains.order.domain.OrderMethod
 import band.gosrock.domain.domains.order.domain.OrderRefuseReasonType
 import band.gosrock.domain.domains.order.domain.OrderStatus
+import band.gosrock.domain.domains.order.domain.RefundStatus
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.LocalDateTime
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -25,8 +29,8 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
 import org.springframework.test.util.ReflectionTestUtils
 
 /** v2 알림 저장 규칙 (#714): 수신자, 종류별 조건, 문구·딥링크·중복 키, 읽음 처리 */
@@ -233,6 +237,57 @@ class V2NotificationDomainServiceTest {
             assertEquals(0, s.markRead(1L, null, all = false))
             assertEquals(0, s.markRead(1L, emptyList(), all = false))
             assertTrue(calls.isEmpty())
+        }
+    }
+
+    @Nested
+    inner class UserWithdrawn {
+
+        private fun withdrawn(price: Long, refund: RefundStatus, method: OrderMethod = OrderMethod.APPROVAL): Order {
+            val vo = OrderItemVo().also {
+                ReflectionTestUtils.setField(it, "price", Money.wons(price))
+                ReflectionTestUtils.setField(it, "itemId", 10L)
+                ReflectionTestUtils.setField(it, "itemGroupId", 50L)
+            }
+            return order(OrderStatus.REFUND, method).also {
+                it.orderLineItems.add(OrderLineItem.forTest(quantity = 1L, orderItemVo = vo))
+                ReflectionTestUtils.setField(it, "refundStatus", refund)
+            }
+        }
+
+        private fun prepare() {
+            val event = Event(hostId = 100L, name = "정기공연", startAt = LocalDateTime.now().plusDays(1), runTime = 60L)
+            `when`(eventAdaptor.findById(50L)).thenReturn(event)
+            `when`(hostAdaptor.findById(100L)).thenReturn(host)
+        }
+
+        @Test
+        fun `유료 환불 요청 - 마스터·매니저에게 ORDER_REFUND_REQUESTED`() {
+            prepare()
+            withdrawn(6000, RefundStatus.REFUND_REQUESTED)
+            assertEquals(2, service.notifyOrderWithdrawnByUser("order-uuid"))
+            assertEquals(setOf(masterId, managerId), saved.map { it.userId }.toSet())
+            assertTrue(saved.all { it.type == NotificationType.ORDER_REFUND_REQUESTED })
+            assertTrue(saved.first().body.contains("주문(R1000001)에 환불 요청이"), saved.first().body)
+        }
+
+        @Test
+        fun `돌려줄 돈 없는 주문(0원)은 환불 요청 상태여도 ORDER_CANCELED_BY_USER`() {
+            prepare()
+            withdrawn(0, RefundStatus.REFUND_REQUESTED, OrderMethod.PAYMENT)
+            assertEquals(2, service.notifyOrderWithdrawnByUser("order-uuid"))
+            assertTrue(saved.all { it.type == NotificationType.ORDER_CANCELED_BY_USER })
+            assertTrue(saved.first().body.contains("주문(R1000001)이 주문자에 의해 취소"), saved.first().body)
+        }
+
+        @Test
+        fun `카드(PG) 결제 주문·REFUND 아닌 주문은 저장 안 함`() {
+            prepare()
+            withdrawn(5000, RefundStatus.REFUND_REQUESTED, OrderMethod.PAYMENT)
+            assertEquals(0, service.notifyOrderWithdrawnByUser("order-uuid"))
+            order(OrderStatus.CANCELED)
+            assertEquals(0, service.notifyOrderWithdrawnByUser("order-uuid"))
+            assertTrue(saved.isEmpty())
         }
     }
 }
