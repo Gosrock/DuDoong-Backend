@@ -38,7 +38,7 @@ import jakarta.persistence.Table
  * (event_id, user_id): v2 공연별 발급 티켓 목록·통계, 셀프 체크인 본인 티켓 조회 (#712, V004)
  * uuid unique: QR 스캔(v1/v2 입장 처리)·티켓 상세의 단건 조회 (#712, V004)
  * order_uuid: 주문의 발급 티켓 조회 (v1 승인·취소 시 티켓 철회, v2 주문 상세) (#712, V004)
- * (user_id, issued_ticket_id): 내 티켓(현재 소유분) 조회 — v2 티켓탭 T-1 (#719, V009)
+ * (user_id, issued_ticket_id): 내 티켓(현재 소유분) 조회 — v2 티켓탭 T-1 (#719, V008)
  */
 @Table(
     indexes = [

@@ -6,7 +6,7 @@ v1 경로 보호(입장·티켓 상세·주문 티켓 목록·사용자 환불, 
 연쇄 취소(v1 호스트 취소, 운영 취소, 운영 사용자 정지, 운영 공연 삭제) → 선물 만료(DB 로 공연 시각 이동) → 알림 →
 1인 제한(원 구매자 기준) → MySQL 동시성(같은 링크 동시 수락, 수락 ↔ 회수, 수락 ↔ v1 호스트 취소, 생성 ↔ 사용자 취소).
 
-DB 직접 접근(운영자 권한 부여, 공연 시각 이동)은 E2E_DB_NAME(기본 dudoong) 의 로컬 MySQL(127.0.0.1:13306, docker-compose 개발용 계정)에 한다.
+DB 직접 접근(운영자 권한 부여, 공연 시각 이동)은 E2E_DB(기본 dudoong, test_47 과 같은 환경변수) 의 로컬 MySQL(127.0.0.1:13306, docker-compose 개발용 계정)에 한다.
 재실행해도 충돌하지 않도록 유저 이메일에 실행마다 다른 접미사를 붙인다.
 """
 import os
@@ -27,7 +27,7 @@ START = (datetime.now() + timedelta(days=30)).replace(hour=18, minute=0, second=
 END = START + timedelta(minutes=120)
 PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", "latitude": 37.548369, "longitude": 126.920036}
 SECTIONS = [{"title": "공연 소개", "content": "<p>선물 테스트</p>", "sortOrder": 0}]
-DB_NAME = os.environ.get("E2E_DB_NAME", "dudoong")
+DB_NAME = os.environ.get("E2E_DB", "dudoong")
 PEOPLE = ["master", "manager", "guest", "sender", "receiver", "other", "admin", "racer1", "racer2", "racer3", "racer4", "racer5", "limit"] + [f"buyer{i}" for i in range(1, 10)]
 
 
@@ -332,12 +332,41 @@ def test_06_v1_host_cancel_cascade(base_url, s):
 
 def test_07_admin_paths(base_url, s):
     admin = _admin_base(base_url)
-    # 운영 취소
+    # 운영 취소: 대기 선물 무효 + 선물 완료 티켓 취소 + 받은 사람 알림 (주문자에게는 #726 호스트 취소 알림, 서로 겹치지 않음)
     order_uuid, uuids = _buy(base_url, s, "sender", "admin", 2)
     pending = _gift_ok(base_url, s, "sender", uuids[0])
+    accepted = _gift_ok(base_url, s, "sender", uuids[1])
+    receiver_uuid = get_data(_accept(base_url, s, "receiver", accepted["giftToken"]))["ticketUuid"]
     resp = requests.post(f"{admin}/v1/orders/{order_uuid}/cancel", json={"reason": "운영"}, headers=_h(s, "admin"))
     assert resp.status_code in (200, 204), resp.text
-    assert _sent(base_url, s, "sender")[pending["giftId"]]["cancelReason"] == "ORDER_CANCELED"
+    sent = _sent(base_url, s, "sender")
+    assert sent[pending["giftId"]]["cancelReason"] == "ORDER_CANCELED"
+    assert sent[accepted["giftId"]]["status"] == "ACCEPTED"
+    assert get_data(_ticket(base_url, s, "receiver", receiver_uuid))["state"] == "CANCELED"
+    assert len(_wait_notification(base_url, s, "receiver", "GIFT_TICKET_CANCELED", accepted["giftId"])) == 1
+    assert len(_wait_notification(base_url, s, "sender", "ORDER_CANCELED_BY_HOST", order_uuid)) == 1
+    resp = requests.get(f"{base_url}/v2/me/notifications", params={"size": 100}, headers=_h(s, "receiver"))
+    assert not [n for n in get_data(resp)["content"] if n["type"] == "ORDER_CANCELED_BY_HOST" and n["target"]["id"] == order_uuid]
+    resp = requests.get(f"{base_url}/v2/me/notifications", params={"size": 100}, headers=_h(s, "sender"))
+    assert not [n for n in get_data(resp)["content"] if n["type"] == "GIFT_TICKET_CANCELED"]
+
+    # 운영 환불 완료·환불 상태 변경: 이미 철회된 주문이라 선물 상태는 그대로, 오류 없음, 받은 사람 취소 알림 중복 없음
+    resp = requests.patch(f"{admin}/v1/refunds/{order_uuid}/complete", headers=_h(s, "admin"))
+    assert resp.status_code in (200, 204), resp.text
+    resp = requests.patch(f"{admin}/v1/orders/{order_uuid}/refund-status", json={"refundStatus": "REFUND_COMPLETED"}, headers=_h(s, "admin"))
+    assert resp.status_code in (200, 204), resp.text
+    sent = _sent(base_url, s, "sender")
+    assert sent[pending["giftId"]]["status"] == "CANCELED" and sent[accepted["giftId"]]["status"] == "ACCEPTED"
+    time.sleep(1)
+    assert len(_wait_notification(base_url, s, "receiver", "GIFT_TICKET_CANCELED", accepted["giftId"])) == 1
+
+    # 운영 환불 완료를 철회 전 주문에 바로 찍어도(v1·운영은 허용) 티켓이 유효하므로 대기 선물은 그대로
+    order2, uuids2 = _buy(base_url, s, "sender", "admin", 1)
+    g3 = _gift_ok(base_url, s, "sender", uuids2[0])
+    resp = requests.patch(f"{admin}/v1/refunds/{order2}/complete", headers=_h(s, "admin"))
+    assert resp.status_code in (200, 204), resp.text
+    assert _sent(base_url, s, "sender")[g3["giftId"]]["status"] == "PENDING"
+    assert_status(_cancel_gift(base_url, s, "sender", g3["giftId"]), 200)
 
     # 운영 사용자 정지 → 보낸 대기 선물 취소
     _, uuids = _buy(base_url, s, "other", "admin", 1)

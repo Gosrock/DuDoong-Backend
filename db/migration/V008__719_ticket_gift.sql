@@ -1,4 +1,4 @@
--- V009__719_ticket_gift.sql
+-- V008__719_ticket_gift.sql
 -- 이슈: Gosrock/DuDoong-Backend#719
 -- 목적: v2 사용자 앱 8단계 티켓탭·선물 (11 문서 8장, DEC-022·DEC-026)
 --   - tbl_ticket_gift: 티켓 선물 링크 (받는 사람을 미리 고르지 않는 링크 방식). 한 티켓에 기록이 여러 개일 수 있다(반환·거절·취소 뒤 재선물)

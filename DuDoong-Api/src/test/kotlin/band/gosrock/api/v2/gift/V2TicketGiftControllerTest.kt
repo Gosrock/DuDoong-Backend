@@ -19,7 +19,10 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
+import org.springframework.http.MediaType
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.util.ReflectionTestUtils
+import org.springframework.test.web.servlet.patch
 
 /** v2 티켓탭·선물 통합 테스트 (#719): 전이표 전체 행, 경로별 차단 표(v1·v2·운영), 에러 코드, viewState 판정 순서, 연쇄 취소, uuid 교체, 알림 */
 @ApiIntegrateSpringBootTest
@@ -651,6 +654,28 @@ class V2TicketGiftControllerTest : V2GiftTestSupport() {
             adminCancel(newAdmin(), q.orderUuid).andExpect { status { is2xxSuccessful() } }
             assertEquals(OrderStatus.CANCELED, orderRepository.findByOrderUuid(q.orderUuid).get().orderStatus)
             assertOrderCascade(q)
+        }
+
+        @Test
+        fun `운영 취소 뒤 운영 환불 완료·환불 상태 변경 - 선물 상태 그대로, 받은 사람 취소 알림 1건, 주문자 알림(#726)과 겹치지 않음`() {
+            val shop = Shop()
+            val sender = newBuyer()
+            val q = pendingAndAccepted(shop, sender)
+            val admin = newAdmin()
+            adminCancel(admin, q.orderUuid).andExpect { status { is2xxSuccessful() } }
+            mockMvc.patch("/internal-api/v1/refunds/${q.orderUuid}/complete") { with(user(admin.id.toString()).roles("ADMIN")) }
+                .andExpect { status { is2xxSuccessful() } }
+            mockMvc.patch("/internal-api/v1/orders/${q.orderUuid}/refund-status") {
+                with(user(admin.id.toString()).roles("ADMIN"))
+                contentType = MediaType.APPLICATION_JSON
+                content = json(mapOf("refundStatus" to "REFUND_COMPLETED"))
+            }.andExpect { status { is2xxSuccessful() } }
+            assertEquals(TicketGiftStatus.CANCELED, giftOf(q.pendingGiftId).status)
+            assertEquals(TicketGiftStatus.ACCEPTED, giftOf(q.acceptedGiftId).status)
+            assertEquals(1, awaitNotification(q.receiver, NotificationType.GIFT_TICKET_CANCELED))
+            assertEquals(1, awaitNotification(sender, NotificationType.ORDER_CANCELED_BY_HOST))
+            assertEquals(0, notificationCount(q.receiver, NotificationType.ORDER_CANCELED_BY_HOST))
+            assertEquals(0, notificationCount(sender, NotificationType.GIFT_TICKET_CANCELED))
         }
 
         @Test
