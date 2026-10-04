@@ -231,6 +231,13 @@ class V2NotificationDomainServiceTest {
         }
 
         @Test
+        fun `호스트 취소 - 결제형(무료 선착순·카드) 주문도 주문자에게 (결정 2026-10-05)`() {
+            paidOrder(OrderStatus.CANCELED, RefundStatus.REFUND_REQUESTED, price = 0, method = OrderMethod.PAYMENT, cancelReason = "무료 취소")
+            assertEquals(1, service.notifyOrderCanceledByHost("order-uuid"))
+            assertEquals(NotificationType.ORDER_CANCELED_BY_HOST, saved.single().type)
+        }
+
+        @Test
         fun `호스트 취소 알림 없음 - 거절(v1·v2), 사용자 철회(REFUND), 승인 대기·승인 상태`() {
             paidOrder(OrderStatus.CANCELED, RefundStatus.REFUND_REQUESTED, approvedAt = null)
             assertEquals(0, service.notifyOrderCanceledByHost("order-uuid"), "v1 거절 (approved_at 없음)")
@@ -256,7 +263,14 @@ class V2NotificationDomainServiceTest {
         }
 
         @Test
-        fun `환불 완료 알림 없음 - 완료 전, 0원 주문, 카드(PG) 결제 주문`() {
+        fun `환불 완료 알림 없음 - 완료 전, 0원 주문, 카드(PG) 결제 주문, 거절·취소·철회가 아닌 주문(승인 완료 등을 v1·운영에서 잘못 처리)`() {
+            for (status in listOf(OrderStatus.APPROVED, OrderStatus.CONFIRM, OrderStatus.PENDING_APPROVE)) {
+                paidOrder(status, RefundStatus.REFUND_COMPLETED)
+                assertEquals(0, service.notifyOrderRefundCompleted("order-uuid"), "$status")
+            }
+            paidOrder(OrderStatus.CANCELED, RefundStatus.REFUND_COMPLETED)
+            assertEquals(1, service.notifyOrderRefundCompleted("order-uuid"), "거절·취소는 대상")
+            saved.clear()
             paidOrder(OrderStatus.CANCELED, RefundStatus.REFUND_REQUESTED)
             assertEquals(0, service.notifyOrderRefundCompleted("order-uuid"))
             paidOrder(OrderStatus.CANCELED, RefundStatus.REFUND_COMPLETED, price = 0)

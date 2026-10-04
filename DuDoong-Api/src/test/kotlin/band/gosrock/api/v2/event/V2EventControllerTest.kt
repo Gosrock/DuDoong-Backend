@@ -385,12 +385,13 @@ class V2EventControllerTest {
         @Test
         fun `myRole 은 N+1 없음 - 호스트·공연 수와 관계없이 쿼리 수가 같다 (#726)`() {
             val statistics = entityManagerFactory.unwrap(SessionFactory::class.java).statistics
-            fun countQueries(user: User): Long {
+            // 통계는 컨텍스트 전체 공유라 앞 테스트의 비동기 알림 저장이 섞일 수 있다 → 3번 재고 최솟값 (잡음은 더하기만 한다)
+            fun countQueries(user: User): Long = (1..3).minOf {
                 statistics.isStatisticsEnabled = true
                 try {
                     statistics.clear()
                     mockMvc.get("/api/v2/me/events") { with(auth(user)) }.andExpect { status { isOk() } }
-                    return statistics.prepareStatementCount
+                    statistics.prepareStatementCount
                 } finally {
                     statistics.isStatisticsEnabled = false
                 }

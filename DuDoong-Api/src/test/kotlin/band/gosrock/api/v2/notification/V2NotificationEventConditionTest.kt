@@ -78,12 +78,14 @@ class V2NotificationEventConditionTest {
     }
 
     @Test
-    fun `주문 철회 - 승인형 CANCELED 만 호출, 결제형 CANCELED 는 호출 안 함`() {
+    fun `주문 철회 - 거절 알림은 승인형 CANCELED 만, 호스트 취소 알림은 결제 방식 무관 CANCELED 전부 (#726 결정)`() {
         publishInTransaction(withDraw(OrderMethod.PAYMENT, OrderStatus.CANCELED))
-        verifyNoInteractions(service)
+        verify(service, never()).notifyOrderRefused("uuid")
+        verify(service).notifyOrderCanceledByHost("uuid")
+        reset(service)
         publishInTransaction(withDraw(OrderMethod.APPROVAL, OrderStatus.CANCELED))
         verify(service).notifyOrderRefused("uuid")
-        // 호스트 취소 알림도 같은 조건으로 함께 호출되고, 거절/취소 구분은 서비스가 한다 (#726)
+        // 거절/취소 구분은 서비스가 커밋된 주문으로 한다
         verify(service).notifyOrderCanceledByHost("uuid")
     }
 
@@ -94,10 +96,15 @@ class V2NotificationEventConditionTest {
     }
 
     @Test
-    fun `환불 완료 - 조건 없이 호출 (판정은 서비스), 롤백되면 호출 안 함 (#726)`() {
-        publishInTransaction(RefundCompletedOrderEvent("uuid"), commit = false)
+    fun `환불 완료 - 결제형(카드 PG·무료 선착순)은 큐에 넣지 않음, 나머지는 서비스가 판정, 롤백되면 호출 안 함 (#726)`() {
+        publishInTransaction(RefundCompletedOrderEvent("uuid", OrderMethod.PAYMENT))
+        verifyNoInteractions(service)
+        publishInTransaction(RefundCompletedOrderEvent("uuid", OrderMethod.APPROVAL), commit = false)
         verify(service, never()).notifyOrderRefundCompleted("uuid")
-        publishInTransaction(RefundCompletedOrderEvent("uuid"))
+        publishInTransaction(RefundCompletedOrderEvent("uuid", OrderMethod.APPROVAL))
+        verify(service).notifyOrderRefundCompleted("uuid")
+        reset(service)
+        publishInTransaction(RefundCompletedOrderEvent("uuid", null))
         verify(service).notifyOrderRefundCompleted("uuid")
     }
 

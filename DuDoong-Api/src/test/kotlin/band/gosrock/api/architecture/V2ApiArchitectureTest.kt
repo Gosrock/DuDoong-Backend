@@ -11,6 +11,7 @@ import band.gosrock.api.v2.event.dto.response.V2HomeEventResponse
 import band.gosrock.api.v2.event.dto.response.V2HomeResponse
 import band.gosrock.api.v2.event.dto.response.V2PublicTicketItemResponse
 import band.gosrock.api.v2.event.dto.response.V2PublicTicketOptionResponse
+import band.gosrock.api.v2.event.usecase.V2PublicTicketItemMapper
 import band.gosrock.api.v2.event.usecase.V2ReadEventDetailUseCase
 import band.gosrock.api.v2.event.usecase.V2ReadHomeUseCase
 import band.gosrock.api.v2.event.usecase.V2ReadOnSaleTicketItemsUseCase
@@ -118,6 +119,8 @@ class V2ApiArchitectureTest {
             V2SearchEventsUseCase::class.java,
             V2ReadEventDetailUseCase::class.java,
             V2ReadOnSaleTicketItemsUseCase::class.java,
+            // P-5·O-0 공통 티켓 응답 (#726). 계좌는 O-0 유스케이스가 따로 붙인다
+            V2PublicTicketItemMapper::class.java,
             *PUBLIC_BROWSE_RESPONSES,
         )
 

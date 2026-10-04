@@ -14,7 +14,10 @@ data class V2MyEventResponse(
     val eventId: Long,
     val hostId: Long,
     val hostName: String?,
-    @field:Schema(description = "이 공연 호스트에서 내 역할 (MASTER / MANAGER / GUEST). 일반 멤버(GUEST)는 공연 삭제 불가 — 카드 메뉴 표시용")
+    @field:Schema(
+        description = "이 공연 호스트에서 내 역할. 일반 멤버(GUEST)는 공연 삭제 불가 — 카드 메뉴 표시용",
+        allowableValues = ["MASTER", "MANAGER", "GUEST"],
+    )
     val myRole: String,
     val name: String?,
     val posterImageUrl: String?,

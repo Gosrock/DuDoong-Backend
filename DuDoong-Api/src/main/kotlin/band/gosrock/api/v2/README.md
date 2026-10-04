@@ -56,8 +56,8 @@ band.gosrock.api.v2
     - 중복 방지 uk(type, dedup_key, user_id): 주문 = orderUuid, 멤버 추가 = `host_user:{id}`. 일괄 저장은 `NotificationBulkRepository`(multi-row INSERT, 이미 있는 키는 건너뜀, 경합으로 uk 에 걸리면 행 단위 재시도)
     - 사용자 취소·환불 요청(#718, REFUND — v1 사용자 환불 포함) → 호스트 활성 마스터·매니저: 환불 요청이 걸리면 `ORDER_REFUND_REQUESTED`, 무료 취소는 `ORDER_CANCELED_BY_USER`. 카드(PG) 결제 주문은 condition 으로 제외
     - 두 알림 모두 엔티티가 발행하는 공통 도메인 이벤트에 붙으므로 v1 호스트 API·운영 어드민(`/internal-api/v1/orders/{uuid}/cancel`, `/internal-api/v1/refunds/{uuid}/complete`, `/internal-api/v1/orders/{uuid}/refund-status`) 경로도 저장된다. 운영 어드민(DuDoong-Admin 모듈)은 Api 서버에 같이 올라가 같은 `EventPublisherAspect`·핸들러를 쓴다
-    - 호스트의 승인 후 취소(#726, v1 취소 포함) → 주문자 `ORDER_CANCELED_BY_HOST`: 거절과 같은 `WithDrawOrderEvent`·condition(승인형 CANCELED)에 핸들러를 하나 더 붙이고, 거절/취소 구분은 서비스가 `V2OrderStatus` 로 판정(둘 중 하나만 저장)
-    - 환불 완료(#726, v1 호스트 환불 완료 포함) → 주문자 `ORDER_REFUND_COMPLETED`: `Order.completeRefund` 가 `RefundCompletedOrderEvent`(uuid 만)를 발행. 돌려준 돈이 있는 승인형 주문만(0원·카드 결제 제외, 서비스가 판정). 다시 완료해도 uk 로 1건
+    - 호스트의 승인 후 취소(#726, v1 취소 포함) → 주문자 `ORDER_CANCELED_BY_HOST`: `WithDrawOrderEvent` 중 CANCELED 전부(결제 방식 무관 — 무료 선착순·카드 결제 포함, 결정 2026-10-05)에 붙고, 거절/취소 구분은 서비스가 `V2OrderStatus` 로 판정(둘 중 하나만 저장). 사용자 본인 취소(REFUND)는 대상 아님
+    - 환불 완료(#726, v1 호스트 환불 완료 포함) → 주문자 `ORDER_REFUND_COMPLETED`: `Order.completeRefund` 가 `RefundCompletedOrderEvent`(uuid·결제 방식)를 발행, 결제형(PAYMENT)은 condition 으로 거른다. 거절·취소·철회(CANCELED·REFUND) 상태 + 돌려준 돈이 있는 주문만(서비스가 판정 — v1·운영 어드민은 상태 검사 없이 환불 완료로 바꿀 수 있어 승인 완료 주문 등은 저장 안 함). 다시 완료해도 uk 로 1건
     - 알림 없음: v1 초대 → 수락 경로(본인이 수락하므로 "추가됨" 알림 대상 아님, `HostUserJoinEvent` 는 슬랙만)
     - 처리가 끝난 승인 대기 알림(승인·거절된 주문)을 자동으로 읽음 처리하지 않는다 (후속)
     - 거절 사유는 본문에 100자 + `…`, extra 값은 각각 300자 + `…` 로 자른 뒤 직렬화
@@ -69,7 +69,7 @@ band.gosrock.api.v2
   - 검색어 = 공연명 OR 호스트명 부분일치(최대 50자, 대소문자 무시, `%`·`_`·`!` 는 QueryDSL contains 가 이스케이프). 태그 = 같은 분류 OR / 분류끼리 AND(분류별 EXISTS), 없는 태그 id 는 400 `Event_400_23`, 51개 이상은 요청 검증 400
   - 목록의 태그·호스트명은 페이지 단위 일괄 조회(호스트는 스칼라 조회 — `Host.hostUsers` EAGER 회피)
   - 문의처: 공연 문의처, 없으면 `V2HostDomainService.displayContacts`(v2 연락처 → v1 전화/이메일)
-  - P-5: 유효 + `TicketItem.isOnSale` 티켓만(지난 공연도 목록은 보임). `isPurchasable` = `V2TicketItemDomainService.isPurchasableInV2App`(v2 결제 방식 DUDOONG/FREE + 공연 OPEN + 시작 전 + 판매 중 + 재고 > 0, 기존 PG 티켓은 false). 티켓·옵션 그룹은 `V2TicketItemQuery` fetch join(옵션 N+1 없음) + 티켓별 승인 대기 수량 그룹 쿼리 1개(쿼리 4개). 계좌는 로그인한 결제 화면(O-0)에서만 제공(P-5 응답에 없음, ArchUnit 으로 고정). 잔여 = 재고 - 승인 대기 수량(#726, `V2TicketItemDomainService.availableQuantity` — 주문 재고 검사 #723 과 같은 기준), 재고 공개 + 수량 지정일 때만 값. 매진·구매 가능도 같은 잔여로 판정
+  - P-5: 유효 + `TicketItem.isOnSale` 티켓만(지난 공연도 목록은 보임). `isPurchasable` = `V2TicketItemDomainService.isPurchasableInV2App`(v2 결제 방식 DUDOONG/FREE + 공연 OPEN + 시작 전 + 판매 중 + 재고 > 0, 기존 PG 티켓은 false). 티켓·옵션 그룹은 `V2TicketItemQuery` fetch join(옵션 N+1 없음) + 티켓별 승인 대기 수량 그룹 쿼리 1개(쿼리 4개). 계좌는 로그인한 결제 화면(O-0)에서만 제공(P-5 응답에 없음, ArchUnit 으로 고정). 잔여 = 재고 - 승인 대기 수량(#726, `V2TicketItemDomainService.availableQuantity` — 주문 재고 검사 #723 과 같은 기준), 재고 공개 + 수량 지정일 때만 값. 매진·구매 가능도 같은 잔여로 판정. 호스트 T-1(티켓 관리)·D-1(대시보드)은 기존 `remaining`·`soldCount` 의미(재고 기준)를 그대로 두고 `pendingApproveCount`(승인 대기 수량)를 따로 준다 — 같은 그룹 쿼리(결정 2026-10-05). T-1 `hasPendingOrders` 도 이 값 > 0
 - `V2UserOrderDomainService` / `V2UserOrderQuery` / `V2MyOrderStatus` (#718): 사용자 앱 주문(O-1~O-4)
   - 생성: v1 장바구니 → 주문을 한 트랜잭션에서. **장바구니는 저장하지 않는다**(메모리 `Cart` 로 v1 `CartValidator` 검증만 — 주문 생성 때 v1 '최근 장바구니'를 덮어쓰지 않음), 주문은 v1 `OrderFactory.createNormalOrder(cart, userId)` 규칙 그대로. 단 주문이 **완료(승인·무료 확정)되면 v1 과 같이 그 사용자의 v1 장바구니가 지워진다**(`DoneOrderEvent` → `DoneOrderEventHandler`, v1 기존 동작)
   - 무료 선착순은 이어서 v1 `FreeOrderService`(별도 락·트랜잭션, 발급이 커밋된 주문을 읽기 때문). 확정이 실패하면 `failUnconfirmed` 로 주문을 FAILED 처리(새 트랜잭션)하고 원래 오류를 돌려준다 — 재시도는 새 주문
@@ -83,7 +83,7 @@ band.gosrock.api.v2
   - 취소: `주문:{uuid}` 락. 승인 대기 = 공연 OPEN + 시작 전, 승인 완료 = + 입장·주문자 소유 아닌(선물 대비) 티켓 없음. 카드(PG) 결제 주문은 `Order_400_24`. 승인 완료 유료는 v1 `Order.refund`, 그 외(승인 대기, 무료 승인)는 `Order.withdrawByUser`(internal) — 둘 다 상태 REFUND(v1 메일·슬랙이 '구매자 환불'로 처리), 유료만 환불 요청 + 환불 계좌(`tbl_order_refund_account`, 필수)
   - 환불 계좌 노출: 호스트 R-2 상세·F-1 환불 목록·변경 응답에서 **매니저 이상(+SUPER_ADMIN)만** 전체, 일반 멤버는 null. 주문자 O-3 은 계좌번호 뒤 4자리
   - 발급 티켓(O-3)은 주문자 소유분만 (8단계 선물 대비)
-  - 결제 화면 O-0 `GET /api/v2/events/{eventId}/ticket-items/{ticketItemId}/checkout` (#726, 로그인): P-5 와 같은 티켓 + 입금 계좌(두둥티켓만, O-3 `payment.account` 와 같은 형태). [결제하기]·토스 송금 전에 계좌를 보여 주기 위한 것이라 공개 경로에 넣지 않는다. 판매 중 아닌 티켓·다른 공연 티켓은 404
+  - 결제 화면 O-0 `GET /api/v2/events/{eventId}/ticket-items/{ticketItemId}/checkout` (#726, 로그인): P-5 와 같은 티켓 + 입금 계좌(두둥티켓 + `isPurchasable` 일 때만 — 지난 공연·정산중·종료·매진은 null, O-3 `payment.account` 와 같은 형태). 티켓 응답은 P-5 와 같은 `V2PublicTicketItemMapper` 로 만든다. [결제하기]·토스 송금 전에 계좌를 보여 주기 위한 것이라 공개 경로에 넣지 않는다. 판매 중 아닌 티켓·다른 공연 티켓은 404
   - 승인형 1인 제한 = 발급 수 + 같은 사용자·같은 티켓 승인 대기 수량 + 이번 수량 (v1 `OrderValidator.validApproveStatePurchaseLimit`, `Order.createApproveOrder` 에서 v1·v2 공통). v2 는 `티켓관리` 락 안이라 같은 사용자 동시 주문도 보장(#726 동시성 테스트), v1 은 `주문생성:{userId}` 락으로 v1 끼리 보장
 - **open-in-view**: test·staging·prod 는 켜져 있다(기본값). 요청 영속성 컨텍스트에 먼저 올린 엔티티는 락 트랜잭션(REQUIRES_NEW)에서 바뀌어도 같은 요청 안에서 갱신되지 않으므로, 락 서비스를 부르기 전 검사는 엔티티 대신 스칼라 조회로 한다 (`V2OrderDomainService.validateEventOrder`)
 - 티켓 공통 불변식(엔티티 `TicketItem`): 재고 감소 = 판매됨(`isSold`), 판매된 티켓 옵션 변경·삭제 불가, 무제한·매수 제한 없음 저장값(`TicketItem.UNLIMITED_SUPPLY_COUNT` / `NO_PURCHASE_LIMIT` = 1,000,000, `isUnlimitedSupply()` / `hasNoPurchaseLimit()` — v1 응답·어드민·v2 공통), **판매 중 판정(`isOnSale`: isSellable + 판매 기간)**

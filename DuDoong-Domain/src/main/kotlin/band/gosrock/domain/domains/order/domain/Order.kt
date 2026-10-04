@@ -312,7 +312,7 @@ class Order() : BaseTimeEntity() {
         refundStatus = RefundStatus.REFUND_COMPLETED
         refundStatusChangedAt = LocalDateTime.now()
         // 저장 전 주문(uuid 없음)은 알림 대상이 아니다
-        uuid?.let { Events.raise(RefundCompletedOrderEvent(it)) }
+        uuid?.let { Events.raise(RefundCompletedOrderEvent(it, orderMethod)) }
     }
 
     fun attachCoupon(orderCouponVo: OrderCouponVo) {

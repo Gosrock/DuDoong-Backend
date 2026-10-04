@@ -35,4 +35,6 @@ data class V2DashboardTicketItemResponse(
     val soldCount: Long,
     @field:Schema(description = "판매 수량. null 이면 무제한 (DEC-020)")
     val supplyCount: Long?,
+    @field:Schema(description = "승인 대기 주문 수량 합 (#726, 판매 매수·재고와 별개)")
+    val pendingApproveCount: Long,
 )

@@ -31,7 +31,7 @@ START = (datetime.now() + timedelta(days=30)).replace(hour=18, minute=0, second=
 END = START + timedelta(minutes=120)
 PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", "latitude": 37.548369, "longitude": 126.920036}
 ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-123-456789"}
-BUYERS = ["b1", "b2", "b3", "late", "evil", "lim1", "lim2", "lim3", "cancel1", "cancel2", "free1", "adm1", "adm2", "admin"]
+BUYERS = ["b1", "b2", "b3", "late", "evil", "lim1", "lim2", "lim3", "cancel1", "cancel2", "free1", "adm1", "adm2", "admin", "fcfs_v2", "fcfs_v1", "fcfs_self", "wrong"]
 E2E_DB = os.environ.get("E2E_DB", "dudoong")
 
 
@@ -42,6 +42,7 @@ class FollowupState:
     a: int = 0
     b: int = 0
     free: int = 0
+    fcfs: int = 0
     orders: dict = {}
 
 
@@ -71,9 +72,9 @@ def _email(who):
     return f"fix726-{who}-{RUN}@dudoong.com"
 
 
-def _ticket_body(name, supply, pay_type="DUDOONG"):
+def _ticket_body(name, supply, pay_type="DUDOONG", approval=True):
     body = {"payType": pay_type, "name": name, "description": "726", "price": 5000, "supplyCount": supply, "account": ACCOUNT,
-            "approvalRequired": True, "isQuantityPublic": True, "purchaseLimit": 4, "saleStartAt": None, "saleEndAt": None}
+            "approvalRequired": approval, "isQuantityPublic": True, "purchaseLimit": 4, "saleStartAt": None, "saleEndAt": None}
     if pay_type == "FREE":
         body.update(price=0, account=None)
     return body
@@ -174,8 +175,8 @@ def test_01_setup(base_url, s):
     )
     assert_status(resp, 200)
     s.event_id = get_data(resp)["eventId"]
-    for attr, name, supply, pay_type in [("a", "A석", 5, "DUDOONG"), ("b", "B석", 20, "DUDOONG"), ("free", "무료", 10, "FREE")]:
-        resp = requests.post(_ev(base_url, s, "/ticket-items"), json=_ticket_body(name, supply, pay_type), headers=_h(s, "manager"))
+    for attr, name, supply, pay_type, approval in [("a", "A석", 5, "DUDOONG", True), ("b", "B석", 30, "DUDOONG", True), ("free", "무료", 10, "FREE", True), ("fcfs", "선착순", 10, "FREE", False)]:
+        resp = requests.post(_ev(base_url, s, "/ticket-items"), json=_ticket_body(name, supply, pay_type, approval), headers=_h(s, "manager"))
         assert_status(resp, 200)
         setattr(s, attr, get_data(resp)["ticketItemId"])
     key = get_data(requests.post(_ev(base_url, s, "/images"), json={"purpose": "POSTER", "extension": "PNG"}, headers=_h(s, "manager")))["key"]
@@ -224,13 +225,21 @@ def test_04_remaining_subtracts_pending(base_url, s):
     s.orders["b2"] = _ok_order(base_url, s, "b2", s.a, 3, depositor="김구구")
     a = _public_item(base_url, s, s.a)
     assert a["remaining"] == 0 and a["isSoldOut"] is True and a["isPurchasable"] is False
-    assert get_data(_checkout(base_url, s, "b3", s.a))["ticket"]["remaining"] == 0
+    sold_out = get_data(_checkout(base_url, s, "b3", s.a))
+    assert sold_out["ticket"]["remaining"] == 0 and sold_out["ticket"]["isPurchasable"] is False
+    # 살 수 없으면 계좌를 주지 않는다 (입금 방지)
+    assert sold_out["account"] is None
+    # 호스트 T-1·D-1: 재고(remaining)는 그대로, 승인 대기는 별도 필드 (결정 2026-10-05)
+    manage = next(t for t in get_data(requests.get(_ev(base_url, s, "/ticket-items/manage"), headers=_h(s, "guest"))) if t["ticketItemId"] == s.a)
+    assert manage["remaining"] == 5 and manage["pendingApproveCount"] == 5 and manage["hasPendingOrders"] is True
+    dash = get_data(requests.get(_ev(base_url, s, "/dashboard"), headers=_h(s, "guest")))
+    assert next(t for t in dash["tickets"]["items"] if t["ticketItemId"] == s.a)["pendingApproveCount"] == 5
     # 화면과 주문 재고 검사(#723)가 같은 기준
     resp = _v2_order(base_url, s, "late", s.a, 1)
     assert_status(resp, 400)
     assert resp.json()["code"] == "Ticket_Item_400_1", resp.text
     # 다른 티켓은 영향 없음
-    assert _public_item(base_url, s, s.b)["remaining"] == 20
+    assert _public_item(base_url, s, s.b)["remaining"] == 30
     # 거절하면 대기에서 빠져 잔여가 돌아온다
     refuse = requests.post(_ev(base_url, s, f"/orders/{s.orders['b2']}/refuse"), json={"reasonType": "SOLD_OUT"}, headers=_h(s, "manager"))
     assert_status(refuse, 200)
@@ -276,39 +285,75 @@ def test_06_purchase_limit_concurrent_pending(base_url, s):
         assert_status(_v2_order(base_url, s, who, s.b, 4 - pending, depositor="경계"), 200)
 
 
+def _approve_and_cancel(base_url, s, who, reason="취소"):
+    # 입금자명을 매번 다르게 해 10초 중복 요청 판정(같은 사용자·티켓·수량·입금자명)에 걸리지 않게 한다
+    o = _ok_order(base_url, s, who, s.b, 1, depositor=f"기준{uuid.uuid4().hex[:8]}")
+    assert_status(requests.post(_ev(base_url, s, f"/orders/{o}/approve"), headers=_h(s, "manager")), 200)
+    assert_status(requests.post(_ev(base_url, s, f"/orders/{o}/cancel"), json={"reason": reason}, headers=_h(s, "manager")), 200)
+    return o
+
+
+def _later_reference(base_url, s, who):
+    """'알림 없음' 검증의 기준점: 같은 사용자에게 나중에 일어난 알림(새 주문 승인 → 호스트 취소)이 도착할 때까지 기다린다 (고정 대기 대신)"""
+    ref = _approve_and_cancel(base_url, s, who, "기준")
+    assert _wait_notification(base_url, s, who, "ORDER_CANCELED_BY_HOST", ref), "기준 알림이 도착하지 않음"
+
+
 def test_07_host_cancel_and_refund_complete_notifications(base_url, s):
     # v2: 승인 → 호스트 취소 → 환불 완료
-    o1 = _ok_order(base_url, s, "cancel1", s.b, 1)
-    assert_status(requests.post(_ev(base_url, s, f"/orders/{o1}/approve"), headers=_h(s, "manager")), 200)
-    assert_status(requests.post(_ev(base_url, s, f"/orders/{o1}/cancel"), json={"reason": "공연 취소"}, headers=_h(s, "manager")), 200)
+    o1 = _approve_and_cancel(base_url, s, "cancel1", "공연 취소")
     canceled = _wait_notification(base_url, s, "cancel1", "ORDER_CANCELED_BY_HOST", o1)
     assert len(canceled) == 1 and canceled[0]["body"].endswith("사유: 공연 취소"), canceled
-    assert not _notifications(base_url, s, "cancel1", "ORDER_REFUSED")
     assert_status(requests.post(_ev(base_url, s, f"/refunds/{o1}/complete"), headers=_h(s, "manager")), 200)
     assert len(_wait_notification(base_url, s, "cancel1", "ORDER_REFUND_COMPLETED", o1)) == 1
     # 다시 눌러도 1건 (멱등)
     assert_status(requests.post(_ev(base_url, s, f"/refunds/{o1}/complete"), headers=_h(s, "manager")), 200)
-    time.sleep(1)
+    _later_reference(base_url, s, "cancel1")
     assert len(_notifications(base_url, s, "cancel1", "ORDER_REFUND_COMPLETED")) == 1
+    assert not _notifications(base_url, s, "cancel1", "ORDER_REFUSED")
 
-    # v1: 승인 → v1 취소 → v1 환불 완료
+    # v1: 승인 → v1 취소 → v1 환불 완료 2번 (uk 로 1건)
     o2 = _ok_order(base_url, s, "cancel2", s.b, 1)
     assert_status(requests.post(f"{base_url}/v1/events/{s.event_id}/orders/{o2}/approve", headers=_h(s, "master")), 200)
     assert_status(requests.post(f"{base_url}/v1/events/{s.event_id}/orders/{o2}/cancel", json={"reason": "v1 취소"}, headers=_h(s, "master")), 200)
     assert len(_wait_notification(base_url, s, "cancel2", "ORDER_CANCELED_BY_HOST", o2)) == 1
-    assert_status(requests.patch(f"{base_url}/v1/events/{s.event_id}/refunds/{o2}/complete", headers=_h(s, "master")), 200)
-    assert len(_wait_notification(base_url, s, "cancel2", "ORDER_REFUND_COMPLETED", o2)) == 1
+    for _ in range(2):
+        assert_status(requests.patch(f"{base_url}/v1/events/{s.event_id}/refunds/{o2}/complete", headers=_h(s, "master")), 200)
+    assert _wait_notification(base_url, s, "cancel2", "ORDER_REFUND_COMPLETED", o2)
+    _later_reference(base_url, s, "cancel2")
+    assert len([n for n in _notifications(base_url, s, "cancel2", "ORDER_REFUND_COMPLETED") if n["target"]["id"] == o2]) == 1
 
     # 거절은 거절 알림만, 0원(무료) 환불 완료는 알림 없음
     assert _wait_notification(base_url, s, "b2", "ORDER_REFUSED", s.orders["b2"])
-    assert not _notifications(base_url, s, "b2", "ORDER_CANCELED_BY_HOST")
     f = _ok_order(base_url, s, "free1", s.free, 1, depositor=None, method="FREE")
     assert_status(requests.post(_ev(base_url, s, f"/orders/{f}/refuse"), json={"reasonType": "SOLD_OUT"}, headers=_h(s, "manager")), 200)
     assert _wait_notification(base_url, s, "free1", "ORDER_REFUSED", f)
     assert_status(requests.post(_ev(base_url, s, f"/refunds/{f}/complete"), headers=_h(s, "manager")), 200)
-    time.sleep(1.5)
+    _later_reference(base_url, s, "free1")
     assert not _notifications(base_url, s, "free1", "ORDER_REFUND_COMPLETED")
+    assert not [n for n in _notifications(base_url, s, "free1", "ORDER_CANCELED_BY_HOST") if n["target"]["id"] == f]
 
+
+def test_09_fcfs_host_cancel_and_wrong_refund_complete(base_url, s):
+    """결정 2026-10-05: 무료 선착순(결제형)도 호스트 취소 알림 (v2·v1). 승인 완료 주문을 v1 에서 잘못 환불 완료해도 알림 없음"""
+    for who, path in [("fcfs_v2", "v2"), ("fcfs_v1", "v1")]:
+        o = _ok_order(base_url, s, who, s.fcfs, 1, depositor=None, method="FREE")
+        url = _ev(base_url, s, f"/orders/{o}/cancel") if path == "v2" else f"{base_url}/v1/events/{s.event_id}/orders/{o}/cancel"
+        assert_status(requests.post(url, json={"reason": f"{path} 무료 취소"}, headers=_h(s, "master")), 200)
+        found = _wait_notification(base_url, s, who, "ORDER_CANCELED_BY_HOST", o)
+        assert len(found) == 1 and found[0]["body"].endswith(f"사유: {path} 무료 취소"), found
+    # 사용자 본인 취소는 호스트 취소 알림 대상 아님
+    o = _ok_order(base_url, s, "fcfs_self", s.fcfs, 1, depositor=None, method="FREE")
+    assert_status(requests.post(f"{base_url}/v2/me/orders/{o}/cancel", json={}, headers=_h(s, "fcfs_self")), 200)
+    _later_reference(base_url, s, "fcfs_self")
+    assert not [n for n in _notifications(base_url, s, "fcfs_self", "ORDER_CANCELED_BY_HOST") if n["target"]["id"] == o]
+
+    # 승인 완료 주문 v1 환불 완료 → 알림 없음
+    approved = _ok_order(base_url, s, "wrong", s.b, 1)
+    assert_status(requests.post(_ev(base_url, s, f"/orders/{approved}/approve"), headers=_h(s, "manager")), 200)
+    assert_status(requests.patch(f"{base_url}/v1/events/{s.event_id}/refunds/{approved}/complete", headers=_h(s, "master")), 200)
+    _later_reference(base_url, s, "wrong")
+    assert not _notifications(base_url, s, "wrong", "ORDER_REFUND_COMPLETED")
 
 def _make_admin(email):
     """운영 어드민 API 는 DB 의 account_role 을 매 요청 읽는다 (JwtTokenFilter). test_33·34 와 같은 mysql CLI, DB 이름만 환경변수"""

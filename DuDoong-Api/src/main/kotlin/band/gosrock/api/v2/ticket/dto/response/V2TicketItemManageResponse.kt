@@ -38,6 +38,8 @@ data class V2TicketItemManageResponse(
     val isSold: Boolean,
     @field:Schema(description = "승인 대기 주문 존재 여부. isSold 또는 이 값이 true 면 잠김: 설명·판매기간·재고공개·매수제한·수량 증가만 수정, 옵션 변경·옵션 추가금 변경 불가")
     val hasPendingOrders: Boolean,
+    @field:Schema(description = "승인 대기 주문 수량 합 (#726). remaining(재고)에서 빠지지 않은 값 — 사용자 앱 잔여(P-5) = remaining - 이 값")
+    val pendingApproveCount: Long,
     @field:Schema(description = "지금 사용자가 살 수 있는지: 판매 중 + 판매 기간 + 공연 등록 + 공연 시작 전 + 재고 > 0")
     val isPurchasable: Boolean,
     @field:Schema(description = "입금 계좌 (DUDOONG 만)")

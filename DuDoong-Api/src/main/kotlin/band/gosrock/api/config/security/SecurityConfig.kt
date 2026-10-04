@@ -98,6 +98,7 @@ class SecurityConfig(
             "/api/v2/events",
             "/api/v2/events/{eventId:[0-9]+}",
             "/api/v2/events/{eventId:[0-9]+}/ticket-items",
+            // 주의: 결제 화면 O-0 `/api/v2/events/{eventId}/ticket-items/{ticketItemId}/checkout` 은 입금 계좌를 주므로 공개 경로에 넣지 말 것 (#726)
         )
     }
 }

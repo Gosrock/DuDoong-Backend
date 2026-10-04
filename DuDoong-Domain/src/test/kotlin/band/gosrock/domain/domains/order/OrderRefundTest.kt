@@ -90,7 +90,9 @@ class OrderRefundTest {
 
             ReflectionTestUtils.setField(order, "uuid", "order-uuid")
             order.completeRefund()
-            assertEquals("order-uuid", (published.single() as RefundCompletedOrderEvent).orderUuid)
+            val event = published.single() as RefundCompletedOrderEvent
+            assertEquals("order-uuid", event.orderUuid)
+            assertEquals(OrderMethod.APPROVAL, event.orderMethod)
             assertEquals(RefundStatus.REFUND_COMPLETED, order.refundStatus)
         } finally {
             Events.reset()

@@ -39,12 +39,16 @@ class V2OrderController(
     private val readCheckoutUseCase: V2ReadCheckoutUseCase,
 ) {
     @Operation(
-        summary = "[O-0] 결제 화면 (로그인). 티켓(P-5 와 같음) + 입금 계좌·예금주(두둥티켓만, 무료는 null). " +
+        summary = "[O-0] 결제 화면 (로그인). 티켓(P-5 와 같음) + 입금 계좌·예금주(두둥티켓 + 구매 가능할 때만, 무료·지난 공연·정산중·종료·매진은 null). " +
             "[결제하기]·토스 송금 전에 보여 줄 값이며, 공개 P-5 에는 계좌가 없다. 판매 중이 아니거나 다른 공연 티켓이면 404",
     )
     @GetMapping("/events/{eventId}/ticket-items/{ticketItemId}/checkout")
-    fun getCheckout(@PathVariable eventId: Long, @PathVariable ticketItemId: Long): V2CheckoutResponse =
-        readCheckoutUseCase.execute(eventId, ticketItemId)
+    fun getCheckout(
+        // 로그인한 사용자에게만 계좌를 준다 (SecurityConfig 공개 경로에 넣지 않음). 값 자체는 쓰지 않는다
+        @Suppress("UNUSED_PARAMETER") @CurrentUserId userId: Long,
+        @PathVariable eventId: Long,
+        @PathVariable ticketItemId: Long,
+    ): V2CheckoutResponse = readCheckoutUseCase.execute(eventId, ticketItemId)
 
     @Operation(
         summary = "[O-1] 주문 생성 (로그인). 두둥티켓은 '입금했어요' 시점에 승인 대기로, 무료는 승인 ON 이면 승인 대기·OFF 면 즉시 발급. " +

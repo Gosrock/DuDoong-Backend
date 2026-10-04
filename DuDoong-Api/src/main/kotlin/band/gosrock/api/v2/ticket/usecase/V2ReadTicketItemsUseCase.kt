@@ -39,8 +39,9 @@ class V2ReadTicketItemsUseCase(
         val event = eventAdaptor.findById(eventId)
         val now = LocalDateTime.now()
         val items = ticketItemAdaptor.findAllByEventId(eventId).sortedBy { it.id }
-        val pending = v2TicketItemDomainService.pendingOrderItemIds(items.mapNotNull { it.id })
-        return items.map { toResponse(it, event, it.id in pending, now) }
+        // 승인 대기 수량 그룹 쿼리 1개 (P-5 와 같은 쿼리, 잠금 판정 hasPendingOrders 도 여기서 — 수량 > 0 = 승인 대기 주문 있음)
+        val pending = v2TicketItemDomainService.pendingApproveQuantities(items.mapNotNull { it.id })
+        return items.map { toResponse(it, event, pending[it.id] ?: 0L, now) }
     }
 
     @Transactional(readOnly = true)
@@ -48,11 +49,11 @@ class V2ReadTicketItemsUseCase(
         toResponse(
             item = v2TicketItemDomainService.queryTicketItem(eventId, ticketItemId),
             event = eventAdaptor.findById(eventId),
-            hasPendingOrders = v2TicketItemDomainService.hasPendingOrders(ticketItemId),
+            pendingApproveCount = v2TicketItemDomainService.pendingApproveQuantities(listOf(ticketItemId))[ticketItemId] ?: 0L,
             now = LocalDateTime.now(),
         )
 
-    private fun toResponse(item: TicketItem, event: Event, hasPendingOrders: Boolean, now: LocalDateTime): V2TicketItemManageResponse {
+    private fun toResponse(item: TicketItem, event: Event, pendingApproveCount: Long, now: LocalDateTime): V2TicketItemManageResponse {
         val unlimited = item.isUnlimitedSupply()
         val supplyCount = item.supplyCount!!
         val quantity = item.quantity!!
@@ -72,7 +73,8 @@ class V2ReadTicketItemsUseCase(
             saleEndAt = item.saleEndAt,
             saleState = v2TicketItemDomainService.saleState(item),
             isSold = item.isSold(),
-            hasPendingOrders = hasPendingOrders,
+            hasPendingOrders = pendingApproveCount > 0,
+            pendingApproveCount = pendingApproveCount,
             isPurchasable = v2TicketItemDomainService.isPurchasable(item, event, now),
             account = item.accountInfo?.takeIf { item.payType == TicketPayType.DUDOONG_TICKET }
                 ?.let { V2TicketAccountResponse(bank = it.bankName, holder = it.accountHolder, number = it.accountNumber) },
