@@ -1,7 +1,6 @@
 package band.gosrock.domain.domains.event.service.v2
 
 import band.gosrock.domain.domains.event.domain.Event
-import band.gosrock.domain.domains.event.domain.EventStatus
 import band.gosrock.domain.domains.event.domain.QEvent.event
 import band.gosrock.domain.domains.event.domain.QEventTag.eventTag
 import band.gosrock.domain.domains.host.domain.QHost.host
@@ -36,7 +35,7 @@ class V2EventBrowseQuery(private val queryFactory: JPAQueryFactory) {
     /** P-1: 종료 전 등록 공연(진행 중 + 시작 전), 시작 임박순 — 진행 중이 앞 (같으면 id 순) 최대 [limit]개 */
     fun findActive(now: LocalDateTime, limit: Int): List<Event> =
         queryFactory.selectFrom(event)
-            .where(activeCondition(now))
+            .where(V2EventConditions.active(now))
             .orderBy(event.eventBasic.startAt.asc(), event.id.asc())
             .limit(limit.toLong())
             .fetch()
@@ -47,7 +46,7 @@ class V2EventBrowseQuery(private val queryFactory: JPAQueryFactory) {
      * 같은 시작 시각은 id 순. 표시 상태([V2EventDisplayRule])와 같은 기준
      */
     fun search(search: V2EventBrowseSearch, now: LocalDateTime, pageable: Pageable): Page<Event> {
-        val active = activeCondition(now)
+        val active = V2EventConditions.active(now)
         val content = base(queryFactory.selectFrom(event), search, now)
             .orderBy(
                 CaseBuilder().`when`(active).then(0).otherwise(1).asc(),
@@ -87,7 +86,7 @@ class V2EventBrowseQuery(private val queryFactory: JPAQueryFactory) {
         // 검색어가 있을 때만 호스트 조인 (PK eq_ref)
         val joined = if (keyword == null) query else query.leftJoin(host).on(host.id.eq(event.hostId))
         return joined.where(
-            if (search.includePast) event.status.`in`(PUBLIC_STATUSES) else activeCondition(now),
+            if (search.includePast) event.status.`in`(PUBLIC_STATUSES) else V2EventConditions.active(now),
             keyword?.let { event.eventBasic.name.containsIgnoreCase(it).or(host.profile.name.containsIgnoreCase(it)) },
             *search.tagIdGroups.map { hasAnyTag(it) }.toTypedArray(),
         )
@@ -101,22 +100,5 @@ class V2EventBrowseQuery(private val queryFactory: JPAQueryFactory) {
 
     companion object {
         private val PUBLIC_STATUSES = V2EventBrowseDomainService.PUBLIC_STATUSES.toList()
-
-        /**
-         * 종료 전 등록 공연 = OPEN + (startAt + runTime분) > now. 표시 상태 UPCOMING·ONGOING 과 같은 기준 ([V2EventDisplayRule]).
-         * 종료 시각 식은 종료 배치(`EventCustomRepositoryImpl.endAtBefore`)와 같은 TIMESTAMPADD. startAt 이 없으면 NULL → 제외(PAST).
-         * start_at 하한 보조 조건(now - 최대 runTime)은 두지 않는다: runTime 상한이 없고(prod 최대 30,000분) OPEN 행이 적어(prod 32건)
-         * (status, start_at) 인덱스의 status 동등 조건만으로 OPEN 행을 읽고 종료 식으로 거른다 (V006 주석 EXPLAIN).
-         * 마이페이지 관심 호스트(M-4)·아카이빙(M-5)도 같은 조건을 쓴다 (#729)
-         */
-        fun activeCondition(now: LocalDateTime): BooleanExpression =
-            event.status.eq(EventStatus.OPEN).and(
-                Expressions.dateTimeTemplate(
-                    LocalDateTime::class.java,
-                    "TIMESTAMPADD(MINUTE, {0}, {1})",
-                    event.eventBasic.runTime.coalesce(0L),
-                    event.eventBasic.startAt,
-                ).gt(now),
-            )
     }
 }

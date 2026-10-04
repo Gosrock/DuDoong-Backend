@@ -1,8 +1,7 @@
 package band.gosrock.domain.domains.issuedTicket.service.v2
 
-import band.gosrock.domain.domains.event.domain.EventStatus
 import band.gosrock.domain.domains.event.domain.QEvent.event
-import band.gosrock.domain.domains.event.service.v2.V2EventBrowseQuery
+import band.gosrock.domain.domains.event.service.v2.V2EventConditions
 import band.gosrock.domain.domains.event.service.v2.V2EventSummaryRow
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus
 import band.gosrock.domain.domains.issuedTicket.domain.QIssuedTicket.issuedTicket
@@ -22,23 +21,23 @@ import org.springframework.stereotype.Component
  * - 입장 기록 = **현재 소유자**(`tbl_issued_ticket.user_id`)가 나이고 입장 완료(ENTRANCE_COMPLETED)인 발급 티켓.
  *   선물로 받아 입장한 티켓은 소유자가 받은 사람으로 바뀌므로 자동으로 포함되고, 보낸 사람(주문자)에게서는 빠진다.
  *   입장 전·취소 티켓은 제외 (입장 후 취소된 티켓도 상태가 CANCELED 라 제외)
- * - 지난 공연 = 표시 상태 PAST 인 공개 공연: CALCULATING·CLOSED, 또는 종료된 OPEN ([V2EventBrowseQuery.activeCondition] 의 반대).
- *   준비중·삭제 공연은 제외
+ * - 지난 공연 = 표시 상태 PAST 인 공개 공연 ([V2EventConditions.ended]): CALCULATING·CLOSED, 종료된 OPEN, startAt 이 없는 OPEN(방어 — 표시 규칙과 같이 PAST).
+ *   준비중·삭제 공연은 제외. startAt 이 없는 공연은 연도 탭·연도 필터에는 안 나오고 전체(year 없음)의 맨 뒤에 나온다
  * - 공연 단위로 한 번만 (같은 공연 여러 장 입장해도 1건). 공연 시작 최근 순, 같으면 id 큰 순
  * - 연도 = 공연 시작 연도 (start_at 범위 조건)
  *
- * 입장 기록 서브쿼리는 user_id 선두 인덱스(`idx_issued_ticket_user_id_id`, #719 V009)를 쓴다
+ * 입장 기록 서브쿼리는 user_id 선두 인덱스(`idx_issued_ticket_user_id_id`, #719 V008)를 쓴다 — #719 이후 머지
  */
 @Component
 class V2ArchiveQuery(private val queryFactory: JPAQueryFactory) {
 
     fun findArchivedEvents(userId: Long, year: Int?, now: LocalDateTime, pageable: Pageable): Page<V2EventSummaryRow> {
-        val condition = arrayOf(enteredBy(userId), ended(now), year?.let { inYear(it) })
+        val condition = arrayOf(enteredBy(userId), V2EventConditions.ended(now), year?.let { inYear(it) })
         val content = queryFactory
             .select(event.id, event.hostId, event.eventBasic.name, event.eventDetail.posterImage.imageKey, event.status, event.eventBasic.startAt, event.eventBasic.runTime)
             .from(event)
             .where(*condition)
-            .orderBy(event.eventBasic.startAt.desc(), event.id.desc())
+            .orderBy(event.eventBasic.startAt.desc().nullsLast(), event.id.desc())
             .offset(pageable.offset)
             .limit(pageable.pageSize.toLong())
             .fetch()
@@ -61,7 +60,7 @@ class V2ArchiveQuery(private val queryFactory: JPAQueryFactory) {
     fun findArchivedYears(userId: Long, now: LocalDateTime): List<Int> =
         queryFactory.select(event.eventBasic.startAt.year()).distinct()
             .from(event)
-            .where(enteredBy(userId), ended(now), event.eventBasic.startAt.isNotNull)
+            .where(enteredBy(userId), V2EventConditions.ended(now), event.eventBasic.startAt.isNotNull)
             .fetch()
             .filterNotNull()
             .sortedDescending()
@@ -95,10 +94,6 @@ class V2ArchiveQuery(private val queryFactory: JPAQueryFactory) {
                     issuedTicket.issuedTicketStatus.eq(IssuedTicketStatus.ENTRANCE_COMPLETED),
                 ),
         )
-
-    private fun ended(now: LocalDateTime): BooleanExpression =
-        event.status.`in`(EventStatus.CALCULATING, EventStatus.CLOSED)
-            .or(event.status.eq(EventStatus.OPEN).and(V2EventBrowseQuery.activeCondition(now).not()))
 
     private fun inYear(year: Int): BooleanExpression {
         val from = LocalDateTime.of(year, 1, 1, 0, 0)

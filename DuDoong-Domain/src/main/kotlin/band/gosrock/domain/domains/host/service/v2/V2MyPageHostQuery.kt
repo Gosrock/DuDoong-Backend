@@ -2,7 +2,7 @@ package band.gosrock.domain.domains.host.service.v2
 
 import band.gosrock.domain.domains.event.domain.QEvent.event
 import band.gosrock.domain.domains.event.service.v2.V2EventBrowseDomainService
-import band.gosrock.domain.domains.event.service.v2.V2EventBrowseQuery
+import band.gosrock.domain.domains.event.service.v2.V2EventConditions
 import band.gosrock.domain.domains.event.service.v2.V2EventSummaryRow
 import band.gosrock.domain.domains.host.domain.HostRole
 import band.gosrock.domain.domains.host.domain.QHost.host
@@ -124,7 +124,7 @@ class V2MyPageHostQuery(private val queryFactory: JPAQueryFactory) {
 
     private fun hasActiveEvent(now: LocalDateTime): BooleanExpression =
         JPAExpressions.selectOne().from(event)
-            .where(event.hostId.eq(hostFollow.hostId), V2EventBrowseQuery.activeCondition(now))
+            .where(event.hostId.eq(hostFollow.hostId), V2EventConditions.active(now))
             .exists()
 
     private fun hasPublicEvent(): BooleanExpression =

@@ -46,10 +46,10 @@ class V2UpdateHostUseCase(
         )
     }
 
-    /** 빈 문자열(기본 이미지)이거나, H-15 가 이 호스트에 발급한 key 여야 한다. 외부 URL / 다른 호스트 key 거부 */
+    /** 빈 문자열(기본 이미지)이거나, H-15 가 이 호스트에 발급한 형식 그대로의 key(prefix + UUID + jpeg/jpg/png)여야 한다. 외부 URL / 다른 호스트 key / 경로 조작 거부 */
     private fun validateImageKey(hostId: Long, key: String?) {
         if (key == null || key.isEmpty()) return
-        if (!key.startsWith(presignedUrlService.hostImageKeyPrefix(hostId)) || key.contains("..")) {
+        if (!presignedUrlService.isHostImageKey(hostId, key)) {
             throw InvalidHostImageKeyException.EXCEPTION
         }
     }

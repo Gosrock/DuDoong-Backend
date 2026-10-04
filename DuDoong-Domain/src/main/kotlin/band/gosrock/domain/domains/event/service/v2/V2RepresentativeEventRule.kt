@@ -26,7 +26,7 @@ data class V2EventSummaryRow(
  * 3. 공개 공연이 없으면 null
  *
  * 준비중·삭제 공연은 후보가 아니다 (사용자 앱 공개 공연 = OPEN·CALCULATING·CLOSED, [V2EventBrowseDomainService.PUBLIC_STATUSES]).
- * 쿼리 쪽 상태 필터(ACTIVE = 종료 전 OPEN 존재, [V2EventBrowseQuery.activeCondition])와 같은 기준이다
+ * 쿼리 쪽 상태 필터(ACTIVE = 종료 전 OPEN 존재, [V2EventConditions.active])와 같은 기준이다
  */
 object V2RepresentativeEventRule {
 

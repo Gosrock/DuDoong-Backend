@@ -62,6 +62,22 @@ class S3UploadPresignedUrlService(
     private fun getForEventFileName(eventId: Long, fileExtension: String): String =
         "${eventImageKeyPrefix(eventId)}${UUID.randomUUID()}.$fileExtension"
 
+    /** forUser 가 발급한 형식 그대로인 key 인지 (`{prefix}{UUID}.{jpeg|jpg|png}`) */
+    fun isUserImageKey(userId: Long, key: String): Boolean = isIssuedKey(userImageKeyPrefix(userId), key)
+
+    /** forHost 가 발급한 형식 그대로인 key 인지 */
+    fun isHostImageKey(hostId: Long, key: String): Boolean = isIssuedKey(hostImageKeyPrefix(hostId), key)
+
+    /** forEvent 가 발급한 형식 그대로인 key 인지 */
+    fun isEventImageKey(eventId: Long, key: String): Boolean = isIssuedKey(eventImageKeyPrefix(eventId), key)
+
+    /**
+     * 화이트리스트 검사: prefix 뒤가 정확히 UUID + 허용 확장자여야 한다. `..`·`%2e%2e`·하위 경로·쿼리스트링·다른 확장자는 모두 거부.
+     * prefix(baseUrl 포함)는 정규식이 아니라 문자열로 비교한다
+     */
+    private fun isIssuedKey(prefix: String, key: String): Boolean =
+        key.startsWith(prefix) && ISSUED_FILE_NAME.matches(key.substring(prefix.length))
+
     private fun getGeneratePreSignedUrlRequest(
         bucket: String,
         fileName: String,
@@ -87,5 +103,9 @@ class S3UploadPresignedUrlService(
         expTimeMillis += 1000 * 60 * 3
         expiration.time = expTimeMillis
         return expiration
+    }
+
+    companion object {
+        private val ISSUED_FILE_NAME = Regex("[0-9a-f-]{36}\\.(jpeg|jpg|png)")
     }
 }

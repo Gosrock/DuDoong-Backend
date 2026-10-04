@@ -41,10 +41,10 @@ class V2MeUseCase(
         return V2MeResponse.of(user, v2MyPageHostQuery.findMyHosts(userId, MAX_HOST_SUMMARY), v2MyPageHostQuery.countMyHosts(userId))
     }
 
-    /** 빈 문자열(기본 이미지)이거나, M-3 이 이 유저에게 발급한 key 여야 한다. 외부 URL / 다른 유저 key 거부 */
+    /** 빈 문자열(기본 이미지)이거나, M-3 이 이 유저에게 발급한 형식 그대로의 key(prefix + UUID + jpeg/jpg/png)여야 한다. 외부 URL·카카오 URL / 다른 유저 key / 경로 조작 거부 */
     private fun validateImageKey(userId: Long, key: String?) {
         if (key == null || key.isEmpty()) return
-        if (!key.startsWith(presignedUrlService.userImageKeyPrefix(userId)) || key.contains("..")) {
+        if (!presignedUrlService.isUserImageKey(userId, key)) {
             throw InvalidUserProfileImageKeyException.EXCEPTION
         }
     }

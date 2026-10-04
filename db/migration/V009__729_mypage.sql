@@ -1,4 +1,4 @@
--- V010__729_mypage.sql
+-- V009__729_mypage.sql
 -- 이슈: Gosrock/DuDoong-Backend#729
 -- 목적: v2 마이페이지 관심 호스트(M-4) — tbl_event (host_id, status) 인덱스
 --   - 페이지 호스트들의 공개 공연: WHERE host_id IN (...) AND status IN ('OPEN','CALCULATING','CLOSED')

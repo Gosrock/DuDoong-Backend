@@ -79,7 +79,7 @@ class V2MyPageController(
     @GetMapping("/archive")
     fun getArchive(
         @CurrentUserId userId: Long,
-        @RequestParam(required = false) @Min(1) @Max(9999) year: Int?,
+        @RequestParam(required = false) @Min(2000) @Max(9998) year: Int?,
         @RequestParam(defaultValue = "0") @Min(0) page: Int,
         @RequestParam(defaultValue = "20") @Min(1) @Max(MAX_PAGE_SIZE) size: Int,
     ): V2ArchiveResponse = readArchiveUseCase.execute(userId, year, page, size)

@@ -1,5 +1,6 @@
 package band.gosrock.api.v2.event
 
+import band.gosrock.api.v2.support.V2ImageKeys
 import band.gosrock.api.supports.ApiIntegrateSpringBootTest
 import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.domains.event.domain.EventStatus
@@ -194,7 +195,7 @@ class V2EventControllerTest {
         mapOf("title" to "유의사항", "content" to null, "sortOrder" to 3),
     )
 
-    private fun posterKey(eventId: Long) = "${presignedUrlService.eventImageKeyPrefix(eventId)}poster.png"
+    private fun posterKey(eventId: Long) = V2ImageKeys.issued(presignedUrlService.eventImageKeyPrefix(eventId))
 
     /** 기본 정보(포스터·장소·문의처) + 섹션까지 채운다 */
     private fun fillBasicAndDetail(requester: User, eventId: Long) {
@@ -457,7 +458,7 @@ class V2EventControllerTest {
         fun `매니저가 포스터-이름-일정-장소-문의처-태그-티켓여부를 수정하면 상세에 그대로 보인다`() {
             val team = Team()
             val eventId = createEvent(team.master, team.hostId)
-            val posterKey = "${presignedUrlService.eventImageKeyPrefix(eventId)}poster.png"
+            val posterKey = V2ImageKeys.issued(presignedUrlService.eventImageKeyPrefix(eventId))
             val rock = tagId(TagCategory.GENRE, "락밴드")
             val regular = tagId(TagCategory.EVENT_TYPE, "정기공연")
             val hongdae = tagId(TagCategory.AREA, "홍대")
@@ -532,9 +533,8 @@ class V2EventControllerTest {
             val otherEvent = createEvent(team.master, team.hostId)
 
             listOf(
-                mapOf("posterImageKey" to "https://evil.com/a.png") to "Event_400_22",
-                mapOf("posterImageKey" to "${presignedUrlService.eventImageKeyPrefix(otherEvent)}a.png") to "Event_400_22",
-                mapOf("posterImageKey" to "${presignedUrlService.eventImageKeyPrefix(eventId)}../1/a.png") to "Event_400_22",
+                *V2ImageKeys.rejected(presignedUrlService.eventImageKeyPrefix(eventId), presignedUrlService.eventImageKeyPrefix(otherEvent))
+                    .map { mapOf("posterImageKey" to it) to "Event_400_22" }.toTypedArray(),
                 mapOf("tagIds" to listOf(987654321L)) to "Event_400_23",
                 mapOf("endAt" to baseStart.minusMinutes(1).f()) to "Event_400_2",
                 mapOf("startAt" to baseStart.plusMinutes(200).f()) to "Event_400_2",

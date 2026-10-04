@@ -2,6 +2,7 @@ package band.gosrock.api.v2.mypage
 
 import band.gosrock.api.supports.ApiIntegrateSpringBootTest
 import band.gosrock.api.v2.operation.V2OperationTestSupport
+import band.gosrock.api.v2.support.V2ImageKeys
 import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.event.domain.EventBasic
@@ -218,11 +219,11 @@ class V2MyPageControllerTest : V2OperationTestSupport() {
         @Test
         fun `닉네임만 수정 — null 인 이미지는 그대로, 응답은 M-1 과 같은 모양`() {
             val user = newUser("원래")
-            val key = "${presignedUrlService.userImageKeyPrefix(user.id!!)}a.png"
+            val key = V2ImageKeys.issued(presignedUrlService.userImageKeyPrefix(user.id!!))
             patchMe(user, mapOf("profileImageKey" to key)).andExpect { status { isOk() } }
             val data = patchMe(user, mapOf("name" to "새이름")).andExpect { status { isOk() } }.data()
             assertEquals("새이름", data.at("/name").asText())
-            assertTrue(data.at("/profileImageUrl").asText().endsWith("/user/${user.id}/a.png"))
+            assertTrue(data.at("/profileImageUrl").asText().endsWith(key))
             assertEquals("새이름", userRepository.findById(user.id!!).get().profile!!.name)
             assertEquals(me(user).data(), data)
         }
@@ -272,7 +273,11 @@ class V2MyPageControllerTest : V2OperationTestSupport() {
         @Test
         fun `프로필 이미지 — 본인 경로 key 저장, 빈 문자열이면 기본 이미지(null)`() {
             val user = newUser()
-            val key = "${presignedUrlService.userImageKeyPrefix(user.id!!)}${UUID.randomUUID()}.png"
+            listOf("jpeg", "jpg", "png").forEach { ext ->
+                val issued = V2ImageKeys.issued(presignedUrlService.userImageKeyPrefix(user.id!!), ext)
+                patchMe(user, mapOf("profileImageKey" to issued)).andExpect { status { isOk() } }
+            }
+            val key = V2ImageKeys.issued(presignedUrlService.userImageKeyPrefix(user.id!!))
             val saved = patchMe(user, mapOf("profileImageKey" to key)).andExpect { status { isOk() } }.data()
             assertTrue(saved.at("/profileImageUrl").asText().endsWith(key))
             assertEquals(key, userRepository.findById(user.id!!).get().profile!!.profileImage!!.imageKey)
@@ -283,15 +288,11 @@ class V2MyPageControllerTest : V2OperationTestSupport() {
         }
 
         @Test
-        fun `프로필 이미지 — 남의 경로·외부 url·경로 이탈 key 는 400 USER_400_5, 저장 안 됨`() {
+        fun `프로필 이미지 — 발급 형식이 아닌 key(남의 prefix·외부·카카오 url·경로 조작·다른 확장자·쿼리)는 400 USER_400_5, 저장 안 됨`() {
             val user = newUser()
             val other = newUser()
-            listOf(
-                "${presignedUrlService.userImageKeyPrefix(other.id!!)}a.png",
-                "https://evil.example.com/a.png",
-                "${presignedUrlService.userImageKeyPrefix(user.id!!)}../${other.id}/a.png",
-                "${presignedUrlService.hostImageKeyPrefix(1)}a.png",
-            ).forEach { key ->
+            val prefix = presignedUrlService.userImageKeyPrefix(user.id!!)
+            (V2ImageKeys.rejected(prefix, presignedUrlService.userImageKeyPrefix(other.id!!)) + V2ImageKeys.issued(presignedUrlService.hostImageKeyPrefix(1))).forEach { key ->
                 patchMe(user, mapOf("profileImageKey" to key)).andExpect { status { isBadRequest() } }.also { assertEquals("USER_400_5", it.code(), key) }
             }
             assertNull(userRepository.findById(user.id!!).get().profile!!.profileImage?.imageKey)
@@ -448,6 +449,25 @@ class V2MyPageControllerTest : V2OperationTestSupport() {
         }
 
         @Test
+        fun `쿼리 경계 — runTime 없음(종료 = 시작)·startAt 없음(PAST)이 필터와 대표 공연 판정에서 같다`() {
+            val user = newUser()
+            val owner = newUser()
+            // runTime 없음 + 1분 전 시작 → 끝남 / runTime 없음 + 1분 뒤 시작 → 예정 / startAt 없는 OPEN → 끝남(PAST)
+            val startedNoRunTime = createHost(owner, "런타임없음끝").also { event(it, EventStatus.OPEN, now.minusMinutes(1), runTime = null) }
+            val upcomingNoRunTime = createHost(owner, "런타임없음예정").also { event(it, EventStatus.OPEN, now.plusMinutes(5), runTime = null) }
+            val noStart = createHost(owner, "시작없음").also { event(it, EventStatus.OPEN, null) }
+            listOf(startedNoRunTime, upcomingNoRunTime, noStart).forEach { follow(user, it) }
+
+            assertEquals(listOf(upcomingNoRunTime), following(user, mapOf("status" to "ACTIVE")).ids("hostId"))
+            assertEquals(listOf(noStart, startedNoRunTime), following(user, mapOf("status" to "ENDED")).ids("hostId"))
+            val all = following(user)
+            assertEquals("UPCOMING", repOf(all, upcomingNoRunTime).at("/displayStatus").asText())
+            assertEquals("PAST", repOf(all, startedNoRunTime).at("/displayStatus").asText())
+            assertEquals("PAST", repOf(all, noStart).at("/displayStatus").asText())
+            assertTrue(repOf(all, noStart).at("/startAt").isNull)
+        }
+
+        @Test
         fun `N+1 없음 — 페이지 크기·호스트별 공연 수와 관계없이 쿼리 수가 같다`() {
             val user = newUser()
             val owner = newUser()
@@ -528,7 +548,8 @@ class V2MyPageControllerTest : V2OperationTestSupport() {
             assertEquals(listOf(2025, 2024), in2025.at("/years").map { it.asInt() })
             assertEquals(listOf(y2024), archive(user, mapOf("year" to "2024")).at("/events").ids("eventId"))
             assertEquals(0, archive(user, mapOf("year" to "2023")).at("/events/content").size())
-            v2Get(user, "/me/archive", mapOf("year" to "0")).andExpect { status { isBadRequest() } }
+            listOf("0", "1999", "9999").forEach { v2Get(user, "/me/archive", mapOf("year" to it)).andExpect { status { isBadRequest() } } }
+            listOf("2000", "9998").forEach { v2Get(user, "/me/archive", mapOf("year" to it)).andExpect { status { isOk() } } }
         }
 
         @Test
@@ -592,6 +613,39 @@ class V2MyPageControllerTest : V2OperationTestSupport() {
             val theirs = archive(receiver).at("/events/content")
             assertEquals(listOf(shop.eventId), theirs.map { it.at("/eventId").asLong() })
             assertTrue(theirs[0].at("/orderUuid").isNull)
+        }
+
+        @Test
+        fun `쿼리 경계 — runTime 없음은 시작이 지나면 지난 공연, startAt 없는 OPEN 은 PAST 로 포함(연도 탭·연도 필터 제외, 맨 뒤)`() {
+            val user = newUser()
+            val owner = newUser()
+            val hostId = createHost(owner, "경계")
+            val startedNoRunTime = event(hostId, EventStatus.OPEN, now.minusMinutes(1), runTime = null)
+            val upcomingNoRunTime = event(hostId, EventStatus.OPEN, now.plusMinutes(5), runTime = null)
+            val noStart = event(hostId, EventStatus.OPEN, null)
+            val closed = event(hostId, EventStatus.CLOSED, LocalDateTime.of(2025, 3, 1, 18, 0))
+            listOf(startedNoRunTime, upcomingNoRunTime, noStart, closed).forEach { ticket(user, it, IssuedTicketStatus.ENTRANCE_COMPLETED) }
+
+            val all = archive(user)
+            assertEquals(listOf(startedNoRunTime, closed, noStart), all.at("/events").ids("eventId"))
+            assertEquals(listOf(now.year, 2025).distinct(), all.at("/years").map { it.asInt() })
+            assertTrue(all.at("/events/content/2/startAt").isNull)
+            assertEquals(listOf(closed), archive(user, mapOf("year" to "2025")).at("/events").ids("eventId"))
+        }
+
+        @Test
+        fun `한 공연에 내 주문 2건이 모두 입장했으면 orderUuid 는 최신 주문`() {
+            val shop = Shop("두주문")
+            val buyer = newBuyer("두번산사람")
+            val first = shop.approved(buyer)
+            val second = shop.approved(buyer)
+            listOf(first, second).forEach { uuid ->
+                issuedTicketRepository.findAllByOrderUuid(uuid).forEach { checkIn(shop.team.master, shop.eventId, it.uuid!!).andExpect { status { isOk() } } }
+            }
+            setSchedule(shop.eventId, EventStatus.CLOSED, now.minusDays(1))
+            val content = archive(buyer).at("/events/content")
+            assertEquals(1, content.size())
+            assertEquals(second, content[0].at("/orderUuid").asText())
         }
 
         @Test
