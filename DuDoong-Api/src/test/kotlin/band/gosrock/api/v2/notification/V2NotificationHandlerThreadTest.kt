@@ -19,6 +19,7 @@ import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.aop.support.AopUtils
 import org.springframework.core.annotation.AnnotatedElementUtils
 import org.springframework.scheduling.annotation.Async
 import org.springframework.transaction.event.TransactionalEventListener
@@ -65,7 +66,8 @@ class V2NotificationHandlerThreadTest : V2OperationTestSupport() {
     /** 실행 경로를 만들지 않은 핸들러(사용자 취소·환불 요청 등)까지 포함해, 리스너 메서드 전부가 전용 executor 를 지정했는지 본다 */
     @Test
     fun `모든 이벤트 리스너 메서드는 @Async(notificationExecutor) 를 지정한다`() {
-        val listeners = handler.javaClass.declaredMethods.filter {
+        // 프록시(CGLIB) 서브클래스가 아니라 실제 핸들러 클래스의 선언 메서드를 본다
+        val listeners = AopUtils.getTargetClass(handler).declaredMethods.filter {
             AnnotatedElementUtils.hasAnnotation(it, TransactionalEventListener::class.java)
         }
         assertEquals(5, listeners.size, "리스너 수가 바뀌면 이 테스트와 실행 스레드 테스트를 갱신: ${listeners.map { it.name }}")

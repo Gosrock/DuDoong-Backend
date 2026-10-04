@@ -11,6 +11,7 @@ v2 공연 운영 API E2E 테스트 (#712).
 import io
 import re
 import uuid
+import threading
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
@@ -29,7 +30,7 @@ PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", 
 SECTIONS = [{"title": "공연 소개", "content": "<p>운영 테스트</p>", "sortOrder": 0}]
 ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-123-456789"}
 BUYERS = ["approved", "refused", "v1refused", "canceled", "pending", "self", "multi"]
-EXTRA = ["boundary", "conc0", "conc1", "conc2"]
+EXTRA = ["boundary", "conc_checkin", "conc0", "conc1", "conc2"]
 
 
 class OpState:
@@ -439,16 +440,24 @@ def test_11_approve_purchase_limit_boundary_on_mysql(base_url, s):
 
 
 def _concurrently(fns):
-    """fns 를 동시에 실행하고 결과를 순서대로 돌려준다 (test_45 와 같은 방식). 작업 중 예외는 future.result() 로 그대로 올라온다"""
+    """fns 를 동시에 실행하고 결과를 순서대로 돌려준다 (test_45 방식 + Barrier).
+    모든 스레드가 준비될 때까지 Barrier 에서 기다렸다가 한꺼번에 요청을 시작한다. 작업 중 예외는 future.result() 로 그대로 올라온다"""
+    barrier = threading.Barrier(len(fns))
+
+    def run(fn):
+        barrier.wait(timeout=30)
+        return fn()
+
     with ThreadPoolExecutor(max_workers=len(fns)) as pool:
-        futures = [pool.submit(fn) for fn in fns]
+        futures = [pool.submit(run, fn) for fn in fns]
         return [f.result(timeout=60) for f in futures]
 
 
 def test_12_concurrent_check_in_enters_once(base_url, s):
     """DEC-021 #6 (#721): 같은 티켓을 동시에 10번 스캔해도 입장은 1번 (행 잠금). 나머지는 ALREADY_ENTERED, 500 없음.
-    다른 호스트 공연(test_11 의 3장 승인 주문)을 써서 위 시나리오의 입장 수에 영향을 주지 않는다."""
-    order = _v1_order(base_url, s, "boundary", s.other_ticket_id, event_id=s.other_event_id)
+    전용 구매자(conc_checkin)가 다른 호스트 공연에 1장 주문 → 승인해 새 티켓을 만들고 그 티켓만 스캔한다
+    (위 시나리오의 입장 수·test_11 구매자의 1인 제한에 영향 없음)."""
+    order = _v1_order(base_url, s, "conc_checkin", s.other_ticket_id, event_id=s.other_event_id)
     assert_status(requests.post(_ev(base_url, s, f"/orders/{order}/approve", s.other_event_id), headers=_h(s, "other")), 200)
     ticket = get_data(requests.get(_ev(base_url, s, f"/orders/{order}", s.other_event_id), headers=_h(s, "other")))["issuedTickets"][0]["ticketUuid"]
     url = _ev(base_url, s, "/check-ins", s.other_event_id)

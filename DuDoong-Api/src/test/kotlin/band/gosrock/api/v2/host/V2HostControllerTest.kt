@@ -838,11 +838,10 @@ class V2HostControllerTest {
         }
 
         @Test
-        fun `마스터가 DELETE 호출해도 405 또는 404 이고 호스트는 남아 있다`() {
+        fun `마스터가 DELETE 호출하면 405 (같은 경로에 GET·PATCH 만 있음) 이고 호스트는 남아 있다`() {
             val team = Team()
-            val status = mockMvc.delete("/api/v2/hosts/${team.hostId}") { with(auth(team.master)) }
-                .andReturn().response.status
-            assertTrue(status == 405 || status == 404, "status=$status")
+            mockMvc.delete("/api/v2/hosts/${team.hostId}") { with(auth(team.master)) }
+                .andExpect { status { isMethodNotAllowed() } }
             assertTrue(hostRepository.findById(team.hostId).isPresent)
         }
     }

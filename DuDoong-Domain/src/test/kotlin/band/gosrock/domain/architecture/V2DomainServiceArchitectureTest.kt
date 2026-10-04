@@ -52,12 +52,14 @@ class V2DomainServiceArchitectureTest {
     }
 
     @Test
-    fun `엔티티 internal 메서드 자동 수집 결과가 문서화된 v2 mutator 목록·소유 엔티티와 같다`() {
-        val collected = classes.filter { it.isAnnotatedWith(Entity::class.java) }
-            .flatMap { c -> c.methods.filter(::isKotlinInternal).map { c.reflect() to it.name.substringBefore('$') } }
-        val hint = "엔티티 internal 메서드가 바뀌면 V2_INTERNAL_MUTATORS·MUTATOR_OWNERS 와 api/v2/README.md 아키텍처 표를 함께 갱신: $collected"
-        assertEquals(V2_INTERNAL_MUTATORS.toSortedSet(), collected.map { it.second }.toSortedSet(), hint)
-        assertEquals(MUTATOR_OWNERS.toSet(), collected.map { it.first }.toSet(), hint)
+    fun `엔티티 internal 메서드 자동 수집 결과가 문서화된 엔티티별 v2 mutator 목록과 같다`() {
+        val collected: Map<String, Set<String>> = classes.filter { it.isAnnotatedWith(Entity::class.java) }
+            .associate { c -> c.simpleName to c.methods.filter(::isKotlinInternal).map { it.name.substringBefore('$') }.toSortedSet() }
+            .filterValues { it.isNotEmpty() }
+            .toSortedMap()
+        val expected: Map<String, Set<String>> = V2_INTERNAL_MUTATORS_BY_OWNER
+            .map { (owner, names) -> owner.simpleName to names.toSortedSet() }.toMap().toSortedMap()
+        assertEquals(expected, collected, "엔티티 internal 메서드가 바뀌면 V2_INTERNAL_MUTATORS_BY_OWNER 와 api/v2/README.md 아키텍처 표를 함께 갱신")
     }
 
     @Test
@@ -78,23 +80,26 @@ class V2DomainServiceArchitectureTest {
     companion object {
         private const val DOMAIN_SERVICE_V2 = "band.gosrock.domain..service.v2.."
 
-        private val MUTATOR_OWNERS = arrayOf(Event::class.java, Host::class.java, TicketItem::class.java, Order::class.java)
-
-        private val V2_INTERNAL_MUTATORS = listOf(
-            "changeHasTicket", "changeSchedule", "changePosterImage", "changePlace",
-            "replaceContacts", "replaceTagIds", "replaceSections", "getOrInitProfile",
+        /** 엔티티별 v2 internal mutator (README 아키텍처 표와 같아야 함) */
+        private val V2_INTERNAL_MUTATORS_BY_OWNER: Map<Class<*>, Set<String>> = mapOf(
+            Event::class.java to setOf(
+                "changeHasTicket", "changeSchedule", "changePosterImage", "changePlace", "replaceContacts", "replaceTagIds", "replaceSections",
+            ),
+            Host::class.java to setOf("replaceContacts", "getOrInitProfile"),
             // TicketItem (#707)
-            "changeAccountInfo", "changeSupplyCount",
+            TicketItem::class.java to setOf("changeAccountInfo", "changeSupplyCount"),
             // Order (#712, #718)
-            "recordRefuseReasonType", "recordV2Payment", "withdrawByUser",
+            Order::class.java to setOf("recordRefuseReasonType", "recordV2Payment", "withdrawByUser"),
         )
+
+        private val MUTATOR_OWNERS = V2_INTERNAL_MUTATORS_BY_OWNER.keys.toTypedArray()
 
         /** Kotlin internal 은 JVM 이름이 `name$모듈명` 으로 맹글링되므로 `name$` 접두도 같은 메서드로 본다 */
         private val V2_INTERNAL_MUTATOR_CALL: DescribedPredicate<JavaMethodCall> =
-            DescribedPredicate.describe("Event/Host/TicketItem/Order 의 v2 internal mutator ($V2_INTERNAL_MUTATORS)") { call ->
+            DescribedPredicate.describe("Event/Host/TicketItem/Order 의 v2 internal mutator ($V2_INTERNAL_MUTATORS_BY_OWNER)") { call ->
                 val target = call.target
-                target.owner.name in MUTATOR_OWNERS.map { it.name } &&
-                    V2_INTERNAL_MUTATORS.any { target.name == it || target.name.startsWith("${it}\$") }
+                val names = V2_INTERNAL_MUTATORS_BY_OWNER.entries.firstOrNull { it.key.name == target.owner.name }?.value.orEmpty()
+                names.any { target.name == it || target.name.startsWith("${it}\$") }
             }
 
         /** Kotlin internal 맹글링 접미 (Gradle 모듈 이름 `DuDoong-Domain` → `DuDoong_Domain`) */
