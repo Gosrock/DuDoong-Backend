@@ -27,6 +27,10 @@ class TicketItemAdaptor(
         return ticketItemRepository.existsByEventId(eventId)
     }
 
+    /** 유효(삭제 안 된) 티켓 존재 여부 (v2 체크리스트) */
+    fun existsValidByEventId(eventId: Long): Boolean =
+        ticketItemRepository.existsByEventIdAndTicketItemStatus(eventId, TicketItemStatus.VALID)
+
     fun save(ticketItem: TicketItem): TicketItem {
         return ticketItemRepository.save(ticketItem)
     }

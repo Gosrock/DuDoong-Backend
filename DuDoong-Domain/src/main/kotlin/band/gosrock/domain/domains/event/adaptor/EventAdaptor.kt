@@ -40,6 +40,9 @@ class EventAdaptor(private val eventRepository: EventRepository) {
     fun queryEventsByEndAtBeforeAndStatusOpen(time: LocalDateTime): List<Event> =
         eventRepository.queryEventsByEndAtBeforeAndStatusOpen(time)
 
+    fun queryPageEventsByHostIdInAndKeyword(hostIds: List<Long>, keyword: String?, pageable: Pageable): Page<Event> =
+        eventRepository.queryPageEventsByHostIdInAndKeyword(hostIds, keyword, pageable)
+
     fun findAllByIds(ids: List<Long>): List<Event> =
         eventRepository.findAllByIdIn(ids)
 }

@@ -11,6 +11,8 @@ interface TicketItemRepository : JpaRepository<TicketItem, Long> {
 
     fun existsByEventId(eventId: Long): Boolean
 
+    fun existsByEventIdAndTicketItemStatus(eventId: Long, status: TicketItemStatus): Boolean
+
     fun countByEventId(eventId: Long): Long
 
     fun findByIdAndTicketItemStatus(ticketItemId: Long, status: TicketItemStatus): Optional<TicketItem>
