@@ -1,10 +1,11 @@
 package band.gosrock.api.v2.event.dto.response
 
-import band.gosrock.api.v2.host.dto.response.V2EventDisplayStatus
 import band.gosrock.api.v2.tag.dto.V2TagResponse
 import band.gosrock.common.annotation.DateFormat
 import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.event.service.v2.EventChecklist
+import band.gosrock.domain.domains.event.service.v2.V2EventDisplayRule
+import band.gosrock.domain.domains.event.service.v2.V2EventDisplayStatus
 import band.gosrock.domain.domains.host.domain.Host
 import band.gosrock.domain.domains.host.domain.HostContactType
 import band.gosrock.domain.domains.tag.domain.Tag
@@ -35,7 +36,7 @@ data class V2EventManageResponse(
     val tags: List<V2TagResponse>,
     @field:Schema(description = "공연 상태 (PREPARING / OPEN / CALCULATING / CLOSED)")
     val status: String,
-    @field:Schema(description = "표시용 상태 (PREPARING / UPCOMING / PAST)")
+    @field:Schema(description = "표시용 상태 (PREPARING / UPCOMING / ONGOING / PAST)")
     val displayStatus: V2EventDisplayStatus,
     val checklist: V2EventChecklistResponse,
 ) {
@@ -59,7 +60,7 @@ data class V2EventManageResponse(
                 hasTicket = event.hasTicket,
                 tags = tags.map { V2TagResponse.from(it) },
                 status = event.status.name,
-                displayStatus = V2EventDisplayStatus.of(event.status, event.getStartAt(), now),
+                displayStatus = V2EventDisplayRule.of(event, now),
                 checklist = V2EventChecklistResponse.from(checklist),
             )
     }

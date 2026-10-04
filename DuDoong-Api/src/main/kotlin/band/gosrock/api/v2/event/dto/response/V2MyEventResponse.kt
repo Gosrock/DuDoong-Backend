@@ -1,8 +1,9 @@
 package band.gosrock.api.v2.event.dto.response
 
-import band.gosrock.api.v2.host.dto.response.V2EventDisplayStatus
 import band.gosrock.common.annotation.DateFormat
 import band.gosrock.domain.domains.event.domain.Event
+import band.gosrock.domain.domains.event.service.v2.V2EventDisplayRule
+import band.gosrock.domain.domains.event.service.v2.V2EventDisplayStatus
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
@@ -24,7 +25,7 @@ data class V2MyEventResponse(
     val placeAddress: String?,
     @field:Schema(description = "공연 상태 (PREPARING / OPEN / CALCULATING / CLOSED)")
     val status: String,
-    @field:Schema(description = "표시용 상태 (PREPARING / UPCOMING / PAST)")
+    @field:Schema(description = "표시용 상태 (PREPARING / UPCOMING / ONGOING / PAST)")
     val displayStatus: V2EventDisplayStatus,
     // getDDay() 는 Jackson 기본 규칙으로 "dday" 가 되므로 이름을 명시한다
     @get:JsonProperty("dDay")
@@ -33,7 +34,7 @@ data class V2MyEventResponse(
 ) {
     companion object {
         fun of(event: Event, hostName: String?, now: LocalDateTime): V2MyEventResponse {
-            val displayStatus = V2EventDisplayStatus.of(event.status, event.getStartAt(), now)
+            val displayStatus = V2EventDisplayRule.of(event, now)
             return V2MyEventResponse(
                 eventId = event.id!!,
                 hostId = event.hostId!!,
