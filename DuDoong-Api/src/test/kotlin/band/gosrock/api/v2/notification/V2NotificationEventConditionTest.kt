@@ -50,8 +50,8 @@ class V2NotificationEventConditionTest {
 
     private fun doneOrder(method: OrderMethod) = newEvent(DoneOrderEvent::class.java, "uuid", 1L, method, null, 1L)
 
-    private fun withDraw(method: OrderMethod, status: OrderStatus) =
-        newEvent(WithDrawOrderEvent::class.java, "uuid", 1L, method, status, true, status == OrderStatus.REFUND, null, 1L, false, null)
+    private fun withDraw(method: OrderMethod, status: OrderStatus, paymentKey: String? = null) =
+        newEvent(WithDrawOrderEvent::class.java, "uuid", 1L, method, status, true, status == OrderStatus.REFUND, paymentKey, 1L, false, null)
 
     @Test
     fun `주문 생성 - 승인형만 호출, 결제형은 큐에 넣지 않음`() {
@@ -70,8 +70,8 @@ class V2NotificationEventConditionTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = OrderStatus::class, names = ["CANCELED"], mode = EnumSource.Mode.EXCLUDE)
-    fun `주문 철회 - CANCELED 가 아니면(환불 등) 호출 안 함`(status: OrderStatus) {
+    @EnumSource(value = OrderStatus::class, names = ["CANCELED", "REFUND"], mode = EnumSource.Mode.EXCLUDE)
+    fun `주문 철회 - CANCELED·REFUND 가 아니면 호출 안 함`(status: OrderStatus) {
         publishInTransaction(withDraw(OrderMethod.APPROVAL, status))
         verifyNoInteractions(service)
     }
@@ -82,6 +82,18 @@ class V2NotificationEventConditionTest {
         verifyNoInteractions(service)
         publishInTransaction(withDraw(OrderMethod.APPROVAL, OrderStatus.CANCELED))
         verify(service).notifyOrderRefused("uuid")
+    }
+
+    @Test
+    fun `사용자 철회(REFUND) - 승인형·결제 없는 결제형만 사용자 취소 알림, 카드 결제(paymentKey 있음)는 호출 안 함 (#718)`() {
+        publishInTransaction(withDraw(OrderMethod.PAYMENT, OrderStatus.REFUND, paymentKey = "pk"))
+        verifyNoInteractions(service)
+        publishInTransaction(withDraw(OrderMethod.APPROVAL, OrderStatus.REFUND))
+        verify(service).notifyOrderWithdrawnByUser("uuid")
+        verify(service, never()).notifyOrderRefused("uuid")
+        reset(service)
+        publishInTransaction(withDraw(OrderMethod.PAYMENT, OrderStatus.REFUND))
+        verify(service).notifyOrderWithdrawnByUser("uuid")
     }
 
     @Test
