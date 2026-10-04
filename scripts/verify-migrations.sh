@@ -33,7 +33,13 @@ APP_PID=""
 [ -n "$CONTAINER" ] || { echo "mysql 컨테이너를 찾지 못함 (docker compose up -d)"; exit 2; }
 mkdir -p "$LOG_DIR"
 
-sql() { docker exec -i "$CONTAINER" mysql --default-character-set=utf8mb4 -uroot -p"$ROOT_PW" -N "$@" 2>&1 | grep -v 'Using a password'; }
+# 결과의 비밀번호 경고 줄만 지운다. 종료 코드는 mysql 의 것 (grep 이 0줄이어도 실패로 보지 않음)
+sql() {
+  local out rc
+  out=$(docker exec -i "$CONTAINER" mysql --default-character-set=utf8mb4 -uroot -p"$ROOT_PW" -N "$@" 2>&1); rc=$?
+  printf '%s\n' "$out" | grep -v 'Using a password' | sed '/^$/d'
+  return $rc
+}
 ok() { echo "  [OK] $*"; }
 ng() { echo "  [NG] $*"; FAIL=1; }
 
@@ -51,6 +57,17 @@ create_db() {
   sql -e "DROP DATABASE IF EXISTS \`$1\`; CREATE DATABASE \`$1\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; GRANT ALL ON \`$1\`.* TO '$APP_USER'@'%';"
 }
 
+# Java 21
+# 순서: JAVA_BIN → java_home -v 21 → Gradle toolchain 이 받은 JDK(~/.gradle/jdks) → PATH 의 java
+find_java21() {
+  local c
+  for c in "$(/usr/libexec/java_home -v 21 2>/dev/null)/bin/java" $(ls -d "$HOME"/.gradle/jdks/*21*/*/Contents/Home/bin/java "$HOME"/.gradle/jdks/*21*/bin/java 2>/dev/null) "$(command -v java)"; do
+    [ -x "$c" ] && "$c" -version 2>&1 | grep -q 'version "21' && { echo "$c"; return; }
+  done
+}
+JAVA_BIN="${JAVA_BIN:-$(find_java21)}"
+[ -n "$JAVA_BIN" ] || { echo "Java 21 을 찾지 못함: JAVA_BIN=/path/to/java 로 지정"; exit 2; }
+
 JAR=$(ls "$ROOT"/DuDoong-Api/build/libs/DuDoong-Api-*-SNAPSHOT.jar 2>/dev/null | grep -v plain | head -1)
 if [ -z "$JAR" ]; then
   (cd "$ROOT" && ./gradlew :DuDoong-Api:bootJar -q --no-daemon) || exit 1
@@ -59,7 +76,7 @@ fi
 
 # 앱 기동 → "Started" 또는 프로세스 종료까지 대기 후 종료. $1 = DB, $2 = ddl-auto, $3 = 로그 파일. 성공 시 0
 boot() {
-  java -jar "$JAR" --spring.profiles.active=local --server.port="$PORT" \
+  "$JAVA_BIN" -jar "$JAR" --spring.profiles.active=local --server.port="$PORT" \
     --spring.datasource.url="jdbc:mysql://127.0.0.1:13306/$1?useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true&tinyInt1isBit=false" \
     --spring.jpa.hibernate.ddl-auto="$2" --spring.sql.init.mode=never --spring.jpa.show-sql=false > "$3" 2>&1 &
   APP_PID=$!
