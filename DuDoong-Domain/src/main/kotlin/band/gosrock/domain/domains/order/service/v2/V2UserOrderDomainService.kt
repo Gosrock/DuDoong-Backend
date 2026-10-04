@@ -14,6 +14,7 @@ import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.event.domain.EventStatus
 import band.gosrock.domain.domains.event.exception.EventNotOpenException
+import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
 import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.order.domain.OrderMethod
@@ -85,6 +86,7 @@ class V2UserOrderDomainService(
     private val refundAccountRepository: OrderRefundAccountRepository,
     private val v2TicketItemDomainService: V2TicketItemDomainService,
     private val v2UserOrderQuery: V2UserOrderQuery,
+    private val issuedTicketAdaptor: IssuedTicketAdaptor,
 ) {
 
     /**
@@ -102,10 +104,33 @@ class V2UserOrderDomainService(
         findDuplicate(command, depositorName, lines)?.let { return it }
 
         val cart = Cart.of(lines, item.name!!, command.userId, cartValidator)
+        if (item.payType == TicketPayType.FREE_TICKET && item.isFCFS()) validateUnconfirmedPurchaseLimit(item, command)
         val order = orderFactory.createNormalOrder(cart, command.userId)
         order.recordV2Payment(command.paymentChannel, depositorName)
         val saved = orderAdaptor.save(order)
         return V2CreatedOrder(saved.uuid!!, needsFreeConfirm = saved.orderStatus == OrderStatus.PENDING_PAYMENT, duplicated = false)
+    }
+
+    /**
+     * 무료 선착순 1인 제한 보강: v1 검사(발급 수 + 이번 수량)에 확정 전 v2 주문 수량을 더한다.
+     * 같은 티켓 락 안이라 동시 요청(옵션만 다른 두 요청 등)도 앞 주문이 보인다. 확정 실패 주문은 FAILED 로 바뀌어 빠지고,
+     * 서버 중단 등으로 확정 전 상태로 남은 주문은 [UNCONFIRMED_WINDOW_MINUTES]분이 지나면 세지 않는다 (영구 차단 방지)
+     */
+    private fun validateUnconfirmedPurchaseLimit(item: TicketItem, command: V2CreateOrderCommand) {
+        val since = LocalDateTime.now().minusMinutes(UNCONFIRMED_WINDOW_MINUTES)
+        val issued = issuedTicketAdaptor.countPaidTicket(command.userId, item.id!!)
+        val unconfirmed = v2UserOrderQuery.sumUnconfirmedV2Quantity(command.userId, item.id!!, since)
+        item.validPurchaseLimit(issued + unconfirmed + command.quantity)
+    }
+
+    /**
+     * 무료 확정 실패 처리 (O-1): 확정 전(PENDING_PAYMENT) 그대로면 FAILED 로 바꾼다 — 중복 요청 판정·1인 제한에서 빠져 재시도가 새 주문으로 정상 진행된다.
+     * 확정 트랜잭션은 이미 롤백됐으므로 `주문` 락의 새 트랜잭션에서 한다
+     */
+    @RedissonLock(LockName = ORDER_LOCK, identifier = "orderUuid")
+    fun failUnconfirmed(orderUuid: String, reason: String?) {
+        val order = orderAdaptor.findByOrderUuid(orderUuid)
+        if (order.orderStatus == OrderStatus.PENDING_PAYMENT) order.fail(reason)
     }
 
     /** 결제 방식·입금자명 검증. 두둥티켓은 계좌이체/토스 + 입금자명 1~20자(앞뒤 공백 제외), 무료는 FREE (입금자명은 저장 안 함) */
@@ -249,7 +274,8 @@ class V2UserOrderDomainService(
     private fun normalize(form: V2RefundAccountForm): V2RefundAccountForm? {
         val bank = form.bankName.trim()
         val holder = form.accountHolder.trim()
-        val number = form.accountNumber.trim()
+        // 계좌번호는 공백을 모두 지워 저장 (호스트가 그대로 복사해 송금)
+        val number = form.accountNumber.filterNot { it.isWhitespace() }
         if (bank.isEmpty() || holder.isEmpty() || number.isEmpty()) return null
         return V2RefundAccountForm(bank, holder, number)
     }
@@ -262,6 +288,9 @@ class V2UserOrderDomainService(
 
         /** 같은 사용자·티켓·수량·결제 방식·입금자명 주문을 중복 요청으로 보는 시간 */
         const val DUPLICATE_WINDOW_SECONDS = 10L
+
+        /** 확정 전 v2 무료 주문을 1인 제한에 세는 기간 (정상 흐름에서는 생성 직후 확정되거나 FAILED 가 된다) */
+        const val UNCONFIRMED_WINDOW_MINUTES = 5L
 
         private val DUPLICATE_CANDIDATE_STATUSES = listOf(
             OrderStatus.READY, OrderStatus.PENDING_PAYMENT, OrderStatus.PENDING_APPROVE, OrderStatus.APPROVED, OrderStatus.CONFIRM,

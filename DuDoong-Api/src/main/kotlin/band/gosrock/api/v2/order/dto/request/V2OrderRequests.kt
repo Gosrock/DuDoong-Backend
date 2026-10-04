@@ -33,8 +33,9 @@ data class V2CreateOrderRequest(
     val options: V2OrderOptionsRequest? = null,
 
     @field:Size(max = MAX_QUANTITY.toInt())
+    @field:Valid
     @field:Schema(description = "티켓별 옵션 (options.applyToAll=false 일 때). 수량과 같은 개수의 답변 묶음, 다르면 Order_400_23")
-    val perTicketOptions: List<@Valid List<@Valid V2OrderAnswerRequest>>? = null,
+    val perTicketOptions: List<@NotNull @Valid List<@NotNull @Valid V2OrderAnswerRequest>>? = null,
 
     @field:NotNull
     @field:Schema(description = "BANK_TRANSFER(직접 계좌이체) / TOSS_TRANSFER(토스 송금) — 두둥티켓, FREE — 무료티켓. 안 맞으면 Order_400_21")
@@ -67,7 +68,8 @@ data class V2OrderOptionsRequest(
     val applyToAll: Boolean?,
 
     @field:Size(max = 50)
-    val answers: List<@Valid V2OrderAnswerRequest>? = null,
+    @field:Valid
+    val answers: List<@NotNull @Valid V2OrderAnswerRequest>? = null,
 )
 
 data class V2OrderAnswerRequest(

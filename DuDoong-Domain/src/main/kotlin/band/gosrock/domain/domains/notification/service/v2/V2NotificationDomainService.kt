@@ -1,6 +1,7 @@
 package band.gosrock.domain.domains.notification.service.v2
 
 import band.gosrock.common.annotation.DomainService
+import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor
 import band.gosrock.domain.domains.host.domain.Host
@@ -140,7 +141,8 @@ class V2NotificationDomainService(
         val order = orderAdaptor.findByOrderUuid(orderUuid)
         if (order.orderStatus != OrderStatus.REFUND) return 0
         if (order.orderMethod == OrderMethod.PAYMENT && order.isNeedPaid()) return 0
-        val refund = order.refundStatus != RefundStatus.NONE
+        // 돌려줄 돈이 있을 때만 환불 요청 알림 (무료·0원 주문은 v1 경로에서 환불 요청 상태가 걸려도 취소 알림)
+        val refund = order.refundStatus != RefundStatus.NONE && order.getTotalPaymentPrice().isGreaterThan(Money.ZERO)
         val event = eventAdaptor.findById(order.eventId!!)
         val host = hostAdaptor.findById(event.hostId!!)
         val eventName = event.eventBasic?.name.orEmpty()
@@ -151,7 +153,7 @@ class V2NotificationDomainService(
                 order = order,
                 type = if (refund) NotificationType.ORDER_REFUND_REQUESTED else NotificationType.ORDER_CANCELED_BY_USER,
                 title = if (refund) "주문자가 환불을 요청했어요" else "주문자가 주문을 취소했어요",
-                body = if (refund) "$subject 환불 요청이 들어왔습니다. 환불 계좌로 송금한 뒤 환불 완료로 처리해 주세요." else "$subject 이 주문자에 의해 취소되었습니다.",
+                body = if (refund) "${subject}에 환불 요청이 들어왔습니다. 환불 계좌로 송금한 뒤 환불 완료로 처리해 주세요." else "${subject}이 주문자에 의해 취소되었습니다.",
                 extra = mapOf("eventName" to eventName, "orderNo" to order.orderNo),
             )
         }

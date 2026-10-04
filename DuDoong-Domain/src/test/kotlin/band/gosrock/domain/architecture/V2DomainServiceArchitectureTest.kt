@@ -3,6 +3,7 @@ package band.gosrock.domain.architecture
 import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.host.domain.Host
 import band.gosrock.domain.domains.order.domain.Order
+import band.gosrock.domain.domains.order.repository.OrderRefundAccountRepository
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem
 import com.tngtech.archunit.base.DescribedPredicate
 import com.tngtech.archunit.core.domain.JavaClasses
@@ -31,6 +32,14 @@ class V2DomainServiceArchitectureTest {
         noClasses().that().resideOutsideOfPackage(DOMAIN_SERVICE_V2)
             .and().doNotBelongToAnyOf(*MUTATOR_OWNERS)
             .should().callMethodWhere(V2_INTERNAL_MUTATOR_CALL)
+            .check(classes)
+    }
+
+    @Test
+    fun `환불 계좌 저장소(v2 전용 테이블)는 v2 도메인 서비스만 접근한다 (#718)`() {
+        noClasses().that().resideOutsideOfPackage(DOMAIN_SERVICE_V2)
+            .and().doNotBelongToAnyOf(OrderRefundAccountRepository::class.java)
+            .should().dependOnClassesThat().belongToAnyOf(OrderRefundAccountRepository::class.java)
             .check(classes)
     }
 

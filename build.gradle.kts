@@ -57,6 +57,9 @@ subprojects {
     tasks.withType<KotlinCompile> {
         compilerOptions {
             freeCompilerArgs.add("-Xjsr305=strict")
+            // 타입 인자 어노테이션(List<@Valid X> 등)을 바이트코드에 남긴다 — Bean Validation 컨테이너 원소 검증용 (#718).
+            // Kotlin 1.9 는 기본으로 남기지 않아 중첩 검증이 조용히 빠졌다. 적용 시점 기준 main 소스에서 이 형태는 v2 주문 DTO 뿐(v1 영향 없음)
+            freeCompilerArgs.add("-Xemit-jvm-type-annotations")
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
         }
     }

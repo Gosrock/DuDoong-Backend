@@ -10,10 +10,11 @@ v2 사용자 앱 주문·주문내역·취소/환불 API E2E 테스트 (#718).
 재실행해도 충돌하지 않도록 유저 이메일에 실행마다 다른 접미사를 붙인다. DB 직접 접근은 하지 않는다.
 """
 import re
-import threading
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
+from typing import Optional
 
 import pytest
 import requests
@@ -40,6 +41,7 @@ class OrderState:
     free_id: int = 0
     free_approval_id: int = 0
     race_id: int = 0
+    limit_id: int = 0
     yes_no_id: int = 0
     subjective_id: int = 0
     orders: dict = {}
@@ -75,7 +77,16 @@ def _answers(s, yes=True, text="홍길동"):
     return [{"optionId": s.yes_no_id, "answer": "YES" if yes else "NO"}, {"optionId": s.subjective_id, "answer": text}]
 
 
-def _body(s, ticket_id=None, quantity=1, answers=None, per_ticket=None, method="BANK_TRANSFER", depositor="입금자", agree=True):
+def _body(
+    s,
+    ticket_id: Optional[int] = None,
+    quantity: int = 1,
+    answers: Optional[list] = None,
+    per_ticket: Optional[list] = None,
+    method: str = "BANK_TRANSFER",
+    depositor: Optional[str] = "입금자",
+    agree: Optional[bool] = True,
+):
     return {
         "eventId": s.event_id,
         "ticketItemId": ticket_id or s.ticket_id,
@@ -184,6 +195,8 @@ def test_01_setup(base_url, s):
     s.free_id = _ticket(base_url, s, _free_body("무료선착순", 10, False))
     s.free_approval_id = _ticket(base_url, s, _free_body("무료승인", 10, True))
     s.race_id = _ticket(base_url, s, _free_body("마지막한장", 1, False))
+    s.limit_id = _ticket(base_url, s, _free_body("1인2장", 10, False))
+    assert_status(requests.put(_ev(base_url, s, f"/ticket-items/{s.limit_id}/options"), json={"optionIds": [s.subjective_id]}, headers=_h(s, "manager")), 200)
 
     key = get_data(requests.post(_ev(base_url, s, "/images"), json={"purpose": "POSTER", "extension": "PNG"}, headers=_h(s, "manager")))["key"]
     resp = requests.patch(_ev(base_url, s, "/basic"), json={"posterImageKey": key, "place": PLACE, "contacts": [{"type": "EMAIL", "value": "a@a.com"}]}, headers=_h(s, "manager"))
@@ -193,7 +206,7 @@ def test_01_setup(base_url, s):
 
     # 공개 티켓 목록(P-5): 세 티켓 모두 구매 가능
     tickets = get_data(requests.get(_ev(base_url, s, "/ticket-items")))
-    assert all(t["isPurchasable"] for t in tickets)
+    assert len(tickets) == 5 and all(t["isPurchasable"] for t in tickets)
 
 
 def test_02_create_orders(base_url, s):
@@ -408,26 +421,18 @@ def test_10_notifications(base_url, s):
 
 
 def _concurrently(fns):
-    results = [None] * len(fns)
-    barrier = threading.Barrier(len(fns))
-
-    def run(i):
-        barrier.wait()
-        results[i] = fns[i]()
-
-    threads = [threading.Thread(target=run, args=(i,)) for i in range(len(fns))]
-    for t in threads:
-        t.start()
-    for t in threads:
-        t.join(60)
-    return results
+    """fns 를 동시에 실행하고 결과를 순서대로 돌려준다. 작업 중 예외는 future.result() 로 그대로 올라온다"""
+    with ThreadPoolExecutor(max_workers=len(fns)) as pool:
+        futures = [pool.submit(fn) for fn in fns]
+        return [f.result(timeout=60) for f in futures]
 
 
 def test_11_concurrency(base_url, s):
-    # 마지막 재고 1장 무료 선착순에 3명 동시 주문 → 1명만 발급
+    # 마지막 재고 1장 무료 선착순에 3명 동시 주문 → 1명만 발급, 나머지는 재고 부족 400 (500 없음)
     racers = ["race1", "race2", "race3"]
     results = _concurrently([lambda who=who: _order(base_url, s, who, _body(s, ticket_id=s.race_id, method="FREE", depositor=None)) for who in racers])
     assert sorted(r.status_code for r in results) == [200, 400, 400], [r.text[:200] for r in results]
+    assert [_code(r) for r in results if r.status_code != 200] == ["Ticket_Item_400_1", "Ticket_Item_400_1"], [r.text[:200] for r in results]
     approved = [who for who in racers if any(x["status"] == "APPROVED" for x in _mine(base_url, s, who)["content"])]
     assert len(approved) == 1
     tickets = get_data(requests.get(_ev(base_url, s, "/ticket-items")))
@@ -439,3 +444,19 @@ def test_11_concurrency(base_url, s):
     ok = [get_data(r)["orderUuid"] for r in results if r.status_code == 200]
     assert len(set(ok)) == 1, [r.text[:200] for r in results]
     assert len([x for x in _mine(base_url, s, "race1")["content"] if x["ticketName"] == "일반"]) == 1
+
+
+def test_12_purchase_limit_concurrency(base_url, s):
+    # 무료 선착순 1인 2장: 같은 사용자가 옵션 답변만 다른 3요청(중복 판정 안 됨)을 동시에 → 발급은 2장을 넘지 않고, 실패는 1인 제한 400
+    bodies = [_body(s, ticket_id=s.limit_id, answers=[{"optionId": s.subjective_id, "answer": f"답{i}"}], method="FREE", depositor=None) for i in range(3)]
+    results = _concurrently([lambda b=b: _order(base_url, s, "race2", b) for b in bodies])
+    assert all(r.status_code in (200, 400) for r in results), [r.text[:200] for r in results]
+    assert all(_code(r) == "Ticket_Item_400_6" for r in results if r.status_code == 400), [r.text[:200] for r in results]
+    mine = [x for x in _mine(base_url, s, "race2")["content"] if x["ticketName"] == "1인2장"]
+    issued = sum(x["quantity"] for x in mine if x["status"] == "APPROVED")
+    assert 1 <= issued <= 2 and issued == sum(1 for r in results if r.status_code == 200), (issued, [r.text[:200] for r in results])
+    # 제한까지 다 찼으면 추가 주문은 1인 제한
+    if issued == 2:
+        resp = _order(base_url, s, "race2", _body(s, ticket_id=s.limit_id, answers=[{"optionId": s.subjective_id, "answer": "추가"}], method="FREE", depositor=None))
+        assert_status(resp, 400)
+        assert _code(resp) == "Ticket_Item_400_6"

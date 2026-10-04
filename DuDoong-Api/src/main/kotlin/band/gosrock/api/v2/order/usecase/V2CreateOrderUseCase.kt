@@ -11,7 +11,8 @@ import org.slf4j.LoggerFactory
 /**
  * O-1 주문 생성. 요청 검증·주문 생성은 도메인 서비스의 `티켓관리` 락 트랜잭션 안에서 하고(이 유스케이스는 엔티티를 먼저 읽지 않는다 — open-in-view),
  * 무료 선착순은 이어서 v1 무료 확정(`FreeOrderService`, `주문` 락)으로 즉시 발급한다. 발급은 커밋된 주문을 다른 트랜잭션에서 읽기 때문에
- * 생성과 한 트랜잭션으로 묶을 수 없다 (v1 도 생성 → 무료 확정 두 요청). 확정이 실패하면(동시 주문으로 매진 등) 주문은 v1 처럼 결제 대기로 남고 목록에는 보이지 않는다
+ * 생성과 한 트랜잭션으로 묶을 수 없다 (v1 도 생성 → 무료 확정 두 요청). 확정이 실패하면(동시 주문으로 매진 등) 주문을 FAILED 로 바꾸고 원래 오류를 돌려준다
+ * (재시도가 중복 요청·1인 제한에 걸리지 않고 새 주문으로 진행되도록)
  */
 @UseCase
 class V2CreateOrderUseCase(
@@ -41,7 +42,16 @@ class V2CreateOrderUseCase(
             ),
         )
         if (created.duplicated) log.info("[V2CreateOrderUseCase] 중복 요청 → 기존 주문 반환 userId={} orderUuid={}", userId, created.orderUuid)
-        if (created.needsFreeConfirm) freeOrderService.execute(created.orderUuid, userId)
+        if (created.needsFreeConfirm) {
+            try {
+                freeOrderService.execute(created.orderUuid, userId)
+            } catch (e: Exception) {
+                log.warn("[V2CreateOrderUseCase] 무료 확정 실패 → FAILED userId={} orderUuid={} cause={}", userId, created.orderUuid, e.message)
+                runCatching { v2UserOrderDomainService.failUnconfirmed(created.orderUuid, "v2 무료 확정 실패: ${e.message}") }
+                    .onFailure { log.error("[V2CreateOrderUseCase] FAILED 처리 실패 orderUuid={}", created.orderUuid, it) }
+                throw e
+            }
+        }
         return readMyOrdersUseCase.detail(userId, created.orderUuid)
     }
 }

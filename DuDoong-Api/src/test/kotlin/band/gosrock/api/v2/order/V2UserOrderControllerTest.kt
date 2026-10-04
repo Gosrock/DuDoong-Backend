@@ -1,6 +1,19 @@
 package band.gosrock.api.v2.order
 
 import band.gosrock.api.supports.ApiIntegrateSpringBootTest
+import band.gosrock.api.v2.order.dto.request.V2CreateOrderRequest
+import band.gosrock.api.v2.order.usecase.V2CreateOrderUseCase
+import band.gosrock.api.v2.order.usecase.V2ReadMyOrdersUseCase
+import band.gosrock.common.exception.DuDoongCodeException
+import band.gosrock.domain.domains.order.service.FreeOrderService
+import band.gosrock.domain.domains.order.service.v2.V2UserOrderDomainService
+import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLackException
+import org.junit.jupiter.api.assertThrows
+import org.mockito.ArgumentMatchers.anyLong
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
+import org.springframework.test.web.servlet.patch
 import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.domains.event.domain.EventStatus
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus
@@ -41,6 +54,14 @@ import org.springframework.test.web.servlet.post
 class V2UserOrderControllerTest : V2UserOrderTestSupport() {
 
     @Autowired private lateinit var notificationRepository: NotificationRepository
+
+    @Autowired private lateinit var v2UserOrderDomainService: V2UserOrderDomainService
+
+    @Autowired private lateinit var readMyOrdersUseCase: V2ReadMyOrdersUseCase
+
+    companion object {
+        private const val STABLE_MS = 500L
+    }
 
     private fun codeOf(buyer: User, body: Map<String, Any?>): String =
         v2CreateOrder(buyer, body).andExpect { status { isBadRequest() } }.code()
@@ -243,7 +264,6 @@ class V2UserOrderControllerTest : V2UserOrderTestSupport() {
             assertEquals("Ticket_Item_400_6", codeOf(buyer, shopBody(limit, quantity = 5)))
             // 승인 대기 2장 + 3장 = 5 > 4 (v1 승인 대기 1인 제한)
             v2OrderOk(buyer, shopBody(limit, quantity = 2))
-            Thread.sleep(10)
             assertEquals("Order_400_15", codeOf(buyer, shopBody(limit, quantity = 3)))
 
             val started = Shop()
@@ -253,6 +273,86 @@ class V2UserOrderControllerTest : V2UserOrderTestSupport() {
             val preparing = Shop()
             setEventStatus(preparing.eventId, EventStatus.PREPARING)
             assertEquals("Event_400_5", codeOf(buyer, shopBody(preparing)))
+        }
+
+        @Test
+        fun `수량 경계 - 0·음수·최대(100) 초과는 400, 주문 미생성, 100 은 요청 검증 통과`() {
+            val shop = Shop()
+            val buyer = newBuyer()
+            listOf(0L, -1L, 101L).forEach { q ->
+                v2CreateOrder(buyer, shopBody(shop, quantity = q)).andExpect { status { isBadRequest() } }
+            }
+            assertEquals(0, orderRepository.findAll().count { it.userId == buyer.id })
+            // 100 은 요청 검증은 통과하고 도메인 검사(재고 20장)에 걸린다
+            assertEquals("Ticket_Item_400_1", codeOf(buyer, shopBody(shop, quantity = 100)))
+        }
+
+        @Test
+        fun `중첩 옵션 검증 - optionId null·답변 300자 초과·null 원소는 400 (500 아님), 주문 미생성`() {
+            val shop = Shop()
+            val buyer = newBuyer()
+            val nullId = listOf(mapOf("optionId" to null, "answer" to "YES"), mapOf("optionId" to shop.subjectiveOptionId, "answer" to "a"))
+            val tooLong = listOf(mapOf("optionId" to shop.yesNoOptionId, "answer" to "YES"), mapOf("optionId" to shop.subjectiveOptionId, "answer" to "가".repeat(301)))
+            val bodies = listOf(
+                orderBody(shop.eventId, shop.ticketId, answers = nullId),
+                orderBody(shop.eventId, shop.ticketId, answers = tooLong),
+                orderBody(shop.eventId, shop.ticketId, quantity = 2, perTicket = listOf(answers(shop), nullId)),
+                orderBody(shop.eventId, shop.ticketId, quantity = 2, perTicket = listOf(answers(shop), tooLong)),
+                orderBody(shop.eventId, shop.ticketId, quantity = 2) + mapOf("options" to mapOf("applyToAll" to false), "perTicketOptions" to listOf(answers(shop), null)),
+                orderBody(shop.eventId, shop.ticketId) + mapOf("options" to mapOf("applyToAll" to true, "answers" to listOf(null))),
+            )
+            bodies.forEachIndexed { i, body ->
+                val r = v2CreateOrder(buyer, body).andReturn().response
+                assertEquals(400, r.status, "case $i ${r.getContentAsString(Charsets.UTF_8)}")
+            }
+            assertEquals(0, orderRepository.findAll().count { it.userId == buyer.id })
+        }
+
+        @Test
+        fun `입금자명은 주문 시점 값 - 닉네임을 바꿔도 기존 주문 입금자명 유지 (DEC-022 #6)`() {
+            val shop = Shop()
+            val buyer = newBuyer("원래닉")
+            val uuid = v2OrderOk(buyer, shopBody(shop, depositorName = "원래닉")).at("/orderUuid").asText()
+            mockMvc.patch("/api/v1/users/me/name") {
+                with(auth(buyer))
+                contentType = MediaType.APPLICATION_JSON
+                content = json(mapOf("name" to "새닉네임"))
+            }.andExpect { status { isOk() } }
+            assertEquals("새닉네임", userRepository.findById(buyer.id!!).get().profile!!.name)
+            assertEquals("원래닉", myOrder(buyer, uuid).andExpect { status { isOk() } }.data().at("/depositorName").asText())
+            assertEquals("원래닉", hostDetail(shop.team.guest, shop.eventId, uuid).at("/order/depositorName").asText())
+        }
+
+        @Test
+        fun `무료 확정이 실패하면 주문은 FAILED, 같은 요청 재시도는 새 주문으로 정상 진행`() {
+            val shop = Shop()
+            val free = freeTicket(shop, approvalRequired = false)
+            val buyer = newBuyer()
+            val failingConfirm = mock(FreeOrderService::class.java)
+            `when`(failingConfirm.execute(anyString(), anyLong())).thenThrow(TicketItemQuantityLackException.EXCEPTION)
+            val useCase = V2CreateOrderUseCase(v2UserOrderDomainService, failingConfirm, readMyOrdersUseCase)
+            val request = objectMapper.convertValue(freeBodyOf(shop, free), V2CreateOrderRequest::class.java)
+            assertThrows<DuDoongCodeException> { useCase.execute(buyer.id!!, request) }
+            val failed = orderRepository.findAll().single { it.userId == buyer.id }
+            assertEquals(OrderStatus.FAILED, failed.orderStatus)
+            assertEquals(0, myOrders(buyer).at("/content").size())
+
+            val retry = v2OrderOk(buyer, freeBodyOf(shop, free))
+            assertEquals("APPROVED", retry.at("/status").asText())
+            assertNotEquals(failed.uuid, retry.at("/orderUuid").asText())
+        }
+
+        @Test
+        fun `승인(완료)되면 v1 과 같이 v1 장바구니가 지워진다 (DoneOrderEvent, v1 기존 동작 고정)`() {
+            val shop = Shop()
+            val buyer = newBuyer()
+            v1Cart(buyer, shop.ticketId, 1, v1Answers(buyer, shop.eventId, shop.ticketId)).andExpect { status { isOk() } }
+            val uuid = v2OrderOk(buyer, shopBody(shop)).at("/orderUuid").asText()
+            assertTrue(cartRepository.findByUserId(buyer.id!!).isPresent, "주문 생성만으로는 유지")
+            v1Approve(shop.team.master, shop.eventId, uuid).andExpect { status { isOk() } }
+            val deadline = System.currentTimeMillis() + 10_000
+            while (System.currentTimeMillis() < deadline && cartRepository.findByUserId(buyer.id!!).isPresent) Thread.sleep(50)
+            assertFalse(cartRepository.findByUserId(buyer.id!!).isPresent)
         }
 
         @Test
@@ -301,7 +401,6 @@ class V2UserOrderControllerTest : V2UserOrderTestSupport() {
             val shop = Shop()
             val buyer = newBuyer()
             val pending = v2OrderOk(buyer, shopBody(shop)).at("/orderUuid").asText()
-            Thread.sleep(5)
             val approved = v2OrderOk(buyer, shopBody(shop, yes = false)).at("/orderUuid").asText()
                 .also { v1Approve(shop.team.master, shop.eventId, it).andExpect { status { isOk() } } }
             val refused = shop.order(buyer).also { refuse(shop.team.manager, shop.eventId, it, "DEPOSIT_UNCONFIRMED").andExpect { status { isOk() } } }
@@ -480,6 +579,36 @@ class V2UserOrderControllerTest : V2UserOrderTestSupport() {
         }
 
         @Test
+        fun `v1 카드(PG) 결제 완료 주문은 O-4 로 취소할 수 없다 (Order_400_24), 상태 유지`() {
+            val shop = Shop()
+            val buyer = newBuyer()
+            val pg = ticketItemRepository.save(
+                TicketItem(
+                    payType = TicketPayType.PRICE_TICKET, name = "카드", description = "v1", price = Money.wons(5000),
+                    quantity = 10, supplyCount = 10, purchaseLimit = 2, type = TicketType.FIRST_COME_FIRST_SERVED,
+                    isQuantityPublic = true, isSellable = true, eventId = shop.eventId,
+                ),
+            )
+            val uuid = v1Order(buyer, shop.eventId, pg.id!!)
+            val order = orderRepository.findByOrderUuid(uuid).get()
+            ReflectionTestUtils.setField(order, "orderStatus", OrderStatus.CONFIRM)
+            ReflectionTestUtils.setField(order, "approvedAt", LocalDateTime.now())
+            orderRepository.save(order)
+            assertFalse(myOrder(buyer, uuid).andExpect { status { isOk() } }.data().at("/canCancel").asBoolean())
+            assertEquals("Order_400_24", cancelMy(buyer, uuid, refundAccount).andExpect { status { isBadRequest() } }.code())
+            assertEquals(OrderStatus.CONFIRM, orderRepository.findByOrderUuid(uuid).get().orderStatus)
+        }
+
+        @Test
+        fun `환불 계좌번호는 공백을 지워 저장`() {
+            val shop = Shop()
+            val buyer = newBuyer()
+            val uuid = v2OrderOk(buyer, shopBody(shop)).at("/orderUuid").asText()
+            cancelMy(buyer, uuid, refundAccount + mapOf("accountNumber" to "123 45 678901")).andExpect { status { isOk() } }
+            assertEquals("12345678901", refundAccountRepository.findByOrderId(orderRepository.findByOrderUuid(uuid).get().id!!)!!.accountNumber)
+        }
+
+        @Test
         fun `주문자 소유가 아닌 발급 티켓(선물 대비)이 있으면 Order_400_24`() {
             val shop = Shop()
             val buyer = newBuyer()
@@ -554,7 +683,7 @@ class V2UserOrderControllerTest : V2UserOrderTestSupport() {
                 with(auth(shop.team.master))
                 param("orderStage", "CONFIRMED")
             }.andExpect { status { isOk() } }.data()
-            assertTrue(v1Admin.at("/content").any { it.at("/orderUuid").asText() == a || it.toString().contains(a) }, v1Admin.toString())
+            assertTrue(v1Admin.at("/content").any { it.at("/orderUuid").asText() == a }, v1Admin.toString())
             assertEquals("APPROVED", myOrder(buyer, a).andExpect { status { isOk() } }.data().at("/status").asText())
             assertEquals("REFUSED", myOrder(buyer, b).andExpect { status { isOk() } }.data().at("/status").asText())
         }
@@ -593,12 +722,35 @@ class V2UserOrderControllerTest : V2UserOrderTestSupport() {
             val results = concurrently(4) { i ->
                 v2CreateOrder(buyers[i], freeBodyOf(shop, free)).andReturn().response.let { if (it.status == 200) "200" else it.getContentAsString(Charsets.UTF_8) }
             }
-            assertEquals(List(4) { "200" }, results)
+            assertEquals(List(4) { "200" }, results, "500 등 실패 없음")
             assertEquals(6, stock(free))
             buyers.forEach { b ->
                 val uuid = myOrders(b).at("/content/0/orderUuid").asText()
                 assertEquals(1, issuedTicketRepository.findAllByOrderUuid(uuid).size)
             }
+        }
+
+        /**
+         * 무료 선착순 1인 제한 동시 우회 방지: 같은 사용자가 옵션 답변만 다른 요청(중복 판정 안 됨)을 동시에 보내도 발급이 제한(2장)을 넘지 않는다.
+         * 성공 건수는 H2 격리 수준 특성(V2OperationTestSupport 참고)으로 MySQL 과 다를 수 있어 상한·실패 코드만 본다 (정확한 값은 MySQL E2E test_45)
+         */
+        @Test
+        fun `무료 선착순 같은 사용자 동시 주문(옵션만 다름) - 1인 제한을 넘겨 발급되지 않음, 실패는 1인 제한 400`() {
+            val shop = Shop()
+            val free = createTicket(shop.team.manager, shop.eventId, freeBody(name = "제한", supplyCount = 10, approvalRequired = false, overrides = mapOf("purchaseLimit" to 2)))
+            putOptions(shop.team.manager, shop.eventId, free, listOf(shop.subjectiveOptionId)).andExpect { status { isOk() } }
+            val buyer = newBuyer()
+            val results = concurrently(3) { i ->
+                val body = orderBody(shop.eventId, free, answers = listOf(mapOf("optionId" to shop.subjectiveOptionId, "answer" to "답$i")), method = "FREE", depositorName = null)
+                v2CreateOrder(buyer, body).andReturn().response.let { if (it.status == 200) "200" else it.getContentAsString(Charsets.UTF_8) }
+            }
+            assertTrue(results.count { it == "200" } >= 1, "$results")
+            assertTrue(results.filter { it != "200" }.all { objectMapper.readTree(it).at("/code").asText() == "Ticket_Item_400_6" }, "$results")
+            val issued = orderRepository.findAll().filter { it.userId == buyer.id }.sumOf { o ->
+                issuedTicketRepository.findAllByOrderUuid(o.uuid!!).count { it.issuedTicketStatus != IssuedTicketStatus.CANCELED }
+            }
+            assertTrue(issued <= 2, "issued=$issued $results")
+            assertEquals(results.count { it == "200" }, issued)
         }
 
         @Test
@@ -612,6 +764,8 @@ class V2UserOrderControllerTest : V2UserOrderTestSupport() {
                 v2CreateOrder(buyers[i], shopBody(shop)).andReturn().response.let { if (it.status == 200) "200" else it.getContentAsString(Charsets.UTF_8) }
             }
             assertEquals(1, results.count { it == "200" }, "$results")
+            // 패자는 재고 부족 400 (500 없음)
+            assertEquals(List(2) { "Ticket_Item_400_1" }, results.filter { it != "200" }.map { objectMapper.readTree(it).at("/code").asText() }, "$results")
             assertEquals(1, orders(shop.team.guest, shop.eventId).at("/counts/pendingApprove").asLong())
         }
 
@@ -632,14 +786,14 @@ class V2UserOrderControllerTest : V2UserOrderTestSupport() {
     @DisplayName("알림")
     inner class Notifications {
 
+        private fun count(user: User, type: NotificationType) = notificationRepository.findAllByUserId(user.id!!).count { it.type == type }
+
+        /** 처음 보일 때까지 기다린 뒤 [STABLE_MS] 더 기다려 최종 개수를 다시 센다 (뒤늦은 중복 저장도 잡는다) */
         private fun await(user: User, type: NotificationType): Int {
             val deadline = System.currentTimeMillis() + 10_000
-            while (System.currentTimeMillis() < deadline) {
-                val n = notificationRepository.findAllByUserId(user.id!!).count { it.type == type }
-                if (n > 0) return n
-                Thread.sleep(50)
-            }
-            return 0
+            while (System.currentTimeMillis() < deadline && count(user, type) == 0) Thread.sleep(50)
+            Thread.sleep(STABLE_MS)
+            return count(user, type)
         }
 
         @Test
@@ -660,8 +814,8 @@ class V2UserOrderControllerTest : V2UserOrderTestSupport() {
             assertTrue(notificationRepository.findAllByUserId(shop.team.guest.id!!).none {
                 it.type == NotificationType.ORDER_REFUND_REQUESTED || it.type == NotificationType.ORDER_CANCELED_BY_USER
             })
-            // 승인 대기 알림(v2 주문 접수)도 기존대로
-            assertTrue(await(shop.team.manager, NotificationType.ORDER_PENDING_APPROVE) >= 1)
+            // 승인 대기 알림(v2 주문 접수)도 기존대로: 유료 주문 1건만 승인형 (무료 선착순은 결제형)
+            assertEquals(1, await(shop.team.manager, NotificationType.ORDER_PENDING_APPROVE))
             assertEquals(IssuedTicketStatus.CANCELED, issuedTicketRepository.findAllByOrderUuid(freeOrder).single().issuedTicketStatus)
         }
     }

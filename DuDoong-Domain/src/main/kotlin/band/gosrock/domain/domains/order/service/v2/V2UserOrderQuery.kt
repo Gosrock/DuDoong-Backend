@@ -85,6 +85,22 @@ class V2UserOrderQuery(private val queryFactory: JPAQueryFactory) {
     }
 
     /**
+     * 무료 확정 전(PENDING_PAYMENT)인 이 사용자의 이 티켓 v2 주문 수량 합 ([since] 이후 생성분, payment_channel 있음 = v2).
+     * 1인 제한 검사에 더한다: 무료 선착순은 생성과 확정(발급)이 다른 트랜잭션이라, 확정 전 주문이 발급 수에 아직 안 잡힌다
+     */
+    fun sumUnconfirmedV2Quantity(userId: Long, ticketItemId: Long, since: LocalDateTime): Long =
+        queryFactory.select(orderLineItem.quantity.sum()).from(order)
+            .join(order.orderLineItems, orderLineItem)
+            .where(
+                order.userId.eq(userId),
+                orderLineItem.orderItem.itemId.eq(ticketItemId),
+                order.orderStatus.eq(OrderStatus.PENDING_PAYMENT),
+                order.paymentChannel.isNotNull,
+                order.createdAt.goe(since),
+            )
+            .fetchOne() ?: 0L
+
+    /**
      * 사용자 취소를 막는 발급 티켓 수: 입장한 티켓 + 주문자 소유가 아닌 티켓(8단계 선물로 넘어간 티켓 대비). 취소된 티켓은 제외
      */
     fun countCancelBlockingTickets(orderUuid: String, ownerUserId: Long): Long =

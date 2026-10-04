@@ -67,8 +67,11 @@ band.gosrock.api.v2
   - 문의처: 공연 문의처, 없으면 `V2HostDomainService.displayContacts`(v2 연락처 → v1 전화/이메일)
   - P-5: 유효 + `TicketItem.isOnSale` 티켓만(지난 공연도 목록은 보임). `isPurchasable` = `V2TicketItemDomainService.isPurchasableInV2App`(v2 결제 방식 DUDOONG/FREE + 공연 OPEN + 시작 전 + 판매 중 + 재고 > 0, 기존 PG 티켓은 false). 티켓·옵션 그룹은 `V2TicketItemQuery` fetch join(옵션 N+1 없음, 쿼리 3개) 계좌는 주문 단계에서 제공(응답에 없음, ArchUnit 으로 고정). 잔여 = 재고 공개 + 수량 지정일 때만
 - `V2UserOrderDomainService` / `V2UserOrderQuery` / `V2MyOrderStatus` (#718): 사용자 앱 주문(O-1~O-4)
-  - 생성: v1 장바구니 → 주문을 한 트랜잭션에서. **장바구니는 저장하지 않는다**(메모리 `Cart` 로 v1 `CartValidator` 검증만 — v1 '최근 장바구니' 덮어쓰기 방지), 주문은 v1 `OrderFactory.createNormalOrder(cart, userId)` 규칙 그대로. 무료 선착순은 이어서 v1 `FreeOrderService`(별도 락·트랜잭션, 발급이 커밋된 주문을 읽기 때문)
+  - 생성: v1 장바구니 → 주문을 한 트랜잭션에서. **장바구니는 저장하지 않는다**(메모리 `Cart` 로 v1 `CartValidator` 검증만 — 주문 생성 때 v1 '최근 장바구니'를 덮어쓰지 않음), 주문은 v1 `OrderFactory.createNormalOrder(cart, userId)` 규칙 그대로. 단 주문이 **완료(승인·무료 확정)되면 v1 과 같이 그 사용자의 v1 장바구니가 지워진다**(`DoneOrderEvent` → `DoneOrderEventHandler`, v1 기존 동작)
+  - 무료 선착순은 이어서 v1 `FreeOrderService`(별도 락·트랜잭션, 발급이 커밋된 주문을 읽기 때문). 확정이 실패하면 `failUnconfirmed` 로 주문을 FAILED 처리(새 트랜잭션)하고 원래 오류를 돌려준다 — 재시도는 새 주문
   - 락: `티켓관리:{ticketItemId}` (v1 발급·재고 감소, v2 티켓 수정과 같은 락). v1 주문 생성의 `주문생성:{userId}` 보다 넓다 — 승인 대기 재고·1인 제한 검사가 다른 사용자 동시 주문에도 맞고, 티켓 조건 변경과 주문이 겹치지 않는다
+  - 1인 제한 실제 보장 범위: v2 주문끼리는 같은 티켓 락으로 줄 세워 보장(승인형 = v1 승인 대기 합산 검사, 무료 선착순 = 발급 수 + **확정 전 v2 주문 수량(최근 5분)** 합산). v1 앱과 v2 앱에서 같은 사용자가 동시에 주문하면 v1 쪽이 이 락을 잡지 않아 보장하지 않는다(v1 끼리도 원래 같은 틈)
+  - MySQL 격리 수준 의존: v1 무료 확정은 발급(REQUIRES_NEW 커밋) 뒤 같은 트랜잭션에서 재고·1인 제한을 다시 세는데, MySQL(REPEATABLE READ)은 트랜잭션 첫 조회 스냅샷이라 방금 발급분을 세지 않고 H2(READ COMMITTED)는 센다. 그래서 '마지막 1장'·제한 경계는 MySQL E2E(test_45)에서 검증하고 H2 통합 테스트는 경계를 피한다
   - 옵션: 일괄 = 라인 1개(수량 N), 티켓별 = **수량 1 라인 N개** (v1 장바구니가 원래 지원하는 구조, 발급 시 라인 답변이 티켓 답변으로 복사). 네/아니오 답은 `YES`/`NO`(예·네 / 아니요·아니오 허용), 저장값은 v1 과 같은 `예`/`아니요`
   - 결제 방식: 두둥 = BANK_TRANSFER / TOSS_TRANSFER + 입금자명 1~20자, 무료 = FREE. `tbl_order.payment_channel`·`depositor_name`(V007, v1 주문은 null). PG 티켓은 `Order_400_20`
   - 중복 요청: 같은 사용자·티켓·라인 수량·옵션 답변·결제 방식·입금자명이 10초 안에 다시 오면 앞 주문(진행 중·완료)을 돌려준다(스칼라 조회). 무료 선착순이 아직 확정 전이면 `Order_400_26` (이중 확정 방지). `Idempotency-Key` 헤더는 지원하지 않는다

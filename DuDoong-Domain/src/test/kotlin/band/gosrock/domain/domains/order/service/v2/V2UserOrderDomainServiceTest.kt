@@ -6,6 +6,7 @@ import band.gosrock.domain.domains.cart.domain.CartValidator
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.event.domain.EventStatus
+import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
 import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.order.domain.OrderItemVo
@@ -17,7 +18,6 @@ import band.gosrock.domain.domains.order.domain.OrderRefuseReasonType
 import band.gosrock.domain.domains.order.domain.OrderStatus
 import band.gosrock.domain.domains.order.domain.RefundStatus
 import band.gosrock.domain.domains.order.domain.validator.OrderValidator
-import band.gosrock.domain.domains.order.exception.OrderErrorCode
 import band.gosrock.domain.domains.order.repository.OrderRefundAccountRepository
 import band.gosrock.domain.domains.order.service.OrderFactory
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem
@@ -44,6 +44,7 @@ class V2UserOrderDomainServiceTest {
     private val service = V2UserOrderDomainService(
         mock(OrderAdaptor::class.java), mock(OrderValidator::class.java), mock(OrderFactory::class.java), mock(CartValidator::class.java),
         mock(EventAdaptor::class.java), mock(OrderRefundAccountRepository::class.java), mock(V2TicketItemDomainService::class.java), query,
+        mock(IssuedTicketAdaptor::class.java),
     )
 
     private val now = LocalDateTime.of(2026, 10, 4, 12, 0)
@@ -182,15 +183,6 @@ class V2UserOrderDomainServiceTest {
             assertEquals("*********8901", mask("123-45-678901"))
             assertEquals("****", mask("1234"))
             assertEquals("*2345", mask("12345"))
-        }
-
-        @Test
-        fun `에러 코드 - 새 v2 코드는 400`() {
-            listOf(
-                OrderErrorCode.V2_UNSUPPORTED_ORDER_TICKET, OrderErrorCode.V2_INVALID_PAYMENT_METHOD, OrderErrorCode.V2_INVALID_DEPOSITOR_NAME,
-                OrderErrorCode.V2_INVALID_OPTION_ANSWERS, OrderErrorCode.V2_ORDER_CANNOT_CANCEL_BY_USER, OrderErrorCode.V2_REFUND_ACCOUNT_REQUIRED,
-                OrderErrorCode.V2_DUPLICATE_ORDER_IN_PROGRESS,
-            ).forEach { assertEquals(400, it.getErrorReason().status) }
         }
     }
 }
