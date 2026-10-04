@@ -16,6 +16,7 @@ import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.order.domain.OrderMethod
 import band.gosrock.domain.domains.order.domain.OrderRefuseReasonType
 import band.gosrock.domain.domains.order.domain.OrderStatus
+import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.LocalDateTime
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -176,11 +177,24 @@ class V2NotificationDomainServiceTest {
         }
 
         @Test
-        fun `긴 문구는 컬럼 길이로 자른다`() {
+        fun `긴 거절 사유 - 본문은 100자 + 말줄임, extra 는 값 단위 300자 + 말줄임 후 직렬화(JSON 유지)`() {
             order(OrderStatus.CANCELED, cancelReason = "가".repeat(500))
             service.notifyOrderRefused("order-uuid")
-            assertEquals(Notification.BODY_MAX_LENGTH, saved.single().body.length)
-            assertTrue(saved.single().extra!!.length <= Notification.EXTRA_MAX_LENGTH)
+            val n = saved.single()
+            assertTrue(n.body.endsWith(" 사유: " + "가".repeat(100) + "…"), n.body)
+            val extra = ObjectMapper().readValue(n.extra, Map::class.java)
+            assertEquals("가".repeat(300) + "…", extra["refuseReason"])
+            assertEquals("정기공연", extra["eventName"])
+            assertTrue(n.extra!!.length <= Notification.EXTRA_MAX_LENGTH)
+        }
+
+        @Test
+        fun `짧은 사유는 그대로 (말줄임 없음), 이스케이프가 필요한 문자도 JSON 유지`() {
+            order(OrderStatus.CANCELED, cancelReason = "\"따옴표\" \\ 사유")
+            service.notifyOrderRefused("order-uuid")
+            val n = saved.single()
+            assertTrue(n.body.endsWith("사유: \"따옴표\" \\ 사유"), n.body)
+            assertEquals("\"따옴표\" \\ 사유", ObjectMapper().readValue(n.extra, Map::class.java)["refuseReason"])
         }
     }
 

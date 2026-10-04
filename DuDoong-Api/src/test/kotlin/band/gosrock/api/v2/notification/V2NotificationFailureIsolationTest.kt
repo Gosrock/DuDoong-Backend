@@ -20,8 +20,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.mock.mockito.MockBean
 
 /**
- * 알림 저장이 실패해도 원 작업(멤버 추가, 주문 생성·승인·거절)은 커밋된 그대로다 (#714).
- * 저장 서비스를 예외를 던지는 목으로 바꾸고, 핸들러가 실제로 호출됐는지(비동기) 확인한다.
+ * 구조적 격리 회귀 확인 (#714): 핸들러가 커밋 후 별도 스레드에서 돌고 예외를 삼키는 구조라, 서비스가 어떤 예외를 던져도 원 작업
+ * (멤버 추가, 주문 생성·승인·거절)이 커밋된 그대로인지 본다. 서비스 전체를 목으로 바꾸므로 실제 저장 실패(DB 오류)는
+ * [V2NotificationStorageFailureTest] 에서 확인한다.
  */
 @ApiIntegrateSpringBootTest
 @AutoConfigureMockMvc

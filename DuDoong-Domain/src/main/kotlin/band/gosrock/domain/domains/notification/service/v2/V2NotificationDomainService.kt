@@ -121,7 +121,7 @@ class V2NotificationDomainService(
                     order = order,
                     type = NotificationType.ORDER_REFUSED,
                     title = "티켓 주문이 거절되었습니다",
-                    body = "'$eventName' ${order.orderName.orEmpty()} 주문이 거절되었어요." + (reason?.let { " 사유: $it" } ?: ""),
+                    body = "'$eventName' ${order.orderName.orEmpty()} 주문이 거절되었어요." + (reason?.let { " 사유: ${ellipsis(it, BODY_REASON_MAX_LENGTH)}" } ?: ""),
                     extra = mapOf(
                         "eventName" to eventName,
                         "orderNo" to order.orderNo,
@@ -193,11 +193,25 @@ class V2NotificationDomainService(
         targetType = targetType,
         targetId = targetId,
         eventId = eventId,
-        extra = OBJECT_MAPPER.writeValueAsString(extra.filterValues { it != null }).take(Notification.EXTRA_MAX_LENGTH),
+        // 값 단위로 자른 뒤 직렬화 (직렬화된 문자열을 자르면 JSON 이 깨진다). 값 상한 합이 컬럼 길이 안이다
+        extra = OBJECT_MAPPER.writeValueAsString(
+            extra.filterValues { it != null }.mapValues { ellipsis(it.value!!, EXTRA_VALUE_MAX_LENGTH) },
+        ),
         dedupKey = dedupKey,
     )
 
+    private fun ellipsis(text: String, max: Int): String = if (text.length <= max) text else text.take(max) + "…"
+
     companion object {
         private val OBJECT_MAPPER = ObjectMapper()
+
+        /** 본문에 넣는 거절 사유 최대 글자 수 (넘으면 … 붙임). extra.refuseReason 에는 최대 300자 */
+        const val BODY_REASON_MAX_LENGTH = 100
+
+        /**
+         * extra 값 하나의 최대 글자 수 (넘으면 … 붙임). 긴 값은 거절 사유 하나뿐이고(공연명 30·호스트명 15자 등 나머지는 짧다),
+         * 사유가 전부 이스케이프 문자여도(301자 → 최대 약 600자) 직렬화 결과가 컬럼 1,000자 안이다
+         */
+        const val EXTRA_VALUE_MAX_LENGTH = 300
     }
 }

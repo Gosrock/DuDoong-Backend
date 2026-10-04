@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository
 
 /**
  * 알림 일괄 저장. IDENTITY 키라 JPA 는 insert 를 묶지 못하므로 여러 행을 한 문장(multi-row INSERT)으로 넣는다.
- * 중복(uk(user_id, type, dedup_key) — 같은 알림 재처리)은 건너뛴다: 먼저 이미 있는 키를 걸러 내고, 그 사이 동시 처리로 uk 에 걸리면
+ * 중복(uk(type, dedup_key, user_id) — 같은 알림 재처리)은 건너뛴다: 먼저 이미 있는 키를 걸러 내고, 그 사이 동시 처리로 uk 에 걸리면
  * 행 단위로 다시 넣으며 중복 행만 버린다. (`INSERT IGNORE` 는 테스트 DB(H2 2.x)가 지원하지 않고, 길이 초과 등 다른 오류까지 경고로 삼켜서 쓰지 않는다)
  * 길이는 호출자가 컬럼 길이 안으로 자른다.
  */
@@ -34,7 +34,8 @@ class NotificationBulkRepository(private val jdbcTemplate: JdbcTemplate) {
         }
     }
 
-    private fun existingKeys(notifications: List<Notification>): Set<Triple<Long, String, String>> {
+    /** 이미 저장된 (user_id, type, dedup_key). protected: 사전 조회와 insert 사이 경합(폴백 경로)을 테스트에서 재현하기 위함 */
+    protected fun existingKeys(notifications: List<Notification>): Set<Triple<Long, String, String>> {
         if (notifications.isEmpty()) return emptySet()
         val userIds = notifications.map { it.userId }.distinct()
         val dedupKeys = notifications.map { it.dedupKey }.distinct()

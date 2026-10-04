@@ -7,6 +7,7 @@ import band.gosrock.domain.domains.notification.domain.NotificationType
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.swagger.v3.oas.annotations.media.Schema
+import org.slf4j.LoggerFactory
 import jakarta.validation.constraints.Size
 import java.time.LocalDateTime
 
@@ -26,6 +27,18 @@ data class V2NotificationResponse(
 ) {
     companion object {
         private val OBJECT_MAPPER = ObjectMapper()
+        private val log = LoggerFactory.getLogger(V2NotificationResponse::class.java)
+
+        /** extra JSON 파싱. 깨진 값이면 빈 맵으로 내리고 warn 로그 (목록 전체가 실패하지 않게) */
+        private fun parseExtra(notification: Notification): Map<String, String> {
+            val raw = notification.extra ?: return emptyMap()
+            return try {
+                OBJECT_MAPPER.readValue<Map<String, String>>(raw)
+            } catch (e: Exception) {
+                log.warn("[알림센터] extra 파싱 실패 (notificationId={}): {}", notification.id, e.message)
+                emptyMap()
+            }
+        }
 
         fun of(notification: Notification) = V2NotificationResponse(
             id = notification.id!!,
@@ -33,7 +46,7 @@ data class V2NotificationResponse(
             title = notification.title,
             body = notification.body,
             target = V2NotificationTarget(type = notification.targetType, id = notification.targetId, eventId = notification.eventId),
-            extra = notification.extra?.let { runCatching { OBJECT_MAPPER.readValue<Map<String, String>>(it) }.getOrNull() }.orEmpty(),
+            extra = parseExtra(notification),
             isRead = notification.isRead,
             createdAt = notification.createdAt,
         )

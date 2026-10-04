@@ -51,7 +51,11 @@ band.gosrock.api.v2
   - 조회 쿼리 `V2OrderQuery` / `V2IssuedTicketQuery` 도 `service.v2` 에 둔다 (v2 만 사용)
   - `V2NotificationDomainService` (#714): 알림센터(테이블 `tbl_notification` 은 v2 전용). 저장(`notify*`)은 커밋된 데이터를 다시 읽어 수신자·문구를 정하고 조건이 안 맞으면 저장 안 함, 목록(Slice)·안읽음 수·읽음(본인 것만, 남의 id 무시, 멱등)
     - 저장 핸들러 `api.v2.notification.handler.V2NotificationEventHandler`: 기존 도메인 이벤트(`CreateOrderEvent`·`DoneOrderEvent`·`WithDrawOrderEvent`, v1 경로 포함)와 v2 전용 `V2HostMembersAddedEvent`(`V2HostDomainService.addActiveHostUsers` 에서만 발행)에 붙는다. `@Async` + `@TransactionalEventListener(AFTER_COMMIT)`, 예외는 삼키고 로그만 (원 트랜잭션 영향 없음)
-    - 중복 방지 uk(user_id, type, dedup_key): 주문 = orderUuid, 멤버 추가 = `host_user:{id}`. 일괄 저장은 `NotificationBulkRepository`(multi-row INSERT, 이미 있는 키는 건너뜀)
+    - 저장 핸들러는 알림 전용 executor(`notificationExecutor`, core 2 / max 4 / queue 200, 가득 차면 버리고 warn — 호출 스레드 실행 안 함)에서 돈다. 기존 `@Async` 기본 풀은 그대로. 결제형 주문·환불 등 이벤트 필드로 알 수 있는 비대상은 `condition`(SpEL)으로 큐에 넣기 전에 거른다
+    - 중복 방지 uk(type, dedup_key, user_id): 주문 = orderUuid, 멤버 추가 = `host_user:{id}`. 일괄 저장은 `NotificationBulkRepository`(multi-row INSERT, 이미 있는 키는 건너뜀, 경합으로 uk 에 걸리면 행 단위 재시도)
+    - 알림 없음: v1 초대 → 수락 경로(본인이 수락하므로 "추가됨" 알림 대상 아님, `HostUserJoinEvent` 는 슬랙만), 승인 후 취소·사용자 환불
+    - 처리가 끝난 승인 대기 알림(승인·거절된 주문)을 자동으로 읽음 처리하지 않는다 (후속)
+    - 거절 사유는 본문에 100자 + `…`, extra 값은 각각 300자 + `…` 로 자른 뒤 직렬화
 - **open-in-view**: test·staging·prod 는 켜져 있다(기본값). 요청 영속성 컨텍스트에 먼저 올린 엔티티는 락 트랜잭션(REQUIRES_NEW)에서 바뀌어도 같은 요청 안에서 갱신되지 않으므로, 락 서비스를 부르기 전 검사는 엔티티 대신 스칼라 조회로 한다 (`V2OrderDomainService.validateEventOrder`)
 - 티켓 공통 불변식(엔티티 `TicketItem`): 재고 감소 = 판매됨(`isSold`), 판매된 티켓 옵션 변경·삭제 불가, 무제한·매수 제한 없음 저장값(`TicketItem.UNLIMITED_SUPPLY_COUNT` / `NO_PURCHASE_LIMIT` = 1,000,000, `isUnlimitedSupply()` / `hasNoPurchaseLimit()` — v1 응답·어드민·v2 공통), **판매 중 판정(`isOnSale`: isSellable + 판매 기간)**
   - v1 장바구니·주문 생성(`CartValidator`/`OrderValidator.validCanCreate`)이 이 검사를 하고, v1 공개 티켓 목록은 판매 중인 티켓만 보여 준다(어드민 목록은 전부). v1 로 만든 티켓은 isSellable=true·기간 null 이라 영향 없음

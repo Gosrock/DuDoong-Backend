@@ -6,9 +6,12 @@
 --   - target_type + target_id: 딥링크 대상 (HOST = hostId, ORDER = orderUuid). event_id: ORDER 대상의 공연 id
 --   - extra: 부가 정보 JSON 문자열 (호스트명, 역할, 공연명, 주문 번호, 거절 사유 종류·문구)
 --   - dedup_key: 중복 방지 키. 주문 알림 = orderUuid, 멤버 추가 = host_user:{host_user_id}
---   - uk(user_id, type, dedup_key): 같은 이벤트 재처리 시 같은 사람에게 두 번 저장하지 않음
---   - idx(user_id, is_read): 안읽음 수(N-2), 전체 읽음(N-3)
---   - idx(user_id): 목록 최신순(N-1, WHERE user_id = ? ORDER BY notification_id DESC — 보조 인덱스에 PK 가 붙어 정렬 없이 읽음)
+--   - uk(type, dedup_key, user_id): 같은 이벤트 재처리 시 같은 사람에게 두 번 저장하지 않음
+--   - idx(user_id, notification_id, is_read): user_id 로 시작하는 유일한 인덱스
+--       N-1 목록 WHERE user_id = ? ORDER BY notification_id DESC → Backward index scan, filesort 없음
+--       N-2 안읽음 수 WHERE user_id = ? AND is_read = 0 → Using index (covering)
+--       N-3 읽음 처리 WHERE user_id = ? AND is_read = 0 [AND notification_id IN (...)] → 이 인덱스 / PK
+--     user_id 로 시작하는 인덱스를 여럿 두면(예: uk(user_id, ...), (user_id, is_read)) MySQL 8.4 가 목록 조회에 그쪽 + filesort 를 골랐다 (로컬 10만 행 EXPLAIN, 2026-10-04)
 --   - 보관 기간·삭제 정책은 후속 (행 증가 추정: prod 승인형 주문 월 약 1,500건 × (마스터·매니저 평균 1.4명 + 주문자 1) → 월 수천 행)
 -- v1 영향: 없음 (테이블 추가만. v1 앱은 이 테이블을 읽지도 쓰지도 않는다)
 -- 실행 순서: (1) 이 파일 DDL → (2) 앱 배포. [DATA] 없음 (기존 주문·멤버에 대한 알림은 소급 생성하지 않는다)
@@ -35,7 +38,6 @@ CREATE TABLE `tbl_notification` (
   `is_read` bit(1) NOT NULL DEFAULT b'0',
   `read_at` datetime DEFAULT NULL,
   PRIMARY KEY (`notification_id`),
-  UNIQUE KEY `uk_notification_user_type_dedup` (`user_id`, `type`, `dedup_key`),
-  KEY `idx_notification_user_id_is_read` (`user_id`, `is_read`),
-  KEY `idx_notification_user_id` (`user_id`)
+  UNIQUE KEY `uk_notification_type_dedup_user` (`type`, `dedup_key`, `user_id`),
+  KEY `idx_notification_user_id_id_is_read` (`user_id`, `notification_id`, `is_read`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
