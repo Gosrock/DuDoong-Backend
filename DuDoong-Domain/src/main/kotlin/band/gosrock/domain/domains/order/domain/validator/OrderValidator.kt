@@ -143,12 +143,10 @@ class OrderValidator(
         }
     }
 
+    /** 승인형 주문 생성 재고 검사: 이 티켓의 승인 대기 수량 + 이번 주문 수량 <= 남은 재고 (다른 티켓 대기는 세지 않는다, #720) */
     fun validApproveOrderCreateTotalStock(order: Order) {
         val item = getItem(order)
-        val approveWaitingOrders = orderAdaptor.findByEventIdAndOrderStatus(
-            order.eventId!!, OrderStatus.PENDING_APPROVE
-        )
-        val approveWaitingTicketCount = approveWaitingOrders.sumOf { it.getTotalQuantity() }
+        val approveWaitingTicketCount = orderAdaptor.sumPendingApproveQuantity(item.id!!)
         val expectedApproveWaitQuantity = approveWaitingTicketCount + order.getTotalQuantity()
         item.validEnoughQuantity(expectedApproveWaitQuantity)
     }

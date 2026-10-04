@@ -32,6 +32,10 @@ class OrderAdaptor(private val orderRepository: OrderRepository) {
         if (itemIds.isEmpty()) emptySet()
         else orderRepository.findItemIdsHavingOrderStatus(itemIds, OrderStatus.PENDING_APPROVE).toSet()
 
+    /** 티켓 하나의 승인 대기(PENDING_APPROVE) 주문 수량 합 */
+    fun sumPendingApproveQuantity(itemId: Long): Long =
+        orderRepository.sumQuantityByItemIdAndOrderStatus(itemId, OrderStatus.PENDING_APPROVE)
+
     fun findByUuidIn(orderUuids: List<String>): List<Order> =
         orderRepository.findByUuidIn(orderUuids)
 
@@ -43,9 +47,6 @@ class OrderAdaptor(private val orderRepository: OrderRepository) {
 
     fun findEventOrders(condition: FindEventOrdersCondition, pageable: Pageable): Page<Order> =
         orderRepository.findEventOrders(condition, pageable)
-
-    fun findByEventIdAndOrderStatus(eventId: Long, orderStatus: OrderStatus): List<Order> =
-        orderRepository.findByEventIdAndOrderStatus(eventId, orderStatus)
 
     fun findByEventIdAndOrderStatusAndUserId(eventId: Long, userId: Long, orderStatus: OrderStatus): List<Order> =
         orderRepository.findByEventIdAndUserIdAndOrderStatus(eventId, userId, orderStatus)
