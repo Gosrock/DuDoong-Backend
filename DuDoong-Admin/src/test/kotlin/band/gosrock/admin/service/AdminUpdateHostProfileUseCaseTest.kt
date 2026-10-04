@@ -48,7 +48,11 @@ class AdminUpdateHostProfileUseCaseTest {
     private fun host(contacts: List<HostContact>): Host =
         Host(masterUserId = 2L, name = "고스락", contactEmail = "old@gosrock.band", contactNumber = "010-1").also {
             ReflectionTestUtils.setField(it, "id", hostId)
-            if (contacts.isNotEmpty()) it.replaceContacts(contacts)
+            // v2 연락처 픽스처 (Host.replaceContacts 는 Domain 모듈 internal). 픽스처의 첫 EMAIL 이 생성자 contactEmail 과 같아 v1 컬럼도 그대로다
+            contacts.forEachIndexed { index, contact ->
+                contact.assignTo(it, index)
+                it.contacts.add(contact)
+            }
             `when`(hostAdaptor.findById(hostId)).thenReturn(it)
         }
 

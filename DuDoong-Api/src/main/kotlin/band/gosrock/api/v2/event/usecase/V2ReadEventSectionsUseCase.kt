@@ -5,6 +5,7 @@ import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.event.exception.EventNotFoundException
+import band.gosrock.domain.domains.event.service.v2.V2EventDomainService
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
 import band.gosrock.domain.domains.user.domain.AccountRole
@@ -15,6 +16,7 @@ class V2ReadEventSectionsUseCase(
     private val eventAdaptor: EventAdaptor,
     private val hostAdaptor: HostAdaptor,
     private val userAdaptor: UserAdaptor,
+    private val v2EventDomainService: V2EventDomainService,
 ) {
     /**
      * 공개 API (비로그인 userId = 0). 준비중 공연은 활성 멤버(일반 포함)와 SUPER_ADMIN 만 볼 수 있고,
@@ -25,7 +27,7 @@ class V2ReadEventSectionsUseCase(
     fun execute(userId: Long, eventId: Long): List<V2EventSectionResponse> {
         val event = eventAdaptor.findById(eventId)
         if (event.isPreparing() && !canViewPreparing(userId, event)) throw EventNotFoundException.EXCEPTION
-        return event.displaySectionsV2().map { V2EventSectionResponse.from(it) }
+        return v2EventDomainService.displaySections(event).map { V2EventSectionResponse.from(it) }
     }
 
     private fun canViewPreparing(userId: Long, event: Event): Boolean {

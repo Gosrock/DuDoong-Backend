@@ -4,7 +4,7 @@ import band.gosrock.api.v2.host.dto.response.V2EventDisplayStatus
 import band.gosrock.api.v2.tag.dto.V2TagResponse
 import band.gosrock.common.annotation.DateFormat
 import band.gosrock.domain.domains.event.domain.Event
-import band.gosrock.domain.domains.event.domain.EventChecklist
+import band.gosrock.domain.domains.event.service.v2.EventChecklist
 import band.gosrock.domain.domains.host.domain.Host
 import band.gosrock.domain.domains.host.domain.HostContactType
 import band.gosrock.domain.domains.tag.domain.Tag

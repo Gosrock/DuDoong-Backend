@@ -11,4 +11,6 @@ dependencies {
     implementation("org.jsoup:jsoup:1.17.2")
 
     testImplementation("org.springframework.security:spring-security-test")
+    // v1/v2 경계 아키텍처 테스트 (DEC-018)
+    testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
 }

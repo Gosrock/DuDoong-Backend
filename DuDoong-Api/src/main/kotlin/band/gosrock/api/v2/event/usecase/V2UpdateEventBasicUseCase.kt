@@ -11,7 +11,7 @@ import band.gosrock.domain.domains.event.exception.InvalidEventContactException
 import band.gosrock.domain.domains.event.exception.InvalidEventImageKeyException
 import band.gosrock.domain.domains.event.exception.InvalidEventTagException
 import band.gosrock.domain.domains.event.repository.EventRepository
-import band.gosrock.domain.domains.event.service.EventService
+import band.gosrock.domain.domains.event.service.v2.V2EventDomainService
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor
 import band.gosrock.infrastructure.config.s3.S3UploadPresignedUrlService
 import org.springframework.transaction.annotation.Transactional
@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional
 class V2UpdateEventBasicUseCase(
     private val eventAdaptor: EventAdaptor,
     private val eventRepository: EventRepository,
-    private val eventService: EventService,
+    private val v2EventDomainService: V2EventDomainService,
     private val ticketItemAdaptor: TicketItemAdaptor,
     private val presignedUrlService: S3UploadPresignedUrlService,
     private val readEventManageUseCase: V2ReadEventManageUseCase,
@@ -31,7 +31,8 @@ class V2UpdateEventBasicUseCase(
     fun execute(userId: Long, eventId: Long, request: V2UpdateEventBasicRequest): V2EventManageResponse {
         validateImageKey(eventId, request.posterImageKey)
         val event = eventAdaptor.findById(eventId)
-        event.updateBasicV2(
+        v2EventDomainService.updateBasic(
+            event = event,
             name = request.name?.trim(),
             startAt = request.startAt,
             endAt = request.endAt,
@@ -43,9 +44,9 @@ class V2UpdateEventBasicUseCase(
         )
         // 배열 안의 null 원소는 형식 오류 (500 방지)
         request.contacts?.let { contacts ->
-            event.replaceContactsV2(contacts.map { it?.toEntity() ?: throw InvalidEventContactException.EXCEPTION })
+            v2EventDomainService.replaceContacts(event, contacts.map { it?.toEntity() ?: throw InvalidEventContactException.EXCEPTION })
         }
-        request.tagIds?.let { tagIds -> eventService.replaceTagsV2(event, tagIds.map { it ?: throw InvalidEventTagException.EXCEPTION }) }
+        request.tagIds?.let { tagIds -> v2EventDomainService.replaceTags(event, tagIds.map { it ?: throw InvalidEventTagException.EXCEPTION }) }
         return readEventManageUseCase.toResponse(userId, eventRepository.save(event))
     }
 
