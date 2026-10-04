@@ -80,7 +80,7 @@ def _ev(base_url, event_id, path=""):
     return f"{base_url}/v2/events/{event_id}{path}"
 
 
-def _new_event(base_url, s, key, purchase_limit=4):
+def _new_event(base_url, s, key, purchase_limit=4, approval=False):
     resp = requests.post(
         f"{base_url}/v2/events",
         json={"hostId": s.host_id, "name": f"선물공연{key}", "startAt": START.strftime(FMT), "endAt": END.strftime(FMT), "hasTicket": True},
@@ -90,7 +90,7 @@ def _new_event(base_url, s, key, purchase_limit=4):
     event_id = get_data(resp)["eventId"]
     resp = requests.post(_ev(base_url, event_id, "/ticket-items"), json={
         "payType": "FREE", "name": "무료", "description": "무료", "price": 0, "supplyCount": 100, "account": None,
-        "approvalRequired": False, "isQuantityPublic": True, "purchaseLimit": purchase_limit, "saleStartAt": None, "saleEndAt": None,
+        "approvalRequired": approval, "isQuantityPublic": True, "purchaseLimit": purchase_limit, "saleStartAt": None, "saleEndAt": None,
     }, headers=_h(s, "manager"))
     assert_status(resp, 200)
     ticket_id = get_data(resp)["ticketItemId"]
@@ -191,6 +191,7 @@ def test_01_setup(base_url, s):
     for key in ("main", "cascade", "admin", "expire", "race", "removed"):
         _new_event(base_url, s, key)
     _new_event(base_url, s, "limit", purchase_limit=2)
+    _new_event(base_url, s, "bar", approval=True)
 
 
 def test_02_create_landing_accept_uuid_swap(base_url, s):
@@ -497,3 +498,39 @@ def test_13_concurrency_create_vs_user_cancel(base_url, s):
             assert pending == "1" and order_status == "APPROVED" and _code(cancel_resp) == "Order_400_24"
         else:
             assert pending == "0" and order_status == "REFUND" and _code(gift_resp) == "Gift_400_1"
+
+
+def test_14_new_approved_bar(base_url, s):
+    """T-3 공지 바: 승인되면 hasNew, 그 주문의 티켓을 열면(T-2) 해제, 티켓탭 진입만으로는 유지 / 알림을 읽어도 해제"""
+    def bar(who):
+        resp = requests.get(f"{base_url}/v2/me/tickets/new-approved", headers=_h(s, who))
+        assert_status(resp, 200)
+        return get_data(resp)
+
+    def approve(who):
+        resp = requests.post(f"{base_url}/v2/orders", json={
+            "eventId": s.events["bar"], "ticketItemId": s.tickets["bar"], "quantity": 1,
+            "options": {"applyToAll": True, "answers": []}, "perTicketOptions": None,
+            "paymentMethod": "FREE", "depositorName": None, "agreeRefundPolicy": True,
+        }, headers=_h(s, who))
+        assert_status(resp, 200)
+        order_uuid = get_data(resp)["orderUuid"]
+        assert get_data(resp)["status"] == "PENDING_APPROVE"
+        assert_status(requests.post(_ev(base_url, s.events["bar"], f"/orders/{order_uuid}/approve"), headers=_h(s, "manager")), 200)
+        assert len(_wait_notification(base_url, s, who, "ORDER_APPROVED", order_uuid)) == 1
+        return order_uuid
+
+    assert bar("buyer1")["hasNew"] is False
+    order_uuid = approve("buyer1")
+    assert bar("buyer1") == {"hasNew": True, "orderUuids": [order_uuid]}
+    _my_tickets(base_url, s, "buyer1")
+    assert bar("buyer1")["hasNew"] is True
+    resp = requests.get(f"{base_url}/v2/me/orders/{order_uuid}", headers=_h(s, "buyer1"))
+    ticket_uuid = get_data(resp)["issuedTickets"][0]["ticketUuid"]
+    assert_status(_ticket(base_url, s, "buyer1", ticket_uuid), 200)
+    assert bar("buyer1") == {"hasNew": False, "orderUuids": []}
+
+    order2 = approve("buyer2")
+    assert bar("buyer2")["orderUuids"] == [order2]
+    assert_status(requests.post(f"{base_url}/v2/me/notifications/read", json={"all": True}, headers=_h(s, "buyer2")), 200)
+    assert bar("buyer2")["hasNew"] is False
