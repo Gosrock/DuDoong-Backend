@@ -64,6 +64,17 @@ data class V2MyTicketElement(
     val giftId: Long?,
 )
 
+/**
+ * T-3 티켓탭 공지 바 "NEW 티켓 주문이 승인되었습니다!" (8-4 A8).
+ * 기준: 안 읽은 승인 알림(ORDER_APPROVED) 중 주문이 지금도 승인 상태인 것. 해제: 그 알림을 읽거나(N-3), 그 주문의 티켓을 T-2 로 열면 해제
+ */
+data class V2NewApprovedResponse(
+    @field:Schema(description = "공지 바를 보일지")
+    val hasNew: Boolean,
+    @field:Schema(description = "새로 승인된 주문 uuid (최근 승인 알림 순). '티켓 보러가기'는 첫 번째 주문 묶음으로")
+    val orderUuids: List<String>,
+)
+
 /** T-2 티켓 상세 + 입장 QR (내가 지금 소유한 티켓만) */
 data class V2MyTicketDetailResponse(
     val ticketUuid: String,

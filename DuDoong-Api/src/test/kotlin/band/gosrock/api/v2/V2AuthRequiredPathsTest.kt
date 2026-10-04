@@ -118,6 +118,7 @@ class V2AuthRequiredPathsTest {
             // 티켓탭·선물 (#719)
             "GET /api/v2/me/tickets",
             "GET /api/v2/me/tickets/{}",
+            "GET /api/v2/me/tickets/new-approved",
             "POST /api/v2/me/tickets/{}/gift",
             "POST /api/v2/me/tickets/{}/return",
             "GET /api/v2/me/gifts",

@@ -1023,6 +1023,78 @@ class V2TicketGiftControllerTest : V2GiftTestSupport() {
     }
 
     @Nested
+    @DisplayName("T-3 티켓탭 공지 바 (A8: 승인 알림을 읽거나 그 주문의 티켓을 열면 해제)")
+    inner class NewApproved {
+
+        private fun newApproved(user: band.gosrock.domain.domains.user.domain.User) =
+            v2Get(user, "/me/tickets/new-approved").andExpect { status { isOk() } }.data()
+
+        /** 승인 알림이 저장될 때까지 기다린 뒤 공지 바 */
+        private fun approvedAndNotified(shop: Shop, buyer: band.gosrock.domain.domains.user.domain.User): Pair<String, List<String>> =
+            approvedOrder(shop, buyer).also { assertEquals(1, awaitNotification(buyer, NotificationType.ORDER_APPROVED)) }
+
+        @Test
+        fun `승인되면 hasNew + 주문, 승인 알림을 읽으면(N-3) 해제, 티켓탭 진입(T-1)만으로는 해제되지 않음`() {
+            val shop = Shop()
+            val buyer = newBuyer()
+            assertFalse(newApproved(buyer).at("/hasNew").asBoolean())
+            val (orderUuid, _) = approvedAndNotified(shop, buyer)
+            val bar = newApproved(buyer)
+            assertTrue(bar.at("/hasNew").asBoolean())
+            assertEquals(listOf(orderUuid), bar.at("/orderUuids").map { it.asText() })
+            myTickets(buyer)
+            assertTrue(newApproved(buyer).at("/hasNew").asBoolean())
+            v2Post(buyer, "/me/notifications/read", mapOf("all" to true)).andExpect { status { isOk() } }
+            assertFalse(newApproved(buyer).at("/hasNew").asBoolean())
+        }
+
+        @Test
+        fun `그 주문의 티켓을 열면(T-2) 그 주문만 해제, 다른 승인 주문은 남음, 멱등`() {
+            val shop = Shop()
+            val buyer = newBuyer()
+            val (first, firstUuids) = approvedAndNotified(shop, buyer)
+            val second = v2OrderOk(buyer, shopBody(shop, yes = false)).at("/orderUuid").asText()
+                .also { v1Approve(shop.team.master, shop.eventId, it).andExpect { status { isOk() } } }
+            val deadline = System.currentTimeMillis() + 10_000
+            while (System.currentTimeMillis() < deadline && notificationCount(buyer, NotificationType.ORDER_APPROVED) < 2) Thread.sleep(50)
+            assertEquals(listOf(second, first), newApproved(buyer).at("/orderUuids").map { it.asText() })
+
+            myTicket(buyer, firstUuids[0]).andExpect { status { isOk() } }
+            myTicket(buyer, firstUuids[0]).andExpect { status { isOk() } }
+            assertEquals(listOf(second), newApproved(buyer).at("/orderUuids").map { it.asText() })
+            assertTrue(notificationRepository.findAllByUserId(buyer.id!!).single { it.targetId == first }.isRead)
+            assertFalse(notificationRepository.findAllByUserId(buyer.id!!).single { it.targetId == second }.isRead)
+        }
+
+        @Test
+        fun `승인 뒤 호스트가 취소한 주문은 공지 바에서 빠짐, 남의 승인은 안 보임`() {
+            val shop = Shop()
+            val buyer = newBuyer()
+            val (orderUuid, _) = approvedAndNotified(shop, buyer)
+            v2HostCancel(shop.team.manager, shop.eventId, orderUuid).andExpect { status { isOk() } }
+            assertFalse(newApproved(buyer).at("/hasNew").asBoolean())
+            assertFalse(newApproved(newBuyer()).at("/hasNew").asBoolean())
+        }
+
+        @Test
+        fun `받은 사람이 선물받은 티켓을 열어도 보낸 사람(주문자)의 공지 바는 그대로`() {
+            val shop = Shop()
+            val sender = newBuyer()
+            val receiver = newBuyer()
+            val (_, uuids) = approvedAndNotified(shop, sender)
+            val (_, newUuid) = giveAndAccept(sender, receiver, uuids[0])
+            myTicket(receiver, newUuid).andExpect { status { isOk() } }
+            assertTrue(newApproved(sender).at("/hasNew").asBoolean())
+            assertFalse(newApproved(receiver).at("/hasNew").asBoolean())
+        }
+
+        @Test
+        fun `비로그인은 401`() {
+            v2Get(null, "/me/tickets/new-approved").andExpect { status { isUnauthorized() } }
+        }
+    }
+
+    @Nested
     @DisplayName("1인 매수 제한은 원 구매자 기준 (A3, 기본안 18)")
     inner class PurchaseLimit {
 

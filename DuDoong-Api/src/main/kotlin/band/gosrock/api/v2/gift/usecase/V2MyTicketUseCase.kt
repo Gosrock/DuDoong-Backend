@@ -5,6 +5,7 @@ import band.gosrock.api.v2.gift.dto.response.V2MyTicketDetailResponse
 import band.gosrock.api.v2.gift.dto.response.V2MyTicketElement
 import band.gosrock.api.v2.gift.dto.response.V2MyTicketGroupResponse
 import band.gosrock.api.v2.gift.dto.response.V2MyTicketsResponse
+import band.gosrock.api.v2.gift.dto.response.V2NewApprovedResponse
 import band.gosrock.api.v2.gift.dto.response.V2TicketGiftInfoResponse
 import band.gosrock.api.v2.operation.usecase.V2OperationMapper
 import band.gosrock.api.v2.order.dto.response.V2MyOrderEventResponse
@@ -20,6 +21,7 @@ import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketNotFoundException
 import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepository
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2EntranceState
+import band.gosrock.domain.domains.notification.service.v2.V2NotificationDomainService
 import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.order.domain.RefundStatus
 import band.gosrock.domain.domains.order.service.v2.V2MyOrderStatus
@@ -41,6 +43,7 @@ class V2MyTicketUseCase(
     private val eventAdaptor: EventAdaptor,
     private val userAdaptor: UserAdaptor,
     private val mapper: V2OperationMapper,
+    private val notificationDomainService: V2NotificationDomainService,
 ) {
 
     @Transactional(readOnly = true)
@@ -90,6 +93,17 @@ class V2MyTicketUseCase(
         return V2MyTicketsResponse((ticketGroups + waitingGroups).sortedWith(upcomingOrder(now)).map { it.response })
     }
 
+    /** T-3 공지 바: 안 읽은 승인 알림 중 주문이 지금도 승인 상태인 내 주문 (승인 뒤 취소된 주문은 빠짐) */
+    @Transactional(readOnly = true)
+    fun newApproved(userId: Long): V2NewApprovedResponse {
+        val uuids = notificationDomainService.unreadApprovedOrderUuids(userId)
+        val approved = myTicketQuery.findOrdersByUuids(uuids)
+            .filter { it.userId == userId && V2OrderStatus.of(it) == V2OrderStatus.APPROVED }
+            .mapNotNull { it.uuid }.toSet()
+        val orderUuids = uuids.filter { it in approved }
+        return V2NewApprovedResponse(hasNew = orderUuids.isNotEmpty(), orderUuids = orderUuids)
+    }
+
     /** T-2. 지금 내가 소유한 티켓만 (남의 티켓·없는 티켓·선물로 바뀐 옛 uuid 는 IssuedTicket_404_1) */
     @Transactional(readOnly = true)
     fun ticket(userId: Long, ticketUuid: String): V2MyTicketDetailResponse {
@@ -102,6 +116,8 @@ class V2MyTicketUseCase(
         val giftState = giftDomainService.giftStateOf(ticket, order.userId, latest, userId)
         val expired = giftState == V2GiftState.PENDING && giftDomainService.isEventEnded(event, now)
         val myOrder = order.userId == userId
+        // 공지 바 해제 (A8): 내 주문의 티켓을 열면 그 주문의 승인 알림을 읽음 처리 (새 트랜잭션, 멱등)
+        if (myOrder) notificationDomainService.markOrderApprovedRead(userId, order.uuid!!)
         return V2MyTicketDetailResponse(
             ticketUuid = ticket.uuid!!,
             issuedTicketNo = ticket.issuedTicketNo,

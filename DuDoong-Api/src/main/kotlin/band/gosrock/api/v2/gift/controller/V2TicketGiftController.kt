@@ -10,6 +10,7 @@ import band.gosrock.api.v2.gift.dto.response.V2GiftLandingResponse
 import band.gosrock.api.v2.gift.dto.response.V2GiftResultResponse
 import band.gosrock.api.v2.gift.dto.response.V2MyTicketDetailResponse
 import band.gosrock.api.v2.gift.dto.response.V2MyTicketsResponse
+import band.gosrock.api.v2.gift.dto.response.V2NewApprovedResponse
 import band.gosrock.api.v2.gift.usecase.V2GiftUseCase
 import band.gosrock.api.v2.gift.usecase.V2MyTicketUseCase
 import band.gosrock.common.annotation.CurrentUserId
@@ -49,7 +50,14 @@ class V2TicketGiftController(
         @RequestParam(defaultValue = "UPCOMING") sort: V2MyTicketSort,
     ): V2MyTicketsResponse = myTicketUseCase.tickets(userId)
 
-    @Operation(summary = "[T-2] 티켓 상세 + 입장 QR (로그인, 지금 소유한 티켓만 — 그 밖 IssuedTicket_404_1). 선물 대기·취소 티켓은 qrValue null")
+    @Operation(
+        summary = "[T-3] 티켓탭 공지 바 (로그인). 안 읽은 승인 알림 중 주문이 지금도 승인 상태면 hasNew. " +
+            "해제: 그 승인 알림을 읽거나(N-3) 그 주문의 티켓을 T-2 로 열면 해제 (티켓탭 진입만으로는 해제되지 않음)",
+    )
+    @GetMapping("/me/tickets/new-approved")
+    fun getNewApproved(@CurrentUserId userId: Long): V2NewApprovedResponse = myTicketUseCase.newApproved(userId)
+
+    @Operation(summary = "[T-2] 티켓 상세 + 입장 QR (로그인, 지금 소유한 티켓만 — 그 밖 IssuedTicket_404_1). 선물 대기·취소 티켓은 qrValue null. 내 주문 티켓이면 그 주문의 승인 알림을 읽음 처리(T-3 해제)")
     @GetMapping("/me/tickets/{ticketUuid}")
     fun getMyTicket(@CurrentUserId userId: Long, @PathVariable ticketUuid: String): V2MyTicketDetailResponse =
         myTicketUseCase.ticket(userId, ticketUuid)

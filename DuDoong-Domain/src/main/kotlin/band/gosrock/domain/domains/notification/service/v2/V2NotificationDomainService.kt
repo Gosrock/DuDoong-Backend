@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.LocalDateTime
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 
 /**
@@ -228,6 +229,20 @@ class V2NotificationDomainService(
         if (notificationIds.isNullOrEmpty()) return 0
         return notificationRepository.markReadByIds(userId, notificationIds.toSet(), now)
     }
+
+    // ===== 티켓탭 공지 바 (T-3, #719) =====
+
+    /** 안 읽은 승인 알림의 주문 uuid (최신 알림 순, 중복 제거). 알림을 읽으면(N-3) 빠진다 */
+    fun unreadApprovedOrderUuids(userId: Long): List<String> =
+        notificationRepository.findAllByUserIdAndTypeAndIsReadFalseOrderByIdDesc(userId, NotificationType.ORDER_APPROVED).map { it.targetId }.distinct()
+
+    /**
+     * 승인된 주문의 티켓을 열면(T-2) 그 주문의 승인 알림을 읽음으로 바꾼다 — 공지 바 해제 (8-4 A8). 멱등.
+     * 조회(T-2) 트랜잭션은 읽기 전용이라 새 트랜잭션에서 쓴다
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun markOrderApprovedRead(userId: Long, orderUuid: String): Int =
+        notificationRepository.markReadByTarget(userId, NotificationType.ORDER_APPROVED, orderUuid, LocalDateTime.now())
 
     // ===== 내부 =====
 
