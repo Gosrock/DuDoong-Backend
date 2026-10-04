@@ -36,6 +36,12 @@ class OrderAdaptor(private val orderRepository: OrderRepository) {
     fun sumPendingApproveQuantity(itemId: Long): Long =
         orderRepository.sumQuantityByItemIdAndOrderStatus(itemId, OrderStatus.PENDING_APPROVE)
 
+    /** 티켓별 승인 대기(PENDING_APPROVE) 주문 수량 합. 승인 대기 주문이 없는 티켓은 결과에 없다 */
+    fun sumPendingApproveQuantities(itemIds: Collection<Long>): Map<Long, Long> =
+        if (itemIds.isEmpty()) emptyMap()
+        else orderRepository.sumQuantityGroupByItemIdAndOrderStatus(itemIds.toSet(), OrderStatus.PENDING_APPROVE)
+            .associate { (it[0] as Number).toLong() to ((it[1] as Number?)?.toLong() ?: 0L) }
+
     fun findByUuidIn(orderUuids: List<String>): List<Order> =
         orderRepository.findByUuidIn(orderUuids)
 

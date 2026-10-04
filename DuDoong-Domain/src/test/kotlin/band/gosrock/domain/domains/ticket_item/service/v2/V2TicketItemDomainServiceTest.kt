@@ -135,12 +135,27 @@ class V2TicketItemDomainServiceTest {
             val open = event(status = EventStatus.OPEN)
             val dudoong = service.newTicketItem(open, dudoongForm(), now)
             val free = service.newTicketItem(open, freeForm(), now)
-            assertTrue(service.isPurchasableInV2App(dudoong, open, now))
-            assertTrue(service.isPurchasableInV2App(free, open, now))
+            assertTrue(service.isPurchasableInV2App(dudoong, open, now, 0))
+            assertTrue(service.isPurchasableInV2App(free, open, now, 0))
             val pg = TicketItem(payType = TicketPayType.PRICE_TICKET, isSellable = true, quantity = 10, supplyCount = 10)
             assertTrue(service.isPurchasable(pg, open, now), "관리 화면 판정은 결제 방식과 무관")
-            assertFalse(service.isPurchasableInV2App(pg, open, now))
-            assertFalse(service.isPurchasableInV2App(dudoong, open, eventStart), "시작 이후는 기존 판정대로 false")
+            assertFalse(service.isPurchasableInV2App(pg, open, now, 0))
+            assertFalse(service.isPurchasableInV2App(dudoong, open, eventStart, 0), "시작 이후는 기존 판정대로 false")
+        }
+
+        @Test
+        fun `사용자 앱 잔여는 재고 - 승인 대기 수량(0 미만은 0), 승인 대기가 재고를 다 채우면 구매 불가 (#726)`() {
+            val open = event(status = EventStatus.OPEN)
+            val item = service.newTicketItem(open, dudoongForm(supplyCount = 5), now)
+            assertEquals(5, service.availableQuantity(item, 0))
+            assertEquals(1, service.availableQuantity(item, 4))
+            assertEquals(0, service.availableQuantity(item, 5))
+            assertEquals(0, service.availableQuantity(item, 7), "v1 경로 등으로 대기가 재고를 넘어도 음수가 아니다")
+            assertTrue(service.isPurchasableInV2App(item, open, now, 4))
+            assertFalse(service.isPurchasableInV2App(item, open, now, 5))
+            item.sold(2)
+            assertEquals(0, service.availableQuantity(item, 3), "재고 감소(승인 발급)와 대기를 함께 뺀다")
+            assertTrue(service.isPurchasable(item, open, now), "관리 화면(T-1) 판정은 승인 대기와 무관 (기존 그대로)")
         }
 
         @Test

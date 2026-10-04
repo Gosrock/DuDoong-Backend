@@ -13,7 +13,7 @@ import java.time.LocalDateTime
 
 data class V2NotificationResponse(
     val id: Long,
-    @field:Schema(description = "HOST_MEMBER_ADDED / ORDER_PENDING_APPROVE / ORDER_APPROVED / ORDER_REFUSED / ORDER_REFUND_REQUESTED(사용자 환불 요청, 호스트 마스터·매니저) / ORDER_CANCELED_BY_USER(돌려줄 돈 없는 사용자 취소, 호스트 마스터·매니저)")
+    @field:Schema(description = "HOST_MEMBER_ADDED / ORDER_PENDING_APPROVE / ORDER_APPROVED / ORDER_REFUSED / ORDER_REFUND_REQUESTED(사용자 환불 요청, 호스트 마스터·매니저) / ORDER_CANCELED_BY_USER(돌려줄 돈 없는 사용자 취소, 호스트 마스터·매니저) / ORDER_CANCELED_BY_HOST(승인 후 호스트 취소, 주문자) / ORDER_REFUND_COMPLETED(환불 완료, 주문자)")
     val type: NotificationType,
     val title: String,
     val body: String,

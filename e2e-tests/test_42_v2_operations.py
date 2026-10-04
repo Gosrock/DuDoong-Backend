@@ -403,10 +403,11 @@ def test_10_excel(base_url, s):
     assert f"orders-{s.event_id}.xlsx" in resp.headers["Content-Disposition"]
     rows = _xlsx_rows(resp.content)
     # 이메일은 엑셀에 넣지 않는다 (주문 상세에서만)
-    assert rows[0] == ["주문번호", "주문자", "연락처", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유"]
+    # 입금자명 열 (#726, 연락처 다음)
+    assert rows[0] == ["주문번호", "주문자", "연락처", "입금자명", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유"]
     assert len(rows) - 1 == 7
     rows = _xlsx_rows(requests.get(_ev(base_url, s, "/orders/export"), params={"status": "REFUSED"}, headers=_h(s, "guest")).content)
-    assert len(rows) - 1 == 2 and {r[7] for r in rows[1:]} == {"승인 거절"}
+    assert len(rows) - 1 == 2 and {r[8] for r in rows[1:]} == {"승인 거절"}
 
     resp = requests.get(_ev(base_url, s, "/issued-tickets/export"), headers=_h(s, "guest"))
     assert_status(resp, 200)

@@ -203,6 +203,85 @@ class V2NotificationDomainServiceTest {
     }
 
     @Nested
+    inner class HostCanceledAndRefundCompleted {
+
+        private fun paidOrder(status: OrderStatus, refund: RefundStatus, price: Long = 6000, method: OrderMethod = OrderMethod.APPROVAL, approvedAt: LocalDateTime? = LocalDateTime.now(), cancelReason: String? = null): Order {
+            val vo = OrderItemVo().also {
+                ReflectionTestUtils.setField(it, "price", Money.wons(price))
+                ReflectionTestUtils.setField(it, "itemId", 10L)
+                ReflectionTestUtils.setField(it, "itemGroupId", 50L)
+            }
+            return order(status, method, approvedAt = approvedAt, cancelReason = cancelReason).also {
+                it.orderLineItems.add(OrderLineItem.forTest(quantity = 1L, orderItemVo = vo))
+                ReflectionTestUtils.setField(it, "refundStatus", refund)
+            }
+        }
+
+        @Test
+        fun `호스트 취소 - 승인 후 취소만 주문자에게, 사유는 본문 + extra (#726)`() {
+            paidOrder(OrderStatus.CANCELED, RefundStatus.REFUND_REQUESTED, cancelReason = "공연 취소")
+            assertEquals(1, service.notifyOrderCanceledByHost("order-uuid"))
+            val n = saved.single()
+            assertEquals(buyerId, n.userId)
+            assertEquals(NotificationType.ORDER_CANCELED_BY_HOST, n.type)
+            assertEquals(NotificationTargetType.ORDER, n.targetType)
+            assertEquals("order-uuid", n.dedupKey)
+            assertEquals("'정기공연' 일반 1매 주문이 호스트에 의해 취소되었어요. 사유: 공연 취소", n.body)
+            assertEquals("""{"eventName":"정기공연","orderNo":"R1000001","cancelReason":"공연 취소"}""", n.extra)
+        }
+
+        @Test
+        fun `호스트 취소 - 결제형(무료 선착순·카드) 주문도 주문자에게 (결정 2026-10-05)`() {
+            paidOrder(OrderStatus.CANCELED, RefundStatus.REFUND_REQUESTED, price = 0, method = OrderMethod.PAYMENT, cancelReason = "무료 취소")
+            assertEquals(1, service.notifyOrderCanceledByHost("order-uuid"))
+            assertEquals(NotificationType.ORDER_CANCELED_BY_HOST, saved.single().type)
+        }
+
+        @Test
+        fun `호스트 취소 알림 없음 - 거절(v1·v2), 사용자 철회(REFUND), 승인 대기·승인 상태`() {
+            paidOrder(OrderStatus.CANCELED, RefundStatus.REFUND_REQUESTED, approvedAt = null)
+            assertEquals(0, service.notifyOrderCanceledByHost("order-uuid"), "v1 거절 (approved_at 없음)")
+            order(OrderStatus.CANCELED, approvedAt = LocalDateTime.now(), reasonType = OrderRefuseReasonType.SOLD_OUT)
+            assertEquals(0, service.notifyOrderCanceledByHost("order-uuid"), "v2 거절 (사유 종류 있음)")
+            paidOrder(OrderStatus.REFUND, RefundStatus.REFUND_REQUESTED)
+            assertEquals(0, service.notifyOrderCanceledByHost("order-uuid"), "사용자 철회")
+            order(OrderStatus.APPROVED, approvedAt = LocalDateTime.now())
+            assertEquals(0, service.notifyOrderCanceledByHost("order-uuid"))
+            assertTrue(saved.isEmpty())
+        }
+
+        @Test
+        fun `환불 완료 - 돌려준 돈이 있는 승인형 주문의 주문자에게 (#726)`() {
+            paidOrder(OrderStatus.REFUND, RefundStatus.REFUND_COMPLETED)
+            assertEquals(1, service.notifyOrderRefundCompleted("order-uuid"))
+            val n = saved.single()
+            assertEquals(buyerId, n.userId)
+            assertEquals(NotificationType.ORDER_REFUND_COMPLETED, n.type)
+            assertEquals("order-uuid", n.targetId)
+            assertEquals(50L, n.eventId)
+            assertEquals("'정기공연' 일반 1매 주문(R1000001)의 환불이 완료되었어요.", n.body)
+        }
+
+        @Test
+        fun `환불 완료 알림 없음 - 완료 전, 0원 주문, 카드(PG) 결제 주문, 거절·취소·철회가 아닌 주문(승인 완료 등을 v1·운영에서 잘못 처리)`() {
+            for (status in listOf(OrderStatus.APPROVED, OrderStatus.CONFIRM, OrderStatus.PENDING_APPROVE)) {
+                paidOrder(status, RefundStatus.REFUND_COMPLETED)
+                assertEquals(0, service.notifyOrderRefundCompleted("order-uuid"), "$status")
+            }
+            paidOrder(OrderStatus.CANCELED, RefundStatus.REFUND_COMPLETED)
+            assertEquals(1, service.notifyOrderRefundCompleted("order-uuid"), "거절·취소는 대상")
+            saved.clear()
+            paidOrder(OrderStatus.CANCELED, RefundStatus.REFUND_REQUESTED)
+            assertEquals(0, service.notifyOrderRefundCompleted("order-uuid"))
+            paidOrder(OrderStatus.CANCELED, RefundStatus.REFUND_COMPLETED, price = 0)
+            assertEquals(0, service.notifyOrderRefundCompleted("order-uuid"))
+            paidOrder(OrderStatus.REFUND, RefundStatus.REFUND_COMPLETED, method = OrderMethod.PAYMENT)
+            assertEquals(0, service.notifyOrderRefundCompleted("order-uuid"))
+            assertTrue(saved.isEmpty())
+        }
+    }
+
+    @Nested
     inner class MarkRead {
         /** 호출된 쿼리 메서드 이름과 인자를 기록하고, 바뀐 건수로 all=3, id 목록=중복 제거한 개수를 돌려준다 */
         private val calls = mutableListOf<Pair<String, List<Any?>>>()

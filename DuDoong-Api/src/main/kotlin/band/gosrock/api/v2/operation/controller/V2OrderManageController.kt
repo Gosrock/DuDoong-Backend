@@ -13,7 +13,7 @@ import band.gosrock.api.v2.operation.usecase.V2ChangeOrderUseCase
 import band.gosrock.api.v2.operation.usecase.V2ReadDashboardUseCase
 import band.gosrock.api.v2.operation.usecase.V2ReadOrdersUseCase
 import band.gosrock.common.annotation.CurrentUserId
-import band.gosrock.domain.domains.order.repository.condition.AdminTableSearchType
+import band.gosrock.domain.domains.order.service.v2.V2OrderSearchType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -45,13 +45,13 @@ class V2OrderManageController(
     fun getDashboard(@CurrentUserId userId: Long, @PathVariable eventId: Long): V2DashboardResponse =
         readDashboardUseCase.execute(userId, eventId)
 
-    @Operation(summary = "[R-1] 주문 목록 (일반 멤버 이상). 최신 순, 상태별 건수(counts) 포함. searchType 기본 NAME")
+    @Operation(summary = "[R-1] 주문 목록 (일반 멤버 이상). 최신 순, 상태별 건수(counts) 포함. searchType: NAME(기본) / PHONE / DEPOSITOR_NAME(입금자명, v2 두둥티켓 주문)")
     @GetMapping("/orders")
     fun getOrders(
         @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @RequestParam(defaultValue = "ALL") status: V2OrderStatusFilter,
-        @RequestParam(required = false) searchType: AdminTableSearchType?,
+        @RequestParam(required = false) searchType: V2OrderSearchType?,
         @RequestParam(required = false) keyword: String?,
         @RequestParam(defaultValue = "0") @Min(0) page: Int,
         @RequestParam(defaultValue = "20") @Min(1) @Max(MAX_PAGE_SIZE) size: Int,
@@ -63,7 +63,7 @@ class V2OrderManageController(
         @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @RequestParam(defaultValue = "ALL") status: V2OrderStatusFilter,
-        @RequestParam(required = false) searchType: AdminTableSearchType?,
+        @RequestParam(required = false) searchType: V2OrderSearchType?,
         @RequestParam(required = false) keyword: String?,
     ): ResponseEntity<ByteArray> =
         V2Excel.attachment("orders-$eventId.xlsx", readOrdersUseCase.export(userId, eventId, status, searchType, keyword))

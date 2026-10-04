@@ -4,6 +4,7 @@ import band.gosrock.common.consts.DuDoongStatic.NO_START_NUMBER
 import band.gosrock.domain.common.aop.domainEvent.Events
 import band.gosrock.domain.common.events.order.CreateOrderEvent
 import band.gosrock.domain.common.events.order.DoneOrderEvent
+import band.gosrock.domain.common.events.order.RefundCompletedOrderEvent
 import band.gosrock.domain.common.events.order.WithDrawOrderEvent
 import band.gosrock.domain.common.model.BaseTimeEntity
 import band.gosrock.domain.common.vo.Money
@@ -310,6 +311,8 @@ class Order() : BaseTimeEntity() {
     fun completeRefund() {
         refundStatus = RefundStatus.REFUND_COMPLETED
         refundStatusChangedAt = LocalDateTime.now()
+        // 저장 전 주문(uuid 없음)은 알림 대상이 아니다
+        uuid?.let { Events.raise(RefundCompletedOrderEvent(it, orderMethod)) }
     }
 
     fun attachCoupon(orderCouponVo: OrderCouponVo) {

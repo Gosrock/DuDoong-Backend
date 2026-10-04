@@ -35,9 +35,7 @@ class V2ReadEventDetailUseCase(
             startAt = event.getStartAt(),
             endAt = event.getEndAt(),
             runTime = event.eventBasic?.runTime,
-            place = event.eventPlace?.takeIf { it.placeName != null || it.placeAddress != null }?.let {
-                V2EventPlaceResponse(name = it.placeName, address = it.placeAddress, latitude = it.latitude, longitude = it.longitude)
-            },
+            place = V2EventPlaceResponse.of(event.eventPlace),
             hasTicket = event.hasTicket,
             tags = tags.map { V2TagResponse.from(it) },
             host = V2EventHostSummaryResponse(

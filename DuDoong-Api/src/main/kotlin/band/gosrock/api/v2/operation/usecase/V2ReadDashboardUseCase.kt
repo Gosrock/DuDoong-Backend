@@ -16,6 +16,7 @@ import band.gosrock.domain.domains.issuedTicket.service.v2.V2IssuedTicketSearch
 import band.gosrock.domain.domains.order.service.v2.V2OrderQuery
 import band.gosrock.domain.domains.order.service.v2.V2OrderSearch
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor
+import band.gosrock.domain.domains.ticket_item.service.v2.V2TicketItemDomainService
 
 /** D-1 대시보드 (일반 멤버 이상) */
 @UseCase
@@ -24,19 +25,24 @@ class V2ReadDashboardUseCase(
     private val ticketItemAdaptor: TicketItemAdaptor,
     private val v2OrderQuery: V2OrderQuery,
     private val v2IssuedTicketQuery: V2IssuedTicketQuery,
+    private val v2TicketItemDomainService: V2TicketItemDomainService,
 ) {
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
     fun execute(userId: Long, eventId: Long): V2DashboardResponse {
         eventAdaptor.findById(eventId)
         val counts = v2OrderQuery.counts(V2OrderSearch(eventId = eventId))
         // 판매 매수 = 재고 감소량 (승인·결제 완료로 발급, 취소 시 복구). 무제한은 판매 수량 null
-        val items = ticketItemAdaptor.findAllByEventId(eventId).sortedBy { it.id }.map {
+        val ticketItems = ticketItemAdaptor.findAllByEventId(eventId).sortedBy { it.id }
+        // 승인 대기 수량 그룹 쿼리 1개 (T-1·P-5 와 같은 쿼리)
+        val pending = v2TicketItemDomainService.pendingApproveQuantities(ticketItems.mapNotNull { it.id })
+        val items = ticketItems.map {
             V2DashboardTicketItemResponse(
                 ticketItemId = it.id!!,
                 name = it.name,
                 payType = V2TicketPayType.of(it.payType),
                 soldCount = it.supplyCount!! - it.quantity!!,
                 supplyCount = if (it.isUnlimitedSupply()) null else it.supplyCount,
+                pendingApproveCount = pending[it.id] ?: 0L,
             )
         }
         return V2DashboardResponse(

@@ -26,6 +26,7 @@ import band.gosrock.domain.domains.user.repository.UserRepository
 import band.gosrock.infrastructure.config.s3.S3UploadPresignedUrlService
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import jakarta.persistence.EntityManagerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -36,6 +37,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
+import org.hibernate.SessionFactory
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -77,6 +79,8 @@ class V2EventControllerTest {
     @Autowired private lateinit var ticketItemRepository: TicketItemRepository
 
     @Autowired private lateinit var presignedUrlService: S3UploadPresignedUrlService
+
+    @Autowired private lateinit var entityManagerFactory: EntityManagerFactory
 
     private val fmt: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm")
 
@@ -349,6 +353,65 @@ class V2EventControllerTest {
             val expectedDDays = setOf(before, after).map { java.time.temporal.ChronoUnit.DAYS.between(it, baseStart.toLocalDate()) }
             assertTrue(byId.getValue(a1)["dDay"].asLong() in expectedDDays, byId.getValue(a1)["dDay"].toString())
             assertEquals(baseStart.plusMinutes(200).f(), byId.getValue(a1)["endAt"].asText())
+        }
+
+        @Test
+        fun `항목마다 그 호스트에서 내 역할 myRole (MASTER, MANAGER, GUEST) (#726)`() {
+            val me = newUser("나")
+            val mine = createHost(me, "내호스트")
+            val other = Team("남의호스트")
+            val third = Team("셋째호스트")
+            fun add(team: Team, role: String) = mockMvc.post("/api/v2/hosts/${team.hostId}/members") {
+                with(auth(team.master))
+                contentType = MediaType.APPLICATION_JSON
+                content = json(mapOf("members" to listOf(mapOf("email" to me.email(), "role" to role))))
+            }.andExpect { status { isOk() } }
+            add(other, "MANAGER")
+            add(third, "GUEST")
+            val e1 = createEvent(me, mine, "내공연")
+            val e2 = createEvent(other.master, other.hostId, "남의공연")
+            val e3 = createEvent(third.master, third.hostId, "셋째공연")
+
+            val roles = mockMvc.get("/api/v2/me/events") { with(auth(me)) }.andExpect { status { isOk() } }
+                .body().at("/data/content").associate { it["eventId"].asLong() to it["myRole"].asText() }
+            assertEquals(mapOf(e1 to "MASTER", e2 to "MANAGER", e3 to "GUEST"), roles)
+            // 같은 공연도 보는 사람마다 역할이 다르다
+            val otherView = mockMvc.get("/api/v2/me/events") { with(auth(other.guest)) }.andExpect { status { isOk() } }
+                .body().at("/data/content").single()
+            assertEquals(e2, otherView["eventId"].asLong())
+            assertEquals("GUEST", otherView["myRole"].asText())
+        }
+
+        @Test
+        fun `myRole 은 N+1 없음 - 호스트·공연 수와 관계없이 쿼리 수가 같다 (#726)`() {
+            val statistics = entityManagerFactory.unwrap(SessionFactory::class.java).statistics
+            // 통계는 컨텍스트 전체 공유라 앞 테스트의 비동기 알림 저장이 섞일 수 있다 → 3번 재고 최솟값 (잡음은 더하기만 한다)
+            fun countQueries(user: User): Long = (1..3).minOf {
+                statistics.isStatisticsEnabled = true
+                try {
+                    statistics.clear()
+                    mockMvc.get("/api/v2/me/events") { with(auth(user)) }.andExpect { status { isOk() } }
+                    statistics.prepareStatementCount
+                } finally {
+                    statistics.isStatisticsEnabled = false
+                }
+            }
+            val small = Team("작은호스트")
+            createEvent(small.master, small.hostId, "공연1")
+            val one = countQueries(small.master)
+
+            val me = newUser("나")
+            val teams = (1..3).map { Team("호스트$it") }
+            teams.forEachIndexed { i, team ->
+                mockMvc.post("/api/v2/hosts/${team.hostId}/members") {
+                    with(auth(team.master))
+                    contentType = MediaType.APPLICATION_JSON
+                    content = json(mapOf("members" to listOf(mapOf("email" to me.email(), "role" to if (i == 0) "MANAGER" else "GUEST"))))
+                }.andExpect { status { isOk() } }
+                repeat(2) { createEvent(team.master, team.hostId, "공연$i-$it") }
+            }
+            val many = countQueries(me)
+            assertEquals(one, many, "호스트 1·공연 1: $one, 호스트 3·공연 6: $many")
         }
 
         @Test

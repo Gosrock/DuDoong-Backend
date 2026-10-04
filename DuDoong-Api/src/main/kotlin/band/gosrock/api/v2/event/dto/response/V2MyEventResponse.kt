@@ -14,6 +14,11 @@ data class V2MyEventResponse(
     val eventId: Long,
     val hostId: Long,
     val hostName: String?,
+    @field:Schema(
+        description = "이 공연 호스트에서 내 역할. 일반 멤버(GUEST)는 공연 삭제 불가 — 카드 메뉴 표시용",
+        allowableValues = ["MASTER", "MANAGER", "GUEST"],
+    )
+    val myRole: String,
     val name: String?,
     val posterImageUrl: String?,
     @field:DateFormat
@@ -33,12 +38,13 @@ data class V2MyEventResponse(
     val dDay: Long?,
 ) {
     companion object {
-        fun of(event: Event, hostName: String?, now: LocalDateTime): V2MyEventResponse {
+        fun of(event: Event, hostName: String?, myRole: String, now: LocalDateTime): V2MyEventResponse {
             val displayStatus = V2EventDisplayRule.of(event, now)
             return V2MyEventResponse(
                 eventId = event.id!!,
                 hostId = event.hostId!!,
                 hostName = hostName,
+                myRole = myRole,
                 name = event.getEventName(),
                 posterImageUrl = event.eventDetail?.posterImage?.generateImageUrl(),
                 startAt = event.getStartAt(),

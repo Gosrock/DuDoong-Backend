@@ -4,10 +4,12 @@ import band.gosrock.api.v2.common.V2PageResponse
 import band.gosrock.api.v2.order.dto.V2MyOrderStatusFilter
 import band.gosrock.api.v2.order.dto.request.V2CancelMyOrderRequest
 import band.gosrock.api.v2.order.dto.request.V2CreateOrderRequest
+import band.gosrock.api.v2.order.dto.response.V2CheckoutResponse
 import band.gosrock.api.v2.order.dto.response.V2MyOrderDetailResponse
 import band.gosrock.api.v2.order.dto.response.V2MyOrderElement
 import band.gosrock.api.v2.order.usecase.V2CancelMyOrderUseCase
 import band.gosrock.api.v2.order.usecase.V2CreateOrderUseCase
+import band.gosrock.api.v2.order.usecase.V2ReadCheckoutUseCase
 import band.gosrock.api.v2.order.usecase.V2ReadMyOrdersUseCase
 import band.gosrock.common.annotation.CurrentUserId
 import io.swagger.v3.oas.annotations.Operation
@@ -34,7 +36,20 @@ class V2OrderController(
     private val createOrderUseCase: V2CreateOrderUseCase,
     private val readMyOrdersUseCase: V2ReadMyOrdersUseCase,
     private val cancelMyOrderUseCase: V2CancelMyOrderUseCase,
+    private val readCheckoutUseCase: V2ReadCheckoutUseCase,
 ) {
+    @Operation(
+        summary = "[O-0] 결제 화면 (로그인). 티켓(P-5 와 같음) + 입금 계좌·예금주(두둥티켓 + 구매 가능할 때만, 무료·지난 공연·정산중·종료·매진은 null). " +
+            "[결제하기]·토스 송금 전에 보여 줄 값이며, 공개 P-5 에는 계좌가 없다. 판매 중이 아니거나 다른 공연 티켓이면 404",
+    )
+    @GetMapping("/events/{eventId}/ticket-items/{ticketItemId}/checkout")
+    fun getCheckout(
+        // 로그인한 사용자에게만 계좌를 준다 (SecurityConfig 공개 경로에 넣지 않음). 값 자체는 쓰지 않는다
+        @Suppress("UNUSED_PARAMETER") @CurrentUserId userId: Long,
+        @PathVariable eventId: Long,
+        @PathVariable ticketItemId: Long,
+    ): V2CheckoutResponse = readCheckoutUseCase.execute(eventId, ticketItemId)
+
     @Operation(
         summary = "[O-1] 주문 생성 (로그인). 두둥티켓은 '입금했어요' 시점에 승인 대기로, 무료는 승인 ON 이면 승인 대기·OFF 면 즉시 발급. " +
             "같은 사용자의 같은 주문이 10초 안에 다시 오면 앞 주문을 돌려준다. 응답은 O-3 과 같은 주문 상세",

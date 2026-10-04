@@ -160,6 +160,56 @@ class V2NotificationDomainService(
         return notificationBulkRepository.insertSkippingDuplicates(notifications)
     }
 
+    /**
+     * 승인 완료 주문의 호스트 취소 → 주문자 (#726, v1 취소·v2 R-5·운영 어드민 공통, [V2OrderStatus.CANCELED] 중 CANCELED 상태). 거절·사용자 취소(REFUND)는 저장 안 함.
+     * 결제 방식 무관 — 승인형·무료 선착순·카드 결제 모두 (사용자 결정 2026-10-05). 사유는 호스트가 입력한 cancel_reason (없을 수 있음)
+     */
+    @Transactional
+    fun notifyOrderCanceledByHost(orderUuid: String): Int {
+        val order = orderAdaptor.findByOrderUuid(orderUuid)
+        if (order.orderStatus != OrderStatus.CANCELED || V2OrderStatus.of(order) != V2OrderStatus.CANCELED) return 0
+        val eventName = eventName(order)
+        val reason = order.cancelReason?.takeIf { it.isNotBlank() }
+        return notificationBulkRepository.insertSkippingDuplicates(
+            listOf(
+                orderDraft(
+                    userId = order.userId!!,
+                    order = order,
+                    type = NotificationType.ORDER_CANCELED_BY_HOST,
+                    title = "티켓 주문이 취소되었습니다",
+                    body = "'$eventName' ${order.orderName.orEmpty()} 주문이 호스트에 의해 취소되었어요." + (reason?.let { " 사유: ${ellipsis(it, BODY_REASON_MAX_LENGTH)}" } ?: ""),
+                    extra = mapOf("eventName" to eventName, "orderNo" to order.orderNo, "cancelReason" to reason),
+                ),
+            ),
+        )
+    }
+
+    /**
+     * 환불 완료 → 주문자 (#726, v1 환불 완료·v2 F-2·운영 어드민 공통). 거절·취소·사용자 철회(CANCELED·REFUND)된 주문 + 환불 완료 상태 + 돌려준 돈이 있는 주문만.
+     * v1·운영 어드민은 상태 검사 없이 환불 완료로 바꿀 수 있어, 승인 완료 주문 등에 잘못 처리된 경우는 저장하지 않는다.
+     * 카드(PG) 결제 주문은 결제 취소로 자동 환불되므로 저장 안 함 (핸들러 condition 에서도 거름)
+     */
+    @Transactional
+    fun notifyOrderRefundCompleted(orderUuid: String): Int {
+        val order = orderAdaptor.findByOrderUuid(orderUuid)
+        if (order.orderStatus !in REFUNDABLE_STATUSES || order.refundStatus != RefundStatus.REFUND_COMPLETED) return 0
+        if (!order.getTotalPaymentPrice().isGreaterThan(Money.ZERO)) return 0
+        if (order.orderMethod == OrderMethod.PAYMENT) return 0
+        val eventName = eventName(order)
+        return notificationBulkRepository.insertSkippingDuplicates(
+            listOf(
+                orderDraft(
+                    userId = order.userId!!,
+                    order = order,
+                    type = NotificationType.ORDER_REFUND_COMPLETED,
+                    title = "환불이 완료되었습니다",
+                    body = "'$eventName' ${order.orderName.orEmpty()} 주문(${order.orderNo.orEmpty()})의 환불이 완료되었어요.",
+                    extra = mapOf("eventName" to eventName, "orderNo" to order.orderNo),
+                ),
+            ),
+        )
+    }
+
     // ===== 조회 / 읽음 =====
 
     fun querySlice(userId: Long, pageable: Pageable): Slice<Notification> =
@@ -237,6 +287,9 @@ class V2NotificationDomainService(
 
     companion object {
         private val OBJECT_MAPPER = ObjectMapper()
+
+        /** 환불 완료 알림 대상 주문 상태: 거절·호스트 취소(CANCELED), 사용자 취소·환불 요청(REFUND) */
+        private val REFUNDABLE_STATUSES = setOf(OrderStatus.CANCELED, OrderStatus.REFUND)
 
         /** 본문에 넣는 거절 사유 최대 글자 수 (넘으면 … 붙임). extra.refuseReason 에는 최대 300자 */
         const val BODY_REASON_MAX_LENGTH = 100

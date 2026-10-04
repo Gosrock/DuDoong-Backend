@@ -650,8 +650,8 @@ class V2EventBrowseControllerTest : V2TicketApiTestSupport() {
                 listOf("t2", "t3", "t4").forEach { ticketWithOptions(it) }
                 val four = countQueries(4)
                 assertEquals(one, four, "티켓 1개: $one, 4개: $four")
-                // 공연 1 + 티켓·옵션 그룹 fetch join 1 + 옵션 선택지 batch 1 (fetch join 전: 1개 6, 4개 9)
-                assertEquals(3L, four)
+                // 공연 1 + 티켓·옵션 그룹 fetch join 1 + 옵션 선택지 batch 1 (fetch join 전: 1개 6, 4개 9) + 티켓별 승인 대기 수량 그룹 1 (#726)
+                assertEquals(4L, four)
             } finally {
                 statistics.isStatisticsEnabled = false
             }

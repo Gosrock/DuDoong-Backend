@@ -30,6 +30,16 @@ interface OrderRepository : CrudRepository<Order, Long>, OrderCustomRepository {
     )
     fun sumQuantityByItemIdAndOrderStatus(@Param("itemId") itemId: Long, @Param("orderStatus") orderStatus: OrderStatus): Long
 
+    /** 티켓(item)별 해당 상태 주문 수량 합 [itemId, sum] — [sumQuantityByItemIdAndOrderStatus] 의 여러 티켓 판 (한 번의 그룹 쿼리, #726) */
+    @Query(
+        """SELECT l.orderItem.itemId, SUM(l.quantity) FROM tbl_order o JOIN o.orderLineItems l
+            WHERE l.orderItem.itemId IN :itemIds AND o.orderStatus = :orderStatus GROUP BY l.orderItem.itemId"""
+    )
+    fun sumQuantityGroupByItemIdAndOrderStatus(
+        @Param("itemIds") itemIds: Collection<Long>,
+        @Param("orderStatus") orderStatus: OrderStatus,
+    ): List<Array<Any?>>
+
     /** Admin: 키워드(orderName/유저명/이벤트명) + 상태 + 이벤트 필터로 주문 검색 */
     @Query(
         """SELECT o FROM tbl_order o WHERE

@@ -3,6 +3,7 @@ package band.gosrock.api.v2.notification.handler
 import band.gosrock.api.v2.notification.handler.V2NotificationAsyncConfig.Companion.NOTIFICATION_EXECUTOR
 import band.gosrock.domain.common.events.order.CreateOrderEvent
 import band.gosrock.domain.common.events.order.DoneOrderEvent
+import band.gosrock.domain.common.events.order.RefundCompletedOrderEvent
 import band.gosrock.domain.common.events.order.WithDrawOrderEvent
 import band.gosrock.domain.domains.host.service.v2.V2HostMembersAddedEvent
 import band.gosrock.domain.domains.notification.service.v2.V2NotificationDomainService
@@ -48,6 +49,21 @@ class V2NotificationEventHandler(
     fun handleWithDrawOrder(event: WithDrawOrderEvent) =
         save("ORDER_REFUSED", event.orderUuid) { notificationDomainService.notifyOrderRefused(event.orderUuid) }
 
+    /**
+     * 승인 후 호스트 취소 → 주문자 (#726). 결제 방식과 무관하게 CANCELED 전부(무료 선착순·카드 결제 포함, 사용자 결정 2026-10-05).
+     * 거절도 CANCELED 라 함께 오고, 거절/취소 구분은 서비스가 커밋된 주문으로 판정 (둘 중 하나만 저장). 사용자 철회(REFUND)는 대상 아님
+     */
+    @Async(NOTIFICATION_EXECUTOR)
+    @TransactionalEventListener(classes = [WithDrawOrderEvent::class], phase = TransactionPhase.AFTER_COMMIT, condition = CANCELED_ORDER)
+    fun handleHostCanceledOrder(event: WithDrawOrderEvent) =
+        save("ORDER_CANCELED_BY_HOST", event.orderUuid) { notificationDomainService.notifyOrderCanceledByHost(event.orderUuid) }
+
+    /** 환불 완료(v1 호스트 환불 완료·운영 어드민 포함) → 주문자 (#726). 카드(PG) 결제 주문은 condition 으로 거르고, 상태·금액 판정은 서비스가 커밋된 주문으로 한다 */
+    @Async(NOTIFICATION_EXECUTOR)
+    @TransactionalEventListener(classes = [RefundCompletedOrderEvent::class], phase = TransactionPhase.AFTER_COMMIT, condition = NOT_PAYMENT_ORDER)
+    fun handleRefundCompleted(event: RefundCompletedOrderEvent) =
+        save("ORDER_REFUND_COMPLETED", event.orderUuid) { notificationDomainService.notifyOrderRefundCompleted(event.orderUuid) }
+
     /** 사용자 취소·환불 요청(REFUND, v1 사용자 환불 포함) → 호스트 마스터·매니저 (#718). 카드(PG) 결제 주문은 condition 으로 거른다 */
     @Async(NOTIFICATION_EXECUTOR)
     @TransactionalEventListener(classes = [WithDrawOrderEvent::class], phase = TransactionPhase.AFTER_COMMIT, condition = USER_WITHDRAWN_ORDER)
@@ -69,6 +85,12 @@ class V2NotificationEventHandler(
 
         /** 승인형 + CANCELED (거절 또는 승인 후 취소). REFUND(사용자 환불)는 제외 */
         const val APPROVAL_CANCELED_ORDER = "#p0.orderMethod.name() == 'APPROVAL' and #p0.orderStatus.name() == 'CANCELED'"
+
+        /** 상태 CANCELED (거절 + 호스트 취소, 결제 방식 무관) */
+        const val CANCELED_ORDER = "#p0.orderStatus.name() == 'CANCELED'"
+
+        /** 결제형(카드 PG·무료 선착순)이 아닌 주문. 무료 선착순은 돌려줄 돈이 없어 함께 빠진다 */
+        const val NOT_PAYMENT_ORDER = "#p0.orderMethod == null or #p0.orderMethod.name() != 'PAYMENT'"
 
         /** 사용자 철회(REFUND) 중 승인형이거나 결제할 돈이 없던 주문 (paymentKey 는 결제가 필요한 주문에만 있다 = 카드 결제는 제외) */
         const val USER_WITHDRAWN_ORDER = "#p0.orderStatus.name() == 'REFUND' and (#p0.orderMethod.name() == 'APPROVAL' or #p0.paymentKey == null)"
