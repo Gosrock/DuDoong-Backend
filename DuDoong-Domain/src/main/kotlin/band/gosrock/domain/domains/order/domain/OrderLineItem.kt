@@ -13,8 +13,12 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
+import jakarta.persistence.Index
 import jakarta.persistence.OneToMany
+import jakarta.persistence.Table
 
+/** item_id 인덱스: 티켓별 진행 중 주문 존재 조회 (v2 티켓 잠금, #707, V003) */
+@Table(indexes = [Index(name = "idx_order_line_item_id", columnList = "item_id")])
 @Entity(name = "tbl_order_line")
 class OrderLineItem() : BaseTimeEntity() {
 

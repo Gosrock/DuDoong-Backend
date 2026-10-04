@@ -14,6 +14,7 @@ import band.gosrock.domain.domains.ticket_item.exception.InvalidTicketItemExcept
 import band.gosrock.domain.domains.ticket_item.exception.InvalidTicketPriceException
 import band.gosrock.domain.domains.ticket_item.exception.InvalidTicketTypeException
 import band.gosrock.domain.domains.ticket_item.exception.NotAppliedItemOptionGroupException
+import band.gosrock.domain.domains.ticket_item.exception.TicketItemNotOnSaleException
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityException
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLackException
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemQuantityLargeException
@@ -192,8 +193,42 @@ class TicketItem(
 
     fun isQuantityLeft(): Boolean = quantity!! > 0
 
+    /** 무제한 공급량(v2) 저장값 이상인지. v1 응답·어드민·v2 가 같은 기준([UNLIMITED_SUPPLY_COUNT])을 쓴다 */
+    fun isUnlimitedSupply(): Boolean = (supplyCount ?: 0L) >= UNLIMITED_SUPPLY_COUNT
+
+    /** 1인 매수 제한 없음(v2) 저장값 이상인지 ([NO_PURCHASE_LIMIT]) */
+    fun hasNoPurchaseLimit(): Boolean = (purchaseLimit ?: 0L) >= NO_PURCHASE_LIMIT
+
+    /**
+     * 판매 중인지 (v1/v2 공통 구매 조건): 판매 중단(isSellable=false)이 아니고, 판매 기간이 설정돼 있으면 그 안.
+     * v1 로 만든 티켓은 isSellable=true · 판매 기간 null 이라 항상 true. 재고·공연 상태·공연 시작 전 여부는 별도 검증
+     */
+    fun isOnSale(now: LocalDateTime): Boolean =
+        isSellable != false &&
+            saleStartAt.let { it == null || !now.isBefore(it) } &&
+            saleEndAt.let { it == null || now.isBefore(it) }
+
+    fun validateOnSale(now: LocalDateTime = LocalDateTime.now()) {
+        if (!isOnSale(now)) throw TicketItemNotOnSaleException.EXCEPTION
+    }
+
+    /** v2 전용 최소 mutator: 계좌 (두둥티켓만, 그 외는 null). 검증은 V2TicketItemDomainService */
+    internal fun changeAccountInfo(accountInfo: AccountInfoVo?) {
+        this.accountInfo = accountInfo
+    }
+
+    /** v2 전용 최소 mutator: 공급량 변경. 판매된 만큼(공급량 - 재고)은 유지하고 재고를 같이 옮긴다 */
+    internal fun changeSupplyCount(newSupplyCount: Long) {
+        val soldCount = this.supplyCount!! - this.quantity!!
+        if (newSupplyCount < soldCount) throw TicketItemQuantityException.EXCEPTION
+        this.supplyCount = newSupplyCount
+        this.quantity = newSupplyCount - soldCount
+    }
+
     /** 어드민 전용: 재고(quantity)와 공급량(supplyCount)을 동시에 조정 */
     fun adminAdjustStock(delta: Long) {
+        // 무제한 티켓은 수량 조정이 의미 없으므로 저장값을 유지한다
+        if (isUnlimitedSupply()) return
         val newQuantity = this.quantity!! + delta
         val newSupplyCount = this.supplyCount!! + delta
         if (newQuantity < 0) throw TicketItemQuantityException.EXCEPTION
@@ -215,5 +250,16 @@ class TicketItem(
         if (price != null) this.price = price
         if (quantity != null) this.quantity = quantity
         if (purchaseLimit != null) this.purchaseLimit = purchaseLimit
+    }
+
+    companion object {
+        /**
+         * 무제한 공급량 저장값. v1 은 공급량(supplyCount)·재고가 필수라 큰 수로 저장하고, 이 값 이상이면 무제한으로 표시한다.
+         * v1 응답(`isUnlimitedSupply`)·어드민·v2 공통 기준 (prod 최대 공급량 1,000 — 2026-10-04 확인)
+         */
+        const val UNLIMITED_SUPPLY_COUNT = 1_000_000L
+
+        /** 1인 매수 제한 없음 저장값 (v1 은 purchaseLimit 필수). 이 값 이상이면 제한 없음 */
+        const val NO_PURCHASE_LIMIT = 1_000_000L
     }
 }

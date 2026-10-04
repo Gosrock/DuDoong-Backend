@@ -17,6 +17,13 @@ interface OrderRepository : CrudRepository<Order, Long>, OrderCustomRepository {
     fun findByEventIdAndUserIdAndOrderStatus(eventId: Long, userId: Long, orderStatus: OrderStatus): List<Order>
     fun findByUuidIn(uuids: List<String>): List<Order>
 
+    /** 주어진 티켓(item) 중 해당 상태 주문이 있는 티켓 id (tbl_order_line.item_id 인덱스 사용) */
+    @Query(
+        """SELECT DISTINCT l.orderItem.itemId FROM tbl_order o JOIN o.orderLineItems l
+            WHERE l.orderItem.itemId IN :itemIds AND o.orderStatus = :orderStatus"""
+    )
+    fun findItemIdsHavingOrderStatus(@Param("itemIds") itemIds: Collection<Long>, @Param("orderStatus") orderStatus: OrderStatus): List<Long>
+
     /** Admin: 키워드(orderName/유저명/이벤트명) + 상태 + 이벤트 필터로 주문 검색 */
     @Query(
         """SELECT o FROM tbl_order o WHERE

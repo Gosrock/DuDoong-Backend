@@ -43,6 +43,8 @@ class OrderValidator(
         val event = getEvent(order)
         validEventIsOpen(event)
         validTicketingTime(event)
+        // 판매 중단·판매 기간 (v2 설정). 주문 생성 시점만 보고, 이미 만든 주문의 승인·결제 확정은 막지 않는다
+        item.validateOnSale()
         validItemStockEnough(order, item)
         validItemKindIsOneType(order)
         validItemPurchaseLimit(order, item)

@@ -27,6 +27,11 @@ class OrderAdaptor(private val orderRepository: OrderRepository) {
     fun findByOrderUuid(uuid: String): Order =
         orderRepository.findByOrderUuid(uuid).orElseThrow { OrderNotFoundException.EXCEPTION }
 
+    /** 승인 대기(PENDING_APPROVE) 주문이 있는 티켓 id */
+    fun findItemIdsHavingPendingApproveOrder(itemIds: Collection<Long>): Set<Long> =
+        if (itemIds.isEmpty()) emptySet()
+        else orderRepository.findItemIdsHavingOrderStatus(itemIds, OrderStatus.PENDING_APPROVE).toSet()
+
     fun findByUuidIn(orderUuids: List<String>): List<Order> =
         orderRepository.findByUuidIn(orderUuids)
 
