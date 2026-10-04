@@ -140,7 +140,7 @@ def _wait_notification(base_url, s, who, type_, target):
     while time.time() < deadline:
         resp = requests.get(f"{base_url}/v2/me/notifications", params={"size": 100}, headers=_h(s, who))
         assert_status(resp, 200)
-        found = [n for n in get_data(resp)["content"] if n["type"] == type_ and n["targetId"] == target]
+        found = [n for n in get_data(resp)["content"] if n["type"] == type_ and n["target"]["id"] == target]
         if found:
             return found
         time.sleep(0.2)
