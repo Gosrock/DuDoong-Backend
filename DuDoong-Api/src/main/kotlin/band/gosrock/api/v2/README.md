@@ -53,7 +53,8 @@ band.gosrock.api.v2
     - 저장 핸들러 `api.v2.notification.handler.V2NotificationEventHandler`: 기존 도메인 이벤트(`CreateOrderEvent`·`DoneOrderEvent`·`WithDrawOrderEvent`, v1 경로 포함)와 v2 전용 `V2HostMembersAddedEvent`(`V2HostDomainService.addActiveHostUsers` 에서만 발행)에 붙는다. `@Async` + `@TransactionalEventListener(AFTER_COMMIT)`, 예외는 삼키고 로그만 (원 트랜잭션 영향 없음)
     - 저장 핸들러는 알림 전용 executor(`notificationExecutor`, core 2 / max 4 / queue 200, 가득 차면 버리고 warn — 호출 스레드 실행 안 함)에서 돈다. 기존 `@Async` 기본 풀은 그대로. 결제형 주문·환불 등 이벤트 필드로 알 수 있는 비대상은 `condition`(SpEL)으로 큐에 넣기 전에 거른다
     - 중복 방지 uk(type, dedup_key, user_id): 주문 = orderUuid, 멤버 추가 = `host_user:{id}`. 일괄 저장은 `NotificationBulkRepository`(multi-row INSERT, 이미 있는 키는 건너뜀, 경합으로 uk 에 걸리면 행 단위 재시도)
-    - 알림 없음: v1 초대 → 수락 경로(본인이 수락하므로 "추가됨" 알림 대상 아님, `HostUserJoinEvent` 는 슬랙만), 승인 후 취소·사용자 환불
+    - 사용자 취소·환불 요청(#718, REFUND — v1 사용자 환불 포함) → 호스트 활성 마스터·매니저: 환불 요청이 걸리면 `ORDER_REFUND_REQUESTED`, 무료 취소는 `ORDER_CANCELED_BY_USER`. 카드(PG) 결제 주문은 condition 으로 제외
+    - 알림 없음: v1 초대 → 수락 경로(본인이 수락하므로 "추가됨" 알림 대상 아님, `HostUserJoinEvent` 는 슬랙만), 호스트의 승인 후 취소
     - 처리가 끝난 승인 대기 알림(승인·거절된 주문)을 자동으로 읽음 처리하지 않는다 (후속)
     - 거절 사유는 본문에 100자 + `…`, extra 값은 각각 300자 + `…` 로 자른 뒤 직렬화
 - `V2EventBrowseDomainService` / `V2EventBrowseQuery` (#716): 사용자 앱 공연 탐색(P-1~P-5, 모두 비로그인)
@@ -65,6 +66,16 @@ band.gosrock.api.v2
   - 목록의 태그·호스트명은 페이지 단위 일괄 조회(호스트는 스칼라 조회 — `Host.hostUsers` EAGER 회피)
   - 문의처: 공연 문의처, 없으면 `V2HostDomainService.displayContacts`(v2 연락처 → v1 전화/이메일)
   - P-5: 유효 + `TicketItem.isOnSale` 티켓만(지난 공연도 목록은 보임). `isPurchasable` = `V2TicketItemDomainService.isPurchasableInV2App`(v2 결제 방식 DUDOONG/FREE + 공연 OPEN + 시작 전 + 판매 중 + 재고 > 0, 기존 PG 티켓은 false). 티켓·옵션 그룹은 `V2TicketItemQuery` fetch join(옵션 N+1 없음, 쿼리 3개) 계좌는 주문 단계에서 제공(응답에 없음, ArchUnit 으로 고정). 잔여 = 재고 공개 + 수량 지정일 때만
+- `V2UserOrderDomainService` / `V2UserOrderQuery` / `V2MyOrderStatus` (#718): 사용자 앱 주문(O-1~O-4)
+  - 생성: v1 장바구니 → 주문을 한 트랜잭션에서. **장바구니는 저장하지 않는다**(메모리 `Cart` 로 v1 `CartValidator` 검증만 — v1 '최근 장바구니' 덮어쓰기 방지), 주문은 v1 `OrderFactory.createNormalOrder(cart, userId)` 규칙 그대로. 무료 선착순은 이어서 v1 `FreeOrderService`(별도 락·트랜잭션, 발급이 커밋된 주문을 읽기 때문)
+  - 락: `티켓관리:{ticketItemId}` (v1 발급·재고 감소, v2 티켓 수정과 같은 락). v1 주문 생성의 `주문생성:{userId}` 보다 넓다 — 승인 대기 재고·1인 제한 검사가 다른 사용자 동시 주문에도 맞고, 티켓 조건 변경과 주문이 겹치지 않는다
+  - 옵션: 일괄 = 라인 1개(수량 N), 티켓별 = **수량 1 라인 N개** (v1 장바구니가 원래 지원하는 구조, 발급 시 라인 답변이 티켓 답변으로 복사). 네/아니오 답은 `YES`/`NO`(예·네 / 아니요·아니오 허용), 저장값은 v1 과 같은 `예`/`아니요`
+  - 결제 방식: 두둥 = BANK_TRANSFER / TOSS_TRANSFER + 입금자명 1~20자, 무료 = FREE. `tbl_order.payment_channel`·`depositor_name`(V007, v1 주문은 null). PG 티켓은 `Order_400_20`
+  - 중복 요청: 같은 사용자·티켓·라인 수량·옵션 답변·결제 방식·입금자명이 10초 안에 다시 오면 앞 주문(진행 중·완료)을 돌려준다(스칼라 조회). 무료 선착순이 아직 확정 전이면 `Order_400_26` (이중 확정 방지). `Idempotency-Key` 헤더는 지원하지 않는다
+  - 상태(`V2MyOrderStatus`): 호스트 분류와 같고 사용자 철회(REFUND)를 REFUNDED(환불 요청/완료) / CANCELED(환불 NONE = 무료 취소)로 나눈다. 목록 제외 READY·PENDING_PAYMENT·FAILED·OUTDATED (v1 마이페이지 목록과 같음)
+  - 취소: `주문:{uuid}` 락. 승인 대기 = 공연 OPEN + 시작 전, 승인 완료 = + 입장·주문자 소유 아닌(선물 대비) 티켓 없음. 카드(PG) 결제 주문은 `Order_400_24`. 승인 완료 유료는 v1 `Order.refund`, 그 외(승인 대기, 무료 승인)는 `Order.withdrawByUser`(internal) — 둘 다 상태 REFUND(v1 메일·슬랙이 '구매자 환불'로 처리), 유료만 환불 요청 + 환불 계좌(`tbl_order_refund_account`, 필수)
+  - 환불 계좌 노출: 호스트 R-2 상세·F-1 환불 목록·변경 응답에서 **매니저 이상(+SUPER_ADMIN)만** 전체, 일반 멤버는 null. 주문자 O-3 은 계좌번호 뒤 4자리
+  - 발급 티켓(O-3)은 주문자 소유분만 (8단계 선물 대비)
 - **open-in-view**: test·staging·prod 는 켜져 있다(기본값). 요청 영속성 컨텍스트에 먼저 올린 엔티티는 락 트랜잭션(REQUIRES_NEW)에서 바뀌어도 같은 요청 안에서 갱신되지 않으므로, 락 서비스를 부르기 전 검사는 엔티티 대신 스칼라 조회로 한다 (`V2OrderDomainService.validateEventOrder`)
 - 티켓 공통 불변식(엔티티 `TicketItem`): 재고 감소 = 판매됨(`isSold`), 판매된 티켓 옵션 변경·삭제 불가, 무제한·매수 제한 없음 저장값(`TicketItem.UNLIMITED_SUPPLY_COUNT` / `NO_PURCHASE_LIMIT` = 1,000,000, `isUnlimitedSupply()` / `hasNoPurchaseLimit()` — v1 응답·어드민·v2 공통), **판매 중 판정(`isOnSale`: isSellable + 판매 기간)**
   - v1 장바구니·주문 생성(`CartValidator`/`OrderValidator.validCanCreate`)이 이 검사를 하고, v1 공개 티켓 목록은 판매 중인 티켓만 보여 준다(어드민 목록은 전부). v1 로 만든 티켓은 isSellable=true·기간 null 이라 영향 없음
@@ -78,7 +89,7 @@ band.gosrock.api.v2
 | 예외: `GlobalExceptionHandler` / `SwaggerConfig` 는 `api.v2` 중 `V2ErrorPolicy` 에만 의존 가능 | 〃 |
 | `api.v2` 는 `api.common` / `api.config` 외 v1 api 에 의존하지 않음 | 〃 |
 | `domain..service.v2..` 에는 `api.v2..` 와 `domain..service.v2..` 만 의존 가능 (허용 목록. v1 api, Admin, Domain, Infrastructure, Common 전부 금지) | 〃 (Api classpath), `DuDoong-Domain/.../architecture/V2DomainServiceArchitectureTest.kt`, `DuDoong-Batch/src/test/kotlin/band/gosrock/architecture/V2BatchArchitectureTest.kt` |
-| 엔티티의 v2 `internal` mutator(`changeHasTicket`, `changeSchedule`, `changePosterImage`, `changePlace`, `replaceContacts`, `replaceTagIds`, `replaceSections`, `getOrInitProfile`, `TicketItem.changeAccountInfo`, `TicketItem.changeSupplyCount`, `Order.recordRefuseReasonType`)는 `service.v2` 와 엔티티 자신(`Event`/`Host`/`TicketItem`/`Order`)만 호출 | `DuDoong-Domain/src/test/kotlin/band/gosrock/domain/architecture/V2DomainServiceArchitectureTest.kt` |
+| 엔티티의 v2 `internal` mutator(`changeHasTicket`, `changeSchedule`, `changePosterImage`, `changePlace`, `replaceContacts`, `replaceTagIds`, `replaceSections`, `getOrInitProfile`, `TicketItem.changeAccountInfo`, `TicketItem.changeSupplyCount`, `Order.recordRefuseReasonType`, `Order.recordV2Payment`, `Order.withdrawByUser`)는 `service.v2` 와 엔티티 자신(`Event`/`Host`/`TicketItem`/`Order`)만 호출 | `DuDoong-Domain/src/test/kotlin/band/gosrock/domain/architecture/V2DomainServiceArchitectureTest.kt` |
 | `V2*DomainService` 는 `..service.v2..` 패키지에 둔다 | 〃 |
 | 공개 공연 탐색 컨트롤러·유스케이스·응답은 계좌(`AccountInfoVo`, `V2TicketAccountResponse`)에 의존하지 않음 | `V2ApiArchitectureTest` |
 | 공개 공연 탐색 응답 DTO 는 `@Entity` 클래스에 의존하지 않음 | 〃 |

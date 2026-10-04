@@ -3,6 +3,7 @@ package band.gosrock.domain.domains.notification.service.v2
 import band.gosrock.common.annotation.DomainService
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor
+import band.gosrock.domain.domains.host.domain.Host
 import band.gosrock.domain.domains.host.domain.HostRole
 import band.gosrock.domain.domains.notification.domain.Notification
 import band.gosrock.domain.domains.notification.domain.NotificationTargetType
@@ -13,6 +14,7 @@ import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
 import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.order.domain.OrderMethod
 import band.gosrock.domain.domains.order.domain.OrderStatus
+import band.gosrock.domain.domains.order.domain.RefundStatus
 import band.gosrock.domain.domains.order.service.v2.V2OrderStatus
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.LocalDateTime
@@ -67,11 +69,7 @@ class V2NotificationDomainService(
         val event = eventAdaptor.findById(order.eventId!!)
         val host = hostAdaptor.findById(event.hostId!!)
         val eventName = event.eventBasic?.name.orEmpty()
-        val recipients = host.hostUsers
-            .filter { it.active && (it.role == HostRole.MASTER || it.role == HostRole.MANAGER) }
-            .mapNotNull { it.userId }
-            .distinct()
-        val notifications = recipients.map { userId ->
+        val notifications = managerIds(host).map { userId ->
             orderDraft(
                 userId = userId,
                 order = order,
@@ -133,6 +131,33 @@ class V2NotificationDomainService(
         )
     }
 
+    /**
+     * 사용자 취소·환불 요청(REFUND) → 호스트 활성 마스터·매니저 (#718). 환불 요청이 걸렸으면 ORDER_REFUND_REQUESTED, 아니면(무료) ORDER_CANCELED_BY_USER.
+     * v1 사용자 환불도 대상이다. 카드(PG) 결제 주문은 결제 취소가 자동이라 저장 안 함 (핸들러 condition 에서도 거름)
+     */
+    @Transactional
+    fun notifyOrderWithdrawnByUser(orderUuid: String): Int {
+        val order = orderAdaptor.findByOrderUuid(orderUuid)
+        if (order.orderStatus != OrderStatus.REFUND) return 0
+        if (order.orderMethod == OrderMethod.PAYMENT && order.isNeedPaid()) return 0
+        val refund = order.refundStatus != RefundStatus.NONE
+        val event = eventAdaptor.findById(order.eventId!!)
+        val host = hostAdaptor.findById(event.hostId!!)
+        val eventName = event.eventBasic?.name.orEmpty()
+        val subject = "'$eventName' ${order.orderName.orEmpty()} 주문(${order.orderNo.orEmpty()})"
+        val notifications = managerIds(host).map { userId ->
+            orderDraft(
+                userId = userId,
+                order = order,
+                type = if (refund) NotificationType.ORDER_REFUND_REQUESTED else NotificationType.ORDER_CANCELED_BY_USER,
+                title = if (refund) "주문자가 환불을 요청했어요" else "주문자가 주문을 취소했어요",
+                body = if (refund) "$subject 환불 요청이 들어왔습니다. 환불 계좌로 송금한 뒤 환불 완료로 처리해 주세요." else "$subject 이 주문자에 의해 취소되었습니다.",
+                extra = mapOf("eventName" to eventName, "orderNo" to order.orderNo),
+            )
+        }
+        return notificationBulkRepository.insertSkippingDuplicates(notifications)
+    }
+
     // ===== 조회 / 읽음 =====
 
     fun querySlice(userId: Long, pageable: Pageable): Slice<Notification> =
@@ -153,6 +178,12 @@ class V2NotificationDomainService(
     }
 
     // ===== 내부 =====
+
+    /** 호스트의 활성 마스터·매니저 (일반 멤버·초대 대기 제외) */
+    private fun managerIds(host: Host): List<Long> = host.hostUsers
+        .filter { it.active && (it.role == HostRole.MASTER || it.role == HostRole.MANAGER) }
+        .mapNotNull { it.userId }
+        .distinct()
 
     private fun eventName(order: Order): String = eventAdaptor.findById(order.eventId!!).eventBasic?.name.orEmpty()
 

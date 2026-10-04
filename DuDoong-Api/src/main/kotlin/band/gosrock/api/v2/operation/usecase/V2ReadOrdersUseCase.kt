@@ -22,6 +22,7 @@ import band.gosrock.domain.domains.order.repository.condition.AdminTableSearchTy
 import band.gosrock.domain.domains.order.service.v2.V2OrderDomainService
 import band.gosrock.domain.domains.order.service.v2.V2OrderQuery
 import band.gosrock.domain.domains.order.service.v2.V2OrderSearch
+import band.gosrock.domain.domains.order.service.v2.V2UserOrderDomainService
 import java.time.format.DateTimeFormatter
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -35,6 +36,7 @@ class V2ReadOrdersUseCase(
     private val issuedTicketAdaptor: IssuedTicketAdaptor,
     private val v2OrderQuery: V2OrderQuery,
     private val v2OrderDomainService: V2OrderDomainService,
+    private val v2UserOrderDomainService: V2UserOrderDomainService,
     private val mapper: V2OperationMapper,
     private val excelService: AdminExcelService,
     @Value("\${v2.export.max-rows:${V2OrderQuery.EXPORT_MAX_ROWS}}") private val exportMaxRows: Int,
@@ -64,11 +66,15 @@ class V2ReadOrdersUseCase(
 
     /** R-2 주문 상세 */
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
-    fun detail(userId: Long, eventId: Long, orderUuid: String): V2OrderDetailResponse = readDetail(eventId, orderUuid)
+    fun detail(userId: Long, eventId: Long, orderUuid: String): V2OrderDetailResponse =
+        readDetail(eventId, orderUuid, showRefundAccount = mapper.canSeeRefundAccount(userId, eventId))
 
-    /** 변경 API 응답용 (권한 검사는 호출한 UseCase 에서 끝남). 변경 트랜잭션이 커밋된 뒤 새로 읽는다 */
+    /**
+     * 변경 API 응답용 (권한 검사는 호출한 UseCase 에서 끝남). 변경 트랜잭션이 커밋된 뒤 새로 읽는다.
+     * [showRefundAccount]: 사용자 환불 계좌 노출 (매니저 이상, 변경 API 는 모두 매니저 이상이라 true)
+     */
     @Transactional(readOnly = true)
-    fun readDetail(eventId: Long, orderUuid: String): V2OrderDetailResponse {
+    fun readDetail(eventId: Long, orderUuid: String, showRefundAccount: Boolean): V2OrderDetailResponse {
         val order = v2OrderDomainService.queryEventOrder(eventId, orderUuid)
         val user = mapper.usersOf(listOf(order.userId))[order.userId]
         val orderLines = order.orderLineItems.sortedBy { it.id }
@@ -107,6 +113,7 @@ class V2ReadOrdersUseCase(
             refundStatusChangedAt = order.refundStatusChangedAt,
             lines = lines,
             issuedTickets = tickets,
+            refundAccount = if (showRefundAccount) order.id?.let { v2UserOrderDomainService.refundAccountOf(it) }?.let(mapper::toRefundAccount) else null,
         )
     }
 
@@ -138,7 +145,8 @@ class V2ReadOrdersUseCase(
         eventAdaptor.findById(eventId)
         val orders = orderAdaptor.findRefunds(eventId, status?.domain, null, PageRequest.of(page, size))
         val users = mapper.usersOf(orders.content.map { it.userId })
-        return V2PageResponse.of(orders.map { mapper.toRefundElement(it, users[it.userId]) })
+        val accounts = if (mapper.canSeeRefundAccount(userId, eventId)) v2UserOrderDomainService.refundAccountsOf(orders.content.mapNotNull { it.id }) else emptyMap()
+        return V2PageResponse.of(orders.map { mapper.toRefundElement(it, users[it.userId], accounts[it.id]) })
     }
 
     companion object {

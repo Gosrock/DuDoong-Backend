@@ -38,11 +38,13 @@ import jakarta.persistence.Table
 /**
  * (event_id, order_status): v2 공연별 주문 목록·상태별 건수·대시보드 (#712, V004)
  * uuid unique: 주문 조회(승인·거절·취소·상세, v1/v2 공통)의 단건 조회 (#712, V004)
+ * (user_id, order_id): 내 주문 목록(v1 마이페이지·v2 O-2, 최신 순)·v2 중복 주문 확인 (#718, V007)
  */
 @Table(
     indexes = [
         Index(name = "idx_order_event_id_status", columnList = "event_id, order_status"),
         Index(name = "uk_order_uuid", columnList = "uuid", unique = true),
+        Index(name = "idx_order_user_id_id", columnList = "user_id, order_id"),
     ],
 )
 @Entity(name = "tbl_order")
@@ -126,6 +128,17 @@ class Order() : BaseTimeEntity() {
     @Enumerated(EnumType.STRING)
     @Column(name = "refuse_reason_type", length = 30)
     var refuseReasonType: OrderRefuseReasonType? = null
+        protected set
+
+    /** 입금자명 (v2 두둥티켓 주문, #718). 주문 시점 값을 저장한다 (닉네임 변경과 무관, DEC-022). v1 주문·무료 주문은 null */
+    @Column(name = "depositor_name", length = 20)
+    var depositorName: String? = null
+        protected set
+
+    /** 결제 방식 (v2 사용자 주문, #718). v1 주문은 null */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_channel", length = 20)
+    var paymentChannel: OrderPaymentChannel? = null
         protected set
 
     @PrePersist
@@ -360,5 +373,27 @@ class Order() : BaseTimeEntity() {
     /** 거절 사유 종류 기록. [refuse] 와 같은 트랜잭션·락 안에서 V2OrderDomainService 가 호출한다 */
     internal fun recordRefuseReasonType(type: OrderRefuseReasonType) {
         this.refuseReasonType = type
+    }
+
+    /** v2 결제 방식·입금자명 기록. 저장 전(같은 트랜잭션·락) V2UserOrderDomainService 가 호출한다 */
+    internal fun recordV2Payment(channel: OrderPaymentChannel, depositorName: String?) {
+        this.paymentChannel = channel
+        this.depositorName = depositorName
+    }
+
+    /**
+     * v2 사용자 취소 (#718): 승인 대기 주문, 또는 환불할 돈이 없는 승인 주문(무료).
+     * 상태는 v1 사용자 환불([refund])과 같은 REFUND 로 남겨 v1 화면·메일·슬랙이 '구매자 환불'로 처리하게 하고,
+     * 환불 요청(REFUND_REQUESTED)은 [refundRequested] 일 때만 건다. 검증(본인·상태·기한·입장 여부)은 V2UserOrderDomainService 가 같은 락 안에서 한다
+     */
+    internal fun withdrawByUser(refundRequested: Boolean) {
+        val now = LocalDateTime.now()
+        orderStatus = OrderStatus.REFUND
+        if (refundRequested) {
+            refundStatus = RefundStatus.REFUND_REQUESTED
+            refundStatusChangedAt = now
+        }
+        withDrawAt = now
+        Events.raise(WithDrawOrderEvent.from(this))
     }
 }

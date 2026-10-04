@@ -4,6 +4,7 @@ import band.gosrock.api.v2.common.V2PageResponse
 import band.gosrock.api.v2.operation.dto.V2RefundStatus
 import band.gosrock.common.annotation.DateFormat
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2EntranceState
+import band.gosrock.domain.domains.order.domain.OrderPaymentChannel
 import band.gosrock.domain.domains.order.domain.OrderRefuseReasonType
 import band.gosrock.domain.domains.order.service.v2.V2OrderCounts
 import band.gosrock.domain.domains.order.service.v2.V2OrderStatus
@@ -62,6 +63,17 @@ data class V2OrderElement(
     val refuseReason: String?,
     @field:Schema(description = "취소 사유 (CANCELED 일 때만)")
     val cancelReason: String?,
+    @field:Schema(description = "결제 방식 (v2 사용자 주문, #718): BANK_TRANSFER / TOSS_TRANSFER / FREE. v1 주문은 null")
+    val paymentChannel: OrderPaymentChannel? = null,
+    @field:Schema(description = "입금자명 (v2 두둥티켓 주문). 입금 확인용 — 주문자 이름과 다를 수 있다")
+    val depositorName: String? = null,
+)
+
+/** 사용자가 취소·환불 요청 때 입력한 환불 계좌 (매니저 이상에게만, 마스킹 없음 — 송금용) */
+data class V2RefundAccountResponse(
+    val bankName: String,
+    val accountHolder: String,
+    val accountNumber: String,
 )
 
 /** R-2 주문 상세 */
@@ -82,6 +94,8 @@ data class V2OrderDetailResponse(
     val lines: List<V2OrderLineResponse>,
     @field:Schema(description = "발급 티켓별 옵션 응답 (승인 후). 거절·승인 대기 주문은 빈 목록")
     val issuedTickets: List<V2OrderIssuedTicketResponse>,
+    @field:Schema(description = "사용자 환불 계좌 (#718). **매니저 이상만** 값이 있고 일반 멤버·계좌 없는 주문은 null")
+    val refundAccount: V2RefundAccountResponse? = null,
 )
 
 data class V2OrderLineResponse(
@@ -130,4 +144,6 @@ data class V2RefundElement(
     @field:DateFormat
     @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm")
     val refundStatusChangedAt: LocalDateTime?,
+    @field:Schema(description = "사용자 환불 계좌 (#718). **매니저 이상만** 값이 있고 일반 멤버·계좌 없는 주문(호스트 거절·취소 등)은 null")
+    val refundAccount: V2RefundAccountResponse? = null,
 )

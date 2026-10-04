@@ -51,8 +51,8 @@ class V2DomainServiceArchitectureTest {
             "replaceContacts", "replaceTagIds", "replaceSections", "getOrInitProfile",
             // TicketItem (#707)
             "changeAccountInfo", "changeSupplyCount",
-            // Order (#712)
-            "recordRefuseReasonType",
+            // Order (#712, #718)
+            "recordRefuseReasonType", "recordV2Payment", "withdrawByUser",
         )
 
         /** Kotlin internal 은 JVM 이름이 `name$모듈명` 으로 맹글링되므로 `name$` 접두도 같은 메서드로 본다 */

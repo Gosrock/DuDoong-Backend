@@ -44,7 +44,28 @@ enum class OrderErrorCode(
     INVALID_REFUSE_REASON(BAD_REQUEST, "Order_400_18", "거절 사유가 올바르지 않습니다."),
 
     @ExplainError("v2 주문 엑셀 다운로드 대상이 행 상한(10,000)을 넘는 경우. 상태 필터·검색어로 줄여서 받는다")
-    EXPORT_TOO_MANY_ORDERS(BAD_REQUEST, "Order_400_19", "엑셀로 내려받을 주문이 너무 많습니다. 필터로 줄여 주세요.");
+    EXPORT_TOO_MANY_ORDERS(BAD_REQUEST, "Order_400_19", "엑셀로 내려받을 주문이 너무 많습니다. 필터로 줄여 주세요."),
+
+    @ExplainError("v2 사용자 주문(O-1)으로 유료(PG, PRICE) 티켓을 주문하려는 경우. v2 는 두둥티켓·무료티켓만 주문할 수 있다 (P-5 isPurchasable=false 와 같은 기준)")
+    V2_UNSUPPORTED_ORDER_TICKET(BAD_REQUEST, "Order_400_20", "이 티켓은 앱에서 주문할 수 없습니다."),
+
+    @ExplainError("결제 방식이 티켓과 맞지 않는 경우. 두둥티켓은 BANK_TRANSFER / TOSS_TRANSFER, 무료티켓은 FREE")
+    V2_INVALID_PAYMENT_METHOD(BAD_REQUEST, "Order_400_21", "티켓에 맞지 않는 결제 방식입니다."),
+
+    @ExplainError("두둥티켓 주문의 입금자명이 없거나 20자를 넘는 경우 (앞뒤 공백 제외)")
+    V2_INVALID_DEPOSITOR_NAME(BAD_REQUEST, "Order_400_22", "입금자명은 1~20자로 입력해 주세요."),
+
+    @ExplainError("옵션 답변이 올바르지 않은 경우: 티켓별 입력(applyToAll=false)인데 답변 묶음 수가 수량과 다름, 티켓에 없는 옵션, 같은 옵션 중복, 옵션 누락, 네/아니오 값이 아님, 주관식 빈 값·255자 초과")
+    V2_INVALID_OPTION_ANSWERS(BAD_REQUEST, "Order_400_23", "옵션 답변이 올바르지 않습니다."),
+
+    @ExplainError("사용자 취소(O-4) 불가: 입장한 티켓·본인 소유가 아닌 티켓(선물)이 있거나, 카드(PG) 결제 주문인 경우. 기한·상태는 Order_400_9 / Order_400_5")
+    V2_ORDER_CANNOT_CANCEL_BY_USER(BAD_REQUEST, "Order_400_24", "취소할 수 없는 주문입니다."),
+
+    @ExplainError("유료(두둥티켓) 주문을 취소하면서 환불 받을 계좌를 보내지 않은 경우")
+    V2_REFUND_ACCOUNT_REQUIRED(BAD_REQUEST, "Order_400_25", "환불 받을 계좌를 입력해 주세요."),
+
+    @ExplainError("같은 사용자가 같은 무료(선착순) 티켓 주문을 짧은 시간에 다시 보냈는데 앞 주문이 아직 발급 중인 경우. 잠시 후 주문내역에서 확인한다")
+    V2_DUPLICATE_ORDER_IN_PROGRESS(BAD_REQUEST, "Order_400_26", "같은 주문을 처리하고 있습니다. 잠시 후 주문내역을 확인해 주세요.");
 
     override fun getErrorReason(): ErrorReason =
         ErrorReason(status = status, code = code, reason = reason)

@@ -42,6 +42,11 @@ class V2AuthRequiredPathsTest {
         "POST, /api/v2/events/1/open",
         "POST, /api/v2/events/1/ticket-items",
         "POST, /api/v2/events",
+        // 사용자 앱 주문 (#718)
+        "POST, /api/v2/orders",
+        "GET, /api/v2/me/orders",
+        "GET, /api/v2/me/orders/abc",
+        "POST, /api/v2/me/orders/abc/cancel",
     )
     fun `비로그인 요청은 401`(method: String, path: String) {
         mockMvc.perform(
