@@ -29,6 +29,7 @@ band.gosrock.api.v2
   - 수식 인젝션 방어: `= + - @ 탭 CR` 로 시작하는 문자열 셀 앞에 `'` (v2 엑셀만, 기존 운영 어드민 엑셀은 그대로)
   - 행 상한 10,000 (`v2.export.max-rows`), 넘으면 400 (`Order_400_19` / `IssuedTicket_400_7`). 연관 데이터는 fetch join
   - 개인정보: 연락처는 포함(입금 확인용, v1 수준), 이메일은 제외(주문 상세에서만). 다운로드마다 감사 로그(userId, eventId, 필터, 행 수)
+  - 옵션 응답 열 (I-3 발급 티켓, R-6 주문 #730): `V2OperationMapper.excelOptionColumnsOf` 한 곳에서 만든다 — 답변에 나온 옵션 그룹 id 순, 헤더는 질문 이름(다른 옵션이나 두 엑셀의 기본 열 이름과 겹치거나 없으면 `이름(그룹 id)`). R-6 은 한 주문 한 행, 라인 1개면 응답 그대로, 여러 라인이면 같은 응답끼리 수량을 더해 `응답 ×수량` 을 쉼표로 잇는다(응답 없으면 빈 칸). 라인 답변은 `V2OrderQuery.findAllForExport` 가 쿼리 1개로 미리 적재
 - 공개(비인증) 경로: `SecurityConfig.V2_PUBLIC_GET_PATHS` 에 추가.
 - SUPER_ADMIN: `@HostRolesAllowed` 권한 검사만 건너뛴다. 요청자 역할을 보는 도메인 규칙은 그대로라, 멤버가 아니면 마스터 전용 규칙(매니저 추가·삭제, 마스터 양도)은 막히고 GUEST 추가·삭제, 역할 변경, 조회·수정은 된다.
 

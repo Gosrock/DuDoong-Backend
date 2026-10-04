@@ -18,6 +18,7 @@ import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2EntranceState
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
+import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.order.service.v2.V2OrderDomainService
 import band.gosrock.domain.domains.order.service.v2.V2OrderQuery
 import band.gosrock.domain.domains.order.service.v2.V2OrderSearch
@@ -120,7 +121,7 @@ class V2ReadOrdersUseCase(
     /**
      * R-6 엑셀 (R-1 과 같은 필터, 전체 행, 상한 [exportMaxRows] 초과 시 Order_400_19).
      * 개인정보: 연락처·입금자명(v2 두둥티켓 주문, #726)은 입금 확인용으로 포함(v1 수준), 이메일은 넣지 않는다(주문 상세에서만). 다운로드는 감사 로그를 남긴다.
-     * 입금자명은 사용자가 입력한 값이라 수식 인젝션 방어(escapeFormula)가 필요하다
+     * 입금자명·옵션 응답(#730, 주관식)은 사용자가 입력한 값이라 수식 인젝션 방어(escapeFormula)가 필요하다
      */
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
     fun export(userId: Long, eventId: Long, status: V2OrderStatusFilter, searchType: V2OrderSearchType?, keyword: String?): ByteArray {
@@ -128,16 +129,34 @@ class V2ReadOrdersUseCase(
         val search = V2OrderSearch(eventId = eventId, status = status.domain, searchType = searchType, keyword = keyword)
         val orders = v2OrderQuery.findAllForExport(search, exportMaxRows)
         val users = mapper.usersOf(orders.map { it.userId })
+        // 옵션 컬럼은 I-3 과 같은 규칙 (#730). 라인 답변은 findAllForExport 가 한 번에 적재, 옵션 이름은 한 번에 조회
+        val columns = mapper.excelOptionColumnsOf(orders.flatMap { o -> o.orderLineItems.flatMap { line -> line.orderOptionAnswers.map { it.optionId } } })
         val rows = orders.map { order ->
             val e = mapper.toOrderElement(order, users[order.userId])
             listOf(
                 e.orderNo, e.buyerName, e.buyerPhone, e.depositorName, e.ticketName, e.totalQuantity, e.totalPaymentAmount,
                 e.orderedAt?.format(EXCEL_DATE), e.status?.let { STATUS_LABELS[it.name] }, REFUND_LABELS[e.refundStatus.name],
                 e.refuseReason ?: e.cancelReason,
-            )
+            ) + columns.groupIds.map { optionCell(order, it, columns) }
         }
         log.info("[V2 엑셀] 주문 다운로드 userId={} eventId={} status={} rows={}", userId, eventId, status, rows.size)
-        return excelService.generateTableExcel("주문 목록", ORDER_HEADERS, rows, escapeFormula = true)
+        return excelService.generateTableExcel("주문 목록", ORDER_HEADERS + columns.headers, rows, escapeFormula = true)
+    }
+
+    /**
+     * 주문 한 행의 옵션 그룹 셀 (#730). 라인이 1개면 응답 그대로, 여러 개(티켓별 옵션 = 수량 1 라인 N개 등)면
+     * 같은 응답끼리 수량을 더해 `응답 ×수량` 을 처음 나온 순서로 쉼표로 잇는다. 응답이 없으면 빈 칸(null)
+     */
+    private fun optionCell(order: Order, groupId: Long, columns: V2ExcelOptionColumns): String? {
+        val lines = order.orderLineItems.sortedBy { it.id }
+        val answered = lines.mapNotNull { line ->
+            line.orderOptionAnswers.firstOrNull { columns.groupOfOption[it.optionId] == groupId }?.answer?.let { it to (line.quantity ?: 0L) }
+        }
+        if (answered.isEmpty()) return null
+        if (lines.size == 1) return answered.single().first
+        val quantities = LinkedHashMap<String, Long>()
+        answered.forEach { (answer, quantity) -> quantities[answer] = (quantities[answer] ?: 0L) + quantity }
+        return quantities.entries.joinToString(", ") { (answer, quantity) -> "$answer ×$quantity" }
     }
 
     /** F-1 환불 목록 (v1 환불 조회 쿼리 재사용, 최신 순) */

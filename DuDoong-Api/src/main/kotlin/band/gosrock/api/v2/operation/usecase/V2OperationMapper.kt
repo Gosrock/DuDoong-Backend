@@ -25,6 +25,9 @@ import band.gosrock.domain.domains.user.domain.AccountRole
 import band.gosrock.domain.domains.user.domain.User
 import org.springframework.stereotype.Component
 
+/** 엑셀 옵션 컬럼: [groupIds] 순서가 [headers] 순서. [groupOfOption] = 답변의 옵션 행 id → 옵션 그룹 id */
+data class V2ExcelOptionColumns(val groupIds: List<Long>, val headers: List<String>, val groupOfOption: Map<Long?, Long?>)
+
 /**
  * v2 공연 운영 응답 변환 (#712). 트랜잭션 안(UseCase)에서 호출한다 (옵션 그룹 지연 로딩).
  *
@@ -109,6 +112,21 @@ class V2OperationMapper(
         enteredAt = ticket.enteredAt,
     )
 
+    /**
+     * 엑셀 옵션 컬럼 (I-3 발급 티켓·R-6 주문 공통, #730). 답변에 나온 옵션 행 id 들을 한 번에 조회해 옵션 그룹 단위 컬럼을 만든다:
+     * 옵션 그룹 id 순, 헤더는 질문 이름. 이름이 다른 옵션이나 두 엑셀의 기본 열 이름([EXCEL_BASE_HEADERS], 예: R-6 '입금자명')과 겹치거나
+     * 없으면 `이름(그룹 id)` — 두 엑셀이 같은 옵션 헤더를 쓰도록 기본 열은 합쳐서 본다. 답변이 없는 옵션은 컬럼이 없다
+     */
+    fun excelOptionColumnsOf(optionIds: Collection<Long?>): V2ExcelOptionColumns {
+        val ids = optionIds.filterNotNull().distinct()
+        val options = if (ids.isEmpty()) emptyList() else optionAdaptor.findAllByIds(ids)
+        val groupOfOption = options.associate { it.id to it.getOptionGroupId() }
+        val groups = options.mapNotNull { o -> o.getOptionGroupId()?.let { it to o.getQuestionName() } }.distinct().sortedBy { it.first }
+        val duplicated = groups.groupBy { it.second }.filterValues { it.size > 1 }.keys
+        val headers = groups.map { (id, name) -> if (name == null || name in duplicated || name in EXCEL_BASE_HEADERS) "${name ?: "옵션"}($id)" else name }
+        return V2ExcelOptionColumns(groupIds = groups.map { it.first }, headers = headers, groupOfOption = groupOfOption)
+    }
+
     /** 옵션 행 id → 질문(옵션 그룹) 이름. 여러 답변의 옵션을 한 번에 조회한다 */
     fun optionNamesOf(optionIds: Collection<Long?>): Map<Long?, String?> {
         val ids = optionIds.filterNotNull().distinct()
@@ -147,4 +165,9 @@ class V2OperationMapper(
 
     fun phoneOf(user: User?): String? =
         user?.profile?.phoneNumberVo?.takeIf { it.phoneNumber != null }?.let { runCatching { it.getNationalFormat() }.getOrNull() }
+
+    companion object {
+        /** 옵션 헤더와 겹치면 안 되는 엑셀 기본 열 (R-6 + I-3) */
+        val EXCEL_BASE_HEADERS: Set<String> by lazy { (V2ReadOrdersUseCase.ORDER_HEADERS + V2ReadIssuedTicketsUseCase.TICKET_HEADERS).toSet() }
+    }
 }

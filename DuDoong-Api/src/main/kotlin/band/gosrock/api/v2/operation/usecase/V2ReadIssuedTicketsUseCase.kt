@@ -17,7 +17,6 @@ import band.gosrock.domain.domains.issuedTicket.service.v2.V2EntranceState
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2IssuedTicketQuery
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2IssuedTicketSearch
 import band.gosrock.domain.domains.order.repository.condition.AdminTableSearchType
-import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor
 import band.gosrock.domain.domains.order.service.v2.V2OrderQuery
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -27,7 +26,6 @@ import org.springframework.data.domain.PageRequest
 class V2ReadIssuedTicketsUseCase(
     private val eventAdaptor: EventAdaptor,
     private val issuedTicketAdaptor: IssuedTicketAdaptor,
-    private val optionAdaptor: OptionAdaptor,
     private val v2IssuedTicketQuery: V2IssuedTicketQuery,
     private val mapper: V2OperationMapper,
     private val excelService: AdminExcelService,
@@ -82,23 +80,19 @@ class V2ReadIssuedTicketsUseCase(
         val tickets = v2IssuedTicketQuery.findAllForExport(search, exportMaxRows)
         val users = mapper.usersOf(tickets.map { it.getUserId() })
         val orderNos = mapper.orderNosOf(tickets.map { it.orderUuid })
-        // 답변의 optionId(옵션 행) → 옵션 그룹. 컬럼은 옵션 그룹 단위
-        val options = optionAdaptor.findAllByIds(tickets.flatMap { t -> t.issuedTicketOptionAnswers.mapNotNull { it.optionId } }.distinct())
-        val groupOfOption = options.associate { it.id to it.getOptionGroupId() }
-        val groups = options.mapNotNull { o -> o.getOptionGroupId()?.let { it to o.getQuestionName() } }.distinct().sortedBy { it.first }
-        val duplicated = groups.groupBy { it.second }.filterValues { it.size > 1 }.keys
-        val optionHeaders = groups.map { (id, name) -> if (name in duplicated || name == null) "${name ?: "옵션"}($id)" else name }
+        // 답변의 optionId(옵션 행) → 옵션 그룹. 컬럼은 옵션 그룹 단위 (R-6 과 같은 규칙)
+        val columns = mapper.excelOptionColumnsOf(tickets.flatMap { t -> t.issuedTicketOptionAnswers.map { it.optionId } })
         val rows = tickets.map { t ->
             val e = mapper.toTicketElement(t, users[t.getUserId()], orderNos[t.orderUuid])
-            val answers = t.issuedTicketOptionAnswers.associate { groupOfOption[it.optionId] to it.answer }
+            val answers = t.issuedTicketOptionAnswers.associate { columns.groupOfOption[it.optionId] to it.answer }
             listOf(
                 e.issuedTicketNo, PAY_TYPE_LABELS[e.payType?.name], e.ticketName, e.buyerName, mapper.phoneOf(users[t.getUserId()]), e.orderNo,
                 e.issuedAt?.format(V2ReadOrdersUseCase.EXCEL_DATE), if (e.entrance == V2EntranceState.DONE) "입장 완료" else "입장 전",
                 e.enteredAt?.format(V2ReadOrdersUseCase.EXCEL_DATE),
-            ) + groups.map { (groupId, _) -> answers[groupId] }
+            ) + columns.groupIds.map { answers[it] }
         }
         log.info("[V2 엑셀] 발급 티켓 다운로드 userId={} eventId={} entrance={} rows={}", userId, eventId, entrance, rows.size)
-        return excelService.generateTableExcel("발급 티켓 목록", TICKET_HEADERS + optionHeaders, rows, escapeFormula = true)
+        return excelService.generateTableExcel("발급 티켓 목록", TICKET_HEADERS + columns.headers, rows, escapeFormula = true)
     }
 
     companion object {
