@@ -2,6 +2,7 @@ package band.gosrock.domain.architecture
 
 import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.host.domain.Host
+import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem
 import com.tngtech.archunit.base.DescribedPredicate
 import com.tngtech.archunit.core.domain.JavaClasses
@@ -43,18 +44,20 @@ class V2DomainServiceArchitectureTest {
     companion object {
         private const val DOMAIN_SERVICE_V2 = "band.gosrock.domain..service.v2.."
 
-        private val MUTATOR_OWNERS = arrayOf(Event::class.java, Host::class.java, TicketItem::class.java)
+        private val MUTATOR_OWNERS = arrayOf(Event::class.java, Host::class.java, TicketItem::class.java, Order::class.java)
 
         private val V2_INTERNAL_MUTATORS = listOf(
             "changeHasTicket", "changeSchedule", "changePosterImage", "changePlace",
             "replaceContacts", "replaceTagIds", "replaceSections", "getOrInitProfile",
             // TicketItem (#707)
             "changeAccountInfo", "changeSupplyCount",
+            // Order (#712)
+            "recordRefuseReasonType",
         )
 
         /** Kotlin internal 은 JVM 이름이 `name$모듈명` 으로 맹글링되므로 `name$` 접두도 같은 메서드로 본다 */
         private val V2_INTERNAL_MUTATOR_CALL: DescribedPredicate<JavaMethodCall> =
-            DescribedPredicate.describe("Event/Host/TicketItem 의 v2 internal mutator ($V2_INTERNAL_MUTATORS)") { call ->
+            DescribedPredicate.describe("Event/Host/TicketItem/Order 의 v2 internal mutator ($V2_INTERNAL_MUTATORS)") { call ->
                 val target = call.target
                 target.owner.name in MUTATOR_OWNERS.map { it.name } &&
                     V2_INTERNAL_MUTATORS.any { target.name == it || target.name.startsWith("${it}\$") }

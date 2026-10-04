@@ -28,11 +28,23 @@ import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Index
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.OneToMany
 import jakarta.persistence.PostPersist
 import jakarta.persistence.PrePersist
+import jakarta.persistence.Table
 
+/**
+ * (event_id, order_status): v2 공연별 주문 목록·상태별 건수·대시보드 (#712, V004)
+ * uuid unique: 주문 조회(승인·거절·취소·상세, v1/v2 공통)의 단건 조회 (#712, V004)
+ */
+@Table(
+    indexes = [
+        Index(name = "idx_order_event_id_status", columnList = "event_id, order_status"),
+        Index(name = "uk_order_uuid", columnList = "uuid", unique = true),
+    ],
+)
 @Entity(name = "tbl_order")
 class Order() : BaseTimeEntity() {
 
@@ -108,6 +120,12 @@ class Order() : BaseTimeEntity() {
         protected set
 
     var refundStatusChangedAt: LocalDateTime? = null
+        protected set
+
+    /** 거절 사유 종류 (v2, #712). v1 거절·취소 주문은 null. 표시 문구는 [cancelReason] 에 함께 기록된다 */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "refuse_reason_type", length = 30)
+    var refuseReasonType: OrderRefuseReasonType? = null
         protected set
 
     @PrePersist
@@ -336,4 +354,11 @@ class Order() : BaseTimeEntity() {
 
     fun toAlimTalkOrderInfo(): AlimTalkOrderInfo =
         AlimTalkOrderInfo(orderName!!, getTotalQuantity(), getTotalPaymentPrice().toString(), createdAtKt())
+
+    // ===== v2 공유 데이터 (검증·조합 규칙은 service.v2.V2OrderDomainService) =====
+
+    /** 거절 사유 종류 기록. [refuse] 와 같은 트랜잭션·락 안에서 V2OrderDomainService 가 호출한다 */
+    internal fun recordRefuseReasonType(type: OrderRefuseReasonType) {
+        this.refuseReasonType = type
+    }
 }

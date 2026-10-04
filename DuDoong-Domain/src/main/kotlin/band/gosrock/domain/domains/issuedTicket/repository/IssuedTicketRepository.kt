@@ -15,4 +15,7 @@ interface IssuedTicketRepository : JpaRepository<IssuedTicket, Long>, IssuedTick
     fun findAllByEventId(eventId: Long, pageable: Pageable): Page<IssuedTicket>
     fun findAllByEventId(eventId: Long): List<IssuedTicket>
     fun findByUuid(uuid: String): Optional<IssuedTicket>
+
+    /** 공연의 한 유저 발급 티켓 전체 (취소 포함). v2 셀프 체크인 (#712) */
+    fun findAllByEventIdAndUserInfo_UserId(eventId: Long, userId: Long): List<IssuedTicket>
 }

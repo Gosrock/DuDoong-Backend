@@ -34,7 +34,17 @@ enum class OrderErrorCode(
     ORDER_OPTION_CHANGED(BAD_REQUEST, "Order_400_13", "주문 과정중 아이템의 옵션이 변화했습니다."),
     CAN_NOT_DELETED_USER_APPROVE(BAD_REQUEST, "Order_400_14", "유저가 탈퇴를 했습니다."),
     APPROVE_WAITING_PURCHASE_LIMIT(BAD_REQUEST, "Order_400_15", "승인 대기중인 주문으로 인해 티켓 최대 구매 가능 횟수를 넘겼습니다.이미 신청한 주문이 승인 될 때까지 기다려주세요."),
-    ORDER_CANNOT_REFUSE(BAD_REQUEST, "Order_400_16", "승인 대기중인 주문을 거절할 수 없는 상태입니다.");
+    ORDER_CANNOT_REFUSE(BAD_REQUEST, "Order_400_16", "승인 대기중인 주문을 거절할 수 없는 상태입니다."),
+
+    // v2
+    @ExplainError("환불 요청 상태(REFUND_REQUESTED)가 아닌 주문을 환불 완료 처리하려는 경우. 이미 환불 완료면 그대로 성공")
+    ORDER_REFUND_NOT_REQUESTED(BAD_REQUEST, "Order_400_17", "환불 요청된 주문이 아닙니다."),
+
+    @ExplainError("거절 사유가 기타(ETC)인데 직접 입력 사유가 비었거나 20자를 넘는 경우")
+    INVALID_REFUSE_REASON(BAD_REQUEST, "Order_400_18", "거절 사유가 올바르지 않습니다."),
+
+    @ExplainError("v2 주문 엑셀 다운로드 대상이 행 상한(10,000)을 넘는 경우. 상태 필터·검색어로 줄여서 받는다")
+    EXPORT_TOO_MANY_ORDERS(BAD_REQUEST, "Order_400_19", "엑셀로 내려받을 주문이 너무 많습니다. 필터로 줄여 주세요.");
 
     override fun getErrorReason(): ErrorReason =
         ErrorReason(status = status, code = code, reason = reason)
