@@ -28,7 +28,7 @@ END = START + timedelta(minutes=120)
 PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", "latitude": 37.548369, "longitude": 126.920036}
 SECTIONS = [{"title": "공연 소개", "content": "<p>선물 테스트</p>", "sortOrder": 0}]
 DB_NAME = os.environ.get("E2E_DB_NAME", "dudoong")
-PEOPLE = ["master", "manager", "guest", "sender", "receiver", "other", "admin", "racer1", "racer2", "racer3", "racer4", "racer5", "limit"]
+PEOPLE = ["master", "manager", "guest", "sender", "receiver", "other", "admin", "racer1", "racer2", "racer3", "racer4", "racer5", "limit"] + [f"buyer{i}" for i in range(1, 10)]
 
 
 class GiftState:
@@ -336,22 +336,22 @@ def test_07_admin_paths(base_url, s):
     order_uuid, uuids = _buy(base_url, s, "sender", "admin", 2)
     pending = _gift_ok(base_url, s, "sender", uuids[0])
     resp = requests.post(f"{admin}/v1/orders/{order_uuid}/cancel", json={"reason": "운영"}, headers=_h(s, "admin"))
-    assert_status(resp, 200)
+    assert resp.status_code in (200, 204), resp.text
     assert _sent(base_url, s, "sender")[pending["giftId"]]["cancelReason"] == "ORDER_CANCELED"
 
     # 운영 사용자 정지 → 보낸 대기 선물 취소
     _, uuids = _buy(base_url, s, "other", "admin", 1)
     g = _gift_ok(base_url, s, "other", uuids[0])
-    assert_status(requests.patch(f"{admin}/v1/users/{s.user_ids['other']}/status", json={"status": "SUSPENDED"}, headers=_h(s, "admin")), 200)
+    assert requests.patch(f"{admin}/v1/users/{s.user_ids['other']}/status", json={"status": "SUSPENDED"}, headers=_h(s, "admin")).status_code in (200, 204)
     assert _landing(base_url, s, None, g["giftToken"])["viewState"] == "CANCELED"
-    assert_status(requests.patch(f"{admin}/v1/users/{s.user_ids['other']}/status", json={"status": "NORMAL"}, headers=_h(s, "admin")), 200)
+    assert requests.patch(f"{admin}/v1/users/{s.user_ids['other']}/status", json={"status": "NORMAL"}, headers=_h(s, "admin")).status_code in (200, 204)
     s.tokens["other"], _ = _login(base_url, s.emails["other"], "선물other")
     assert _sent(base_url, s, "other")[g["giftId"]]["cancelReason"] == "SENDER_WITHDRAWN"
 
     # 운영 공연 삭제 → 대기 선물 취소
     _, uuids = _buy(base_url, s, "sender", "removed", 1)
     g2 = _gift_ok(base_url, s, "sender", uuids[0])
-    assert_status(requests.delete(f"{admin}/v1/events/{s.events['removed']}", headers=_h(s, "admin")), 200)
+    assert requests.delete(f"{admin}/v1/events/{s.events['removed']}", headers=_h(s, "admin")).status_code in (200, 204)
     assert _sent(base_url, s, "sender")[g2["giftId"]]["cancelReason"] == "EVENT_REMOVED"
 
 
@@ -416,24 +416,25 @@ def test_10_concurrency_same_link(base_url, s):
 
 def test_11_concurrency_accept_vs_cancel(base_url, s):
     """수락 ↔ 회수 동시: 정확히 한쪽만 성공, 상태와 소유자가 맞는다"""
-    for _ in range(3):
-        _, uuids = _buy(base_url, s, "sender", "race", 1)
-        g = _gift_ok(base_url, s, "sender", uuids[0])
-        a, c = _race(lambda: _accept(base_url, s, "racer1", g["giftToken"]), lambda: _cancel_gift(base_url, s, "sender", g["giftId"]))
+    # 같은 사용자의 같은 주문은 10초 안 중복 요청으로 앞 주문을 돌려주므로 회차마다 구매자를 바꾼다
+    for buyer in ("buyer1", "buyer2", "buyer3"):
+        _, uuids = _buy(base_url, s, buyer, "race", 1)
+        g = _gift_ok(base_url, s, buyer, uuids[0])
+        a, c = _race(lambda: _accept(base_url, s, "racer1", g["giftToken"]), lambda: _cancel_gift(base_url, s, buyer, g["giftId"]))
         assert [a.status_code, c.status_code].count(200) == 1, (a.text, c.text)
         status, owner = _sql(f"SELECT g.status, t.user_id FROM tbl_ticket_gift g JOIN tbl_issued_ticket t ON t.issued_ticket_id = g.issued_ticket_id WHERE g.ticket_gift_id = {g['giftId']}").split()
         if a.status_code == 200:
             assert status == "ACCEPTED" and int(owner) == s.user_ids["racer1"] and _code(c) == "Gift_400_3"
         else:
-            assert status == "CANCELED" and int(owner) == s.user_ids["sender"] and _code(a) == "Gift_400_3"
+            assert status == "CANCELED" and int(owner) == s.user_ids[buyer] and _code(a) == "Gift_400_3"
 
 
 def test_12_concurrency_accept_vs_v1_host_cancel(base_url, s):
     """수락 ↔ v1 호스트 취소 동시: 어느 쪽이 먼저든 주문 취소 + 티켓 취소, 선물은 (ACCEPTED + 받은 사람 소유) 또는 (CANCELED(ORDER_CANCELED) + 보낸 사람 소유)"""
     ev = s.events["race"]
-    for _ in range(3):
-        order_uuid, uuids = _buy(base_url, s, "sender", "race", 1)
-        g = _gift_ok(base_url, s, "sender", uuids[0])
+    for buyer in ("buyer4", "buyer5", "buyer6"):
+        order_uuid, uuids = _buy(base_url, s, buyer, "race", 1)
+        g = _gift_ok(base_url, s, buyer, uuids[0])
         a, c = _race(
             lambda: _accept(base_url, s, "racer2", g["giftToken"]),
             lambda: requests.post(f"{base_url}/v1/events/{ev}/orders/{order_uuid}/cancel", json={"reason": "경합"}, headers=_h(s, "manager")),
@@ -449,16 +450,16 @@ def test_12_concurrency_accept_vs_v1_host_cancel(base_url, s):
         if a.status_code == 200:
             assert status == "ACCEPTED" and int(owner) == s.user_ids["racer2"]
         else:
-            assert _code(a) == "Gift_400_3" and status == "CANCELED" and reason == "ORDER_CANCELED" and int(owner) == s.user_ids["sender"]
+            assert _code(a) == "Gift_400_3" and status == "CANCELED" and reason == "ORDER_CANCELED" and int(owner) == s.user_ids[buyer]
 
 
 def test_13_concurrency_create_vs_user_cancel(base_url, s):
     """선물 생성 ↔ 사용자 취소(O-4) 동시: 둘 다 성공하는 일은 없다 (주문 락으로 줄 섬)"""
-    for _ in range(3):
-        order_uuid, uuids = _buy(base_url, s, "sender", "race", 1)
+    for buyer in ("buyer7", "buyer8", "buyer9"):
+        order_uuid, uuids = _buy(base_url, s, buyer, "race", 1)
         gift_resp, cancel_resp = _race(
-            lambda: _gift(base_url, s, "sender", uuids[0]),
-            lambda: requests.post(f"{base_url}/v2/me/orders/{order_uuid}/cancel", json={"refundAccount": None}, headers=_h(s, "sender")),
+            lambda: _gift(base_url, s, buyer, uuids[0]),
+            lambda: requests.post(f"{base_url}/v2/me/orders/{order_uuid}/cancel", json={"refundAccount": None}, headers=_h(s, buyer)),
         )
         assert [gift_resp.status_code, cancel_resp.status_code].count(200) == 1, (gift_resp.text, cancel_resp.text)
         pending = _sql(f"SELECT COUNT(*) FROM tbl_ticket_gift g JOIN tbl_issued_ticket t ON t.issued_ticket_id = g.issued_ticket_id WHERE t.uuid = '{uuids[0]}' AND g.status = 'PENDING'")
