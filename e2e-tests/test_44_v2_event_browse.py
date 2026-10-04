@@ -164,7 +164,11 @@ def test_02_home(base_url, s):
     assert len(events) <= 10
     starts = [datetime.strptime(e["startAt"], FMT) for e in events]
     assert starts == sorted(starts)
-    assert all(t > datetime.now() - timedelta(minutes=1) for t in starts)
+    # 종료 전 공연만: 시작 전 UPCOMING, 시작했으면 진행 중(ONGOING)
+    assert all(e["displayStatus"] in ("UPCOMING", "ONGOING") for e in events)
+    # 홈 = 기본 리스트(includePast=false) 앞 10개와 같은 기준·순서
+    default = get_data(requests.get(f"{base_url}/v2/events", params={"size": 10}))
+    assert [e["eventId"] for e in default["content"]] == [e["eventId"] for e in events]
     ids = [e["eventId"] for e in events]
     assert s.preparing not in ids and s.closed not in ids
     mine = next((e for e in events if e["eventId"] == s.open_b), None)
@@ -177,6 +181,7 @@ def test_02_home(base_url, s):
 def test_03_list_sort_and_include_past(base_url, s):
     # 다가오는 공연 임박순 → 지난 공연. 준비중 제외. 호스트명(밴드{RUN})으로도 걸린다
     assert _ids(_list(base_url, RUN)) == [s.open_b, s.open_a, s.band_c, s.closed]
+    # includePast=false = 종료 전 등록 공연 (이 시나리오는 모두 시작 전)
     upcoming = _list(base_url, RUN, include_past=False)
     assert _ids(upcoming) == [s.open_b, s.open_a, s.band_c]
     assert all(e["displayStatus"] == "UPCOMING" for e in upcoming["content"])
@@ -218,6 +223,10 @@ def test_06_list_paging(base_url, s):
     assert p0["totalElements"] == 4 and p0["totalPages"] == 2 and p0["hasNext"] is True
     assert p1["hasNext"] is False
     assert_status(requests.get(f"{base_url}/v2/events", params={"size": 51}), 400)
+    assert_status(requests.get(f"{base_url}/v2/events", params={"keyword": "가" * 51}), 400)
+    too_many = requests.get(f"{base_url}/v2/events", params={"tagIds": ",".join(str(i) for i in range(1, 52))})
+    assert_status(too_many, 400)
+    assert too_many.json().get("code") != "Event_400_23"
 
 
 def test_07_detail(base_url, s):
@@ -267,7 +276,7 @@ def test_10_tickets(base_url, s):
     free, dudoong = items
     assert free["payType"] == "FREE" and free["approvalRequired"] is False
     assert free["remaining"] == 10 and free["isSoldOut"] is False and free["purchaseLimit"] == 2
-    assert free["isPurchasable"] is True and dudoong["isPurchasable"] is True
+    assert free["isPurchasable"] is True and dudoong["isPurchasable"] is True  # v2 결제 방식(FREE / DUDOONG)
     assert dudoong["payType"] == "DUDOONG" and dudoong["approvalRequired"] is True and dudoong["price"] == 8000
     assert dudoong["remaining"] is None and dudoong["purchaseLimit"] is None
     # 계좌 미노출

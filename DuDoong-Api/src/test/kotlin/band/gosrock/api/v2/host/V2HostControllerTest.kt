@@ -875,24 +875,28 @@ class V2HostControllerTest {
             val startedOpen = saveEvent(team.hostId, EventStatus.OPEN, now.minusDays(1))
             val closed = saveEvent(team.hostId, EventStatus.CLOSED, now.minusDays(30))
             val calculating = saveEvent(team.hostId, EventStatus.CALCULATING, now.minusDays(2))
+            // 시작 ~ 종료(시작 + 60분) 사이 (#716 표시 상태 ONGOING)
+            val ongoing = saveEvent(team.hostId, EventStatus.OPEN, now.minusMinutes(30))
             saveEvent(team.hostId, EventStatus.DELETED, now.plusDays(1))
 
             val publicIds = mockMvc.get("/api/v2/hosts/${team.hostId}/events")
                 .andExpect {
                     status { isOk() }
-                    jsonPath("$.data.totalElements") { value(4) }
+                    jsonPath("$.data.totalElements") { value(5) }
                 }.body().at("/data/content").map { it["eventId"].asLong() }
-            assertEquals(listOf(calculating.id, closed.id, startedOpen.id, upcoming.id), publicIds)
+            assertEquals(listOf(ongoing.id, calculating.id, closed.id, startedOpen.id, upcoming.id), publicIds)
 
             mockMvc.get("/api/v2/hosts/${team.hostId}/events") { with(auth(team.outsider)) }
-                .andExpect { jsonPath("$.data.totalElements") { value(4) } }
+                .andExpect { jsonPath("$.data.totalElements") { value(5) } }
 
             val memberContent = mockMvc.get("/api/v2/hosts/${team.hostId}/events") { with(auth(team.guest)) }
-                .andExpect { jsonPath("$.data.totalElements") { value(5) } }
+                .andExpect { jsonPath("$.data.totalElements") { value(6) } }
                 .body().at("/data/content")
             val display = memberContent.associate { it["eventId"].asLong() to it["displayStatus"].asText() }
             assertEquals("PREPARING", display[preparing.id])
             assertEquals("UPCOMING", display[upcoming.id])
+            assertEquals("ONGOING", display[ongoing.id])
+            // 종료(시작 + 60분)가 지났지만 종료 배치 전인 OPEN
             assertEquals("PAST", display[startedOpen.id])
             assertEquals("PAST", display[closed.id])
             assertEquals("PAST", display[calculating.id])

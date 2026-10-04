@@ -23,7 +23,7 @@ import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito.mock
 import org.springframework.test.util.ReflectionTestUtils
 
-/** v2 사용자 앱 공연 탐색 규칙 (#716): 공개 여부, 표시 상태, 태그 필터 묶음, 문의처 대체 */
+/** v2 사용자 앱 공연 탐색 규칙 (#716): 공개 여부, 태그 필터 묶음, 문의처 대체. 표시 상태는 V2EventDisplayRuleTest */
 class V2EventBrowseDomainServiceTest {
 
     private fun tag(id: Long, category: TagCategory): Tag =
@@ -66,22 +66,6 @@ class V2EventBrowseDomainServiceTest {
     }
 
     @Nested
-    inner class DisplayStatus {
-        @Test
-        fun `OPEN 이고 시작 전이면 UPCOMING`() {
-            assertEquals(V2EventBrowseDisplayStatus.UPCOMING, service.displayStatusOf(event(EventStatus.OPEN, now.plusMinutes(1)), now))
-        }
-
-        @Test
-        fun `시작 시각이 지났거나 같은 OPEN, 정산중, 지난공연은 PAST`() {
-            assertEquals(V2EventBrowseDisplayStatus.PAST, service.displayStatusOf(event(EventStatus.OPEN, now), now))
-            assertEquals(V2EventBrowseDisplayStatus.PAST, service.displayStatusOf(event(EventStatus.OPEN, now.minusMinutes(1)), now))
-            assertEquals(V2EventBrowseDisplayStatus.PAST, service.displayStatusOf(event(EventStatus.CALCULATING, now.plusDays(1)), now))
-            assertEquals(V2EventBrowseDisplayStatus.PAST, service.displayStatusOf(event(EventStatus.CLOSED, now.plusDays(1)), now))
-        }
-    }
-
-    @Nested
     inner class TagFilterGroups {
         @Test
         fun `분류별로 묶고 분류 순서(EVENT_TYPE GENRE AREA TEAM), 묶음 안은 id 순`() {
@@ -104,12 +88,6 @@ class V2EventBrowseDomainServiceTest {
         @Test
         fun `없는 태그 id 가 있으면 400`() {
             assertEquals(InvalidEventTagException.EXCEPTION, assertThrows<Exception> { service.tagFilterGroups(listOf(1, 999)) })
-        }
-
-        @Test
-        fun `상한을 넘으면 400`() {
-            val ids = (1L..(V2EventBrowseDomainService.MAX_FILTER_TAG_COUNT + 1).toLong()).toList()
-            assertEquals(InvalidEventTagException.EXCEPTION, assertThrows<Exception> { service.tagFilterGroups(ids) })
         }
     }
 

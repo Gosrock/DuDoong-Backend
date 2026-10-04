@@ -67,6 +67,13 @@ class V2TicketItemDomainService(
         return item.isOnSale(now) && event.status == EventStatus.OPEN && now.isBefore(startAt) && item.isQuantityLeft()
     }
 
+    /**
+     * 사용자 앱(P-5)에서 지금 살 수 있는지: v2 주문이 지원하는 결제 방식(DUDOONG / FREE) + [isPurchasable].
+     * 기존 PG 티켓(PRICE)은 v2 주문 경로가 없어 false (#716 L-5). 관리 화면(T-1)의 isPurchasable 은 결제 방식과 무관하게 [isPurchasable]
+     */
+    fun isPurchasableInV2App(item: TicketItem, event: Event, now: LocalDateTime): Boolean =
+        item.payType in V2_ORDER_PAY_TYPES && isPurchasable(item, event, now)
+
     /** 잠김: 재고 감소(판매됨) 또는 승인 대기 주문 있음. 잠기면 금액·결제 조건 필드와 옵션을 바꿀 수 없다 */
     fun isLocked(item: TicketItem, hasPendingOrders: Boolean): Boolean = item.isSold() || hasPendingOrders
 
@@ -277,6 +284,9 @@ class V2TicketItemDomainService(
             .any { it.additionalPrice?.isGreaterThan(Money.ZERO) == true }
 
     companion object {
+        /** v2 주문이 지원하는 결제 방식 (계좌송금 두둥티켓 / 무료) */
+        val V2_ORDER_PAY_TYPES: Set<TicketPayType> = setOf(TicketPayType.DUDOONG_TICKET, TicketPayType.FREE_TICKET)
+
         private const val TICKET_LOCK = "티켓관리"
 
         /** 수량 지정·매수 제한 최대값 (무제한 저장값 [TicketItem.UNLIMITED_SUPPLY_COUNT] 보다 작아야 한다) */

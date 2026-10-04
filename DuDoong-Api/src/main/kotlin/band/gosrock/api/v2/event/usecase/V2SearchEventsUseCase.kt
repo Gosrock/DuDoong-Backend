@@ -7,6 +7,7 @@ import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.domains.event.service.v2.V2EventBrowseDomainService
 import band.gosrock.domain.domains.event.service.v2.V2EventBrowseQuery
 import band.gosrock.domain.domains.event.service.v2.V2EventBrowseSearch
+import band.gosrock.domain.domains.event.service.v2.V2EventDisplayRule
 import band.gosrock.domain.domains.tag.adaptor.TagAdaptor
 import java.time.LocalDateTime
 import org.springframework.data.domain.PageRequest
@@ -19,7 +20,7 @@ class V2SearchEventsUseCase(
     private val tagAdaptor: TagAdaptor,
 ) {
     /**
-     * 공개 API. 정렬 UPCOMING: 다가오는 공연(시작 임박순) → 지난 공연(최근 시작 순). 준비중·삭제 공연은 제외.
+     * 공개 API. 정렬 UPCOMING: 종료 전 공연(진행 중 → 시작 임박순) → 지난 공연(최근 시작 순). 준비중·삭제 공연은 제외.
      * 태그·호스트명은 페이지 단위로 한 번씩 일괄 조회한다 (N+1 없음)
      */
     @Transactional(readOnly = true)
@@ -48,7 +49,7 @@ class V2SearchEventsUseCase(
                     tags = tagIdsByEvent[event.id].orEmpty().mapNotNull { tagsById[it] }
                         .sortedWith(compareBy({ it.category.ordinal }, { it.sortOrder }, { it.id }))
                         .map { V2TagResponse.from(it) },
-                    displayStatus = v2EventBrowseDomainService.displayStatusOf(event, now),
+                    displayStatus = V2EventDisplayRule.of(event, now),
                 )
             },
         )

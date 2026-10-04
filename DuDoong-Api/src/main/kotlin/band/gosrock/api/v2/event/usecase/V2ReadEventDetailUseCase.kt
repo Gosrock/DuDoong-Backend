@@ -7,6 +7,7 @@ import band.gosrock.api.v2.tag.dto.V2TagResponse
 import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.event.service.v2.V2EventBrowseDomainService
+import band.gosrock.domain.domains.event.service.v2.V2EventDisplayRule
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor
 import band.gosrock.domain.domains.tag.adaptor.TagAdaptor
 import java.time.LocalDateTime
@@ -45,7 +46,7 @@ class V2ReadEventDetailUseCase(
                 profileImageUrl = host.profile?.profileImage?.generateImageUrl(),
             ),
             contacts = v2EventBrowseDomainService.displayContacts(event, host),
-            displayStatus = v2EventBrowseDomainService.displayStatusOf(event, LocalDateTime.now()),
+            displayStatus = V2EventDisplayRule.of(event, LocalDateTime.now()),
         )
     }
 }

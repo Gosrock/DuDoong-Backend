@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component
  * 공개 공연 리스트(P-2) 검색 조건 (#716).
  * @property keyword 공연명 OR 호스트명 부분일치 (대소문자 무시, `%`·`_` 는 문자 그대로 — QueryDSL contains 가 이스케이프)
  * @property tagIdGroups 분류별 태그 id 묶음. 묶음 안은 OR, 묶음끼리는 AND ([V2EventBrowseDomainService.tagFilterGroups])
- * @property includePast false 면 다가오는 공연(OPEN + 시작 전)만, true 면 OPEN(시작한 것 포함) + CALCULATING + CLOSED
+ * @property includePast false 면 종료 전 등록 공연(UPCOMING + ONGOING)만, true 면 OPEN(종료된 것 포함) + CALCULATING + CLOSED
  */
 data class V2EventBrowseSearch(
     val keyword: String? = null,
@@ -33,25 +33,25 @@ data class V2EventBrowseSearch(
 @Component
 class V2EventBrowseQuery(private val queryFactory: JPAQueryFactory) {
 
-    /** P-1: 등록(OPEN)·시작 전 공연, 시작 임박순 (같으면 id 순) 최대 [limit]개 */
-    fun findUpcoming(now: LocalDateTime, limit: Int): List<Event> =
+    /** P-1: 종료 전 등록 공연(진행 중 + 시작 전), 시작 임박순 — 진행 중이 앞 (같으면 id 순) 최대 [limit]개 */
+    fun findActive(now: LocalDateTime, limit: Int): List<Event> =
         queryFactory.selectFrom(event)
-            .where(upcoming(now))
+            .where(active(now))
             .orderBy(event.eventBasic.startAt.asc(), event.id.asc())
             .limit(limit.toLong())
             .fetch()
 
     /**
      * P-2 공연 리스트 (정렬 UPCOMING).
-     * 1그룹 = 다가오는 공연(OPEN + 시작 전) 시작 임박순, 2그룹 = 지난 공연(시작이 지난 OPEN, CALCULATING, CLOSED) 최근 시작 순.
-     * 같은 시작 시각은 id 순. 표시 상태([V2EventBrowseDomainService.displayStatusOf])와 같은 기준
+     * 1그룹 = 종료 전 등록 공연(ONGOING·UPCOMING) 시작 임박순 — 진행 중이 앞, 2그룹 = 지난 공연(종료된 OPEN, CALCULATING, CLOSED) 최근 시작 순.
+     * 같은 시작 시각은 id 순. 표시 상태([V2EventDisplayRule])와 같은 기준
      */
     fun search(search: V2EventBrowseSearch, now: LocalDateTime, pageable: Pageable): Page<Event> {
-        val upcoming = upcoming(now)
+        val active = active(now)
         val content = base(queryFactory.selectFrom(event), search, now)
             .orderBy(
-                CaseBuilder().`when`(upcoming).then(0).otherwise(1).asc(),
-                CaseBuilder().`when`(upcoming).then(event.eventBasic.startAt)
+                CaseBuilder().`when`(active).then(0).otherwise(1).asc(),
+                CaseBuilder().`when`(active).then(event.eventBasic.startAt)
                     .otherwise(Expressions.nullExpression(LocalDateTime::class.java)).asc(),
                 event.eventBasic.startAt.desc(),
                 event.id.asc(),
@@ -87,15 +87,27 @@ class V2EventBrowseQuery(private val queryFactory: JPAQueryFactory) {
         // 검색어가 있을 때만 호스트 조인 (PK eq_ref)
         val joined = if (keyword == null) query else query.leftJoin(host).on(host.id.eq(event.hostId))
         return joined.where(
-            if (search.includePast) event.status.`in`(PUBLIC_STATUSES) else upcoming(now),
+            if (search.includePast) event.status.`in`(PUBLIC_STATUSES) else active(now),
             keyword?.let { event.eventBasic.name.containsIgnoreCase(it).or(host.profile.name.containsIgnoreCase(it)) },
             *search.tagIdGroups.map { hasAnyTag(it) }.toTypedArray(),
         )
     }
 
-    /** 다가오는 공연 = 등록(OPEN) + 시작 전. 표시 상태 UPCOMING 과 같은 기준 */
-    private fun upcoming(now: LocalDateTime): BooleanExpression =
-        event.status.eq(EventStatus.OPEN).and(event.eventBasic.startAt.gt(now))
+    /**
+     * 종료 전 등록 공연 = OPEN + (startAt + runTime분) > now. 표시 상태 UPCOMING·ONGOING 과 같은 기준 ([V2EventDisplayRule]).
+     * 종료 시각 식은 종료 배치(`EventCustomRepositoryImpl.endAtBefore`)와 같은 TIMESTAMPADD. startAt 이 없으면 NULL → 제외(PAST).
+     * start_at 하한 보조 조건(now - 최대 runTime)은 두지 않는다: runTime 상한이 없고(prod 최대 30,000분) OPEN 행이 적어(prod 32건)
+     * (status, start_at) 인덱스의 status 동등 조건만으로 OPEN 행을 읽고 종료 식으로 거른다 (V006 주석 EXPLAIN)
+     */
+    private fun active(now: LocalDateTime): BooleanExpression =
+        event.status.eq(EventStatus.OPEN).and(
+            Expressions.dateTimeTemplate(
+                LocalDateTime::class.java,
+                "TIMESTAMPADD(MINUTE, {0}, {1})",
+                event.eventBasic.runTime.coalesce(0L),
+                event.eventBasic.startAt,
+            ).gt(now),
+        )
 
     /** 태그 묶음 중 하나라도 붙은 공연 (EXISTS, uk(event_id, tag_id) 사용) */
     private fun hasAnyTag(tagIds: List<Long>): BooleanExpression =

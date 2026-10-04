@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.Size
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -45,9 +46,10 @@ class V2EventBrowseController(
     )
     @GetMapping("/events")
     fun searchEvents(
-        @RequestParam(required = false) keyword: String?,
-        @Parameter(description = "태그 id (쉼표 구분, 예: 1,2)")
-        @RequestParam(required = false) tagIds: List<Long>?,
+        @Parameter(description = "공연명 OR 호스트명 (최대 $MAX_KEYWORD_LENGTH 자)")
+        @RequestParam(required = false) @Size(max = MAX_KEYWORD_LENGTH) keyword: String?,
+        @Parameter(description = "태그 id (쉼표 구분, 예: 1,2, 최대 $MAX_TAG_IDS 개)")
+        @RequestParam(required = false) @Size(max = MAX_TAG_IDS) tagIds: List<Long>?,
         @RequestParam(defaultValue = "false") includePast: Boolean,
         @RequestParam(defaultValue = "UPCOMING") sort: V2EventSort,
         @RequestParam(defaultValue = "0") @Min(0) page: Int,
@@ -64,5 +66,9 @@ class V2EventBrowseController(
 
     companion object {
         private const val MAX_PAGE_SIZE = 50L
+        private const val MAX_KEYWORD_LENGTH = 50
+
+        /** 필터 태그 id 상한 (태그는 운영자 관리, 초기 22개). 넘으면 요청 검증 400 (없는 태그 id 의 Event_400_23 과 구분) */
+        private const val MAX_TAG_IDS = 50
     }
 }

@@ -2,6 +2,7 @@ package band.gosrock.api.v2.event
 
 import band.gosrock.api.supports.ApiIntegrateSpringBootTest
 import band.gosrock.api.v2.ticket.V2TicketApiTestSupport
+import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.domains.event.domain.EventBasic
 import band.gosrock.domain.domains.event.domain.EventStatus
 import band.gosrock.domain.domains.tag.domain.Tag
@@ -9,6 +10,8 @@ import band.gosrock.domain.domains.tag.domain.TagCategory
 import band.gosrock.domain.domains.tag.domain.TagSeed
 import band.gosrock.domain.domains.tag.repository.TagRepository
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem
+import band.gosrock.domain.domains.ticket_item.domain.TicketPayType
+import band.gosrock.domain.domains.ticket_item.domain.TicketType
 import band.gosrock.domain.domains.user.domain.User
 import band.gosrock.infrastructure.config.s3.S3UploadPresignedUrlService
 import com.fasterxml.jackson.databind.JsonNode
@@ -139,7 +142,9 @@ class V2EventBrowseControllerTest : V2TicketApiTestSupport() {
         val soon3 = event(master, hostId, "공연$tok-3", EventStatus.OPEN, now.plusDays(3), listOf(정기, 락))
         // 공연명에는 토큰이 없고 호스트명에만 있음
         val bandSoon4 = event(otherMaster, bandHostId, "다른공연", EventStatus.OPEN, now.plusDays(4))
+        // 시작 1시간 전 ~ 종료(시작 + 120분) 전: 진행 중 / 종료가 지났지만 종료 배치 전인 OPEN
         val started = event(master, hostId, "공연$tok-시작", EventStatus.OPEN, now.minusHours(1))
+        val ended = event(master, hostId, "공연$tok-끝", EventStatus.OPEN, now.minusHours(5))
         val calculating = event(master, hostId, "공연$tok-정산", EventStatus.CALCULATING, now.minusDays(2))
         val closed = event(master, hostId, "공연$tok-종료", EventStatus.CLOSED, now.minusDays(10), listOf(정기, 락))
         val preparing = event(master, hostId, "공연$tok-준비", EventStatus.PREPARING, now.plusDays(1), listOf(정기, 락))
@@ -153,33 +158,46 @@ class V2EventBrowseControllerTest : V2TicketApiTestSupport() {
     inner class Home {
 
         @Test
-        fun `비로그인 - 등록·시작 전 공연만 임박순, 준비중·삭제·시작한·지난 공연 제외, 최대 10개`() {
+        fun `비로그인 - 종료 전 등록 공연(진행 중 + 시작 전) 임박순, 준비중·삭제·종료·지난 공연 제외, 최대 10개`() {
             val tok = token()
             val master = newUser("마스터")
             val hostId = createHost(master, "홈$tok")
-            // 다른 테스트 공연(30일 뒤)보다 앞서도록 몇 분 뒤로
             val b = event(master, hostId, "홈$tok-b", EventStatus.OPEN, now.plusMinutes(30))
             val a = event(master, hostId, "홈$tok-a", EventStatus.OPEN, now.plusMinutes(20))
+            // 시작 10분 전 ~ 종료(시작 + 120분) 전: 진행 중
+            val ongoing = event(master, hostId, "홈$tok-진행", EventStatus.OPEN, now.minusMinutes(10))
+            val ended = event(master, hostId, "홈$tok-끝", EventStatus.OPEN, now.minusHours(3))
             val preparing = event(master, hostId, "홈$tok-준비", EventStatus.PREPARING, now.plusMinutes(10))
             val deleted = event(master, hostId, "홈$tok-삭제", EventStatus.DELETED, now.plusMinutes(10))
-            val started = event(master, hostId, "홈$tok-시작", EventStatus.OPEN, now.minusMinutes(10))
             val closed = event(master, hostId, "홈$tok-종료", EventStatus.CLOSED, now.plusMinutes(10))
 
             val events = anonymousGet("/api/v2/home").andExpect { status { isOk() } }.data().at("/events")
-            assertTrue(events.size() <= 10)
+            assertTrue(events.size() in 1..10)
             val ids = events.map { it.at("/eventId").asLong() }
-            assertTrue(ids.indexOf(a) in 0 until ids.indexOf(b), "임박순: $ids")
-            listOf(preparing, deleted, started, closed).forEach { assertFalse(it in ids, "노출되면 안 되는 공연 $it: $ids") }
-            // 전체가 시작 전·임박순
-            val starts = events.map { LocalDateTime.parse(it.at("/startAt").asText(), java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm")) }
-            assertEquals(starts.sorted(), starts)
-            assertTrue(starts.all { it.isAfter(now.minusMinutes(1)) })
+            // 공유 컨텍스트라 다른 테스트 공연이 섞인다: 절대 위치 대신 상대 순서·포함 여부만 본다
+            listOf(preparing, deleted, ended, closed).forEach { assertFalse(it in ids, "노출되면 안 되는 공연 $it: $ids") }
+            val mine = ids.filter { it in listOf(ongoing, a, b) }
+            assertEquals(listOf(ongoing, a, b).take(mine.size), mine, "진행 중 → 임박순: $ids")
+            // 홈 = 기본 리스트(includePast=false) 앞부분과 같은 기준·순서
+            val defaultList = anonymousGet("/api/v2/events", mapOf("size" to "10")).andExpect { status { isOk() } }.data()
+            assertEquals(defaultList.ids(), ids)
+            // 같은 조건을 검색어로 격리해 확인
+            assertEquals(listOf(ongoing, a, b), list(tok, includePast = false).ids())
+            // 항목 표시 상태: 시작 전 UPCOMING, 시작했으면 ONGOING
+            events.forEach {
+                val startAt = LocalDateTime.parse(it.at("/startAt").asText(), java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"))
+                assertEquals(if (startAt.isAfter(LocalDateTime.now())) "UPCOMING" else "ONGOING", it.at("/displayStatus").asText())
+            }
 
-            val item = events.first { it.at("/eventId").asLong() == a }
-            assertEquals("홈$tok-a", item.at("/name").asText())
+            val item = list(tok, includePast = false).at("/content").first { it.at("/eventId").asLong() == a }
             assertEquals("홈$tok", item.at("/hostName").asText())
-            assertEquals("롤링홀", item.at("/placeName").asText())
-            assertTrue(item.at("/posterImageUrl").asText().endsWith("poster.png"))
+            val homeItem = events.firstOrNull { it.at("/eventId").asLong() == a }
+            if (homeItem != null) {
+                assertEquals("홈$tok-a", homeItem.at("/name").asText())
+                assertEquals("홈$tok", homeItem.at("/hostName").asText())
+                assertEquals("롤링홀", homeItem.at("/placeName").asText())
+                assertTrue(homeItem.at("/posterImageUrl").asText().endsWith("poster.png"))
+            }
         }
     }
 
@@ -190,25 +208,25 @@ class V2EventBrowseControllerTest : V2TicketApiTestSupport() {
     inner class Search {
 
         @Test
-        fun `비로그인 - includePast=true 면 다가오는 공연 임박순 후 지난 공연 최근순, 준비중·삭제 제외`() {
+        fun `비로그인 - includePast=true 면 진행 중·다가오는 공연 임박순 후 지난 공연 최근순, 준비중·삭제 제외`() {
             val w = World()
             val result = list(w.tok, includePast = true)
-            assertEquals(listOf(w.soon1, w.soon2, w.soon3, w.bandSoon4, w.started, w.calculating, w.closed), result.ids())
+            assertEquals(listOf(w.started, w.soon1, w.soon2, w.soon3, w.bandSoon4, w.ended, w.calculating, w.closed), result.ids())
             val statuses = result.at("/content").map { it.at("/displayStatus").asText() }
-            assertEquals(listOf("UPCOMING", "UPCOMING", "UPCOMING", "UPCOMING", "PAST", "PAST", "PAST"), statuses)
-            assertEquals(7, result.at("/totalElements").asInt())
+            assertEquals(listOf("ONGOING", "UPCOMING", "UPCOMING", "UPCOMING", "UPCOMING", "PAST", "PAST", "PAST"), statuses)
+            assertEquals(8, result.at("/totalElements").asInt())
         }
 
         @Test
-        fun `includePast=false(기본) 면 다가오는 공연(OPEN·시작 전)만 - 시작한 OPEN 은 제외`() {
+        fun `includePast=false(기본) 면 종료 전 등록 공연만 - 진행 중이 맨 앞, 종료된 OPEN 은 제외`() {
             val w = World()
-            val upcoming = list(w.tok, includePast = false)
-            assertEquals(listOf(w.soon1, w.soon2, w.soon3, w.bandSoon4), upcoming.ids())
-            assertTrue(upcoming.at("/content").all { it.at("/displayStatus").asText() == "UPCOMING" })
-            assertEquals(4, upcoming.at("/totalElements").asInt())
+            val active = list(w.tok, includePast = false)
+            assertEquals(listOf(w.started, w.soon1, w.soon2, w.soon3, w.bandSoon4), active.ids())
+            assertEquals(listOf("ONGOING", "UPCOMING", "UPCOMING", "UPCOMING", "UPCOMING"), active.at("/content").map { it.at("/displayStatus").asText() })
+            assertEquals(5, active.at("/totalElements").asInt())
             // 파라미터 생략 = false
             val defaults = anonymousGet("/api/v2/events", mapOf("keyword" to w.tok)).andExpect { status { isOk() } }.data()
-            assertEquals(listOf(w.soon1, w.soon2, w.soon3, w.bandSoon4), defaults.ids())
+            assertEquals(listOf(w.started, w.soon1, w.soon2, w.soon3, w.bandSoon4), defaults.ids())
         }
 
         @Test
@@ -286,6 +304,12 @@ class V2EventBrowseControllerTest : V2TicketApiTestSupport() {
             anonymousGet("/api/v2/events", mapOf("sort" to "LATEST")).andExpect { status { isBadRequest() } }
             anonymousGet("/api/v2/events", mapOf("size" to "51")).andExpect { status { isBadRequest() } }
             anonymousGet("/api/v2/events", mapOf("page" to "-1")).andExpect { status { isBadRequest() } }
+            // 검색어 50자 / 태그 id 50개 상한 — 요청 검증 400 (없는 태그 id 의 Event_400_23 과 다른 코드)
+            anonymousGet("/api/v2/events", mapOf("keyword" to "가".repeat(50))).andExpect { status { isOk() } }
+            anonymousGet("/api/v2/events", mapOf("keyword" to "가".repeat(51))).andExpect { status { isBadRequest() } }
+            val tooMany = anonymousGet("/api/v2/events", mapOf("tagIds" to (1..51).joinToString(","))).andExpect { status { isBadRequest() } }.body()
+            assertTrue(tooMany.at("/code").asText() != "Event_400_23", "개수 초과 코드: ${tooMany.at("/code").asText()}")
+            anonymousGet("/api/v2/events", mapOf("keyword" to w.tok, "tagIds" to List(50) { 정기 }.joinToString(","))).andExpect { status { isOk() } }
             anonymousGet("/api/v2/events", mapOf("sort" to "UPCOMING", "keyword" to w.tok)).andExpect { status { isOk() } }
         }
 
@@ -297,8 +321,8 @@ class V2EventBrowseControllerTest : V2TicketApiTestSupport() {
             val p1 = list(w.tok, size = 3, page = 1)
             val p2 = list(w.tok, size = 3, page = 2)
             assertEquals(all, p0.ids() + p1.ids() + p2.ids())
-            assertEquals(listOf(3, 3, 1), listOf(p0, p1, p2).map { it.at("/content").size() })
-            assertEquals(7, p0.at("/totalElements").asInt())
+            assertEquals(listOf(3, 3, 2), listOf(p0, p1, p2).map { it.at("/content").size() })
+            assertEquals(8, p0.at("/totalElements").asInt())
             assertEquals(3, p0.at("/totalPages").asInt())
             assertTrue(p0.at("/hasNext").asBoolean())
             assertFalse(p2.at("/hasNext").asBoolean())
@@ -405,18 +429,20 @@ class V2EventBrowseControllerTest : V2TicketApiTestSupport() {
         }
 
         @Test
-        fun `정산중·지난공연·시작한 공연은 PAST 로 조회된다`() {
+        fun `진행 중 OPEN 은 ONGOING, 종료된 OPEN·정산중·지난공연은 PAST`() {
             val tok = token()
             val master = newUser("마스터")
             val hostId = createHost(master, "지난$tok")
-            listOf(
-                event(master, hostId, "지난$tok-1", EventStatus.CLOSED, now.minusDays(3)),
-                event(master, hostId, "지난$tok-2", EventStatus.CALCULATING, now.minusDays(1)),
-                event(master, hostId, "지난$tok-3", EventStatus.OPEN, now.minusMinutes(30)),
-            ).forEach { id ->
+            val expected = mapOf(
+                event(master, hostId, "지난$tok-1", EventStatus.CLOSED, now.minusDays(3)) to "PAST",
+                event(master, hostId, "지난$tok-2", EventStatus.CALCULATING, now.minusDays(1)) to "PAST",
+                event(master, hostId, "지난$tok-3", EventStatus.OPEN, now.minusMinutes(30)) to "ONGOING",
+                event(master, hostId, "지난$tok-4", EventStatus.OPEN, now.minusHours(3)) to "PAST",
+            )
+            expected.forEach { (id, display) ->
                 anonymousGet("/api/v2/events/$id").andExpect {
                     status { isOk() }
-                    jsonPath("$.data.displayStatus") { value("PAST") }
+                    jsonPath("$.data.displayStatus") { value(display) }
                 }
             }
         }
@@ -563,6 +589,55 @@ class V2EventBrowseControllerTest : V2TicketApiTestSupport() {
             setEventStatus(team.eventId, EventStatus.DELETED)
             tickets(team.eventId).andExpect { status { isNotFound() } }
             tickets(999_999_999L).andExpect { status { isNotFound() } }
+        }
+
+        @Test
+        fun `기존 PG 티켓(PRICE)은 판매 중이면 목록에 보이지만 v2 주문 경로가 없어 isPurchasable=false`() {
+            val team = Team()
+            val free = createTicket(team.manager, team.eventId, freeBody())
+            val pg = ticketItemRepository.save(
+                TicketItem(
+                    payType = TicketPayType.PRICE_TICKET, name = "PG", description = "v1 카드결제", price = Money.wons(5000),
+                    quantity = 10, supplyCount = 10, purchaseLimit = 2, type = TicketType.FIRST_COME_FIRST_SERVED,
+                    isQuantityPublic = true, isSellable = true, eventId = team.eventId,
+                ),
+            )
+            setEventStatus(team.eventId, EventStatus.OPEN)
+            val data = tickets(team.eventId).andExpect { status { isOk() } }.data()
+            assertEquals(listOf(free, pg.id), data.map { it.at("/ticketItemId").asLong() })
+            assertTrue(data[0].at("/isPurchasable").asBoolean())
+            assertEquals("PRICE", data[1].at("/payType").asText())
+            assertFalse(data[1].at("/isPurchasable").asBoolean())
+        }
+
+        @Test
+        fun `옵션 N+1 없음 - 티켓·옵션 수와 관계없이 쿼리 수가 같다`() {
+            val team = Team()
+            val yesNo = createOption(team.manager, team.eventId, type = "YES_NO", yesAdditionalPrice = 1000, name = "뒷풀이")
+            val subjective = createOption(team.manager, team.eventId, type = "SUBJECTIVE", yesAdditionalPrice = null, name = "입금자명")
+            fun ticketWithOptions(name: String) =
+                createTicket(team.manager, team.eventId, dudoongBody(name = name)).also { putOptions(team.manager, team.eventId, it, listOf(yesNo, subjective)).andExpect { status { isOk() } } }
+            ticketWithOptions("t1")
+            setEventStatus(team.eventId, EventStatus.OPEN)
+            val statistics = entityManagerFactory.unwrap(SessionFactory::class.java).statistics
+            statistics.isStatisticsEnabled = true
+            try {
+                fun countQueries(expectedTickets: Int): Long {
+                    statistics.clear()
+                    val data = tickets(team.eventId).andExpect { status { isOk() } }.data()
+                    assertEquals(expectedTickets, data.size())
+                    assertTrue(data.all { it.at("/options").size() == 2 && it.at("/options/0/yesAdditionalPrice").asInt() == 1000 })
+                    return statistics.prepareStatementCount
+                }
+                val one = countQueries(1)
+                listOf("t2", "t3", "t4").forEach { ticketWithOptions(it) }
+                val four = countQueries(4)
+                assertEquals(one, four, "티켓 1개: $one, 4개: $four")
+                // 공연 1 + 티켓·옵션 그룹 fetch join 1 + 옵션 선택지 batch 1 (fetch join 전: 1개 6, 4개 9)
+                assertEquals(3L, four)
+            } finally {
+                statistics.isStatisticsEnabled = false
+            }
         }
 
         @Test

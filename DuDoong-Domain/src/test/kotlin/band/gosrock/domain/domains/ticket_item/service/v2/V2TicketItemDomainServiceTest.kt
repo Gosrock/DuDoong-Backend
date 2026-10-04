@@ -131,6 +131,19 @@ class V2TicketItemDomainServiceTest {
         }
 
         @Test
+        fun `사용자 앱 구매 가능은 v2 결제 방식(DUDOONG FREE)만 - 기존 PG(PRICE) 티켓은 false (#716)`() {
+            val open = event(status = EventStatus.OPEN)
+            val dudoong = service.newTicketItem(open, dudoongForm(), now)
+            val free = service.newTicketItem(open, freeForm(), now)
+            assertTrue(service.isPurchasableInV2App(dudoong, open, now))
+            assertTrue(service.isPurchasableInV2App(free, open, now))
+            val pg = TicketItem(payType = TicketPayType.PRICE_TICKET, isSellable = true, quantity = 10, supplyCount = 10)
+            assertTrue(service.isPurchasable(pg, open, now), "관리 화면 판정은 결제 방식과 무관")
+            assertFalse(service.isPurchasableInV2App(pg, open, now))
+            assertFalse(service.isPurchasableInV2App(dudoong, open, eventStart), "시작 이후는 기존 판정대로 false")
+        }
+
+        @Test
         fun `엔티티 판매 중 판정 - v1 티켓(isSellable true 또는 null, 기간 null)은 항상 판매 중`() {
             val v1 = TicketItem(isSellable = true, quantity = 1, supplyCount = 1)
             assertTrue(v1.isOnSale(now))

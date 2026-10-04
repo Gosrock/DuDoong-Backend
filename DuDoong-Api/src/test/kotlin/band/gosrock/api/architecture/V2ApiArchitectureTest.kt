@@ -26,6 +26,7 @@ import com.tngtech.archunit.core.importer.ClassFileImporter
 import com.tngtech.archunit.core.importer.ImportOption
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
+import jakarta.persistence.Entity
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
@@ -75,6 +76,13 @@ class V2ApiArchitectureTest {
             .check(classes)
     }
 
+    @Test
+    fun `공개 공연 탐색 응답 DTO 는 JPA 엔티티(@Entity)에 의존하지 않는다 (#716, 엔티티 직렬화·필드 누출 방지)`() {
+        noClasses().that().belongToAnyOf(*PUBLIC_BROWSE_RESPONSES)
+            .should().dependOnClassesThat().areAnnotatedWith(Entity::class.java)
+            .check(classes)
+    }
+
     companion object {
         private const val API = "band.gosrock.api.."
         private const val API_V2 = "band.gosrock.api.v2.."
@@ -83,13 +91,8 @@ class V2ApiArchitectureTest {
         /** V2ErrorPolicy 를 쓰는 공통 설정 (403 정책 / v2 Swagger 그룹 에러 예시) */
         private val V2_ERROR_POLICY_USERS = arrayOf(GlobalExceptionHandler::class.java, SwaggerConfig::class.java)
 
-        /** 비로그인 공개 공연 탐색 API (응답 DTO 포함) */
-        private val PUBLIC_BROWSE_CLASSES = arrayOf(
-            V2EventBrowseController::class.java,
-            V2ReadHomeUseCase::class.java,
-            V2SearchEventsUseCase::class.java,
-            V2ReadEventDetailUseCase::class.java,
-            V2ReadOnSaleTicketItemsUseCase::class.java,
+        /** 비로그인 공개 공연 탐색 응답 DTO */
+        private val PUBLIC_BROWSE_RESPONSES = arrayOf(
             V2HomeResponse::class.java,
             V2HomeEventResponse::class.java,
             V2EventListItemResponse::class.java,
@@ -97,6 +100,16 @@ class V2ApiArchitectureTest {
             V2EventHostSummaryResponse::class.java,
             V2PublicTicketItemResponse::class.java,
             V2PublicTicketOptionResponse::class.java,
+        )
+
+        /** 비로그인 공개 공연 탐색 API (컨트롤러·유스케이스 + 응답 DTO) */
+        private val PUBLIC_BROWSE_CLASSES = arrayOf(
+            V2EventBrowseController::class.java,
+            V2ReadHomeUseCase::class.java,
+            V2SearchEventsUseCase::class.java,
+            V2ReadEventDetailUseCase::class.java,
+            V2ReadOnSaleTicketItemsUseCase::class.java,
+            *PUBLIC_BROWSE_RESPONSES,
         )
 
         private val classes: JavaClasses = ClassFileImporter()

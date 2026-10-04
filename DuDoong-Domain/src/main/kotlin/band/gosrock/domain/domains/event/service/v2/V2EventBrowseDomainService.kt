@@ -9,7 +9,6 @@ import band.gosrock.domain.domains.event.exception.InvalidEventTagException
 import band.gosrock.domain.domains.host.domain.Host
 import band.gosrock.domain.domains.host.service.v2.V2HostDomainService
 import band.gosrock.domain.domains.tag.adaptor.TagAdaptor
-import java.time.LocalDateTime
 import org.springframework.transaction.annotation.Transactional
 
 /**
@@ -28,24 +27,13 @@ class V2EventBrowseDomainService(
         if (event.status !in PUBLIC_STATUSES) throw EventNotFoundException.EXCEPTION
     }
 
-    /** 사용자 앱 표시 상태: 등록(OPEN)·시작 전이면 UPCOMING, 그 외 공개 공연(시작한 OPEN, CALCULATING, CLOSED)은 PAST */
-    fun displayStatusOf(event: Event, now: LocalDateTime): V2EventBrowseDisplayStatus {
-        val startAt = event.getStartAt()
-        return if (event.status == EventStatus.OPEN && startAt != null && startAt.isAfter(now)) {
-            V2EventBrowseDisplayStatus.UPCOMING
-        } else {
-            V2EventBrowseDisplayStatus.PAST
-        }
-    }
-
     /**
      * 태그 필터 묶음: 같은 분류는 OR, 분류끼리는 AND (DEC-014). 분류 순서(enum 선언 순)로 묶는다.
-     * 중복 id 는 하나로, 존재하지 않는 태그 id 가 있으면 400 (Event_400_*: INVALID_EVENT_TAG)
+     * 중복 id 는 하나로, 존재하지 않는 태그 id 가 있으면 400 (Event_400_23: INVALID_EVENT_TAG). 개수 상한은 컨트롤러 `@Size`
      */
     fun tagFilterGroups(tagIds: Collection<Long>): List<List<Long>> {
         val distinctIds = tagIds.distinct()
         if (distinctIds.isEmpty()) return emptyList()
-        if (distinctIds.size > MAX_FILTER_TAG_COUNT) throw InvalidEventTagException.EXCEPTION
         val tags = tagAdaptor.findAllByIdIn(distinctIds)
         if (tags.size != distinctIds.size) throw InvalidEventTagException.EXCEPTION
         return tags.groupBy { it.category }
@@ -64,14 +52,5 @@ class V2EventBrowseDomainService(
 
     companion object {
         val PUBLIC_STATUSES: Set<EventStatus> = setOf(EventStatus.OPEN, EventStatus.CALCULATING, EventStatus.CLOSED)
-
-        /** 필터 태그 id 상한 (태그는 운영자 관리, 초기 22개) */
-        const val MAX_FILTER_TAG_COUNT = 50
     }
-}
-
-/** 사용자 앱 공연 표시 상태 (준비중은 노출하지 않으므로 없음) */
-enum class V2EventBrowseDisplayStatus {
-    UPCOMING,
-    PAST,
 }
