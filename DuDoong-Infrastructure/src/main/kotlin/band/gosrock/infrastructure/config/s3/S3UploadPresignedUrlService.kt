@@ -44,8 +44,11 @@ class S3UploadPresignedUrlService(
         return ImageUrlDto.of(url.toString(), fileName)
     }
 
+    /** forUser 가 발급하는 유저(프로필) 이미지 key 의 공통 prefix */
+    fun userImageKeyPrefix(userId: Long): String = "$baseUrl/user/$userId/"
+
     private fun getForUserFileName(userId: Long, fileExtension: String): String =
-        "$baseUrl/user/$userId/${UUID.randomUUID()}.$fileExtension"
+        "${userImageKeyPrefix(userId)}${UUID.randomUUID()}.$fileExtension"
 
     /** forHost 가 발급하는 호스트 이미지 key 의 공통 prefix */
     fun hostImageKeyPrefix(hostId: Long): String = "$baseUrl/host/$hostId/"

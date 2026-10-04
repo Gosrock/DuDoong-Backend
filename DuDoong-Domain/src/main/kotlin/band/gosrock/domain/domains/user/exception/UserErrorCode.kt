@@ -27,7 +27,13 @@ enum class UserErrorCode(
     USER_PHONE_INVALID(BAD_REQUEST, "USER_400_2", "유저의 휴대폰 전화번호가 올바르지않습니다. 두둥 관리자에게 문의주세요"),
 
     @ExplainError("알림톡 발송시 보내는 유저의 전화번호 정보가 null이라 알림톡 발송 불가 경우")
-    USER_PHONE_EMPTY(BAD_REQUEST, "USER_400_3", "유저의 휴대폰 전화번호가 null입니다.");
+    USER_PHONE_EMPTY(BAD_REQUEST, "USER_400_3", "유저의 휴대폰 전화번호가 null입니다."),
+
+    @ExplainError("v2 닉네임 변경(M-2): 요청 검증(v1 과 같은 2~7자·공백 아님)은 통과했지만 유니코드 공백만으로 된 이름 (v1 은 이 경우 500)")
+    USER_NAME_INVALID(BAD_REQUEST, "USER_400_4", "이름은 공백만으로 지을 수 없습니다."),
+
+    @ExplainError("v2 프로필 이미지(M-2): 프로필 이미지 업로드(M-3)로 본인에게 발급한 key 가 아닌 경우")
+    USER_PROFILE_IMAGE_KEY_INVALID(BAD_REQUEST, "USER_400_5", "본인에게 업로드한 이미지가 아닙니다.");
 
     override fun getErrorReason(): ErrorReason =
         ErrorReason(status = status, code = code, reason = reason)
