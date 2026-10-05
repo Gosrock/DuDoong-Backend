@@ -2,7 +2,8 @@
 v2 마이페이지 API E2E 테스트 (#729): M-1 프로필 / M-2 수정 / M-3 이미지 / M-4 관심 호스트 / M-5 관람 공연 아카이빙.
 
 시나리오: 호스트 3개(공연 2개 / 공연 없음 / 준비중 공연만) 준비 → 팬이 무료 티켓 주문 → 호스트 스캔으로 입장 →
-관심 호스트(대표 공연·필터·언팔로우) → v1 상태 변경(OPEN → CALCULATING)으로 공연 종료 → 아카이빙(연도 탭·중복 제거·주문 uuid).
+관심 호스트(대표 공연·필터·언팔로우) → v1 상태 변경(OPEN → CALCULATING)으로 공연 종료 → 아카이빙(연도 탭·중복 제거·주문 uuid) →
+선물(#719 G-1 → G-4)받아 입장한 티켓이 받은 사람의 아카이빙에 포함되는지.
 공연 종료는 DB 를 직접 바꾸지 않고 v1 `PATCH /v1/events/{id}/status` 로 한다 (호스트 스캔은 CALCULATING 에서도 된다).
 
 재실행해도 충돌하지 않도록 유저 이메일에 실행마다 다른 접미사를 붙인다. DB 직접 접근은 하지 않는다.
@@ -137,7 +138,7 @@ def _end_event(base_url, s, event_id):
 
 
 def test_01_setup(base_url, s):
-    for who, name in [("master", "마이마스터"), ("fan", "마이팬"), ("other", "마이남"), ("v1name", "v1이름"), ("v2name", "v2이름")]:
+    for who, name in [("master", "마이마스터"), ("fan", "마이팬"), ("other", "마이남"), ("v1name", "v1이름"), ("v2name", "v2이름"), ("sender", "보낸사람"), ("receiver", "받은사람")]:
         email = f"v2mypage-{who}-{RUN}@dudoong.com"
         s.tokens[who], s.emails[who] = _login(base_url, email, name), email
         s.user_ids[who] = get_data(requests.get(f"{base_url}/v1/users/me", headers=_h(s, who)))["userId"]
@@ -282,3 +283,31 @@ def test_10_following_after_end(base_url, s):
     assert rep[s.host_a]["eventId"] == s.far_event and rep[s.host_a]["displayStatus"] == "PAST" and rep[s.host_a]["dDay"] is None
     assert [h["hostId"] for h in _following(base_url, s, "fan", status="ENDED")["content"]] == [s.host_a]
     assert _following(base_url, s, "fan", status="ACTIVE")["content"] == []
+
+
+def test_11_gifted_ticket_in_receiver_archive(base_url, s):
+    """선물 G-1(보낸 사람) → G-4(받은 사람 수락, 소유자·uuid 변경) → 새 uuid 로 입장 → 공연 종료.
+    아카이빙은 현재 소유자 기준이라 받은 사람에게 보이고(주문은 보낸 사람 것이라 orderUuid null), 보낸 사람에게는 없다"""
+    event_id, ticket_id = _registered_event(base_url, s, s.host_a, "선물공연", NEAR + timedelta(days=2))
+    order_uuid = _free_order(base_url, s, "sender", event_id, ticket_id, 1)
+    old_uuid = _ticket_uuids(base_url, s, event_id, order_uuid)[0]
+
+    resp = requests.post(f"{base_url}/v2/me/tickets/{old_uuid}/gift", json={"memo": "선물"}, headers=_h(s, "sender"))
+    assert_status(resp, 200)
+    token = get_data(resp)["giftToken"]
+    resp = requests.post(f"{base_url}/v2/gifts/{token}/accept", headers=_h(s, "receiver"))
+    assert_status(resp, 200)
+    new_uuid = get_data(resp)["ticketUuid"]
+    assert new_uuid and new_uuid != old_uuid
+
+    _scan(base_url, s, event_id, new_uuid)
+    # 아직 끝나지 않은 공연은 입장했어도 없다
+    assert event_id not in [e["eventId"] for e in _archive(base_url, s, "receiver")["events"]["content"]]
+    _end_event(base_url, s, event_id)
+
+    received = _archive(base_url, s, "receiver")
+    item = next(e for e in received["events"]["content"] if e["eventId"] == event_id)
+    assert item["orderUuid"] is None and item["host"]["hostId"] == s.host_a
+    assert received["years"] == [(NEAR + timedelta(days=2)).year]
+    sent = _archive(base_url, s, "sender")
+    assert sent["years"] == [] and sent["events"]["content"] == []
