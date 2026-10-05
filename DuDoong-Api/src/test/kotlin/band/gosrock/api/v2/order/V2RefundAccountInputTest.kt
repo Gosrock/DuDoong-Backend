@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.http.MediaType
+import org.springframework.test.util.ReflectionTestUtils
 import org.springframework.test.web.servlet.ResultActionsDsl
 import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.put
@@ -159,6 +160,22 @@ class V2RefundAccountInputTest : V2UserOrderTestSupport() {
             assertEquals(RefundStatus.REFUND_REQUESTED, orderRepository.findByOrderUuid(freeOrder).get().refundStatus, "무료여도 v1 취소는 환불 요청 상태를 건다")
             assertEquals("Order_400_27", putAccount(freeBuyer, freeOrder, refundAccount).andExpect { status { isBadRequest() } }.code())
             assertFalse(detail(freeBuyer, freeOrder).at("/refundAccountRequired").asBoolean())
+
+            // 무료 승인형(계좌이체와 같은 승인 방식이지만 0원) 거절 — 돌려줄 돈이 없어 대상 아님
+            val freeApproval = freeTicket(shop, approvalRequired = true, name = "무료승인")
+            val faBuyer = newBuyer()
+            val faOrder = v2OrderOk(faBuyer, freeBodyOf(shop, freeApproval)).at("/orderUuid").asText()
+            refuse(shop.team.manager, shop.eventId, faOrder, "SOLD_OUT").andExpect { status { isOk() } }
+            assertEquals(RefundStatus.REFUND_REQUESTED, orderRepository.findByOrderUuid(faOrder).get().refundStatus)
+            assertEquals("Order_400_27", putAccount(faBuyer, faOrder, refundAccount).andExpect { status { isBadRequest() } }.code())
+
+            // 방어: 취소됐지만 환불 요청이 없는 유료 주문 (정상 흐름에는 없음)
+            val noRequest = refused(shop, newBuyer())
+            val noRequestOrder = orderRepository.findByOrderUuid(noRequest).get()
+            ReflectionTestUtils.setField(noRequestOrder, "refundStatus", RefundStatus.NONE)
+            orderRepository.save(noRequestOrder)
+            val noRequestOwner = userRepository.findById(noRequestOrder.userId!!).get()
+            assertEquals("Order_400_27", putAccount(noRequestOwner, noRequest, refundAccount).andExpect { status { isBadRequest() } }.code())
         }
 
         @Test
