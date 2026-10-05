@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.LocalDateTime
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
-import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 
 /**
@@ -236,11 +235,12 @@ class V2NotificationDomainService(
     fun unreadApprovedOrderUuids(userId: Long): List<String> =
         notificationRepository.findAllByUserIdAndTypeAndIsReadFalseOrderByIdDesc(userId, NotificationType.ORDER_APPROVED).map { it.targetId }.distinct()
 
-    /**
-     * 승인된 주문의 티켓을 열면(T-2) 그 주문의 승인 알림을 읽음으로 바꾼다 — 공지 바 해제 (8-4 A8). 멱등.
-     * 조회(T-2) 트랜잭션은 읽기 전용이라 새 트랜잭션에서 쓴다
-     */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    /** 이 주문의 안 읽은 승인 알림이 있는지 (T-2 가 읽음 처리 이벤트를 낼지 정하는 사전 확인 — 없으면 UPDATE 를 하지 않는다) */
+    fun hasUnreadOrderApproved(userId: Long, orderUuid: String): Boolean =
+        notificationRepository.existsByUserIdAndTypeAndTargetIdAndIsReadFalse(userId, NotificationType.ORDER_APPROVED, orderUuid)
+
+    /** 승인된 주문의 티켓을 열면(T-2·G-7a) 그 주문의 승인 알림을 읽음으로 — 공지 바 해제 (8-4 A8). 멱등. 조회가 끝난 뒤 알림 전용 풀에서 부른다 */
+    @Transactional
     fun markOrderApprovedRead(userId: Long, orderUuid: String): Int =
         notificationRepository.markReadByTarget(userId, NotificationType.ORDER_APPROVED, orderUuid, LocalDateTime.now())
 

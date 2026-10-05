@@ -9,6 +9,7 @@ import band.gosrock.api.order.model.dto.response.OrderTicketResponse
 import band.gosrock.common.annotation.Mapper
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo
 import band.gosrock.domain.common.vo.OptionAnswerVo
+import band.gosrock.domain.common.vo.RefundInfoVo
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.gift.service.TicketGiftGuard
@@ -43,16 +44,20 @@ class OrderMapper(
     fun toOrderResponse(order: Order): OrderResponse {
         val event = getEvent(order)
         val orderLineTicketResponses = getOrderLineTicketResponses(order)
-        return withGiftRefundBlock(order, OrderResponse.of(order, event, orderLineTicketResponses))
+        return OrderResponse.of(order, event, orderLineTicketResponses)
     }
 
-    /** 선물 대기·선물 완료 티켓이 있으면 사용자 환불 불가로 표시 (#719 — v1 환불 API 도 막힌다). 선물이 없으면 기존 값 그대로 */
-    private fun withGiftRefundBlock(order: Order, response: OrderResponse): OrderResponse =
-        if (response.refundInfo.availAble && ticketGiftGuard.hasUserCancelBlockingGift(order)) {
-            response.copy(refundInfo = response.refundInfo.copy(availAble = false))
-        } else {
-            response
-        }
+    /** 주문자 본인 주문 상세 (v1 사용자 앱). 환불 가능 표시에 선물 차단 반영 (#719). 호스트 상세는 [toOrderResponse] 그대로 */
+    @Transactional(readOnly = true)
+    fun toMyOrderResponse(order: Order): OrderResponse =
+        toOrderResponse(order).let { it.copy(refundInfo = withGiftRefundBlock(order, it.refundInfo)) }
+
+    /**
+     * 선물 대기·선물 완료 티켓이 있으면 사용자 환불 불가로 표시 (#719 — v1 사용자 환불 API 도 막힌다). 선물이 없으면 기존 값 그대로.
+     * 사용자 경로(주문 상세·목록·최근 주문)에만 쓴다
+     */
+    private fun withGiftRefundBlock(order: Order, refundInfo: RefundInfoVo): RefundInfoVo =
+        if (refundInfo.availAble && ticketGiftGuard.hasUserCancelBlockingGift(order)) refundInfo.copy(availAble = false) else refundInfo
 
     @Transactional(readOnly = true)
     fun toCreateOrderResponse(orderUuid: String): CreateOrderResponse {
@@ -89,9 +94,10 @@ class OrderMapper(
     private fun getTicketNoName(orderLineItemId: Long): String =
         issuedTicketAdaptor.findOrderLineIssuedTickets(orderLineItemId).getTicketNoName()
 
+    /** v1 사용자 주문 목록·최근 주문 (주문자 본인). 환불 가능 표시에 선물 차단 반영 (#719) */
     fun toOrderBriefElement(order: Order): OrderBriefElement {
         val orderIssuedTickets = issuedTicketAdaptor.findOrderIssuedTickets(order.uuid!!)
-        return OrderBriefElement.of(order, getEvent(order), orderIssuedTickets)
+        return OrderBriefElement.of(order, getEvent(order), orderIssuedTickets).let { it.copy(refundInfo = withGiftRefundBlock(order, it.refundInfo)) }
     }
 
     fun toOrderBriefsResponse(ordersWithPagination: Slice<Order>): Slice<OrderBriefElement> =

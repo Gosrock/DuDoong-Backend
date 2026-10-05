@@ -92,6 +92,17 @@ band.gosrock.api.v2
 - `V2TicketGiftDomainService` / `V2MyTicketQuery` / `V2TicketGiftCascadeHandler` (#719, `domains.gift.service.v2`): 사용자 앱 티켓탭(T-1·T-2)·선물(G-1~G-8). 테이블 `tbl_ticket_gift` 는 v2 전용(V008)
   - 잠금 순서 **주문 → 티켓** 하나: 선물 전이(생성·회수·수락·거절·반환·메모)는 `주문:{orderUuid}` 락(v1·v2 승인·거절·취소·환불과 같은 락, 새 트랜잭션) 안에서 티켓 행 `SELECT ... FOR UPDATE` → 선물 행 잠금 읽기 후 판정. 락 전에는 orderUuid 만 스칼라로 읽는다
   - 연쇄 처리는 도메인 이벤트 **BEFORE_COMMIT**(원 트랜잭션 안, 실패하면 원 전이도 롤백): `WithDrawOrderEvent`(v1·v2 호스트 취소, 운영 취소 — 대기 선물 CANCELED(ORDER_CANCELED), 선물 완료 티켓은 v1 티켓 철회 핸들러가 함께 취소), `UserDeactivatedEvent`(탈퇴·운영 정지 → SENDER_WITHDRAWN), `EventAdminStatusChangeEvent`(운영 삭제·준비중 전환 → EVENT_REMOVED, 정산중·지난공연은 대기 유지). 주문 연쇄는 대기 선물을 먼저 찾아(`idx_ticket_gift_order_uuid_status`) 없으면 끝내고(선물 없는 주문은 인덱스 조회 1회), 있으면 그 티켓 행만 PK 로 잠근다 — v1 티켓 철회 핸들러보다 먼저(`@Order`). 선물 완료 티켓은 철회 핸들러가 취소하고 기록은 ACCEPTED 그대로라 잠그지 않는다(반환 G-6 은 같은 주문 락)
+  - **잠금 순서 표** (#719 재리뷰). 모든 경로가 아래 순서의 부분열만 잡으므로 순환 대기가 없다
+    - 공연 행 → 사용자 행 → 티켓 행 → 선물 행 (DB), 그 앞에 Redisson `주문:{uuid}` (선물 전이·주문 전이)
+    - G-1 생성: 주문 락 → 공연 S → 보낸 사람 S → 티켓 X → 선물(잠금 읽기·INSERT). 공연 삭제·정지가 먼저 커밋되면 최신 상태를 보고 Gift_400_1
+    - G-2·G-4·G-5·G-6·G-8: 주문 락 → 티켓 X → 선물 X (공연·사용자 행은 잠그지 않음)
+    - 주문 전이 연쇄: 주문 락 → (주문 행 UPDATE) → 대기 선물 티켓 X(PK) → 선물 X
+    - 공연 운영 삭제·상태 변경: 공연 X → 후보(새 트랜잭션 스냅샷) → 티켓 X(PK) → 선물 X
+    - 탈퇴·운영 정지: 사용자 X → 후보(새 트랜잭션 스냅샷) → 티켓 X(PK) → 선물 X
+    - 입장(v1·v2): 티켓 X → 선물 S(잠금 읽기)
+    - 연쇄 후보를 선물 행 잠금 읽기로 먼저 잡지 않는 이유: 수락 등이 티켓 → 선물 순서라, 선물 행을 먼저 잡고 티켓을 기다리면 역순이 되어 교착한다. 대신 공연·사용자 행 X 를 잡은 뒤 새 스냅샷으로 후보를 읽는다 — G-1 이 그 행을 S 로 잡고 커밋까지 놓지 않으므로 이 시점에 미커밋 생성은 없다 (`V2TicketGiftCandidateReader`)
+  - 입장과 주문 취소가 동시에 일어나는 경합(입장한 티켓의 취소 등)은 선물과 무관한 v1 기존 동작과 같다 — v1 티켓 철회 핸들러는 티켓을 잠그지 않고 읽는다 (코드 변경 없음)
+  - T-3 공지 바 해제: T-2·G-7a 는 안 읽은 승인 알림이 있을 때만 `V2OrderTicketViewedEvent` 를 내고, 읽음 처리는 조회 커밋 뒤 알림 전용 풀에서 (조회는 커넥션 1개, 실패는 warn 만)
   - 운영 어드민 주문 취소(`AdminCancelOrderUseCase`)는 v1 호스트 취소와 같은 `WithdrawOrderService.cancelOrder`(주문 락)로 바꿨다 (#719 — 선물 수락과 같은 락으로 줄 서도록)
   - 수락·반환 때 `IssuedTicket.transferOwner`(internal)로 소유자 정보 + uuid(QR) 교체 (`V2TicketUuidIssuer`, 이미 있는 uuid 면 다시 뽑음). 옛 uuid 는 v1·v2 모두 없는 티켓
   - 선물 만료(공연 종료) = `V2EventDisplayRule` PAST (종료 시각 경과 또는 CALCULATING·CLOSED·DELETED). 상태는 PENDING 유지, 배치 없음

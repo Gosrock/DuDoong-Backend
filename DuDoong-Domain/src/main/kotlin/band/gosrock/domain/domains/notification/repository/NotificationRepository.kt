@@ -32,6 +32,8 @@ interface NotificationRepository : JpaRepository<Notification, Long> {
     /** 안 읽은 알림 중 한 종류 (최신 순). 티켓탭 공지 바 T-3 = 안 읽은 ORDER_APPROVED (#719) */
     fun findAllByUserIdAndTypeAndIsReadFalseOrderByIdDesc(userId: Long, type: NotificationType): List<Notification>
 
+    fun existsByUserIdAndTypeAndTargetIdAndIsReadFalse(userId: Long, type: NotificationType, targetId: String): Boolean
+
     /** 한 종류·한 대상의 안 읽은 알림 읽음 처리 (T-2 로 승인된 주문의 티켓을 열면 그 주문의 승인 알림을 읽음, #719) */
     @Modifying(clearAutomatically = true)
     @Query(

@@ -23,12 +23,14 @@ import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketNotFoundEx
 import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepository
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2EntranceState
 import band.gosrock.domain.domains.notification.service.v2.V2NotificationDomainService
+import band.gosrock.domain.domains.notification.service.v2.V2OrderTicketViewedEvent
 import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.order.domain.RefundStatus
 import band.gosrock.domain.domains.order.service.v2.V2MyOrderStatus
 import band.gosrock.domain.domains.order.service.v2.V2OrderStatus
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
 import java.time.LocalDateTime
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.transaction.annotation.Transactional
 
 /**
@@ -45,6 +47,7 @@ class V2MyTicketUseCase(
     private val userAdaptor: UserAdaptor,
     private val mapper: V2OperationMapper,
     private val notificationDomainService: V2NotificationDomainService,
+    private val eventPublisher: ApplicationEventPublisher,
 ) {
 
     @Transactional(readOnly = true)
@@ -111,8 +114,7 @@ class V2MyTicketUseCase(
         val ticket = issuedTicketRepository.findByUuid(ticketUuid).orElse(null)?.takeIf { it.getUserId() == userId }
             ?: throw IssuedTicketNotFoundException.EXCEPTION
         val order = myTicketQuery.findOrdersByUuids(listOf(ticket.orderUuid!!)).single()
-        // 공지 바 해제 (A8): 내 주문의 티켓을 열면 그 주문의 승인 알림을 읽음 처리 (새 트랜잭션, 멱등)
-        if (order.userId == userId) notificationDomainService.markOrderApprovedRead(userId, order.uuid!!)
+        markApprovedReadAfterView(order, userId)
         return detail(ticket, order, userId)
     }
 
@@ -123,13 +125,24 @@ class V2MyTicketUseCase(
     @Transactional(readOnly = true)
     fun sentTicket(userId: Long, giftId: Long): V2MyTicketDetailResponse {
         val gift = giftDomainService.querySentGift(userId, giftId)
-        val ticket = myTicketQuery.findTicketsByIds(listOf(gift.issuedTicketId)).single()
-        val order = myTicketQuery.findOrdersByUuids(listOf(ticket.orderUuid!!)).single()
+        val ticket = myTicketQuery.findTicketsByIds(listOf(gift.issuedTicketId)).singleOrNull() ?: throw GiftNotFoundException.EXCEPTION
+        val order = myTicketQuery.findOrdersByUuids(listOfNotNull(ticket.orderUuid)).singleOrNull() ?: throw GiftNotFoundException.EXCEPTION
         val latest = giftDomainService.latestGiftsOf(listOf(ticket.id!!))[ticket.id]
         if (latest?.id != gift.id || giftDomainService.giftStateOf(ticket, order.userId, latest, userId) != V2GiftState.SENT) {
             throw GiftNotFoundException.EXCEPTION
         }
+        markApprovedReadAfterView(order, userId)
         return detail(ticket, order, userId)
+    }
+
+    /**
+     * 공지 바 해제 (A8): 주문자가 그 주문의 티켓을 열면 그 주문의 승인 알림을 읽음 처리. 안 읽은 알림이 있을 때만 이벤트를 내고,
+     * 읽음 처리는 조회 트랜잭션 커밋 뒤 알림 전용 풀에서 한다 (조회는 커넥션 1개, 읽음 처리 실패는 조회에 영향 없음)
+     */
+    private fun markApprovedReadAfterView(order: Order, userId: Long) {
+        if (order.userId == userId && notificationDomainService.hasUnreadOrderApproved(userId, order.uuid!!)) {
+            eventPublisher.publishEvent(V2OrderTicketViewedEvent(userId, order.uuid!!))
+        }
     }
 
     private fun detail(ticket: IssuedTicket, order: Order, userId: Long): V2MyTicketDetailResponse {
@@ -213,6 +226,8 @@ class V2MyTicketUseCase(
         val myOrder = order.userId == userId
         val refused = V2OrderStatus.of(order) == V2OrderStatus.REFUSED
         return V2MyTicketGroupResponse(
+            // 묶음 키: 내 주문은 주문 uuid, 받은 티켓 묶음은 원 주문을 드러내지 않는 첫 티켓 번호
+            groupKey = if (myOrder) order.uuid!! else "ticket:" + (tickets.firstOrNull()?.issuedTicketNo ?: order.id),
             orderUuid = order.uuid.takeIf { myOrder },
             orderNo = order.orderNo.takeIf { myOrder },
             isMyOrder = myOrder,

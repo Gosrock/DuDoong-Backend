@@ -30,7 +30,7 @@ class ReadOrderUseCase(
 ) {
     fun getOrderDetail(userId: Long, orderUuid: String): OrderResponse {
         val order = getMyOrder(userId, orderUuid)
-        return orderMapper.toOrderResponse(order)
+        return orderMapper.toMyOrderResponse(order)
     }
 
     private fun getMyOrder(userId: Long, orderUuid: String): Order {

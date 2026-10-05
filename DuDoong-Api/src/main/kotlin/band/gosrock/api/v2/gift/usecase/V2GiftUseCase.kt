@@ -12,7 +12,6 @@ import band.gosrock.api.v2.order.dto.response.V2MyOrderEventResponse
 import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.event.domain.Event
-import band.gosrock.domain.domains.event.repository.EventRepository
 import band.gosrock.domain.domains.event.service.v2.V2EventDisplayRule
 import band.gosrock.domain.domains.gift.domain.TicketGift
 import band.gosrock.domain.domains.gift.domain.TicketGiftStatus
@@ -34,7 +33,6 @@ class V2GiftUseCase(
     private val giftDomainService: V2TicketGiftDomainService,
     private val issuedTicketRepository: IssuedTicketRepository,
     private val eventAdaptor: EventAdaptor,
-    private val eventRepository: EventRepository,
     private val userAdaptor: UserAdaptor,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -86,7 +84,7 @@ class V2GiftUseCase(
     fun landing(viewerId: Long, token: String): V2GiftLandingResponse {
         val gift = giftDomainService.queryByToken(token)
         // 삭제된 공연은 조회되지 않는다(@Where) — 운영 삭제로 취소된 선물도 404 가 아니라 CANCELED 화면을 보여 준다
-        val event = eventRepository.findById(gift.eventId).orElse(null)
+        val event = eventAdaptor.findByIdOrNull(gift.eventId)
         val viewState = giftDomainService.viewStateOf(gift, event, viewerId, LocalDateTime.now())
         val pending = gift.status == TicketGiftStatus.PENDING && event != null
         val ticket = if (pending) issuedTicketRepository.findById(gift.issuedTicketId).orElse(null) else null
@@ -177,10 +175,15 @@ class V2GiftUseCase(
         private const val ANONYMOUS = 0L
 
         /** 공개 랜딩용 이름 가림: 첫 글자 + 가운데 * + 끝 글자 (2자면 첫 글자 + *, 1자면 *) — 김*수, 김*, 남**희 */
-        fun maskName(name: String): String = when {
-            name.length <= 1 -> "*"
-            name.length == 2 -> name.first() + "*"
-            else -> name.first() + "*".repeat(name.length - 2) + name.last()
+        fun maskName(name: String): String {
+            // 코드 포인트 단위 (이모지 등 보조 문자를 반으로 자르지 않는다)
+            val cps = name.codePoints().toArray()
+            fun str(cp: Int) = String(Character.toChars(cp))
+            return when {
+                cps.size <= 1 -> "*"
+                cps.size == 2 -> str(cps.first()) + "*"
+                else -> str(cps.first()) + "*".repeat(cps.size - 2) + str(cps.last())
+            }
         }
 
         /** 선물 랜딩 프론트 경로 (8-4 A9, 프론트 협의 전 초안). origin 은 프론트가 붙인다 */

@@ -5,6 +5,8 @@ import band.gosrock.domain.common.events.order.WithDrawOrderEvent
 import band.gosrock.domain.domains.gift.service.v2.V2TicketGiftChange
 import band.gosrock.domain.domains.gift.service.v2.V2TicketGiftEvent
 import band.gosrock.domain.domains.notification.service.v2.V2GiftNotificationDomainService
+import band.gosrock.domain.domains.notification.service.v2.V2NotificationDomainService
+import band.gosrock.domain.domains.notification.service.v2.V2OrderTicketViewedEvent
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
@@ -12,12 +14,13 @@ import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
 
 /**
- * 선물 알림 저장 핸들러 (#719). [V2NotificationEventHandler] 와 같은 방식: 원 트랜잭션 커밋 후(AFTER_COMMIT) 알림 전용 executor 에서,
+ * 선물 알림 저장 핸들러 (#719). T-3 공지 바 해제(티켓 열람 → 승인 알림 읽음)도 여기서 커밋 후 처리한다. [V2NotificationEventHandler] 와 같은 방식: 원 트랜잭션 커밋 후(AFTER_COMMIT) 알림 전용 executor 에서,
  * 저장은 [V2GiftNotificationDomainService] 의 새 트랜잭션. 예외는 삼키고 로그만 (선물 전이·주문 취소는 이미 커밋됨)
  */
 @Component
 class V2GiftNotificationEventHandler(
     private val giftNotificationDomainService: V2GiftNotificationDomainService,
+    private val notificationDomainService: V2NotificationDomainService,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -37,6 +40,12 @@ class V2GiftNotificationEventHandler(
     @TransactionalEventListener(classes = [WithDrawOrderEvent::class], phase = TransactionPhase.AFTER_COMMIT, condition = CANCELED_ORDER)
     fun handleWithDrawOrder(event: WithDrawOrderEvent) =
         save("GIFT_TICKET_CANCELED", event.orderUuid) { giftNotificationDomainService.notifyGiftTicketsCanceled(event.orderUuid) }
+
+    /** T-2·G-7a 로 주문 티켓을 연 뒤 그 주문의 승인 알림 읽음 처리 (T-3 공지 바 해제). 조회 커밋 후, 실패는 warn 만 */
+    @Async(NOTIFICATION_EXECUTOR)
+    @TransactionalEventListener(classes = [V2OrderTicketViewedEvent::class], phase = TransactionPhase.AFTER_COMMIT)
+    fun handleOrderTicketViewed(event: V2OrderTicketViewedEvent) =
+        save("ORDER_APPROVED 읽음", event.orderUuid) { notificationDomainService.markOrderApprovedRead(event.userId, event.orderUuid) }
 
     private fun save(type: String, key: String, block: () -> Int) {
         try {

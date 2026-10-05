@@ -16,6 +16,9 @@ class EventAdaptor(private val eventRepository: EventRepository) {
     fun findById(eventId: Long): Event =
         eventRepository.findById(eventId).orElseThrow { EventNotFoundException.EXCEPTION }
 
+    /** 없거나 삭제된 공연(@Where)이면 null */
+    fun findByIdOrNull(eventId: Long): Event? = eventRepository.findById(eventId).orElse(null)
+
     fun findAllByHostId(hostId: Long, pageable: Pageable): Page<Event> =
         eventRepository.findAllByHostId(hostId, pageable)
 

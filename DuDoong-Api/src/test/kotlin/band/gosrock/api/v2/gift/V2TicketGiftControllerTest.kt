@@ -112,6 +112,18 @@ class V2TicketGiftControllerTest : V2GiftTestSupport() {
         }
 
         @Test
+        fun `정지된 보낸 사람·삭제된 공연은 Gift_400_1 (락 안에서 계정·공연 상태 확인)`() {
+            val shop = Shop()
+            val sender = newBuyer()
+            val (_, uuids) = approvedOrder(shop, sender)
+            userRepository.save(userRepository.findById(sender.id!!).get().also { it.changeAccountState(AccountState.SUSPENDED) })
+            assertEquals("Gift_400_1", gift(sender, uuids[0]).andExpect { status { isBadRequest() } }.code())
+            userRepository.save(userRepository.findById(sender.id!!).get().also { it.changeAccountState(AccountState.NORMAL) })
+            setEventStatus(shop.eventId, EventStatus.DELETED)
+            assertEquals("Gift_400_1", gift(sender, uuids[0]).andExpect { status { isBadRequest() } }.code())
+        }
+
+        @Test
         fun `무료 즉시 발급 티켓도 선물 가능`() {
             val shop = Shop()
             val free = freeTicket(shop, approvalRequired = false)
@@ -844,6 +856,8 @@ class V2TicketGiftControllerTest : V2GiftTestSupport() {
             assertEquals(listOf("PENDING", "NONE"), mine.at("/tickets").map { it.at("/giftState").asText() })
             val received = all.single { !it.at("/isMyOrder").asBoolean() }
             assertTrue(received.at("/orderUuid").isNull, "받은 티켓 묶음은 원 주문 uuid 를 숨긴다 (T-2 와 같은 기준)")
+            assertEquals("ticket:" + received.at("/tickets/0/issuedTicketNo").asText(), received.at("/groupKey").asText())
+            assertEquals(orderUuid, mine.at("/groupKey").asText())
             assertTrue(received.at("/orderNo").isNull)
             assertTrue(received.at("/orderStatus").isNull)
             assertEquals("RECEIVED", received.at("/tickets/0/state").asText())
@@ -1080,6 +1094,13 @@ class V2TicketGiftControllerTest : V2GiftTestSupport() {
         private fun newApproved(user: band.gosrock.domain.domains.user.domain.User) =
             v2Get(user, "/me/tickets/new-approved").andExpect { status { isOk() } }.data()
 
+        /** 공지 바가 조건을 만족할 때까지 기다린다 (읽음 처리는 비동기) */
+        private fun awaitBar(user: band.gosrock.domain.domains.user.domain.User, until: (com.fasterxml.jackson.databind.JsonNode) -> Boolean) {
+            val deadline = System.currentTimeMillis() + 10_000
+            while (System.currentTimeMillis() < deadline && !until(newApproved(user))) Thread.sleep(50)
+            assertTrue(until(newApproved(user)), newApproved(user).toString())
+        }
+
         /** 승인 알림이 저장될 때까지 기다린 뒤 공지 바 */
         private fun approvedAndNotified(shop: Shop, buyer: band.gosrock.domain.domains.user.domain.User): Pair<String, List<String>> =
             approvedOrder(shop, buyer).also { assertEquals(1, awaitNotification(buyer, NotificationType.ORDER_APPROVED)) }
@@ -1111,6 +1132,8 @@ class V2TicketGiftControllerTest : V2GiftTestSupport() {
             assertEquals(listOf(second, first), newApproved(buyer).at("/orderUuids").map { it.asText() })
 
             myTicket(buyer, firstUuids[0]).andExpect { status { isOk() } }
+            // 읽음 처리는 조회 커밋 뒤 알림 전용 풀에서 (비동기)
+            awaitBar(buyer) { it.at("/orderUuids").map { u -> u.asText() } == listOf(second) }
             myTicket(buyer, firstUuids[0]).andExpect { status { isOk() } }
             assertEquals(listOf(second), newApproved(buyer).at("/orderUuids").map { it.asText() })
             assertTrue(notificationRepository.findAllByUserId(buyer.id!!).single { it.targetId == first }.isRead)
@@ -1135,6 +1158,7 @@ class V2TicketGiftControllerTest : V2GiftTestSupport() {
             val (_, uuids) = approvedAndNotified(shop, sender)
             val (_, newUuid) = giveAndAccept(sender, receiver, uuids[0])
             myTicket(receiver, newUuid).andExpect { status { isOk() } }
+            Thread.sleep(500)
             assertTrue(newApproved(sender).at("/hasNew").asBoolean())
             assertFalse(newApproved(receiver).at("/hasNew").asBoolean())
         }

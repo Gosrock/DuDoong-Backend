@@ -7,6 +7,7 @@ import band.gosrock.domain.common.aop.redissonLock.RedissonLock
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.event.domain.EventStatus
+import band.gosrock.domain.domains.event.repository.EventRepository
 import band.gosrock.domain.domains.event.service.v2.V2EventDisplayRule
 import band.gosrock.domain.domains.event.service.v2.V2EventDisplayStatus
 import band.gosrock.domain.domains.gift.domain.TicketGift
@@ -31,6 +32,7 @@ import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
 import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
 import band.gosrock.domain.domains.user.domain.AccountState
+import band.gosrock.domain.domains.user.repository.UserRepository
 import jakarta.persistence.EntityManager
 import jakarta.persistence.LockModeType
 import java.security.SecureRandom
@@ -88,6 +90,9 @@ class V2TicketGiftDomainService(
     private val userAdaptor: UserAdaptor,
     private val uuidIssuer: V2TicketUuidIssuer,
     private val entityManager: EntityManager,
+    private val eventRepository: EventRepository,
+    private val userRepository: UserRepository,
+    private val candidateReader: V2TicketGiftCandidateReader,
 ) {
     private val random = SecureRandom()
 
@@ -109,10 +114,15 @@ class V2TicketGiftDomainService(
      */
     @RedissonLock(LockName = ORDER_LOCK, identifier = "orderUuid")
     fun create(orderUuid: String, userId: Long, ticketUuid: String, memo: String?): TicketGift {
+        // 잠금 순서: (주문 락) → 공연 행 S → 보낸 사람 행 S → 티켓 행 X → 선물 행. 공연 삭제·보낸 사람 정지(행 X)와 줄 서
+        // 삭제·정지가 먼저면 최신 상태를 보고 거부하고, 생성이 먼저면 그쪽 연쇄가 이 선물을 본다 (#719 재리뷰)
+        val eventId = issuedTicketRepository.findEventIdByUuid(ticketUuid) ?: throw IssuedTicketNotFoundException.EXCEPTION
+        val event = eventRepository.findByIdForShare(eventId)
+        val sender = userRepository.findByIdForShare(userId)
         val ticket = lockTicketByUuid(orderUuid, ticketUuid)
         if (ticket.getUserId() != userId) throw IssuedTicketNotFoundException.EXCEPTION
+        if (event == null || sender?.accountState != AccountState.NORMAL) throw GiftNotGiftableException.EXCEPTION
         val order = orderAdaptor.findByOrderUuid(orderUuid)
-        val event = eventAdaptor.findById(ticket.eventId!!)
         val latest = lockLatestGift(ticket.id!!)
         giftBlocker(ticket, order, event, latest, userId, LocalDateTime.now())?.let { throw it }
         val gift = ticketGiftRepository.save(
@@ -212,12 +222,8 @@ class V2TicketGiftDomainService(
 
     /** 보낸 사람 탈퇴·운영 정지 → 그 사람이 보낸 대기 선물 CANCELED(SENDER_WITHDRAWN) (DEC-026 #9·#10). 받은 사람 쪽은 기존 탈퇴 정책 */
     @Transactional(propagation = Propagation.MANDATORY)
-    fun cancelPendingBySender(senderUserId: Long): Int {
-        val candidates = ticketGiftRepository.findAllBySenderUserIdAndStatus(senderUserId, TicketGiftStatus.PENDING)
-        if (candidates.isEmpty()) return 0
-        issuedTicketRepository.findAllByIdInForUpdate(candidates.map { it.issuedTicketId }.toSet())
-        return cancelLocked(candidates, TicketGiftCancelReason.SENDER_WITHDRAWN)
-    }
+    fun cancelPendingBySender(senderUserId: Long): Int =
+        cancelCandidates(candidateReader.pendingBySender(senderUserId), TicketGiftCancelReason.SENDER_WITHDRAWN)
 
     /**
      * 공연 운영 삭제·비공개 전환(DELETED·PREPARING) → 대기 선물 CANCELED(EVENT_REMOVED) (DEC-026 #9).
@@ -226,10 +232,18 @@ class V2TicketGiftDomainService(
     @Transactional(propagation = Propagation.MANDATORY)
     fun cancelPendingByEventRemoved(eventId: Long, status: EventStatus): Int {
         if (status !in EVENT_REMOVED_STATUSES) return 0
-        val candidates = ticketGiftRepository.findAllByEventIdAndStatus(eventId, TicketGiftStatus.PENDING)
+        return cancelCandidates(candidateReader.pendingByEvent(eventId), TicketGiftCancelReason.EVENT_REMOVED)
+    }
+
+    /**
+     * 사용자·공연 연쇄: 후보([V2TicketGiftCandidateReader], 새 스냅샷)의 티켓 행을 PK 순으로 잠그고 → 선물 행을 잠금 읽기로 다시 읽어 아직 대기 중인 것만 취소.
+     * 잠금 순서가 수락·회수·반환(티켓 → 선물)과 같아 교착이 없다
+     */
+    private fun cancelCandidates(candidates: List<V2GiftCandidate>, reason: TicketGiftCancelReason): Int {
         if (candidates.isEmpty()) return 0
         issuedTicketRepository.findAllByIdInForUpdate(candidates.map { it.issuedTicketId }.toSet())
-        return cancelLocked(candidates, TicketGiftCancelReason.EVENT_REMOVED)
+        val gifts = candidates.sortedBy { it.giftId }.mapNotNull { ticketGiftRepository.findById(it.giftId).orElse(null) }
+        return cancelLocked(gifts, reason)
     }
 
     /** 티켓 행을 잠근 뒤 선물을 잠금 읽기로 다시 읽어 아직 대기 중인 것만 취소 (스냅샷에 남은 옛 상태로 덮어쓰지 않는다) */

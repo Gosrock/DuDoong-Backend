@@ -49,9 +49,13 @@ class V2TicketGiftDomainServiceTest {
     private val issuedTicketRepository = mock(IssuedTicketRepository::class.java)
     private val ticketGiftRepository = mock(TicketGiftRepository::class.java)
     private val entityManager = mock(EntityManager::class.java)
+    private val candidateReader = mock(V2TicketGiftCandidateReader::class.java)
     private val service = V2TicketGiftDomainService(
         issuedTicketRepository, ticketGiftRepository, orderAdaptor, eventAdaptor, userAdaptor,
         V2TicketUuidIssuer(issuedTicketRepository), entityManager,
+        mock(band.gosrock.domain.domains.event.repository.EventRepository::class.java),
+        mock(band.gosrock.domain.domains.user.repository.UserRepository::class.java),
+        candidateReader,
     )
 
     private fun code(e: DuDoongCodeException?) = e?.errorCode?.getErrorReason()?.code
@@ -284,5 +288,29 @@ class V2TicketGiftDomainServiceTest {
         assertEquals("Gift_404_1", code(runCatching { service.orderUuidOfMyGift(2L, 7L) }.exceptionOrNull() as DuDoongCodeException))
         assertEquals("Gift_404_1", code(runCatching { service.orderUuidOfMyGift(1L, 999L) }.exceptionOrNull() as DuDoongCodeException))
         verify(ticketGiftRepository, times(1)).findOrderUuidById(7L)
+    }
+
+    @Test
+    fun `탈퇴·정지·공연 삭제 연쇄 - 후보는 새 스냅샷 리더로 찾고, 티켓 행(PK) → 선물 행 잠금 순서로 다시 읽어 대기만 취소`() {
+        val g1 = gift()
+        val g2 = gift().also { ReflectionTestUtils.setField(it, "id", 9L); ReflectionTestUtils.setField(it, "issuedTicketId", 102L) }
+        `when`(candidateReader.pendingBySender(1L)).thenReturn(listOf(V2GiftCandidate(9L, 102L), V2GiftCandidate(7L, 100L)))
+        `when`(ticketGiftRepository.findById(7L)).thenReturn(java.util.Optional.of(g1))
+        `when`(ticketGiftRepository.findById(9L)).thenReturn(java.util.Optional.of(g2))
+        // 잠금 읽기 사이에 g2 가 수락됨
+        doAnswer { inv -> (inv.arguments[0] as TicketGift).takeIf { it.id == 9L }?.accept(5L, now); null }
+            .`when`(entityManager).refresh(org.mockito.ArgumentMatchers.any(TicketGift::class.java), org.mockito.ArgumentMatchers.eq(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE))
+        assertEquals(1, service.cancelPendingBySender(1L))
+        val order = org.mockito.Mockito.inOrder(issuedTicketRepository, entityManager)
+        order.verify(issuedTicketRepository).findAllByIdInForUpdate(setOf(102L, 100L))
+        order.verify(entityManager, times(2)).refresh(org.mockito.ArgumentMatchers.any(TicketGift::class.java), org.mockito.ArgumentMatchers.eq(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE))
+        assertEquals(TicketGiftCancelReason.SENDER_WITHDRAWN, g1.cancelReason)
+        assertEquals(TicketGiftStatus.ACCEPTED, g2.status)
+        // 원 트랜잭션 스냅샷으로 후보를 찾지 않는다
+        verify(ticketGiftRepository, never()).findAllBySenderUserIdAndStatus(1L, TicketGiftStatus.PENDING)
+
+        `when`(candidateReader.pendingByEvent(10L)).thenReturn(emptyList())
+        assertEquals(0, service.cancelPendingByEventRemoved(10L, EventStatus.DELETED))
+        verify(candidateReader).pendingByEvent(10L)
     }
 }

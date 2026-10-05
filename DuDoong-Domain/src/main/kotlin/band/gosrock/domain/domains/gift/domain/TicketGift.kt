@@ -42,6 +42,10 @@ class TicketGift(
     val eventId: Long,
     @Column(name = "sender_user_id", nullable = false)
     val senderUserId: Long,
+    /**
+     * base64url 은 대소문자를 구분하므로 DB 는 utf8mb4_bin (V008). `columnDefinition` 으로 지정하지 않는 이유: 테스트 H2(MODE=MySQL)가
+     * 컬럼 문자셋·콜레이션 구문을 받지 않아 테이블 생성이 실패한다. prod·staging 은 ddl-auto none 이라 V008 정의가 기준
+     */
     @Column(name = "token", nullable = false, length = TOKEN_MAX_LENGTH)
     val token: String,
     memo: String?,

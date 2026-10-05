@@ -49,4 +49,8 @@ interface IssuedTicketRepository : JpaRepository<IssuedTicket, Long>, IssuedTick
     /** 잠금 키 조회용 스칼라 (엔티티를 영속성 컨텍스트에 올리지 않는다 — open-in-view) */
     @Query("select t.orderUuid from tbl_issued_ticket t where t.uuid = :uuid")
     fun findOrderUuidByUuid(@Param("uuid") uuid: String): String?
+
+    /** 공연 id 스칼라 (바뀌지 않는 값 — 선물 생성이 공연 행을 먼저 잠그려고 읽는다) */
+    @Query("select t.eventId from tbl_issued_ticket t where t.uuid = :uuid")
+    fun findEventIdByUuid(@Param("uuid") uuid: String): Long?
 }

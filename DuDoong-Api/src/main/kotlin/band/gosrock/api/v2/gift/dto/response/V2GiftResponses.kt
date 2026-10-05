@@ -22,6 +22,8 @@ data class V2MyTicketsResponse(
 )
 
 data class V2MyTicketGroupResponse(
+    @field:Schema(description = "묶음 키 (목록 key 용). 내 주문 = 주문 uuid, 받은 티켓 묶음 = ticket:{첫 티켓 번호}")
+    val groupKey: String,
     @field:Schema(description = "주문 uuid. 내 주문일 때만 (받은 티켓 묶음은 null — T-2 와 같은 기준)")
     val orderUuid: String?,
     @field:Schema(description = "예매 번호. 내 주문일 때만 (받은 티켓 묶음은 null)")
