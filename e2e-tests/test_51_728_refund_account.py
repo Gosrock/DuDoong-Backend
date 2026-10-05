@@ -139,6 +139,7 @@ def test_02_refused_input_host_view_complete_then_locked(base_url, s):
         found = [n for n in get_data(resp)["content"] if n["type"] == "ORDER_REFUSED" and n["target"]["id"] == order_uuid]
         time.sleep(0.2)
     assert found and found[0]["target"]["type"] == "ORDER"
+    assert found[0]["body"].endswith("주문상세에서 환불 계좌를 입력해 주세요."), found[0]["body"]
 
     assert _code(_put(base_url, s, "other", order_uuid)) == "Order_404_1"
     resp = _put(base_url, s, "refused", order_uuid, {**REFUND_ACCOUNT, "accountNumber": "12ab"})

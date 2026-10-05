@@ -300,7 +300,7 @@ def test_07_host_cancel_and_refund_complete_notifications(base_url, s):
     # v2: 승인 → 호스트 취소 → 환불 완료
     o1 = _approve_and_cancel(base_url, s, "cancel1", "공연 취소")
     canceled = _wait_notification(base_url, s, "cancel1", "ORDER_CANCELED_BY_HOST", o1)
-    assert len(canceled) == 1 and canceled[0]["body"].endswith("사유: 공연 취소"), canceled
+    assert len(canceled) == 1 and canceled[0]["body"].endswith("사유: 공연 취소. 주문상세에서 환불 계좌를 입력해 주세요."), canceled
     assert_status(requests.post(_ev(base_url, s, f"/refunds/{o1}/complete"), headers=_h(s, "manager")), 200)
     assert len(_wait_notification(base_url, s, "cancel1", "ORDER_REFUND_COMPLETED", o1)) == 1
     # 다시 눌러도 1건 (멱등)
@@ -365,7 +365,7 @@ def test_08_admin_paths_notifications(base_url, s, e2e_db):
     assert_status(requests.post(_ev(base_url, s, f"/orders/{o1}/approve"), headers=_h(s, "manager")), 200)
     assert_status(requests.post(f"{internal}/v1/orders/{o1}/cancel", json={"reason": "운영 취소"}, headers=_h(s, "admin")), 200)
     found = _wait_notification(base_url, s, "adm1", "ORDER_CANCELED_BY_HOST", o1)
-    assert len(found) == 1 and found[0]["body"].endswith("사유: 운영 취소"), found
+    assert len(found) == 1 and found[0]["body"].endswith("사유: 운영 취소. 주문상세에서 환불 계좌를 입력해 주세요."), found
     assert_status(requests.patch(f"{internal}/v1/refunds/{o1}/complete", headers=_h(s, "admin")), 200)
     assert len(_wait_notification(base_url, s, "adm1", "ORDER_REFUND_COMPLETED", o1)) == 1
 

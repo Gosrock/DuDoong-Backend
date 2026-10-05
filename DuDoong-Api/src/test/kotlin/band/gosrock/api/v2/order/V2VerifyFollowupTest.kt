@@ -446,7 +446,8 @@ class V2VerifyFollowupTest : V2UserOrderTestSupport() {
             assertEquals(1, await(buyer, NotificationType.ORDER_CANCELED_BY_HOST))
             val n = only(buyer, NotificationType.ORDER_CANCELED_BY_HOST)
             assertEquals(order, n.targetId)
-            assertTrue(n.body.contains("호스트에 의해 취소") && n.body.endsWith("사유: 공연 취소"), n.body)
+            // 유료 계좌이체 주문이라 환불 계좌 입력 안내가 뒤에 붙는다 (#728)
+            assertTrue(n.body.contains("호스트에 의해 취소") && n.body.endsWith("사유: 공연 취소. 주문상세에서 환불 계좌를 입력해 주세요."), n.body)
             laterReference(shop, buyer)
             assertEquals(0, count(buyer, NotificationType.ORDER_REFUSED))
             // 호스트 쪽(마스터·매니저)에는 보내지 않는다
@@ -558,7 +559,7 @@ class V2VerifyFollowupTest : V2UserOrderTestSupport() {
                 content = json(mapOf("reason" to "운영 취소"))
             }.andExpect { status { isOk() } }
             assertEquals(1, await(buyer, NotificationType.ORDER_CANCELED_BY_HOST))
-            assertTrue(only(buyer, NotificationType.ORDER_CANCELED_BY_HOST).body.endsWith("사유: 운영 취소"))
+            assertTrue(only(buyer, NotificationType.ORDER_CANCELED_BY_HOST).body.endsWith("사유: 운영 취소. 주문상세에서 환불 계좌를 입력해 주세요."))
             mockMvc.patch("/internal-api/v1/refunds/$order/complete") { with(adminAuth(admin)) }.andExpect { status { isOk() } }
             assertEquals(1, await(buyer, NotificationType.ORDER_REFUND_COMPLETED))
 
