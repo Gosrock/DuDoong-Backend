@@ -80,8 +80,12 @@ data class V2MyOrderDetailResponse(
     val refuseReason: String?,
     @field:Schema(description = "호스트 취소 사유 (승인 후 호스트가 취소한 경우)")
     val cancelReason: String?,
-    @field:Schema(description = "취소·환불 요청 때 입력한 환불 계좌 (계좌번호 뒤 4자리만)")
+    @field:Schema(description = "입력한 환불 계좌 (계좌번호 뒤 4자리만). O-4 취소 때 또는 환불 계좌 입력 API 로 입력")
     val refundAccount: V2MyRefundAccountResponse?,
+    @field:Schema(description = "지금 환불 계좌를 입력·수정할 수 있는지 (#728): 환불 요청 중인 유료 계좌이체 주문(거절·호스트 취소·사용자 취소), 환불 완료 전")
+    val refundAccountEditable: Boolean = false,
+    @field:Schema(description = "환불 계좌 입력이 필요한지 (#728): 입력 가능한데 아직 계좌가 없음 — 호스트 거절·취소 뒤 주문상세에서 입력 유도")
+    val refundAccountRequired: Boolean = false,
     @field:Schema(description = "발급 티켓: 본인 소유분 + 내가 선물해 수락된 티켓(giftState=SENT, ticketUuid null)")
     val issuedTickets: List<V2MyOrderIssuedTicketResponse>,
     @field:Schema(description = "지금 취소(O-4)할 수 있는지. 승인 대기: 공연 시작 전, 승인 완료: 공연 시작 전 + 입장·선물 대기·선물 완료 티켓 없음")

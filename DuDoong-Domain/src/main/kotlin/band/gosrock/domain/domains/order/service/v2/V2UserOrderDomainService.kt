@@ -21,6 +21,7 @@ import band.gosrock.domain.domains.order.domain.OrderMethod
 import band.gosrock.domain.domains.order.domain.OrderPaymentChannel
 import band.gosrock.domain.domains.order.domain.OrderRefundAccount
 import band.gosrock.domain.domains.order.domain.OrderStatus
+import band.gosrock.domain.domains.order.domain.RefundStatus
 import band.gosrock.domain.domains.order.domain.validator.OrderValidator
 import band.gosrock.domain.domains.order.exception.CanNotCancelOrderException
 import band.gosrock.domain.domains.order.exception.NotRefundAvailableDateOrderException
@@ -30,9 +31,12 @@ import band.gosrock.domain.domains.order.exception.V2InvalidDepositorNameExcepti
 import band.gosrock.domain.domains.order.exception.V2InvalidOptionAnswersException
 import band.gosrock.domain.domains.order.exception.V2InvalidPaymentMethodException
 import band.gosrock.domain.domains.order.exception.V2OrderCannotCancelByUserException
+import band.gosrock.domain.domains.order.exception.V2RefundAccountNotAllowedException
 import band.gosrock.domain.domains.order.exception.V2RefundAccountRequiredException
+import band.gosrock.domain.domains.order.exception.V2RefundAlreadyCompletedException
 import band.gosrock.domain.domains.order.exception.V2UnsupportedOrderTicketException
 import band.gosrock.domain.domains.order.repository.OrderRefundAccountRepository
+import band.gosrock.domain.domains.order.repository.OrderRepository
 import band.gosrock.domain.domains.order.service.OrderFactory
 import band.gosrock.domain.domains.ticket_item.domain.OptionGroup
 import band.gosrock.domain.domains.ticket_item.domain.OptionGroupType
@@ -87,6 +91,7 @@ class V2UserOrderDomainService(
     private val v2TicketItemDomainService: V2TicketItemDomainService,
     private val v2UserOrderQuery: V2UserOrderQuery,
     private val issuedTicketAdaptor: IssuedTicketAdaptor,
+    private val orderRepository: OrderRepository,
 ) {
 
     /**
@@ -253,6 +258,42 @@ class V2UserOrderDomainService(
         }
     }
 
+    // ===== 환불 계좌 입력·수정 (#728) =====
+
+    /**
+     * 환불 계좌를 받을 수 있는 주문인지 (호스트 거절·호스트 취소·사용자 취소 공통): 환불 요청 중 + 유료 + 계좌이체(승인형, 두둥티켓).
+     * 카드(PG) 결제는 결제 취소가 자동이라, 무료·0원은 돌려줄 돈이 없어 대상이 아니다. 환불 완료면 null 이 아니라 완료 예외
+     */
+    fun refundAccountBlocker(order: Order): DuDoongCodeException? = when {
+        order.refundStatus == RefundStatus.REFUND_COMPLETED -> V2RefundAlreadyCompletedException.EXCEPTION
+        order.refundStatus != RefundStatus.REFUND_REQUESTED || order.orderMethod != OrderMethod.APPROVAL || !isPaid(order) ||
+            order.orderStatus !in REFUND_ACCOUNT_ORDER_STATUSES -> V2RefundAccountNotAllowedException.EXCEPTION
+        else -> null
+    }
+
+    /** O-3 `refundAccountEditable`: 지금 환불 계좌를 입력·수정할 수 있는지 */
+    fun canEditRefundAccount(order: Order): Boolean = refundAccountBlocker(order) == null
+
+    /**
+     * 환불 계좌 입력·수정 (#728, 사용자 결정 2026-10-05). 본인 주문만(남의·없는 주문 404).
+     * `주문:{uuid}` 락(O-4 와 같은 락) + 주문 행 잠금 읽기: v1·운영의 환불 완료는 주문 락 없이 주문 행만 UPDATE 하므로 행 잠금으로 줄 서고,
+     * 완료가 먼저 커밋됐으면 최신 상태를 보고 Order_400_28. 계좌 정규화·검증은 O-4 와 같다(빈 값 Order_400_25)
+     */
+    @RedissonLock(LockName = ORDER_LOCK, identifier = "orderUuid")
+    fun putRefundAccount(userId: Long, orderUuid: String, form: V2RefundAccountForm): OrderRefundAccount {
+        val order = orderRepository.findByUuidForUpdate(orderUuid)?.takeIf { it.userId == userId } ?: throw OrderNotFoundException.EXCEPTION
+        refundAccountBlocker(order)?.let { throw it }
+        val account = normalize(form) ?: throw V2RefundAccountRequiredException.EXCEPTION
+        val existing = refundAccountRepository.findByOrderId(order.id!!)
+        if (existing != null) {
+            existing.change(account.bankName, account.accountHolder, account.accountNumber)
+            return existing
+        }
+        return refundAccountRepository.save(
+            OrderRefundAccount(orderId = order.id!!, bankName = account.bankName, accountHolder = account.accountHolder, accountNumber = account.accountNumber),
+        )
+    }
+
     /** 취소를 막는 사유(예외). 없으면 null. 순서: 결제 방식 → 주문 상태 → 공연 상태·시작 전 → 입장·선물 대기·선물 완료 티켓 */
     private fun cancelBlocker(order: Order, event: Event, now: LocalDateTime): DuDoongCodeException? {
         // 카드(PG) 결제 주문은 v1 결제 취소 경로 (계좌 환불 대상 아님)
@@ -291,6 +332,9 @@ class V2UserOrderDomainService(
 
         /** 확정 전 v2 무료 주문을 1인 제한에 세는 기간 (정상 흐름에서는 생성 직후 확정되거나 FAILED 가 된다) */
         const val UNCONFIRMED_WINDOW_MINUTES = 5L
+
+        /** 환불 계좌를 받는 주문 상태: 거절·호스트 취소(CANCELED), 사용자 취소(REFUND) */
+        private val REFUND_ACCOUNT_ORDER_STATUSES = setOf(OrderStatus.CANCELED, OrderStatus.REFUND)
 
         private val DUPLICATE_CANDIDATE_STATUSES = listOf(
             OrderStatus.READY, OrderStatus.PENDING_PAYMENT, OrderStatus.PENDING_APPROVE, OrderStatus.APPROVED, OrderStatus.CONFIRM,

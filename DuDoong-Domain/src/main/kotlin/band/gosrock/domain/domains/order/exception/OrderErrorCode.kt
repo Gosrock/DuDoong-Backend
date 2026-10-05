@@ -65,7 +65,13 @@ enum class OrderErrorCode(
     V2_REFUND_ACCOUNT_REQUIRED(BAD_REQUEST, "Order_400_25", "환불 받을 계좌를 입력해 주세요."),
 
     @ExplainError("같은 사용자가 같은 무료(선착순) 티켓 주문을 짧은 시간에 다시 보냈는데 앞 주문이 아직 발급 중인 경우. 잠시 후 주문내역에서 확인한다")
-    V2_DUPLICATE_ORDER_IN_PROGRESS(BAD_REQUEST, "Order_400_26", "같은 주문을 처리하고 있습니다. 잠시 후 주문내역을 확인해 주세요.");
+    V2_DUPLICATE_ORDER_IN_PROGRESS(BAD_REQUEST, "Order_400_26", "같은 주문을 처리하고 있습니다. 잠시 후 주문내역을 확인해 주세요."),
+
+    @ExplainError("환불 계좌를 입력할 수 없는 주문 (#728): 환불 요청이 없음, 무료·0원, 카드(PG) 결제 주문")
+    V2_REFUND_ACCOUNT_NOT_ALLOWED(BAD_REQUEST, "Order_400_27", "환불 계좌를 입력할 수 없는 주문입니다."),
+
+    @ExplainError("이미 환불 완료된 주문은 환불 계좌를 바꿀 수 없음 (#728)")
+    V2_REFUND_ALREADY_COMPLETED(BAD_REQUEST, "Order_400_28", "이미 환불이 완료된 주문입니다.");
 
     override fun getErrorReason(): ErrorReason =
         ErrorReason(status = status, code = code, reason = reason)

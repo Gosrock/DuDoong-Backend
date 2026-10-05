@@ -7,6 +7,7 @@ import band.gosrock.domain.domains.gift.service.TicketGiftGuard
 import band.gosrock.domain.domains.host.domain.Host
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket
 import band.gosrock.domain.domains.order.domain.Order
+import band.gosrock.domain.domains.order.domain.OrderRefundAccount
 import band.gosrock.domain.domains.order.repository.OrderRefundAccountRepository
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem
 import com.tngtech.archunit.base.DescribedPredicate
@@ -105,13 +106,15 @@ class V2DomainServiceArchitectureTest {
             // 선물 (#719): 수락·반환 때 소유자·uuid 교체, 선물 전이 기록
             IssuedTicket::class.java to setOf("transferOwner"),
             TicketGift::class.java to setOf("accept", "reject", "returnToSender", "cancel", "changeMemo"),
+            // 환불 계좌 수정 (#728)
+            OrderRefundAccount::class.java to setOf("change"),
         )
 
         private val MUTATOR_OWNERS = V2_INTERNAL_MUTATORS_BY_OWNER.keys.toTypedArray()
 
         /** Kotlin internal 은 JVM 이름이 `name$모듈명` 으로 맹글링되므로 `name$` 접두도 같은 메서드로 본다 */
         private val V2_INTERNAL_MUTATOR_CALL: DescribedPredicate<JavaMethodCall> =
-            DescribedPredicate.describe("Event/Host/TicketItem/Order/IssuedTicket/TicketGift 의 v2 internal mutator ($V2_INTERNAL_MUTATORS_BY_OWNER)") { call ->
+            DescribedPredicate.describe("Event/Host/TicketItem/Order/IssuedTicket/TicketGift/OrderRefundAccount 의 v2 internal mutator ($V2_INTERNAL_MUTATORS_BY_OWNER)") { call ->
                 val target = call.target
                 val names = V2_INTERNAL_MUTATORS_BY_OWNER.entries.firstOrNull { it.key.name == target.owner.name }?.value.orEmpty()
                 names.any { target.name == it || target.name.startsWith("${it}\$") }

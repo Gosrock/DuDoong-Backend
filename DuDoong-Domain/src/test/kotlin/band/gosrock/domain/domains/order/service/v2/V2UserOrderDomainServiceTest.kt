@@ -44,7 +44,7 @@ class V2UserOrderDomainServiceTest {
     private val service = V2UserOrderDomainService(
         mock(OrderAdaptor::class.java), mock(OrderValidator::class.java), mock(OrderFactory::class.java), mock(CartValidator::class.java),
         mock(EventAdaptor::class.java), mock(OrderRefundAccountRepository::class.java), mock(V2TicketItemDomainService::class.java), query,
-        mock(IssuedTicketAdaptor::class.java),
+        mock(IssuedTicketAdaptor::class.java), mock(band.gosrock.domain.domains.order.repository.OrderRepository::class.java),
     )
 
     private val now = LocalDateTime.of(2026, 10, 4, 12, 0)
