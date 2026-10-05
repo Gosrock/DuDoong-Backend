@@ -88,7 +88,7 @@ API_BASE_URL=http://staging.dudoong.com/api pytest -v
 
 ### 3-1) DB 직접 접근 · 새 DB 로 실행 (#737)
 
-일부 테스트(test_33/34/37/39/47/48)는 역할 승격·공연 시각 이동·상태 확인을 위해 로컬 MySQL 에 SQL 로 직접 접근한다.
+일부 테스트(test_25/33/34/37/39/47/48 등)는 역할 승격·공연 시각 이동·상태 확인을 위해 로컬 MySQL 에 SQL 로 직접 접근한다.
 접속 정보는 `conftest.py` 의 `e2e_db` fixture 하나에서만 받고, 값은 환경변수로 정한다. 기본값은 `docker-compose.yml` 의 로컬 개발용 값이다 (운영 값 금지).
 
 | 환경변수 | 기본값 | 용도 |
