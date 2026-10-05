@@ -25,8 +25,8 @@ START = (datetime.now() + timedelta(days=30)).replace(hour=18, minute=0, second=
 END = START + timedelta(minutes=120)
 PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", "latitude": 37.548369, "longitude": 126.920036}
 ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-123-456789"}
-ORDER_BASE = ["주문번호", "주문자", "연락처", "입금자명", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유"]
-TICKET_BASE = ["티켓번호", "티켓 종류", "티켓 이름", "주문자", "연락처", "주문번호", "발급일시", "입장", "체크인 시각"]
+ORDER_BASE = ["주문번호", "주문자", "연락처", "입금자명", "결제 방식", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유"]
+TICKET_BASE = ["티켓번호", "티켓 종류", "티켓 이름", "주문자", "연락처", "소유자", "소유자 연락처", "선물", "주문번호", "발급일시", "입장", "체크인 시각"]
 
 
 class ExcelState:
@@ -171,7 +171,7 @@ def test_03_order_excel_option_columns(base_url, s):
 def test_04_same_header_rule_as_issued_ticket_excel(base_url, s):
     orders = _sheet(base_url, s, "/orders/export")
     tickets = _sheet(base_url, s, "/issued-tickets/export")
-    assert tickets[0][:9] == TICKET_BASE
+    assert tickets[0][:len(TICKET_BASE)] == TICKET_BASE
     assert orders[0][len(ORDER_BASE):] == tickets[0][len(TICKET_BASE):] == ["뒷풀이", "메모"]
     # 같은 규칙이지 같은 열 집합은 아니다: 필터로 옵션 답변이 있는 주문이 빠지면 옵션 열도 없다 (답변에 나온 옵션만)
     only_plain = _xlsx_rows(requests.get(_ev(base_url, s, "/orders/export"), params={"searchType": "DEPOSITOR_NAME", "keyword": "입금plain"}, headers=_h(s, "guest")).content)

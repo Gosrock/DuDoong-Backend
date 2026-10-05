@@ -106,6 +106,7 @@ class V2ReadMyOrdersUseCase(
                 payType = V2TicketPayType.of(item?.payType),
                 unitPrice = firstLine?.orderItem?.price?.longValue() ?: 0L,
             ),
+            approvalRequired = order.orderMethod == OrderMethod.APPROVAL,
             quantity = order.getTotalQuantity(),
             paymentChannel = order.paymentChannel,
             depositorName = order.depositorName,

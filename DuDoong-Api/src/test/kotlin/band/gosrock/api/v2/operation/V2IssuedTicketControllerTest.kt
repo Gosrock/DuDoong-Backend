@@ -106,7 +106,7 @@ class V2IssuedTicketControllerTest : V2OperationTestSupport() {
                 header { string("Content-Disposition", "attachment; filename=\"issued-tickets-${shop.eventId}.xlsx\"") }
             }.sheet()
             assertEquals(
-                listOf("티켓번호", "티켓 종류", "티켓 이름", "주문자", "연락처", "주문번호", "발급일시", "입장", "체크인 시각", "뒷풀이", "입금자명"),
+                listOf("티켓번호", "티켓 종류", "티켓 이름", "주문자", "연락처", "소유자", "소유자 연락처", "선물", "주문번호", "발급일시", "입장", "체크인 시각", "뒷풀이", "입금자명"),
                 sheet.headers(),
             )
             assertEquals(3, sheet.lastRowNum)

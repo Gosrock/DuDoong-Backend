@@ -255,7 +255,7 @@ def test_05_depositor_search_and_excel(base_url, s):
     resp = requests.get(_ev(base_url, s, "/orders/export"), headers=_h(s, "guest"))
     assert_status(resp, 200)
     rows = _xlsx_rows(resp.content)
-    assert rows[0] == ["주문번호", "주문자", "연락처", "입금자명", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유"]
+    assert rows[0] == ["주문번호", "주문자", "연락처", "입금자명", "결제 방식", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유"]
     depositors = {r[3] for r in rows[1:]}
     assert {"128구구", "김구구", "'=HYPERLINK(\"x\")"} <= depositors, depositors
     filtered = _xlsx_rows(requests.get(_ev(base_url, s, "/orders/export"), params={"searchType": "DEPOSITOR_NAME", "keyword": "128"}, headers=_h(s, "guest")).content)

@@ -299,6 +299,65 @@ class V2AuditFollowupTest : V2GiftTestSupport() {
         }
     }
 
+    // ===== 4. O-3 approvalRequired =====
+
+    @Nested
+    @DisplayName("O-3 approvalRequired (주문 시점 승인형 여부)")
+    inner class ApprovalRequired {
+
+        private fun approvalOf(buyer: User, orderUuid: String): Boolean =
+            myOrder(buyer, orderUuid).andExpect { status { isOk() } }.data().at("/approvalRequired").let {
+                assertTrue(it.isBoolean, it.toString())
+                it.asBoolean()
+            }
+
+        @Test
+        fun `두둥티켓·무료 승인형은 true, 무료 선착순은 false — 주문 뒤 티켓 설정이 바뀌어도 주문 시점 값`() {
+            val shop = Shop()
+            val buyer = newBuyer("승인형확인")
+            val dudoong = v2OrderOk(buyer, shopBody(shop)).at("/orderUuid").asText()
+            val freeApproval = v2OrderOk(buyer, freeBodyOf(shop, freeTicket(shop, approvalRequired = true, name = "무료승인"))).at("/orderUuid").asText()
+            val freeTicketId = freeTicket(shop, approvalRequired = false, name = "무료선착순")
+            val freeFirstCome = v2OrderOk(buyer, freeBodyOf(shop, freeTicketId)).at("/orderUuid").asText()
+            assertTrue(approvalOf(buyer, dudoong))
+            assertTrue(approvalOf(buyer, freeApproval))
+            assertFalse(approvalOf(buyer, freeFirstCome))
+
+            // 티켓을 승인형으로 바꿔도 이미 확정된 주문은 그대로
+            val item = ticketItemRepository.findById(freeTicketId).get()
+            ReflectionTestUtils.setField(item, "type", band.gosrock.domain.domains.ticket_item.domain.TicketType.APPROVAL)
+            ticketItemRepository.save(item)
+            assertFalse(approvalOf(buyer, freeFirstCome))
+        }
+    }
+
+    // ===== 5. R-6 결제 방식 열 =====
+
+    @Nested
+    @DisplayName("R-6 결제 방식 열")
+    inner class PaymentChannelColumn {
+
+        @Test
+        fun `계좌이체·토스 송금·무료, v1 두둥티켓 주문은 빈 칸 — 입금자명 다음 열`() {
+            val shop = Shop()
+            fun order(method: String, body: Map<String, Any?>? = null) =
+                v2OrderOk(newBuyer("결제$method"), body ?: shopBody(shop, method = method)).at("/orderNo").asText()
+            val bank = order("BANK_TRANSFER")
+            val toss = order("TOSS_TRANSFER")
+            val free = order("FREE", freeBodyOf(shop, freeTicket(shop, approvalRequired = true, name = "무료")))
+            val v1 = orderRepository.findByUuidIn(listOf(shop.order(newBuyer("v1주문")))).single().orderNo!!
+
+            val sheet = v2Get(shop.team.guest, "/events/${shop.eventId}/orders/export").andExpect { status { isOk() } }.sheet()
+            val headers = sheet.headers()
+            assertEquals(headers.indexOf("입금자명") + 1, headers.indexOf("결제 방식"))
+            val byNo = sheet.column("주문번호").zip(sheet.column("결제 방식")).toMap()
+            assertEquals("계좌이체", byNo[bank])
+            assertEquals("토스 송금", byNo[toss])
+            assertEquals("무료", byNo[free])
+            assertEquals("", byNo[v1])
+        }
+    }
+
     // ===== 6. Swagger 문구 =====
 
     @Nested
