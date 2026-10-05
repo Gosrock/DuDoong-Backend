@@ -17,6 +17,7 @@ import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor
 import band.gosrock.domain.domains.host.domain.HostRole
 import band.gosrock.domain.domains.order.domain.Order
+import band.gosrock.domain.domains.order.domain.OrderLineItem
 import band.gosrock.domain.domains.order.domain.OrderRefundAccount
 import band.gosrock.domain.domains.order.service.v2.V2OrderStatus
 import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor
@@ -24,6 +25,9 @@ import band.gosrock.domain.domains.user.adaptor.UserAdaptor
 import band.gosrock.domain.domains.user.domain.AccountRole
 import band.gosrock.domain.domains.user.domain.User
 import org.springframework.stereotype.Component
+
+/** 엑셀 옵션 컬럼: [groupIds] 순서가 [headers] 순서. [groupOfOption] = 답변의 옵션 행 id → 옵션 그룹 id */
+data class V2ExcelOptionColumns(val groupIds: List<Long>, val headers: List<String>, val groupOfOption: Map<Long?, Long?>)
 
 /**
  * v2 공연 운영 응답 변환 (#712). 트랜잭션 안(UseCase)에서 호출한다 (옵션 그룹 지연 로딩).
@@ -109,6 +113,49 @@ class V2OperationMapper(
         enteredAt = ticket.enteredAt,
     )
 
+    /**
+     * 엑셀 옵션 컬럼 (I-3 발급 티켓·R-6 주문 공통 규칙, #730). 답변에 나온 옵션 행 id 들을 한 번에 조회해 옵션 그룹 단위 컬럼을 만든다:
+     * 옵션 그룹 id 순, 헤더는 질문 이름. 이름이 없거나, 다른 옵션 이름 또는 **그 엑셀의 기본 열**([baseHeaders], 예: R-6 '입금자명')과 겹치면 `이름(그룹 id)`.
+     * 열 집합은 엑셀마다 대상·필터가 달라 다를 수 있다 (답변에 나온 옵션만 — soft delete 된 옵션도 지난 답변이 있으면 열이 남는다).
+     * 그래도 헤더가 겹치면(예: 질문 이름이 원래 `뒷풀이(3)`) 겹치지 않을 때까지 `(그룹 id)` 를 한 번 더 붙인다
+     */
+    fun excelOptionColumnsOf(optionIds: Collection<Long?>, baseHeaders: List<String>): V2ExcelOptionColumns {
+        val ids = optionIds.filterNotNull().distinct()
+        val options = if (ids.isEmpty()) emptyList() else optionAdaptor.findAllByIds(ids)
+        val groupOfOption = options.associate { it.id to it.getOptionGroupId() }
+        val groups = options.mapNotNull { o -> o.getOptionGroupId()?.let { it to o.getQuestionName() } }.distinct().sortedBy { it.first }
+        val duplicated = groups.groupBy { it.second }.filterValues { it.size > 1 }.keys
+        val taken = baseHeaders.toMutableSet()
+        val headers = groups.map { (id, name) ->
+            // 기본 열과 겹치는 이름은 아래 반복에서 `(id)` 가 붙는다
+            var header = if (name == null || name in duplicated) "${name ?: "옵션"}($id)" else name
+            while (header in taken) header = "$header($id)"
+            header.also { taken += it }
+        }
+        return V2ExcelOptionColumns(groupIds = groups.map { it.first }, headers = headers, groupOfOption = groupOfOption)
+    }
+
+    /**
+     * R-6 주문 한 행의 옵션 셀 (옵션 그룹 id → 셀, #730). 라인이 1개면 응답 그대로, 여러 개(티켓별 옵션 = 수량 1 라인 N개 등)면
+     * 같은 응답끼리 수량을 더해 `응답 ×수량` 을 처음 나온 순서로 **줄바꿈**으로 잇는다 (응답 안의 쉼표와 헷갈리지 않게 — 셀은 자동 줄바꿈).
+     * 응답 안의 줄바꿈은 공백으로 바꾸고, 빈 응답은 빼고, 수량이 없으면 1로 본다. 응답이 없는 그룹은 맵에 없다(빈 칸)
+     */
+    fun excelOptionCells(orderLines: List<OrderLineItem>, columns: V2ExcelOptionColumns): Map<Long, String> {
+        val lines = orderLines.sortedBy { it.id }
+        val answered = LinkedHashMap<Long, LinkedHashMap<String, Long>>()
+        lines.forEach { line ->
+            line.orderOptionAnswers.forEach { a ->
+                val groupId = columns.groupOfOption[a.optionId] ?: return@forEach
+                val answer = a.answer?.replace(LINE_BREAK, " ")?.takeIf { it.isNotBlank() } ?: return@forEach
+                val quantities = answered.getOrPut(groupId) { LinkedHashMap() }
+                quantities[answer] = (quantities[answer] ?: 0L) + (line.quantity ?: 1L)
+            }
+        }
+        return answered.mapValues { (_, quantities) ->
+            if (lines.size == 1) quantities.keys.single() else quantities.entries.joinToString("\n") { (answer, quantity) -> "$answer ×$quantity" }
+        }
+    }
+
     /** 옵션 행 id → 질문(옵션 그룹) 이름. 여러 답변의 옵션을 한 번에 조회한다 */
     fun optionNamesOf(optionIds: Collection<Long?>): Map<Long?, String?> {
         val ids = optionIds.filterNotNull().distinct()
@@ -147,4 +194,8 @@ class V2OperationMapper(
 
     fun phoneOf(user: User?): String? =
         user?.profile?.phoneNumberVo?.takeIf { it.phoneNumber != null }?.let { runCatching { it.getNationalFormat() }.getOrNull() }
+
+    companion object {
+        private val LINE_BREAK = Regex("\r\n|\r|\n")
+    }
 }

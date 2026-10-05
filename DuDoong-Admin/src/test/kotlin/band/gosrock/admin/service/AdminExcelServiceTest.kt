@@ -307,6 +307,28 @@ class AdminExcelServiceTest {
             assertEquals(values, raw)
         }
 
+        @Test
+        @DisplayName("escapeFormula=true 면 헤더도 방어 (v2 옵션 질문 이름, #730), 아니면 그대로")
+        fun escapesHeaders() {
+            fun headers(escape: Boolean) = XSSFWorkbook(ByteArrayInputStream(
+                adminExcelService.generateTableExcel("s", listOf("주문번호", "=cmd"), emptyList(), escapeFormula = escape),
+            )).use { wb -> (0..1).map { wb.getSheetAt(0).getRow(0).getCell(it).stringCellValue } }
+            assertEquals(listOf("주문번호", "'=cmd"), headers(true))
+            assertEquals(listOf("주문번호", "=cmd"), headers(false))
+        }
+
+        @Test
+        @DisplayName("줄바꿈이 있는 문자열 셀만 자동 줄바꿈 스타일 (#730)")
+        fun wrapsMultilineCells() {
+            val bytes = adminExcelService.generateTableExcel("s", listOf("a", "b"), listOf(listOf("예 ×2\n아니요 ×1", "한 줄")), escapeFormula = true)
+            XSSFWorkbook(ByteArrayInputStream(bytes)).use { wb ->
+                val row = wb.getSheetAt(0).getRow(1)
+                assertEquals("예 ×2\n아니요 ×1", row.getCell(0).stringCellValue)
+                assertEquals(true, row.getCell(0).cellStyle.wrapText)
+                assertEquals(false, row.getCell(1).cellStyle.wrapText)
+            }
+        }
+
         private fun readRow(bytes: ByteArray): List<String> =
             XSSFWorkbook(ByteArrayInputStream(bytes)).use { wb ->
                 val row = wb.getSheetAt(0).getRow(1)

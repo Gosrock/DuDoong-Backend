@@ -99,7 +99,7 @@ class V2VerifyFollowupTest : V2UserOrderTestSupport() {
             v2OrderOk(newBuyer("악성"), shopBody(shop, depositorName = "=HYPERLINK(\"x\")"))
             shop.order(newBuyer("v1주문자"))
             val sheet = v2Get(shop.team.guest, "/events/${shop.eventId}/orders/export").andExpect { status { isOk() } }.sheet()
-            assertEquals(listOf("주문번호", "주문자", "연락처", "입금자명", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유"), sheet.headers())
+            assertEquals(listOf("주문번호", "주문자", "연락처", "입금자명", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유"), sheet.headers().take(11))
             assertEquals(listOf("", "'=HYPERLINK(\"x\")", "128구구"), sheet.column("입금자명"))
             // 화면(JSON)은 원문
             assertTrue(orders(shop.team.guest, shop.eventId).at("/orders/content").any { it.at("/depositorName").asText() == "=HYPERLINK(\"x\")" })

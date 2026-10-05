@@ -404,7 +404,10 @@ def test_10_excel(base_url, s):
     rows = _xlsx_rows(resp.content)
     # 이메일은 엑셀에 넣지 않는다 (주문 상세에서만)
     # 입금자명 열 (#726, 연락처 다음)
-    assert rows[0] == ["주문번호", "주문자", "연락처", "입금자명", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유"]
+    assert rows[0][:11] == ["주문번호", "주문자", "연락처", "입금자명", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유"]
+    # 옵션 응답 열 (#730). 옵션 '입금자명' 은 R-6 기본 열 '입금자명' 과 겹쳐 id 를 붙인다
+    order_option_headers = rows[0][11:]
+    assert order_option_headers[0] == "뒷풀이" and re.fullmatch(r"입금자명\(\d+\)", order_option_headers[1]), rows[0]
     assert len(rows) - 1 == 7
     rows = _xlsx_rows(requests.get(_ev(base_url, s, "/orders/export"), params={"status": "REFUSED"}, headers=_h(s, "guest")).content)
     assert len(rows) - 1 == 2 and {r[8] for r in rows[1:]} == {"승인 거절"}
@@ -413,6 +416,7 @@ def test_10_excel(base_url, s):
     assert_status(resp, 200)
     rows = _xlsx_rows(resp.content)
     assert rows[0][:9] == ["티켓번호", "티켓 종류", "티켓 이름", "주문자", "연락처", "주문번호", "발급일시", "입장", "체크인 시각"]
+    # I-3 은 자기 기본 열과만 겹침을 본다 — '입금자명' 그대로 (#730, R-6 과 같은 규칙)
     assert rows[0][9:] == ["뒷풀이", "입금자명"]
     assert len(rows) - 1 == 5
     rows = _xlsx_rows(requests.get(_ev(base_url, s, "/issued-tickets/export"), params={"entrance": "DONE"}, headers=_h(s, "guest")).content)

@@ -4,6 +4,7 @@ import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.order.domain.OrderStatus
 import band.gosrock.domain.domains.order.domain.QOrder.order
 import band.gosrock.domain.domains.order.domain.QOrderLineItem.orderLineItem
+import band.gosrock.domain.domains.order.domain.QOrderOptionAnswer.orderOptionAnswer
 import band.gosrock.domain.domains.order.exception.ExportTooManyOrdersException
 import band.gosrock.domain.domains.order.domain.RefundStatus
 import band.gosrock.domain.domains.user.domain.QUser.user
@@ -73,11 +74,20 @@ class V2OrderQuery(private val queryFactory: JPAQueryFactory) {
     }
 
     /**
-     * 엑셀용 전체 (최신 순, 주문 라인 fetch join). [maxRows] 를 넘으면 조회하지 않고 400 (Order_400_19)
+     * 엑셀용 전체 (최신 순, 주문 라인 fetch join, 라인 옵션 답변은 별도 쿼리 1개로 미리 적재). [maxRows] 를 넘으면 조회하지 않고 400 (Order_400_19)
      */
     fun findAllForExport(search: V2OrderSearch, maxRows: Int): List<Order> {
         val total = base(queryFactory.select(order.count()).from(order), search, withStatus = true).fetchOne() ?: 0L
         if (total > maxRows) throw ExportTooManyOrdersException.EXCEPTION
+        // 라인 옵션 답변(EAGER 컬렉션)을 먼저 쿼리 1개로 읽어 영속성 컨텍스트에 올린다 (#730).
+        // 그대로 두면 라인을 읽을 때 답변을 따로 조회한다: dev·staging·prod 는 default_batch_fetch_size(100) 로 라인 100개당 1번,
+        // 이 설정이 없는 test 프로필은 라인마다 1번. 주문 + 라인 fetch join 에 같이 넣으면 bag(List) 두 개를 동시에 fetch 할 수 없어 쿼리를 나눈다
+        base(
+            queryFactory.select(orderLineItem).from(order).join(order.orderLineItems, orderLineItem)
+                .leftJoin(orderLineItem.orderOptionAnswers, orderOptionAnswer).fetchJoin(),
+            search,
+            withStatus = true,
+        ).fetch()
         return base(queryFactory.selectFrom(order).distinct().leftJoin(order.orderLineItems, orderLineItem).fetchJoin(), search, withStatus = true)
             .orderBy(order.id.desc())
             .fetch()
