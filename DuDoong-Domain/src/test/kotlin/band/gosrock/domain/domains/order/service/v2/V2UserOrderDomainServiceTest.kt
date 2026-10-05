@@ -23,6 +23,7 @@ import band.gosrock.domain.domains.order.service.OrderFactory
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem
 import band.gosrock.domain.domains.ticket_item.domain.TicketPayType
 import band.gosrock.domain.domains.ticket_item.service.v2.V2TicketItemDomainService
+import jakarta.persistence.EntityManager
 import java.time.LocalDateTime
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -37,14 +38,14 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.springframework.test.util.ReflectionTestUtils
 
-/** v2 사용자 주문 규칙 (#718): 결제 방식·입금자명, 취소 가능 판정, 사용자 상태 분류, 사용자 철회 전이, 계좌 마스킹 */
+/** v2 사용자 주문 규칙 (#718): 결제 방식·입금자명, 취소 가능 판정, 사용자 상태 분류, 사용자 철회 전이, 계좌 마스킹, 환불 계좌 입력 대상 (#728) */
 class V2UserOrderDomainServiceTest {
 
     private val query = mock(V2UserOrderQuery::class.java)
     private val service = V2UserOrderDomainService(
         mock(OrderAdaptor::class.java), mock(OrderValidator::class.java), mock(OrderFactory::class.java), mock(CartValidator::class.java),
         mock(EventAdaptor::class.java), mock(OrderRefundAccountRepository::class.java), mock(V2TicketItemDomainService::class.java), query,
-        mock(IssuedTicketAdaptor::class.java),
+        mock(IssuedTicketAdaptor::class.java), mock(EntityManager::class.java),
     )
 
     private val now = LocalDateTime.of(2026, 10, 4, 12, 0)
@@ -183,6 +184,50 @@ class V2UserOrderDomainServiceTest {
             assertEquals("*********8901", mask("123-45-678901"))
             assertEquals("****", mask("1234"))
             assertEquals("*2345", mask("12345"))
+        }
+    }
+
+    @Nested
+    inner class RefundAccountTarget {
+
+        private fun v2(o: Order) = o.also { it.recordV2Payment(OrderPaymentChannel.BANK_TRANSFER, "입금자") }
+
+        private fun blocker(o: Order) = service.refundAccountBlocker(o)?.let(::code)
+
+        private val account = OrderRefundAccount(orderId = 1L, bankName = "b", accountHolder = "h", accountNumber = "123")
+
+        @Test
+        fun `v2 주문만 - v1 주문(결제 채널 없음)은 환불 요청 중이어도, 환불 완료여도 Order_400_27`() {
+            assertNull(blocker(v2(order(OrderStatus.CANCELED, refund = RefundStatus.REFUND_REQUESTED))))
+            assertNull(blocker(v2(order(OrderStatus.REFUND, refund = RefundStatus.REFUND_REQUESTED))))
+            assertEquals("Order_400_27", blocker(order(OrderStatus.CANCELED, refund = RefundStatus.REFUND_REQUESTED)))
+            assertEquals("Order_400_27", blocker(order(OrderStatus.CANCELED, refund = RefundStatus.REFUND_COMPLETED)))
+            assertFalse(service.isRefundAccountRequired(order(OrderStatus.CANCELED, refund = RefundStatus.REFUND_REQUESTED), null))
+        }
+
+        @Test
+        fun `판정 순서 - 대상 아님(400_27) 먼저, 대상인 주문의 환불 완료만 400_28`() {
+            assertEquals("Order_400_28", blocker(v2(order(OrderStatus.CANCELED, refund = RefundStatus.REFUND_COMPLETED))))
+            assertEquals("Order_400_27", blocker(v2(order(OrderStatus.CANCELED, price = 0, refund = RefundStatus.REFUND_COMPLETED))))
+            assertEquals("Order_400_27", blocker(v2(order(OrderStatus.APPROVED, refund = RefundStatus.REFUND_COMPLETED))))
+            assertEquals("Order_400_27", blocker(v2(order(OrderStatus.CANCELED, method = OrderMethod.PAYMENT, refund = RefundStatus.REFUND_COMPLETED))))
+            assertEquals("Order_400_27", blocker(v2(order(OrderStatus.CANCELED, refund = RefundStatus.NONE))))
+        }
+
+        @Test
+        fun `입력 필요 - 계좌 없음 + 입력 가능, 입금 미확인 거절은 false(입력은 가능)`() {
+            val refused = v2(order(OrderStatus.CANCELED, refund = RefundStatus.REFUND_REQUESTED))
+            assertTrue(service.isRefundAccountRequired(refused, null))
+            assertFalse(service.isRefundAccountRequired(refused, account))
+            refused.recordRefuseReasonType(OrderRefuseReasonType.AMOUNT_MISMATCH)
+            assertTrue(service.isRefundAccountRequired(refused, null))
+
+            val unconfirmed = v2(order(OrderStatus.CANCELED, refund = RefundStatus.REFUND_REQUESTED))
+            unconfirmed.recordRefuseReasonType(OrderRefuseReasonType.DEPOSIT_UNCONFIRMED)
+            assertFalse(service.isRefundAccountRequired(unconfirmed, null))
+            assertTrue(service.canEditRefundAccount(unconfirmed))
+
+            assertFalse(service.isRefundAccountRequired(v2(order(OrderStatus.CANCELED, refund = RefundStatus.REFUND_COMPLETED)), null))
         }
     }
 }

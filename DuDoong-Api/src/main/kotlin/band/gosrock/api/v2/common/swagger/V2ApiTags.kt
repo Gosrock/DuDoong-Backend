@@ -35,8 +35,8 @@ object V2ApiTags {
     const val BROWSE = "[사용자] 1. 공연 탐색"
     const val BROWSE_DESCRIPTION = "P-1~P-5 (P). 홈·공연 리스트·공개 상세·판매 중 티켓. 준비중·삭제 공연은 404, 계좌는 노출하지 않는다"
 
-    const val ORDER = "[사용자] 2. 주문·주문내역·취소"
-    const val ORDER_DESCRIPTION = "O-0~O-4 (U). 결제 화면(계좌), 주문 생성, 내 주문 목록·상세, 취소·환불 요청. 본인 주문만 (남의 주문은 404)"
+    const val ORDER = "[사용자] 2. 주문·주문내역·취소·환불 계좌"
+    const val ORDER_DESCRIPTION = "O-0~O-5 (U). 결제 화면(계좌), 주문 생성, 내 주문 목록·상세, 취소·환불 요청, 환불 계좌 입력·수정. 본인 주문만 (남의 주문은 404)"
 
     const val GIFT = "[사용자] 3. 티켓탭·선물"
     const val GIFT_DESCRIPTION = "T-1~T-3 내 티켓·입장 QR, G-1~G-8 선물 링크 생성·취소·받기/거절·반환·내역 (U, 선물 랜딩 G-3 만 P). 사용자 앱 T-* 는 호스팅 센터 티켓 T-* 와 별개"

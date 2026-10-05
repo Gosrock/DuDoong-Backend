@@ -5,12 +5,14 @@ import band.gosrock.api.v2.common.V2PageResponse
 import band.gosrock.api.v2.order.dto.V2MyOrderStatusFilter
 import band.gosrock.api.v2.order.dto.request.V2CancelMyOrderRequest
 import band.gosrock.api.v2.order.dto.request.V2CreateOrderRequest
+import band.gosrock.api.v2.order.dto.request.V2RefundAccountRequest
 import band.gosrock.api.v2.order.dto.response.V2CheckoutResponse
 import band.gosrock.api.v2.order.dto.response.V2MyOrderDetailResponse
 import band.gosrock.api.v2.order.dto.response.V2MyOrderElement
 import band.gosrock.api.v2.order.usecase.V2CancelMyOrderUseCase
 import band.gosrock.api.v2.order.usecase.V2CreateOrderUseCase
 import band.gosrock.api.v2.order.usecase.V2ReadCheckoutUseCase
+import band.gosrock.api.v2.order.usecase.V2PutRefundAccountUseCase
 import band.gosrock.api.v2.order.usecase.V2ReadMyOrdersUseCase
 import band.gosrock.common.annotation.CurrentUserId
 import io.swagger.v3.oas.annotations.Operation
@@ -23,6 +25,7 @@ import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -38,6 +41,7 @@ class V2OrderController(
     private val readMyOrdersUseCase: V2ReadMyOrdersUseCase,
     private val cancelMyOrderUseCase: V2CancelMyOrderUseCase,
     private val readCheckoutUseCase: V2ReadCheckoutUseCase,
+    private val putRefundAccountUseCase: V2PutRefundAccountUseCase,
 ) {
     @Operation(
         summary = "[O-0] 결제 화면 (로그인). 티켓(P-5 와 같음) + 입금 계좌·예금주(두둥티켓 + 구매 가능할 때만, 무료·지난 공연·정산중·종료·매진은 null). " +
@@ -83,6 +87,18 @@ class V2OrderController(
         @PathVariable orderUuid: String,
         @RequestBody(required = false) @Valid request: V2CancelMyOrderRequest?,
     ): V2MyOrderDetailResponse = cancelMyOrderUseCase.execute(userId, orderUuid, request)
+
+    @Operation(
+        summary = "[O-5] 환불 계좌 입력·수정 (로그인, 본인 주문 — 남의 주문은 404). v2 주문 중 환불 요청 중인 유료 계좌이체 주문(호스트 거절·호스트 취소·사용자 취소)만. " +
+            "대상 아님(계좌 행 없는 v1 주문·무료·카드·환불 요청 없음)은 Order_400_27 — O-4 로 계좌를 입력한 v1 주문은 수정만 가능, 대상 주문의 환불 완료 뒤는 Order_400_28. 검증은 O-4 계좌와 같음. " +
+            "이미 있던 계좌를 바꾸면 호스트 마스터·매니저에게 REFUND_ACCOUNT_CHANGED 알림. 응답은 O-3 주문 상세",
+    )
+    @PutMapping("/me/orders/{orderUuid}/refund-account")
+    fun putRefundAccount(
+        @CurrentUserId userId: Long,
+        @PathVariable orderUuid: String,
+        @RequestBody @Valid request: V2RefundAccountRequest,
+    ): V2MyOrderDetailResponse = putRefundAccountUseCase.execute(userId, orderUuid, request)
 
     companion object {
         const val MAX_PAGE_SIZE = 50L

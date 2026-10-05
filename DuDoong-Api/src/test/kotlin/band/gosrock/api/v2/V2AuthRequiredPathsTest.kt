@@ -115,6 +115,8 @@ class V2AuthRequiredPathsTest {
 
         /** #716·#718 수동 목록에서 옮긴 핵심 인증 필요 경로 */
         private val MUST_BE_ENUMERATED = setOf(
+            // 환불 계좌 입력 (#728)
+            "PUT /api/v2/me/orders/{}/refund-account",
             // 티켓탭·선물 (#719)
             "GET /api/v2/me/tickets",
             "GET /api/v2/me/tickets/{}",

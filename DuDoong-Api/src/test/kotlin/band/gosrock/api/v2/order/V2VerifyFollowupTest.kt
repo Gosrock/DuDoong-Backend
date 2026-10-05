@@ -446,6 +446,7 @@ class V2VerifyFollowupTest : V2UserOrderTestSupport() {
             assertEquals(1, await(buyer, NotificationType.ORDER_CANCELED_BY_HOST))
             val n = only(buyer, NotificationType.ORDER_CANCELED_BY_HOST)
             assertEquals(order, n.targetId)
+            // v1 앱 주문(결제 채널 없음)이라 환불 계좌 입력 안내는 붙지 않는다 (#728 v2 주문만)
             assertTrue(n.body.contains("호스트에 의해 취소") && n.body.endsWith("사유: 공연 취소"), n.body)
             laterReference(shop, buyer)
             assertEquals(0, count(buyer, NotificationType.ORDER_REFUSED))

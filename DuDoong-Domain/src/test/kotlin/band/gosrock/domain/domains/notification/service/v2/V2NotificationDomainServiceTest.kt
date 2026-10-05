@@ -46,7 +46,7 @@ class V2NotificationDomainServiceTest {
     private val hostAdaptor = mock(HostAdaptor::class.java)
     private val eventAdaptor = mock(EventAdaptor::class.java)
     private val orderAdaptor = mock(OrderAdaptor::class.java)
-    private val service = V2NotificationDomainService(notificationRepository, bulkRepository, hostAdaptor, eventAdaptor, orderAdaptor)
+    private val service = V2NotificationDomainService(notificationRepository, bulkRepository, hostAdaptor, eventAdaptor, orderAdaptor, mock(band.gosrock.domain.domains.order.service.v2.V2UserOrderDomainService::class.java))
 
     private val masterId = 1L
     private val managerId = 2L
@@ -293,7 +293,7 @@ class V2NotificationDomainServiceTest {
                 else -> null
             }
         }
-        private val s = V2NotificationDomainService(repository, bulkRepository, hostAdaptor, eventAdaptor, orderAdaptor)
+        private val s = V2NotificationDomainService(repository, bulkRepository, hostAdaptor, eventAdaptor, orderAdaptor, mock(band.gosrock.domain.domains.order.service.v2.V2UserOrderDomainService::class.java))
 
         @Test
         fun `all 이면 전체 (id 목록 무시)`() {

@@ -74,6 +74,8 @@ data class V2RefundAccountResponse(
     val bankName: String,
     val accountHolder: String,
     val accountNumber: String,
+    @field:Schema(description = "계좌를 마지막으로 입력·수정한 시각 (#728). 사용자가 송금 전에 바꿀 수 있어 송금 직전 확인용")
+    val updatedAt: LocalDateTime?,
 )
 
 /** R-2 주문 상세 */

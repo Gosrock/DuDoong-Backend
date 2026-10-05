@@ -172,6 +172,7 @@ class V2NotificationControllerTest : V2OperationTestSupport() {
 
             val n = awaitNotifications(buyer, NotificationType.ORDER_REFUSED).single()
             assertEquals(orderUuid, n.targetId)
+            // v1 앱 주문(결제 채널 없음)이라 환불 계좌 입력 안내는 붙지 않는다 (#728 v2 주문만)
             assertTrue(n.body.endsWith("사유: 좌석 배치 변경"), n.body)
             assertTrue(n.extra!!.contains("\"refuseReasonType\":\"ETC\""), n.extra)
             assertTrue(n.extra!!.contains("\"refuseReason\":\"좌석 배치 변경\""), n.extra)
@@ -193,6 +194,7 @@ class V2NotificationControllerTest : V2OperationTestSupport() {
             }
 
             val n = awaitNotifications(buyer, NotificationType.ORDER_REFUSED).single()
+            // v1 주문이라 환불 계좌 입력 안내는 붙지 않는다 (#728 v2 주문만)
             assertTrue(n.body.endsWith("사유: 입금 확인 불가"), n.body)
             assertFalse(n.extra!!.contains("refuseReasonType"), n.extra)
         }

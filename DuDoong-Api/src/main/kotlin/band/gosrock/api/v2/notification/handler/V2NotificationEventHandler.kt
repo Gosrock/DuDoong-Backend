@@ -7,6 +7,7 @@ import band.gosrock.domain.common.events.order.RefundCompletedOrderEvent
 import band.gosrock.domain.common.events.order.WithDrawOrderEvent
 import band.gosrock.domain.domains.host.service.v2.V2HostMembersAddedEvent
 import band.gosrock.domain.domains.notification.service.v2.V2NotificationDomainService
+import band.gosrock.domain.domains.order.service.v2.V2RefundAccountChangedEvent
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
@@ -69,6 +70,12 @@ class V2NotificationEventHandler(
     @TransactionalEventListener(classes = [WithDrawOrderEvent::class], phase = TransactionPhase.AFTER_COMMIT, condition = USER_WITHDRAWN_ORDER)
     fun handleUserWithdrawnOrder(event: WithDrawOrderEvent) =
         save("ORDER_REFUND_REQUESTED/ORDER_CANCELED_BY_USER", event.orderUuid) { notificationDomainService.notifyOrderWithdrawnByUser(event.orderUuid) }
+
+    /** 환불 계좌 변경(v2 O-5, 이미 있던 계좌를 바꿀 때만 발행) → 호스트 마스터·매니저 (#728) */
+    @Async(NOTIFICATION_EXECUTOR)
+    @TransactionalEventListener(classes = [V2RefundAccountChangedEvent::class], phase = TransactionPhase.AFTER_COMMIT)
+    fun handleRefundAccountChanged(event: V2RefundAccountChangedEvent) =
+        save("REFUND_ACCOUNT_CHANGED", event.toString()) { notificationDomainService.notifyRefundAccountChanged(event.orderUuid, event.changeId) }
 
     private fun save(type: String, key: String, block: () -> Int) {
         try {

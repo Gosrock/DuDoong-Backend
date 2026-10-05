@@ -86,7 +86,7 @@ class V2OperationMapper(
     )
 
     fun toRefundAccount(account: OrderRefundAccount) =
-        V2RefundAccountResponse(bankName = account.bankName, accountHolder = account.accountHolder, accountNumber = account.accountNumber)
+        V2RefundAccountResponse(bankName = account.bankName, accountHolder = account.accountHolder, accountNumber = account.accountNumber, updatedAt = account.updatedAt)
 
     /**
      * 사용자 환불 계좌를 볼 수 있는지 (#718): 공연 호스트의 활성 마스터·매니저 또는 SUPER_ADMIN.

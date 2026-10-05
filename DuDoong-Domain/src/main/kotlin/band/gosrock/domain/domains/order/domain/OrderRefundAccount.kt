@@ -22,19 +22,35 @@ import jakarta.persistence.Table
 class OrderRefundAccount(
     @Column(name = "order_id", nullable = false)
     val orderId: Long,
-    @Column(name = "bank_name", nullable = false, length = BANK_NAME_MAX_LENGTH)
-    val bankName: String,
-    @Column(name = "account_holder", nullable = false, length = ACCOUNT_HOLDER_MAX_LENGTH)
-    val accountHolder: String,
-    @Column(name = "account_number", nullable = false, length = ACCOUNT_NUMBER_MAX_LENGTH)
-    val accountNumber: String,
+    bankName: String,
+    accountHolder: String,
+    accountNumber: String,
 ) : BaseTimeEntity() {
+
+    @Column(name = "bank_name", nullable = false, length = BANK_NAME_MAX_LENGTH)
+    var bankName: String = bankName
+        protected set
+
+    @Column(name = "account_holder", nullable = false, length = ACCOUNT_HOLDER_MAX_LENGTH)
+    var accountHolder: String = accountHolder
+        protected set
+
+    @Column(name = "account_number", nullable = false, length = ACCOUNT_NUMBER_MAX_LENGTH)
+    var accountNumber: String = accountNumber
+        protected set
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_refund_account_id")
     var id: Long? = null
         protected set
+
+    /** 환불 계좌 수정 (#728). 환불 완료 전·본인 주문 확인은 `service.v2.V2UserOrderDomainService` 가 주문 잠금 안에서 한다 */
+    internal fun change(bankName: String, accountHolder: String, accountNumber: String) {
+        this.bankName = bankName
+        this.accountHolder = accountHolder
+        this.accountNumber = accountNumber
+    }
 
     /** 뒤 4자리만 남기고 `*` (숫자·하이픈 외 문자도 그대로 센다). 4자리 이하면 전부 가린다 */
     fun maskedAccountNumber(): String =

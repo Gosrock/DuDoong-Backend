@@ -132,6 +132,9 @@ class V2ReadMyOrdersUseCase(
             refundAccount = refundAccount?.let {
                 V2MyRefundAccountResponse(bankName = it.bankName, accountHolder = it.accountHolder, maskedAccountNumber = it.maskedAccountNumber())
             },
+            // 환불 계좌 입력·수정 (#728): v2 주문 중 환불 요청 중인 유료 계좌이체 주문 (거절·호스트 취소·사용자 취소), 환불 완료 전
+            refundAccountEditable = v2UserOrderDomainService.canEditRefundAccount(order),
+            refundAccountRequired = v2UserOrderDomainService.isRefundAccountRequired(order, refundAccount),
             issuedTickets = tickets.map { t ->
                 val giftState = giftStates.getValue(t.id)
                 V2MyOrderIssuedTicketResponse(

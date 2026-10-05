@@ -51,3 +51,17 @@ class V2DuplicateOrderInProgressException private constructor() : DuDoongCodeExc
         val EXCEPTION: DuDoongCodeException = V2DuplicateOrderInProgressException()
     }
 }
+
+class V2RefundAccountNotAllowedException private constructor() : DuDoongCodeException(OrderErrorCode.V2_REFUND_ACCOUNT_NOT_ALLOWED) {
+    companion object {
+        @JvmField
+        val EXCEPTION: DuDoongCodeException = V2RefundAccountNotAllowedException()
+    }
+}
+
+class V2RefundAlreadyCompletedException private constructor() : DuDoongCodeException(OrderErrorCode.V2_REFUND_ALREADY_COMPLETED) {
+    companion object {
+        @JvmField
+        val EXCEPTION: DuDoongCodeException = V2RefundAlreadyCompletedException()
+    }
+}
