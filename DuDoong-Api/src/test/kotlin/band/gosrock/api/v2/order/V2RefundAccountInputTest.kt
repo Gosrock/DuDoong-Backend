@@ -355,10 +355,10 @@ class V2RefundAccountInputTest : V2UserOrderTestSupport() {
 
         /**
          * H2 에서는 순서를 강제할 수 없어 어느 쪽이 먼저여도 맞는 결과인지만 본다 (잠금이 빠진 변형을 여기서는 못 잡는다).
-         * 결정적 검증(완료가 먼저 대기 → 입력이 행 잠금 대기 → 해제 후 Order_400_28)은 MySQL E2E `test_51` test_04
+         * 결정적 검증(완료가 먼저 대기 → 입력이 행 잠금 대기 → 해제 후 Order_400_28)은 MySQL E2E `test_51` test_05
          */
         @Test
-        fun `계좌 입력 ↔ v1 환불 완료(주문 락 없음) 동시 - 완료가 먼저면 입력 거부(계좌 없음), 입력이 먼저면 계좌가 남고 완료 (결정적 검증은 E2E test_04)`() {
+        fun `계좌 입력 ↔ v1 환불 완료(주문 락 없음) 동시 - 완료가 먼저면 입력 거부(계좌 없음), 입력이 먼저면 계좌가 남고 완료 (결정적 검증은 E2E test_05)`() {
             repeat(3) {
                 val shop = Shop()
                 val buyer = newBuyer()
