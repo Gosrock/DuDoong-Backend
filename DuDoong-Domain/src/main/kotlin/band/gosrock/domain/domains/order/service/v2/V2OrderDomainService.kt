@@ -12,6 +12,7 @@ import band.gosrock.domain.domains.order.exception.OrderNotFoundException
 import band.gosrock.domain.domains.order.exception.OrderRefundNotRequestedException
 import band.gosrock.domain.domains.order.service.OrderApproveService
 import band.gosrock.domain.domains.order.service.WithdrawOrderService
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 
 /**
@@ -45,12 +46,21 @@ class V2OrderDomainService(
         if (v2OrderQuery.findEventId(orderUuid) != eventId) throw OrderNotFoundException.EXCEPTION
     }
 
+    /**
+     * 승인 = v1 [OrderApproveService](`주문` 락, 새 트랜잭션). 트랜잭션 밖(NOT_SUPPORTED)에서 부른다 (#746): 클래스의 읽기 전용 트랜잭션이 열려 있으면
+     * 그 커넥션을 쥔 채 v1 락을 기다린다 (#743 후속).
+     * - NOT_SUPPORTED 범위에서는 **자체 트랜잭션을 가진 조회만** 쓴다 (소속 확인 [V2OrderQuery.findEventId]) — 그냥 읽으면 범위 끝까지 커넥션을 쥔다
+     * - 효과 조건: **호출 측도 트랜잭션 없이** 불러야 하고(있으면 그 커넥션을 쥔 채 기다린다), **open-in-view 가 꺼져 있어야** 한다
+     *   (켜져 있으면 요청 EntityManager 가 락 전 조회의 커넥션을 쥐어 절감이 없다 — test·staging·prod 기본값은 켜짐)
+     */
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     fun approve(eventId: Long, orderUuid: String) {
         validateEventOrder(eventId, orderUuid)
         orderApproveService.execute(orderUuid)
     }
 
-    /** 승인 완료(APPROVED/CONFIRM) 주문 취소 (v1 과 같은 로직) */
+    /** 승인 완료(APPROVED/CONFIRM) 주문 취소 (v1 과 같은 로직). [approve] 와 같은 이유·조건으로 트랜잭션 밖에서 v1 [WithdrawOrderService] 락을 기다린다 (#746) */
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     fun cancel(eventId: Long, orderUuid: String, reason: String?) {
         validateEventOrder(eventId, orderUuid)
         withdrawOrderService.cancelOrder(orderUuid, reason?.trim()?.ifEmpty { null })

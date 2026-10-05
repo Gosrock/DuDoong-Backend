@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.support.PageableExecutionUtils
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 
 /**
  * v2 호스트 주문 목록 검색 조건 (#712).
@@ -108,7 +109,13 @@ class V2OrderQuery(private val queryFactory: JPAQueryFactory) {
         )
     }
 
-    /** 주문의 공연 id (엔티티를 영속성 컨텍스트에 올리지 않는 스칼라 조회). 없는 주문은 null */
+    /**
+     * 주문의 공연 id (엔티티를 영속성 컨텍스트에 올리지 않는 스칼라 조회). 없는 주문은 null.
+     * 자체 읽기 전용 트랜잭션에서 읽는다 (#746): 트랜잭션 밖(NOT_SUPPORTED) 범위에서 그냥 읽으면 그 범위의 EntityManager 가 범위 끝까지 커넥션을 쥐어,
+     * 이어서 기다리는 락 동안에도 커넥션을 점유한다 (`V2OrderDomainService.approve/cancel`). 진행 중인 트랜잭션이 있으면 참여만 한다.
+     * **커넥션 절감은 open-in-view 가 꺼진 경우에만** 있다 — 켜져 있으면(test·staging·prod 기본값) 요청의 EntityManager 가 이 조회의 커넥션을 요청 끝까지 쥔다
+     */
+    @Transactional(readOnly = true)
     fun findEventId(orderUuid: String): Long? =
         queryFactory.select(order.eventId).from(order).where(order.uuid.eq(orderUuid)).fetchFirst()
 

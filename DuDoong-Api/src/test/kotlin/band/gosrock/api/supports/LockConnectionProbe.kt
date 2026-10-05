@@ -14,6 +14,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.jdbc.datasource.DelegatingDataSource
+import org.springframework.transaction.support.TransactionSynchronizationManager
 
 /**
  * 스레드별로 지금 쥔 JDBC 커넥션 수를 센다 (#734 리뷰 M-1, #743). 풀 전체 활성 수는 다른 스레드(알림 executor 등)가 섞여 흔들린다.
@@ -75,6 +76,7 @@ class CountingDataSource(target: DataSource) : DelegatingDataSource(target) {
  * `@RedissonLock` 메서드별 커넥션 측정 (#743). 메서드마다 세 값의 최댓값을 모은다:
  * - entry: 락 AOP·트랜잭션 AOP 보다 바깥(호출 측이 이미 쥔 수)
  * - waiting: 락을 얻은 직후, 락 트랜잭션(`CallTransaction.proceed`)을 열기 전에 쥔 수 = 락을 기다리는 동안 쥔 수 (그 사이 커넥션을 열 코드가 없다)
+ * - callerTx: 락 메서드를 부를 때 이미 진행 중이던 트랜잭션 이름(호출 측 트랜잭션 — 그 커넥션을 쥔 채 락을 기다린다)
  * - inside: 락 트랜잭션 구간(`CallTransaction.proceed`, 락 획득 ~ 해제 안)의 최댓값 (락 트랜잭션 + 그 안의 REQUIRES_NEW 등)
  *
  * DataSource 는 [LockConnectionProbePostProcessor] 가 감싼다. 환경변수 `LOCK_PROBE_OUT`(파일 경로)이 있으면 JVM 종료 때 그 파일에 TSV 로 쓴다 — 예: `LOCK_PROBE_OUT=/tmp/lock.tsv ./gradlew :DuDoong-Api:test --rerun`
@@ -83,14 +85,16 @@ class CountingDataSource(target: DataSource) : DelegatingDataSource(target) {
 @Order(Ordered.HIGHEST_PRECEDENCE)
 class LockConnectionProbe {
 
-    data class Stat(var calls: Int = 0, var entry: Int = 0, var waiting: Int = 0, var inside: Int = 0)
+    data class Stat(var calls: Int = 0, var entry: Int = 0, var waiting: Int = 0, var inside: Int = 0, val callerTx: MutableSet<String> = sortedSetOf())
 
     @Around("@annotation(band.gosrock.domain.common.aop.redissonLock.RedissonLock)")
     fun around(joinPoint: ProceedingJoinPoint): Any? {
         val method = (joinPoint.signature as MethodSignature).method
         val name = "${method.declaringClass.simpleName}.${method.name}"
         current.get().addLast(name)
-        stat(name).also { synchronized(it) { it.calls++; it.entry = maxOf(it.entry, ThreadConnections.open) } }
+        val callerTx = if (TransactionSynchronizationManager.isActualTransactionActive()) shortTxName(TransactionSynchronizationManager.getCurrentTransactionName()) else null
+        lastCallerTx.get()[name] = callerTx
+        stat(name).also { synchronized(it) { it.calls++; it.entry = maxOf(it.entry, ThreadConnections.open); callerTx?.let(it.callerTx::add) } }
         try {
             return joinPoint.proceed()
         } finally {
@@ -112,6 +116,14 @@ class LockConnectionProbe {
     }
 
     companion object {
+        private val lastCallerTx = ThreadLocal.withInitial { mutableMapOf<String, String?>() }
+
+        /** 이 스레드에서 [method](`클래스.메서드`)를 마지막으로 불렀을 때 진행 중이던 호출 측 트랜잭션 (없으면 null) */
+        fun lastCallerTxOf(method: String): String? = lastCallerTx.get()[method]
+
+        /** 트랜잭션 이름(`패키지.클래스.메서드`, 이름 없으면 "?")을 `클래스.메서드` 로 */
+        fun shortTxName(name: String?): String = name?.split('.')?.takeLast(2)?.joinToString(".") ?: "?"
+
         private val current = ThreadLocal.withInitial { ArrayDeque<String>() }
         val stats = ConcurrentHashMap<String, Stat>()
 
@@ -125,8 +137,10 @@ class LockConnectionProbe {
                     val out = File(path)
                     out.parentFile?.mkdirs()
                     out.writeText(
-                        "method\tcalls\tentry\twaiting\tinside\n" +
-                            stats.toSortedMap().entries.joinToString("\n") { (k, v) -> "$k\t${v.calls}\t${v.entry}\t${v.waiting}\t${v.inside}" } + "\n",
+                        "method\tcalls\tentry\twaiting\tinside\tcallerTx\n" +
+                            stats.toSortedMap().entries.joinToString("\n") { (k, v) ->
+                                "$k\t${v.calls}\t${v.entry}\t${v.waiting}\t${v.inside}\t${v.callerTx.joinToString(",")}"
+                            } + "\n",
                     )
                 },
             )

@@ -12,10 +12,6 @@ import band.gosrock.domain.domains.coupon.domain.IssuedCoupon
 class IssuedCouponMapper(
     private val issuedCouponAdaptor: IssuedCouponAdaptor,
 ) {
-    fun toEntity(couponCampaign: CouponCampaign, userId: Long): IssuedCoupon {
-        return IssuedCoupon(couponCampaign = couponCampaign, userId = userId)
-    }
-
     fun toCreateUserCouponResponse(issuedCoupon: IssuedCoupon, couponCampaign: CouponCampaign): CreateUserCouponResponse {
         return CreateUserCouponResponse(
             issuedCouponId = issuedCoupon.id!!,

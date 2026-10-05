@@ -88,7 +88,7 @@ API_BASE_URL=http://staging.dudoong.com/api pytest -v
 
 ### 3-1) DB 직접 접근 · 새 DB 로 실행 (#737)
 
-일부 테스트(test_33/34/37/39/47/48)는 역할 승격·공연 시각 이동·상태 확인을 위해 로컬 MySQL 에 SQL 로 직접 접근한다.
+일부 테스트(test_25/33/34/37/39/47/48 등)는 역할 승격·공연 시각 이동·상태 확인을 위해 로컬 MySQL 에 SQL 로 직접 접근한다.
 접속 정보는 `conftest.py` 의 `e2e_db` fixture 하나에서만 받고, 값은 환경변수로 정한다. 기본값은 `docker-compose.yml` 의 로컬 개발용 값이다 (운영 값 금지).
 
 | 환경변수 | 기본값 | 용도 |
@@ -98,6 +98,7 @@ API_BASE_URL=http://staging.dudoong.com/api pytest -v
 | `E2E_DB_ROOT_PASSWORD` | `dudoong` | `performance_schema` 조회 (test_48 결정적 경합). 못 읽으면 그 테스트만 skip (`E2E_REQUIRE_LOCK_INSPECTION=1` 이면 실패) |
 | `E2E_ALLOW_REMOTE_DB` | (없음) | `1` 이면 원격 DB·서버 허용 (기본은 로컬만) |
 | `E2E_DB_HOST` / `E2E_DB_PORT` | `127.0.0.1` / `13306` | MySQL 주소 |
+| `REDIS_HOST` / `REDIS_PORT` | `127.0.0.1` / `6379` | Redisson 락 키 확인 (test_25 test_03, #746). 서버가 쓰는 Redis 와 같아야 한다. redis-py → `redis-cli -h -p` → 소켓(RESP) 순으로 접속, 못 붙으면 그 테스트만 skip (`E2E_REQUIRE_LOCK_INSPECTION=1` 이면 실패) |
 
 - 필요: 호스트에 `mysql` CLI. 비밀번호는 인자가 아니라 `MYSQL_PWD` 환경변수로 넘긴다. mysql 호출은 30초, 사전 검사 HTTP 요청은 10초 제한.
 - `E2E_DB` 는 영문·숫자·`_` 만 허용한다.
@@ -105,9 +106,10 @@ API_BASE_URL=http://staging.dudoong.com/api pytest -v
   원격 DB·서버에 일부러 붙일 때만 `E2E_ALLOW_REMOTE_DB=1` 로 허용한다 (테스트가 역할 승격·시각 변경 같은 쓰기 쿼리를 보낸다 — 운영 DB 금지).
 - **사전 검사**: `e2e_db` 를 처음 쓸 때 서버로 표식 유저를 만들고(로컬 로그인) `E2E_DB` 에 그 이메일이 있는지 본다(user_id 는 비교하지 않음).
   없으면(서버와 다른 DB) 전체 실행을 바로 멈춘다(exit code 3, `[E2E DB 사전 검사 실패]`). 서버 설정을 읽는 API 가 없어서(운영 코드 변경 없음) 데이터로 확인한다.
-- 검사 시점: `e2e_db` 를 받는 테스트·fixture 가 처음 실행될 때. 지금은 test_33(`user_b` fixture), test_34(`test_user` fixture), test_37 `test_setup_refund_reason_scenario`, test_39 `test_08b`, test_47 `test_08`,
+- 검사 시점: `e2e_db` 를 받는 테스트·fixture 가 처음 실행될 때. 지금은 test_25(모듈 전체), test_33(`user_b` fixture), test_34(`test_user` fixture), test_37 `test_setup_refund_reason_scenario`, test_39 `test_08b`, test_47 `test_08`,
   **test_48 은 모듈 전체**(모듈 autouse fixture 로 받는다)가 해당한다. 이 테스트들을 빼고 돌리면(예: 스테이징 대상 일부 실행) DB 검사를 하지 않는다.
-- `E2E_REQUIRE_LOCK_INSPECTION=1`: test_48 결정적 경합 테스트가 root 로 `performance_schema` 를 못 읽을 때 skip 대신 실패시킨다 (CI 에서 빠뜨리지 않게).
+- `E2E_REQUIRE_LOCK_INSPECTION=1`: 결정적 경합 테스트(test_25·48·51 등)가 root 로 `performance_schema` 를 못 읽거나 Redis 에 붙지 못할 때 skip 대신 실패시킨다 (CI 에서 빠뜨리지 않게).
+- test_25 는 캠페인 생성 동안만 `e2e_db.account_role` 로 SUPER_ADMIN 승격(토큰에 역할이 들어가므로 다시 로그인) 후 USER 로 되돌린다 (#746 — 예전에는 권한이 없어 skip)
 - 새 DB 로 전체 실행 예 (스키마 = baseline + migration):
 
 ```bash

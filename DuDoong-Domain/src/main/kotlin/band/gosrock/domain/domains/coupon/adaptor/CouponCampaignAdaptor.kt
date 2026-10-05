@@ -19,6 +19,9 @@ class CouponCampaignAdaptor(
         }
     }
 
+    fun queryCouponCampaign(couponCampaignId: Long): CouponCampaign =
+        couponCampaignRepository.findById(couponCampaignId).orElseThrow { CouponCampaignNotFoundException.EXCEPTION }
+
     fun findByCouponCode(couponCode: String): CouponCampaign =
         couponCampaignRepository.findByCouponCode(couponCode)
             .orElseThrow { CouponCampaignNotFoundException.EXCEPTION }
