@@ -218,6 +218,31 @@ class V2NotificationDomainService(
         )
     }
 
+    /**
+     * 환불 계좌 변경 (#728 리뷰) → 호스트 활성 마스터·매니저. 이미 있던 계좌를 사용자가 바꿨을 때만 이벤트가 온다 (첫 입력은 알림 없음).
+     * 그사이 환불 완료 등으로 더는 계좌를 바꿀 수 없는 주문이면 저장 안 함. dedup = `refund_account:{changeId}` (변경마다 새 알림)
+     */
+    @Transactional
+    fun notifyRefundAccountChanged(orderUuid: String, changeId: String): Int {
+        val order = orderAdaptor.findByOrderUuid(orderUuid)
+        if (!v2UserOrderDomainService.canEditRefundAccount(order)) return 0
+        val event = eventAdaptor.findById(order.eventId!!)
+        val host = hostAdaptor.findById(event.hostId!!)
+        val eventName = event.eventBasic?.name.orEmpty()
+        val notifications = managerIds(host).map { userId ->
+            orderDraft(
+                userId = userId,
+                order = order,
+                type = NotificationType.REFUND_ACCOUNT_CHANGED,
+                title = "환불 계좌가 변경되었어요",
+                body = "'$eventName' ${order.orderName.orEmpty()} 주문(${order.orderNo.orEmpty()})의 환불 계좌가 변경되었습니다. 송금 전에 주문 상세에서 새 계좌를 확인해 주세요.",
+                extra = mapOf("eventName" to eventName, "orderNo" to order.orderNo),
+                dedupKey = "refund_account:$changeId",
+            )
+        }
+        return notificationBulkRepository.insertSkippingDuplicates(notifications)
+    }
+
     // ===== 조회 / 읽음 =====
 
     fun querySlice(userId: Long, pageable: Pageable): Slice<Notification> =
@@ -261,11 +286,11 @@ class V2NotificationDomainService(
         .distinct()
 
     /**
-     * 거절·호스트 취소 알림의 환불 계좌 입력 안내 (#728 결정): 환불 계좌를 받을 수 있는 주문(환불 요청 중인 유료 계좌이체)이고 아직 계좌가 없을 때만.
-     * 무료·0원·카드 결제·이미 계좌가 있는 주문은 붙이지 않는다. 알림을 누르면 주문상세(target ORDER)에서 입력한다
+     * 거절·호스트 취소 알림의 환불 계좌 입력 안내 (#728 결정): O-3 `refundAccountRequired` 와 같은 기준 — v2 주문 + 환불 요청 중인 유료 계좌이체 + 아직 계좌 없음.
+     * v1 주문·무료·0원·카드 결제·입금 미확인 거절·이미 계좌가 있는 주문은 붙이지 않는다. 알림을 누르면 주문상세(target ORDER)에서 입력한다
      */
     private fun withRefundAccountGuide(order: Order, body: String): String {
-        if (!v2UserOrderDomainService.canEditRefundAccount(order) || v2UserOrderDomainService.refundAccountOf(order.id!!) != null) return body
+        if (!v2UserOrderDomainService.isRefundAccountRequired(order, order.id?.let { v2UserOrderDomainService.refundAccountOf(it) })) return body
         // 사유 문구 뒤에 바로 붙으면 이어 읽히므로 문장을 끊는다
         return body + (if (body.endsWith(".")) " " else ". ") + REFUND_ACCOUNT_GUIDE
     }
@@ -279,6 +304,7 @@ class V2NotificationDomainService(
         title: String,
         body: String,
         extra: Map<String, String?>,
+        dedupKey: String = order.uuid!!,
     ): Notification = draft(
         userId = userId,
         type = type,
@@ -288,7 +314,7 @@ class V2NotificationDomainService(
         targetId = order.uuid!!,
         eventId = order.eventId,
         extra = extra,
-        dedupKey = order.uuid!!,
+        dedupKey = dedupKey,
     )
 
     private fun draft(

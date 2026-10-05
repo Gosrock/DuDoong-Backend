@@ -82,9 +82,9 @@ data class V2MyOrderDetailResponse(
     val cancelReason: String?,
     @field:Schema(description = "입력한 환불 계좌 (계좌번호 뒤 4자리만). O-4 취소 때 또는 환불 계좌 입력 API 로 입력")
     val refundAccount: V2MyRefundAccountResponse?,
-    @field:Schema(description = "지금 환불 계좌를 입력·수정할 수 있는지 (#728): 환불 요청 중인 유료 계좌이체 주문(거절·호스트 취소·사용자 취소), 환불 완료 전")
+    @field:Schema(description = "지금 환불 계좌를 입력·수정할 수 있는지 (#728): v2 주문 중 환불 요청 중인 유료 계좌이체 주문(거절·호스트 취소·사용자 취소), 환불 완료 전. v1 주문은 false")
     val refundAccountEditable: Boolean = false,
-    @field:Schema(description = "환불 계좌 입력이 필요한지 (#728): 입력 가능한데 아직 계좌가 없음 — 호스트 거절·취소 뒤 주문상세에서 입력 유도")
+    @field:Schema(description = "환불 계좌 입력이 필요한지 (#728): 입력 가능한데 아직 계좌가 없음 — 호스트 거절·취소 뒤 주문상세에서 입력 유도. 입금 미확인 거절은 false (입력은 가능)")
     val refundAccountRequired: Boolean = false,
     @field:Schema(description = "발급 티켓: 본인 소유분 + 내가 선물해 수락된 티켓(giftState=SENT, ticketUuid null)")
     val issuedTickets: List<V2MyOrderIssuedTicketResponse>,

@@ -167,8 +167,7 @@ def test_03_approved_refused(base_url, s):
     assert_status(resp, 200)
     n = _wait(base_url, s, "refused", "ORDER_REFUSED")[0]
     assert n["target"]["id"] == o["refused"]
-    # 유료 계좌이체 거절 → 환불 계좌 입력 안내가 뒤에 붙는다 (#728)
-    assert n["body"].endswith("사유: 중복 주문. 주문상세에서 환불 계좌를 입력해 주세요."), n["body"]
+    assert n["body"].endswith("사유: 중복 주문"), n["body"]
     assert n["extra"]["refuseReasonType"] == "ETC" and n["extra"]["refuseReason"] == "중복 주문"
 
     # v1 거절도 저장 (사유 종류 없음), v1 응답은 그대로
@@ -176,7 +175,7 @@ def test_03_approved_refused(base_url, s):
     assert_status(resp, 200)
     assert get_data(resp)["orderUuid"] == o["v1refused"]
     n = _wait(base_url, s, "v1refused", "ORDER_REFUSED")[0]
-    assert "사유: v1 거절" in n["body"] and "refuseReasonType" not in n["extra"]
+    assert n["body"].endswith("사유: v1 거절") and "refuseReasonType" not in n["extra"]
 
     # 승인 후 취소는 거절 알림이 아니라 호스트 취소 알림 (#726)
     _wait(base_url, s, "canceled", "ORDER_APPROVED")

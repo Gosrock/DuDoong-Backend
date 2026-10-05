@@ -5,21 +5,11 @@ import band.gosrock.domain.domains.order.domain.OrderStatus
 import java.time.LocalDateTime
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
-import jakarta.persistence.LockModeType
-import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
 import org.springframework.data.repository.query.Param
 
 interface OrderRepository : CrudRepository<Order, Long>, OrderCustomRepository {
-    /**
-     * 주문 행 잠금 (#728 환불 계좌 입력). 환불 완료는 경로마다 `주문` 락을 잡지 않으므로(v1·운영) 주문 행 UPDATE 와 이 잠금으로 줄 선다 —
-     * 잠금 읽기라 이미 커밋된 환불 완료를 본다
-     */
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select o from tbl_order o where o.uuid = :uuid")
-    fun findByUuidForUpdate(@Param("uuid") uuid: String): Order?
-
     fun countByEventId(eventId: Long): Long
 
     fun findByEventId(eventId: Long): List<Order>

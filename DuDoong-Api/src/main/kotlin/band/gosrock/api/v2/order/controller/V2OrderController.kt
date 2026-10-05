@@ -89,8 +89,9 @@ class V2OrderController(
     ): V2MyOrderDetailResponse = cancelMyOrderUseCase.execute(userId, orderUuid, request)
 
     @Operation(
-        summary = "[O-5] 환불 계좌 입력·수정 (로그인, 본인 주문 — 남의 주문은 404). 환불 요청 중인 유료 계좌이체 주문(호스트 거절·호스트 취소·사용자 취소)만. " +
-            "환불 완료 뒤는 Order_400_28, 대상 아님(무료·카드·환불 요청 없음)은 Order_400_27. 검증은 O-4 계좌와 같음. 응답은 O-3 주문 상세",
+        summary = "[O-5] 환불 계좌 입력·수정 (로그인, 본인 주문 — 남의 주문은 404). v2 주문 중 환불 요청 중인 유료 계좌이체 주문(호스트 거절·호스트 취소·사용자 취소)만. " +
+            "대상 아님(v1 주문·무료·카드·환불 요청 없음)은 Order_400_27, 대상 주문의 환불 완료 뒤는 Order_400_28. 검증은 O-4 계좌와 같음. " +
+            "이미 있던 계좌를 바꾸면 호스트 마스터·매니저에게 REFUND_ACCOUNT_CHANGED 알림. 응답은 O-3 주문 상세",
     )
     @PutMapping("/me/orders/{orderUuid}/refund-account")
     fun putRefundAccount(

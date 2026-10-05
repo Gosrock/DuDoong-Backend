@@ -4,6 +4,7 @@ import band.gosrock.common.annotation.DomainService
 import band.gosrock.common.consts.DuDoongStatic.KR_NO
 import band.gosrock.common.consts.DuDoongStatic.KR_YES
 import band.gosrock.common.exception.DuDoongCodeException
+import band.gosrock.domain.common.aop.domainEvent.Events
 import band.gosrock.domain.common.aop.redissonLock.RedissonLock
 import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.domains.cart.domain.Cart
@@ -20,6 +21,7 @@ import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.order.domain.OrderMethod
 import band.gosrock.domain.domains.order.domain.OrderPaymentChannel
 import band.gosrock.domain.domains.order.domain.OrderRefundAccount
+import band.gosrock.domain.domains.order.domain.OrderRefuseReasonType
 import band.gosrock.domain.domains.order.domain.OrderStatus
 import band.gosrock.domain.domains.order.domain.RefundStatus
 import band.gosrock.domain.domains.order.domain.validator.OrderValidator
@@ -36,13 +38,14 @@ import band.gosrock.domain.domains.order.exception.V2RefundAccountRequiredExcept
 import band.gosrock.domain.domains.order.exception.V2RefundAlreadyCompletedException
 import band.gosrock.domain.domains.order.exception.V2UnsupportedOrderTicketException
 import band.gosrock.domain.domains.order.repository.OrderRefundAccountRepository
-import band.gosrock.domain.domains.order.repository.OrderRepository
 import band.gosrock.domain.domains.order.service.OrderFactory
 import band.gosrock.domain.domains.ticket_item.domain.OptionGroup
 import band.gosrock.domain.domains.ticket_item.domain.OptionGroupType
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem
 import band.gosrock.domain.domains.ticket_item.domain.TicketPayType
 import band.gosrock.domain.domains.ticket_item.service.v2.V2TicketItemDomainService
+import jakarta.persistence.EntityManager
+import jakarta.persistence.LockModeType
 import java.time.LocalDateTime
 import org.springframework.transaction.annotation.Transactional
 
@@ -91,7 +94,7 @@ class V2UserOrderDomainService(
     private val v2TicketItemDomainService: V2TicketItemDomainService,
     private val v2UserOrderQuery: V2UserOrderQuery,
     private val issuedTicketAdaptor: IssuedTicketAdaptor,
-    private val orderRepository: OrderRepository,
+    private val entityManager: EntityManager,
 ) {
 
     /**
@@ -261,13 +264,15 @@ class V2UserOrderDomainService(
     // ===== 환불 계좌 입력·수정 (#728) =====
 
     /**
-     * 환불 계좌를 받을 수 있는 주문인지 (호스트 거절·호스트 취소·사용자 취소 공통): 환불 요청 중 + 유료 + 계좌이체(승인형, 두둥티켓).
-     * 카드(PG) 결제는 결제 취소가 자동이라, 무료·0원은 돌려줄 돈이 없어 대상이 아니다. 환불 완료면 null 이 아니라 완료 예외
+     * 환불 계좌를 받을 수 있는 주문인지 (호스트 거절·호스트 취소·사용자 취소 공통): v2 주문 + 유료 + 계좌이체(승인형, 두둥티켓) + 환불 요청 중.
+     * v1 주문(결제 채널 없음)은 v1 앱이 계좌를 받지 않으므로 대상이 아니다 (사용자 결정 2026-10-05). 카드(PG) 결제는 결제 취소가 자동이라,
+     * 무료·0원은 돌려줄 돈이 없어 대상이 아니다. 순서: 대상 아님(Order_400_27) → 대상이지만 환불 완료(Order_400_28)
      */
     fun refundAccountBlocker(order: Order): DuDoongCodeException? = when {
+        order.paymentChannel == null || order.orderMethod != OrderMethod.APPROVAL || !isPaid(order) ||
+            order.orderStatus !in REFUND_ACCOUNT_ORDER_STATUSES || order.refundStatus !in REFUND_ACCOUNT_REFUND_STATUSES ->
+            V2RefundAccountNotAllowedException.EXCEPTION
         order.refundStatus == RefundStatus.REFUND_COMPLETED -> V2RefundAlreadyCompletedException.EXCEPTION
-        order.refundStatus != RefundStatus.REFUND_REQUESTED || order.orderMethod != OrderMethod.APPROVAL || !isPaid(order) ||
-            order.orderStatus !in REFUND_ACCOUNT_ORDER_STATUSES -> V2RefundAccountNotAllowedException.EXCEPTION
         else -> null
     }
 
@@ -275,18 +280,31 @@ class V2UserOrderDomainService(
     fun canEditRefundAccount(order: Order): Boolean = refundAccountBlocker(order) == null
 
     /**
+     * O-3 `refundAccountRequired`·거절/호스트 취소 알림의 입력 안내: 입력할 수 있고 아직 계좌가 없을 때.
+     * 입금 미확인 거절은 돌려줄 돈이 없을 가능성이 커서 요구하지 않는다 (입력·수정은 가능, 사용자 결정 2026-10-05)
+     */
+    fun isRefundAccountRequired(order: Order, account: OrderRefundAccount?): Boolean =
+        account == null && order.refuseReasonType != OrderRefuseReasonType.DEPOSIT_UNCONFIRMED && canEditRefundAccount(order)
+
+    /**
      * 환불 계좌 입력·수정 (#728, 사용자 결정 2026-10-05). 본인 주문만(남의·없는 주문 404).
-     * `주문:{uuid}` 락(O-4 와 같은 락) + 주문 행 잠금 읽기: v1·운영의 환불 완료는 주문 락 없이 주문 행만 UPDATE 하므로 행 잠금으로 줄 서고,
-     * 완료가 먼저 커밋됐으면 최신 상태를 보고 Order_400_28. 계좌 정규화·검증은 O-4 와 같다(빈 값 Order_400_25)
+     * `주문:{uuid}` 락(O-4 와 같은 락) + 주문 행 잠금 다시 읽기: v1·운영의 환불 완료는 주문 락 없이 주문 행만 UPDATE 하므로 행 잠금으로 줄 서고,
+     * 완료가 먼저 커밋됐으면 최신 상태를 보고 Order_400_28. 이미 읽혀 영속성 컨텍스트에 있는 주문이어도 낡은 상태로 판정하지 않도록
+     * 잠금 쿼리가 아니라 refresh 로 다시 읽는다. 소유자(userId)는 바뀌지 않는 값이라 잠그기 전에 확인한다 (남의 주문 행은 잠그지 않음).
+     * 계좌 정규화·검증은 O-4 와 같다(빈 값 Order_400_25). 이미 있던 계좌를 다른 값으로 바꾸면 호스트 마스터·매니저 알림 이벤트를 낸다 (첫 입력은 알림 없음)
      */
     @RedissonLock(LockName = ORDER_LOCK, identifier = "orderUuid")
     fun putRefundAccount(userId: Long, orderUuid: String, form: V2RefundAccountForm): OrderRefundAccount {
-        val order = orderRepository.findByUuidForUpdate(orderUuid)?.takeIf { it.userId == userId } ?: throw OrderNotFoundException.EXCEPTION
+        val order = queryMyOrder(userId, orderUuid)
+        entityManager.refresh(order, LockModeType.PESSIMISTIC_WRITE)
         refundAccountBlocker(order)?.let { throw it }
         val account = normalize(form) ?: throw V2RefundAccountRequiredException.EXCEPTION
         val existing = refundAccountRepository.findByOrderId(order.id!!)
         if (existing != null) {
-            existing.change(account.bankName, account.accountHolder, account.accountNumber)
+            if (existing.bankName != account.bankName || existing.accountHolder != account.accountHolder || existing.accountNumber != account.accountNumber) {
+                existing.change(account.bankName, account.accountHolder, account.accountNumber)
+                Events.raise(V2RefundAccountChangedEvent(orderUuid = orderUuid))
+            }
             return existing
         }
         return refundAccountRepository.save(
@@ -335,6 +353,9 @@ class V2UserOrderDomainService(
 
         /** 환불 계좌를 받는 주문 상태: 거절·호스트 취소(CANCELED), 사용자 취소(REFUND) */
         private val REFUND_ACCOUNT_ORDER_STATUSES = setOf(OrderStatus.CANCELED, OrderStatus.REFUND)
+
+        /** 환불 계좌 대상 환불 상태: 요청 중(입력·수정 가능), 완료(Order_400_28) */
+        private val REFUND_ACCOUNT_REFUND_STATUSES = setOf(RefundStatus.REFUND_REQUESTED, RefundStatus.REFUND_COMPLETED)
 
         private val DUPLICATE_CANDIDATE_STATUSES = listOf(
             OrderStatus.READY, OrderStatus.PENDING_PAYMENT, OrderStatus.PENDING_APPROVE, OrderStatus.APPROVED, OrderStatus.CONFIRM,
