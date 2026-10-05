@@ -19,8 +19,10 @@ springdoc:
   default-produces-media-type: application/json
   default-consumes-media-type: application/json
   swagger-ui:
+    # v2 태그는 `[영역] 번호. 이름` 이라 이름순 = 와이어프레임 순서 (#731). 같은 태그 안 API 는 경로 순
     tags-sorter: alpha
-    urls-primary-name: v1
+    operations-sorter: alpha
+    urls-primary-name: v2-전체
 
 server:
   forward-headers-strategy: framework

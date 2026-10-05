@@ -1,5 +1,6 @@
 package band.gosrock.api.v2.host.controller
 
+import band.gosrock.api.v2.common.swagger.V2ApiTags
 import band.gosrock.api.v2.common.V2PageResponse
 import band.gosrock.api.v2.host.dto.request.V2AddHostMembersRequest
 import band.gosrock.api.v2.host.dto.request.V2CreateHostRequest
@@ -46,7 +47,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @SecurityRequirement(name = "access-token")
-@Tag(name = "v2. 호스트 / 멤버")
+@Tag(name = V2ApiTags.HOST, description = V2ApiTags.HOST_DESCRIPTION)
 @RestController
 @RequestMapping("/api/v2")
 @Validated

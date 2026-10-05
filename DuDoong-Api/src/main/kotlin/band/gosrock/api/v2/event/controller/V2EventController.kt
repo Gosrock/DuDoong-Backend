@@ -1,5 +1,6 @@
 package band.gosrock.api.v2.event.controller
 
+import band.gosrock.api.v2.common.swagger.V2ApiTags
 import band.gosrock.api.v2.common.V2PageResponse
 import band.gosrock.api.v2.event.dto.request.V2CreateEventRequest
 import band.gosrock.api.v2.event.dto.request.V2EventImageUploadRequest
@@ -42,7 +43,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @SecurityRequirement(name = "access-token")
-@Tag(name = "v2. 공연 준비")
+@Tag(name = V2ApiTags.EVENT_PREP, description = V2ApiTags.EVENT_PREP_DESCRIPTION)
 @RestController
 @RequestMapping("/api/v2")
 @Validated

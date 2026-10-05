@@ -1,5 +1,6 @@
 package band.gosrock.api.v2.ticket.controller
 
+import band.gosrock.api.v2.common.swagger.V2ApiTags
 import band.gosrock.api.v2.ticket.dto.request.V2ReplaceTicketOptionsRequest
 import band.gosrock.api.v2.ticket.dto.request.V2TicketItemRequest
 import band.gosrock.api.v2.ticket.dto.response.V2TicketItemManageResponse
@@ -25,7 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @SecurityRequirement(name = "access-token")
-@Tag(name = "v2. 티켓")
+@Tag(name = V2ApiTags.TICKET, description = V2ApiTags.TICKET_DESCRIPTION)
 @RestController
 @RequestMapping("/api/v2/events/{eventId}/ticket-items")
 class V2TicketItemController(

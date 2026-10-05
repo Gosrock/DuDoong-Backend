@@ -1,5 +1,6 @@
 package band.gosrock.api.v2.notification.controller
 
+import band.gosrock.api.v2.common.swagger.V2ApiTags
 import band.gosrock.api.v2.common.V2PageResponse
 import band.gosrock.api.v2.notification.dto.V2NotificationResponse
 import band.gosrock.api.v2.notification.dto.V2ReadNotificationsRequest
@@ -22,7 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @SecurityRequirement(name = "access-token")
-@Tag(name = "v2. 알림센터")
+@Tag(name = V2ApiTags.NOTIFICATION, description = V2ApiTags.NOTIFICATION_DESCRIPTION)
 @RestController
 @RequestMapping("/api/v2/me/notifications")
 @Validated

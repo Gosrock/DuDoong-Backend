@@ -81,9 +81,7 @@ class SwaggerConfig(
     fun v1Api(): GroupedOpenApi =
         GroupedOpenApi.builder().group("v1").pathsToMatch("/api/v1/**").build()
 
-    @Bean
-    fun v2Api(): GroupedOpenApi =
-        GroupedOpenApi.builder().group("v2").pathsToMatch("/api/v2/**").build()
+    // v2 그룹(v2-전체 / v2-호스팅센터 / v2-사용자앱)은 api.v2.common.swagger.V2SwaggerGroups (#731)
 
     @Bean
     fun internalApi(): GroupedOpenApi =
