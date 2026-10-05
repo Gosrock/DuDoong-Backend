@@ -17,6 +17,7 @@ import band.gosrock.domain.domains.order.domain.OrderMethod
 import band.gosrock.domain.domains.order.domain.OrderStatus
 import band.gosrock.domain.domains.order.domain.RefundStatus
 import band.gosrock.domain.domains.order.service.v2.V2OrderStatus
+import band.gosrock.domain.domains.order.service.v2.V2UserOrderDomainService
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.LocalDateTime
 import org.springframework.data.domain.Pageable
@@ -37,6 +38,7 @@ class V2NotificationDomainService(
     private val hostAdaptor: HostAdaptor,
     private val eventAdaptor: EventAdaptor,
     private val orderAdaptor: OrderAdaptor,
+    private val v2UserOrderDomainService: V2UserOrderDomainService,
 ) {
 
     // ===== 저장 =====
@@ -120,7 +122,10 @@ class V2NotificationDomainService(
                     order = order,
                     type = NotificationType.ORDER_REFUSED,
                     title = "티켓 주문이 거절되었습니다",
-                    body = "'$eventName' ${order.orderName.orEmpty()} 주문이 거절되었어요." + (reason?.let { " 사유: ${ellipsis(it, BODY_REASON_MAX_LENGTH)}" } ?: ""),
+                    body = withRefundAccountGuide(
+                        order,
+                        "'$eventName' ${order.orderName.orEmpty()} 주문이 거절되었어요." + (reason?.let { " 사유: ${ellipsis(it, BODY_REASON_MAX_LENGTH)}" } ?: ""),
+                    ),
                     extra = mapOf(
                         "eventName" to eventName,
                         "orderNo" to order.orderNo,
@@ -177,7 +182,10 @@ class V2NotificationDomainService(
                     order = order,
                     type = NotificationType.ORDER_CANCELED_BY_HOST,
                     title = "티켓 주문이 취소되었습니다",
-                    body = "'$eventName' ${order.orderName.orEmpty()} 주문이 호스트에 의해 취소되었어요." + (reason?.let { " 사유: ${ellipsis(it, BODY_REASON_MAX_LENGTH)}" } ?: ""),
+                    body = withRefundAccountGuide(
+                        order,
+                        "'$eventName' ${order.orderName.orEmpty()} 주문이 호스트에 의해 취소되었어요." + (reason?.let { " 사유: ${ellipsis(it, BODY_REASON_MAX_LENGTH)}" } ?: ""),
+                    ),
                     extra = mapOf("eventName" to eventName, "orderNo" to order.orderNo, "cancelReason" to reason),
                 ),
             ),
@@ -252,6 +260,16 @@ class V2NotificationDomainService(
         .mapNotNull { it.userId }
         .distinct()
 
+    /**
+     * 거절·호스트 취소 알림의 환불 계좌 입력 안내 (#728 결정): 환불 계좌를 받을 수 있는 주문(환불 요청 중인 유료 계좌이체)이고 아직 계좌가 없을 때만.
+     * 무료·0원·카드 결제·이미 계좌가 있는 주문은 붙이지 않는다. 알림을 누르면 주문상세(target ORDER)에서 입력한다
+     */
+    private fun withRefundAccountGuide(order: Order, body: String): String {
+        if (!v2UserOrderDomainService.canEditRefundAccount(order) || v2UserOrderDomainService.refundAccountOf(order.id!!) != null) return body
+        // 사유 문구 뒤에 바로 붙으면 이어 읽히므로 문장을 끊는다
+        return body + (if (body.endsWith(".")) " " else ". ") + REFUND_ACCOUNT_GUIDE
+    }
+
     private fun eventName(order: Order): String = eventAdaptor.findById(order.eventId!!).eventBasic?.name.orEmpty()
 
     private fun orderDraft(
@@ -302,6 +320,9 @@ class V2NotificationDomainService(
 
     companion object {
         private val OBJECT_MAPPER = ObjectMapper()
+
+        /** 거절·호스트 취소 알림에 붙이는 환불 계좌 입력 안내 (#728) */
+        const val REFUND_ACCOUNT_GUIDE = "주문상세에서 환불 계좌를 입력해 주세요."
 
         /** 환불 완료 알림 대상 주문 상태: 거절·호스트 취소(CANCELED), 사용자 취소·환불 요청(REFUND) */
         private val REFUNDABLE_STATUSES = setOf(OrderStatus.CANCELED, OrderStatus.REFUND)

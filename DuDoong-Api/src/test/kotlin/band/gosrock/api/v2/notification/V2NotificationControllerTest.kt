@@ -172,7 +172,8 @@ class V2NotificationControllerTest : V2OperationTestSupport() {
 
             val n = awaitNotifications(buyer, NotificationType.ORDER_REFUSED).single()
             assertEquals(orderUuid, n.targetId)
-            assertTrue(n.body.endsWith("사유: 좌석 배치 변경"), n.body)
+            // 유료 계좌이체 거절 → 환불 계좌 입력 안내가 뒤에 붙는다 (#728)
+            assertTrue(n.body.endsWith("사유: 좌석 배치 변경. 주문상세에서 환불 계좌를 입력해 주세요."), n.body)
             assertTrue(n.extra!!.contains("\"refuseReasonType\":\"ETC\""), n.extra)
             assertTrue(n.extra!!.contains("\"refuseReason\":\"좌석 배치 변경\""), n.extra)
             assertTrue(notificationsOf(buyer, NotificationType.ORDER_APPROVED).isEmpty())
@@ -193,7 +194,8 @@ class V2NotificationControllerTest : V2OperationTestSupport() {
             }
 
             val n = awaitNotifications(buyer, NotificationType.ORDER_REFUSED).single()
-            assertTrue(n.body.endsWith("사유: 입금 확인 불가"), n.body)
+            // 유료 계좌이체 거절 → 환불 계좌 입력 안내가 뒤에 붙는다 (#728)
+            assertTrue(n.body.endsWith("사유: 입금 확인 불가. 주문상세에서 환불 계좌를 입력해 주세요."), n.body)
             assertFalse(n.extra!!.contains("refuseReasonType"), n.extra)
         }
 

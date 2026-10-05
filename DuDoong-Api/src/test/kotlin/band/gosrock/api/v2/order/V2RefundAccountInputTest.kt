@@ -1,6 +1,9 @@
 package band.gosrock.api.v2.order
 
 import band.gosrock.api.supports.ApiIntegrateSpringBootTest
+import band.gosrock.domain.domains.notification.domain.NotificationTargetType
+import band.gosrock.domain.domains.notification.domain.NotificationType
+import band.gosrock.domain.domains.notification.repository.NotificationRepository
 import band.gosrock.domain.domains.order.domain.RefundStatus
 import band.gosrock.domain.domains.user.domain.User
 import com.fasterxml.jackson.databind.JsonNode
@@ -15,6 +18,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.http.MediaType
 import org.springframework.test.util.ReflectionTestUtils
@@ -27,6 +31,8 @@ import org.springframework.test.web.servlet.put
 @AutoConfigureMockMvc
 @DisplayName("v2 사용자 앱 - 환불 계좌 입력")
 class V2RefundAccountInputTest : V2UserOrderTestSupport() {
+
+    @Autowired private lateinit var notificationRepository: NotificationRepository
 
     private val account2 = mapOf("bankName" to " 우리은행 ", "accountHolder" to " 김철수 ", "accountNumber" to "1002 123 456789")
 
@@ -190,6 +196,51 @@ class V2RefundAccountInputTest : V2UserOrderTestSupport() {
             putAccount(buyer, orderUuid, refundAccount + mapOf("accountNumber" to "12ab34")).andExpect { status { isBadRequest() } }
             putAccount(buyer, orderUuid, refundAccount + mapOf("accountHolder" to "가".repeat(21))).andExpect { status { isBadRequest() } }
             assertNull(savedAccount(orderUuid))
+        }
+    }
+
+    @Nested
+    @DisplayName("알림 안내 문구 (#728 결정)")
+    inner class NotificationGuide {
+
+        private val guide = "주문상세에서 환불 계좌를 입력해 주세요."
+
+        private fun body(user: User, type: NotificationType, orderUuid: String): String {
+            val deadline = System.currentTimeMillis() + 10_000
+            while (System.currentTimeMillis() < deadline) {
+                notificationRepository.findAllByUserId(user.id!!).firstOrNull { it.type == type && it.targetId == orderUuid }?.let { return it.body }
+                Thread.sleep(50)
+            }
+            throw AssertionError("$type 알림 없음")
+        }
+
+        @Test
+        fun `유료 계좌이체 거절·호스트 취소 알림에는 계좌 입력 안내, 대상은 주문상세`() {
+            val shop = Shop()
+            val refusedBuyer = newBuyer()
+            val refusedOrder = refused(shop, refusedBuyer)
+            assertTrue(body(refusedBuyer, NotificationType.ORDER_REFUSED, refusedOrder).endsWith(guide))
+            val n = notificationRepository.findAllByUserId(refusedBuyer.id!!).first { it.type == NotificationType.ORDER_REFUSED }
+            assertEquals(NotificationTargetType.ORDER, n.targetType)
+            val canceledBuyer = newBuyer()
+            val canceledOrder = hostCanceled(shop, canceledBuyer)
+            assertTrue(body(canceledBuyer, NotificationType.ORDER_CANCELED_BY_HOST, canceledOrder).endsWith(guide))
+        }
+
+        @Test
+        fun `무료 주문(즉시 발급 호스트 취소·승인형 거절)에는 안내 없음`() {
+            val shop = Shop()
+            val free = freeTicket(shop, approvalRequired = false)
+            val freeBuyer = newBuyer()
+            val freeOrder = v2OrderOk(freeBuyer, freeBodyOf(shop, free)).at("/orderUuid").asText()
+            v2Post(shop.team.manager, "/events/${shop.eventId}/orders/$freeOrder/cancel").andExpect { status { isOk() } }
+            assertFalse(body(freeBuyer, NotificationType.ORDER_CANCELED_BY_HOST, freeOrder).contains(guide))
+
+            val freeApproval = freeTicket(shop, approvalRequired = true, name = "무료승인")
+            val faBuyer = newBuyer()
+            val faOrder = v2OrderOk(faBuyer, freeBodyOf(shop, freeApproval)).at("/orderUuid").asText()
+            refuse(shop.team.manager, shop.eventId, faOrder, "SOLD_OUT").andExpect { status { isOk() } }
+            assertFalse(body(faBuyer, NotificationType.ORDER_REFUSED, faOrder).contains(guide))
         }
     }
 
