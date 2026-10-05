@@ -91,19 +91,32 @@ def test_double_entry_fails(base_url, auth_headers, state):
     print(f"[test_double_entry_fails] 이중 입장 차단 확인: {resp.status_code}")
 
 
-def test_admin_cancel_order(base_url, auth_headers, state):
-    """관리자가 주문을 취소합니다."""
-    if not state.event_id or not state.ticket_item_id:
-        pytest.skip("event_id 또는 ticket_item_id 없음")
-
-    # 취소 테스트용 새 주문 생성
-    cart_resp = requests.post(
-        f"{base_url}/v1/carts",
-        json={"items": [{"itemId": state.ticket_item_id, "quantity": 1, "options": []}]},
+def _cancel_ticket_item_id(base_url, auth_headers, state) -> int:
+    """주문 취소 테스트 전용 무료 티켓 (1인 10장). 공용 티켓(test_04, 1인 2장)은 앞 모듈 구매로 한도가 찰 수 있다 (#737)"""
+    if getattr(state, "admin_cancel_ticket_item_id", None):
+        return state.admin_cancel_ticket_item_id
+    resp = requests.post(
+        f"{base_url}/v1/events/{state.event_id}/ticketItems",
+        json={"payType": "무료티켓", "name": "E2E취소테스트티켓", "description": "관리자 취소 테스트용", "price": 0,
+              "supplyCount": 100, "approveType": "선착순", "isQuantityPublic": True, "purchaseLimit": 10},
         headers=auth_headers,
     )
-    if cart_resp.status_code not in (200, 201):
-        pytest.skip(f"장바구니 생성 실패: {cart_resp.text[:200]}")
+    assert resp.status_code in (200, 201), f"취소 테스트 티켓 생성 실패: {resp.text[:200]}"
+    state.admin_cancel_ticket_item_id = get_data(resp)["ticketItemId"]
+    return state.admin_cancel_ticket_item_id
+
+
+def test_admin_cancel_order(base_url, auth_headers, state):
+    """관리자가 주문을 취소합니다."""
+    assert state.event_id, "event_id 없음 — test_03 을 먼저 실행하세요."
+
+    # 취소 테스트용 새 주문 생성 (이 모듈 전용 티켓)
+    cart_resp = requests.post(
+        f"{base_url}/v1/carts",
+        json={"items": [{"itemId": _cancel_ticket_item_id(base_url, auth_headers, state), "quantity": 1, "options": []}]},
+        headers=auth_headers,
+    )
+    assert cart_resp.status_code in (200, 201), f"장바구니 생성 실패: {cart_resp.text[:200]}"
     cart_id = get_data(cart_resp)["cartId"]
 
     order_resp = requests.post(
@@ -111,14 +124,12 @@ def test_admin_cancel_order(base_url, auth_headers, state):
         json={"couponId": None, "cartId": cart_id},
         headers=auth_headers,
     )
-    if order_resp.status_code not in (200, 201):
-        pytest.skip(f"주문 생성 실패: {order_resp.text[:200]}")
+    assert order_resp.status_code in (200, 201), f"주문 생성 실패: {order_resp.text[:200]}"
     order_uuid = get_data(order_resp)["orderId"]
 
     # 무료 결제
     free_resp = requests.post(f"{base_url}/v1/orders/{order_uuid}/free", headers=auth_headers)
-    if free_resp.status_code != 200:
-        pytest.skip(f"무료결제 실패: {free_resp.text[:200]}")
+    assert free_resp.status_code == 200, f"무료결제 실패: {free_resp.text[:200]}"
 
     # 관리자 취소
     cancel_url = f"{base_url}/v1/events/{state.event_id}/orders/{order_uuid}/cancel"

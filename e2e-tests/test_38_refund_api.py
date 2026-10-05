@@ -8,16 +8,31 @@ import requests
 from conftest import assert_status, get_data
 
 
+def _refund_ticket_item_id(base_url, auth_headers, state) -> int:
+    """환불 API 테스트 전용 무료 티켓 (1인 10장). 세션에서 한 번만 만든다"""
+    if getattr(state, "refund_api_ticket_item_id", None):
+        return state.refund_api_ticket_item_id
+    resp = requests.post(
+        f"{base_url}/v1/events/{state.event_id}/ticketItems",
+        json={"payType": "무료티켓", "name": "E2E환불API티켓", "description": "환불 API 테스트용", "price": 0,
+              "supplyCount": 100, "approveType": "선착순", "isQuantityPublic": True, "purchaseLimit": 10},
+        headers=auth_headers,
+    )
+    assert resp.status_code in (200, 201), f"환불 테스트 티켓 생성 실패: {resp.text[:200]}"
+    state.refund_api_ticket_item_id = get_data(resp)["ticketItemId"]
+    return state.refund_api_ticket_item_id
+
+
 def _create_and_refund_order(base_url, auth_headers, state) -> str:
     """
     환불 API 테스트 전용: 주문 생성 -> 무료 결제 -> 환불 요청 후 order_uuid 반환.
     """
-    assert state.ticket_item_id, "ticket_item_id가 없습니다. test_04를 먼저 실행하세요."
+    assert state.event_id, "event_id가 없습니다. test_03을 먼저 실행하세요."
 
-    # 1) 장바구니 생성
+    # 1) 장바구니 생성 — 공용 티켓(test_04, 1인 2장)은 앞 모듈 구매로 한도가 찰 수 있어 이 모듈 전용 티켓을 쓴다 (#737)
     cart_resp = requests.post(
         f"{base_url}/v1/carts",
-        json={"items": [{"itemId": state.ticket_item_id, "quantity": 1, "options": []}]},
+        json={"items": [{"itemId": _refund_ticket_item_id(base_url, auth_headers, state), "quantity": 1, "options": []}]},
         headers=auth_headers,
     )
     assert cart_resp.status_code in (200, 201), f"장바구니 생성 실패: {cart_resp.text[:200]}"

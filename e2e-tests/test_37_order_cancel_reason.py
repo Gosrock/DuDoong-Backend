@@ -52,7 +52,7 @@ def _create_order(base_url: str, ticket_item_id: int, headers: dict) -> str:
     return get_data(order_resp)["orderId"]
 
 
-def test_setup_refund_reason_scenario(base_url, auth_headers, state):
+def test_setup_refund_reason_scenario(base_url, auth_headers, state, e2e_db):
     """환불 사유 테스트를 위한 이벤트 셋업."""
     if not state.host_id:
         pytest.skip("host_id가 없어 테스트를 건너뜁니다.")
@@ -61,12 +61,12 @@ def test_setup_refund_reason_scenario(base_url, auth_headers, state):
     _state["admin_headers"] = auth_headers
 
     # admin 유저를 ADMIN으로 승격 (internal-api 접근을 위해)
-    import subprocess, base64, json as _json
+    import base64, json as _json
     token = auth_headers["Authorization"].replace("Bearer ", "")
     p = token.split(".")[1]
     p += "=" * (4 - len(p) % 4)
     uid = int(_json.loads(base64.b64decode(p))["sub"])
-    subprocess.run(["mysql", "-h", "127.0.0.1", "-P", "13306", "-u", "dudoong", "-pdudoong", "dudoong", "-e", f"UPDATE tbl_user SET account_role='ADMIN' WHERE user_id={uid}"], capture_output=True)
+    e2e_db.query(f"UPDATE tbl_user SET account_role='ADMIN' WHERE user_id={uid}")
     _state["admin_user_id"] = uid
 
     from datetime import datetime, timedelta

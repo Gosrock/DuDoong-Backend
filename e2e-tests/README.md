@@ -86,6 +86,44 @@ pytest test_05_order_flow.py::test_create_order -v -s
 API_BASE_URL=http://staging.dudoong.com/api pytest -v
 ```
 
+### 3-1) DB 직접 접근 · 새 DB 로 실행 (#737)
+
+일부 테스트(test_33/34/37/39/47/48)는 역할 승격·공연 시각 이동·상태 확인을 위해 로컬 MySQL 에 SQL 로 직접 접근한다.
+접속 정보는 `conftest.py` 의 `e2e_db` fixture 하나에서만 받고, 값은 환경변수로 정한다. 기본값은 `docker-compose.yml` 의 로컬 개발용 값이다 (운영 값 금지).
+
+| 환경변수 | 기본값 | 용도 |
+|---|---|---|
+| `E2E_DB` | `dudoong` | 서버가 쓰는 DB 이름 (서버 `spring.datasource.url` 과 같아야 함) |
+| `E2E_DB_USER` / `E2E_DB_PASSWORD` | `dudoong` / `dudoong` | 일반 SQL |
+| `E2E_DB_ROOT_PASSWORD` | `dudoong` | `performance_schema` 조회 (test_48 결정적 경합). 못 읽으면 그 테스트만 skip (`E2E_REQUIRE_LOCK_INSPECTION=1` 이면 실패) |
+| `E2E_ALLOW_REMOTE_DB` | (없음) | `1` 이면 원격 DB·서버 허용 (기본은 로컬만) |
+| `E2E_DB_HOST` / `E2E_DB_PORT` | `127.0.0.1` / `13306` | MySQL 주소 |
+
+- 필요: 호스트에 `mysql` CLI. 비밀번호는 인자가 아니라 `MYSQL_PWD` 환경변수로 넘긴다. mysql 호출은 30초, 사전 검사 HTTP 요청은 10초 제한.
+- `E2E_DB` 는 영문·숫자·`_` 만 허용한다.
+- **로컬 가드**: `E2E_DB_HOST` 가 `127.0.0.1`/`localhost`/`::1` 이 아니거나 `API_BASE_URL` 의 호스트가 로컬이 아니면 표식 유저도 만들지 않고 전체 실행을 멈춘다.
+  원격 DB·서버에 일부러 붙일 때만 `E2E_ALLOW_REMOTE_DB=1` 로 허용한다 (테스트가 역할 승격·시각 변경 같은 쓰기 쿼리를 보낸다 — 운영 DB 금지).
+- **사전 검사**: `e2e_db` 를 처음 쓸 때 서버로 표식 유저를 만들고(로컬 로그인) `E2E_DB` 에 그 이메일이 있는지 본다(user_id 는 비교하지 않음).
+  없으면(서버와 다른 DB) 전체 실행을 바로 멈춘다(exit code 3, `[E2E DB 사전 검사 실패]`). 서버 설정을 읽는 API 가 없어서(운영 코드 변경 없음) 데이터로 확인한다.
+- 검사 시점: `e2e_db` 를 받는 테스트·fixture 가 처음 실행될 때. 지금은 test_33(`user_b` fixture), test_34(`test_user` fixture), test_37 `test_setup_refund_reason_scenario`, test_39 `test_08b`, test_47 `test_08`,
+  **test_48 은 모듈 전체**(모듈 autouse fixture 로 받는다)가 해당한다. 이 테스트들을 빼고 돌리면(예: 스테이징 대상 일부 실행) DB 검사를 하지 않는다.
+- `E2E_REQUIRE_LOCK_INSPECTION=1`: test_48 결정적 경합 테스트가 root 로 `performance_schema` 를 못 읽을 때 skip 대신 실패시킨다 (CI 에서 빠뜨리지 않게).
+- 새 DB 로 전체 실행 예 (스키마 = baseline + migration):
+
+```bash
+# 1) DB 만들기 (docker-compose mysql, root 비밀번호는 로컬 개발용)
+docker exec -i -e MYSQL_PWD=dudoong dudoong-backend-mysql-1 mysql -uroot -e "CREATE DATABASE e2e_mine CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; GRANT ALL ON e2e_mine.* TO 'dudoong'@'%';"
+for f in ../db/schema/baseline-*.sql $(ls ../db/migration/V*.sql | sort); do docker exec -i -e MYSQL_PWD=dudoong dudoong-backend-mysql-1 mysql -uroot e2e_mine < "$f"; done
+# 2) 서버를 그 DB 로 (Java 21)
+java -jar ../DuDoong-Api/build/libs/DuDoong-Api-0.0.1-SNAPSHOT.jar --spring.profiles.active=local --server.port=18080 \
+  --spring.datasource.url="jdbc:mysql://127.0.0.1:13306/e2e_mine?useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true&tinyInt1isBit=false"
+# 3) 같은 DB 이름으로 테스트
+E2E_DB=e2e_mine API_BASE_URL=http://127.0.0.1:18080/api pytest -q
+```
+
+- 기존 방식(서버 local 프로필 = DB `dudoong`, 포트 8080)은 환경변수 없이 그대로 `pytest` 하면 된다.
+- 운영 어드민 경로(`/internal-api`)는 같은 Api 서버에서 제공되므로 별도 서버가 필요 없다.
+
 ### 4) 테스트 실행 순서
 
 `conftest.py`의 `auth_token` 픽스처가 최초 1회 로그인을 수행하므로, 테스트는 다음 순서로 실행됩니다:
