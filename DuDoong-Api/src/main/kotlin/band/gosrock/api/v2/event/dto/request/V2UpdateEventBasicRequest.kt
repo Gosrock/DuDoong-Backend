@@ -32,7 +32,7 @@ data class V2UpdateEventBasicRequest(
     @field:DateFormat
     val endAt: LocalDateTime? = null,
 
-    @field:Schema(description = "공연 장소 (모든 필드 필수)")
+    @field:Schema(description = "공연 장소 (상세주소 외 모든 필드 필수). 통째로 교체")
     @field:Valid
     val place: V2EventPlaceRequest? = null,
 
@@ -72,9 +72,25 @@ data class V2EventPlaceRequest(
     @field:Schema(description = "경도", example = "126.920036")
     @field:NotNull
     val longitude: Double?,
+
+    @field:Schema(description = "상세주소 (선택, 최대 255자). 장소는 통째로 교체되므로 비우거나 빼면 상세주소가 지워진다", example = "지하 1층")
+    @field:Size(max = 255)
+    val detailAddress: String? = null,
 ) {
     fun toEventPlace(): EventPlace =
-        EventPlace(latitude = latitude, longitude = longitude, placeName = name!!.trim(), placeAddress = address!!.trim())
+        EventPlace(
+            latitude = latitude,
+            longitude = longitude,
+            placeName = name!!.trim(),
+            placeAddress = address!!.trim(),
+            placeDetailAddress = sanitizeDetailAddress(detailAddress),
+        )
+
+    companion object {
+        /** 한 줄 텍스트로 정리: 제어 문자(줄바꿈·탭 포함) 제거 → 앞뒤 공백 제거 → 비면 null */
+        fun sanitizeDetailAddress(value: String?): String? =
+            value?.filterNot { it.isISOControl() }?.trim()?.ifEmpty { null }
+    }
 }
 
 data class V2EventContactRequest(

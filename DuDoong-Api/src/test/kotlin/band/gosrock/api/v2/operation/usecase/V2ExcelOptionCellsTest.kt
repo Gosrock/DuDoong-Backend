@@ -2,6 +2,7 @@ package band.gosrock.api.v2.operation.usecase
 
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor
+import band.gosrock.domain.domains.issuedTicket.service.v2.V2IssuedTicketQuery
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
 import band.gosrock.domain.domains.order.domain.OrderLineItem
 import band.gosrock.domain.domains.order.domain.OrderOptionAnswer
@@ -19,7 +20,7 @@ class V2ExcelOptionCellsTest {
 
     private val mapper = V2OperationMapper(
         mock(UserAdaptor::class.java), mock(EventAdaptor::class.java), mock(HostAdaptor::class.java),
-        mock(OrderAdaptor::class.java), mock(OptionAdaptor::class.java),
+        mock(OrderAdaptor::class.java), mock(OptionAdaptor::class.java), mock(V2IssuedTicketQuery::class.java),
     )
 
     /** 옵션 행 1 → 그룹 10, 옵션 행 2 → 그룹 20 */

@@ -12,6 +12,8 @@ import band.gosrock.api.v2.ticket.dto.V2TicketPayType
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2CheckInOutcome
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2EntranceState
+import band.gosrock.domain.domains.issuedTicket.service.v2.V2HostGiftState
+import band.gosrock.domain.domains.issuedTicket.service.v2.V2IssuedTicketQuery
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor
@@ -25,6 +27,9 @@ import band.gosrock.domain.domains.user.adaptor.UserAdaptor
 import band.gosrock.domain.domains.user.domain.AccountRole
 import band.gosrock.domain.domains.user.domain.User
 import org.springframework.stereotype.Component
+
+/** 발급 티켓 한 장의 응답 + 연락처용 주문자·소유자 회원 (#740) */
+data class V2IssuedTicketView(val ticket: IssuedTicket, val element: V2IssuedTicketElement, val buyer: User?, val owner: User?)
 
 /** 엑셀 옵션 컬럼: [groupIds] 순서가 [headers] 순서. [groupOfOption] = 답변의 옵션 행 id → 옵션 그룹 id */
 data class V2ExcelOptionColumns(val groupIds: List<Long>, val headers: List<String>, val groupOfOption: Map<Long?, Long?>)
@@ -42,13 +47,10 @@ class V2OperationMapper(
     private val hostAdaptor: HostAdaptor,
     private val orderAdaptor: OrderAdaptor,
     private val optionAdaptor: OptionAdaptor,
+    private val v2IssuedTicketQuery: V2IssuedTicketQuery,
 ) {
     fun usersOf(userIds: Collection<Long?>): Map<Long, User> =
         userAdaptor.findUserByIdIn(userIds.filterNotNull().distinct()).associateBy { it.id!! }
-
-    fun orderNosOf(orderUuids: Collection<String?>): Map<String, String?> =
-        if (orderUuids.isEmpty()) emptyMap()
-        else orderAdaptor.findByUuidIn(orderUuids.filterNotNull().distinct()).associate { it.uuid!! to it.orderNo }
 
     fun toOrderElement(order: Order, user: User?): V2OrderElement {
         val status = V2OrderStatus.of(order)
@@ -98,20 +100,43 @@ class V2OperationMapper(
         return host.getActiveRoleOf(userId).let { it == HostRole.MASTER || it == HostRole.MANAGER }
     }
 
-    fun toTicketElement(ticket: IssuedTicket, user: User?, orderNo: String?) = V2IssuedTicketElement(
-        ticketUuid = ticket.uuid,
-        issuedTicketNo = ticket.issuedTicketNo,
-        ticketItemId = ticket.itemInfo?.ticketItemId,
-        payType = V2TicketPayType.of(ticket.itemInfo?.payType),
-        ticketName = ticket.itemInfo?.ticketName,
-        // 현재 회원 이름 (없으면 발급 시점 이름)
-        buyerName = user?.profile?.name ?: ticket.userInfo?.userName,
-        orderUuid = ticket.orderUuid,
-        orderNo = orderNo,
-        issuedAt = ticket.createdAt,
-        entrance = V2EntranceState.of(ticket.issuedTicketStatus),
-        enteredAt = ticket.enteredAt,
-    )
+    /**
+     * 발급 티켓 응답(I-1·I-2·I-3) 변환 (#740). 주문(주문번호·주문자)·회원(주문자·소유자)·선물 상태를 티켓 수와 관계없이 한 번씩 일괄 조회한다.
+     * 주문자 = 주문 사용자, 소유자 = 지금 티켓을 가진 사용자(`issued_ticket.user_id`, 선물 수락 시 받은 사람)
+     */
+    fun ticketViewsOf(tickets: List<IssuedTicket>): List<V2IssuedTicketView> {
+        if (tickets.isEmpty()) return emptyList()
+        val orders = orderAdaptor.findByUuidIn(tickets.mapNotNull { it.orderUuid }.distinct()).associateBy { it.uuid!! }
+        val users = usersOf(tickets.map { it.getUserId() } + orders.values.map { it.userId })
+        val giftStates = v2IssuedTicketQuery.giftStatesOf(tickets.mapNotNull { it.id })
+        return tickets.map { ticket ->
+            val order = ticket.orderUuid?.let { orders[it] }
+            val owner = users[ticket.getUserId()]
+            val buyer = order?.userId?.let { users[it] }
+            val ownerName = owner?.profile?.name ?: ticket.userInfo?.userName
+            V2IssuedTicketView(
+                ticket = ticket,
+                buyer = buyer,
+                owner = owner,
+                element = V2IssuedTicketElement(
+                    ticketUuid = ticket.uuid,
+                    issuedTicketNo = ticket.issuedTicketNo,
+                    ticketItemId = ticket.itemInfo?.ticketItemId,
+                    payType = V2TicketPayType.of(ticket.itemInfo?.payType),
+                    ticketName = ticket.itemInfo?.ticketName,
+                    // 주문이 없으면(방어) 소유자 이름으로 대신한다
+                    buyerName = if (order == null) ownerName else buyer?.profile?.name,
+                    ownerName = ownerName,
+                    giftState = giftStates[ticket.id] ?: V2HostGiftState.NONE,
+                    orderUuid = ticket.orderUuid,
+                    orderNo = order?.orderNo,
+                    issuedAt = ticket.createdAt,
+                    entrance = V2EntranceState.of(ticket.issuedTicketStatus),
+                    enteredAt = ticket.enteredAt,
+                ),
+            )
+        }
+    }
 
     /**
      * 엑셀 옵션 컬럼 (I-3 발급 티켓·R-6 주문 공통 규칙, #730). 답변에 나온 옵션 행 id 들을 한 번에 조회해 옵션 그룹 단위 컬럼을 만든다:

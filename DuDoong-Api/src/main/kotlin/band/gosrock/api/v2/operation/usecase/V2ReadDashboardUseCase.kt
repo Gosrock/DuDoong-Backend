@@ -11,12 +11,14 @@ import band.gosrock.api.v2.operation.dto.response.V2EntranceStatsResponse
 import band.gosrock.api.v2.ticket.dto.V2TicketPayType
 import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
+import band.gosrock.domain.domains.event.service.v2.V2EventDisplayRule
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2IssuedTicketQuery
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2IssuedTicketSearch
 import band.gosrock.domain.domains.order.service.v2.V2OrderQuery
 import band.gosrock.domain.domains.order.service.v2.V2OrderSearch
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor
 import band.gosrock.domain.domains.ticket_item.service.v2.V2TicketItemDomainService
+import java.time.LocalDateTime
 
 /** D-1 대시보드 (일반 멤버 이상) */
 @UseCase
@@ -29,7 +31,8 @@ class V2ReadDashboardUseCase(
 ) {
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
     fun execute(userId: Long, eventId: Long): V2DashboardResponse {
-        eventAdaptor.findById(eventId)
+        val event = eventAdaptor.findById(eventId)
+        val now = LocalDateTime.now()
         val counts = v2OrderQuery.counts(V2OrderSearch(eventId = eventId))
         // 판매 매수 = 재고 감소량 (승인·결제 완료로 발급, 취소 시 복구). 무제한은 판매 수량 null
         val ticketItems = ticketItemAdaptor.findAllByEventId(eventId).sortedBy { it.id }
@@ -59,6 +62,8 @@ class V2ReadDashboardUseCase(
             ),
             salesAmount = v2OrderQuery.sumSalesAmount(eventId),
             entrance = V2EntranceStatsResponse.of(v2IssuedTicketQuery.stats(V2IssuedTicketSearch(eventId = eventId))),
+            displayStatus = V2EventDisplayRule.of(event, now),
+            dDay = V2EventDisplayRule.dDayOf(event, now),
         )
     }
 }

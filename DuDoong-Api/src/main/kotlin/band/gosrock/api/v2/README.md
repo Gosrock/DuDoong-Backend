@@ -73,6 +73,7 @@ band.gosrock.api.v2
 - `V2EventBrowseDomainService` / `V2EventBrowseQuery` (#716): 사용자 앱 공연 탐색(P-1~P-5, 모두 비로그인)
   - 공개 공연 = OPEN·CALCULATING·CLOSED. 준비중·삭제는 상세(P-3)·티켓(P-5)에서 멤버여도 404, 홈·리스트에 절대 미포함 (호스트는 E-3 관리 화면)
   - 표시 상태는 `V2EventDisplayRule` 한 곳에서 판정(호스팅 센터 E-1·E-3·E-8·E-9·H-14 와 공통, enum `V2EventDisplayStatus`): PREPARING / OPEN 시작 전 UPCOMING / OPEN 시작~종료 전 ONGOING / 그 외 PAST. 종료 = startAt + runTime(DEC-019 #6), runTime 없으면 종료 = 시작, startAt 없으면 PAST (방어 — prod 0건)
+  - D-day 도 같은 곳 `V2EventDisplayRule.dDayOf` (UPCOMING 일 때만, 날짜 차이·당일 0): E-1·E-3·D-1·H-14·M-4 공통 (#740)
   - 홈(P-1)·P-2 includePast=false = 종료 전 등록 공연(ONGOING + UPCOMING). 쿼리 조건은 종료 배치와 같은 `TIMESTAMPADD(MINUTE, run_time, start_at) > now`, start_at 하한 보조 조건 없음(runTime 상한 없음, OPEN 행 적음 — V006 주석)
   - P-2 정렬 UPCOMING: 종료 전 그룹 시작 임박순(진행 중이 앞) → PAST 그룹 최근 시작 순, 같은 시작이면 id 순. includePast=true 면 종료된 OPEN·CALCULATING·CLOSED 를 PAST 로 포함
   - 검색어 = 공연명 OR 호스트명 부분일치(최대 50자, 대소문자 무시, `%`·`_`·`!` 는 QueryDSL contains 가 이스케이프). 태그 = 같은 분류 OR / 분류끼리 AND(분류별 EXISTS), 없는 태그 id 는 400 `Event_400_23`, 51개 이상은 요청 검증 400
@@ -117,6 +118,10 @@ band.gosrock.api.v2
   - 토큰: 32바이트 SecureRandom base64url. 요청 로그·Slack URL 에서 `SensitiveBodyMasker.maskPath` 로 가린다. 메모(`memo`)는 본문 마스킹 키
   - 알림: `V2GiftNotificationDomainService` + `api.v2.notification.handler.V2GiftNotificationEventHandler`(AFTER_COMMIT, 알림 전용 풀). 보낸 사람 GIFT_SENT·ACCEPTED·REJECTED·RETURNED, 받은 사람 GIFT_RECEIVED·GIFT_TICKET_CANCELED. 회수는 알림 없음. dedup = `gift:{giftId}`. 호스트·운영 취소 때 주문자(보낸 사람)는 #726 의 ORDER_CANCELED_BY_HOST, 받은 사람은 GIFT_TICKET_CANCELED 만 받는다 (수신자가 달라 겹치지 않음, 운영 경로 포함)
 - **v1 공통 보호** `domains.gift.service.TicketGiftGuard` (#719, `service.v2` 밖 — v1 코드가 부른다, 읽기만): v1 입장(티켓 행 잠금 뒤 선물 행 **잠금 읽기**(`FOR SHARE`) — 일반 읽기는 REPEATABLE READ 스냅샷이라 잠금 대기 중 커밋된 선물 생성을 놓친다. 선물 대기면 `IssuedTicket_400_8`), v1 티켓 상세(대기면 400_8), v1 주문 티켓 목록(주문자 소유분만, 대기는 uuid null), v1 사용자 환불(`OrderValidator.validCanRefund`, 선물 대기·완료면 `Order_400_24`), v2 체크인(같은 잠금 읽기로 GIFT_PENDING, 잠근 뒤 uuid·소유자가 요청과 다르면 OTHER_EVENT). 1인 제한 `countPaidTicket` 은 원 구매자(주문 사용자) 기준 (선물 없으면 기존과 같은 값)
+- 전수조사 후속 (#740)
+  - 공연 장소 상세주소 `EventPlace.placeDetailAddress`(`tbl_event.place_detail_address`, V010): E-4 `place.detailAddress`(선택, 255자, 제어 문자 제거·trim·빈 값 null), 장소 응답 `V2EventPlaceResponse.detailAddress`(E-3·P-3·H-14)·E-1 `placeDetailAddress`. 장소는 통째 교체라 빼면 지워진다. v1·운영 어드민 장소 수정은 상세주소를 몰라 `EventPlace.keepingDetailOf`(주소가 같으면 유지, 바뀌면 지움). v1 응답에는 넣지 않음
+  - 호스트 발급 티켓(I-1·I-2·I-3): `giftState`(`V2HostGiftState` NONE / PENDING / ACCEPTED — `V2IssuedTicketQuery.giftStatesOf` 한 번의 쿼리), **`buyerName` = 주문자(주문 사용자)**, `ownerName` = 현재 소유자(선물 수락 시 받은 사람). I-2 `buyerPhone`(주문자)·`ownerPhone`(소유자). 엑셀 열 `소유자`·`소유자 연락처`·`선물`(선물 대기 / 선물 완료). 주문·회원·선물 상태는 `V2OperationMapper.ticketViewsOf` 에서 일괄 조회 (N+1 없음). 검색(NAME/PHONE)은 지금처럼 현재 소유자 기준
+  - D-1 에 `displayStatus`·`dDay`, E-3·H-14 에 `dDay`
 - 마이페이지 (#729, M-1~M-6, 컨트롤러 `api.v2.mypage.V2MyPageController`, 모두 로그인·본인 것만)
   - M-1 `GET /api/v2/me`: 닉네임·이메일(v1 `GET /v1/users/me` 와 같은 값)·프로필 이미지 + 소속(활성) 호스트 요약 — 합류 최신순(host_user 생성 시각 → id, v1 초대 수락이면 초대 시각) 최대 10개 + `hostCount`. 전체는 H-1 `/api/v2/me/hosts`. 조회는 `V2MyPageHostQuery` 스칼라(Host EAGER 회피)
   - M-2 `PATCH /api/v2/me`: null = 변경 안 함. 닉네임 요청 검증은 v1 `ChangeNameRequest`(`@NotBlank` + 2~7자)와 같은 판정(`@Pattern` 으로 null 허용, `V2MyPageNameRuleTest` 가 v1 과 대조), 저장은 v1 `User.changeName`. 유니코드 공백만인 이름(v1 은 도메인 require 로 500)은 `V2UserDomainService` 가 400 `USER_400_4`. 프로필 이미지 빈 문자열 = 기본 이미지(null), key 는 M-3 이 이 유저에게 발급한 형식 그대로(`S3UploadPresignedUrlService.isUserImageKey`: `user/{userId}/` + UUID + jpeg·jpg·png 화이트리스트)만 — 아니면 400 `USER_400_5`. `profile` 이 null 인 유저(prod 0명, 2026-10-05)는 v1 과 같이 아무것도 바꾸지 않고 200 (`User.changeName` 이 `profile?.` 로 무시)

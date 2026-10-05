@@ -175,7 +175,7 @@ class Event(
 
     fun updateEventPlace(eventPlace: EventPlace) {
         validateOpenStatus()
-        this.eventPlace = eventPlace
+        this.eventPlace = eventPlace.keepingDetailOf(this.eventPlace)
     }
 
     fun validateStartAt() {
@@ -295,7 +295,7 @@ class Event(
                 longitude = currentPlace?.longitude,
                 placeName = placeName ?: currentPlace?.placeName,
                 placeAddress = placeAddress ?: currentPlace?.placeAddress,
-            )
+            ).keepingDetailOf(currentPlace)
         }
     }
 

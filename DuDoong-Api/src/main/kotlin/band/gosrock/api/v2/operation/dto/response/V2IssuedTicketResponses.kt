@@ -1,5 +1,6 @@
 package band.gosrock.api.v2.operation.dto.response
 
+import band.gosrock.domain.domains.issuedTicket.service.v2.V2HostGiftState
 import band.gosrock.api.v2.common.V2PageResponse
 import band.gosrock.api.v2.ticket.dto.V2TicketPayType
 import band.gosrock.common.annotation.DateFormat
@@ -42,7 +43,12 @@ data class V2IssuedTicketElement(
     @field:Schema(description = "티켓 종류 DUDOONG / FREE / PRICE")
     val payType: V2TicketPayType?,
     val ticketName: String?,
+    @field:Schema(description = "주문자(주문한 사용자) 이름 — 현재 회원 이름. 선물을 보내도 바뀌지 않는다 (#740 전에는 현재 소유자였음)")
     val buyerName: String?,
+    @field:Schema(description = "현재 소유자 이름 — 선물이 수락되면 받은 사람. 선물이 없으면 주문자와 같다 (#740)")
+    val ownerName: String?,
+    @field:Schema(description = "선물 상태 NONE / PENDING(선물 대기 — 입장 불가) / ACCEPTED(선물 완료 — 소유자 = 받은 사람) (#740)")
+    val giftState: V2HostGiftState,
     val orderUuid: String?,
     val orderNo: String?,
     @field:DateFormat
@@ -58,7 +64,9 @@ data class V2IssuedTicketElement(
 /** I-2 발급 티켓 상세 */
 data class V2IssuedTicketDetailResponse(
     val ticket: V2IssuedTicketElement,
-    @field:Schema(description = "주문자 연락처 (상세에서만)")
+    @field:Schema(description = "주문자 연락처 (상세에서만, #740 전에는 현재 소유자 연락처였음)")
     val buyerPhone: String?,
+    @field:Schema(description = "현재 소유자 연락처 (상세에서만, #740). 선물이 없으면 주문자 연락처와 같다")
+    val ownerPhone: String?,
     val optionAnswers: List<V2OptionAnswerResponse>,
 )

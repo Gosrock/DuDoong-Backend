@@ -3,6 +3,7 @@ package band.gosrock.domain.domains.event.service.v2
 import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.event.domain.EventStatus
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 /** v2 표시용 공연 상태 (호스팅 센터 E-1·E-3·E-8·E-9·H-14 와 사용자 앱 P-1~P-3 공통). 사용자 앱에는 PREPARING 이 나오지 않는다 */
 enum class V2EventDisplayStatus {
@@ -36,4 +37,15 @@ object V2EventDisplayRule {
             }
             EventStatus.CALCULATING, EventStatus.CLOSED, EventStatus.DELETED -> V2EventDisplayStatus.PAST
         }
+
+    /**
+     * D-day (D-n 의 n, 공연일 당일 0) — UPCOMING 일 때만, 아니면 null. 날짜끼리의 차이(시각 무시).
+     * E-1·E-3·D-1·H-14·M-4 공통 (#740 에서 한 곳으로 모음)
+     */
+    fun dDayOf(displayStatus: V2EventDisplayStatus, startAt: LocalDateTime?, now: LocalDateTime): Long? {
+        if (displayStatus != V2EventDisplayStatus.UPCOMING || startAt == null) return null
+        return ChronoUnit.DAYS.between(now.toLocalDate(), startAt.toLocalDate())
+    }
+
+    fun dDayOf(event: Event, now: LocalDateTime): Long? = dDayOf(of(event, now), event.getStartAt(), now)
 }

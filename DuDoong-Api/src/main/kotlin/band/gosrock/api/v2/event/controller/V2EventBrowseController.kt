@@ -38,15 +38,15 @@ class V2EventBrowseController(
     private val readEventDetailUseCase: V2ReadEventDetailUseCase,
     private val readOnSaleTicketItemsUseCase: V2ReadOnSaleTicketItemsUseCase,
 ) {
-    @Operation(summary = "[P-1] 홈: 등록(OPEN)·시작 전 공연 시작 임박순 최대 10개 (비로그인 허용)")
+    @Operation(summary = "[P-1] 홈: 종료 전 등록(OPEN) 공연(진행 중 + 시작 전) 시작 임박순 — 진행 중이 앞, 최대 10개 (비로그인 허용)")
     @GetMapping("/home")
     fun getHome(): V2HomeResponse = readHomeUseCase.execute()
 
     @Operation(
         summary = "[P-2] 공연 리스트 (비로그인 허용)",
         description = "keyword = 공연명 OR 호스트명 부분일치. tagIds = 같은 분류 OR / 분류끼리 AND (없는 태그 id 는 400). " +
-            "includePast=false 면 다가오는 공연(OPEN·시작 전)만, true 면 시작한 OPEN·정산중·지난공연 포함. " +
-            "sort=UPCOMING: 다가오는 공연(OPEN·시작 전) 시작 임박순 → 지난 공연(시작한 OPEN·정산중·지난공연) 최근 시작 순",
+            "includePast=false 면 종료 전 등록(OPEN) 공연(진행 중 + 시작 전)만, true 면 종료된 OPEN·정산중·지난공연 포함 (종료 = 시작 + 러닝타임). " +
+            "sort=UPCOMING: 종료 전 공연 시작 임박순(진행 중이 앞) → 지난 공연(종료된 OPEN·정산중·지난공연) 최근 시작 순",
     )
     @GetMapping("/events")
     fun searchEvents(

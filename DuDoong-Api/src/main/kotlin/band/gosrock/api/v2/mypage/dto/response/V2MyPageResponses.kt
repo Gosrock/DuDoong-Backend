@@ -1,9 +1,9 @@
 package band.gosrock.api.v2.mypage.dto.response
 
 import band.gosrock.api.v2.common.V2PageResponse
-import band.gosrock.api.v2.event.dto.response.V2MyEventResponse
 import band.gosrock.common.annotation.DateFormat
 import band.gosrock.domain.common.vo.ImageVo
+import band.gosrock.domain.domains.event.service.v2.V2EventDisplayRule
 import band.gosrock.domain.domains.event.service.v2.V2EventDisplayStatus
 import band.gosrock.domain.domains.event.service.v2.V2EventSummaryRow
 import band.gosrock.domain.domains.host.service.v2.V2FollowingHostRow
@@ -121,7 +121,7 @@ data class V2RepresentativeEventResponse(
                 startAt = row.startAt,
                 endAt = row.endAt,
                 displayStatus = displayStatus,
-                dDay = V2MyEventResponse.dDayOf(displayStatus, row.startAt, now),
+                dDay = V2EventDisplayRule.dDayOf(displayStatus, row.startAt, now),
             )
         }
     }
