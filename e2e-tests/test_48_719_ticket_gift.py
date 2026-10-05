@@ -554,12 +554,26 @@ def test_14_new_approved_bar(base_url, s):
 # performance_schema 조회는 root(docker-compose 개발용, E2E_DB_ROOT_PASSWORD) 권한이 필요하다
 
 
+# 기본값은 docker-compose.yml 의 로컬 개발용 root 비밀번호 (운영 값 아님). performance_schema 를 못 읽으면 결정적 경합 테스트는 skip
 ROOT_PW = os.environ.get("E2E_DB_ROOT_PASSWORD", "dudoong")
 SEQ = iter(range(10_000))
 
 
 def _rb(seq):
     return f"rb{next(seq)}"
+
+
+def _perf_schema_available():
+    result = subprocess.run(
+        ["mysql", "-h", "127.0.0.1", "-P", "13306", "-uroot", f"-p{ROOT_PW}", "-N", "-e", "SELECT COUNT(*) FROM performance_schema.data_lock_waits"],
+        capture_output=True, text=True,
+    )
+    return result.returncode == 0
+
+
+needs_lock_inspection = pytest.mark.skipif(
+    not _perf_schema_available(), reason="performance_schema 를 읽을 수 없음 (E2E_DB_ROOT_PASSWORD 확인) — 결정적 경합 테스트 skip",
+)
 
 
 def _lock_waits():
@@ -648,6 +662,7 @@ def _rounds_both_orders(run_round):
     return seen
 
 
+@needs_lock_inspection
 def test_15_race_gift_vs_v1_entrance(base_url, s):
     """G-1 ↔ v1 입장 (티켓 행 경합): 입장된 티켓에 대기 선물이 남지 않는다, 양쪽 결과(선물 먼저 / 입장 먼저)가 모두 나온다"""
     ev = s.events["race"]
@@ -672,6 +687,7 @@ def test_15_race_gift_vs_v1_entrance(base_url, s):
     assert set(_rounds_both_orders(round_)) == {"GIFT_WON", "ENTRANCE_WON"}
 
 
+@needs_lock_inspection
 def test_16_race_gift_vs_v2_scan(base_url, s):
     """G-1 ↔ v2 호스트 스캔 (티켓 행 경합): ENTERED 와 대기 선물이 함께 남지 않는다, 양쪽 결과 모두"""
     ev = s.events["race"]
@@ -695,6 +711,7 @@ def test_16_race_gift_vs_v2_scan(base_url, s):
     assert set(_rounds_both_orders(round_)) == {"GIFT_WON", "SCAN_WON"}
 
 
+@needs_lock_inspection
 def test_17_race_accept_vs_old_qr_scan(base_url, s):
     """G-4 ↔ 옛 QR 스캔 (티켓 행 경합): 옛 QR 은 입장되지 않는다 — 스캔이 먼저면 GIFT_PENDING, 수락이 먼저면 OTHER_EVENT (uuid 재확인)"""
     ev = s.events["race"]
@@ -718,6 +735,7 @@ def test_17_race_accept_vs_old_qr_scan(base_url, s):
     assert set(_rounds_both_orders(round_)) == {"GIFT_PENDING", "OTHER_EVENT"}
 
 
+@needs_lock_inspection
 def test_18_race_accept_vs_sender_suspend(base_url, s):
     """G-4 ↔ 보낸 사람 운영 정지 (티켓 행 경합): (수락됨) 또는 (CANCELED SENDER_WITHDRAWN + 수락 Gift_400_3), 양쪽 결과 모두"""
     admin = _admin_base(base_url)
@@ -742,6 +760,7 @@ def test_18_race_accept_vs_sender_suspend(base_url, s):
     assert set(_rounds_both_orders(round_)) == {"ACCEPT_WON", "SUSPEND_WON"}
 
 
+@needs_lock_inspection
 def test_18b_race_gift_vs_sender_suspend(base_url, s):
     """G-1 ↔ 보낸 사람 운영 정지 (사용자 행 경합): 정지된 사용자에게 대기 선물이 남지 않는다"""
     admin = _admin_base(base_url)
@@ -764,6 +783,7 @@ def test_18b_race_gift_vs_sender_suspend(base_url, s):
     assert set(_rounds_both_orders(round_)) == {"GIFT_THEN_CANCELED", "GIFT_REJECTED"}
 
 
+@needs_lock_inspection
 def test_19_race_gift_vs_admin_event_delete(base_url, s):
     """G-1 ↔ 운영 공연 삭제 (공연 행 경합): 삭제된 공연에 대기 선물이 남지 않는다, 양쪽 결과 모두"""
     admin = _admin_base(base_url)
