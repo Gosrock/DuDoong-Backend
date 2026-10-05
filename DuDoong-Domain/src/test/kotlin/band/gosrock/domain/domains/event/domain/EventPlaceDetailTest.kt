@@ -19,6 +19,8 @@ class EventPlaceDetailTest {
         assertNull(place("주소B").keepingDetailOf(place("주소A", "B1")).placeDetailAddress)
         assertNull(place("주소A").keepingDetailOf(null).placeDetailAddress)
         assertEquals("2층", place("주소A", "2층").keepingDetailOf(place("주소A", "B1")).placeDetailAddress)
+        // 앞뒤 공백만 다르면 같은 주소
+        assertEquals("B1", place(" 주소A ").keepingDetailOf(place("주소A", "B1")).placeDetailAddress)
     }
 
     @Test

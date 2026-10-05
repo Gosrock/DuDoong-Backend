@@ -72,7 +72,8 @@ class V2ReadIssuedTicketsUseCase(
     /**
      * I-3 엑셀 (I-1 과 같은 필터, 전체 행, 상한 [exportMaxRows] 초과 시 IssuedTicket_400_7). 기본 컬럼 + 답변이 있는 옵션별 응답 컬럼
      * (옵션 이름이 같으면 옵션 그룹 id 를 붙여 구분). 답변은 fetch join, 옵션 이름은 한 번에 조회.
-     * 개인정보: 연락처 포함(입금 확인용, v1 수준), 이메일 제외. 다운로드는 감사 로그를 남긴다
+     * 개인정보: 연락처 포함(입금 확인용, v1 수준), 이메일 제외. 다운로드는 감사 로그를 남긴다.
+     * 주문·회원·선물 상태 일괄 조회의 IN 절 값 개수도 행 상한([exportMaxRows], 기본 10,000)을 넘지 않는다 (회원은 주문자 + 소유자라 최대 2배)
      */
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
     fun export(userId: Long, eventId: Long, entrance: V2EntranceFilter, searchType: AdminTableSearchType?, keyword: String?): ByteArray {

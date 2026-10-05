@@ -1,11 +1,11 @@
 package band.gosrock.api.v2.operation.dto.response
 
-import band.gosrock.domain.domains.issuedTicket.service.v2.V2HostGiftState
 import band.gosrock.api.v2.common.V2PageResponse
 import band.gosrock.api.v2.ticket.dto.V2TicketPayType
 import band.gosrock.common.annotation.DateFormat
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2EntranceState
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2EntranceStats
+import band.gosrock.domain.domains.issuedTicket.service.v2.V2HostGiftState
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
@@ -47,7 +47,8 @@ data class V2IssuedTicketElement(
     val buyerName: String?,
     @field:Schema(description = "현재 소유자 이름 — 선물이 수락되면 받은 사람. 선물이 없으면 주문자와 같다 (#740)")
     val ownerName: String?,
-    @field:Schema(description = "선물 상태 NONE / PENDING(선물 대기 — 입장 불가) / ACCEPTED(선물 완료 — 소유자 = 받은 사람) (#740)")
+    @field:Schema(description = "선물 상태 NONE / PENDING(선물 대기 — 입장 불가) / ACCEPTED(선물 완료 — 소유자 = 받은 사람) (#740). " +
+            "공연이 끝난 뒤에도 수락되지 않은 선물은 PENDING 그대로라 '선물 대기'로 보인다 (사용자 화면의 '선물 만료'는 조회 시 판정, DEC-026 #7)")
     val giftState: V2HostGiftState,
     val orderUuid: String?,
     val orderNo: String?,

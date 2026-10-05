@@ -14,6 +14,7 @@ import band.gosrock.api.v2.operation.usecase.V2ReadIssuedTicketsUseCase
 import band.gosrock.common.annotation.CurrentUserId
 import band.gosrock.domain.domains.order.repository.condition.AdminTableSearchType
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
@@ -44,7 +45,9 @@ class V2IssuedTicketController(
         @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @RequestParam(defaultValue = "ALL") entrance: V2EntranceFilter,
+        @Parameter(description = SEARCH_TYPE_DESCRIPTION)
         @RequestParam(required = false) searchType: AdminTableSearchType?,
+        @Parameter(description = "검색어 (searchType 기준, 현재 소유자의 이름 또는 연락처 부분일치)")
         @RequestParam(required = false) keyword: String?,
         @RequestParam(defaultValue = "0") @Min(0) page: Int,
         @RequestParam(defaultValue = "20") @Min(1) @Max(V2OrderManageController.MAX_PAGE_SIZE) size: Int,
@@ -56,7 +59,9 @@ class V2IssuedTicketController(
         @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @RequestParam(defaultValue = "ALL") entrance: V2EntranceFilter,
+        @Parameter(description = SEARCH_TYPE_DESCRIPTION)
         @RequestParam(required = false) searchType: AdminTableSearchType?,
+        @Parameter(description = "검색어 (searchType 기준, 현재 소유자의 이름 또는 연락처 부분일치)")
         @RequestParam(required = false) keyword: String?,
     ): ResponseEntity<ByteArray> =
         V2Excel.attachment("issued-tickets-$eventId.xlsx", readIssuedTicketsUseCase.export(userId, eventId, entrance, searchType, keyword))
@@ -88,4 +93,10 @@ class V2IssuedTicketController(
     @PostMapping("/check-ins/self")
     fun selfCheckIn(@CurrentUserId userId: Long, @RequestBody @Valid request: V2SelfCheckInRequest): V2CheckInResponse =
         checkInUseCase.selfCheckIn(userId, request.token!!, request.ticketUuid)
+
+    companion object {
+        /** 발급 티켓 검색 기준 (#740): 현재 소유자 기준 — 선물이 수락된 티켓은 받은 사람으로 찾는다 */
+        private const val SEARCH_TYPE_DESCRIPTION =
+            "검색 기준 NAME(기본) / PHONE — **현재 소유자**(선물 수락 시 받은 사람)의 이름·연락처. 주문자 이름으로는 찾지 않는다"
+    }
 }

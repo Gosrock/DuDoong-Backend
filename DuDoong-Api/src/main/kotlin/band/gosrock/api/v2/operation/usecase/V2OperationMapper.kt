@@ -9,15 +9,15 @@ import band.gosrock.api.v2.operation.dto.response.V2OrderElement
 import band.gosrock.api.v2.operation.dto.response.V2RefundAccountResponse
 import band.gosrock.api.v2.operation.dto.response.V2RefundElement
 import band.gosrock.api.v2.ticket.dto.V2TicketPayType
+import band.gosrock.domain.domains.event.adaptor.EventAdaptor
+import band.gosrock.domain.domains.host.adaptor.HostAdaptor
+import band.gosrock.domain.domains.host.domain.HostRole
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2CheckInOutcome
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2EntranceState
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2HostGiftState
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2IssuedTicketQuery
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
-import band.gosrock.domain.domains.event.adaptor.EventAdaptor
-import band.gosrock.domain.domains.host.adaptor.HostAdaptor
-import band.gosrock.domain.domains.host.domain.HostRole
 import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.order.domain.OrderLineItem
 import band.gosrock.domain.domains.order.domain.OrderRefundAccount
@@ -27,6 +27,9 @@ import band.gosrock.domain.domains.user.adaptor.UserAdaptor
 import band.gosrock.domain.domains.user.domain.AccountRole
 import band.gosrock.domain.domains.user.domain.User
 import org.springframework.stereotype.Component
+
+/** 티켓 한 장의 주문·주문자·소유자 (#740). 이름은 회원 행이 없을 때의 대체 규칙까지 반영한 값 */
+private data class V2TicketPeople(val order: Order?, val buyer: User?, val owner: User?, val buyerName: String?, val ownerName: String?)
 
 /** 발급 티켓 한 장의 응답 + 연락처용 주문자·소유자 회원 (#740) */
 data class V2IssuedTicketView(val ticket: IssuedTicket, val element: V2IssuedTicketElement, val buyer: User?, val owner: User?)
@@ -106,35 +109,51 @@ class V2OperationMapper(
      */
     fun ticketViewsOf(tickets: List<IssuedTicket>): List<V2IssuedTicketView> {
         if (tickets.isEmpty()) return emptyList()
-        val orders = orderAdaptor.findByUuidIn(tickets.mapNotNull { it.orderUuid }.distinct()).associateBy { it.uuid!! }
-        val users = usersOf(tickets.map { it.getUserId() } + orders.values.map { it.userId })
+        val people = ticketPeopleOf(tickets)
         val giftStates = v2IssuedTicketQuery.giftStatesOf(tickets.mapNotNull { it.id })
         return tickets.map { ticket ->
-            val order = ticket.orderUuid?.let { orders[it] }
-            val owner = users[ticket.getUserId()]
-            val buyer = order?.userId?.let { users[it] }
-            val ownerName = owner?.profile?.name ?: ticket.userInfo?.userName
+            val p = people.getValue(ticket)
             V2IssuedTicketView(
                 ticket = ticket,
-                buyer = buyer,
-                owner = owner,
+                buyer = p.buyer,
+                owner = p.owner,
                 element = V2IssuedTicketElement(
                     ticketUuid = ticket.uuid,
                     issuedTicketNo = ticket.issuedTicketNo,
                     ticketItemId = ticket.itemInfo?.ticketItemId,
                     payType = V2TicketPayType.of(ticket.itemInfo?.payType),
                     ticketName = ticket.itemInfo?.ticketName,
-                    // 주문이 없으면(방어) 소유자 이름으로 대신한다
-                    buyerName = if (order == null) ownerName else buyer?.profile?.name,
-                    ownerName = ownerName,
+                    buyerName = p.buyerName,
+                    ownerName = p.ownerName,
                     giftState = giftStates[ticket.id] ?: V2HostGiftState.NONE,
                     orderUuid = ticket.orderUuid,
-                    orderNo = order?.orderNo,
+                    orderNo = p.order?.orderNo,
                     issuedAt = ticket.createdAt,
                     entrance = V2EntranceState.of(ticket.issuedTicketStatus),
                     enteredAt = ticket.enteredAt,
                 ),
             )
+        }
+    }
+
+    /**
+     * 티켓별 주문·주문자·소유자 (#740, I-1~I-3·Q-2·Q-5 공통). 주문·회원을 한 번씩 일괄 조회한다.
+     * 주문자 이름: 주문 사용자의 현재 이름. 주문이 없거나, 주문자 회원 행이 없는데 주문자 = 소유자이면 소유자 이름(발급 시점 이름 포함)으로 채운다
+     */
+    private fun ticketPeopleOf(tickets: List<IssuedTicket>): Map<IssuedTicket, V2TicketPeople> {
+        val orders = orderAdaptor.findByUuidIn(tickets.mapNotNull { it.orderUuid }.distinct()).associateBy { it.uuid!! }
+        val users = usersOf(tickets.map { it.getUserId() } + orders.values.map { it.userId })
+        return tickets.associateWith { ticket ->
+            val order = ticket.orderUuid?.let { orders[it] }
+            val owner = users[ticket.getUserId()]
+            val buyer = order?.userId?.let { users[it] }
+            val ownerName = owner?.profile?.name ?: ticket.userInfo?.userName
+            val buyerName = when {
+                buyer != null -> buyer.profile?.name
+                order == null || order.userId == ticket.getUserId() -> ownerName
+                else -> null
+            }
+            V2TicketPeople(order = order, buyer = buyer, owner = owner, buyerName = buyerName, ownerName = ownerName)
         }
     }
 
@@ -201,12 +220,13 @@ class V2OperationMapper(
     }
 
     fun toCheckInResponse(outcome: V2CheckInOutcome): V2CheckInResponse {
-        val users = usersOf((listOfNotNull(outcome.ticket) + outcome.candidates).map { it.getUserId() })
+        val people = ticketPeopleOf(listOfNotNull(outcome.ticket) + outcome.candidates)
         fun summary(t: IssuedTicket) = V2CheckInTicketResponse(
             ticketUuid = t.uuid,
             issuedTicketNo = t.issuedTicketNo,
             ticketName = t.itemInfo?.ticketName,
-            buyerName = users[t.getUserId()]?.profile?.name ?: t.userInfo?.userName,
+            buyerName = people.getValue(t).buyerName,
+            ownerName = people.getValue(t).ownerName,
             entrance = V2EntranceState.of(t.issuedTicketStatus),
             enteredAt = t.enteredAt,
         )

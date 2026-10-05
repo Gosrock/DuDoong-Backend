@@ -15,13 +15,13 @@ import band.gosrock.api.v2.operation.dto.response.V2OrderListResponse
 import band.gosrock.api.v2.operation.dto.response.V2RefundElement
 import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.common.vo.Money
-import band.gosrock.domain.domains.order.domain.OrderPaymentChannel
-import band.gosrock.domain.domains.order.domain.OrderMethod
-import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2EntranceState
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
+import band.gosrock.domain.domains.order.domain.Order
+import band.gosrock.domain.domains.order.domain.OrderMethod
+import band.gosrock.domain.domains.order.domain.OrderPaymentChannel
 import band.gosrock.domain.domains.order.service.v2.V2OrderDomainService
 import band.gosrock.domain.domains.order.service.v2.V2OrderQuery
 import band.gosrock.domain.domains.order.service.v2.V2OrderSearch
@@ -162,18 +162,21 @@ class V2ReadOrdersUseCase(
             "PENDING_APPROVE" to "승인 대기", "APPROVED" to "승인 완료", "REFUSED" to "승인 거절", "CANCELED" to "취소", "FAILED" to "주문 실패",
         )
         private val REFUND_LABELS = mapOf("NONE" to "", "REQUESTED" to "환불 요청", "COMPLETED" to "환불 완료")
-        private val PAYMENT_CHANNEL_LABELS = mapOf(
-            OrderPaymentChannel.BANK_TRANSFER to "계좌이체", OrderPaymentChannel.TOSS_TRANSFER to "토스 송금", OrderPaymentChannel.FREE to "무료",
-        )
 
         /**
          * R-6 '결제 방식' 열 (#740): v2 주문은 저장된 결제 방식. v1 주문(값 없음)은 무료면 '무료', 카드(PG) 결제면 'PG 결제',
          * 그 밖(v1 두둥티켓 승인형 — 계좌이체·토스 구분 기록 없음)은 빈 칸
          */
-        fun paymentChannelLabel(order: Order): String = order.paymentChannel?.let { PAYMENT_CHANNEL_LABELS.getValue(it) } ?: when {
+        fun paymentChannelLabel(order: Order): String = order.paymentChannel?.let(::paymentChannelLabel) ?: when {
             !order.getTotalPaymentPrice().isGreaterThan(Money.ZERO) -> "무료"
             order.orderMethod == OrderMethod.PAYMENT -> "PG 결제"
             else -> ""
+        }
+
+        private fun paymentChannelLabel(channel: OrderPaymentChannel): String = when (channel) {
+            OrderPaymentChannel.BANK_TRANSFER -> "계좌이체"
+            OrderPaymentChannel.TOSS_TRANSFER -> "토스 송금"
+            OrderPaymentChannel.FREE -> "무료"
         }
     }
 }

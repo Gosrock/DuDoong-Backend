@@ -234,6 +234,55 @@ class V2AuditFollowupTest : V2GiftTestSupport() {
         }
 
         @Test
+        fun `체크인 Q-2·Q-5 응답도 buyerName = 주문자, ownerName = 현재 소유자`() {
+            val shop = Shop()
+            val sender = newBuyer("체크인보낸이")
+            val receiver = newBuyer("체크인받는이")
+            val (_, uuids) = approvedOrder(shop, sender, quantity = 2)
+            val (_, newUuid) = giveAndAccept(sender, receiver, uuids[0])
+
+            checkIn(shop.team.guest, shop.eventId, newUuid).andExpect { status { isOk() } }.data().at("/ticket").let {
+                assertEquals("체크인보낸이", it.at("/buyerName").asText())
+                assertEquals("체크인받는이", it.at("/ownerName").asText())
+            }
+            // 선물 없는 티켓은 같다 — 셀프 체크인(Q-5)
+            val token = qrToken(shop.team.master, shop.eventId)
+            selfCheckIn(sender, token, uuids[1]).andExpect { status { isOk() } }.data().at("/ticket").let {
+                assertEquals("체크인보낸이", it.at("/buyerName").asText())
+                assertEquals("체크인보낸이", it.at("/ownerName").asText())
+            }
+            // 받은 사람의 셀프 체크인: 이미 입장한 티켓 → 요약에 소유자·주문자
+            selfCheckIn(receiver, token, newUuid).andExpect { status { isOk() } }.data().let {
+                assertEquals("ALREADY_ENTERED", it.at("/result").asText())
+                assertEquals("체크인받는이", it.at("/ticket/ownerName").asText())
+                assertEquals("체크인보낸이", it.at("/ticket/buyerName").asText())
+            }
+        }
+
+        @Test
+        fun `N+1 없음 — I-3 엑셀도 티켓·선물 수와 관계없이 쿼리 수가 같다`() {
+            fun exportQueries(shop: Shop): Long {
+                val statistics = entityManagerFactory.unwrap(SessionFactory::class.java).statistics
+                statistics.isStatisticsEnabled = true
+                try {
+                    statistics.clear()
+                    v2Get(shop.team.guest, "/events/${shop.eventId}/issued-tickets/export").andExpect { status { isOk() } }
+                    return statistics.prepareStatementCount
+                } finally {
+                    statistics.isStatisticsEnabled = false
+                }
+            }
+            val small = Shop().also { approvedOrder(it, newBuyer("엑셀N1소"), quantity = 1) }
+            val large = Shop().also { shop ->
+                val buyers = (1..3).map { newBuyer("엑셀N1대$it") }
+                val tickets = buyers.flatMap { b -> approvedOrder(shop, b, quantity = 2).second.map { b to it } }
+                giftOk(tickets[0].first, tickets[0].second)
+                giveAndAccept(tickets[2].first, newBuyer("엑셀N1받는이"), tickets[2].second)
+            }
+            assertEquals(exportQueries(small), exportQueries(large))
+        }
+
+        @Test
         fun `N+1 없음 — 선물이 섞인 티켓 수와 관계없이 I-1 쿼리 수가 같다`() {
             val shop = Shop()
             val buyers = (1..3).map { newBuyer("N1구매$it") }

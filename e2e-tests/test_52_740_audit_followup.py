@@ -189,7 +189,18 @@ def test_06_pending_ticket_scan_rejected(base_url, s):
     # 목록에 '선물 대기'로 보이는 티켓은 현장 스캔에서도 거부된다 (호스트가 미리 알 수 있게 된 것)
     resp = requests.post(_ev(base_url, s, "/check-ins"), json={"ticketUuid": s.ticket_uuids[0]}, headers=_h(s, "master"))
     assert_status(resp, 200)
-    assert get_data(resp)["result"] == "GIFT_PENDING"
+    data = get_data(resp)
+    assert data["result"] == "GIFT_PENDING"
+    assert data["ticket"]["buyerName"] == data["ticket"]["ownerName"] == "후속보낸이"
+
+
+def test_06b_check_in_buyer_and_owner(base_url, s):
+    # 체크인 응답(Q-2)도 I-1 과 같은 의미: buyerName = 주문자, ownerName = 현재 소유자(받은 사람)
+    resp = requests.post(_ev(base_url, s, "/check-ins"), json={"ticketUuid": s.accepted_uuid}, headers=_h(s, "master"))
+    assert_status(resp, 200)
+    data = get_data(resp)
+    assert data["result"] == "ENTERED"
+    assert data["ticket"]["buyerName"] == "후속보낸이" and data["ticket"]["ownerName"] == "후속받는이"
 
 
 def test_07_d_day(base_url, s):

@@ -42,7 +42,8 @@ enum class V2HostGiftState { NONE, PENDING, ACCEPTED }
 
 /**
  * @property entrance null 이면 유효 티켓 전체. CANCELED 는 목록에서 쓰지 않는다
- * @property searchType 검색어 기준(현재 회원 이름·연락처, v1 발급 티켓 목록과 같음). null 이면 이름
+ * @property searchType 검색어 기준(현재 회원 이름·연락처, v1 발급 티켓 목록과 같음). null 이면 이름.
+ *   **현재 소유자 기준** — 선물이 수락된 티켓은 받은 사람 이름·연락처로 찾는다(주문자로는 안 찾아짐, #740)
  */
 data class V2IssuedTicketSearch(
     val eventId: Long,
@@ -86,7 +87,6 @@ class V2IssuedTicketQuery(private val queryFactory: JPAQueryFactory) {
         ).orderBy(issuedTicket.id.desc()).fetch()
     }
 
-    /** 검색어를 반영한 입장 상태별 건수 (입장 필터는 무시) */
     /**
      * 티켓별 선물 상태 (한 번의 쿼리, idx_ticket_gift_issued_ticket_id). 대기·수락 선물이 없는 티켓은 결과에 없다(= NONE).
      * 받은 티켓은 다시 선물할 수 없어 둘이 함께 있을 수 없지만, 있으면 대기를 우선한다
@@ -102,6 +102,7 @@ class V2IssuedTicketQuery(private val queryFactory: JPAQueryFactory) {
             }
     }
 
+    /** 검색어를 반영한 입장 상태별 건수 (입장 필터는 무시) */
     fun stats(search: V2IssuedTicketSearch): V2EntranceStats {
         val entered = CaseBuilder().`when`(issuedTicket.issuedTicketStatus.eq(IssuedTicketStatus.ENTRANCE_COMPLETED)).then(1L).otherwise(0L).sum()
         val tuple = base(queryFactory.select(issuedTicket.count(), entered).from(issuedTicket), search, withEntrance = false).fetchOne()
