@@ -87,17 +87,23 @@ class RedissonLockAop(
     /**
      * 락 트랜잭션이 **새 영속성 컨텍스트**에서 돌게 한다 (#743). 진행 중인 트랜잭션이 없는데 open-in-view 의 EntityManager 가 스레드에 묶여 있으면
      * REQUIRES_NEW 가 그 EntityManager 를 그대로 써서, 락 전에 읽은 엔티티(락 대기 중 다른 요청이 바꿨을 수 있는 옛 상태)가 락 트랜잭션에 보인다.
-     * 트랜잭션 AOP 가 락 AOP 바깥에 있던 때는 메서드의 `@Transactional` 이 먼저 시작돼 REQUIRES_NEW 가 그것을 보류하며 새 EntityManager 를 썼다 — 그 동작을 유지한다.
-     * 진행 중인 트랜잭션이 있으면 REQUIRES_NEW 가 스스로 보류하므로 손대지 않는다
+     * - `@Transactional` 이 있던 락 메서드: 예전(트랜잭션 AOP 가 바깥)에도 그 트랜잭션을 REQUIRES_NEW 가 보류하며 새 EntityManager 를 썼다 — 같은 결과
+     * - `@Transactional` 이 없던 락 메서드(쿠폰·운영 재고 조정·회원 탈퇴 등): 예전에는 open-in-view EntityManager 를 그대로 썼지만 **이제 새 EntityManager** 를 쓴다
+     *
+     * 떼어 내는 것은 open-in-view 가 묶은 holder(트랜잭션 동기화에 묶이지 않은 것)만이다. SUPPORTS 같은 트랜잭션 동기화 범위가 묶은 holder 는
+     * 그 범위가 끝날 때 스스로 풀므로 건드리면 안 된다(떼면 범위 정리 때 IllegalStateException). 진행 중인 트랜잭션이 있으면 REQUIRES_NEW 가 스스로 보류하므로 손대지 않는다.
+     * 메서드가 예외로 끝나도 finally 에서 되돌리고 원래 예외를 그대로 던진다
      */
     private fun <T> withoutOpenEntityManager(block: () -> T): T {
         if (TransactionSynchronizationManager.isActualTransactionActive()) return block()
-        val held = TransactionSynchronizationManager.getResourceMap().filter { (key, value) -> key is EntityManagerFactory && value is EntityManagerHolder }
+        val held = TransactionSynchronizationManager.getResourceMap().filter { (key, value) ->
+            key is EntityManagerFactory && value is EntityManagerHolder && !value.isSynchronizedWithTransaction
+        }
         held.keys.forEach { TransactionSynchronizationManager.unbindResource(it) }
         try {
             return block()
         } finally {
-            held.forEach { (key, value) -> TransactionSynchronizationManager.bindResource(key, value) }
+            held.forEach { (key, value) -> if (!TransactionSynchronizationManager.hasResource(key)) TransactionSynchronizationManager.bindResource(key, value) }
         }
     }
 

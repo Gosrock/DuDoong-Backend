@@ -12,6 +12,10 @@ annotation class RedissonLock(
     // 락 이름
     val LockName: String,
     val paramClassType: KClass<*> = Any::class,
+    /**
+     * true 면 새 트랜잭션을 열지 않고 **호출 측 트랜잭션에 참여**한다(MANDATORY) — 호출 측 트랜잭션이 반드시 있어야 하며 없으면 IllegalTransactionStateException.
+     * 이때 락은 메서드가 끝나면(호출 측 커밋 전에) 풀린다. 기본 false = 락 획득 뒤 새 트랜잭션(REQUIRES_NEW), 락 해제는 그 커밋 뒤 (#743)
+     */
     val needSameTransaction: Boolean = false,
     // redisson default waitTime 이 30 s 임
     val waitTime: Long = 10L,
