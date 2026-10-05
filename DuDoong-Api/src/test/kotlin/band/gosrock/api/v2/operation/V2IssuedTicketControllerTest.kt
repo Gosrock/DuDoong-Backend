@@ -106,12 +106,12 @@ class V2IssuedTicketControllerTest : V2OperationTestSupport() {
                 header { string("Content-Disposition", "attachment; filename=\"issued-tickets-${shop.eventId}.xlsx\"") }
             }.sheet()
             assertEquals(
-                listOf("티켓번호", "티켓 종류", "티켓 이름", "주문자", "연락처", "주문번호", "발급일시", "입장", "체크인 시각", "뒷풀이", "입금자명(${shop.subjectiveOptionId})"),
+                listOf("티켓번호", "티켓 종류", "티켓 이름", "주문자", "연락처", "주문번호", "발급일시", "입장", "체크인 시각", "뒷풀이", "입금자명"),
                 sheet.headers(),
             )
             assertEquals(3, sheet.lastRowNum)
             assertEquals(setOf("예"), sheet.column("뒷풀이").toSet())
-            assertEquals(setOf("홍길동"), sheet.column("입금자명(${shop.subjectiveOptionId})").toSet())
+            assertEquals(setOf("홍길동"), sheet.column("입금자명").toSet())
             assertEquals(setOf("010-7777-8888"), sheet.column("연락처").toSet())
             // 이메일 컬럼 없음, 수식으로 해석될 이름은 작은따옴표
             assertTrue("이메일" !in sheet.headers())

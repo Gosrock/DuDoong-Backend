@@ -18,7 +18,6 @@ import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2EntranceState
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
-import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.order.service.v2.V2OrderDomainService
 import band.gosrock.domain.domains.order.service.v2.V2OrderQuery
 import band.gosrock.domain.domains.order.service.v2.V2OrderSearch
@@ -129,34 +128,18 @@ class V2ReadOrdersUseCase(
         val search = V2OrderSearch(eventId = eventId, status = status.domain, searchType = searchType, keyword = keyword)
         val orders = v2OrderQuery.findAllForExport(search, exportMaxRows)
         val users = mapper.usersOf(orders.map { it.userId })
-        // 옵션 컬럼은 I-3 과 같은 규칙 (#730). 라인 답변은 findAllForExport 가 한 번에 적재, 옵션 이름은 한 번에 조회
-        val columns = mapper.excelOptionColumnsOf(orders.flatMap { o -> o.orderLineItems.flatMap { line -> line.orderOptionAnswers.map { it.optionId } } })
+        // 옵션 컬럼은 I-3 과 같은 규칙 (#730). 라인 답변은 findAllForExport 가 쿼리 1개로 적재, 옵션 이름은 한 번에 조회
+        val columns = mapper.excelOptionColumnsOf(orders.flatMap { o -> o.orderLineItems.flatMap { line -> line.orderOptionAnswers.map { it.optionId } } }, V2ExcelHeaders.ORDER)
         val rows = orders.map { order ->
             val e = mapper.toOrderElement(order, users[order.userId])
             listOf(
                 e.orderNo, e.buyerName, e.buyerPhone, e.depositorName, e.ticketName, e.totalQuantity, e.totalPaymentAmount,
                 e.orderedAt?.format(EXCEL_DATE), e.status?.let { STATUS_LABELS[it.name] }, REFUND_LABELS[e.refundStatus.name],
                 e.refuseReason ?: e.cancelReason,
-            ) + columns.groupIds.map { optionCell(order, it, columns) }
+            ) + mapper.excelOptionCells(order.orderLineItems, columns).let { cells -> columns.groupIds.map { cells[it] } }
         }
         log.info("[V2 엑셀] 주문 다운로드 userId={} eventId={} status={} rows={}", userId, eventId, status, rows.size)
-        return excelService.generateTableExcel("주문 목록", ORDER_HEADERS + columns.headers, rows, escapeFormula = true)
-    }
-
-    /**
-     * 주문 한 행의 옵션 그룹 셀 (#730). 라인이 1개면 응답 그대로, 여러 개(티켓별 옵션 = 수량 1 라인 N개 등)면
-     * 같은 응답끼리 수량을 더해 `응답 ×수량` 을 처음 나온 순서로 쉼표로 잇는다. 응답이 없으면 빈 칸(null)
-     */
-    private fun optionCell(order: Order, groupId: Long, columns: V2ExcelOptionColumns): String? {
-        val lines = order.orderLineItems.sortedBy { it.id }
-        val answered = lines.mapNotNull { line ->
-            line.orderOptionAnswers.firstOrNull { columns.groupOfOption[it.optionId] == groupId }?.answer?.let { it to (line.quantity ?: 0L) }
-        }
-        if (answered.isEmpty()) return null
-        if (lines.size == 1) return answered.single().first
-        val quantities = LinkedHashMap<String, Long>()
-        answered.forEach { (answer, quantity) -> quantities[answer] = (quantities[answer] ?: 0L) + quantity }
-        return quantities.entries.joinToString(", ") { (answer, quantity) -> "$answer ×$quantity" }
+        return excelService.generateTableExcel("주문 목록", V2ExcelHeaders.ORDER + columns.headers, rows, escapeFormula = true)
     }
 
     /** F-1 환불 목록 (v1 환불 조회 쿼리 재사용, 최신 순) */
@@ -171,7 +154,6 @@ class V2ReadOrdersUseCase(
 
     companion object {
         val EXCEL_DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm")
-        val ORDER_HEADERS = listOf("주문번호", "주문자", "연락처", "입금자명", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유")
         private val STATUS_LABELS = mapOf(
             "PENDING_APPROVE" to "승인 대기", "APPROVED" to "승인 완료", "REFUSED" to "승인 거절", "CANCELED" to "취소", "FAILED" to "주문 실패",
         )

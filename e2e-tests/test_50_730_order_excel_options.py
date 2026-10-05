@@ -3,7 +3,7 @@
 
 시나리오: 두둥티켓(옵션 2개: 네/아니오 '뒷풀이', 주관식 '메모') + 옵션 없는 티켓 → v2 등록 →
 일괄 옵션 2장 / 티켓별 옵션 3장(수식으로 시작하는 응답 포함) / 옵션 없는 티켓 주문 → 1건 승인(발급) →
-R-6 옵션 열: 한 주문 한 행, 여러 라인은 `응답 ×수량`(같은 응답 합산), 빈 칸, 수식 방어 / I-3 과 옵션 헤더 동일.
+R-6 옵션 열: 한 주문 한 행, 여러 라인은 `응답 ×수량`(같은 응답 합산)을 줄바꿈으로, 빈 칸, 수식 방어 / I-3 과 같은 헤더 규칙.
 
 재실행해도 충돌하지 않도록 유저 이메일에 실행마다 다른 접미사를 붙인다. DB 직접 접근은 하지 않는다.
 """
@@ -114,7 +114,7 @@ def _sheet(base_url, s, path):
 
 
 def test_01_setup(base_url, s):
-    for who in ["master", "guest", "all", "per", "plain"]:
+    for who in ["master", "guest", "all", "per", "plain", "formula"]:
         s.tokens[who] = _login(base_url, f"fix730-{who}-{RUN}@dudoong.com", f"엑셀{who}")
     resp = requests.post(f"{base_url}/v2/hosts", json={"name": f"엑셀{RUN[:5]}", "contacts": [{"type": "EMAIL", "value": "h@dudoong.com"}]}, headers=_h(s, "master"))
     assert_status(resp, 200)
@@ -147,9 +147,10 @@ def test_01_setup(base_url, s):
 
 def test_02_orders(base_url, s):
     s.orders["all"] = _order(base_url, s, "all", s.ticket, 2, answers=_answers(s, True, "일괄"))
-    per_ticket = [_answers(s, True, "=1+1"), _answers(s, False, "=1+1"), _answers(s, True, "김")]
+    per_ticket = [_answers(s, True, "=1+1"), _answers(s, False, "=1+1"), _answers(s, True, "김, 이")]
     s.orders["per"] = _order(base_url, s, "per", s.ticket, 3, per_ticket=per_ticket)
     s.orders["plain"] = _order(base_url, s, "plain", s.plain, 1)
+    s.orders["formula"] = _order(base_url, s, "formula", s.ticket, 1, answers=_answers(s, False, "@SUM(1)\n둘째줄"))
     # 1건 승인 → 발급 티켓(I-3)에도 옵션 응답이 생긴다 (MySQL 은 3장 승인도 성공)
     assert_status(requests.post(_ev(base_url, s, f"/orders/{s.orders['per']['orderUuid']}/approve"), headers=_h(s, "master")), 200)
 
@@ -157,18 +158,21 @@ def test_02_orders(base_url, s):
 def test_03_order_excel_option_columns(base_url, s):
     rows = _sheet(base_url, s, "/orders/export")
     assert rows[0] == ORDER_BASE + ["뒷풀이", "메모"]
-    assert len(rows) - 1 == 3, "주문 3건 = 3행 (라인 수와 무관)"
+    assert len(rows) - 1 == 4, "주문 4건 = 4행 (라인 수와 무관)"
     by_no = {r[0]: r + [""] * (len(rows[0]) - len(r)) for r in rows[1:]}
     assert by_no[s.orders["all"]["orderNo"]][11:] == ["예", "일괄"]
-    assert by_no[s.orders["per"]["orderNo"]][11:] == ["예 ×2, 아니요 ×1", "'=1+1 ×2, 김 ×1"]
+    # 응답 안의 쉼표와 헷갈리지 않게 응답끼리는 줄바꿈
+    assert by_no[s.orders["per"]["orderNo"]][11:] == ["예 ×2\n아니요 ×1", "'=1+1 ×2\n김, 이 ×1"]
+    # 라인 1개도 수식 방어, 응답 안의 줄바꿈은 공백
+    assert by_no[s.orders["formula"]["orderNo"]][11:] == ["아니요", "'@SUM(1) 둘째줄"]
     assert by_no[s.orders["plain"]["orderNo"]][11:] == ["", ""]
 
 
-def test_04_same_option_headers_as_issued_ticket_excel(base_url, s):
+def test_04_same_header_rule_as_issued_ticket_excel(base_url, s):
     orders = _sheet(base_url, s, "/orders/export")
     tickets = _sheet(base_url, s, "/issued-tickets/export")
     assert tickets[0][:9] == TICKET_BASE
     assert orders[0][len(ORDER_BASE):] == tickets[0][len(TICKET_BASE):] == ["뒷풀이", "메모"]
-    # 필터로 옵션 답변이 있는 주문이 빠지면 옵션 열도 없다 (I-3 과 같은 규칙: 답변에 나온 옵션만)
+    # 같은 규칙이지 같은 열 집합은 아니다: 필터로 옵션 답변이 있는 주문이 빠지면 옵션 열도 없다 (답변에 나온 옵션만)
     only_plain = _xlsx_rows(requests.get(_ev(base_url, s, "/orders/export"), params={"searchType": "DEPOSITOR_NAME", "keyword": "입금plain"}, headers=_h(s, "guest")).content)
     assert only_plain[0] == ORDER_BASE and len(only_plain) == 2

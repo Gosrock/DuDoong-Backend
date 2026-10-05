@@ -81,7 +81,7 @@ class V2ReadIssuedTicketsUseCase(
         val users = mapper.usersOf(tickets.map { it.getUserId() })
         val orderNos = mapper.orderNosOf(tickets.map { it.orderUuid })
         // 답변의 optionId(옵션 행) → 옵션 그룹. 컬럼은 옵션 그룹 단위 (R-6 과 같은 규칙)
-        val columns = mapper.excelOptionColumnsOf(tickets.flatMap { t -> t.issuedTicketOptionAnswers.map { it.optionId } })
+        val columns = mapper.excelOptionColumnsOf(tickets.flatMap { t -> t.issuedTicketOptionAnswers.map { it.optionId } }, V2ExcelHeaders.ISSUED_TICKET)
         val rows = tickets.map { t ->
             val e = mapper.toTicketElement(t, users[t.getUserId()], orderNos[t.orderUuid])
             val answers = t.issuedTicketOptionAnswers.associate { columns.groupOfOption[it.optionId] to it.answer }
@@ -92,11 +92,10 @@ class V2ReadIssuedTicketsUseCase(
             ) + columns.groupIds.map { answers[it] }
         }
         log.info("[V2 엑셀] 발급 티켓 다운로드 userId={} eventId={} entrance={} rows={}", userId, eventId, entrance, rows.size)
-        return excelService.generateTableExcel("발급 티켓 목록", TICKET_HEADERS + columns.headers, rows, escapeFormula = true)
+        return excelService.generateTableExcel("발급 티켓 목록", V2ExcelHeaders.ISSUED_TICKET + columns.headers, rows, escapeFormula = true)
     }
 
     companion object {
-        val TICKET_HEADERS = listOf("티켓번호", "티켓 종류", "티켓 이름", "주문자", "연락처", "주문번호", "발급일시", "입장", "체크인 시각")
         private val PAY_TYPE_LABELS = mapOf("DUDOONG" to "두둥티켓", "FREE" to "무료티켓", "PRICE" to "유료티켓")
     }
 }

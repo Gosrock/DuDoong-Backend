@@ -79,8 +79,9 @@ class V2OrderQuery(private val queryFactory: JPAQueryFactory) {
     fun findAllForExport(search: V2OrderSearch, maxRows: Int): List<Order> {
         val total = base(queryFactory.select(order.count()).from(order), search, withStatus = true).fetchOne() ?: 0L
         if (total > maxRows) throw ExportTooManyOrdersException.EXCEPTION
-        // 라인 옵션 답변(EAGER — 따로 두면 라인마다 조회)을 먼저 한 번에 읽어 영속성 컨텍스트에 올린다 (#730 N+1 방지).
-        // 주문 + 라인 fetch join 에 같이 넣으면 bag(List) 두 개를 동시에 fetch 할 수 없어 쿼리를 나눈다
+        // 라인 옵션 답변(EAGER 컬렉션)을 먼저 쿼리 1개로 읽어 영속성 컨텍스트에 올린다 (#730).
+        // 그대로 두면 라인을 읽을 때 답변을 따로 조회한다: dev·staging·prod 는 default_batch_fetch_size(100) 로 라인 100개당 1번,
+        // 이 설정이 없는 test 프로필은 라인마다 1번. 주문 + 라인 fetch join 에 같이 넣으면 bag(List) 두 개를 동시에 fetch 할 수 없어 쿼리를 나눈다
         base(
             queryFactory.select(orderLineItem).from(order).join(order.orderLineItems, orderLineItem)
                 .leftJoin(orderLineItem.orderOptionAnswers, orderOptionAnswer).fetchJoin(),

@@ -182,14 +182,23 @@ class AdminExcelService {
         val workbook = XSSFWorkbook()
         val sheet = workbook.createSheet(sheetName)
         val headerRow = sheet.createRow(0)
-        headers.forEachIndexed { i, h -> headerRow.createCell(i).setCellValue(h) }
+        // 헤더도 사용자가 정한 값(v2 옵션 질문 이름)이 들어갈 수 있어 같이 방어한다
+        headers.forEachIndexed { i, h -> headerRow.createCell(i).setCellValue(if (escapeFormula) escapeFormula(h) else h) }
+        // 여러 줄 값(v2 주문 엑셀 옵션 응답 등)은 셀 안에서 줄바꿈이 보이도록 자동 줄바꿈
+        val wrapStyle = workbook.createCellStyle().apply { wrapText = true }
         rows.forEachIndexed { idx, values ->
             val row = sheet.createRow(idx + 1)
             values.forEachIndexed { col, value ->
                 when (value) {
                     null -> row.createCell(col).setCellValue("")
                     is Number -> row.createCell(col).setCellValue(value.toDouble())
-                    else -> row.createCell(col).setCellValue(value.toString().let { if (escapeFormula) escapeFormula(it) else it })
+                    else -> {
+                        val text = value.toString().let { if (escapeFormula) escapeFormula(it) else it }
+                        row.createCell(col).apply {
+                            setCellValue(text)
+                            if ('\n' in text) cellStyle = wrapStyle
+                        }
+                    }
                 }
             }
         }
