@@ -181,7 +181,7 @@ class V2RefundAccountInputTest : V2UserOrderTestSupport() {
     inner class Concurrency {
 
         @Test
-        fun `계좌 입력 ↔ 환불 완료 동시 - 완료가 먼저면 입력 거부(계좌 없음), 입력이 먼저면 계좌가 남고 완료`() {
+        fun `계좌 입력 ↔ v1 환불 완료(주문 락 없음) 동시 - 완료가 먼저면 입력 거부(계좌 없음), 입력이 먼저면 계좌가 남고 완료`() {
             repeat(3) {
                 val shop = Shop()
                 val buyer = newBuyer()
@@ -190,7 +190,11 @@ class V2RefundAccountInputTest : V2UserOrderTestSupport() {
                 val pool = Executors.newFixedThreadPool(2)
                 val results = Collections.synchronizedMap(mutableMapOf<String, Int>())
                 pool.submit { start.await(); results["put"] = putAccount(buyer, orderUuid, refundAccount).andReturn().response.status }
-                pool.submit { start.await(); results["complete"] = v2Post(shop.team.manager, "/events/${shop.eventId}/refunds/$orderUuid/complete").andReturn().response.status }
+                // v1 환불 완료는 주문 락을 잡지 않는다 → 주문 행 잠금으로만 줄 선다
+                pool.submit {
+                    start.await()
+                    results["complete"] = mockMvc.patch("/api/v1/events/${shop.eventId}/refunds/$orderUuid/complete") { with(auth(shop.team.master)) }.andReturn().response.status
+                }
                 start.countDown()
                 pool.shutdown()
                 assertTrue(pool.awaitTermination(30, TimeUnit.SECONDS))
