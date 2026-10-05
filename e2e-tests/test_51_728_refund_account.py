@@ -2,13 +2,12 @@
 v2 환불 계좌 입력·수정 O-5 E2E (#728, 사용자 결정 2026-10-05: 호스트 거절·취소 주문의 환불 계좌를 사용자가 입력).
 
 시나리오: 두둥티켓(계좌이체·승인형) 주문 → 호스트 거절 → 주문상세(O-3) 입력 필요 → 계좌 입력 → 주문자에게는 뒤 4자리만 →
-호스트 R-2·F-1 은 매니저 이상만 전체 계좌 → 환불 완료 → 수정 거부(Order_400_28).
-호스트 승인 후 취소·사용자 취소(O-4) 주문의 입력·수정, 대상 아님·남의 주문, 알림 딥링크(주문상세) 확인.
+호스트 R-2·F-1 은 매니저 이상만 전체 계좌(+ 마지막 입력·수정 시각) → 계좌 변경 시 호스트 마스터·매니저 알림 → 환불 완료 → 수정 거부(Order_400_28).
+호스트 승인 후 취소·사용자 취소(O-4) 주문의 입력·수정, 입금 미확인 거절(입력 필요 아님·안내 없음), v1 주문(대상 아님), 남의 주문, 알림 딥링크(주문상세) 확인.
 MySQL 경합: 주문 행을 별도 세션으로 잡아 둔 채 v1 환불 완료(주문 락 없음) → 계좌 입력 순으로 보내고, 입력이 완료 뒤에 판정되는지 확인.
 
-DB 직접 접근은 E2E_DB(기본 dudoong) 의 로컬 MySQL, performance_schema 조회는 E2E_DB_ROOT_PASSWORD(기본 docker-compose 로컬값) — 못 읽으면 경합 테스트 skip.
+DB 직접 접근(v1 주문 흉내, 행 잠금 세션)은 conftest 의 e2e_db fixture(#737), 잠금 대기 조회는 e2e_db_root(못 읽으면 경합 테스트 skip).
 """
-import os
 import subprocess
 import threading
 import time
@@ -28,10 +27,8 @@ PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", 
 SECTIONS = [{"title": "공연 소개", "content": "<p>환불 계좌 테스트</p>", "sortOrder": 0}]
 ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-123-456789"}
 REFUND_ACCOUNT = {"bankName": "국민은행", "accountHolder": "홍길동", "accountNumber": "123-45-678901"}
-DB_NAME = os.environ.get("E2E_DB", "dudoong")
-# 기본값은 docker-compose.yml 의 로컬 개발용 root 비밀번호 (운영 값 아님)
-ROOT_PW = os.environ.get("E2E_DB_ROOT_PASSWORD", "dudoong")
-PEOPLE = ["master", "manager", "guest", "refused", "canceled", "self", "other", "race1", "race2"]
+GUIDE = "주문상세에서 환불 계좌를 입력해 주세요."
+PEOPLE = ["master", "manager", "guest", "refused", "unconfirmed", "v1", "canceled", "self", "other", "race1", "race2"]
 
 
 class State:
@@ -45,6 +42,20 @@ class State:
 @pytest.fixture(scope="module")
 def s():
     return State()
+
+
+# conftest e2e_db fixture 를 이 모듈의 헬퍼(_sql, _RowLock 등)가 쓰도록 묶는다 (#737)
+DB = None
+
+
+@pytest.fixture(autouse=True, scope="module")
+def _bind_db(e2e_db):
+    global DB
+    DB = e2e_db
+
+
+def _sql(sql):
+    return DB.query(sql)
 
 
 def _h(s, who):
@@ -85,13 +96,16 @@ def _host_detail(base_url, s, who, order_uuid):
     return get_data(resp)
 
 
-def _sql(sql):
-    result = subprocess.run(
-        ["mysql", "-h", "127.0.0.1", "-P", "13306", "-u", "dudoong", "-pdudoong", DB_NAME, "-N", "-e", sql],
-        capture_output=True, text=True,
-    )
-    assert result.returncode == 0, result.stderr
-    return result.stdout.strip()
+def _notifications(base_url, s, who, type_, order_uuid, count=1):
+    """who 의 type_ 알림 중 order_uuid 대상인 것. count 건이 될 때까지 최대 10초 기다린다"""
+    deadline = time.time() + 10
+    while True:
+        resp = requests.get(f"{base_url}/v2/me/notifications", params={"size": 50}, headers=_h(s, who))
+        assert_status(resp, 200)
+        found = [n for n in get_data(resp)["content"] if n["type"] == type_ and n["target"]["id"] == order_uuid]
+        if len(found) >= count or time.time() > deadline:
+            return found
+        time.sleep(0.2)
 
 
 def test_01_setup(base_url, s):
@@ -126,20 +140,15 @@ def test_01_setup(base_url, s):
 def test_02_refused_input_host_view_complete_then_locked(base_url, s):
     order_uuid = _order(base_url, s, "refused")
     assert _code(_put(base_url, s, "refused", order_uuid)) == "Order_400_27", "승인 대기(환불 요청 없음)는 대상 아님"
-    assert_status(requests.post(_ev(base_url, s, f"/orders/{order_uuid}/refuse"), json={"reasonType": "DEPOSIT_UNCONFIRMED"}, headers=_h(s, "manager")), 200)
+    assert_status(requests.post(_ev(base_url, s, f"/orders/{order_uuid}/refuse"), json={"reasonType": "AMOUNT_MISMATCH"}, headers=_h(s, "manager")), 200)
 
     d = _detail(base_url, s, "refused", order_uuid)
     assert d["refundAccountRequired"] is True and d["refundAccountEditable"] is True and d["refundAccount"] is None
 
-    # 거절 알림은 주문상세로 이동 (target = ORDER / orderUuid)
-    deadline = time.time() + 10
-    found = []
-    while time.time() < deadline and not found:
-        resp = requests.get(f"{base_url}/v2/me/notifications", params={"size": 50}, headers=_h(s, "refused"))
-        found = [n for n in get_data(resp)["content"] if n["type"] == "ORDER_REFUSED" and n["target"]["id"] == order_uuid]
-        time.sleep(0.2)
+    # 거절 알림은 주문상세로 이동 (target = ORDER / orderUuid) + 계좌 입력 안내
+    found = _notifications(base_url, s, "refused", "ORDER_REFUSED", order_uuid)
     assert found and found[0]["target"]["type"] == "ORDER"
-    assert found[0]["body"].endswith("주문상세에서 환불 계좌를 입력해 주세요."), found[0]["body"]
+    assert found[0]["body"].endswith(GUIDE), found[0]["body"]
 
     assert _code(_put(base_url, s, "other", order_uuid)) == "Order_404_1"
     resp = _put(base_url, s, "refused", order_uuid, {**REFUND_ACCOUNT, "accountNumber": "12ab"})
@@ -151,15 +160,22 @@ def test_02_refused_input_host_view_complete_then_locked(base_url, s):
     assert d["refundAccountRequired"] is False and d["refundAccountEditable"] is True
     assert d["refundAccount"] == {"bankName": "국민은행", "accountHolder": "홍길동", "maskedAccountNumber": "*********8901"}
 
-    # 호스트: 매니저 이상만 전체 계좌, 일반 멤버는 null (R-2·F-1)
-    assert _host_detail(base_url, s, "manager", order_uuid)["refundAccount"]["accountNumber"] == "123-45-678901"
+    # 호스트: 매니저 이상만 전체 계좌 + 마지막 입력·수정 시각, 일반 멤버는 null (R-2·F-1)
+    host_account = _host_detail(base_url, s, "manager", order_uuid)["refundAccount"]
+    assert host_account["accountNumber"] == "123-45-678901" and host_account["updatedAt"], host_account
     assert _host_detail(base_url, s, "guest", order_uuid)["refundAccount"] is None
     rows = get_data(requests.get(_ev(base_url, s, "/refunds"), headers=_h(s, "manager")))["content"]
-    assert next(r for r in rows if r["orderUuid"] == order_uuid)["refundAccount"]["bankName"] == "국민은행"
+    row_account = next(r for r in rows if r["orderUuid"] == order_uuid)["refundAccount"]
+    assert row_account["bankName"] == "국민은행" and row_account["updatedAt"], row_account
 
-    # 수정 → 환불 완료 → 수정 거부
+    # 같은 값 재입력은 변경 아님. 다른 값으로 수정 → 호스트 마스터·매니저 변경 알림 1건씩 (첫 입력은 알림 없음)
+    assert_status(_put(base_url, s, "refused", order_uuid), 200)
     assert_status(_put(base_url, s, "refused", order_uuid, {"bankName": "우리은행", "accountHolder": "김철수", "accountNumber": "1002 123 456789"}), 200)
     assert _host_detail(base_url, s, "manager", order_uuid)["refundAccount"]["accountNumber"] == "1002123456789"
+    for who in ("master", "manager"):
+        changed = _notifications(base_url, s, who, "REFUND_ACCOUNT_CHANGED", order_uuid)
+        assert len(changed) == 1 and changed[0]["target"]["type"] == "ORDER", changed
+    assert _notifications(base_url, s, "guest", "REFUND_ACCOUNT_CHANGED", order_uuid, count=0) == []
     assert_status(requests.post(_ev(base_url, s, f"/refunds/{order_uuid}/complete"), headers=_h(s, "manager")), 200)
     resp = _put(base_url, s, "refused", order_uuid)
     assert resp.status_code == 400 and _code(resp) == "Order_400_28"
@@ -167,7 +183,28 @@ def test_02_refused_input_host_view_complete_then_locked(base_url, s):
     assert d["refundAccountEditable"] is False and d["refundAccount"]["bankName"] == "우리은행"
 
 
-def test_03_host_cancel_and_user_cancel(base_url, s):
+def test_03_deposit_unconfirmed_and_v1_order(base_url, s):
+    # 입금 미확인 거절: 입력 필요 아님 + 알림 안내 없음, 입력은 가능
+    unconfirmed = _order(base_url, s, "unconfirmed")
+    assert_status(requests.post(_ev(base_url, s, f"/orders/{unconfirmed}/refuse"), json={"reasonType": "DEPOSIT_UNCONFIRMED"}, headers=_h(s, "manager")), 200)
+    d = _detail(base_url, s, "unconfirmed", unconfirmed)
+    assert d["refundAccountRequired"] is False and d["refundAccountEditable"] is True
+    found = _notifications(base_url, s, "unconfirmed", "ORDER_REFUSED", unconfirmed)
+    assert found and GUIDE not in found[0]["body"], found
+    assert_status(_put(base_url, s, "unconfirmed", unconfirmed), 200)
+
+    # v1 주문(결제 채널 없음 — v1 앱 주문을 DB 로 흉내): 거절돼도 대상 아님, 안내 없음
+    v1 = _order(base_url, s, "v1")
+    _sql(f"UPDATE tbl_order SET payment_channel = NULL WHERE uuid = '{v1}'")
+    assert_status(requests.post(_ev(base_url, s, f"/orders/{v1}/refuse"), json={"reasonType": "AMOUNT_MISMATCH"}, headers=_h(s, "manager")), 200)
+    assert _code(_put(base_url, s, "v1", v1)) == "Order_400_27"
+    d = _detail(base_url, s, "v1", v1)
+    assert d["refundAccountRequired"] is False and d["refundAccountEditable"] is False
+    found = _notifications(base_url, s, "v1", "ORDER_REFUSED", v1)
+    assert found and GUIDE not in found[0]["body"], found
+
+
+def test_04_host_cancel_and_user_cancel(base_url, s):
     canceled = _order(base_url, s, "canceled")
     assert_status(requests.post(_ev(base_url, s, f"/orders/{canceled}/approve"), headers=_h(s, "manager")), 200)
     assert _code(_put(base_url, s, "canceled", canceled)) == "Order_400_27", "승인 완료(환불 요청 없음)는 대상 아님"
@@ -185,23 +222,38 @@ def test_03_host_cancel_and_user_cancel(base_url, s):
 
 # ===== MySQL 경합 (결정적) =====
 
-def _perf_schema_available():
-    result = subprocess.run(
-        ["mysql", "-h", "127.0.0.1", "-P", "13306", "-uroot", f"-p{ROOT_PW}", "-N", "-e", "SELECT COUNT(*) FROM performance_schema.data_lock_waits"],
-        capture_output=True, text=True,
-    )
-    return result.returncode == 0
+# performance_schema 를 root 로 못 읽으면 결정적 경합 테스트는 skip (conftest e2e_db_root, E2E_DB_ROOT_PASSWORD)
+needs_lock_inspection = pytest.mark.usefixtures("e2e_db_root")
 
 
 def _lock_waits():
-    result = subprocess.run(
-        ["mysql", "-h", "127.0.0.1", "-P", "13306", "-uroot", f"-p{ROOT_PW}", "-N", "-e",
-         "SELECT COUNT(*) FROM performance_schema.data_lock_waits w JOIN performance_schema.data_locks l "
-         f"ON l.ENGINE_LOCK_ID = w.REQUESTING_ENGINE_LOCK_ID WHERE l.OBJECT_SCHEMA = '{DB_NAME}'"],
-        capture_output=True, text=True,
-    )
-    assert result.returncode == 0, result.stderr
-    return int(result.stdout.strip())
+    return int(DB.query(
+        "SELECT COUNT(*) FROM performance_schema.data_lock_waits w JOIN performance_schema.data_locks l "
+        f"ON l.ENGINE_LOCK_ID = w.REQUESTING_ENGINE_LOCK_ID WHERE l.OBJECT_SCHEMA = '{DB.name}'",
+        root=True, database=False,
+    ))
+
+
+class _RowLock:
+    """별도 세션에서 BEGIN; <잠금 SELECT>; 를 실행해 둔 채로 있다가 release() 에서 COMMIT"""
+
+    def __init__(self, lock_sql):
+        self.p = subprocess.Popen(
+            DB.command("--unbuffered", "-N"), env=DB.env(),
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        )
+        self.p.stdin.write(f"BEGIN;\n{lock_sql};\nSELECT 'LOCKED';\n")
+        self.p.stdin.flush()
+        while True:
+            line = self.p.stdout.readline()
+            assert line, self.p.stderr.read()
+            if line.strip() == "LOCKED":
+                break
+
+    def release(self):
+        self.p.stdin.write("COMMIT;\n")
+        self.p.stdin.close()
+        self.p.wait(timeout=10)
 
 
 def _await_waits(n, timeout=6.0):
@@ -213,30 +265,24 @@ def _await_waits(n, timeout=6.0):
     raise AssertionError(f"잠금 대기 {n}건이 안 됨 (현재 {_lock_waits()})")
 
 
-@pytest.mark.skipif(not _perf_schema_available(), reason="performance_schema 를 읽을 수 없음 (E2E_DB_ROOT_PASSWORD 확인)")
-def test_04_race_v1_complete_then_put(base_url, s):
+@needs_lock_inspection
+def test_05_race_v1_complete_then_put(base_url, s):
     """주문 행을 별도 세션으로 잡은 채 v1 환불 완료(주문 락 없음, 행 UPDATE 대기) → 계좌 입력(행 잠금 대기) 순으로 보내고 해제:
-    입력은 완료 뒤에 판정되어 Order_400_28, 계좌가 저장되지 않는다 (입력이 일반 읽기면 대기 없이 저장돼 버린다)"""
+    입력은 완료 뒤에 판정되어 Order_400_28, 계좌가 저장되지 않는다.
+    입력이 행 잠금 없이 읽으면 대기 2건이 되지 않아 여기서 실패한다 (대기 확인 시간 초과는 삼키지 않는다)"""
     for who in ("race1", "race2"):
         order_uuid = _order(base_url, s, who)
-        assert_status(requests.post(_ev(base_url, s, f"/orders/{order_uuid}/refuse"), json={"reasonType": "DEPOSIT_UNCONFIRMED"}, headers=_h(s, "manager")), 200)
+        assert_status(requests.post(_ev(base_url, s, f"/orders/{order_uuid}/refuse"), json={"reasonType": "AMOUNT_MISMATCH"}, headers=_h(s, "manager")), 200)
         order_id = _sql(f"SELECT order_id FROM tbl_order WHERE uuid = '{order_uuid}'")
-        holder = subprocess.Popen(
-            ["mysql", "-h", "127.0.0.1", "-P", "13306", "-u", "dudoong", "-pdudoong", "--unbuffered", "-N", DB_NAME],
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
-        )
-        holder.stdin.write(f"BEGIN;\nSELECT order_id FROM tbl_order WHERE order_id = {order_id} FOR UPDATE;\nSELECT 'LOCKED';\n")
-        holder.stdin.flush()
-        while holder.stdout.readline().strip() != "LOCKED":
-            pass
         results, errors = {}, {}
 
         def run(key, call):
             try:
                 results[key] = call()
-            except Exception as e:
+            except Exception as e:  # 요청 스레드의 예외를 그대로 다시 던진다 (KeyError 로 가려지지 않게)
                 errors[key] = e
 
+        holder = _RowLock(f"SELECT order_id FROM tbl_order WHERE order_id = {order_id} FOR UPDATE")
         try:
             t1 = threading.Thread(target=run, args=("complete", lambda: requests.patch(
                 f"{base_url}/v1/events/{s.event_id}/refunds/{order_uuid}/complete", headers=_h(s, "master"))))
@@ -244,20 +290,15 @@ def test_04_race_v1_complete_then_put(base_url, s):
             _await_waits(1)
             t2 = threading.Thread(target=run, args=("put", lambda: _put(base_url, s, who, order_uuid)))
             t2.start()
-            # 정상: 입력도 주문 행 잠금을 기다린다. 일반 읽기 변형이면 대기 없이 끝나 2건이 되지 않는다
-            try:
-                _await_waits(2, timeout=3.0)
-            except AssertionError:
-                pass
+            _await_waits(2)
         finally:
-            holder.stdin.write("COMMIT;\n")
-            holder.stdin.close()
-            holder.wait(timeout=10)
+            holder.release()
         t1.join(30)
         t2.join(30)
         for key in ("complete", "put"):
             if key in errors:
                 raise errors[key]
+            assert key in results, f"{key} 요청이 30초 안에 끝나지 않음"
         assert results["complete"].status_code == 200, results["complete"].text
         assert results["put"].status_code == 400 and _code(results["put"]) == "Order_400_28", results["put"].text
         assert _sql(f"SELECT COUNT(*) FROM tbl_order_refund_account WHERE order_id = {order_id}") == "0"

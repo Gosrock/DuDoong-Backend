@@ -132,11 +132,11 @@ class V2NotificationHandlerThreadTest : V2OperationTestSupport() {
     /** 실행 경로를 만들지 않은 핸들러(사용자 취소·환불 요청 등)까지 포함해, 리스너 메서드 전부가 전용 executor 를 지정했는지 본다 */
     @Test
     fun `모든 이벤트 리스너 메서드는 @Async(notificationExecutor) 를 지정한다`() {
-        // 프록시(CGLIB) 서브클래스가 아니라 실제 핸들러 클래스의 선언 메서드를 본다. 선물 알림 핸들러(#719)도 같은 규칙
+        // 프록시(CGLIB) 서브클래스가 아니라 실제 핸들러 클래스의 선언 메서드를 본다. 선물 알림 핸들러(#719)·환불 계좌 변경(#728)도 같은 규칙
         val listeners = listOf(handler, giftHandler).flatMap { bean ->
             AopUtils.getTargetClass(bean).declaredMethods.filter { AnnotatedElementUtils.hasAnnotation(it, TransactionalEventListener::class.java) }
         }
-        assertEquals(10, listeners.size, "리스너 수가 바뀌면 이 테스트와 실행 스레드 테스트를 갱신: ${listeners.map { it.name }}")
+        assertEquals(11, listeners.size, "리스너 수가 바뀌면 이 테스트와 실행 스레드 테스트를 갱신: ${listeners.map { it.name }}")
         listeners.forEach {
             val async = AnnotatedElementUtils.findMergedAnnotation(it, Async::class.java)
             assertEquals(V2NotificationAsyncConfig.NOTIFICATION_EXECUTOR, async?.value, "${it.name} 의 @Async executor")

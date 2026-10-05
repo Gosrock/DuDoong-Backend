@@ -167,6 +167,7 @@ def test_03_approved_refused(base_url, s):
     assert_status(resp, 200)
     n = _wait(base_url, s, "refused", "ORDER_REFUSED")[0]
     assert n["target"]["id"] == o["refused"]
+    # v1 앱 주문(결제 채널 없음)이라 환불 계좌 입력 안내는 붙지 않는다 (#728 v2 주문만)
     assert n["body"].endswith("사유: 중복 주문"), n["body"]
     assert n["extra"]["refuseReasonType"] == "ETC" and n["extra"]["refuseReason"] == "중복 주문"
 
