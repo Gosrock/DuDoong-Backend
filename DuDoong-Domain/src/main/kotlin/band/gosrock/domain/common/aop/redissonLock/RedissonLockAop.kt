@@ -4,6 +4,7 @@ import band.gosrock.common.exception.BadLockIdentifierException
 import band.gosrock.common.exception.DuDoongCodeException
 import band.gosrock.common.exception.DuDoongDynamicException
 import band.gosrock.common.exception.NotAvailableRedissonLockException
+import jakarta.persistence.EntityManagerFactory
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
@@ -11,14 +12,26 @@ import org.aspectj.lang.reflect.MethodSignature
 import org.redisson.api.RedissonClient
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
+import org.springframework.core.Ordered
+import org.springframework.core.annotation.Order
+import org.springframework.orm.jpa.EntityManagerHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.TransactionTimedOutException
+import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.util.StringUtils
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.TimeUnit
 
+/**
+ * `@RedissonLock` 분산락 AOP. 순서: **락 획득 → 새 트랜잭션([RedissonCallNewTransaction], REQUIRES_NEW) → 메서드 → 커밋 → 락 해제**.
+ *
+ * 트랜잭션 AOP(`@Transactional`, 기본 order = [Ordered.LOWEST_PRECEDENCE])보다 **바깥**에 둔다 (#743). 같은 order 이면 트랜잭션 AOP 가 바깥이 되어,
+ * 메서드·클래스의 `@Transactional` 이 락을 기다리기 전에 커넥션을 잡고(락 대기 중 점유) 락 트랜잭션과 함께 커넥션 2개를 쥐었다.
+ * 바깥에 두면 메서드의 `@Transactional` 은 락의 새 트랜잭션에 참여만 한다 (커넥션 1개). 락 트랜잭션은 늘 새 영속성 컨텍스트([withoutOpenEntityManager])
+ */
 @Aspect
 @Component
+@Order(RedissonLockAop.ORDER)
 @ConditionalOnExpression("\${ableRedissonLock:true}")
 class RedissonLockAop(
     private val redissonClient: RedissonClient,
@@ -53,7 +66,8 @@ class RedissonLockAop(
             if (!available) throw NotAvailableRedissonLockException.EXCEPTION
 
             log.info("redisson 락 안으로 진입 $baseKey:$dynamicKey 쓰레드 아이디${Thread.currentThread().id}")
-            return callTransactionFactory.getCallTransaction(redissonLock.needSameTransaction).proceed(joinPoint)
+            if (redissonLock.needSameTransaction) return callTransactionFactory.getCallTransaction(true).proceed(joinPoint)
+            return withoutOpenEntityManager { callTransactionFactory.getCallTransaction(false).proceed(joinPoint) }
         } catch (e: DuDoongCodeException) {
             throw e
         } catch (e: DuDoongDynamicException) {
@@ -67,6 +81,23 @@ class RedissonLockAop(
                 log.error("$e$baseKey$dynamicKey")
                 throw e
             }
+        }
+    }
+
+    /**
+     * 락 트랜잭션이 **새 영속성 컨텍스트**에서 돌게 한다 (#743). 진행 중인 트랜잭션이 없는데 open-in-view 의 EntityManager 가 스레드에 묶여 있으면
+     * REQUIRES_NEW 가 그 EntityManager 를 그대로 써서, 락 전에 읽은 엔티티(락 대기 중 다른 요청이 바꿨을 수 있는 옛 상태)가 락 트랜잭션에 보인다.
+     * 트랜잭션 AOP 가 락 AOP 바깥에 있던 때는 메서드의 `@Transactional` 이 먼저 시작돼 REQUIRES_NEW 가 그것을 보류하며 새 EntityManager 를 썼다 — 그 동작을 유지한다.
+     * 진행 중인 트랜잭션이 있으면 REQUIRES_NEW 가 스스로 보류하므로 손대지 않는다
+     */
+    private fun <T> withoutOpenEntityManager(block: () -> T): T {
+        if (TransactionSynchronizationManager.isActualTransactionActive()) return block()
+        val held = TransactionSynchronizationManager.getResourceMap().filter { (key, value) -> key is EntityManagerFactory && value is EntityManagerHolder }
+        held.keys.forEach { TransactionSynchronizationManager.unbindResource(it) }
+        try {
+            return block()
+        } finally {
+            held.forEach { (key, value) -> TransactionSynchronizationManager.bindResource(key, value) }
         }
     }
 
@@ -124,5 +155,10 @@ class RedissonLockAop(
             }
         }
         throw BadLockIdentifierException.EXCEPTION
+    }
+
+    companion object {
+        /** 트랜잭션 AOP(기본 [Ordered.LOWEST_PRECEDENCE]) 바로 바깥 */
+        const val ORDER = Ordered.LOWEST_PRECEDENCE - 1
     }
 }
