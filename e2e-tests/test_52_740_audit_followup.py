@@ -200,3 +200,15 @@ def test_07_d_day(base_url, s):
     mine = next(e for e in get_data(requests.get(f"{base_url}/v2/me/events", params={"size": 50}, headers=_h(s, "master")))["content"] if e["eventId"] == s.event_id)
     assert manage["dDay"] == dashboard["dDay"] == host_event["dDay"] == mine["dDay"] == expected
     assert dashboard["displayStatus"] == "UPCOMING"
+
+
+def test_08_order_approval_required_and_payment_column(base_url, s):
+    # 무료 선착순 주문은 주문 시점 승인형이 아니다
+    detail = get_data(requests.get(f"{base_url}/v2/me/orders/{s.order_uuid}", headers=_h(s, "sender")))
+    assert detail["approvalRequired"] is False
+    # 주문 엑셀: 입금자명 다음에 결제 방식
+    rows = _xlsx_rows(requests.get(_ev(base_url, s, "/orders/export"), headers=_h(s, "master")).content)
+    headers = rows[0]
+    assert headers.index("결제 방식") == headers.index("입금자명") + 1
+    row = dict(zip(headers, next(r for r in rows[1:] if r[0] == detail["orderNo"])))
+    assert row["결제 방식"] == "무료"
