@@ -9,11 +9,16 @@ import java.lang.reflect.Proxy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import software.amazon.awssdk.services.ses.SesClient;
 
-/** 스프링 부트 설정의 컴포넌트 스캔범위를 지정 통합 테스트를 위함 */
+/**
+ * 스프링 부트 설정의 컴포넌트 스캔범위를 지정 통합 테스트를 위함.
+ * 커넥션 측정(#743): 스레드별 커넥션 수([ThreadConnections])와 락 메서드별 측정([LockConnectionProbe])을 모든 통합 테스트에 붙인다
+ */
 @Configuration
+@Import({LockConnectionProbe.class, LockConnectionProbePostProcessor.class})
 @ComponentScan(
         basePackageClasses = {
             DuDoongInfraApplication.class,
