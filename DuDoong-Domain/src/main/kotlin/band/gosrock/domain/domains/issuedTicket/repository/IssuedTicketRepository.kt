@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param
 interface IssuedTicketRepository : JpaRepository<IssuedTicket, Long>, IssuedTicketCustomRepository {
     fun findAllByOrderLineId(orderLineId: Long): List<IssuedTicket>
     fun findAllByOrderUuid(orderId: String): List<IssuedTicket>
+    fun findAllByOrderUuidIn(orderUuids: Collection<String>): List<IssuedTicket>
     fun findByIssuedTicketNo(issuedTicketNo: String): Optional<IssuedTicket>
     fun existsByEventId(eventId: Long): Boolean
     fun countByEventId(eventId: Long): Long

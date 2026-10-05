@@ -1,8 +1,11 @@
 package band.gosrock.domain.domains.gift.service.v2
 
 import band.gosrock.domain.common.events.event.EventAdminStatusChangeEvent
+import band.gosrock.domain.common.events.event.EventDeletionEvent
+import band.gosrock.domain.common.events.event.EventStatusChangeEvent
 import band.gosrock.domain.common.events.order.WithDrawOrderEvent
 import band.gosrock.domain.common.events.user.UserDeactivatedEvent
+import band.gosrock.domain.domains.event.domain.EventStatus
 import org.slf4j.LoggerFactory
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
@@ -15,6 +18,9 @@ import org.springframework.transaction.event.TransactionalEventListener
  * - [WithDrawOrderEvent]: `Order.cancel/refuse/refund/withdrawByUser` — v1·v2 호스트 취소, 운영 취소, 사용자 환불·취소, 거절
  * - [UserDeactivatedEvent]: `User.withDrawUser/changeAccountState` — 회원 탈퇴, 운영 사용자 상태 변경(정지·탈퇴)
  * - [EventAdminStatusChangeEvent]: `Event.adminUpdateStatus` — 운영 공연 삭제·상태 변경
+ * - [EventStatusChangeEvent]·[EventDeletionEvent]: `Event.prepare/…`·`Event.deleteSoft` — 호스트 공연 상태 변경·삭제 (v1·v2, #734). 운영 경로와 같은 규칙
+ *   (삭제·준비중 전환이면 대기 선물 CANCELED(EVENT_REMOVED)). 현재 호스트 전이 규칙(OPEN → 준비중 불가, OPEN·발급 티켓 있는 공연 삭제 불가)으로는
+ *   대기 선물이 있는 공연(OPEN + 발급 티켓)이 이 두 상태가 될 수 없어 실제로는 0건이지만, 규칙이 바뀌어도 링크가 살아남지 않게 붙여 둔다
  *
  * **BEFORE_COMMIT** (원 트랜잭션 안)에서 처리한다: 연쇄가 실패하면 원 전이도 롤백되어 "주문은 취소됐는데 링크는 살아 있음" 같은 상태가 커밋되지 않는다.
  * AFTER_COMMIT 이면 원 전이 커밋과 연쇄 사이에 수락이 끼어들 수 있고 연쇄 실패를 되돌릴 수 없다.
@@ -45,5 +51,20 @@ class V2TicketGiftCascadeHandler(
     fun handleEventAdminStatusChange(event: EventAdminStatusChangeEvent) {
         val canceled = giftDomainService.cancelPendingByEventRemoved(event.eventId, event.status)
         if (canceled > 0) log.info("[선물] 공연 운영 상태 {} 로 대기 선물 {}건 취소 eventId={}", event.status, canceled, event.eventId)
+    }
+
+    /** 호스트 상태 변경 (준비중 전환만 대상 — 진행·정산·종료는 cancelPendingByEventRemoved 가 바로 0 을 돌려준다) */
+    @TransactionalEventListener(classes = [EventStatusChangeEvent::class], phase = TransactionPhase.BEFORE_COMMIT)
+    fun handleEventStatusChange(event: EventStatusChangeEvent) {
+        val status = event.status ?: return
+        val canceled = giftDomainService.cancelPendingByEventRemoved(event.eventId, status)
+        if (canceled > 0) log.info("[선물] 공연 호스트 상태 {} 로 대기 선물 {}건 취소 eventId={}", status, canceled, event.eventId)
+    }
+
+    @TransactionalEventListener(classes = [EventDeletionEvent::class], phase = TransactionPhase.BEFORE_COMMIT)
+    fun handleEventDeletion(event: EventDeletionEvent) {
+        val eventId = event.eventId ?: return
+        val canceled = giftDomainService.cancelPendingByEventRemoved(eventId, EventStatus.DELETED)
+        if (canceled > 0) log.info("[선물] 공연 호스트 삭제로 대기 선물 {}건 취소 eventId={}", canceled, eventId)
     }
 }

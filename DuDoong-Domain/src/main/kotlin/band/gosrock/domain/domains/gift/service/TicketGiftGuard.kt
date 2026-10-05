@@ -53,10 +53,18 @@ class TicketGiftGuard(
      * 사용자 취소를 막는 선물 티켓이 있는지 (v2 O-4·v1 사용자 환불 공통, 기본안 15): 취소되지 않은 티켓 중 주문자 소유가 아닌 것(선물 완료) 또는 선물 대기.
      * `주문` 락 안에서 부른다 (선물 생성도 같은 락이라 판정과 생성이 겹치지 않는다)
      */
-    fun hasUserCancelBlockingGift(order: Order): Boolean {
-        val tickets = issuedTicketRepository.findAllByOrderUuid(order.uuid!!).filterNot { it.issuedTicketStatus.isCanceled() }
-        if (tickets.any { it.getUserId() != order.userId }) return true
-        return pendingTicketIds(tickets.mapNotNull { it.id }).isNotEmpty()
+    fun hasUserCancelBlockingGift(order: Order): Boolean = order.uuid!! in userCancelBlockedOrderUuids(listOf(order))
+
+    /**
+     * [hasUserCancelBlockingGift] 의 묶음 판정 (v1 주문 목록, #734 N+1 제거): 주문 수와 무관하게 발급 티켓 조회 1번 + 선물 대기 조회 1번.
+     * @return 사용자 취소를 막는 선물 티켓이 있는 주문 uuid
+     */
+    fun userCancelBlockedOrderUuids(orders: Collection<Order>): Set<String> {
+        val owners = orders.associate { it.uuid!! to it.userId }
+        if (owners.isEmpty()) return emptySet()
+        val tickets = issuedTicketRepository.findAllByOrderUuidIn(owners.keys).filterNot { it.issuedTicketStatus.isCanceled() }
+        val pending = pendingTicketIds(tickets.mapNotNull { it.id })
+        return tickets.filter { it.getUserId() != owners[it.orderUuid] || it.id in pending }.mapNotNull { it.orderUuid }.toSet()
     }
 
     /** v1 사용자 환불: 선물 대기·선물 완료 티켓이 있으면 Order_400_24 (v2 O-4 와 같은 코드) */

@@ -18,10 +18,6 @@ interface TicketGiftRepository : JpaRepository<TicketGift, Long> {
 
     fun findByToken(token: String): TicketGift?
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select g from TicketGift g where g.id = :id")
-    fun findByIdForUpdate(@Param("id") id: Long): TicketGift?
-
     /** 티켓의 가장 최근 선물 (잠금 읽기) */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select g from TicketGift g where g.issuedTicketId = :ticketId order by g.id desc")
@@ -65,6 +61,13 @@ interface TicketGiftRepository : JpaRepository<TicketGift, Long> {
     /** G-2·G-8: 락 전에 보낸 사람 확인 (남의 giftId 로 주문 락을 잡지 않는다) */
     @Query("select g.senderUserId from TicketGift g where g.id = :id")
     fun findSenderUserIdById(@Param("id") id: Long): Long?
+
+    /**
+     * G-6 반환이 잠그기 전에 보낸 사람 행을 공유 잠금하려고 읽는 스칼라 (#734): 이 티켓의 선물 기록 보낸 사람, 최근 순.
+     * `주문` 락 안에서 부르므로 잠근 뒤 다시 읽은 최근 선물과 같다
+     */
+    @Query("select g.senderUserId from TicketGift g, tbl_issued_ticket t where t.uuid = :ticketUuid and g.issuedTicketId = t.id order by g.id desc")
+    fun findLatestSenderIdsByTicketUuid(@Param("ticketUuid") ticketUuid: String, pageable: Pageable): List<Long>
 
     @Query("select g.orderUuid from TicketGift g where g.token = :token")
     fun findOrderUuidByToken(@Param("token") token: String): String?

@@ -56,8 +56,8 @@ class OrderMapper(
      * 선물 대기·선물 완료 티켓이 있으면 사용자 환불 불가로 표시 (#719 — v1 사용자 환불 API 도 막힌다). 선물이 없으면 기존 값 그대로.
      * 사용자 경로(주문 상세·목록·최근 주문)에만 쓴다
      */
-    private fun withGiftRefundBlock(order: Order, refundInfo: RefundInfoVo): RefundInfoVo =
-        if (refundInfo.availAble && ticketGiftGuard.hasUserCancelBlockingGift(order)) refundInfo.copy(availAble = false) else refundInfo
+    private fun withGiftRefundBlock(order: Order, refundInfo: RefundInfoVo, blocked: () -> Boolean = { ticketGiftGuard.hasUserCancelBlockingGift(order) }): RefundInfoVo =
+        if (refundInfo.availAble && blocked()) refundInfo.copy(availAble = false) else refundInfo
 
     @Transactional(readOnly = true)
     fun toCreateOrderResponse(orderUuid: String): CreateOrderResponse {
@@ -94,14 +94,21 @@ class OrderMapper(
     private fun getTicketNoName(orderLineItemId: Long): String =
         issuedTicketAdaptor.findOrderLineIssuedTickets(orderLineItemId).getTicketNoName()
 
-    /** v1 사용자 주문 목록·최근 주문 (주문자 본인). 환불 가능 표시에 선물 차단 반영 (#719) */
-    fun toOrderBriefElement(order: Order): OrderBriefElement {
+    /**
+     * v1 사용자 주문 목록·최근 주문 (주문자 본인). 환불 가능 표시에 선물 차단 반영 (#719).
+     * [giftBlockedOrderUuids] 를 주면 그 묶음 판정을 쓰고(목록 — #734 N+1 제거), 없으면 이 주문만 조회한다(최근 주문 1건)
+     */
+    fun toOrderBriefElement(order: Order, giftBlockedOrderUuids: Set<String>? = null): OrderBriefElement {
         val orderIssuedTickets = issuedTicketAdaptor.findOrderIssuedTickets(order.uuid!!)
-        return OrderBriefElement.of(order, getEvent(order), orderIssuedTickets).let { it.copy(refundInfo = withGiftRefundBlock(order, it.refundInfo)) }
+        return OrderBriefElement.of(order, getEvent(order), orderIssuedTickets).let {
+            it.copy(refundInfo = withGiftRefundBlock(order, it.refundInfo) { giftBlockedOrderUuids?.contains(order.uuid) ?: ticketGiftGuard.hasUserCancelBlockingGift(order) })
+        }
     }
 
-    fun toOrderBriefsResponse(ordersWithPagination: Slice<Order>): Slice<OrderBriefElement> =
-        ordersWithPagination.map { toOrderBriefElement(it) }
+    fun toOrderBriefsResponse(ordersWithPagination: Slice<Order>): Slice<OrderBriefElement> {
+        val blocked = ticketGiftGuard.userCancelBlockedOrderUuids(ordersWithPagination.content)
+        return ordersWithPagination.map { toOrderBriefElement(it, blocked) }
+    }
 
     fun toOrderAdminTableElement(eventId: Long, orders: Page<Order>): Page<OrderAdminTableElement> {
         val userIds = orders.map { it.userId!! }.distinct().toList()
