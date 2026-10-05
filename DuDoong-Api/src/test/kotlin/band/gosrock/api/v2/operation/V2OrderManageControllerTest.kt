@@ -421,7 +421,7 @@ class V2OrderManageControllerTest : V2OperationTestSupport() {
                 header { string("Content-Disposition", "attachment; filename=\"orders-${m.shop.eventId}.xlsx\"") }
             }.sheet()
             // 이메일은 엑셀에 넣지 않는다 (주문 상세에서만)
-            assertEquals(listOf("주문번호", "주문자", "연락처", "입금자명", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유", "뒷풀이", "입금자명(${m.shop.subjectiveOptionId})"), all.headers())
+            assertEquals(listOf("주문번호", "주문자", "연락처", "입금자명", "결제 방식", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유", "뒷풀이", "입금자명(${m.shop.subjectiveOptionId})"), all.headers())
             assertEquals(5, all.lastRowNum)
             assertEquals(setOf("승인 대기", "승인 완료", "승인 거절", "취소"), all.column("상태").toSet())
             assertTrue("010-3333-4444" in all.column("연락처"))

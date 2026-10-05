@@ -25,8 +25,8 @@ START = (datetime.now() + timedelta(days=30)).replace(hour=18, minute=0, second=
 END = START + timedelta(minutes=120)
 PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", "latitude": 37.548369, "longitude": 126.920036}
 ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-123-456789"}
-ORDER_BASE = ["주문번호", "주문자", "연락처", "입금자명", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유"]
-TICKET_BASE = ["티켓번호", "티켓 종류", "티켓 이름", "주문자", "연락처", "주문번호", "발급일시", "입장", "체크인 시각"]
+ORDER_BASE = ["주문번호", "주문자", "연락처", "입금자명", "결제 방식", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유"]
+TICKET_BASE = ["티켓번호", "티켓 종류", "티켓 이름", "주문자", "연락처", "소유자", "소유자 연락처", "선물", "주문번호", "발급일시", "입장", "체크인 시각"]
 
 
 class ExcelState:
@@ -160,18 +160,18 @@ def test_03_order_excel_option_columns(base_url, s):
     assert rows[0] == ORDER_BASE + ["뒷풀이", "메모"]
     assert len(rows) - 1 == 4, "주문 4건 = 4행 (라인 수와 무관)"
     by_no = {r[0]: r + [""] * (len(rows[0]) - len(r)) for r in rows[1:]}
-    assert by_no[s.orders["all"]["orderNo"]][11:] == ["예", "일괄"]
+    assert by_no[s.orders["all"]["orderNo"]][len(ORDER_BASE):] == ["예", "일괄"]
     # 응답 안의 쉼표와 헷갈리지 않게 응답끼리는 줄바꿈
-    assert by_no[s.orders["per"]["orderNo"]][11:] == ["예 ×2\n아니요 ×1", "'=1+1 ×2\n김, 이 ×1"]
+    assert by_no[s.orders["per"]["orderNo"]][len(ORDER_BASE):] == ["예 ×2\n아니요 ×1", "'=1+1 ×2\n김, 이 ×1"]
     # 라인 1개도 수식 방어, 응답 안의 줄바꿈은 공백
-    assert by_no[s.orders["formula"]["orderNo"]][11:] == ["아니요", "'@SUM(1) 둘째줄"]
-    assert by_no[s.orders["plain"]["orderNo"]][11:] == ["", ""]
+    assert by_no[s.orders["formula"]["orderNo"]][len(ORDER_BASE):] == ["아니요", "'@SUM(1) 둘째줄"]
+    assert by_no[s.orders["plain"]["orderNo"]][len(ORDER_BASE):] == ["", ""]
 
 
 def test_04_same_header_rule_as_issued_ticket_excel(base_url, s):
     orders = _sheet(base_url, s, "/orders/export")
     tickets = _sheet(base_url, s, "/issued-tickets/export")
-    assert tickets[0][:9] == TICKET_BASE
+    assert tickets[0][:len(TICKET_BASE)] == TICKET_BASE
     assert orders[0][len(ORDER_BASE):] == tickets[0][len(TICKET_BASE):] == ["뒷풀이", "메모"]
     # 같은 규칙이지 같은 열 집합은 아니다: 필터로 옵션 답변이 있는 주문이 빠지면 옵션 열도 없다 (답변에 나온 옵션만)
     only_plain = _xlsx_rows(requests.get(_ev(base_url, s, "/orders/export"), params={"searchType": "DEPOSITOR_NAME", "keyword": "입금plain"}, headers=_h(s, "guest")).content)

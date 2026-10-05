@@ -7,7 +7,6 @@ import band.gosrock.domain.domains.event.service.v2.V2EventDisplayStatus
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 
 /** 공연준비 홈 공연 카드 */
 data class V2MyEventResponse(
@@ -28,6 +27,8 @@ data class V2MyEventResponse(
     @field:Schema(description = "공연장 이름. 미입력이면 null")
     val placeName: String?,
     val placeAddress: String?,
+    @field:Schema(description = "상세주소 (없으면 null, #740)")
+    val placeDetailAddress: String?,
     @field:Schema(description = "공연 상태 (PREPARING / OPEN / CALCULATING / CLOSED)")
     val status: String,
     @field:Schema(description = "표시용 상태 (PREPARING / UPCOMING / ONGOING / PAST)")
@@ -51,15 +52,11 @@ data class V2MyEventResponse(
                 endAt = event.getEndAt(),
                 placeName = event.eventPlace?.placeName,
                 placeAddress = event.eventPlace?.placeAddress,
+                placeDetailAddress = event.eventPlace?.placeDetailAddress,
                 status = event.status.name,
                 displayStatus = displayStatus,
-                dDay = dDayOf(displayStatus, event.getStartAt(), now),
+                dDay = V2EventDisplayRule.dDayOf(displayStatus, event.getStartAt(), now),
             )
-        }
-
-        fun dDayOf(displayStatus: V2EventDisplayStatus, startAt: LocalDateTime?, now: LocalDateTime): Long? {
-            if (displayStatus != V2EventDisplayStatus.UPCOMING || startAt == null) return null
-            return ChronoUnit.DAYS.between(now.toLocalDate(), startAt.toLocalDate())
         }
     }
 }

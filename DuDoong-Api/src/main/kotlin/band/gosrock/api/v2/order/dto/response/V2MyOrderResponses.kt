@@ -65,6 +65,8 @@ data class V2MyOrderDetailResponse(
     val refundStatusChangedAt: LocalDateTime?,
     val event: V2MyOrderEventResponse?,
     val ticket: V2MyOrderTicketResponse,
+    @field:Schema(description = "주문 시점의 승인형 여부 (#740): true = 호스트 승인 후 발급(두둥티켓·무료 승인형), false = 바로 확정(무료 선착순·PG). 티켓 설정이 나중에 바뀌어도 그대로")
+    val approvalRequired: Boolean,
     val quantity: Long,
     @field:Schema(description = "BANK_TRANSFER / TOSS_TRANSFER / FREE. v1 에서 만든 주문은 null")
     val paymentChannel: OrderPaymentChannel?,

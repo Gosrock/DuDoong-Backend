@@ -24,7 +24,10 @@ data class V2CheckInTicketResponse(
     val ticketUuid: String?,
     val issuedTicketNo: String?,
     val ticketName: String?,
+    @field:Schema(description = "주문자(주문한 사용자) 이름 (#740 전에는 현재 소유자였음 — I-1 과 같은 의미)")
     val buyerName: String?,
+    @field:Schema(description = "현재 소유자 이름 — 선물이 수락되면 받은 사람, 선물이 없으면 주문자와 같다 (#740). 현장 확인은 이 이름으로")
+    val ownerName: String?,
     val entrance: V2EntranceState,
     @field:DateFormat
     @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm")

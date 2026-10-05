@@ -13,7 +13,9 @@ import java.time.LocalDateTime
 
 data class V2NotificationResponse(
     val id: Long,
-    @field:Schema(description = "HOST_MEMBER_ADDED / ORDER_PENDING_APPROVE / ORDER_APPROVED / ORDER_REFUSED / ORDER_REFUND_REQUESTED(사용자 환불 요청, 호스트 마스터·매니저) / ORDER_CANCELED_BY_USER(돌려줄 돈 없는 사용자 취소, 호스트 마스터·매니저) / ORDER_CANCELED_BY_HOST(승인 후 호스트 취소, 주문자) / ORDER_REFUND_COMPLETED(환불 완료, 주문자) / REFUND_ACCOUNT_CHANGED(환불 계좌 변경, 호스트 마스터·매니저)")
+    @field:Schema(description = "HOST_MEMBER_ADDED / ORDER_PENDING_APPROVE / ORDER_APPROVED / ORDER_REFUSED / ORDER_REFUND_REQUESTED(사용자 환불 요청, 호스트 마스터·매니저) / ORDER_CANCELED_BY_USER(돌려줄 돈 없는 사용자 취소, 호스트 마스터·매니저) / ORDER_CANCELED_BY_HOST(승인 후 호스트 취소, 주문자) / ORDER_REFUND_COMPLETED(환불 완료, 주문자) / REFUND_ACCOUNT_CHANGED(환불 계좌 변경, 호스트 마스터·매니저) / " +
+        "GIFT_SENT(선물 링크 생성, 보낸 사람) / GIFT_ACCEPTED(수락, 보낸 사람) / GIFT_RECEIVED(수락, 받은 사람) / GIFT_REJECTED(거절, 보낸 사람) / " +
+        "GIFT_RETURNED(수락 후 반환, 보낸 사람) / GIFT_TICKET_CANCELED(선물받은 티켓이 원 주문 취소로 취소, 받은 사람)")
     val type: NotificationType,
     val title: String,
     val body: String,
@@ -54,7 +56,7 @@ data class V2NotificationResponse(
 }
 
 data class V2NotificationTarget(
-    @field:Schema(description = "HOST: id = hostId, ORDER: id = orderUuid (+ eventId)")
+    @field:Schema(description = "HOST: id = hostId, ORDER: id = orderUuid (+ eventId), GIFT: id = giftId (+ eventId)")
     val type: NotificationTargetType,
     val id: String,
     val eventId: Long?,
