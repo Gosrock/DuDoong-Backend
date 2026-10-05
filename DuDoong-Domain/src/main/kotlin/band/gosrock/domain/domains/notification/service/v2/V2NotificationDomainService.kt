@@ -229,6 +229,21 @@ class V2NotificationDomainService(
         return notificationRepository.markReadByIds(userId, notificationIds.toSet(), now)
     }
 
+    // ===== 티켓탭 공지 바 (T-3, #719) =====
+
+    /** 안 읽은 승인 알림의 주문 uuid (최신 알림 순, 중복 제거). 알림을 읽으면(N-3) 빠진다 */
+    fun unreadApprovedOrderUuids(userId: Long): List<String> =
+        notificationRepository.findAllByUserIdAndTypeAndIsReadFalseOrderByIdDesc(userId, NotificationType.ORDER_APPROVED).map { it.targetId }.distinct()
+
+    /** 이 주문의 안 읽은 승인 알림이 있는지 (T-2 가 읽음 처리 이벤트를 낼지 정하는 사전 확인 — 없으면 UPDATE 를 하지 않는다) */
+    fun hasUnreadOrderApproved(userId: Long, orderUuid: String): Boolean =
+        notificationRepository.existsByUserIdAndTypeAndTargetIdAndIsReadFalse(userId, NotificationType.ORDER_APPROVED, orderUuid)
+
+    /** 승인된 주문의 티켓을 열면(T-2·G-7a) 그 주문의 승인 알림을 읽음으로 — 공지 바 해제 (8-4 A8). 멱등. 조회가 끝난 뒤 알림 전용 풀에서 부른다 */
+    @Transactional
+    fun markOrderApprovedRead(userId: Long, orderUuid: String): Int =
+        notificationRepository.markReadByTarget(userId, NotificationType.ORDER_APPROVED, orderUuid, LocalDateTime.now())
+
     // ===== 내부 =====
 
     /** 호스트의 활성 마스터·매니저 (일반 멤버·초대 대기 제외) */

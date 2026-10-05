@@ -1,5 +1,7 @@
 package band.gosrock.domain.domains.order.domain.validator;
 
+import band.gosrock.domain.domains.gift.service.TicketGiftGuard;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -59,6 +61,7 @@ class OrderValidatorTest {
     @Mock OptionAdaptor optionAdaptor;
     @Mock UserAdaptor userAdaptor;
     @Mock OrderAdaptor OrderAdaptor;
+    @Mock TicketGiftGuard ticketGiftGuard;
     @Mock Option optionOfGroup1;
     @Mock Option optionOfGroup2;
     @Mock OrderLineItem orderLineItem;
@@ -76,7 +79,8 @@ class OrderValidatorTest {
                         issuedTicketAdaptor,
                         optionAdaptor,
                         userAdaptor,
-                        OrderAdaptor);
+                        OrderAdaptor,
+                        ticketGiftGuard);
     }
 
     @Test

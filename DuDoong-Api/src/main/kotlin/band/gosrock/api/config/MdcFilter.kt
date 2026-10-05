@@ -39,7 +39,8 @@ class MdcFilter : OncePerRequestFilter() {
     }
 
     private fun logRequest(request: ContentCachingRequestWrapper, response: HttpServletResponse) {
-        val uri = request.requestURI
+        // 선물 링크 토큰은 경로에서 가린다 (#719)
+        val uri = SensitiveBodyMasker.maskPath(request.requestURI)
         val method = request.method
         val status = response.status
 

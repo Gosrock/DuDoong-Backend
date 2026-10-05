@@ -18,6 +18,8 @@ import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.event.service.v2.V2EventDisplayRule
+import band.gosrock.domain.domains.gift.service.v2.V2GiftState
+import band.gosrock.domain.domains.gift.service.v2.V2TicketGiftDomainService
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2EntranceState
 import band.gosrock.domain.domains.order.domain.Order
@@ -40,6 +42,7 @@ class V2ReadMyOrdersUseCase(
     private val v2UserOrderQuery: V2UserOrderQuery,
     private val v2UserOrderDomainService: V2UserOrderDomainService,
     private val mapper: V2OperationMapper,
+    private val giftDomainService: V2TicketGiftDomainService,
 ) {
 
     /** O-2 최신 순. status null 이면 전체(결제 진행 중·실패 주문 제외 — v1 마이페이지 목록과 같은 기준) */
@@ -77,8 +80,11 @@ class V2ReadMyOrdersUseCase(
         val lineAnswers = lines.associate { line ->
             line.id to line.orderOptionAnswers.sortedBy { it.id }.map { Triple(it.optionId, it.answer, it.additionalPrice.longValue()) }
         }
-        // 본인 소유 발급 티켓만 (8단계 선물로 넘어간 티켓은 받은 사람 것)
-        val tickets = issuedTicketAdaptor.findAllByOrderUuid(orderUuid).filter { it.getUserId() == userId }.sortedBy { it.id }
+        // 본인 소유 티켓 + 내가 선물해 수락된 티켓('선물 완료' 행, uuid·QR 없음 — DEC-026 #3, #719)
+        val orderTickets = issuedTicketAdaptor.findAllByOrderUuid(orderUuid)
+        val latestGifts = giftDomainService.latestGiftsOf(orderTickets.mapNotNull { it.id })
+        val giftStates = orderTickets.associate { it.id to giftDomainService.giftStateOf(it, order.userId, latestGifts[it.id], userId) }
+        val tickets = orderTickets.filter { it.getUserId() == userId || giftStates[it.id] == V2GiftState.SENT }.sortedBy { it.id }
         val ticketAnswers = tickets.associate { it.id to mapper.ticketAnswerRows(it) }
         val names = mapper.optionNamesOf((lineAnswers.values + ticketAnswers.values).flatten().map { it.first })
         val v2Status = V2OrderStatus.of(order)
@@ -127,13 +133,17 @@ class V2ReadMyOrdersUseCase(
                 V2MyRefundAccountResponse(bankName = it.bankName, accountHolder = it.accountHolder, maskedAccountNumber = it.maskedAccountNumber())
             },
             issuedTickets = tickets.map { t ->
+                val giftState = giftStates.getValue(t.id)
                 V2MyOrderIssuedTicketResponse(
-                    ticketUuid = t.uuid,
+                    ticketUuid = t.uuid.takeIf { giftState != V2GiftState.SENT },
                     issuedTicketNo = t.issuedTicketNo,
                     ticketName = t.itemInfo?.ticketName,
                     entrance = V2EntranceState.of(t.issuedTicketStatus),
                     enteredAt = t.enteredAt,
                     optionAnswers = mapper.toOptionAnswers(ticketAnswers.getValue(t.id), names),
+                    giftState = giftState,
+                    isGiftExpired = giftState == V2GiftState.PENDING && giftDomainService.isEventEnded(event, now),
+                    giftId = latestGifts[t.id]?.id?.takeIf { giftState == V2GiftState.PENDING || giftState == V2GiftState.SENT },
                 )
             },
             canCancel = v2UserOrderDomainService.canCancel(order, event, now),

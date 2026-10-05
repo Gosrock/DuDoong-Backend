@@ -73,7 +73,7 @@ data class V2RefundAccountForm(val bankName: String, val accountHolder: String, 
  * (두둥 → 승인 대기, 무료 승인 → 승인 대기, 무료 선착순 → 결제형 생성 후 v1 무료 확정).
  * 티켓별 옵션 답변은 같은 티켓의 **수량 1짜리 주문 라인 N개**로 표현한다 (v1 장바구니가 원래 지원하는 구조, 발급 시 라인 답변이 티켓으로 복사됨).
  *
- * 취소(O-4): 승인 대기는 공연 시작 전 언제든, 승인 완료는 공연 시작 전 + 입장·양도된 티켓 없음. 상태는 v1 사용자 환불과 같은 REFUND.
+ * 취소(O-4): 승인 대기는 공연 시작 전 언제든, 승인 완료는 공연 시작 전 + 입장·선물 대기·선물 완료 티켓 없음(#719). 상태는 v1 사용자 환불과 같은 REFUND.
  */
 @DomainService
 @Transactional(readOnly = true)
@@ -253,7 +253,7 @@ class V2UserOrderDomainService(
         }
     }
 
-    /** 취소를 막는 사유(예외). 없으면 null. 순서: 결제 방식 → 주문 상태 → 공연 상태·시작 전 → 입장·양도 티켓 */
+    /** 취소를 막는 사유(예외). 없으면 null. 순서: 결제 방식 → 주문 상태 → 공연 상태·시작 전 → 입장·선물 대기·선물 완료 티켓 */
     private fun cancelBlocker(order: Order, event: Event, now: LocalDateTime): DuDoongCodeException? {
         // 카드(PG) 결제 주문은 v1 결제 취소 경로 (계좌 환불 대상 아님)
         if (order.orderMethod == OrderMethod.PAYMENT && isPaid(order)) return V2OrderCannotCancelByUserException.EXCEPTION

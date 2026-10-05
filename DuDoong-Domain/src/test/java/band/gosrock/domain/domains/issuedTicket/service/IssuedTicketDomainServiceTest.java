@@ -7,7 +7,9 @@ import static org.mockito.BDDMockito.*;
 import band.gosrock.domain.DisableDomainEvent;
 import band.gosrock.domain.DomainIntegrateSpringBootTest;
 import band.gosrock.domain.common.vo.Money;
+import band.gosrock.domain.domains.gift.service.TicketGiftGuard;
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor;
+import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepository;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketItemInfoVo;
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketOptionAnswer;
@@ -43,6 +45,11 @@ public class IssuedTicketDomainServiceTest {
     @MockBean OrderAdaptor orderAdaptor;
 
     @MockBean IssuedTicketAdaptor issuedTicketAdaptor;
+
+    // v1 입장은 티켓 행을 잠그는 조회(findByUuidForUpdate)와 선물 대기 확인을 거친다 (#719)
+    @MockBean IssuedTicketRepository issuedTicketRepository;
+
+    @MockBean TicketGiftGuard ticketGiftGuard;
 
     @Mock IssuedTicket issuedTicket;
 
@@ -109,7 +116,9 @@ public class IssuedTicketDomainServiceTest {
                         ticketItemAdaptor,
                         userAdaptor,
                         orderAdaptor,
-                        issuedTicketValidator);
+                        issuedTicketValidator,
+                        mock(IssuedTicketRepository.class),
+                        mock(TicketGiftGuard.class));
 
         orderLineItems.add(orderLineItem);
         orderLineItems.add(orderLineItem1);
@@ -123,7 +132,9 @@ public class IssuedTicketDomainServiceTest {
                         ticketItemAdaptor,
                         userAdaptor,
                         orderAdaptor,
-                        issuedTicketValidator);
+                        issuedTicketValidator,
+                        mock(IssuedTicketRepository.class),
+                        mock(TicketGiftGuard.class));
 
         // given
         given(ticketItemAdaptor.queryTicketItem(any())).willReturn(ticketItem);
@@ -154,7 +165,9 @@ public class IssuedTicketDomainServiceTest {
                         ticketItemAdaptor,
                         userAdaptor,
                         orderAdaptor,
-                        issuedTicketValidator);
+                        issuedTicketValidator,
+                        mock(IssuedTicketRepository.class),
+                        mock(TicketGiftGuard.class));
 
         // given
         given(issuedTicketAdaptor.findAllByOrderUuid(orderUuid)).willReturn(issuedTickets);
@@ -181,15 +194,18 @@ public class IssuedTicketDomainServiceTest {
     @Test
     public void 발급_티켓_입장_처리_로직_정상_작동_테스트() {
         // given
-        given(issuedTicketAdaptor.queryByIssuedTicketUuid(any())).willReturn(issuedTicket1);
+        given(issuedTicketRepository.findByUuidForUpdate(any())).willReturn(issuedTicket1);
         given(issuedTicketOptionAnswer.getAdditionalPrice()).willReturn(w3000);
         given(issuedTicketOptionAnswer1.getAdditionalPrice()).willReturn(w3000);
 
         // when
-        issuedTicketDomainService.processingEntranceIssuedTicket(1L, "UUID");
+        issuedTicketDomainService.processingEntranceIssuedTicket(1L, issuedTicket1.getUuid());
 
         // then
         assertEquals(issuedTicket1.getIssuedTicketStatus(), IssuedTicketStatus.ENTRANCE_COMPLETED);
+        // 선물 대기 판정은 티켓 행을 잠근 뒤 잠금 읽기로 (#719 리뷰)
+        verify(ticketGiftGuard).validateNotGiftPendingLocked(issuedTicket1);
+        verify(ticketGiftGuard, never()).validateNotGiftPending(any());
     }
 
     @Test

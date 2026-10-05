@@ -1,9 +1,11 @@
 package band.gosrock.api.v2.notification
 
 import band.gosrock.api.supports.ApiIntegrateSpringBootTest
+import band.gosrock.api.v2.notification.handler.V2GiftNotificationEventHandler
 import band.gosrock.api.v2.notification.handler.V2NotificationAsyncConfig
 import band.gosrock.api.v2.notification.handler.V2NotificationEventHandler
 import band.gosrock.api.v2.operation.V2OperationTestSupport
+import band.gosrock.domain.domains.notification.service.v2.V2GiftNotificationDomainService
 import band.gosrock.domain.domains.notification.service.v2.V2NotificationDomainService
 import java.util.concurrent.ConcurrentHashMap
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -14,6 +16,7 @@ import org.mockito.ArgumentMatchers.anyList
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
+import org.mockito.Mockito.never
 import org.mockito.Mockito.timeout
 import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
@@ -36,7 +39,11 @@ class V2NotificationHandlerThreadTest : V2OperationTestSupport() {
 
     @MockBean private lateinit var notificationDomainService: V2NotificationDomainService
 
+    @MockBean private lateinit var giftNotificationDomainService: V2GiftNotificationDomainService
+
     @Autowired private lateinit var handler: V2NotificationEventHandler
+
+    @Autowired private lateinit var giftHandler: V2GiftNotificationEventHandler
 
     @Test
     fun `멤버 추가·주문 생성·승인·거절·호스트 취소·환불 완료 알림 저장은 notification- 스레드에서 실행된다`() {
@@ -71,14 +78,65 @@ class V2NotificationHandlerThreadTest : V2OperationTestSupport() {
         }
     }
 
+    @Test
+    fun `선물 알림(생성·선물받은 티켓 취소) 저장도 notification- 스레드에서 실행된다 (#719)`() {
+        val threads = ConcurrentHashMap<String, String>()
+        fun record(name: String): Int = 0.also { threads[name] = Thread.currentThread().name }
+        given(giftNotificationDomainService.notifyGiftSent(anyLong())).willAnswer { record("giftSent") }
+        given(giftNotificationDomainService.notifyGiftTicketsCanceled(anyString())).willAnswer { record("giftTicketCanceled") }
+
+        val shop = Shop()
+        val buyer = newBuyer()
+        val orderUuid = shop.approved(buyer)
+        v2Post(buyer, "/me/tickets/${shop.ticketUuids(orderUuid)[0]}/gift").andExpect { status { isOk() } }
+        v2Post(shop.team.manager, "/events/${shop.eventId}/orders/$orderUuid/cancel").andExpect { status { isOk() } }
+
+        verify(giftNotificationDomainService, timeout(10_000)).notifyGiftSent(anyLong())
+        verify(giftNotificationDomainService, timeout(10_000)).notifyGiftTicketsCanceled(orderUuid)
+        assertEquals(setOf("giftSent", "giftTicketCanceled"), threads.keys)
+        threads.forEach { (name, thread) ->
+            assertTrue(thread.startsWith("notification-"), "$name 알림이 전용 풀이 아닌 스레드에서 실행됨: $thread")
+        }
+    }
+
+    @Test
+    fun `T-2 공지 바 해제(승인 알림 읽음)는 조회 요청 스레드가 아니라 커밋 후 notification- 스레드, 실패해도 T-2 는 200 (#719 재리뷰)`() {
+        val threads = ConcurrentHashMap<String, String>()
+        given(notificationDomainService.hasUnreadOrderApproved(anyLong(), anyString())).willReturn(true)
+        given(notificationDomainService.markOrderApprovedRead(anyLong(), anyString())).willAnswer {
+            threads["markRead"] = Thread.currentThread().name
+            throw IllegalStateException("읽음 처리 실패 흉내")
+        }
+        val shop = Shop()
+        val buyer = newBuyer()
+        val orderUuid = shop.approved(buyer)
+        val requestThread = Thread.currentThread().name
+        v2Get(buyer, "/me/tickets/${shop.ticketUuids(orderUuid)[0]}").andExpect { status { isOk() } }
+        verify(notificationDomainService, timeout(10_000)).markOrderApprovedRead(buyer.id!!, orderUuid)
+        val thread = threads.getValue("markRead")
+        assertTrue(thread.startsWith("notification-") && thread != requestThread, "읽음 처리가 조회 스레드에서 실행됨: $thread")
+    }
+
+    @Test
+    fun `T-2 - 안 읽은 승인 알림이 없으면 읽음 처리(UPDATE)를 하지 않는다 (#719 재리뷰)`() {
+        given(notificationDomainService.hasUnreadOrderApproved(anyLong(), anyString())).willReturn(false)
+        val shop = Shop()
+        val buyer = newBuyer()
+        val orderUuid = shop.approved(buyer)
+        v2Get(buyer, "/me/tickets/${shop.ticketUuids(orderUuid)[0]}").andExpect { status { isOk() } }
+        verify(notificationDomainService, timeout(10_000)).hasUnreadOrderApproved(buyer.id!!, orderUuid)
+        Thread.sleep(500)
+        verify(notificationDomainService, never()).markOrderApprovedRead(anyLong(), anyString())
+    }
+
     /** 실행 경로를 만들지 않은 핸들러(사용자 취소·환불 요청 등)까지 포함해, 리스너 메서드 전부가 전용 executor 를 지정했는지 본다 */
     @Test
     fun `모든 이벤트 리스너 메서드는 @Async(notificationExecutor) 를 지정한다`() {
-        // 프록시(CGLIB) 서브클래스가 아니라 실제 핸들러 클래스의 선언 메서드를 본다
-        val listeners = AopUtils.getTargetClass(handler).declaredMethods.filter {
-            AnnotatedElementUtils.hasAnnotation(it, TransactionalEventListener::class.java)
+        // 프록시(CGLIB) 서브클래스가 아니라 실제 핸들러 클래스의 선언 메서드를 본다. 선물 알림 핸들러(#719)도 같은 규칙
+        val listeners = listOf(handler, giftHandler).flatMap { bean ->
+            AopUtils.getTargetClass(bean).declaredMethods.filter { AnnotatedElementUtils.hasAnnotation(it, TransactionalEventListener::class.java) }
         }
-        assertEquals(7, listeners.size, "리스너 수가 바뀌면 이 테스트와 실행 스레드 테스트를 갱신: ${listeners.map { it.name }}")
+        assertEquals(10, listeners.size, "리스너 수가 바뀌면 이 테스트와 실행 스레드 테스트를 갱신: ${listeners.map { it.name }}")
         listeners.forEach {
             val async = AnnotatedElementUtils.findMergedAnnotation(it, Async::class.java)
             assertEquals(V2NotificationAsyncConfig.NOTIFICATION_EXECUTOR, async?.value, "${it.name} 의 @Async executor")

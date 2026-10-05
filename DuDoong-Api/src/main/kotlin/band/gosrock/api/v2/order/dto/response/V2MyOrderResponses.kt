@@ -5,6 +5,7 @@ import band.gosrock.api.v2.operation.dto.response.V2OptionAnswerResponse
 import band.gosrock.api.v2.ticket.dto.V2TicketPayType
 import band.gosrock.common.annotation.DateFormat
 import band.gosrock.domain.domains.event.service.v2.V2EventDisplayStatus
+import band.gosrock.domain.domains.gift.service.v2.V2GiftState
 import band.gosrock.domain.domains.issuedTicket.service.v2.V2EntranceState
 import band.gosrock.domain.domains.order.domain.OrderPaymentChannel
 import band.gosrock.domain.domains.order.domain.OrderRefuseReasonType
@@ -81,9 +82,9 @@ data class V2MyOrderDetailResponse(
     val cancelReason: String?,
     @field:Schema(description = "취소·환불 요청 때 입력한 환불 계좌 (계좌번호 뒤 4자리만)")
     val refundAccount: V2MyRefundAccountResponse?,
-    @field:Schema(description = "발급 티켓 (본인 소유분만)")
+    @field:Schema(description = "발급 티켓: 본인 소유분 + 내가 선물해 수락된 티켓(giftState=SENT, ticketUuid null)")
     val issuedTickets: List<V2MyOrderIssuedTicketResponse>,
-    @field:Schema(description = "지금 취소(O-4)할 수 있는지. 승인 대기: 공연 시작 전, 승인 완료: 공연 시작 전 + 입장·양도한 티켓 없음")
+    @field:Schema(description = "지금 취소(O-4)할 수 있는지. 승인 대기: 공연 시작 전, 승인 완료: 공연 시작 전 + 입장·선물 대기·선물 완료 티켓 없음")
     val canCancel: Boolean,
 )
 
@@ -119,6 +120,12 @@ data class V2MyOrderLineResponse(
     @field:Schema(description = "(티켓 가격 + 옵션 추가금) x 수량")
     val linePrice: Long,
     val optionAnswers: List<V2OptionAnswerResponse>,
+    @field:Schema(description = "NONE / PENDING(선물 대기중) / SENT(선물 완료). 주문상세는 주문자만 보므로 RECEIVED 는 없음 (#719)")
+    val giftState: V2GiftState = V2GiftState.NONE,
+    @field:Schema(description = "선물 대기 중인데 공연이 끝남 (선물 만료)")
+    val isGiftExpired: Boolean = false,
+    @field:Schema(description = "PENDING·SENT 의 선물 id")
+    val giftId: Long? = null,
 )
 
 data class V2MyRefundAccountResponse(
@@ -129,6 +136,7 @@ data class V2MyRefundAccountResponse(
 )
 
 data class V2MyOrderIssuedTicketResponse(
+    @field:Schema(description = "티켓 uuid. 선물 완료(SENT) 행은 null (받은 사람의 QR)")
     val ticketUuid: String?,
     @field:Schema(description = "티켓 번호 (T1000xxxx)")
     val issuedTicketNo: String?,
@@ -139,4 +147,10 @@ data class V2MyOrderIssuedTicketResponse(
     @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm")
     val enteredAt: LocalDateTime?,
     val optionAnswers: List<V2OptionAnswerResponse>,
+    @field:Schema(description = "NONE / PENDING(선물 대기중) / SENT(선물 완료). 주문상세는 주문자만 보므로 RECEIVED 는 없음 (#719)")
+    val giftState: V2GiftState = V2GiftState.NONE,
+    @field:Schema(description = "선물 대기 중인데 공연이 끝남 (선물 만료)")
+    val isGiftExpired: Boolean = false,
+    @field:Schema(description = "PENDING·SENT 의 선물 id")
+    val giftId: Long? = null,
 )

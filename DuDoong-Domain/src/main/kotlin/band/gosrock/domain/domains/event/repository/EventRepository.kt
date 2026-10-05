@@ -4,12 +4,22 @@ import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.event.domain.EventStatus
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import jakarta.persistence.LockModeType
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
 import org.springframework.data.repository.query.Param
 
 interface EventRepository : CrudRepository<Event, Long>, EventCustomRepository {
+    /**
+     * 공연 행 공유 잠금 (`FOR SHARE`, #719): 선물 생성(G-1)이 공연 상태를 확인하는 동안 운영 삭제·상태 변경(행 X 잠금)과 줄 선다.
+     * 삭제된 공연은 엔티티 @Where 로 null
+     */
+    @Lock(LockModeType.PESSIMISTIC_READ)
+    @Query("select e from tbl_event e where e.id = :eventId")
+    fun findByIdForShare(@Param("eventId") eventId: Long): Event?
+
     override fun findAll(): List<Event>
 
     fun findAllByHostId(hostId: Long, pageable: Pageable): Page<Event>

@@ -109,10 +109,24 @@ class V2AuthRequiredPathsTest {
             "/api/v2/events",
             "/api/v2/events/{}",
             "/api/v2/events/{}/ticket-items",
+            // 선물 랜딩 G-3 (#719). 같은 접두의 수락·거절 POST 는 인증 필요 (아래 MUST_BE_ENUMERATED)
+            "/api/v2/gifts/{}",
         )
 
         /** #716·#718 수동 목록에서 옮긴 핵심 인증 필요 경로 */
         private val MUST_BE_ENUMERATED = setOf(
+            // 티켓탭·선물 (#719)
+            "GET /api/v2/me/tickets",
+            "GET /api/v2/me/tickets/{}",
+            "GET /api/v2/me/tickets/new-approved",
+            "POST /api/v2/me/tickets/{}/gift",
+            "POST /api/v2/me/tickets/{}/return",
+            "GET /api/v2/me/gifts",
+            "GET /api/v2/me/gifts/{}/ticket",
+            "DELETE /api/v2/me/gifts/{}",
+            "PATCH /api/v2/me/gifts/{}",
+            "POST /api/v2/gifts/{}/accept",
+            "POST /api/v2/gifts/{}/reject",
             "GET /api/v2/events/{}/manage",
             "GET /api/v2/events/{}/checklist",
             "GET /api/v2/events/{}/check-in-qr",

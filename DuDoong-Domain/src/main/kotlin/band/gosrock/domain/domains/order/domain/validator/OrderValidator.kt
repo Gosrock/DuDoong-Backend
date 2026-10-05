@@ -4,6 +4,7 @@ import band.gosrock.common.annotation.Validator
 import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.event.domain.Event
+import band.gosrock.domain.domains.gift.service.TicketGiftGuard
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
 import band.gosrock.domain.domains.order.domain.Order
@@ -37,6 +38,7 @@ class OrderValidator(
     private val optionAdaptor: OptionAdaptor,
     private val userAdaptor: UserAdaptor,
     private val orderAdaptor: OrderAdaptor,
+    private val ticketGiftGuard: TicketGiftGuard,
 ) {
     fun validCanCreate(order: Order) {
         val item = getItem(order)
@@ -103,6 +105,8 @@ class OrderValidator(
         validAvailableRefundDate(order)
         validStatusCanRefund(order.orderStatus)
         validCanWithDraw(order)
+        // 선물 대기·선물 완료 티켓이 있으면 사용자 환불 불가 (#719, v2 O-4 와 같은 규칙). 선물이 없는 주문은 영향 없음
+        ticketGiftGuard.validateNoUserCancelBlockingGift(order)
     }
 
     fun validCanDone(order: Order) {

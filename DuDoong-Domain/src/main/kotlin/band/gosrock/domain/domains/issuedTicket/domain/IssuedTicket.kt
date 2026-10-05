@@ -38,12 +38,14 @@ import jakarta.persistence.Table
  * (event_id, user_id): v2 공연별 발급 티켓 목록·통계, 셀프 체크인 본인 티켓 조회 (#712, V004)
  * uuid unique: QR 스캔(v1/v2 입장 처리)·티켓 상세의 단건 조회 (#712, V004)
  * order_uuid: 주문의 발급 티켓 조회 (v1 승인·취소 시 티켓 철회, v2 주문 상세) (#712, V004)
+ * (user_id, issued_ticket_id): 내 티켓(현재 소유분) 조회 — v2 티켓탭 T-1 (#719, V008)
  */
 @Table(
     indexes = [
         Index(name = "idx_issued_ticket_event_id_user_id", columnList = "event_id, user_id"),
         Index(name = "uk_issued_ticket_uuid", columnList = "uuid", unique = true),
         Index(name = "idx_issued_ticket_order_uuid", columnList = "order_uuid"),
+        Index(name = "idx_issued_ticket_user_id_id", columnList = "user_id, issued_ticket_id"),
     ],
 )
 @Entity(name = "tbl_issued_ticket")
@@ -156,6 +158,17 @@ class IssuedTicket(
     }
 
     fun getUserId(): Long? = this.userInfo?.userId
+
+    // ===== v2 선물 (검증·잠금은 service.v2.V2TicketGiftDomainService) =====
+
+    /**
+     * 선물 수락·반환 (#719, DEC-026 #6): 소유자 정보를 바꾸고 uuid(입장 QR 값)를 새 값으로 바꾼다.
+     * 옛 uuid 로 연 화면·QR 은 v1·v2 모두 '없는 티켓'이 된다. 주문(결제자)은 그대로
+     */
+    internal fun transferOwner(owner: IssuedTicketUserInfoVo, newUuid: String) {
+        this.userInfo = owner
+        this.uuid = newUuid
+    }
 
     companion object {
         @JvmStatic

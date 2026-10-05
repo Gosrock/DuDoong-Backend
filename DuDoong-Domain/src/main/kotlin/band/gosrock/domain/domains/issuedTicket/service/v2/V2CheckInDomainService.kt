@@ -6,6 +6,7 @@ import band.gosrock.domain.domains.event.domain.EventStatus
 import band.gosrock.domain.domains.event.exception.CannotCheckInEventStatusException
 import band.gosrock.domain.domains.event.exception.InvalidCheckInTokenException
 import band.gosrock.domain.domains.event.repository.EventRepository
+import band.gosrock.domain.domains.gift.service.TicketGiftGuard
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket
 import band.gosrock.domain.domains.issuedTicket.exception.IssuedTicketUserNotMatchedException
 import band.gosrock.domain.domains.issuedTicket.repository.IssuedTicketRepository
@@ -15,13 +16,14 @@ import java.security.SecureRandom
 import java.util.Base64
 import org.springframework.transaction.annotation.Transactional
 
-/** 체크인 결과 (DEC-010). [SELECT_TICKET] 은 셀프 체크인에서 입장 전 티켓이 여러 장일 때만 */
+/** 체크인 결과 (DEC-010). [SELECT_TICKET] 은 셀프 체크인에서 입장 전 티켓이 여러 장일 때만. [GIFT_PENDING] 은 선물 대기 중인 티켓 (#719) */
 enum class V2CheckInResult {
     ENTERED,
     ALREADY_ENTERED,
     OTHER_EVENT,
     CANCELED,
     SELECT_TICKET,
+    GIFT_PENDING,
 }
 
 /**
@@ -45,6 +47,7 @@ data class V2CheckInOutcome(
  *   (v1 입장 API 는 락이 없다. v1 동작은 바꾸지 않는다)
  * - 없는 티켓 uuid 와 다른 공연 티켓은 둘 다 OTHER_EVENT (티켓 정보 없음): 스캐너 입장에선 둘 다 "이 공연 티켓 아님"이고, 다른 공연 티켓의 존재를 드러내지 않는다.
  * - 셀프 체크인 토큰: 공연별 고정 랜덤 토큰 (32바이트 SecureRandom, base64url 43자). 최초 조회 시 조건부 UPDATE 로 생성한다.
+ * - 선물 대기 중인 티켓(#719)은 GIFT_PENDING (입장 안 함). 셀프 체크인 후보에서도 뺀다. 선물 수락으로 uuid 가 바뀐 옛 QR 은 없는 티켓 = OTHER_EVENT
  */
 @DomainService
 class V2CheckInDomainService(
@@ -52,14 +55,16 @@ class V2CheckInDomainService(
     private val eventRepository: EventRepository,
     private val eventAdaptor: EventAdaptor,
     private val entityManager: EntityManager,
+    private val ticketGiftGuard: TicketGiftGuard,
 ) {
     private val random = SecureRandom()
 
     /** 잠금 후 상태로 판정 (입장 처리 전). 없는 티켓·다른 공연 티켓은 OTHER_EVENT */
-    fun classify(ticket: IssuedTicket?, eventId: Long): V2CheckInResult = when {
+    fun classify(ticket: IssuedTicket?, eventId: Long, giftPending: Boolean = false): V2CheckInResult = when {
         ticket == null || ticket.eventId != eventId -> V2CheckInResult.OTHER_EVENT
         ticket.issuedTicketStatus.isCanceled() -> V2CheckInResult.CANCELED
         ticket.issuedTicketStatus.isAfterEntrance() -> V2CheckInResult.ALREADY_ENTERED
+        giftPending -> V2CheckInResult.GIFT_PENDING
         else -> V2CheckInResult.ENTERED
     }
 
@@ -72,14 +77,14 @@ class V2CheckInDomainService(
     @Transactional
     fun checkIn(eventId: Long, ticketUuid: String): V2CheckInOutcome {
         validateHostCheckInStatus(eventAdaptor.findById(eventId).status)
-        return enter(eventId, issuedTicketRepository.findByUuid(ticketUuid).orElse(null))
+        return enter(eventId, issuedTicketRepository.findByUuid(ticketUuid).orElse(null), requestedUuid = ticketUuid)
     }
 
     /**
      * 관객 셀프 체크인 (Q-5). 토큰의 공연이 OPEN 이어야 한다.
      * - ticketUuid 지정: 그 티켓 (이 공연의 남의 티켓이면 IssuedTicket_400_1, 없거나 다른 공연이면 OTHER_EVENT)
-     * - 미지정: 입장 전 본인 티켓이 1장이면 입장, 2장 이상이면 SELECT_TICKET + 후보,
-     *   0장이면 입장한 티켓이 있으면 ALREADY_ENTERED, 취소 티켓만 있으면 CANCELED, 티켓이 없으면 OTHER_EVENT
+     * - 미지정: 입장 전 본인 티켓(선물 대기 제외)이 1장이면 입장, 2장 이상이면 SELECT_TICKET + 후보,
+     *   0장이면 선물 대기 티켓만 있으면 GIFT_PENDING, 입장한 티켓이 있으면 ALREADY_ENTERED, 취소 티켓만 있으면 CANCELED, 티켓이 없으면 OTHER_EVENT
      */
     @Transactional
     fun selfCheckIn(userId: Long, token: String, ticketUuid: String?): V2CheckInOutcome {
@@ -89,13 +94,16 @@ class V2CheckInDomainService(
         if (ticketUuid != null) {
             val ticket = issuedTicketRepository.findByUuid(ticketUuid).orElse(null)
             if (ticket != null && ticket.eventId == eventId && ticket.getUserId() != userId) throw IssuedTicketUserNotMatchedException.EXCEPTION
-            return enter(eventId, ticket)
+            return enter(eventId, ticket, requestedUuid = ticketUuid, ownerId = userId)
         }
         val mine = issuedTicketRepository.findAllByEventIdAndUserInfo_UserId(eventId, userId).sortedBy { it.id }
-        val before = mine.filter { it.issuedTicketStatus.isBeforeEntrance() }
+        val notEntered = mine.filter { it.issuedTicketStatus.isBeforeEntrance() }
+        val pending = ticketGiftGuard.pendingTicketIds(notEntered.mapNotNull { it.id })
+        val before = notEntered.filterNot { it.id in pending }
         return when {
-            before.size == 1 -> enter(eventId, before.single())
+            before.size == 1 -> enter(eventId, before.single(), ownerId = userId)
             before.size > 1 -> V2CheckInOutcome(eventId, V2CheckInResult.SELECT_TICKET, ticket = null, candidates = before)
+            notEntered.isNotEmpty() -> V2CheckInOutcome(eventId, V2CheckInResult.GIFT_PENDING, notEntered.first())
             else -> {
                 val entered = mine.filter { it.issuedTicketStatus.isAfterEntrance() }.maxByOrNull { it.enteredAt ?: java.time.LocalDateTime.MIN }
                 when {
@@ -107,11 +115,18 @@ class V2CheckInDomainService(
         }
     }
 
-    /** 이 공연 티켓이면 행 잠금 + 최신 상태로 다시 읽고 판정, 입장 가능하면 입장 처리 */
-    private fun enter(eventId: Long, ticket: IssuedTicket?): V2CheckInOutcome {
+    /**
+     * 이 공연 티켓이면 행 잠금 + 최신 상태로 다시 읽고 판정, 입장 가능하면 입장 처리.
+     * 잠그는 동안 선물 수락·반환으로 uuid(QR)나 소유자가 바뀌었으면 요청한 QR·사람의 티켓이 아니므로 OTHER_EVENT (#719 리뷰).
+     * 선물 대기는 티켓 행을 잠근 뒤 잠금 읽기로 본다 (일반 읽기는 스냅샷이라 잠금 대기 중 커밋된 선물 생성을 놓친다)
+     */
+    private fun enter(eventId: Long, ticket: IssuedTicket?, requestedUuid: String? = null, ownerId: Long? = null): V2CheckInOutcome {
         if (ticket == null || ticket.eventId != eventId) return V2CheckInOutcome(eventId, V2CheckInResult.OTHER_EVENT, ticket = null)
         entityManager.refresh(ticket, LockModeType.PESSIMISTIC_WRITE)
-        val result = classify(ticket, eventId)
+        if ((requestedUuid != null && ticket.uuid != requestedUuid) || (ownerId != null && ticket.getUserId() != ownerId)) {
+            return V2CheckInOutcome(eventId, V2CheckInResult.OTHER_EVENT, ticket = null)
+        }
+        val result = classify(ticket, eventId, giftPending = ticketGiftGuard.isGiftPendingLocked(ticket.id!!))
         if (result == V2CheckInResult.ENTERED) ticket.entrance()
         return V2CheckInOutcome(eventId, result, ticket)
     }

@@ -1,6 +1,7 @@
 package band.gosrock.api.config
 
 import band.gosrock.api.slack.sender.SlackInternalErrorSender
+import band.gosrock.api.slack.sender.SlackThrottleErrorSender
 import band.gosrock.infrastructure.config.slack.SlackErrorNotificationProvider
 import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.spi.ILoggingEvent
@@ -36,6 +37,34 @@ class SensitiveBodyMaskingTest {
         assertTrue(masked.contains("\"accountNumber\":\"***\""))
         assertTrue(masked.contains("\"quantity\":2") && masked.contains("\"eventId\":1") && masked.contains("\"type\":\"PHONE\""))
         assertEquals(ObjectMapper().readTree(masked).at("/refundAccount/accountNumber").asText(), "***")
+    }
+
+    @Test
+    fun `선물 링크 토큰은 경로·URL 에서 가리고, 선물 메모는 본문에서 가린다 (#719)`() {
+        val token = "AbC-_123xyzAbC-_123xyzAbC-_123xyzAbC-_123x"
+        assertEquals("/api/v2/gifts/***", SensitiveBodyMasker.maskPath("/api/v2/gifts/$token"))
+        assertEquals("/api/v2/gifts/***/accept", SensitiveBodyMasker.maskPath("/api/v2/gifts/$token/accept"))
+        assertEquals("http://localhost/api/v2/gifts/***/reject?x=1", SensitiveBodyMasker.maskPath("http://localhost/api/v2/gifts/$token/reject?x=1"))
+        // 선물 id 경로(G-2·G-8)와 그 밖 경로는 그대로
+        assertEquals("/api/v2/me/gifts/12", SensitiveBodyMasker.maskPath("/api/v2/me/gifts/12"))
+        assertEquals("/api/v2/me/tickets/abc/gift", SensitiveBodyMasker.maskPath("/api/v2/me/tickets/abc/gift"))
+        assertEquals("""{"memo":"***"}""", SensitiveBodyMasker.mask("""{"memo":"엄마"}"""))
+    }
+
+    @Test
+    fun `MdcFilter 요청 로그에 선물 토큰이 남지 않는다 (#719)`() {
+        val logger = LoggerFactory.getLogger(MdcFilter::class.java) as Logger
+        val appender = ListAppender<ILoggingEvent>().also { it.start() }
+        logger.addAppender(appender)
+        try {
+            val request = MockHttpServletRequest("POST", "/api/v2/gifts/SECRET_TOKEN_719/accept")
+            MdcFilter().doFilter(request, MockHttpServletResponse(), MockFilterChain())
+            val lines = appender.list.map { it.formattedMessage }
+            assertTrue(lines.any { it.contains("/api/v2/gifts/***/accept") }, lines.toString())
+            assertFalse(lines.any { it.contains("SECRET_TOKEN_719") }, lines.toString())
+        } finally {
+            logger.detachAppender(appender)
+        }
     }
 
     @Test
@@ -90,5 +119,30 @@ class SensitiveBodyMaskingTest {
         val sent = (call.arguments[0] as List<*>).joinToString("\n") { it.toString() }
         assertTrue(sent.contains("quantity"), sent)
         secrets.forEach { assertFalse(sent.contains(it), "$it Slack 노출: $sent") }
+    }
+
+    private fun slackSent(provider: SlackErrorNotificationProvider): String {
+        val call = mockingDetails(provider).invocations.single { it.method.name == "sendNotification" }
+        return (call.arguments[0] as List<*>).joinToString("\n") { it.toString() }
+    }
+
+    private fun giftRequest(): ContentCachingRequestWrapper = ContentCachingRequestWrapper(
+        MockHttpServletRequest("POST", "/api/v2/gifts/SECRET_TOKEN_719/accept").apply {
+            contentType = "application/json"
+            setContent(body.toByteArray(Charsets.UTF_8))
+        },
+    ).also { it.inputStream.readAllBytes() }
+
+    @Test
+    fun `Slack 500·rate limit 알림 URL 에 선물 토큰이 없고, rate limit 본문도 가린다 (#719)`() {
+        val internal = mock(SlackErrorNotificationProvider::class.java)
+        SlackInternalErrorSender(ObjectMapper(), internal).execute(giftRequest(), RuntimeException("boom"), 1L)
+        val throttle = mock(SlackErrorNotificationProvider::class.java)
+        SlackThrottleErrorSender(ObjectMapper(), throttle).execute(giftRequest(), 1L)
+        for (sent in listOf(slackSent(internal), slackSent(throttle))) {
+            assertTrue(sent.contains("/api/v2/gifts/***/accept"), sent)
+            assertFalse(sent.contains("SECRET_TOKEN_719"), sent)
+            secrets.forEach { assertFalse(sent.contains(it), "$it Slack 노출: $sent") }
+        }
     }
 }

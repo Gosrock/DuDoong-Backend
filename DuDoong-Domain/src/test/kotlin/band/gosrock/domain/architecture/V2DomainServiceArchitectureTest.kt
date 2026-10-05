@@ -1,7 +1,11 @@
 package band.gosrock.domain.architecture
 
 import band.gosrock.domain.domains.event.domain.Event
+import band.gosrock.domain.domains.gift.domain.TicketGift
+import band.gosrock.domain.domains.gift.repository.TicketGiftRepository
+import band.gosrock.domain.domains.gift.service.TicketGiftGuard
 import band.gosrock.domain.domains.host.domain.Host
+import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicket
 import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.order.repository.OrderRefundAccountRepository
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem
@@ -71,6 +75,14 @@ class V2DomainServiceArchitectureTest {
     }
 
     @Test
+    fun `선물 저장소(v2 전용 테이블)는 v2 도메인 서비스와 v1 보호용 TicketGiftGuard 만 접근한다 (#719)`() {
+        noClasses().that().resideOutsideOfPackage(DOMAIN_SERVICE_V2)
+            .and().doNotBelongToAnyOf(TicketGiftRepository::class.java, TicketGiftGuard::class.java)
+            .should().dependOnClassesThat().belongToAnyOf(TicketGiftRepository::class.java)
+            .check(classes)
+    }
+
+    @Test
     fun `V2 로 시작하는 DomainService 는 service v2 패키지에 있다`() {
         classes().that().haveSimpleNameStartingWith("V2").and().haveSimpleNameEndingWith("DomainService")
             .should().resideInAPackage(DOMAIN_SERVICE_V2)
@@ -90,13 +102,16 @@ class V2DomainServiceArchitectureTest {
             TicketItem::class.java to setOf("changeAccountInfo", "changeSupplyCount"),
             // Order (#712, #718)
             Order::class.java to setOf("recordRefuseReasonType", "recordV2Payment", "withdrawByUser"),
+            // 선물 (#719): 수락·반환 때 소유자·uuid 교체, 선물 전이 기록
+            IssuedTicket::class.java to setOf("transferOwner"),
+            TicketGift::class.java to setOf("accept", "reject", "returnToSender", "cancel", "changeMemo"),
         )
 
         private val MUTATOR_OWNERS = V2_INTERNAL_MUTATORS_BY_OWNER.keys.toTypedArray()
 
         /** Kotlin internal 은 JVM 이름이 `name$모듈명` 으로 맹글링되므로 `name$` 접두도 같은 메서드로 본다 */
         private val V2_INTERNAL_MUTATOR_CALL: DescribedPredicate<JavaMethodCall> =
-            DescribedPredicate.describe("Event/Host/TicketItem/Order 의 v2 internal mutator ($V2_INTERNAL_MUTATORS_BY_OWNER)") { call ->
+            DescribedPredicate.describe("Event/Host/TicketItem/Order/IssuedTicket/TicketGift 의 v2 internal mutator ($V2_INTERNAL_MUTATORS_BY_OWNER)") { call ->
                 val target = call.target
                 val names = V2_INTERNAL_MUTATORS_BY_OWNER.entries.firstOrNull { it.key.name == target.owner.name }?.value.orEmpty()
                 names.any { target.name == it || target.name.startsWith("${it}\$") }

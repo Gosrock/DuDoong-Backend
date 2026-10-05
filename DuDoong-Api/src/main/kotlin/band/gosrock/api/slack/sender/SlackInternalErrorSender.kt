@@ -24,7 +24,8 @@ class SlackInternalErrorSender(
 ) {
     @Throws(IOException::class)
     fun execute(cachingRequest: ContentCachingRequestWrapper, e: Exception, userId: Long) {
-        val url = cachingRequest.requestURL.toString()
+        // 선물 링크 토큰은 URL 에서 가린다 (#719)
+        val url = SensitiveBodyMasker.maskPath(cachingRequest.requestURL.toString())
         val method = cachingRequest.method
         // 민감 키(계좌·입금자명·연락처) 값은 마스킹해서 보낸다
         val body = SensitiveBodyMasker.mask(objectMapper.readTree(cachingRequest.contentAsByteArray).toString())

@@ -7,6 +7,7 @@ import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus.ENTRAN
 import band.gosrock.domain.domains.issuedTicket.domain.QIssuedTicket.issuedTicket
 import band.gosrock.domain.domains.issuedTicket.domain.QIssuedTicketOptionAnswer.issuedTicketOptionAnswer
 import band.gosrock.domain.domains.issuedTicket.repository.condition.FindEventIssuedTicketsCondition
+import band.gosrock.domain.domains.order.domain.QOrder.order
 import band.gosrock.domain.domains.user.domain.QUser.user
 import com.querydsl.core.types.ExpressionUtils.count
 import com.querydsl.core.types.dsl.BooleanExpression
@@ -60,11 +61,16 @@ class IssuedTicketCustomRepositoryImpl(
         return Optional.ofNullable(findIssuedTicket)
     }
 
+    /**
+     * 1인 매수 제한용 발급 수: **원 구매자(주문 사용자)** 기준 (#719, 기본안 18). 선물로 소유자가 바뀌어도 보낸 사람 제한이 풀리지 않고
+     * 받은 사람이 제한에 걸리지 않는다. 선물 전에는 소유자 = 주문자라 기존(현재 소유자 기준)과 같은 값 (prod 2026-10-05: 73,139장 중 차이 0)
+     */
     override fun countPaidTicket(userId: Long, issuedTicketId: Long): Long {
         val result = queryFactory
             .select(count(issuedTicket))
             .from(issuedTicket)
-            .where(eqUserId(userId), eqTicketItemId(issuedTicketId), filterPaidTickets())
+            .join(order).on(order.uuid.eq(issuedTicket.orderUuid))
+            .where(order.userId.eq(userId), eqTicketItemId(issuedTicketId), filterPaidTickets())
             .fetchOne()
         return result ?: 0L
     }
@@ -83,9 +89,6 @@ class IssuedTicketCustomRepositoryImpl(
 
     private fun eqTicketItemId(ticketItemId: Long): BooleanExpression =
         issuedTicket.itemInfo.ticketItemId.eq(ticketItemId)
-
-    private fun eqUserId(userId: Long): BooleanExpression =
-        issuedTicket.userInfo.userId.eq(userId)
 
     private fun eventIdEq(eventId: Long?): BooleanExpression? =
         if (eventId == null) null else issuedTicket.eventId.eq(eventId)

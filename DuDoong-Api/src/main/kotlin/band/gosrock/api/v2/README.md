@@ -84,11 +84,31 @@ band.gosrock.api.v2
   - 결제 방식: 두둥 = BANK_TRANSFER / TOSS_TRANSFER + 입금자명 1~20자, 무료 = FREE. `tbl_order.payment_channel`·`depositor_name`(V007, v1 주문은 null). PG 티켓은 `Order_400_20`
   - 중복 요청: 같은 사용자·티켓·라인 수량·옵션 답변·결제 방식·입금자명이 10초 안에 다시 오면 앞 주문(진행 중·완료)을 돌려준다(스칼라 조회). 무료 선착순이 아직 확정 전이면 `Order_400_26` (이중 확정 방지). `Idempotency-Key` 헤더는 지원하지 않는다
   - 상태(`V2MyOrderStatus`): 호스트 분류와 같고 사용자 철회(REFUND)를 REFUNDED(환불 요청/완료) / CANCELED(환불 NONE = 무료 취소)로 나눈다. 목록 제외 READY·PENDING_PAYMENT·FAILED·OUTDATED (v1 마이페이지 목록과 같음)
-  - 취소: `주문:{uuid}` 락. 승인 대기 = 공연 OPEN + 시작 전, 승인 완료 = + 입장·주문자 소유 아닌(선물 대비) 티켓 없음. 카드(PG) 결제 주문은 `Order_400_24`. 승인 완료 유료는 v1 `Order.refund`, 그 외(승인 대기, 무료 승인)는 `Order.withdrawByUser`(internal) — 둘 다 상태 REFUND(v1 메일·슬랙이 '구매자 환불'로 처리), 유료만 환불 요청 + 환불 계좌(`tbl_order_refund_account`, 필수)
+  - 취소: `주문:{uuid}` 락. 승인 대기 = 공연 OPEN + 시작 전, 승인 완료 = + 입장·선물 대기·선물 완료(주문자 소유 아님) 티켓 없음 (#719). 카드(PG) 결제 주문은 `Order_400_24`. 승인 완료 유료는 v1 `Order.refund`, 그 외(승인 대기, 무료 승인)는 `Order.withdrawByUser`(internal) — 둘 다 상태 REFUND(v1 메일·슬랙이 '구매자 환불'로 처리), 유료만 환불 요청 + 환불 계좌(`tbl_order_refund_account`, 필수)
   - 환불 계좌 노출: 호스트 R-2 상세·F-1 환불 목록·변경 응답에서 **매니저 이상(+SUPER_ADMIN)만** 전체, 일반 멤버는 null. 주문자 O-3 은 계좌번호 뒤 4자리
-  - 발급 티켓(O-3)은 주문자 소유분만 (8단계 선물 대비)
+  - 발급 티켓(O-3)은 주문자 소유분 + 내가 선물해 수락된 티켓(`giftState=SENT`, uuid 없음, #719). 취소 차단에 선물 대기·선물 완료 티켓 포함
   - 결제 화면 O-0 `GET /api/v2/events/{eventId}/ticket-items/{ticketItemId}/checkout` (#726, 로그인): P-5 와 같은 티켓 + 입금 계좌(두둥티켓 + `isPurchasable` 일 때만 — 지난 공연·정산중·종료·매진은 null, O-3 `payment.account` 와 같은 형태). 티켓 응답은 P-5 와 같은 `V2PublicTicketItemMapper` 로 만든다. [결제하기]·토스 송금 전에 계좌를 보여 주기 위한 것이라 공개 경로에 넣지 않는다. 판매 중 아닌 티켓·다른 공연 티켓은 404
   - 승인형 1인 제한 = 발급 수 + 같은 사용자·같은 티켓 승인 대기 수량 + 이번 수량 (v1 `OrderValidator.validApproveStatePurchaseLimit`, `Order.createApproveOrder` 에서 v1·v2 공통). v2 는 `티켓관리` 락 안이라 같은 사용자 동시 주문도 보장(#726 동시성 테스트), v1 은 `주문생성:{userId}` 락으로 v1 끼리 보장
+- `V2TicketGiftDomainService` / `V2MyTicketQuery` / `V2TicketGiftCascadeHandler` (#719, `domains.gift.service.v2`): 사용자 앱 티켓탭(T-1·T-2)·선물(G-1~G-8). 테이블 `tbl_ticket_gift` 는 v2 전용(V008)
+  - 잠금 순서는 아래 **잠금 순서 표**를 따른다 (Redisson `주문` 락 → 공연 → 사용자 → 티켓 → 선물 행). 선물 전이(생성·회수·수락·거절·반환·메모)는 `주문:{orderUuid}` 락(v1·v2 승인·거절·취소·환불과 같은 락, 새 트랜잭션) 안에서 티켓 행 `SELECT ... FOR UPDATE` → 선물 행 잠금 읽기 후 판정. 락 전에는 orderUuid 만 스칼라로 읽는다
+  - 연쇄 처리는 도메인 이벤트 **BEFORE_COMMIT**(원 트랜잭션 안, 실패하면 원 전이도 롤백): `WithDrawOrderEvent`(v1·v2 호스트 취소, 운영 취소 — 대기 선물 CANCELED(ORDER_CANCELED), 선물 완료 티켓은 v1 티켓 철회 핸들러가 함께 취소), `UserDeactivatedEvent`(탈퇴·운영 정지 → SENDER_WITHDRAWN), `EventAdminStatusChangeEvent`(운영 삭제·준비중 전환 → EVENT_REMOVED, 정산중·지난공연은 대기 유지). 주문 연쇄는 대기 선물을 먼저 찾아(`idx_ticket_gift_order_uuid_status`) 없으면 끝내고(선물 없는 주문은 인덱스 조회 1회), 있으면 그 티켓 행만 PK 로 잠근다 — v1 티켓 철회 핸들러보다 먼저(`@Order`). 선물 완료 티켓은 철회 핸들러가 취소하고 기록은 ACCEPTED 그대로라 잠그지 않는다(반환 G-6 은 같은 주문 락)
+  - **잠금 순서 표** (#719 재리뷰). 모든 경로가 아래 순서의 부분열만 잡으므로 순환 대기가 없다
+    - 공연 행 → 사용자 행 → 티켓 행 → 선물 행 (DB), 그 앞에 Redisson `주문:{uuid}` (선물 전이·주문 전이)
+    - G-1 생성: 주문 락 → 공연 S → 보낸 사람 S → 티켓 X → 선물(잠금 읽기·INSERT). 공연 삭제·정지가 먼저 커밋되면 최신 상태를 보고 Gift_400_1
+    - G-2·G-4·G-5·G-6·G-8: 주문 락 → 티켓 X → 선물 X (공연·사용자 행은 잠그지 않음)
+    - 주문 전이 연쇄: 주문 락 → 대기 선물 티켓 X(PK) → 선물 X → (주문 행 UPDATE 는 BEFORE_COMMIT 뒤 커밋 flush 때 실행 — 주문 행 X 는 맨 마지막. 주문 행은 Redisson 주문 락으로 이미 줄 서 있다)
+    - 공연 운영 삭제·상태 변경: 공연 X(flush 로 UPDATE 먼저) → 후보(짧은 별도 트랜잭션의 선물 FOR SHARE, 바로 놓음) → 티켓 X(PK) → 선물 X
+    - 탈퇴·운영 정지: 사용자 X(flush) → 후보(짧은 별도 트랜잭션의 선물 FOR SHARE) → 티켓 X(PK) → 선물 X
+    - 입장(v1·v2): 티켓 X → 선물 S(잠금 읽기)
+    - 연쇄 후보를 선물 행 잠금 읽기로 먼저 잡지 않는 이유: 수락 등이 티켓 → 선물 순서라, 선물 행을 먼저 잡고 티켓을 기다리면 역순이 되어 교착한다. 대신 공연·사용자 행 X 를 잡은 뒤, 다른 잠금을 쥐지 않는 짧은 별도 트랜잭션에서 선물 행을 잠금 읽기(최신 값)로 후보만 읽고 놓는다 — G-1 이 그 행을 S 로 잡고 커밋까지 놓지 않으므로 이 시점에 미커밋 생성은 없다. 원 트랜잭션의 일반(스냅샷) 읽기는 잠금 대기 전에 만들어진 스냅샷이라 기다리는 동안 커밋된 생성을 놓친다 (E2E 결정적 경합으로 재현) — 후보와 선물 행은 모두 잠금 읽기로 가져온다 (`V2TicketGiftCandidateReader`)
+  - 입장과 주문 취소가 동시에 일어나는 경합(입장한 티켓의 취소 등)은 선물과 무관한 v1 기존 동작과 같다 — v1 티켓 철회 핸들러는 티켓을 잠그지 않고 읽는다 (코드 변경 없음)
+  - T-3 공지 바 해제: T-2·G-7a 는 안 읽은 승인 알림이 있을 때만 `V2OrderTicketViewedEvent` 를 내고, 읽음 처리는 조회 커밋 뒤 알림 전용 풀에서 (조회는 커넥션 1개, 실패는 warn 만)
+  - 운영 어드민 주문 취소(`AdminCancelOrderUseCase`)는 v1 호스트 취소와 같은 `WithdrawOrderService.cancelOrder`(주문 락)로 바꿨다 (#719 — 선물 수락과 같은 락으로 줄 서도록)
+  - 수락·반환 때 `IssuedTicket.transferOwner`(internal)로 소유자 정보 + uuid(QR) 교체 (`V2TicketUuidIssuer`, 이미 있는 uuid 면 다시 뽑음). 옛 uuid 는 v1·v2 모두 없는 티켓
+  - 선물 만료(공연 종료) = `V2EventDisplayRule` PAST (종료 시각 경과 또는 CALCULATING·CLOSED·DELETED). 상태는 PENDING 유지, 배치 없음
+  - 토큰: 32바이트 SecureRandom base64url. 요청 로그·Slack URL 에서 `SensitiveBodyMasker.maskPath` 로 가린다. 메모(`memo`)는 본문 마스킹 키
+  - 알림: `V2GiftNotificationDomainService` + `api.v2.notification.handler.V2GiftNotificationEventHandler`(AFTER_COMMIT, 알림 전용 풀). 보낸 사람 GIFT_SENT·ACCEPTED·REJECTED·RETURNED, 받은 사람 GIFT_RECEIVED·GIFT_TICKET_CANCELED. 회수는 알림 없음. dedup = `gift:{giftId}`. 호스트·운영 취소 때 주문자(보낸 사람)는 #726 의 ORDER_CANCELED_BY_HOST, 받은 사람은 GIFT_TICKET_CANCELED 만 받는다 (수신자가 달라 겹치지 않음, 운영 경로 포함)
+- **v1 공통 보호** `domains.gift.service.TicketGiftGuard` (#719, `service.v2` 밖 — v1 코드가 부른다, 읽기만): v1 입장(티켓 행 잠금 뒤 선물 행 **잠금 읽기**(`FOR SHARE`) — 일반 읽기는 REPEATABLE READ 스냅샷이라 잠금 대기 중 커밋된 선물 생성을 놓친다. 선물 대기면 `IssuedTicket_400_8`), v1 티켓 상세(대기면 400_8), v1 주문 티켓 목록(주문자 소유분만, 대기는 uuid null), v1 사용자 환불(`OrderValidator.validCanRefund`, 선물 대기·완료면 `Order_400_24`), v2 체크인(같은 잠금 읽기로 GIFT_PENDING, 잠근 뒤 uuid·소유자가 요청과 다르면 OTHER_EVENT). 1인 제한 `countPaidTicket` 은 원 구매자(주문 사용자) 기준 (선물 없으면 기존과 같은 값)
 - **open-in-view**: test·staging·prod 는 켜져 있다(기본값). 요청 영속성 컨텍스트에 먼저 올린 엔티티는 락 트랜잭션(REQUIRES_NEW)에서 바뀌어도 같은 요청 안에서 갱신되지 않으므로, 락 서비스를 부르기 전 검사는 엔티티 대신 스칼라 조회로 한다 (`V2OrderDomainService.validateEventOrder`)
 - 티켓 공통 불변식(엔티티 `TicketItem`): 재고 감소 = 판매됨(`isSold`), 판매된 티켓 옵션 변경·삭제 불가, 무제한·매수 제한 없음 저장값(`TicketItem.UNLIMITED_SUPPLY_COUNT` / `NO_PURCHASE_LIMIT` = 1,000,000, `isUnlimitedSupply()` / `hasNoPurchaseLimit()` — v1 응답·어드민·v2 공통), **판매 중 판정(`isOnSale`: isSellable + 판매 기간)**
   - v1 장바구니·주문 생성(`CartValidator`/`OrderValidator.validCanCreate`)이 이 검사를 하고, v1 공개 티켓 목록은 판매 중인 티켓만 보여 준다(어드민 목록은 전부). v1 로 만든 티켓은 isSellable=true·기간 null 이라 영향 없음
@@ -102,8 +122,9 @@ band.gosrock.api.v2
 | 예외: `GlobalExceptionHandler` / `SwaggerConfig` 는 `api.v2` 중 `V2ErrorPolicy` 에만 의존 가능 | 〃 |
 | `api.v2` 는 `api.common` / `api.config` 외 v1 api 에 의존하지 않음 | 〃 |
 | `domain..service.v2..` 에는 `api.v2..` 와 `domain..service.v2..` 만 의존 가능 (허용 목록. v1 api, Admin, Domain, Infrastructure, Common 전부 금지) | 〃 (Api classpath), `DuDoong-Domain/.../architecture/V2DomainServiceArchitectureTest.kt`, `DuDoong-Batch/src/test/kotlin/band/gosrock/architecture/V2BatchArchitectureTest.kt` |
-| 엔티티의 v2 `internal` mutator(`changeHasTicket`, `changeSchedule`, `changePosterImage`, `changePlace`, `replaceContacts`, `replaceTagIds`, `replaceSections`, `getOrInitProfile`, `TicketItem.changeAccountInfo`, `TicketItem.changeSupplyCount`, `Order.recordRefuseReasonType`, `Order.recordV2Payment`, `Order.withdrawByUser`)는 `service.v2` 와 엔티티 자신(`Event`/`Host`/`TicketItem`/`Order`)만 호출 | `DuDoong-Domain/src/test/kotlin/band/gosrock/domain/architecture/V2DomainServiceArchitectureTest.kt` |
+| 엔티티의 v2 `internal` mutator(`changeHasTicket`, `changeSchedule`, `changePosterImage`, `changePlace`, `replaceContacts`, `replaceTagIds`, `replaceSections`, `getOrInitProfile`, `TicketItem.changeAccountInfo`, `TicketItem.changeSupplyCount`, `Order.recordRefuseReasonType`, `Order.recordV2Payment`, `Order.withdrawByUser`, `IssuedTicket.transferOwner`, `TicketGift.accept/reject/returnToSender/cancel/changeMemo`)는 `service.v2` 와 엔티티 자신(`Event`/`Host`/`TicketItem`/`Order`/`IssuedTicket`/`TicketGift`)만 호출 | `DuDoong-Domain/src/test/kotlin/band/gosrock/domain/architecture/V2DomainServiceArchitectureTest.kt` |
 | `V2*DomainService` 는 `..service.v2..` 패키지에 둔다 | 〃 |
+| 선물 저장소 `TicketGiftRepository`(v2 전용 테이블)는 `service.v2` 와 v1 보호용 `TicketGiftGuard` 만 접근 (#719) | 〃 |
 | 공개 공연 탐색 컨트롤러·유스케이스·응답은 계좌(`AccountInfoVo`, `V2TicketAccountResponse`)에 의존하지 않음 | `V2ApiArchitectureTest` |
 | 공개 공연 탐색 응답 DTO 는 `@Entity` 클래스에 의존하지 않음 | 〃 |
 | 엔티티의 **모든** Kotlin `internal` 메서드(`*$DuDoong_Domain`, 자동 수집)는 `service.v2` 와 그 엔티티 자신만 호출, 수집 결과 = 위 목록 (#721) | `V2DomainServiceArchitectureTest` |

@@ -1,5 +1,7 @@
 package band.gosrock.domain.domains.order.service.v2
 
+import band.gosrock.domain.domains.gift.domain.QTicketGift.ticketGift
+import band.gosrock.domain.domains.gift.domain.TicketGiftStatus
 import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus
 import band.gosrock.domain.domains.issuedTicket.domain.QIssuedTicket.issuedTicket
 import band.gosrock.domain.domains.order.domain.Order
@@ -8,6 +10,7 @@ import band.gosrock.domain.domains.order.domain.OrderStatus
 import band.gosrock.domain.domains.order.domain.QOrder.order
 import band.gosrock.domain.domains.order.domain.QOrderLineItem.orderLineItem
 import band.gosrock.domain.domains.order.domain.QOrderOptionAnswer.orderOptionAnswer
+import com.querydsl.jpa.JPAExpressions
 import com.querydsl.jpa.impl.JPAQueryFactory
 import java.time.LocalDateTime
 import org.springframework.data.domain.Page
@@ -101,7 +104,7 @@ class V2UserOrderQuery(private val queryFactory: JPAQueryFactory) {
             .fetchOne() ?: 0L
 
     /**
-     * 사용자 취소를 막는 발급 티켓 수: 입장한 티켓 + 주문자 소유가 아닌 티켓(8단계 선물로 넘어간 티켓 대비). 취소된 티켓은 제외
+     * 사용자 취소를 막는 발급 티켓 수: 입장한 티켓 + 주문자 소유가 아닌 티켓(선물 완료) + 선물 대기 중인 티켓 (#719). 취소된 티켓은 제외
      */
     fun countCancelBlockingTickets(orderUuid: String, ownerUserId: Long): Long =
         queryFactory.select(issuedTicket.count()).from(issuedTicket)
@@ -109,7 +112,12 @@ class V2UserOrderQuery(private val queryFactory: JPAQueryFactory) {
                 issuedTicket.orderUuid.eq(orderUuid),
                 issuedTicket.issuedTicketStatus.ne(IssuedTicketStatus.CANCELED),
                 issuedTicket.issuedTicketStatus.eq(IssuedTicketStatus.ENTRANCE_COMPLETED)
-                    .or(issuedTicket.userInfo.userId.ne(ownerUserId)),
+                    .or(issuedTicket.userInfo.userId.ne(ownerUserId))
+                    .or(
+                        JPAExpressions.selectOne().from(ticketGift)
+                            .where(ticketGift.issuedTicketId.eq(issuedTicket.id), ticketGift.status.eq(TicketGiftStatus.PENDING))
+                            .exists(),
+                    ),
             )
             .fetchOne() ?: 0L
 }

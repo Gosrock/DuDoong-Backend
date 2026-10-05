@@ -1,6 +1,7 @@
 package band.gosrock.domain.domains.user.domain
 
 import band.gosrock.domain.common.aop.domainEvent.Events
+import band.gosrock.domain.common.events.user.UserDeactivatedEvent
 import band.gosrock.domain.common.events.user.UserRegisterEvent
 import band.gosrock.domain.common.model.BaseTimeEntity
 import band.gosrock.domain.common.vo.UserInfoVo
@@ -81,6 +82,7 @@ class User(
         oauthInfo = oauthInfo?.withDrawOauthInfo()
         marketingAgree = false
         receiveMail = false
+        id?.let { Events.raise(UserDeactivatedEvent(it, accountState)) }
     }
 
     fun login() {
@@ -121,6 +123,7 @@ class User(
             return
         }
         accountState = newState
+        if (newState != AccountState.NORMAL) id?.let { Events.raise(UserDeactivatedEvent(it, newState)) }
     }
 
     fun isDeletedUser(): Boolean = accountState == AccountState.DELETED

@@ -6,12 +6,19 @@ import band.gosrock.domain.domains.user.domain.User
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import jakarta.persistence.LockModeType
 import java.time.LocalDateTime
 import java.util.Optional
 
 interface UserRepository : JpaRepository<User, Long> {
+    /** 사용자 행 공유 잠금 (`FOR SHARE`, #719): 선물 생성(G-1)이 보낸 사람 계정 상태를 확인하는 동안 탈퇴·운영 정지(행 X 잠금)와 줄 선다 */
+    @Lock(LockModeType.PESSIMISTIC_READ)
+    @Query("select u from User u where u.id = :userId")
+    fun findByIdForShare(@Param("userId") userId: Long): User?
+
     fun findByOauthInfo(oauthInfo: OauthInfo): Optional<User>
 
     /** user id 리스트에 포함되어 있는 유저를 모두 가져오는 쿼리 */

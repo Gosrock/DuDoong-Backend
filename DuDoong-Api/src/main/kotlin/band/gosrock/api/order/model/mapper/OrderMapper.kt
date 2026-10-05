@@ -9,10 +9,11 @@ import band.gosrock.api.order.model.dto.response.OrderTicketResponse
 import band.gosrock.common.annotation.Mapper
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo
 import band.gosrock.domain.common.vo.OptionAnswerVo
+import band.gosrock.domain.common.vo.RefundInfoVo
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.event.domain.Event
+import band.gosrock.domain.domains.gift.service.TicketGiftGuard
 import band.gosrock.domain.domains.issuedTicket.adaptor.IssuedTicketAdaptor
-import band.gosrock.domain.domains.issuedTicket.domain.IssuedTickets
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
 import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.order.domain.OrderLineItem
@@ -34,14 +35,10 @@ class OrderMapper(
     private val ticketItemAdaptor: TicketItemAdaptor,
     private val optionAdaptor: OptionAdaptor,
     private val eventAdaptor: EventAdaptor,
+    private val ticketGiftGuard: TicketGiftGuard,
 ) {
     @Transactional(readOnly = true)
-    fun toOrderResponse(orderUuid: String): OrderResponse {
-        val order = orderAdaptor.findByOrderUuid(orderUuid)
-        val event = getEvent(order)
-        val orderLineTicketResponses = getOrderLineTicketResponses(order)
-        return OrderResponse.of(order, event, orderLineTicketResponses)
-    }
+    fun toOrderResponse(orderUuid: String): OrderResponse = toOrderResponse(orderAdaptor.findByOrderUuid(orderUuid))
 
     @Transactional(readOnly = true)
     fun toOrderResponse(order: Order): OrderResponse {
@@ -49,6 +46,18 @@ class OrderMapper(
         val orderLineTicketResponses = getOrderLineTicketResponses(order)
         return OrderResponse.of(order, event, orderLineTicketResponses)
     }
+
+    /** 주문자 본인 주문 상세 (v1 사용자 앱). 환불 가능 표시에 선물 차단 반영 (#719). 호스트 상세는 [toOrderResponse] 그대로 */
+    @Transactional(readOnly = true)
+    fun toMyOrderResponse(order: Order): OrderResponse =
+        toOrderResponse(order).let { it.copy(refundInfo = withGiftRefundBlock(order, it.refundInfo)) }
+
+    /**
+     * 선물 대기·선물 완료 티켓이 있으면 사용자 환불 불가로 표시 (#719 — v1 사용자 환불 API 도 막힌다). 선물이 없으면 기존 값 그대로.
+     * 사용자 경로(주문 상세·목록·최근 주문)에만 쓴다
+     */
+    private fun withGiftRefundBlock(order: Order, refundInfo: RefundInfoVo): RefundInfoVo =
+        if (refundInfo.availAble && ticketGiftGuard.hasUserCancelBlockingGift(order)) refundInfo.copy(availAble = false) else refundInfo
 
     @Transactional(readOnly = true)
     fun toCreateOrderResponse(orderUuid: String): CreateOrderResponse {
@@ -85,9 +94,10 @@ class OrderMapper(
     private fun getTicketNoName(orderLineItemId: Long): String =
         issuedTicketAdaptor.findOrderLineIssuedTickets(orderLineItemId).getTicketNoName()
 
+    /** v1 사용자 주문 목록·최근 주문 (주문자 본인). 환불 가능 표시에 선물 차단 반영 (#719) */
     fun toOrderBriefElement(order: Order): OrderBriefElement {
         val orderIssuedTickets = issuedTicketAdaptor.findOrderIssuedTickets(order.uuid!!)
-        return OrderBriefElement.of(order, getEvent(order), orderIssuedTickets)
+        return OrderBriefElement.of(order, getEvent(order), orderIssuedTickets).let { it.copy(refundInfo = withGiftRefundBlock(order, it.refundInfo)) }
     }
 
     fun toOrderBriefsResponse(ordersWithPagination: Slice<Order>): Slice<OrderBriefElement> =
@@ -105,10 +115,17 @@ class OrderMapper(
 
     private fun getEvent(order: Order): Event = eventAdaptor.findById(order.getItemGroupId())
 
+    /**
+     * v1 주문 티켓(QR) 목록 — 주문자 본인 요청. 선물 보호 (#719, 11 문서 8-3): 주문자가 **지금 소유한** 티켓만 내보내고
+     * (선물 완료 티켓은 받은 사람 것), 선물 대기 중인 티켓은 QR 값(uuid)을 비운다. 선물이 없는 주문은 기존과 같다
+     */
     fun toOrderTicketResponse(order: Order): OrderTicketResponse {
-        val orderIssuedTickets = issuedTicketAdaptor.findOrderIssuedTickets(order.uuid!!)
+        val owned = issuedTicketAdaptor.findAllByOrderUuid(order.uuid!!).filter { it.getUserId() == order.userId }
         val event = getEvent(order)
-        val issuedTicketInfoVos: List<IssuedTicketInfoVo> = orderIssuedTickets.getIssuedTicketInfoVos()
+        val pending = ticketGiftGuard.pendingTicketIds(owned.mapNotNull { it.id })
+        val issuedTicketInfoVos: List<IssuedTicketInfoVo> = owned.map { ticket ->
+            ticket.toIssuedTicketInfoVo().let { if (ticket.id in pending) it.copy(uuid = null) else it }
+        }
         return OrderTicketResponse.of(order, event, issuedTicketInfoVos)
     }
 }
