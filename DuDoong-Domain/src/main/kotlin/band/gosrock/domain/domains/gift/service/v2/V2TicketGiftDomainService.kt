@@ -32,12 +32,14 @@ import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
 import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
 import band.gosrock.domain.domains.user.domain.AccountState
+import band.gosrock.domain.domains.user.domain.User
 import band.gosrock.domain.domains.user.repository.UserRepository
 import jakarta.persistence.EntityManager
 import jakarta.persistence.LockModeType
 import java.security.SecureRandom
 import java.time.LocalDateTime
 import java.util.Base64
+import org.hibernate.engine.spi.SessionImplementor
 import org.springframework.data.domain.PageRequest
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
@@ -71,9 +73,11 @@ enum class V2GiftViewState {
 /**
  * v2 티켓 선물 (#719, DEC-022·DEC-026, 11 문서 8-2). v1 코드는 이 서비스를 호출하지 않는다 (v1 보호 판정은 [band.gosrock.domain.domains.gift.service.TicketGiftGuard]).
  *
- * 잠금 순서는 **주문 → 티켓** 하나로 고정한다 (8-4 A4):
+ * 잠금 순서는 **주문 락 → 공연 행(S) → 사용자 행(S) → 티켓 행(X) → 선물 행(X)** 하나로 고정한다 (8-4 A4, #734):
  * - 선물 전이(생성·회수·수락·거절·반환·메모)는 `주문:{orderUuid}` 락(v1·v2 의 승인·거절·취소·환불과 같은 락, 새 트랜잭션)을 잡고, 그 안에서 티켓 행을 `SELECT ... FOR UPDATE` 로 잠근 뒤
  *   선물 행을 잠금 읽기로 다시 읽어 판정한다. 같은 링크 동시 수락은 한 요청만 성공한다
+ * - 공연·사용자 상태를 판정에 쓰는 전이(생성 G-1, 수락·거절 G-4·G-5, 반환 G-6)는 티켓보다 먼저 그 행을 `FOR SHARE` 로 읽는다:
+ *   운영 삭제·상태 변경·정지·탈퇴(행 X + 연쇄)와 줄 서, 변경이 먼저면 최신 상태로 거부하고 전이가 먼저면 변경 쪽 연쇄가 결과를 본다
  * - 주문 쪽 연쇄 처리([cancelPendingByOrder])는 주문 전이와 같은 트랜잭션(이미 `주문` 락 안)에서 그 주문의 티켓 행을 id 순으로 잠근다
  * - 주문과 무관한 연쇄 처리(보낸 사람 탈퇴·정지, 공연 운영 삭제)는 주문 락 없이 티켓 행만 id 순으로 잠근다 (선물 상태만 바꾸므로 주문 불변식과 무관)
  * - 락 밖에서는 잠금 키(orderUuid)만 스칼라로 읽는다 (open-in-view: 먼저 올린 엔티티는 락 트랜잭션의 변경을 보지 못한다)
@@ -166,8 +170,8 @@ class V2TicketGiftDomainService(
     /** G-4 수락: 소유자를 받은 사람으로 바꾸고 티켓 uuid(QR)를 새로 발급한다 (DEC-026 #6) */
     @RedissonLock(LockName = ORDER_LOCK, identifier = "orderUuid")
     fun accept(orderUuid: String, userId: Long, token: String): TicketGift {
-        val (ticket, gift) = lockByToken(orderUuid, token)
-        respondBlocker(ticket, gift, userId, LocalDateTime.now())?.let { throw it }
+        val (event, ticket, gift) = lockByToken(orderUuid, token)
+        respondBlocker(ticket, gift, event, userId, LocalDateTime.now())?.let { throw it }
         val receiver = userAdaptor.queryUser(userId)
         gift.accept(userId, LocalDateTime.now())
         ticket.transferOwner(IssuedTicketUserInfoVo.from(receiver), uuidIssuer.issue())
@@ -178,25 +182,33 @@ class V2TicketGiftDomainService(
     /** G-5 거절: 티켓은 보낸 사람에게 그대로 (uuid 유지). 수락과 같은 조건 */
     @RedissonLock(LockName = ORDER_LOCK, identifier = "orderUuid")
     fun reject(orderUuid: String, userId: Long, token: String) {
-        val (ticket, gift) = lockByToken(orderUuid, token)
-        respondBlocker(ticket, gift, userId, LocalDateTime.now())?.let { throw it }
+        val (event, ticket, gift) = lockByToken(orderUuid, token)
+        respondBlocker(ticket, gift, event, userId, LocalDateTime.now())?.let { throw it }
         gift.reject(userId, LocalDateTime.now())
         Events.raise(V2TicketGiftEvent(gift.id!!, V2TicketGiftChange.REJECTED))
     }
 
     /**
      * G-6 수락 후 반환 (DEC-022 #1): 받은 사람이 입장 전·공연 시작 전에 보낸 사람에게 돌려보낸다. 소유자 복귀 + uuid 교체 (DEC-026 #6).
-     * 남의 티켓·없는 티켓은 IssuedTicket_404_1, 내 티켓이지만 받은 티켓이 아니면 Gift_400_8
+     * 남의 티켓·없는 티켓은 IssuedTicket_404_1, 내 티켓이지만 받은 티켓이 아니면 Gift_400_8.
+     * 잠금 순서: (주문 락) → 공연 행 S → 보낸 사람 행 S → 티켓 행 X → 선물 행 (#734). 보낸 사람 정지·탈퇴(사용자 행 X)와 줄 서
+     * 정지가 먼저면 최신 상태를 보고 Gift_400_7 (일반 읽기는 스냅샷이라 대기 중 커밋된 정지를 놓친다).
+     * 보낸 사람 id 는 잠그기 전에 이 티켓의 최근 선물에서 스칼라로 읽는다 — 선물 전이는 모두 같은 `주문` 락이라 잠근 뒤에도 같다(아니면 반환 불가)
      */
     @RedissonLock(LockName = ORDER_LOCK, identifier = "orderUuid")
     fun returnTicket(orderUuid: String, userId: Long, ticketUuid: String): TicketGift {
+        val eventId = issuedTicketRepository.findEventIdByUuid(ticketUuid) ?: throw IssuedTicketNotFoundException.EXCEPTION
+        val event = eventRepository.findByIdForShare(eventId)
+        val sender = ticketGiftRepository.findLatestSenderIdsByTicketUuid(ticketUuid, PageRequest.of(0, 1)).firstOrNull()
+            ?.let { userRepository.findByIdForShare(it) }
         val ticket = lockTicketByUuid(orderUuid, ticketUuid)
         if (ticket.getUserId() != userId) throw IssuedTicketNotFoundException.EXCEPTION
         val gift = lockLatestGift(ticket.id!!)
-        returnBlocker(ticket, gift, eventAdaptor.findById(ticket.eventId!!), userId, LocalDateTime.now())?.let { throw it }
-        val sender = userAdaptor.queryUser(gift!!.senderUserId)
-        gift.returnToSender(LocalDateTime.now())
-        ticket.transferOwner(IssuedTicketUserInfoVo.from(sender), uuidIssuer.issue())
+        returnBlocker(ticket, gift, event, userId, LocalDateTime.now(), sender)?.let { throw it }
+        // 잠근 사용자가 최근 선물의 보낸 사람이 아니면(같은 주문 락이라 정상 흐름에서는 없음) 잠그지 않은 사람에게 돌려보내지 않는다
+        val returnTo = sender?.takeIf { it.id == gift!!.senderUserId } ?: throw GiftCannotReturnException.EXCEPTION
+        gift!!.returnToSender(LocalDateTime.now())
+        ticket.transferOwner(IssuedTicketUserInfoVo.from(returnTo), uuidIssuer.issue())
         Events.raise(V2TicketGiftEvent(gift.id!!, V2TicketGiftChange.RETURNED))
         return gift
     }
@@ -248,18 +260,36 @@ class V2TicketGiftDomainService(
     private fun cancelCandidates(candidates: List<V2GiftCandidate>, reason: TicketGiftCancelReason): Int {
         if (candidates.isEmpty()) return 0
         issuedTicketRepository.findAllByIdInForUpdate(candidates.map { it.issuedTicketId }.toSet())
-        // 원 트랜잭션의 일반 읽기는 스냅샷이라 방금 커밋된 선물이 안 보일 수 있다 → 잠금 읽기로 가져온다
-        val gifts = candidates.sortedBy { it.giftId }.mapNotNull { ticketGiftRepository.findByIdForUpdate(it.giftId) }
-        return cancelLocked(gifts, reason)
+        // 원 트랜잭션의 일반 읽기는 스냅샷이라 방금 커밋된 선물이 안 보일 수 있다 → 선물마다 잠금 읽기 1번으로 가져온다 (#734: 잠금 SELECT 2번 → 1번)
+        val now = LocalDateTime.now()
+        return candidates.sortedBy { it.giftId }.count { candidate ->
+            val gift = lockGift(candidate.giftId) ?: return@count false
+            gift.isPending().also { pending -> if (pending) gift.cancel(reason, now) }
+        }
     }
 
-    /** 티켓 행을 잠근 뒤 선물을 잠금 읽기로 다시 읽어 아직 대기 중인 것만 취소 (스냅샷에 남은 옛 상태로 덮어쓰지 않는다) */
+    /** 티켓 행을 잠근 뒤 (이미 읽은) 선물을 잠금 읽기로 다시 읽어 아직 대기 중인 것만 취소 (스냅샷에 남은 옛 상태로 덮어쓰지 않는다) */
     private fun cancelLocked(candidates: List<TicketGift>, reason: TicketGiftCancelReason): Int {
         val now = LocalDateTime.now()
         return candidates.sortedBy { it.id }.count { gift ->
             entityManager.refresh(gift, LockModeType.PESSIMISTIC_WRITE)
             gift.isPending().also { pending -> if (pending) gift.cancel(reason, now) }
         }
+    }
+
+    /**
+     * 선물 행 잠금 읽기 (SELECT ... FOR UPDATE 1번). 이 영속성 컨텍스트에 이미 있는 선물이면 find 는 상태를 다시 읽지 않고 잠금만 걸므로
+     * refresh 로, 없으면 잠금 find 로 읽는다 — 어느 쪽이든 최신 커밋 값이다
+     */
+    private fun lockGift(giftId: Long): TicketGift? {
+        val session = entityManager.unwrap(SessionImplementor::class.java)
+        val persister = session.factory.mappingMetamodel.getEntityDescriptor(TicketGift::class.java)
+        val managed = session.persistenceContextInternal.getEntity(session.generateEntityKey(giftId, persister)) as TicketGift?
+        if (managed != null) {
+            entityManager.refresh(managed, LockModeType.PESSIMISTIC_WRITE)
+            return managed
+        }
+        return entityManager.find(TicketGift::class.java, giftId, LockModeType.PESSIMISTIC_WRITE)
     }
 
     // ===== 판정 (조회 화면과 전이가 같은 함수를 쓴다) =====
@@ -277,25 +307,33 @@ class V2TicketGiftDomainService(
         return null
     }
 
-    /** G-4·G-5 를 막는 사유. 순서는 랜딩 viewState 와 같다: 대기 아님 → 만료 → 본인 링크 → 원 주문·티켓 비정상 */
-    fun respondBlocker(ticket: IssuedTicket, gift: TicketGift, userId: Long, now: LocalDateTime): DuDoongCodeException? {
+    /**
+     * G-4·G-5 를 막는 사유. 순서는 랜딩 viewState 와 같다: 대기 아님 → 만료(삭제된 공연 포함) → 본인 링크 → 공연 OPEN 아님·원 주문·티켓 비정상.
+     * [event] 는 공유 잠금으로 읽은 공연 (삭제됐으면 null). 비공개(준비중) 전환은 연쇄로 대기 선물이 취소되지만, 판정도 OPEN 만 받는다 (#734)
+     */
+    fun respondBlocker(ticket: IssuedTicket, gift: TicketGift, event: Event?, userId: Long, now: LocalDateTime): DuDoongCodeException? {
         if (!gift.isPending()) return GiftNotPendingException.EXCEPTION
-        if (isEventEnded(eventAdaptor.findById(gift.eventId), now)) return GiftExpiredException.EXCEPTION
+        if (event == null || isEventEnded(event, now)) return GiftExpiredException.EXCEPTION
         if (gift.senderUserId == userId) return GiftOwnLinkException.EXCEPTION
         val order = orderAdaptor.findByOrderUuid(gift.orderUuid)
-        if (!order.orderStatus.isCanWithDraw() || !ticket.issuedTicketStatus.isBeforeEntrance() || ticket.getUserId() != gift.senderUserId) {
+        if (event.status != EventStatus.OPEN || !order.orderStatus.isCanWithDraw() || !ticket.issuedTicketStatus.isBeforeEntrance() ||
+            ticket.getUserId() != gift.senderUserId
+        ) {
             return GiftOrderInvalidException.EXCEPTION
         }
         return null
     }
 
-    /** G-6 을 막는 사유. 순서: 받은 티켓 아님(Gift_400_8) → 입장·취소·공연 시작 후·보낸 사람 탈퇴/정지(Gift_400_7) */
-    fun returnBlocker(ticket: IssuedTicket, latest: TicketGift?, event: Event, userId: Long, now: LocalDateTime): DuDoongCodeException? {
+    /**
+     * G-6 을 막는 사유. 순서: 받은 티켓 아님(Gift_400_8) → 입장·취소·공연 시작 후·보낸 사람 탈퇴/정지(Gift_400_7).
+     * [event] 는 삭제됐으면 null(반환 불가). [sender] 는 반환 전이가 공유 잠금으로 읽은 보낸 사람 (화면 표시는 null 로 부르고 여기서 읽는다)
+     */
+    fun returnBlocker(ticket: IssuedTicket, latest: TicketGift?, event: Event?, userId: Long, now: LocalDateTime, sender: User? = null): DuDoongCodeException? {
         if (ticket.getUserId() != userId || latest == null || latest.status != TicketGiftStatus.ACCEPTED || latest.receiverUserId != userId) {
             return GiftNotReceivedTicketException.EXCEPTION
         }
-        val startAt = event.getStartAt()
-        val senderActive = userAdaptor.queryUser(latest.senderUserId).accountState == AccountState.NORMAL
+        val startAt = event?.getStartAt()
+        val senderActive = (sender ?: userAdaptor.queryUser(latest.senderUserId)).accountState == AccountState.NORMAL
         if (!ticket.issuedTicketStatus.isBeforeEntrance() || startAt == null || !now.isBefore(startAt) || !senderActive) {
             return GiftCannotReturnException.EXCEPTION
         }
@@ -363,9 +401,12 @@ class V2TicketGiftDomainService(
         return lockWithGift(gift)
     }
 
-    private fun lockByToken(orderUuid: String, token: String): Pair<IssuedTicket, TicketGift> {
+    /** 수락·거절: 공연 행 S(삭제됐으면 null) → 티켓 행 X → 선물 잠금 읽기 (#734). 선물의 공연 id 는 바뀌지 않는 값이라 잠그기 전에 읽는다 */
+    private fun lockByToken(orderUuid: String, token: String): Triple<Event?, IssuedTicket, TicketGift> {
         val gift = ticketGiftRepository.findByToken(token)?.takeIf { it.orderUuid == orderUuid } ?: throw GiftNotFoundException.EXCEPTION
-        return lockWithGift(gift)
+        val event = eventRepository.findByIdForShare(gift.eventId)
+        val (ticket, locked) = lockWithGift(gift)
+        return Triple(event, ticket, locked)
     }
 
     /** 티켓 행 잠금 → 선물 잠금 읽기 (주문 → 티켓 순서) */

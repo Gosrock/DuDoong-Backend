@@ -54,11 +54,17 @@ open class UserDomainService(
         return user
     }
 
-    @Transactional
+    /**
+     * 회원 탈퇴. `유저탈퇴` 락(새 트랜잭션) 안에서 상태를 바꾸고, 탈퇴 전 카카오 연결 해제용 oid 를 돌려준다 (탈퇴하면 oauthInfo 가 지워진다).
+     * `@Transactional` 을 붙이지 않는다 (#734): 붙이면 그 트랜잭션이 락 AOP 바깥에서 먼저 시작돼, 락의 새 트랜잭션과 함께 커넥션 2개를 쥔다.
+     * 같은 이유로 호출 측도 트랜잭션 없이 부른다
+     */
     @RedissonLock(LockName = "유저탈퇴", identifier = "userId")
-    open fun withDrawUser(userId: Long) {
+    open fun withDrawUser(userId: Long): String? {
         val user = userAdaptor.queryUser(userId)
+        val oid = user.oauthInfo?.oid
         user.withDrawUser()
+        return oid
     }
 
     @Transactional
