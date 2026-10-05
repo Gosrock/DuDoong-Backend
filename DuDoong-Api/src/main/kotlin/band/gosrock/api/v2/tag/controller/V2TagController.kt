@@ -1,5 +1,6 @@
 package band.gosrock.api.v2.tag.controller
 
+import band.gosrock.api.v2.common.swagger.V2ApiTags
 import band.gosrock.api.v2.tag.dto.V2TagGroupResponse
 import band.gosrock.api.v2.tag.usecase.V2ReadTagsUseCase
 import io.swagger.v3.oas.annotations.Operation
@@ -8,7 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
-@Tag(name = "v2. 공연 준비")
+@Tag(name = V2ApiTags.EVENT_PREP)
 @RestController
 @RequestMapping("/api/v2")
 class V2TagController(

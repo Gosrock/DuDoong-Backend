@@ -1,5 +1,6 @@
 package band.gosrock.api.v2.operation.controller
 
+import band.gosrock.api.v2.common.swagger.V2ApiTags
 import band.gosrock.api.v2.operation.dto.V2EntranceFilter
 import band.gosrock.api.v2.operation.dto.request.V2CheckInRequest
 import band.gosrock.api.v2.operation.dto.request.V2SelfCheckInRequest
@@ -29,7 +30,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @SecurityRequirement(name = "access-token")
-@Tag(name = "v2. 공연 운영 - 발급 티켓·QR 체크인")
+@Tag(name = V2ApiTags.OPERATION_TICKET, description = V2ApiTags.OPERATION_TICKET_DESCRIPTION)
 @RestController
 @RequestMapping("/api/v2")
 @Validated

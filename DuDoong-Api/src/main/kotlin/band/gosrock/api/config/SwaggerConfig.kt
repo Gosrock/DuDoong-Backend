@@ -79,15 +79,23 @@ class SwaggerConfig(
 
     @Bean
     fun v1Api(): GroupedOpenApi =
-        GroupedOpenApi.builder().group("v1").pathsToMatch("/api/v1/**").build()
+        GroupedOpenApi.builder().group("v1").pathsToMatch("/api/v1/**").addOpenApiCustomizer(::sortTagsByName).build()
 
-    @Bean
-    fun v2Api(): GroupedOpenApi =
-        GroupedOpenApi.builder().group("v2").pathsToMatch("/api/v2/**").build()
+    // v2 그룹(v2-전체 / v2-호스팅센터 / v2-사용자앱)은 api.v2.common.swagger.V2SwaggerGroups (#731)
 
     @Bean
     fun internalApi(): GroupedOpenApi =
-        GroupedOpenApi.builder().group("internal").pathsToMatch("/internal-api/**").build()
+        GroupedOpenApi.builder().group("internal").pathsToMatch("/internal-api/**").addOpenApiCustomizer(::sortTagsByName).build()
+
+    /**
+     * v1·internal 태그는 예전(swagger-ui tagsSorter=alpha)처럼 이름순으로 보이게 문서의 tags 배열을 채운다.
+     * 전역 tagsSorter 는 v2 의 화면 순서 정렬(#731, V2SwaggerGroups)과 충돌해 쓰지 않는다
+     */
+    private fun sortTagsByName(openApi: OpenAPI) {
+        val declared = openApi.tags.orEmpty().associateBy { it.name }
+        val used = openApi.paths.orEmpty().values.flatMap { it.readOperations() }.flatMap { it.tags.orEmpty() }
+        openApi.tags = (declared.keys + used).distinct().sorted().map { declared[it] ?: io.swagger.v3.oas.models.tags.Tag().name(it) }
+    }
 
     @Bean
     fun modelResolver(objectMapper: ObjectMapper): ModelResolver = ModelResolver(objectMapper)

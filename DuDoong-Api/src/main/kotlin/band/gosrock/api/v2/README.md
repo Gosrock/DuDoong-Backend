@@ -35,6 +35,10 @@ band.gosrock.api.v2
     - 수식 방어는 헤더(옵션 질문 이름)에도 적용. 라인 답변은 `V2OrderQuery.findAllForExport` 가 쿼리 1개로 미리 적재
 - 공개(비인증) 경로: `SecurityConfig.V2_PUBLIC_GET_PATHS` 에 추가.
 - 이미지 key 검증(H-4 호스트, E-4 공연 포스터, M-2 프로필): 발급 형식 화이트리스트 `{발급 prefix}{UUID}.{jpeg|jpg|png}` (`S3UploadPresignedUrlService.isHostImageKey` / `isEventImageKey` / `isUserImageKey`, #729 리뷰). 빈 문자열 = 기본 이미지. prod 저장 key 전부 이 형식(공연 1,353 · 호스트 690, 유저는 카카오 URL 또는 null — 2026-10-05 읽기 전용 조회)
+- Swagger (#731): 그룹 `v2-전체`(기본) / `v2-호스팅센터` / `v2-사용자앱` (`api.v2.common.swagger.V2SwaggerGroups`). 영역은 컨트롤러 단위 — `V2ApiArea.of`: `@V2Area` 가 있으면 그 값, 없으면 패키지(`host`·`event`·`tag`·`ticket`·`operation`·`notification`·`health` → 호스팅, `order`·`gift`·`mypage` → 사용자). 새 패키지는 `PACKAGE_AREAS` 에 추가해야 `V2SwaggerGroupsTest` 가 통과한다
+  - 태그는 `V2ApiTags` 상수 `[호스팅|사용자] 번호. 이름` (와이어프레임 순서, 영역 안 번호 중복 금지, 설명 필수). summary 는 화면 ID(`[H-1]`)로 시작.
+  - 정렬은 Swagger UI 설정(tagsSorter/operationsSorter) 없이 문서 순서로: 태그는 `V2ApiTags.ORDERED`(호스팅 1~8 → 사용자 1~4, 새 태그는 여기 추가), 경로는 태그마다 화면 ID 순(접두 문자 → 숫자 → 하위 표기, 접두 문자 순서는 태그별로 `V2ApiTags.PREFIX_ORDER` — 운영 D → R → F, 티켓 T → O. 여러 태그에 걸친 경로는 위상 정렬).
+    - 한계: 같은 경로의 메서드는 Swagger UI 가 묶어 고정 순서(GET → PUT → POST → DELETE → PATCH)로 보여 줘 화면 ID 순이 아니다 — 티켓 T-4(DELETE) → T-3(PATCH), 옵션 O-4 → O-3, 선물 G-2·G-8(`/me/gifts/{giftId}`)이 G-3 앞. v1·internal 태그는 예전처럼 이름순 태그 상수를 바꾸면 `const` 인라인 때문에 증분 빌드가 옛 값을 남길 수 있어 `clean` 후 확인
 - SUPER_ADMIN: `@HostRolesAllowed` 권한 검사만 건너뛴다. 요청자 역할을 보는 도메인 규칙은 그대로라, 멤버가 아니면 마스터 전용 규칙(매니저 추가·삭제, 마스터 양도)은 막히고 GUEST 추가·삭제, 역할 변경, 조회·수정은 된다.
 
 ## v1 / v2 로직 경계 (DEC-018)

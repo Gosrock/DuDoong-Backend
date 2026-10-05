@@ -19,8 +19,9 @@ springdoc:
   default-produces-media-type: application/json
   default-consumes-media-type: application/json
   swagger-ui:
-    tags-sorter: alpha
-    urls-primary-name: v1
+    # 정렬 설정 없음: v2 는 문서의 tags 배열 순서(호스팅 → 사용자)와 경로 순서(화면 ID 순)를 V2SwaggerGroups 가 정한다 (#731).
+    # v1·internal 도 태그 이름순이 아니라 문서 순서로 보인다
+    urls-primary-name: v2-전체
 
 server:
   forward-headers-strategy: framework

@@ -1,5 +1,6 @@
 package band.gosrock.api.v2.mypage.controller
 
+import band.gosrock.api.v2.common.swagger.V2ApiTags
 import band.gosrock.api.v2.common.V2PageResponse
 import band.gosrock.api.v2.mypage.dto.request.V2MeImageUploadRequest
 import band.gosrock.api.v2.mypage.dto.request.V2UpdateMeRequest
@@ -28,12 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @SecurityRequirement(name = "access-token")
-@Tag(
-    name = "v2. 사용자 앱 - 마이페이지",
-    description = "M-1~M-5. 알림센터(M-6)는 'v2. 알림센터' N-1~N-3(/api/v2/me/notifications) 재사용, " +
-        "주문내역은 O-2·O-3, 소속 호스트 전체는 H-1(/api/v2/me/hosts), 언팔로우는 H-13(DELETE /api/v2/hosts/{hostId}/follow), " +
-        "로그아웃·탈퇴는 v1(POST /api/v1/auth/logout, DELETE /api/v1/auth/me) 재사용",
-)
+@Tag(name = V2ApiTags.MYPAGE, description = V2ApiTags.MYPAGE_DESCRIPTION)
 @RestController
 @RequestMapping("/api/v2/me")
 @Validated

@@ -1,5 +1,6 @@
 package band.gosrock.api.v2.health
 
+import band.gosrock.api.v2.common.swagger.V2SwaggerGroups
 import band.gosrock.api.supports.ApiIntegrateSpringBootTest
 import band.gosrock.domain.domains.user.exception.UserNotFoundException
 import com.fasterxml.jackson.databind.JsonNode
@@ -49,9 +50,9 @@ class V2HealthControllerTest {
     // api-docs 는 기존 시큐리티 설정상 USER 권한이 필요하다. username 은 userId(Long)로 파싱되므로 숫자.
     @Test
     @WithMockUser(username = "1", roles = ["USER"])
-    @DisplayName("Swagger v2 그룹 문서에 /api/v2/health 가 있고 v2 경로만 포함한다")
+    @DisplayName("Swagger v2-전체 그룹 문서에 /api/v2/health 가 있고 v2 경로만 포함한다 (#731 그룹 분리)")
     fun swaggerV2Group() {
-        val paths = apiDocsPaths("v2")
+        val paths = apiDocsPaths(V2SwaggerGroups.ALL)
 
         assertTrue(paths.contains("/api/v2/health"), "v2 문서에 /api/v2/health 가 없음: $paths")
         assertTrue(paths.all { it.startsWith("/api/v2/") }, "v2 문서에 v2 외 경로 포함: $paths")
@@ -85,7 +86,7 @@ class V2HealthControllerTest {
     }
 
     private fun apiDocs(group: String): JsonNode {
-        val body = mockMvc.get("/v3/api-docs/$group")
+        val body = mockMvc.get("/v3/api-docs/{group}", group)
             .andExpect { status { isOk() } }
             .andReturn().response.getContentAsString(Charsets.UTF_8)
         return objectMapper.readTree(body)

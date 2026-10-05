@@ -1,5 +1,8 @@
 package band.gosrock.api.v2.event.controller
 
+import band.gosrock.api.v2.common.swagger.V2ApiArea
+import band.gosrock.api.v2.common.swagger.V2ApiTags
+import band.gosrock.api.v2.common.swagger.V2Area
 import band.gosrock.api.v2.common.V2PageResponse
 import band.gosrock.api.v2.event.dto.request.V2EventSort
 import band.gosrock.api.v2.event.dto.response.V2EventDetailResponse
@@ -24,7 +27,8 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 /** 사용자 앱 공연 탐색 (#716). 모두 비로그인 허용 (SecurityConfig.V2_PUBLIC_GET_PATHS). P-4 섹션은 [V2EventController] E-5 */
-@Tag(name = "v2. 공연 탐색")
+@V2Area(V2ApiArea.USER)
+@Tag(name = V2ApiTags.BROWSE, description = V2ApiTags.BROWSE_DESCRIPTION)
 @RestController
 @RequestMapping("/api/v2")
 @Validated
