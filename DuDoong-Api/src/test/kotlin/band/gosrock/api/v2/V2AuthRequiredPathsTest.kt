@@ -122,6 +122,7 @@ class V2AuthRequiredPathsTest {
             "POST /api/v2/me/tickets/{}/gift",
             "POST /api/v2/me/tickets/{}/return",
             "GET /api/v2/me/gifts",
+            "GET /api/v2/me/gifts/{}/ticket",
             "DELETE /api/v2/me/gifts/{}",
             "PATCH /api/v2/me/gifts/{}",
             "POST /api/v2/gifts/{}/accept",

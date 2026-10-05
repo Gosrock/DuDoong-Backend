@@ -1,6 +1,7 @@
 package band.gosrock.api.config
 
 import band.gosrock.api.slack.sender.SlackInternalErrorSender
+import band.gosrock.api.slack.sender.SlackThrottleErrorSender
 import band.gosrock.infrastructure.config.slack.SlackErrorNotificationProvider
 import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.spi.ILoggingEvent
@@ -118,5 +119,30 @@ class SensitiveBodyMaskingTest {
         val sent = (call.arguments[0] as List<*>).joinToString("\n") { it.toString() }
         assertTrue(sent.contains("quantity"), sent)
         secrets.forEach { assertFalse(sent.contains(it), "$it Slack 노출: $sent") }
+    }
+
+    private fun slackSent(provider: SlackErrorNotificationProvider): String {
+        val call = mockingDetails(provider).invocations.single { it.method.name == "sendNotification" }
+        return (call.arguments[0] as List<*>).joinToString("\n") { it.toString() }
+    }
+
+    private fun giftRequest(): ContentCachingRequestWrapper = ContentCachingRequestWrapper(
+        MockHttpServletRequest("POST", "/api/v2/gifts/SECRET_TOKEN_719/accept").apply {
+            contentType = "application/json"
+            setContent(body.toByteArray(Charsets.UTF_8))
+        },
+    ).also { it.inputStream.readAllBytes() }
+
+    @Test
+    fun `Slack 500·rate limit 알림 URL 에 선물 토큰이 없고, rate limit 본문도 가린다 (#719)`() {
+        val internal = mock(SlackErrorNotificationProvider::class.java)
+        SlackInternalErrorSender(ObjectMapper(), internal).execute(giftRequest(), RuntimeException("boom"), 1L)
+        val throttle = mock(SlackErrorNotificationProvider::class.java)
+        SlackThrottleErrorSender(ObjectMapper(), throttle).execute(giftRequest(), 1L)
+        for (sent in listOf(slackSent(internal), slackSent(throttle))) {
+            assertTrue(sent.contains("/api/v2/gifts/***/accept"), sent)
+            assertFalse(sent.contains("SECRET_TOKEN_719"), sent)
+            secrets.forEach { assertFalse(sent.contains(it), "$it Slack 노출: $sent") }
+        }
     }
 }

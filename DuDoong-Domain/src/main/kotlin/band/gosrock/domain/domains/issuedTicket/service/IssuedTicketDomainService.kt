@@ -50,9 +50,10 @@ class IssuedTicketDomainService(
      * 선물로 uuid 가 바뀐 옛 QR 은 없는 티켓(IssuedTicket_404_1)
      */
     fun processingEntranceIssuedTicket(eventId: Long, uuid: String): IssuedTicketInfoVo {
-        val issuedTicket = issuedTicketRepository.findByUuidForUpdate(uuid) ?: throw IssuedTicketNotFoundException.EXCEPTION
+        // 잠금 읽기로 찾으므로 선물 수락·반환으로 uuid 가 바뀐 옛 QR 은 찾지 못한다. 영속성 컨텍스트에 먼저 올라간 옛 값이면 거부 (방어)
+        val issuedTicket = issuedTicketRepository.findByUuidForUpdate(uuid)?.takeIf { it.uuid == uuid } ?: throw IssuedTicketNotFoundException.EXCEPTION
         issuedTicketValidator.validIssuedTicketEventIdEqualEvent(issuedTicket, eventId)
-        ticketGiftGuard.validateNotGiftPending(issuedTicket)
+        ticketGiftGuard.validateNotGiftPendingLocked(issuedTicket)
         issuedTicket.entrance()
         return issuedTicket.toIssuedTicketInfoVo()
     }

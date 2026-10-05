@@ -23,12 +23,25 @@ class TicketGiftGuard(
     private val issuedTicketRepository: IssuedTicketRepository,
 ) {
 
+    /** 화면용 (잠금 없음). 입장 판정에는 [isGiftPendingLocked] */
     fun isGiftPending(issuedTicketId: Long): Boolean =
         ticketGiftRepository.existsByIssuedTicketIdAndStatus(issuedTicketId, TicketGiftStatus.PENDING)
 
-    /** v1 입장·v1 티켓 상세: 선물 대기 중이면 IssuedTicket_400_8 */
+    /**
+     * 입장 판정용: 티켓 행을 `FOR UPDATE` 로 잠근 **뒤에** 부른다. 선물 행을 공유 잠금 읽기로 읽어 최신 커밋 값을 본다
+     * (일반 읽기는 REPEATABLE READ 스냅샷이라 티켓 잠금을 기다리는 동안 커밋된 선물 생성을 놓친다, #719 리뷰)
+     */
+    fun isGiftPendingLocked(issuedTicketId: Long): Boolean =
+        ticketGiftRepository.findAllByTicketAndStatusLocked(issuedTicketId, TicketGiftStatus.PENDING).isNotEmpty()
+
+    /** v1 티켓 상세(화면): 선물 대기 중이면 IssuedTicket_400_8 */
     fun validateNotGiftPending(issuedTicket: IssuedTicket) {
         if (isGiftPending(issuedTicket.id!!)) throw IssuedTicketGiftPendingException.EXCEPTION
+    }
+
+    /** v1 입장: 티켓 행을 잠근 뒤 잠금 읽기로 선물 대기를 확인해 IssuedTicket_400_8 */
+    fun validateNotGiftPendingLocked(issuedTicket: IssuedTicket) {
+        if (isGiftPendingLocked(issuedTicket.id!!)) throw IssuedTicketGiftPendingException.EXCEPTION
     }
 
     /** 대기 중 선물이 걸린 티켓 id */

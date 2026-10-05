@@ -129,6 +129,12 @@ class V2TicketGiftDomainService(
         return gift
     }
 
+    /** G-2·G-8 락 전 소유 확인 + 잠금 키. 남의 선물·없는 선물은 Gift_404_1 (남의 giftId 로 주문 락을 잡지 않는다, #719 리뷰). 락 안에서 다시 확인한다 */
+    fun orderUuidOfMyGift(userId: Long, giftId: Long): String {
+        if (ticketGiftRepository.findSenderUserIdById(giftId) != userId) throw GiftNotFoundException.EXCEPTION
+        return orderUuidOfGift(giftId)
+    }
+
     /** G-2 보낸 사람 회수: 대기 중일 때 언제든(공연 시작·종료 후에도). 알림 없음 */
     @RedissonLock(LockName = ORDER_LOCK, identifier = "orderUuid")
     fun cancel(orderUuid: String, userId: Long, giftId: Long) {
@@ -189,14 +195,18 @@ class V2TicketGiftDomainService(
 
     /**
      * 원 주문 취소(호스트 취소 v1·v2, 운영 취소, 사용자 환불, 거절) → 대기 선물 CANCELED(ORDER_CANCELED) — 링크 무효 (DEC-026 #8).
-     * 선물 완료 티켓은 같은 트랜잭션의 v1 티켓 철회 핸들러가 주문의 다른 티켓과 함께 취소하고, 선물 기록은 ACCEPTED 로 남는다 (받은 사람 알림은 커밋 후).
-     * 이미 `주문` 락 안이므로 티켓 행만 id 순으로 잠근다. @return 취소한 선물 수
+     * 대기 선물을 먼저 찾고(idx_ticket_gift_order_uuid_status), 없으면 바로 끝낸다 — 선물이 없는 주문은 선물 인덱스 조회 1회뿐 (#719 리뷰).
+     * 있으면 그 선물의 티켓 행만 PK 순으로 잠그고 선물을 잠금 읽기로 다시 읽어 아직 대기 중인 것만 취소한다.
+     *
+     * 선물 완료(ACCEPTED) 티켓은 잠그지 않는다: 같은 트랜잭션의 v1 티켓 철회 핸들러가 주문의 다른 티켓과 함께 취소하고, 선물 기록은 ACCEPTED 그대로라
+     * 이 메서드가 바꿀 것이 없다. 그 티켓을 바꿀 수 있는 선물 전이(반환 G-6)는 같은 `주문` 락으로 이미 줄 서 있다
+     * @return 취소한 선물 수
      */
     @Transactional(propagation = Propagation.MANDATORY)
     fun cancelPendingByOrder(orderUuid: String): Int {
-        val tickets = issuedTicketRepository.findAllByOrderUuidForUpdate(orderUuid)
-        if (tickets.isEmpty()) return 0
         val candidates = ticketGiftRepository.findAllByOrderUuidAndStatus(orderUuid, TicketGiftStatus.PENDING)
+        if (candidates.isEmpty()) return 0
+        issuedTicketRepository.findAllByIdInForUpdate(candidates.map { it.issuedTicketId }.toSet())
         return cancelLocked(candidates, TicketGiftCancelReason.ORDER_CANCELED)
     }
 

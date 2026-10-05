@@ -5,6 +5,7 @@
 --     - status: PENDING / ACCEPTED / REJECTED / RETURNED / CANCELED (시간 만료 상태 없음 — 공연 종료 뒤 PENDING 은 조회 시 '선물 만료', DEC-026 #7)
 --     - cancel_reason: SENDER(회수) / ORDER_CANCELED(주문 취소 연쇄) / SENDER_WITHDRAWN(보낸 사람 탈퇴·정지) / EVENT_REMOVED(공연 운영 삭제·비공개)
 --     - token: 추측 불가 랜덤(32바이트 SecureRandom, base64url 43자). 요청 로그·Slack 의 URL 에서는 가린다
+--       base64url 은 대소문자를 구분하므로 utf8mb4_bin (기본 _ai_ci 면 대소문자만 다른 토큰이 같은 값으로 조회·uk 충돌)
 --     - receiver_user_id: 수락·거절한 사람. memo: 보낸 사람 메모(최대 50자, 보낸 사람에게만 보임)
 --     - order_uuid·event_id: 티켓에서 복사 (바뀌지 않음). 주문·공연 단위 연쇄 처리와 잠금 키 조회용
 --   - 인덱스
@@ -13,7 +14,8 @@
 --     idx_ticket_gift_sender_user_id (sender_user_id, ticket_gift_id): G-7 보낸 선물(최신 순), T-1 '선물 완료' 행, 보낸 사람 탈퇴 연쇄
 --     idx_ticket_gift_receiver_user_id (receiver_user_id, ticket_gift_id): G-7 받은 선물(최신 순)
 --     idx_ticket_gift_event_id_status (event_id, status): 공연 운영 삭제 연쇄 (대기 선물)
---     주문 연쇄는 order_uuid 를 조건으로 쓰지만 먼저 tbl_issued_ticket(order_uuid) 로 그 주문 티켓 행을 잠그고, 주문당 선물 행이 적어 인덱스를 따로 두지 않는다
+--     idx_ticket_gift_order_uuid_status (order_uuid, status): 주문 연쇄(주문 취소·환불·거절마다 실행) — 대기 선물을 먼저 찾고 없으면 끝낸다.
+--       선물이 없는 주문(대부분)은 이 인덱스 조회 1회뿐이고 티켓 행을 잠그지 않는다
 --   - tbl_issued_ticket.idx_issued_ticket_user_id_id (user_id, issued_ticket_id): T-1 내 티켓(현재 소유분). 기존 인덱스는 (event_id, user_id) 라 user_id 단독 조회는 전체 스캔
 --   - 선물 QR 은 기존 tbl_issued_ticket.uuid 를 수락·반환 때 새 값으로 바꾼다 (DEC-026 #6) → tbl_issued_ticket 컬럼 변경 없음
 -- v1 영향: 없음 (테이블·인덱스 추가만). 선물이 없으면 v1 의 모든 판정이 기존과 같다 (prod 2026-10-05: 발급 티켓 73,139장 모두 소유자 = 주문자)
@@ -34,7 +36,7 @@ CREATE TABLE `tbl_ticket_gift` (
   `event_id` bigint NOT NULL,
   `sender_user_id` bigint NOT NULL,
   `receiver_user_id` bigint DEFAULT NULL,
-  `token` varchar(64) NOT NULL,
+  `token` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `status` varchar(20) NOT NULL,
   `cancel_reason` varchar(30) DEFAULT NULL,
   `memo` varchar(50) DEFAULT NULL,
@@ -47,7 +49,8 @@ CREATE TABLE `tbl_ticket_gift` (
   KEY `idx_ticket_gift_issued_ticket_id` (`issued_ticket_id`, `ticket_gift_id`),
   KEY `idx_ticket_gift_sender_user_id` (`sender_user_id`, `ticket_gift_id`),
   KEY `idx_ticket_gift_receiver_user_id` (`receiver_user_id`, `ticket_gift_id`),
-  KEY `idx_ticket_gift_event_id_status` (`event_id`, `status`)
+  KEY `idx_ticket_gift_event_id_status` (`event_id`, `status`),
+  KEY `idx_ticket_gift_order_uuid_status` (`order_uuid`, `status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 ALTER TABLE tbl_issued_ticket ADD INDEX idx_issued_ticket_user_id_id (user_id, issued_ticket_id), ALGORITHM=INPLACE, LOCK=NONE;

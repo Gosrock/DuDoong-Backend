@@ -22,7 +22,8 @@ data class V2MyTicketsResponse(
 )
 
 data class V2MyTicketGroupResponse(
-    val orderUuid: String,
+    @field:Schema(description = "주문 uuid. 내 주문일 때만 (받은 티켓 묶음은 null — T-2 와 같은 기준)")
+    val orderUuid: String?,
     @field:Schema(description = "예매 번호. 내 주문일 때만 (받은 티켓 묶음은 null)")
     val orderNo: String?,
     @field:Schema(description = "주문자 = 나. false(받은 티켓)면 [주문상세] 없음")
@@ -75,9 +76,10 @@ data class V2NewApprovedResponse(
     val orderUuids: List<String>,
 )
 
-/** T-2 티켓 상세 + 입장 QR (내가 지금 소유한 티켓만) */
+/** T-2 티켓 상세 + 입장 QR (내가 지금 소유한 티켓). 보낸 사람의 선물 완료 티켓(`GET /me/gifts/{giftId}/ticket`)도 같은 형태 — uuid·QR 없음 */
 data class V2MyTicketDetailResponse(
-    val ticketUuid: String,
+    @field:Schema(description = "티켓 uuid. 선물 완료(SENT) 상세는 null")
+    val ticketUuid: String?,
     val issuedTicketNo: String?,
     val ticketName: String?,
     @field:Schema(description = "티켓 가격(원)")
@@ -114,6 +116,8 @@ data class V2TicketGiftInfoResponse(
     val linkPath: String?,
     @field:Schema(description = "메모 (보낸 사람에게만)")
     val memo: String?,
+    @field:Schema(description = "받은 사람 닉네임 (선물 완료, 보낸 사람이 볼 때)")
+    val receiverName: String?,
     @field:Schema(description = "보낸 사람 닉네임 (받은 티켓)")
     val senderName: String?,
     @field:DateFormat
@@ -158,11 +162,11 @@ data class V2GiftLandingResponse(
     val isReceiver: Boolean,
     @field:Schema(description = "보는 사람이 보낸 사람이면 선물 id (회수 버튼용)")
     val giftId: Long?,
-    @field:Schema(description = "보낸 사람 닉네임 (대기 중일 때만)")
+    @field:Schema(description = "보낸 사람 닉네임, 가운데를 가림 (예: 김*수, 김*). 대기 중일 때만 (기본안 — 공개 링크라 원문을 주지 않는다)")
     val senderName: String?,
     @field:Schema(description = "공연 요약 (대기 중일 때만)")
     val event: V2GiftEventResponse?,
-    @field:Schema(description = "티켓 요약 (대기 중일 때만)")
+    @field:Schema(description = "티켓 요약 (대기 중일 때만). 옵션 답변은 주지 않는다 (공개 링크 — 보낸 사람이 입력한 개인 정보일 수 있음)")
     val ticket: V2GiftTicketResponse?,
 )
 
@@ -178,7 +182,8 @@ data class V2GiftEventResponse(
 
 data class V2GiftTicketResponse(
     val ticketName: String?,
-    val optionAnswers: List<V2OptionAnswerResponse>,
+    @field:Schema(description = "티켓 가격(원)")
+    val ticketPrice: Long,
 )
 
 /** G-7 보낸·받은 선물 내역 */

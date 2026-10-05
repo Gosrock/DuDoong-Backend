@@ -8,7 +8,6 @@ import band.gosrock.api.v2.gift.dto.response.V2GiftEventResponse
 import band.gosrock.api.v2.gift.dto.response.V2GiftLandingResponse
 import band.gosrock.api.v2.gift.dto.response.V2GiftResultResponse
 import band.gosrock.api.v2.gift.dto.response.V2GiftTicketResponse
-import band.gosrock.api.v2.operation.usecase.V2OperationMapper
 import band.gosrock.api.v2.order.dto.response.V2MyOrderEventResponse
 import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
@@ -35,7 +34,6 @@ class V2GiftUseCase(
     private val issuedTicketRepository: IssuedTicketRepository,
     private val eventAdaptor: EventAdaptor,
     private val userAdaptor: UserAdaptor,
-    private val mapper: V2OperationMapper,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -48,14 +46,14 @@ class V2GiftUseCase(
 
     /** G-2 */
     fun cancel(userId: Long, giftId: Long): V2GiftResultResponse {
-        giftDomainService.cancel(giftDomainService.orderUuidOfGift(giftId), userId, giftId)
+        giftDomainService.cancel(giftDomainService.orderUuidOfMyGift(userId, giftId), userId, giftId)
         log.info("[V2GiftUseCase] 선물 회수 userId={} giftId={}", userId, giftId)
         return result(giftDomainService.querySentGift(userId, giftId), withMemo = true)
     }
 
     /** G-8 */
     fun changeMemo(userId: Long, giftId: Long, memo: String?): V2GiftResultResponse {
-        giftDomainService.changeMemo(giftDomainService.orderUuidOfGift(giftId), userId, giftId, memo)
+        giftDomainService.changeMemo(giftDomainService.orderUuidOfMyGift(userId, giftId), userId, giftId, memo)
         return result(giftDomainService.querySentGift(userId, giftId), withMemo = true)
     }
 
@@ -95,7 +93,7 @@ class V2GiftUseCase(
             isLoggedIn = viewerId != ANONYMOUS,
             isReceiver = viewState == V2GiftViewState.ALREADY_ACCEPTED && viewerId != ANONYMOUS && gift.receiverUserId == viewerId,
             giftId = gift.id.takeIf { viewerId != ANONYMOUS && gift.senderUserId == viewerId },
-            senderName = if (pending) nameOf(gift.senderUserId) else null,
+            senderName = if (pending) nameOf(gift.senderUserId)?.let(::maskName) else null,
             event = if (pending) {
                 V2GiftEventResponse(
                     eventId = event.id!!,
@@ -107,7 +105,7 @@ class V2GiftUseCase(
             } else {
                 null
             },
-            ticket = ticket?.let { V2GiftTicketResponse(ticketName = it.itemInfo?.ticketName, optionAnswers = mapper.ticketOptionAnswers(it)) },
+            ticket = ticket?.let { V2GiftTicketResponse(ticketName = it.itemInfo?.ticketName, ticketPrice = it.itemInfo?.price?.longValue() ?: 0L) },
         )
     }
 
@@ -174,6 +172,13 @@ class V2GiftUseCase(
     companion object {
         /** 비로그인 (SecurityUtils: 익명 = 0) */
         private const val ANONYMOUS = 0L
+
+        /** 공개 랜딩용 이름 가림: 첫 글자 + 가운데 * + 끝 글자 (2자면 첫 글자 + *, 1자면 *) — 김*수, 김*, 남**희 */
+        fun maskName(name: String): String = when {
+            name.length <= 1 -> "*"
+            name.length == 2 -> name.first() + "*"
+            else -> name.first() + "*".repeat(name.length - 2) + name.last()
+        }
 
         /** 선물 랜딩 프론트 경로 (8-4 A9, 프론트 협의 전 초안). origin 은 프론트가 붙인다 */
         fun linkPath(token: String): String = "/gifts/$token"

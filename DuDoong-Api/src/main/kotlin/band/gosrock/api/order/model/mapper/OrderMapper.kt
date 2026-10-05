@@ -37,19 +37,22 @@ class OrderMapper(
     private val ticketGiftGuard: TicketGiftGuard,
 ) {
     @Transactional(readOnly = true)
-    fun toOrderResponse(orderUuid: String): OrderResponse {
-        val order = orderAdaptor.findByOrderUuid(orderUuid)
-        val event = getEvent(order)
-        val orderLineTicketResponses = getOrderLineTicketResponses(order)
-        return OrderResponse.of(order, event, orderLineTicketResponses)
-    }
+    fun toOrderResponse(orderUuid: String): OrderResponse = toOrderResponse(orderAdaptor.findByOrderUuid(orderUuid))
 
     @Transactional(readOnly = true)
     fun toOrderResponse(order: Order): OrderResponse {
         val event = getEvent(order)
         val orderLineTicketResponses = getOrderLineTicketResponses(order)
-        return OrderResponse.of(order, event, orderLineTicketResponses)
+        return withGiftRefundBlock(order, OrderResponse.of(order, event, orderLineTicketResponses))
     }
+
+    /** 선물 대기·선물 완료 티켓이 있으면 사용자 환불 불가로 표시 (#719 — v1 환불 API 도 막힌다). 선물이 없으면 기존 값 그대로 */
+    private fun withGiftRefundBlock(order: Order, response: OrderResponse): OrderResponse =
+        if (response.refundInfo.availAble && ticketGiftGuard.hasUserCancelBlockingGift(order)) {
+            response.copy(refundInfo = response.refundInfo.copy(availAble = false))
+        } else {
+            response
+        }
 
     @Transactional(readOnly = true)
     fun toCreateOrderResponse(orderUuid: String): CreateOrderResponse {

@@ -18,7 +18,8 @@ import org.springframework.transaction.event.TransactionalEventListener
  *
  * **BEFORE_COMMIT** (원 트랜잭션 안)에서 처리한다: 연쇄가 실패하면 원 전이도 롤백되어 "주문은 취소됐는데 링크는 살아 있음" 같은 상태가 커밋되지 않는다.
  * AFTER_COMMIT 이면 원 전이 커밋과 연쇄 사이에 수락이 끼어들 수 있고 연쇄 실패를 되돌릴 수 없다.
- * 주문 연쇄는 v1 티켓 철회 핸들러(같은 이벤트, BEFORE_COMMIT)보다 먼저 돌아 티켓 행을 먼저 잠근다.
+ * 주문 연쇄는 v1 티켓 철회 핸들러(같은 이벤트, BEFORE_COMMIT)보다 먼저 돈다: 대기 선물이 있으면 그 티켓 행을 철회 핸들러가 읽기 전에 잠근다.
+ * 대기 선물이 없는 주문(대부분)은 선물 인덱스 조회 1회만 하고 끝난다.
  * 알림(선물받은 티켓 취소)은 커밋 후 알림 핸들러가 따로 저장한다.
  */
 @Component

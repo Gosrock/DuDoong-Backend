@@ -22,6 +22,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.util.ReflectionTestUtils
+import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
 
 /** v2 티켓탭·선물 통합 테스트 (#719): 전이표 전체 행, 경로별 차단 표(v1·v2·운영), 에러 코드, viewState 판정 순서, 연쇄 취소, uuid 교체, 알림 */
@@ -390,9 +391,12 @@ class V2TicketGiftControllerTest : V2GiftTestSupport() {
             assertEquals("AVAILABLE", anonymous.at("/viewState").asText())
             assertFalse(anonymous.at("/isLoggedIn").asBoolean())
             assertTrue(anonymous.at("/giftId").isNull)
-            assertEquals("보낸닉", anonymous.at("/senderName").asText())
+            assertEquals("보*닉", anonymous.at("/senderName").asText(), "공개 랜딩은 이름 가운데를 가린다")
             assertEquals(shop.eventId, anonymous.at("/event/eventId").asLong())
             assertEquals("일반", anonymous.at("/ticket/ticketName").asText())
+            assertEquals(6000, anonymous.at("/ticket/ticketPrice").asLong())
+            assertTrue(anonymous.at("/ticket/optionAnswers").isMissingNode, "옵션 답변(개인 입력)은 주지 않는다")
+            assertFalse(anonymous.toString().contains("홍길동"))
             assertFalse(anonymous.toString().contains("비밀메모"))
             assertEquals("AVAILABLE", landing(newBuyer(), token).at("/viewState").asText())
             val own = landing(sender, token)
@@ -826,14 +830,15 @@ class V2TicketGiftControllerTest : V2GiftTestSupport() {
             val refused = v2OrderOk(sender, shopBody(shop, yes = false)).at("/orderUuid").asText()
             refuse(shop.team.manager, shop.eventId, refused, "SOLD_OUT").andExpect { status { isOk() } }
 
-            val groups = myTickets(sender).associateBy { it.at("/orderUuid").asText() }
+            val all = myTickets(sender)
+            val groups = all.filter { it.at("/isMyOrder").asBoolean() }.associateBy { it.at("/orderUuid").asText() }
             val mine = groups.getValue(orderUuid)
             assertTrue(mine.at("/isMyOrder").asBoolean())
             assertEquals(1, mine.at("/counts/GIFT_PENDING").asInt())
             assertEquals(1, mine.at("/counts/APPROVED").asInt())
             assertEquals(listOf("PENDING", "NONE"), mine.at("/tickets").map { it.at("/giftState").asText() })
-            val received = groups.getValue(other.first)
-            assertFalse(received.at("/isMyOrder").asBoolean())
+            val received = all.single { !it.at("/isMyOrder").asBoolean() }
+            assertTrue(received.at("/orderUuid").isNull, "받은 티켓 묶음은 원 주문 uuid 를 숨긴다 (T-2 와 같은 기준)")
             assertTrue(received.at("/orderNo").isNull)
             assertTrue(received.at("/orderStatus").isNull)
             assertEquals("RECEIVED", received.at("/tickets/0/state").asText())
@@ -846,6 +851,16 @@ class V2TicketGiftControllerTest : V2GiftTestSupport() {
             // 보낸 사람(gifter)에게는 선물 완료 행 (uuid 없음)
             val sentGroup = myTickets(gifter).single { it.at("/orderUuid").asText() == other.first }
             assertEquals("GIFT_SENT", sentGroup.at("/tickets/0/state").asText())
+            // 보낸 사람은 giftId 로 선물 완료 티켓 상세를 연다 (uuid·QR 없음)
+            val sentDetail = v2Get(gifter, "/me/gifts/${sentGroup.at("/tickets/0/giftId").asLong()}/ticket").andExpect { status { isOk() } }.data()
+            assertEquals("GIFT_SENT", sentDetail.at("/state").asText())
+            assertEquals("SENT", sentDetail.at("/giftState").asText())
+            assertTrue(sentDetail.at("/ticketUuid").isNull)
+            assertTrue(sentDetail.at("/qrValue").isNull)
+            assertFalse(sentDetail.at("/canGift").asBoolean())
+            assertEquals(other.first, sentDetail.at("/orderUuid").asText())
+            assertTrue(sentDetail.at("/gift/receiverName").asText().isNotEmpty())
+            assertEquals("Gift_404_1", v2Get(sender, "/me/gifts/${sentGroup.at("/tickets/0/giftId").asLong()}/ticket").andExpect { status { isNotFound() } }.code())
             assertEquals("SENT", sentGroup.at("/tickets/0/giftState").asText())
             assertTrue(sentGroup.at("/tickets/0/ticketUuid").isNull)
             assertEquals(1, sentGroup.at("/counts/GIFT_SENT").asInt())
@@ -868,6 +883,37 @@ class V2TicketGiftControllerTest : V2GiftTestSupport() {
             assertEquals(listOf(nearOrder, farOrder, pastOrder), groups.map { it.at("/orderUuid").asText() })
             assertEquals("GIFT_EXPIRED", groups[2].at("/tickets/0/state").asText())
             assertTrue(groups[2].at("/tickets/0/isGiftExpired").asBoolean())
+        }
+
+        @Test
+        fun `선물 완료 상세 - 반환·대기 중인 선물은 Gift_404_1 (돌아온 티켓은 T-2), 남의 선물 404`() {
+            val shop = Shop()
+            val sender = newBuyer()
+            val receiver = newBuyer()
+            val (_, uuids) = approvedOrder(shop, sender, quantity = 2)
+            val (giftId, newUuid) = giveAndAccept(sender, receiver, uuids[0])
+            v2Get(sender, "/me/gifts/$giftId/ticket").andExpect { status { isOk() } }
+            assertEquals("Gift_404_1", v2Get(receiver, "/me/gifts/$giftId/ticket").andExpect { status { isNotFound() } }.code())
+            returnTicket(receiver, newUuid).andExpect { status { isOk() } }
+            assertEquals("Gift_404_1", v2Get(sender, "/me/gifts/$giftId/ticket").andExpect { status { isNotFound() } }.code())
+            val pending = giftOk(sender, uuids[1]).at("/giftId").asLong()
+            assertEquals("Gift_404_1", v2Get(sender, "/me/gifts/$pending/ticket").andExpect { status { isNotFound() } }.code())
+        }
+
+        @Test
+        fun `v1 주문 상세 환불 가능 표시 - 선물 대기·완료면 false, 선물 없으면 기존 값(true), 회수하면 다시 true`() {
+            val shop = Shop()
+            val sender = newBuyer()
+            val (orderUuid, uuids) = approvedOrder(shop, sender)
+            fun refundable() = mockMvc.get("/api/v1/orders/$orderUuid") { with(auth(sender)) }
+                .andExpect { status { isOk() } }.data().at("/refundInfo/availAble").asBoolean()
+            assertTrue(refundable())
+            val giftId = giftOk(sender, uuids[0]).at("/giftId").asLong()
+            assertFalse(refundable())
+            cancelGift(sender, giftId).andExpect { status { isOk() } }
+            assertTrue(refundable())
+            giveAndAccept(sender, newBuyer(), uuids[0])
+            assertFalse(refundable())
         }
 
         @Test

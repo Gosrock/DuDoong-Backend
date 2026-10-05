@@ -77,7 +77,7 @@ class V2CheckInDomainService(
     @Transactional
     fun checkIn(eventId: Long, ticketUuid: String): V2CheckInOutcome {
         validateHostCheckInStatus(eventAdaptor.findById(eventId).status)
-        return enter(eventId, issuedTicketRepository.findByUuid(ticketUuid).orElse(null))
+        return enter(eventId, issuedTicketRepository.findByUuid(ticketUuid).orElse(null), requestedUuid = ticketUuid)
     }
 
     /**
@@ -94,14 +94,14 @@ class V2CheckInDomainService(
         if (ticketUuid != null) {
             val ticket = issuedTicketRepository.findByUuid(ticketUuid).orElse(null)
             if (ticket != null && ticket.eventId == eventId && ticket.getUserId() != userId) throw IssuedTicketUserNotMatchedException.EXCEPTION
-            return enter(eventId, ticket)
+            return enter(eventId, ticket, requestedUuid = ticketUuid, ownerId = userId)
         }
         val mine = issuedTicketRepository.findAllByEventIdAndUserInfo_UserId(eventId, userId).sortedBy { it.id }
         val notEntered = mine.filter { it.issuedTicketStatus.isBeforeEntrance() }
         val pending = ticketGiftGuard.pendingTicketIds(notEntered.mapNotNull { it.id })
         val before = notEntered.filterNot { it.id in pending }
         return when {
-            before.size == 1 -> enter(eventId, before.single())
+            before.size == 1 -> enter(eventId, before.single(), ownerId = userId)
             before.size > 1 -> V2CheckInOutcome(eventId, V2CheckInResult.SELECT_TICKET, ticket = null, candidates = before)
             notEntered.isNotEmpty() -> V2CheckInOutcome(eventId, V2CheckInResult.GIFT_PENDING, notEntered.first())
             else -> {
@@ -115,12 +115,18 @@ class V2CheckInDomainService(
         }
     }
 
-    /** 이 공연 티켓이면 행 잠금 + 최신 상태로 다시 읽고 판정, 입장 가능하면 입장 처리 */
-    private fun enter(eventId: Long, ticket: IssuedTicket?): V2CheckInOutcome {
+    /**
+     * 이 공연 티켓이면 행 잠금 + 최신 상태로 다시 읽고 판정, 입장 가능하면 입장 처리.
+     * 잠그는 동안 선물 수락·반환으로 uuid(QR)나 소유자가 바뀌었으면 요청한 QR·사람의 티켓이 아니므로 OTHER_EVENT (#719 리뷰).
+     * 선물 대기는 티켓 행을 잠근 뒤 잠금 읽기로 본다 (일반 읽기는 스냅샷이라 잠금 대기 중 커밋된 선물 생성을 놓친다)
+     */
+    private fun enter(eventId: Long, ticket: IssuedTicket?, requestedUuid: String? = null, ownerId: Long? = null): V2CheckInOutcome {
         if (ticket == null || ticket.eventId != eventId) return V2CheckInOutcome(eventId, V2CheckInResult.OTHER_EVENT, ticket = null)
         entityManager.refresh(ticket, LockModeType.PESSIMISTIC_WRITE)
-        // 선물 생성·수락도 같은 티켓 행 잠금 안에서 바뀌므로 잠근 뒤에 본다
-        val result = classify(ticket, eventId, giftPending = ticketGiftGuard.isGiftPending(ticket.id!!))
+        if ((requestedUuid != null && ticket.uuid != requestedUuid) || (ownerId != null && ticket.getUserId() != ownerId)) {
+            return V2CheckInOutcome(eventId, V2CheckInResult.OTHER_EVENT, ticket = null)
+        }
+        val result = classify(ticket, eventId, giftPending = ticketGiftGuard.isGiftPendingLocked(ticket.id!!))
         if (result == V2CheckInResult.ENTERED) ticket.entrance()
         return V2CheckInOutcome(eventId, result, ticket)
     }

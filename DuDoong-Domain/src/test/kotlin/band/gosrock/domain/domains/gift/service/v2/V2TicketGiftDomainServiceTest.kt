@@ -29,7 +29,13 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.Mockito.`when`
 import org.springframework.test.util.ReflectionTestUtils
 
@@ -41,9 +47,11 @@ class V2TicketGiftDomainServiceTest {
     private val orderAdaptor = mock(OrderAdaptor::class.java)
     private val userAdaptor = mock(UserAdaptor::class.java)
     private val issuedTicketRepository = mock(IssuedTicketRepository::class.java)
+    private val ticketGiftRepository = mock(TicketGiftRepository::class.java)
+    private val entityManager = mock(EntityManager::class.java)
     private val service = V2TicketGiftDomainService(
-        issuedTicketRepository, mock(TicketGiftRepository::class.java), orderAdaptor, eventAdaptor, userAdaptor,
-        V2TicketUuidIssuer(issuedTicketRepository), mock(EntityManager::class.java),
+        issuedTicketRepository, ticketGiftRepository, orderAdaptor, eventAdaptor, userAdaptor,
+        V2TicketUuidIssuer(issuedTicketRepository), entityManager,
     )
 
     private fun code(e: DuDoongCodeException?) = e?.errorCode?.getErrorReason()?.code
@@ -240,5 +248,31 @@ class V2TicketGiftDomainServiceTest {
         val r = gift().also { it.reject(6L, now) }
         assertEquals(6L, r.receiverUserId)
         assertEquals(TicketGiftStatus.REJECTED, r.status)
+    }
+
+    // ===== 주문 연쇄 잠금 범위 (#719 리뷰) =====
+
+    @Test
+    fun `주문 연쇄 - 대기 선물이 없으면 선물 인덱스 조회 1회만, 티켓 행은 잠그지 않는다`() {
+        `when`(ticketGiftRepository.findAllByOrderUuidAndStatus("order", TicketGiftStatus.PENDING)).thenReturn(emptyList())
+        assertEquals(0, service.cancelPendingByOrder("order"))
+        verify(ticketGiftRepository, times(1)).findAllByOrderUuidAndStatus("order", TicketGiftStatus.PENDING)
+        verifyNoMoreInteractions(ticketGiftRepository)
+        verifyNoInteractions(issuedTicketRepository, entityManager)
+    }
+
+    @Test
+    fun `주문 연쇄 - 대기 선물이 있으면 그 티켓 행만 PK 로 잠그고, 잠금 읽기 뒤 아직 대기인 것만 취소`() {
+        val pending = gift()
+        val alreadyCanceled = gift().also { ReflectionTestUtils.setField(it, "id", 8L); ReflectionTestUtils.setField(it, "issuedTicketId", 101L) }
+        `when`(ticketGiftRepository.findAllByOrderUuidAndStatus("order", TicketGiftStatus.PENDING)).thenReturn(listOf(pending, alreadyCanceled))
+        // 잠금 읽기 사이에 다른 연쇄(보낸 사람 탈퇴)가 먼저 취소한 경우를 흉내 낸다
+        doAnswer { inv -> (inv.arguments[0] as TicketGift).takeIf { it.id == 8L }?.cancel(TicketGiftCancelReason.SENDER_WITHDRAWN, now); null }
+            .`when`(entityManager).refresh(org.mockito.ArgumentMatchers.any(TicketGift::class.java), org.mockito.ArgumentMatchers.eq(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE))
+        assertEquals(1, service.cancelPendingByOrder("order"))
+        verify(issuedTicketRepository).findAllByIdInForUpdate(setOf(100L, 101L))
+        verify(issuedTicketRepository, never()).findAllByOrderUuidForUpdate(anyString())
+        assertEquals(TicketGiftCancelReason.ORDER_CANCELED, pending.cancelReason)
+        assertEquals(TicketGiftCancelReason.SENDER_WITHDRAWN, alreadyCanceled.cancelReason)
     }
 }

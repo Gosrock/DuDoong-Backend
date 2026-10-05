@@ -17,7 +17,7 @@ import jakarta.persistence.Table
  * 한 티켓에 기록이 여러 개일 수 있고(반환·거절·취소 뒤 재선물) 가장 최근 기록으로 티켓의 선물 상태를 판정한다.
  * 전이는 `service.v2` 에서 `주문:{orderUuid}` 락 → 티켓 행 잠금 안에서만 한다 (상태 검증은 서비스, 엔티티는 전이 기록만).
  *
- * - token: 추측 불가 랜덤(32바이트 SecureRandom, base64url 43자). PENDING 일 때만 수락·거절에 쓰인다
+ * - token: 추측 불가 랜덤(32바이트 SecureRandom, base64url 43자, 대소문자 구분 — DB 는 utf8mb4_bin). PENDING 일 때만 수락·거절에 쓰인다
  * - receiver_user_id: 수락·거절한 사람 (대기·취소면 null)
  * - order_uuid·event_id: 티켓에서 복사한 값 (바뀌지 않음). 주문·공연 단위 연쇄 처리와 잠금 키 조회용
  */
@@ -29,6 +29,7 @@ import jakarta.persistence.Table
         Index(name = "idx_ticket_gift_sender_user_id", columnList = "sender_user_id, ticket_gift_id"),
         Index(name = "idx_ticket_gift_receiver_user_id", columnList = "receiver_user_id, ticket_gift_id"),
         Index(name = "idx_ticket_gift_event_id_status", columnList = "event_id, status"),
+        Index(name = "idx_ticket_gift_order_uuid_status", columnList = "order_uuid, status"),
     ],
 )
 @Entity

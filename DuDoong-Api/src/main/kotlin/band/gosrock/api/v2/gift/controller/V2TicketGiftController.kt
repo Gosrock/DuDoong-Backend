@@ -87,6 +87,11 @@ class V2TicketGiftController(
         @RequestParam(defaultValue = "20") @Min(1) @Max(MAX_PAGE_SIZE) size: Int,
     ): V2PageResponse<V2GiftElement> = giftUseCase.history(userId, direction, page, size)
 
+    @Operation(summary = "[G-7a] 보낸 사람의 선물 완료 티켓 상세 (로그인). T-1 의 SENT 행 giftId 로 연다. 티켓 정보·선물 상태만 — uuid·QR 없음. 선물 완료가 아니면 Gift_404_1")
+    @GetMapping("/me/gifts/{giftId}/ticket")
+    fun getSentGiftTicket(@CurrentUserId userId: Long, @PathVariable giftId: Long): V2MyTicketDetailResponse =
+        myTicketUseCase.sentTicket(userId, giftId)
+
     @Operation(summary = "[G-2] 선물 취소(회수) (로그인, 보낸 사람). 대기 중이면 언제든(공연 시작·종료 후에도). 링크 무효, 티켓 복귀. 알림 없음")
     @DeleteMapping("/me/gifts/{giftId}")
     fun cancelGift(@CurrentUserId userId: Long, @PathVariable giftId: Long): V2GiftResultResponse =

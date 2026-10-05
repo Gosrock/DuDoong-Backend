@@ -1,5 +1,6 @@
 package band.gosrock.api.slack.sender
 
+import band.gosrock.api.config.SensitiveBodyMasker
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.slack.api.model.block.Blocks
 import com.slack.api.model.block.Blocks.divider
@@ -23,9 +24,10 @@ class SlackThrottleErrorSender(
 ) {
     @Throws(IOException::class)
     fun execute(cachingRequest: ContentCachingRequestWrapper, userId: Long) {
-        val url = cachingRequest.requestURL.toString()
+        // 선물 링크 토큰(URL)·민감 키(본문)는 가려서 보낸다 (#719 리뷰 — 500 알림과 같은 규칙)
+        val url = SensitiveBodyMasker.maskPath(cachingRequest.requestURL.toString())
         val method = cachingRequest.method
-        val body = objectMapper.readTree(cachingRequest.contentAsByteArray).toString()
+        val body = SensitiveBodyMasker.mask(objectMapper.readTree(cachingRequest.contentAsByteArray).toString())
         val errorUserIP = cachingRequest.remoteAddr
 
         val layoutBlocks = mutableListOf<LayoutBlock>()

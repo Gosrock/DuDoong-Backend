@@ -14,6 +14,7 @@ import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.event.service.v2.V2EventDisplayRule
 import band.gosrock.domain.domains.gift.domain.TicketGift
+import band.gosrock.domain.domains.gift.exception.GiftNotFoundException
 import band.gosrock.domain.domains.gift.service.v2.V2GiftState
 import band.gosrock.domain.domains.gift.service.v2.V2MyTicketQuery
 import band.gosrock.domain.domains.gift.service.v2.V2TicketGiftDomainService
@@ -109,17 +110,38 @@ class V2MyTicketUseCase(
     fun ticket(userId: Long, ticketUuid: String): V2MyTicketDetailResponse {
         val ticket = issuedTicketRepository.findByUuid(ticketUuid).orElse(null)?.takeIf { it.getUserId() == userId }
             ?: throw IssuedTicketNotFoundException.EXCEPTION
-        val now = LocalDateTime.now()
         val order = myTicketQuery.findOrdersByUuids(listOf(ticket.orderUuid!!)).single()
+        // 공지 바 해제 (A8): 내 주문의 티켓을 열면 그 주문의 승인 알림을 읽음 처리 (새 트랜잭션, 멱등)
+        if (order.userId == userId) notificationDomainService.markOrderApprovedRead(userId, order.uuid!!)
+        return detail(ticket, order, userId)
+    }
+
+    /**
+     * 보낸 사람의 '선물 완료' 티켓 상세 (T-1 SENT 행의 giftId 로 연다, #719 리뷰). 티켓 정보·선물 상태만 — uuid·QR 없음 (받은 사람의 QR).
+     * 내가 보낸 선물이 아니거나, 그 티켓의 지금 선물 상태가 '선물 완료'가 아니면(반환·회수로 돌아온 티켓은 T-2) Gift_404_1
+     */
+    @Transactional(readOnly = true)
+    fun sentTicket(userId: Long, giftId: Long): V2MyTicketDetailResponse {
+        val gift = giftDomainService.querySentGift(userId, giftId)
+        val ticket = myTicketQuery.findTicketsByIds(listOf(gift.issuedTicketId)).single()
+        val order = myTicketQuery.findOrdersByUuids(listOf(ticket.orderUuid!!)).single()
+        val latest = giftDomainService.latestGiftsOf(listOf(ticket.id!!))[ticket.id]
+        if (latest?.id != gift.id || giftDomainService.giftStateOf(ticket, order.userId, latest, userId) != V2GiftState.SENT) {
+            throw GiftNotFoundException.EXCEPTION
+        }
+        return detail(ticket, order, userId)
+    }
+
+    private fun detail(ticket: IssuedTicket, order: Order, userId: Long): V2MyTicketDetailResponse {
+        val now = LocalDateTime.now()
         val event = eventAdaptor.findById(ticket.eventId!!)
         val latest = giftDomainService.latestGiftsOf(listOf(ticket.id!!))[ticket.id]
         val giftState = giftDomainService.giftStateOf(ticket, order.userId, latest, userId)
         val expired = giftState == V2GiftState.PENDING && giftDomainService.isEventEnded(event, now)
         val myOrder = order.userId == userId
-        // 공지 바 해제 (A8): 내 주문의 티켓을 열면 그 주문의 승인 알림을 읽음 처리 (새 트랜잭션, 멱등)
-        if (myOrder) notificationDomainService.markOrderApprovedRead(userId, order.uuid!!)
+        val sent = giftState == V2GiftState.SENT
         return V2MyTicketDetailResponse(
-            ticketUuid = ticket.uuid!!,
+            ticketUuid = ticket.uuid.takeIf { !sent },
             issuedTicketNo = ticket.issuedTicketNo,
             ticketName = ticket.itemInfo?.ticketName,
             ticketPrice = ticket.itemInfo?.price?.longValue() ?: 0L,
@@ -131,12 +153,12 @@ class V2MyTicketUseCase(
             giftState = giftState,
             isGiftExpired = expired,
             isReceived = giftState == V2GiftState.RECEIVED,
-            qrValue = ticket.uuid.takeIf { giftState != V2GiftState.PENDING && !ticket.issuedTicketStatus.isCanceled() },
+            qrValue = ticket.uuid.takeIf { !sent && giftState != V2GiftState.PENDING && !ticket.issuedTicketStatus.isCanceled() },
             event = eventResponse(event, now),
             orderUuid = order.uuid.takeIf { myOrder },
             orderNo = order.orderNo.takeIf { myOrder },
             gift = latest?.let { giftInfo(it, giftState) },
-            canGift = giftDomainService.giftBlocker(ticket, order, event, latest, userId, now) == null,
+            canGift = !sent && giftDomainService.giftBlocker(ticket, order, event, latest, userId, now) == null,
             canReturn = giftState == V2GiftState.RECEIVED && giftDomainService.returnBlocker(ticket, latest, event, userId, now) == null,
         )
     }
@@ -148,6 +170,7 @@ class V2MyTicketUseCase(
             giftToken = gift.token,
             linkPath = V2GiftUseCase.linkPath(gift.token),
             memo = gift.memo,
+            receiverName = null,
             senderName = null,
             createdAt = gift.createdAt,
             acceptedAt = null,
@@ -158,7 +181,19 @@ class V2MyTicketUseCase(
             giftToken = null,
             linkPath = null,
             memo = null,
+            receiverName = null,
             senderName = runCatching { userAdaptor.queryUser(gift.senderUserId).profile?.name }.getOrNull(),
+            createdAt = gift.createdAt,
+            acceptedAt = gift.acceptedAt,
+        )
+        V2GiftState.SENT -> V2TicketGiftInfoResponse(
+            giftId = gift.id!!,
+            status = gift.status,
+            giftToken = null,
+            linkPath = null,
+            memo = gift.memo,
+            receiverName = gift.receiverUserId?.let { id -> runCatching { userAdaptor.queryUser(id).profile?.name }.getOrNull() },
+            senderName = null,
             createdAt = gift.createdAt,
             acceptedAt = gift.acceptedAt,
         )
@@ -178,7 +213,7 @@ class V2MyTicketUseCase(
         val myOrder = order.userId == userId
         val refused = V2OrderStatus.of(order) == V2OrderStatus.REFUSED
         return V2MyTicketGroupResponse(
-            orderUuid = order.uuid!!,
+            orderUuid = order.uuid.takeIf { myOrder },
             orderNo = order.orderNo.takeIf { myOrder },
             isMyOrder = myOrder,
             orderStatus = V2MyOrderStatus.of(order).takeIf { myOrder },
