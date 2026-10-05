@@ -121,6 +121,11 @@ class LockConnectionProbe {
         /** 이 스레드에서 [method](`클래스.메서드`)를 마지막으로 불렀을 때 진행 중이던 호출 측 트랜잭션 (없으면 null) */
         fun lastCallerTxOf(method: String): String? = lastCallerTx.get()[method]
 
+        /** 이 스레드에서 [clearCalls] 뒤에 [method] 락 메서드를 불렀는지 */
+        fun wasCalled(method: String): Boolean = lastCallerTx.get().containsKey(method)
+
+        fun clearCalls() = lastCallerTx.get().clear()
+
         /** 트랜잭션 이름(`패키지.클래스.메서드`, 이름 없으면 "?")을 `클래스.메서드` 로 */
         fun shortTxName(name: String?): String = name?.split('.')?.takeLast(2)?.joinToString(".") ?: "?"
 

@@ -1,6 +1,7 @@
 package band.gosrock.domain.domains.ticket_item.service.v2
 
 import band.gosrock.common.annotation.DomainService
+import band.gosrock.domain.common.aop.redissonLock.LockNames
 import band.gosrock.domain.common.aop.redissonLock.RedissonLock
 import band.gosrock.domain.common.vo.AccountInfoVo
 import band.gosrock.domain.common.vo.Money
@@ -297,7 +298,7 @@ class V2TicketItemDomainService(
         /** v2 주문이 지원하는 결제 방식 (계좌송금 두둥티켓 / 무료) */
         val V2_ORDER_PAY_TYPES: Set<TicketPayType> = setOf(TicketPayType.DUDOONG_TICKET, TicketPayType.FREE_TICKET)
 
-        private const val TICKET_LOCK = "티켓관리"
+        private const val TICKET_LOCK = LockNames.TICKET
 
         /** 수량 지정·매수 제한 최대값 (무제한 저장값 [TicketItem.UNLIMITED_SUPPLY_COUNT] 보다 작아야 한다) */
         const val MAX_SUPPLY_COUNT = 999_999L

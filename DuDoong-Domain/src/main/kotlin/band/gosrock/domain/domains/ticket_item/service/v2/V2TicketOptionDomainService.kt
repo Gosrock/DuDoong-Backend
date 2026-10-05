@@ -1,5 +1,6 @@
 package band.gosrock.domain.domains.ticket_item.service.v2
 
+import band.gosrock.domain.common.aop.redissonLock.LockNames
 import band.gosrock.common.annotation.DomainService
 import band.gosrock.common.consts.DuDoongStatic.KR_YES
 import band.gosrock.common.exception.NotAvailableRedissonLockException
@@ -194,7 +195,7 @@ class V2TicketOptionDomainService(
 
     companion object {
         /** v1 재고 감소(IssuedTicketDomainService)·v2 티켓 변경과 같은 락 이름 */
-        private const val TICKET_LOCK = "티켓관리"
+        private const val TICKET_LOCK = LockNames.TICKET
         private const val LOCK_WAIT_SECONDS = 10L
         private const val LOCK_LEASE_SECONDS = 10L
 

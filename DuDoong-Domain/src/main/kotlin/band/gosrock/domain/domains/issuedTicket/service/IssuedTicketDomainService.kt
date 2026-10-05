@@ -1,6 +1,7 @@
 package band.gosrock.domain.domains.issuedTicket.service
 
 import band.gosrock.common.annotation.DomainService
+import band.gosrock.domain.common.aop.redissonLock.LockNames
 import band.gosrock.domain.common.aop.redissonLock.RedissonLock
 import band.gosrock.domain.common.vo.IssuedTicketInfoVo
 import band.gosrock.domain.domains.gift.service.TicketGiftGuard
@@ -26,7 +27,7 @@ class IssuedTicketDomainService(
     private val ticketGiftGuard: TicketGiftGuard,
 ) {
 
-    @RedissonLock(LockName = "티켓관리", identifier = "itemId")
+    @RedissonLock(LockName = LockNames.TICKET, identifier = "itemId")
     fun withdrawIssuedTicket(itemId: Long, issuedTickets: List<IssuedTicket>) {
         val ticketItem = ticketItemAdaptor.queryTicketItem(itemId)
         issuedTickets.forEach { issuedTicket ->
@@ -35,7 +36,7 @@ class IssuedTicketDomainService(
         }
     }
 
-    @RedissonLock(LockName = "티켓관리", identifier = "itemId")
+    @RedissonLock(LockName = LockNames.TICKET, identifier = "itemId")
     fun doneOrderEventAfterRollBackWithdrawIssuedTickets(itemId: Long, orderUuid: String) {
         val failIssuedTickets = issuedTicketAdaptor.findAllByOrderUuid(orderUuid)
         val ticketItem = ticketItemAdaptor.queryTicketItem(itemId)
@@ -58,7 +59,7 @@ class IssuedTicketDomainService(
         return issuedTicket.toIssuedTicketInfoVo()
     }
 
-    @RedissonLock(LockName = "티켓관리", identifier = "itemId")
+    @RedissonLock(LockName = LockNames.TICKET, identifier = "itemId")
     fun createIssuedTicket(itemId: Long, orderUuid: String, userId: Long) {
         val ticketItem = ticketItemAdaptor.queryTicketItem(itemId)
         val user = userAdaptor.queryUser(userId)

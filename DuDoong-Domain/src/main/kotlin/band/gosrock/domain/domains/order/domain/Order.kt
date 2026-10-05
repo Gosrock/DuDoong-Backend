@@ -251,17 +251,23 @@ class Order() : BaseTimeEntity() {
         this.pgPaymentInfo = pgPaymentInfo
     }
 
+    /**
+     * 승인. 검사를 발급(DoneOrderEvent → 티켓 발급·재고 감소, REQUIRES_NEW 커밋)보다 **먼저** 한다 (#724).
+     * 예전에는 발급 뒤에 검사해, 격리 수준이 READ COMMITTED 면 방금 발급한 수량을 재고·1인 제한에 한 번 더 세어 남은 재고의 절반을 넘는 주문이 실패했다
+     * (MySQL REPEATABLE READ 는 스냅샷이라 우연히 통과). 검사 결과·에러 코드는 그대로
+     */
     fun approve(orderValidator: OrderValidator) {
-        issueDoneOrderEvent()
         orderValidator.validCanApproveOrder(this)
+        issueDoneOrderEvent()
         approvedAt = LocalDateTime.now()
         orderStatus = OrderStatus.APPROVED
     }
 
+    /** 무료 확정. [approve] 와 같은 이유로 검사를 발급보다 먼저 한다 (#724) */
     fun freeConfirm(currentUserId: Long, orderValidator: OrderValidator) {
         orderValidator.validOwner(this, currentUserId)
-        issueDoneOrderEvent()
         orderValidator.validCanFreeConfirm(this)
+        issueDoneOrderEvent()
         approvedAt = LocalDateTime.now()
         orderStatus = OrderStatus.APPROVED
     }

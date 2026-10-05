@@ -17,8 +17,8 @@ import org.springframework.test.web.servlet.ResultActionsDsl
  * 승인형 주문 생성 재고 검사는 **같은 티켓**의 승인 대기 수량만 더한다 (#720).
  * 예전에는 공연 전체 승인 대기 수량을 이 티켓 재고와 비교해, 다른 티켓 대기가 쌓이면 재고가 남은 티켓도 매진(Ticket_Item_400_1)으로 거절했다.
  * v1 주문 API(카트 → 주문)와 v2 O-1 이 같은 검증([band.gosrock.domain.domains.order.domain.Order.createApproveOrder])을 쓰므로 두 경로를 모두 본다.
- * H2 주의: v1 승인은 발급(별도 REQUIRES_NEW 커밋, 재고 감소) 뒤에 재고·매수 제한을 다시 보는데, H2(READ COMMITTED)는 방금 줄어든 재고를 본다
- * (MySQL REPEATABLE READ 는 승인 트랜잭션 스냅샷이라 줄기 전 값). 그래서 H2 에서는 남은 재고의 절반 이하 주문만 승인한다 — 경계는 MySQL E2E(test_46)
+ * (#724 이전에는 v1 승인이 발급 뒤에 재고·매수 제한을 다시 봐서 H2(READ COMMITTED)에서 남은 재고 절반 초과 승인이 실패했다. 지금은 검사가 발급보다 먼저라
+ * H2·MySQL 결과가 같다 — `OrderLockUnifyTest`. 이 클래스의 주문 수량은 그때 맞춘 값 그대로 둔다. 경계는 MySQL E2E(test_46))
  */
 @ApiIntegrateSpringBootTest
 @AutoConfigureMockMvc

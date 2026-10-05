@@ -5,6 +5,7 @@ import band.gosrock.common.consts.DuDoongStatic.KR_NO
 import band.gosrock.common.consts.DuDoongStatic.KR_YES
 import band.gosrock.common.exception.DuDoongCodeException
 import band.gosrock.domain.common.aop.domainEvent.Events
+import band.gosrock.domain.common.aop.redissonLock.LockNames
 import band.gosrock.domain.common.aop.redissonLock.RedissonLock
 import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.domains.cart.domain.Cart
@@ -345,7 +346,7 @@ class V2UserOrderDomainService(
     }
 
     companion object {
-        private const val TICKET_LOCK = "티켓관리"
+        private const val TICKET_LOCK = LockNames.TICKET
         private const val ORDER_LOCK = "주문"
         const val DEPOSITOR_NAME_MAX_LENGTH = 20
         const val SUBJECTIVE_ANSWER_MAX_LENGTH = 255
