@@ -52,8 +52,6 @@ interface TicketGiftRepository : JpaRepository<TicketGift, Long> {
     @Query("select g from TicketGift g where g.eventId = :eventId and g.status = :status order by g.id")
     fun findAllByEventLocked(@Param("eventId") eventId: Long, @Param("status") status: TicketGiftStatus): List<TicketGift>
 
-    fun findAllByEventIdAndStatus(eventId: Long, status: TicketGiftStatus): List<TicketGift>
-
     fun findAllByOrderUuidAndStatus(orderUuid: String, status: TicketGiftStatus): List<TicketGift>
 
     fun findBySenderUserIdOrderByIdDesc(senderUserId: Long, pageable: Pageable): Page<TicketGift>

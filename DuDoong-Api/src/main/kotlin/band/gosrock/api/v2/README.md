@@ -90,13 +90,13 @@ band.gosrock.api.v2
   - 결제 화면 O-0 `GET /api/v2/events/{eventId}/ticket-items/{ticketItemId}/checkout` (#726, 로그인): P-5 와 같은 티켓 + 입금 계좌(두둥티켓 + `isPurchasable` 일 때만 — 지난 공연·정산중·종료·매진은 null, O-3 `payment.account` 와 같은 형태). 티켓 응답은 P-5 와 같은 `V2PublicTicketItemMapper` 로 만든다. [결제하기]·토스 송금 전에 계좌를 보여 주기 위한 것이라 공개 경로에 넣지 않는다. 판매 중 아닌 티켓·다른 공연 티켓은 404
   - 승인형 1인 제한 = 발급 수 + 같은 사용자·같은 티켓 승인 대기 수량 + 이번 수량 (v1 `OrderValidator.validApproveStatePurchaseLimit`, `Order.createApproveOrder` 에서 v1·v2 공통). v2 는 `티켓관리` 락 안이라 같은 사용자 동시 주문도 보장(#726 동시성 테스트), v1 은 `주문생성:{userId}` 락으로 v1 끼리 보장
 - `V2TicketGiftDomainService` / `V2MyTicketQuery` / `V2TicketGiftCascadeHandler` (#719, `domains.gift.service.v2`): 사용자 앱 티켓탭(T-1·T-2)·선물(G-1~G-8). 테이블 `tbl_ticket_gift` 는 v2 전용(V008)
-  - 잠금 순서 **주문 → 티켓** 하나: 선물 전이(생성·회수·수락·거절·반환·메모)는 `주문:{orderUuid}` 락(v1·v2 승인·거절·취소·환불과 같은 락, 새 트랜잭션) 안에서 티켓 행 `SELECT ... FOR UPDATE` → 선물 행 잠금 읽기 후 판정. 락 전에는 orderUuid 만 스칼라로 읽는다
+  - 잠금 순서는 아래 **잠금 순서 표**를 따른다 (Redisson `주문` 락 → 공연 → 사용자 → 티켓 → 선물 행). 선물 전이(생성·회수·수락·거절·반환·메모)는 `주문:{orderUuid}` 락(v1·v2 승인·거절·취소·환불과 같은 락, 새 트랜잭션) 안에서 티켓 행 `SELECT ... FOR UPDATE` → 선물 행 잠금 읽기 후 판정. 락 전에는 orderUuid 만 스칼라로 읽는다
   - 연쇄 처리는 도메인 이벤트 **BEFORE_COMMIT**(원 트랜잭션 안, 실패하면 원 전이도 롤백): `WithDrawOrderEvent`(v1·v2 호스트 취소, 운영 취소 — 대기 선물 CANCELED(ORDER_CANCELED), 선물 완료 티켓은 v1 티켓 철회 핸들러가 함께 취소), `UserDeactivatedEvent`(탈퇴·운영 정지 → SENDER_WITHDRAWN), `EventAdminStatusChangeEvent`(운영 삭제·준비중 전환 → EVENT_REMOVED, 정산중·지난공연은 대기 유지). 주문 연쇄는 대기 선물을 먼저 찾아(`idx_ticket_gift_order_uuid_status`) 없으면 끝내고(선물 없는 주문은 인덱스 조회 1회), 있으면 그 티켓 행만 PK 로 잠근다 — v1 티켓 철회 핸들러보다 먼저(`@Order`). 선물 완료 티켓은 철회 핸들러가 취소하고 기록은 ACCEPTED 그대로라 잠그지 않는다(반환 G-6 은 같은 주문 락)
   - **잠금 순서 표** (#719 재리뷰). 모든 경로가 아래 순서의 부분열만 잡으므로 순환 대기가 없다
     - 공연 행 → 사용자 행 → 티켓 행 → 선물 행 (DB), 그 앞에 Redisson `주문:{uuid}` (선물 전이·주문 전이)
     - G-1 생성: 주문 락 → 공연 S → 보낸 사람 S → 티켓 X → 선물(잠금 읽기·INSERT). 공연 삭제·정지가 먼저 커밋되면 최신 상태를 보고 Gift_400_1
     - G-2·G-4·G-5·G-6·G-8: 주문 락 → 티켓 X → 선물 X (공연·사용자 행은 잠그지 않음)
-    - 주문 전이 연쇄: 주문 락 → (주문 행 UPDATE) → 대기 선물 티켓 X(PK) → 선물 X
+    - 주문 전이 연쇄: 주문 락 → 대기 선물 티켓 X(PK) → 선물 X → (주문 행 UPDATE 는 BEFORE_COMMIT 뒤 커밋 flush 때 실행 — 주문 행 X 는 맨 마지막. 주문 행은 Redisson 주문 락으로 이미 줄 서 있다)
     - 공연 운영 삭제·상태 변경: 공연 X(flush 로 UPDATE 먼저) → 후보(짧은 별도 트랜잭션의 선물 FOR SHARE, 바로 놓음) → 티켓 X(PK) → 선물 X
     - 탈퇴·운영 정지: 사용자 X(flush) → 후보(짧은 별도 트랜잭션의 선물 FOR SHARE) → 티켓 X(PK) → 선물 X
     - 입장(v1·v2): 티켓 X → 선물 S(잠금 읽기)

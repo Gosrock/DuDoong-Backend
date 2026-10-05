@@ -620,19 +620,30 @@ def _await_waits(n, timeout=6.0):
 
 def _contend(lock_sql, first, second):
     """lock_sql 로 행을 잡아 두고 first → (대기 확인) → second → (둘 다 대기 확인) → 해제. 두 응답을 (first, second) 순으로 돌려준다"""
-    results = {}
+    results, errors = {}, {}
+
+    def run(i, call):
+        try:
+            results[i] = call()
+        except Exception as e:  # 요청 스레드의 예외를 그대로 다시 던진다 (KeyError 로 가려지지 않게)
+            errors[i] = e
+
     holder = _RowLock(lock_sql)
     try:
-        t1 = threading.Thread(target=lambda: results.__setitem__(0, first()))
+        t1 = threading.Thread(target=run, args=(0, first))
         t1.start()
         _await_waits(1)
-        t2 = threading.Thread(target=lambda: results.__setitem__(1, second()))
+        t2 = threading.Thread(target=run, args=(1, second))
         t2.start()
         _await_waits(2)
     finally:
         holder.release()
     t1.join(30)
     t2.join(30)
+    for i in (0, 1):
+        if i in errors:
+            raise errors[i]
+        assert i in results, f"요청 {i} 가 30초 안에 끝나지 않음"
     return results[0], results[1]
 
 

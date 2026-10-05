@@ -301,7 +301,10 @@ class V2TicketGiftDomainServiceTest {
         doAnswer { inv -> (inv.arguments[0] as TicketGift).takeIf { it.id == 9L }?.accept(5L, now); null }
             .`when`(entityManager).refresh(org.mockito.ArgumentMatchers.any(TicketGift::class.java), org.mockito.ArgumentMatchers.eq(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE))
         assertEquals(1, service.cancelPendingBySender(1L))
-        val order = org.mockito.Mockito.inOrder(issuedTicketRepository, entityManager)
+        val order = org.mockito.Mockito.inOrder(entityManager, candidateReader, issuedTicketRepository)
+        // 사용자 행 UPDATE(X 잠금)를 flush 로 먼저 실행한 뒤 후보를 읽는다
+        order.verify(entityManager).flush()
+        order.verify(candidateReader).pendingBySender(1L)
         order.verify(issuedTicketRepository).findAllByIdInForUpdate(setOf(102L, 100L))
         order.verify(entityManager, times(2)).refresh(org.mockito.ArgumentMatchers.any(TicketGift::class.java), org.mockito.ArgumentMatchers.eq(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE))
         assertEquals(TicketGiftCancelReason.SENDER_WITHDRAWN, g1.cancelReason)
@@ -309,8 +312,12 @@ class V2TicketGiftDomainServiceTest {
         // 원 트랜잭션 스냅샷으로 후보를 찾지 않는다
         verify(ticketGiftRepository, never()).findAllBySenderUserIdAndStatus(1L, TicketGiftStatus.PENDING)
 
+        // 공연 연쇄도 같은 순서 — 앞 단언의 flush 호출과 섞이지 않게 기록을 비운다
+        org.mockito.Mockito.clearInvocations(entityManager, candidateReader)
         `when`(candidateReader.pendingByEvent(10L)).thenReturn(emptyList())
         assertEquals(0, service.cancelPendingByEventRemoved(10L, EventStatus.DELETED))
-        verify(candidateReader).pendingByEvent(10L)
+        val eventOrder = org.mockito.Mockito.inOrder(entityManager, candidateReader)
+        eventOrder.verify(entityManager).flush()
+        eventOrder.verify(candidateReader).pendingByEvent(10L)
     }
 }
