@@ -1,5 +1,7 @@
 package band.gosrock.api.v2.common.swagger
 
+import io.swagger.v3.oas.models.PathItem
+import io.swagger.v3.oas.models.Paths
 import io.swagger.v3.oas.models.info.Info
 import org.springdoc.core.models.GroupedOpenApi
 import org.springframework.context.annotation.Bean
@@ -28,8 +30,53 @@ class V2SwaggerGroups {
             .group(name)
             .pathsToMatch("/api/v2/**")
             .apply { if (area != null) addOpenApiMethodFilter { V2ApiArea.of(it.declaringClass) == area } }
-            .addOpenApiCustomizer { it.info(Info().title("두둥 v2 API - $name").version("v2").description("$summary\n\n$GUIDE")) }
+            .addOpenApiCustomizer { openApi ->
+                openApi.info(Info().title("두둥 v2 API - $name").version("v2").description("$summary\n\n$GUIDE"))
+                openApi.tags = openApi.tags?.sortedBy { tag -> V2ApiTags.ORDERED.indexOf(tag.name).let { if (it < 0) Int.MAX_VALUE else it } }
+                openApi.paths?.let { paths -> openApi.paths = Paths().apply { sortPaths(paths).forEach { path -> addPathItem(path, paths[path]) } } }
+            }
             .build()
+
+    /**
+     * 경로 순서. Swagger UI 는 태그별로 문서의 경로 순서대로 보여 주고, 같은 경로의 메서드는 묶는다. 그래서 태그마다
+     * "그 태그 operation 들의 화면 ID 중 가장 앞" 순으로 경로가 놓이도록, 태그별 순서를 제약으로 위상 정렬한다.
+     * 한 경로가 여러 태그에 걸치면(`/api/v2/events`: P-2 탐색 + E-2 공연 준비) 두 태그의 순서를 모두 만족시키고, 동점·나머지는 전체 화면 ID 순.
+     * 제약이 순환하면(실제로는 없음) 전체 화면 ID 순으로 대신한다
+     */
+    private fun sortPaths(paths: Paths): List<String> {
+        fun key(item: PathItem, tag: String? = null) =
+            item.readOperations().filter { tag == null || tag in it.tags.orEmpty() }.minOfOrNull { ScreenKey.of(it.summary) } ?: ScreenKey.NONE
+        val globalOrder = compareBy<String> { key(paths.getValue(it)) }.thenBy { it }
+        val tags = paths.values.flatMap { it.readOperations() }.flatMap { it.tags.orEmpty() }.distinct()
+        val after = paths.keys.associateWith { mutableSetOf<String>() }
+        val inDegree = paths.keys.associateWith { 0 }.toMutableMap()
+        tags.forEach { tag ->
+            paths.keys.filter { path -> paths.getValue(path).readOperations().any { tag in it.tags.orEmpty() } }
+                .sortedWith(compareBy<String> { key(paths.getValue(it), tag) }.then(globalOrder))
+                .zipWithNext()
+                .forEach { (before, next) -> if (after.getValue(before).add(next)) inDegree[next] = inDegree.getValue(next) + 1 }
+        }
+        val ready = java.util.PriorityQueue(globalOrder).apply { addAll(inDegree.filterValues { it == 0 }.keys) }
+        val sorted = mutableListOf<String>()
+        while (ready.isNotEmpty()) {
+            val path = ready.poll().also { sorted += it }
+            after.getValue(path).forEach { next -> inDegree[next] = inDegree.getValue(next) - 1; if (inDegree.getValue(next) == 0) ready += next }
+        }
+        return if (sorted.size == paths.size) sorted else paths.keys.sortedWith(globalOrder)
+    }
+
+    /** summary 앞 화면 ID `[P-1]`, `[G-7a]` 의 정렬 키: 접두 문자 → 숫자 → 하위 표기. 화면 ID 가 없으면 맨 뒤 */
+    data class ScreenKey(val prefix: String, val number: Int, val suffix: String) : Comparable<ScreenKey> {
+        override fun compareTo(other: ScreenKey): Int = compareValuesBy(this, other, { it.prefix }, { it.number }, { it.suffix })
+
+        companion object {
+            private val SCREEN_ID = Regex("""^\[([A-Z])-(\d+)([a-z]?)]""")
+            val NONE = ScreenKey("\uFFFF", Int.MAX_VALUE, "")
+
+            fun of(summary: String?): ScreenKey =
+                summary?.let { SCREEN_ID.find(it) }?.let { ScreenKey(it.groupValues[1], it.groupValues[2].toInt(), it.groupValues[3]) } ?: NONE
+        }
+    }
 
     companion object {
         const val ALL = "v2-전체"

@@ -112,15 +112,58 @@ class V2SwaggerGroupsTest {
     }
 
     @Test
-    fun `기본 그룹은 v2-전체, 태그·operation 정렬, v1·internal 그룹 유지, 그룹 설명에 권한 표기·에러 코드 안내`() {
+    fun `기본 그룹은 v2-전체, Swagger UI 정렬 설정 없음(문서 순서), v1·internal 그룹 유지, 그룹 설명에 권한 표기·에러 코드 안내`() {
         val config = objectMapper.readTree(mockMvc.get("/v3/api-docs/swagger-config") { with(user("1").roles("USER")) }.andExpect { status { isOk() } }.andReturn().response.getContentAsString(Charsets.UTF_8))
         assertEquals("v2-전체", config["urls.primaryName"].asText())
-        assertEquals("alpha", config["tagsSorter"].asText())
-        assertEquals("alpha", config["operationsSorter"].asText())
+        // 전역 정렬을 켜면 아래 문서 순서(태그: 호스팅 → 사용자, operation: 화면 ID)가 무시된다
+        assertTrue(config["tagsSorter"] == null && config["operationsSorter"] == null, config.toString())
         assertEquals(setOf("v1", "internal", "v2-전체", "v2-호스팅센터", "v2-사용자앱"), config["urls"].map { it["name"].asText() }.toSet())
         for (group in listOf(V2SwaggerGroups.ALL, V2ApiArea.HOSTING.group, V2ApiArea.USER.group)) {
             val description = docs(group)["info"]["description"].asText()
             listOf("G+", "M+", "MS", "에러 코드").forEach { assertTrue(it in description, "$group 설명에 $it 없음") }
+        }
+    }
+
+    @Test
+    fun `태그는 호스팅 1~8 → 사용자 1~4 순서 (tags 배열), 문서에 쓰인 태그는 모두 순서 목록에 있다`() {
+        for (group in listOf(V2SwaggerGroups.ALL, V2ApiArea.HOSTING.group, V2ApiArea.USER.group)) {
+            val docs = docs(group)
+            val tags = docs["tags"].map { it["name"].asText() }
+            assertEquals(V2ApiTags.ORDERED.filter { it in tags }, tags, "$group 태그 순서")
+            val used = ops(group).flatMap { it.tags }.toSet()
+            assertEquals(used, tags.toSet(), "$group: tags 배열 = 쓰인 태그")
+            assertTrue((used - V2ApiTags.ORDERED.toSet()).isEmpty(), "V2ApiTags.ORDERED 에 없는 태그: ${used - V2ApiTags.ORDERED.toSet()}")
+        }
+        val all = docs(V2SwaggerGroups.ALL)["tags"].map { it["name"].asText() }
+        assertEquals(all.sortedBy { if (it.startsWith(V2ApiArea.HOSTING.tagPrefix)) 0 else 1 }, all, "호스팅이 사용자보다 먼저")
+    }
+
+    @Test
+    fun `태그 안 operation 은 화면 ID 순 (경로 단위 — 경로 순서 = 그 경로 화면 ID 중 가장 앞)`() {
+        for (group in listOf(V2SwaggerGroups.ALL, V2ApiArea.HOSTING.group, V2ApiArea.USER.group)) {
+            ops(group).groupBy { it.tags.single() }.forEach { (tag, tagOps) ->
+                // 문서 순서대로 경로별 가장 앞 화면 ID
+                val pathKeys = tagOps.groupBy { it.path }.map { (path, pathOps) -> path to pathOps.minOf { V2SwaggerGroups.ScreenKey.of(it.summary) } }
+                assertEquals(pathKeys.sortedBy { it.second }, pathKeys, "$group / $tag 경로 순서")
+            }
+        }
+        // 예: 공연 탐색은 P-1 → P-2 → P-3 → P-5, 선물·티켓탭은 G-7 → G-7a → G-8 순
+        val browse = ops(V2ApiArea.USER.group).filter { it.tags.single() == V2ApiTags.BROWSE }.map { it.summary!!.substringBefore("]") + "]" }
+        assertEquals(listOf("[P-1]", "[P-2]", "[P-3]", "[P-5]"), browse)
+    }
+
+    @Test
+    fun `화면 ID 정렬 키 - 접두 문자, 숫자, 하위 표기 순, 화면 ID 없으면 맨 뒤`() {
+        val ids = listOf("[G-8] a", "[G-7a] b", "헬스", "[G-10] c", "[G-7] d", "[E-2] e")
+        assertEquals(listOf("[E-2] e", "[G-7] d", "[G-7a] b", "[G-8] a", "[G-10] c", "헬스"), ids.sortedBy { V2SwaggerGroups.ScreenKey.of(it) })
+    }
+
+    @Test
+    fun `v1·internal 태그는 예전처럼 이름순`() {
+        for (group in listOf("v1", "internal")) {
+            val tags = docs(group)["tags"].map { it["name"].asText() }
+            assertEquals(tags.sorted(), tags, group)
+            assertTrue(ops(group).flatMap { it.tags }.toSet().all { it in tags }, "$group 의 쓰인 태그가 tags 배열에 모두 있음")
         }
     }
 

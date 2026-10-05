@@ -1,7 +1,8 @@
 package band.gosrock.api.v2.common.swagger
 
 /**
- * v2 Swagger 태그 (#731). `[영역] 번호. 이름` — 번호는 와이어프레임 순서(10·11 문서 장 순서)이고 Swagger UI 는 이름순(tagsSorter=alpha)으로 정렬한다.
+ * v2 Swagger 태그 (#731). `[영역] 번호. 이름` — 번호는 와이어프레임 순서(10·11 문서 장 순서). 화면에 보이는 순서는 [ORDERED] (호스팅 → 사용자)이고
+ * `V2SwaggerGroups` 가 문서의 tags 배열을 이 순서로 넣는다 (Swagger UI 는 tags 배열 순서를 따른다).
  * 영역 안에서 번호는 겹치지 않는다(`V2SwaggerGroupsTest`). 태그 설명은 처음 쓰는 컨트롤러 한 곳에만 둔다.
  *
  * 권한 표기: P = 비로그인 허용, U = 로그인, G+ = 호스트 일반 멤버 이상, M+ = 매니저 이상, MS = 마스터만 (SUPER_ADMIN 은 G+/M+/MS 검사를 건너뜀)
@@ -44,4 +45,10 @@ object V2ApiTags {
     const val MYPAGE_DESCRIPTION = "M-1~M-5 (U). 알림센터(M-6)는 '$NOTIFICATION' N-1~N-3(/api/v2/me/notifications) 재사용, " +
         "주문내역은 O-2·O-3, 소속 호스트 전체는 H-1(/api/v2/me/hosts), 언팔로우는 H-13(DELETE /api/v2/hosts/{hostId}/follow), " +
         "로그아웃·탈퇴는 v1(POST /api/v1/auth/logout, DELETE /api/v1/auth/me) 재사용"
+
+    /** 문서에 보이는 태그 순서: 작업·와이어프레임 순서 (호스팅 1~8 → 사용자 1~4). 새 태그는 여기에도 넣는다 (빠지면 뒤에 붙고 테스트가 실패) */
+    val ORDERED = listOf(
+        HOST, EVENT_PREP, TICKET, TICKET_OPTION, OPERATION_ORDER, OPERATION_TICKET, NOTIFICATION, HEALTH,
+        BROWSE, ORDER, GIFT, MYPAGE,
+    )
 }
