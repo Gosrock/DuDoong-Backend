@@ -265,11 +265,12 @@ class V2UserOrderDomainService(
 
     /**
      * 환불 계좌를 받을 수 있는 주문인지 (호스트 거절·호스트 취소·사용자 취소 공통): v2 주문 + 유료 + 계좌이체(승인형, 두둥티켓) + 환불 요청 중.
-     * v1 주문(결제 채널 없음)은 v1 앱이 계좌를 받지 않으므로 대상이 아니다 (사용자 결정 2026-10-05). 카드(PG) 결제는 결제 취소가 자동이라,
-     * 무료·0원은 돌려줄 돈이 없어 대상이 아니다. 순서: 대상 아님(Order_400_27) → 대상이지만 환불 완료(Order_400_28)
+     * v1 주문(결제 채널 없음)은 오래된 주문에 입력을 유도하지 않도록 대상이 아니다 (사용자 결정 2026-10-05). 단 v2 앱에서 O-4 로 취소하며
+     * 계좌를 입력해 계좌 행이 이미 있는 v1 주문은 오타를 고칠 수 있게 **수정만** 허용한다 (#728 재리뷰 — 계좌가 있으므로 입력 필요는 항상 false).
+     * 카드(PG) 결제는 결제 취소가 자동이라, 무료·0원은 돌려줄 돈이 없어 대상이 아니다. 순서: 대상 아님(Order_400_27) → 대상이지만 환불 완료(Order_400_28)
      */
     fun refundAccountBlocker(order: Order): DuDoongCodeException? = when {
-        order.paymentChannel == null || order.orderMethod != OrderMethod.APPROVAL || !isPaid(order) ||
+        !isV2OrHasRefundAccount(order) || order.orderMethod != OrderMethod.APPROVAL || !isPaid(order) ||
             order.orderStatus !in REFUND_ACCOUNT_ORDER_STATUSES || order.refundStatus !in REFUND_ACCOUNT_REFUND_STATUSES ->
             V2RefundAccountNotAllowedException.EXCEPTION
         order.refundStatus == RefundStatus.REFUND_COMPLETED -> V2RefundAlreadyCompletedException.EXCEPTION
@@ -327,6 +328,10 @@ class V2UserOrderDomainService(
         }
         return null
     }
+
+    /** v2 주문이거나, v1 주문이지만 O-4 로 입력한 계좌 행이 있음 (v1 주문만 계좌를 조회한다) */
+    private fun isV2OrHasRefundAccount(order: Order): Boolean =
+        order.paymentChannel != null || order.id?.let { refundAccountRepository.findByOrderId(it) } != null
 
     private fun isPaid(order: Order): Boolean = order.getTotalPaymentPrice().isGreaterThan(Money.ZERO)
 

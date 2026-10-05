@@ -235,14 +235,15 @@ def _lock_waits():
 
 
 class _RowLock:
-    """별도 세션에서 BEGIN; <잠금 SELECT>; 를 실행해 둔 채로 있다가 release() 에서 COMMIT"""
+    """별도 세션에서 BEGIN; <잠금 SELECT>; 를 실행해 둔 채로 있다가 release() 에서 COMMIT.
+    홀더가 다른 잠금에 막혀도 무한 대기하지 않도록 세션 잠금 대기를 10초로 둔다 (넘으면 mysql 이 오류로 끝나 아래 readline 이 실패)"""
 
     def __init__(self, lock_sql):
         self.p = subprocess.Popen(
             DB.command("--unbuffered", "-N"), env=DB.env(),
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
         )
-        self.p.stdin.write(f"BEGIN;\n{lock_sql};\nSELECT 'LOCKED';\n")
+        self.p.stdin.write(f"SET SESSION innodb_lock_wait_timeout = 10;\nBEGIN;\n{lock_sql};\nSELECT 'LOCKED';\n")
         self.p.stdin.flush()
         while True:
             line = self.p.stdout.readline()

@@ -145,6 +145,23 @@ class V2RefundAccountInputTest : V2UserOrderTestSupport() {
         }
 
         @Test
+        fun `v1 앱 주문을 O-4 로 취소하며 입력한 계좌 - 수정만 가능(입력 필요 아님), 수정하면 호스트 변경 알림 (#728 재리뷰)`() {
+            val shop = Shop()
+            val buyer = newBuyer()
+            val v1 = shop.order(buyer)
+            assertNull(orderRepository.findByOrderUuid(v1).get().paymentChannel, "v1 주문은 결제 채널이 없다")
+            cancelMy(buyer, v1, refundAccount).andExpect { status { isOk() } }
+            val d = detail(buyer, v1)
+            assertTrue(d.at("/refundAccountEditable").asBoolean())
+            assertFalse(d.at("/refundAccountRequired").asBoolean())
+            putAccount(buyer, v1, account2).andExpect { status { isOk() } }
+            assertEquals("우리은행", savedAccount(v1)!!.bankName)
+            awaitChanged(shop.team.manager, v1, 1)
+            completeRefund(shop, v1)
+            assertEquals("Order_400_28", putAccount(buyer, v1, refundAccount).andExpect { status { isBadRequest() } }.code())
+        }
+
+        @Test
         fun `입금 미확인 거절 - 입력 필요 아님(안내 없음), 입력·수정은 가능`() {
             val shop = Shop()
             val buyer = newBuyer()

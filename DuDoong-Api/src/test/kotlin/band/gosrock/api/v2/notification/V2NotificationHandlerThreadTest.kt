@@ -7,6 +7,7 @@ import band.gosrock.api.v2.notification.handler.V2NotificationEventHandler
 import band.gosrock.api.v2.operation.V2OperationTestSupport
 import band.gosrock.domain.domains.notification.service.v2.V2GiftNotificationDomainService
 import band.gosrock.domain.domains.notification.service.v2.V2NotificationDomainService
+import band.gosrock.domain.domains.order.service.v2.V2RefundAccountChangedEvent
 import java.util.concurrent.ConcurrentHashMap
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -22,10 +23,13 @@ import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.aop.support.AopUtils
 import org.springframework.core.annotation.AnnotatedElementUtils
 import org.springframework.scheduling.annotation.Async
+import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.event.TransactionalEventListener
+import org.springframework.transaction.support.TransactionTemplate
 
 /**
  * DEC-023 #2 (#721): 알림 저장 핸들러는 기존 `@Async` 기본 풀(`async-`)이 아니라 알림 전용 풀(`notification-`)에서 돈다.
@@ -44,6 +48,10 @@ class V2NotificationHandlerThreadTest : V2OperationTestSupport() {
     @Autowired private lateinit var handler: V2NotificationEventHandler
 
     @Autowired private lateinit var giftHandler: V2GiftNotificationEventHandler
+
+    @Autowired private lateinit var eventPublisher: ApplicationEventPublisher
+
+    @Autowired private lateinit var transactionManager: PlatformTransactionManager
 
     @Test
     fun `멤버 추가·주문 생성·승인·거절·호스트 취소·환불 완료 알림 저장은 notification- 스레드에서 실행된다`() {
@@ -100,6 +108,19 @@ class V2NotificationHandlerThreadTest : V2OperationTestSupport() {
     }
 
     @Test
+    fun `환불 계좌 변경 알림 저장도 커밋 후 notification- 스레드에서 실행된다 (#728)`() {
+        val threads = ConcurrentHashMap<String, String>()
+        given(notificationDomainService.notifyRefundAccountChanged(anyString(), anyString())).willAnswer { 0.also { threads["refundAccountChanged"] = Thread.currentThread().name } }
+        val event = V2RefundAccountChangedEvent(orderUuid = "order-728")
+        val requestThread = Thread.currentThread().name
+        // 발행 경로(O-5 계좌 수정)와 같이 트랜잭션 안에서 발행 → AFTER_COMMIT 리스너
+        TransactionTemplate(transactionManager).executeWithoutResult { eventPublisher.publishEvent(event) }
+        verify(notificationDomainService, timeout(10_000)).notifyRefundAccountChanged("order-728", event.changeId)
+        val thread = threads.getValue("refundAccountChanged")
+        assertTrue(thread.startsWith("notification-") && thread != requestThread, "환불 계좌 변경 알림이 전용 풀이 아닌 스레드에서 실행됨: $thread")
+    }
+
+    @Test
     fun `T-2 공지 바 해제(승인 알림 읽음)는 조회 요청 스레드가 아니라 커밋 후 notification- 스레드, 실패해도 T-2 는 200 (#719 재리뷰)`() {
         val threads = ConcurrentHashMap<String, String>()
         given(notificationDomainService.hasUnreadOrderApproved(anyLong(), anyString())).willReturn(true)
@@ -136,7 +157,7 @@ class V2NotificationHandlerThreadTest : V2OperationTestSupport() {
         val listeners = listOf(handler, giftHandler).flatMap { bean ->
             AopUtils.getTargetClass(bean).declaredMethods.filter { AnnotatedElementUtils.hasAnnotation(it, TransactionalEventListener::class.java) }
         }
-        assertEquals(11, listeners.size, "리스너 수가 바뀌면 이 테스트와 실행 스레드 테스트를 갱신: ${listeners.map { it.name }}")
+        assertEquals(11, listeners.size, "리스너 수가 11개가 아님 — 리스너를 추가·삭제했다면 이 개수와 위 실행 스레드 테스트(리스너별 notification- 스레드 확인)를 함께 갱신: ${listeners.map { it.name }}")
         listeners.forEach {
             val async = AnnotatedElementUtils.findMergedAnnotation(it, Async::class.java)
             assertEquals(V2NotificationAsyncConfig.NOTIFICATION_EXECUTOR, async?.value, "${it.name} 의 @Async executor")
