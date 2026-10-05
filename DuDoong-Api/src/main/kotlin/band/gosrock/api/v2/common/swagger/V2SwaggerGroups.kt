@@ -45,7 +45,8 @@ class V2SwaggerGroups {
      */
     private fun sortPaths(paths: Paths): List<String> {
         fun key(item: PathItem, tag: String? = null) =
-            item.readOperations().filter { tag == null || tag in it.tags.orEmpty() }.minOfOrNull { ScreenKey.of(it.summary) } ?: ScreenKey.NONE
+            item.readOperations().filter { tag == null || tag in it.tags.orEmpty() }
+                .minOfOrNull { ScreenKey.of(it.summary, tag?.let { t -> V2ApiTags.PREFIX_ORDER[t] }.orEmpty()) } ?: ScreenKey.NONE
         val globalOrder = compareBy<String> { key(paths.getValue(it)) }.thenBy { it }
         val tags = paths.values.flatMap { it.readOperations() }.flatMap { it.tags.orEmpty() }.distinct()
         val after = paths.keys.associateWith { mutableSetOf<String>() }
@@ -65,16 +66,23 @@ class V2SwaggerGroups {
         return if (sorted.size == paths.size) sorted else paths.keys.sortedWith(globalOrder)
     }
 
-    /** summary 앞 화면 ID `[P-1]`, `[G-7a]` 의 정렬 키: 접두 문자 → 숫자 → 하위 표기. 화면 ID 가 없으면 맨 뒤 */
-    data class ScreenKey(val prefix: String, val number: Int, val suffix: String) : Comparable<ScreenKey> {
-        override fun compareTo(other: ScreenKey): Int = compareValuesBy(this, other, { it.prefix }, { it.number }, { it.suffix })
+    /**
+     * summary 앞 화면 ID `[P-1]`, `[G-7a]` 의 정렬 키: 접두 문자 → 숫자 → 하위 표기. 화면 ID 가 없으면 맨 뒤.
+     * 접두 문자 순서는 [prefixRank] — 태그별 순서([V2ApiTags.PREFIX_ORDER])에 있으면 그 자리, 없으면 그 뒤에 알파벳순
+     */
+    data class ScreenKey(val prefixRank: Int, val number: Int, val suffix: String) : Comparable<ScreenKey> {
+        override fun compareTo(other: ScreenKey): Int = compareValuesBy(this, other, { it.prefixRank }, { it.number }, { it.suffix })
 
         companion object {
             private val SCREEN_ID = Regex("""^\[([A-Z])-(\d+)([a-z]?)]""")
-            val NONE = ScreenKey("\uFFFF", Int.MAX_VALUE, "")
+            val NONE = ScreenKey(Int.MAX_VALUE, Int.MAX_VALUE, "")
 
-            fun of(summary: String?): ScreenKey =
-                summary?.let { SCREEN_ID.find(it) }?.let { ScreenKey(it.groupValues[1], it.groupValues[2].toInt(), it.groupValues[3]) } ?: NONE
+            fun of(summary: String?, prefixOrder: String = ""): ScreenKey =
+                summary?.let { SCREEN_ID.find(it) }?.let {
+                    val prefix = it.groupValues[1].single()
+                    val rank = prefixOrder.indexOf(prefix).let { i -> if (i >= 0) i else prefixOrder.length + prefix.code }
+                    ScreenKey(rank, it.groupValues[2].toInt(), it.groupValues[3])
+                } ?: NONE
         }
     }
 

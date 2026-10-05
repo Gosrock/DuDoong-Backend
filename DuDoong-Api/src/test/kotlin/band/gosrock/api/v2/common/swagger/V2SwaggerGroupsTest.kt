@@ -143,19 +143,26 @@ class V2SwaggerGroupsTest {
         for (group in listOf(V2SwaggerGroups.ALL, V2ApiArea.HOSTING.group, V2ApiArea.USER.group)) {
             ops(group).groupBy { it.tags.single() }.forEach { (tag, tagOps) ->
                 // 문서 순서대로 경로별 가장 앞 화면 ID
-                val pathKeys = tagOps.groupBy { it.path }.map { (path, pathOps) -> path to pathOps.minOf { V2SwaggerGroups.ScreenKey.of(it.summary) } }
+                val pathKeys = tagOps.groupBy { it.path }.map { (path, pathOps) -> path to pathOps.minOf { V2SwaggerGroups.ScreenKey.of(it.summary, V2ApiTags.PREFIX_ORDER[tag].orEmpty()) } }
                 assertEquals(pathKeys.sortedBy { it.second }, pathKeys, "$group / $tag 경로 순서")
             }
         }
         // 예: 공연 탐색은 P-1 → P-2 → P-3 → P-5, 선물·티켓탭은 G-7 → G-7a → G-8 순
         val browse = ops(V2ApiArea.USER.group).filter { it.tags.single() == V2ApiTags.BROWSE }.map { it.summary!!.substringBefore("]") + "]" }
         assertEquals(listOf("[P-1]", "[P-2]", "[P-3]", "[P-5]"), browse)
+        // 태그별 접두 순서 (V2ApiTags.PREFIX_ORDER): 운영은 D → R → F, 티켓은 T-* 다음 O-5
+        fun prefixes(tag: String) = ops(V2ApiArea.HOSTING.group).filter { it.tags.single() == tag }.map { it.summary!![1] }.distinct()
+        assertEquals(listOf('D', 'R', 'F'), prefixes(V2ApiTags.OPERATION_ORDER))
+        assertEquals(listOf('T', 'O'), prefixes(V2ApiTags.TICKET))
     }
 
     @Test
-    fun `화면 ID 정렬 키 - 접두 문자, 숫자, 하위 표기 순, 화면 ID 없으면 맨 뒤`() {
+    fun `화면 ID 정렬 키 - 접두 문자(태그별 순서 지정 가능), 숫자, 하위 표기 순, 화면 ID 없으면 맨 뒤`() {
         val ids = listOf("[G-8] a", "[G-7a] b", "헬스", "[G-10] c", "[G-7] d", "[E-2] e")
         assertEquals(listOf("[E-2] e", "[G-7] d", "[G-7a] b", "[G-8] a", "[G-10] c", "헬스"), ids.sortedBy { V2SwaggerGroups.ScreenKey.of(it) })
+        // 태그별 접두 순서: 목록에 있는 문자가 앞(그 순서), 나머지는 뒤에 알파벳순
+        val operation = listOf("[F-1] a", "[R-2] b", "[D-1] c", "[R-1] d", "[A-1] e")
+        assertEquals(listOf("[D-1] c", "[R-1] d", "[R-2] b", "[F-1] a", "[A-1] e"), operation.sortedBy { V2SwaggerGroups.ScreenKey.of(it, "DRF") })
     }
 
     @Test

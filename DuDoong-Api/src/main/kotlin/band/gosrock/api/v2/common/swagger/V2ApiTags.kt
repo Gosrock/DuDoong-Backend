@@ -51,4 +51,13 @@ object V2ApiTags {
         HOST, EVENT_PREP, TICKET, TICKET_OPTION, OPERATION_ORDER, OPERATION_TICKET, NOTIFICATION, HEALTH,
         BROWSE, ORDER, GIFT, MYPAGE,
     )
+
+    /**
+     * 태그 안 화면 ID 접두 문자 순서 (와이어프레임 순서). 없는 태그·목록에 없는 문자는 알파벳순으로 뒤에 온다.
+     * 예: 운영은 D(대시보드) → R(주문) → F(환불), 티켓은 T(티켓) → O(O-5 옵션 지정)
+     */
+    val PREFIX_ORDER: Map<String, String> = mapOf(
+        OPERATION_ORDER to "DRF",
+        TICKET to "TO",
+    )
 }
