@@ -6,7 +6,7 @@ v1 경로 보호(입장·티켓 상세·주문 티켓 목록·사용자 환불, 
 연쇄 취소(v1 호스트 취소, 운영 취소, 운영 사용자 정지, 운영 공연 삭제) → 선물 만료(DB 로 공연 시각 이동) → 알림 →
 1인 제한(원 구매자 기준) → MySQL 동시성(같은 링크 동시 수락, 수락 ↔ 회수, 수락 ↔ v1 호스트 취소, 생성 ↔ 사용자 취소).
 
-DB 직접 접근(운영자 권한 부여, 공연 시각 이동)은 E2E_DB(기본 dudoong, test_47 과 같은 환경변수) 의 로컬 MySQL(127.0.0.1:13306, docker-compose 개발용 계정)에 한다.
+DB 직접 접근(운영자 권한 부여, 공연 시각 이동)은 conftest 의 e2e_db fixture(환경변수 E2E_DB 등, #737)로 한다.
 재실행해도 충돌하지 않도록 유저 이메일에 실행마다 다른 접미사를 붙인다.
 """
 import os
@@ -28,7 +28,6 @@ START = (datetime.now() + timedelta(days=30)).replace(hour=18, minute=0, second=
 END = START + timedelta(minutes=120)
 PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", "latitude": 37.548369, "longitude": 126.920036}
 SECTIONS = [{"title": "공연 소개", "content": "<p>선물 테스트</p>", "sortOrder": 0}]
-DB_NAME = os.environ.get("E2E_DB", "dudoong")
 RACE_ROUNDS = int(os.environ.get("GIFT_RACE_ROUNDS", "6"))
 PEOPLE = ["master", "manager", "guest", "sender", "receiver", "other", "admin", "racer1", "racer2", "racer3", "racer4", "racer5", "limit"] + \
     [f"buyer{i}" for i in range(1, 10)] + [f"rb{i}" for i in range(RACE_ROUNDS * 9)]
@@ -48,13 +47,18 @@ def s():
     return GiftState()
 
 
+# conftest e2e_db fixture 를 이 모듈의 헬퍼(_sql, _RowLock 등)가 쓰도록 묶는다 (#737)
+DB = None
+
+
+@pytest.fixture(autouse=True, scope="module")
+def _bind_db(e2e_db):
+    global DB
+    DB = e2e_db
+
+
 def _sql(sql):
-    result = subprocess.run(
-        ["mysql", "-h", "127.0.0.1", "-P", "13306", "-u", "dudoong", "-pdudoong", DB_NAME, "-N", "-e", sql],
-        capture_output=True, text=True,
-    )
-    assert result.returncode == 0, result.stderr
-    return result.stdout.strip()
+    return DB.query(sql)
 
 
 def _h(s, who):
@@ -554,8 +558,6 @@ def test_14_new_approved_bar(base_url, s):
 # performance_schema 조회는 root(docker-compose 개발용, E2E_DB_ROOT_PASSWORD) 권한이 필요하다
 
 
-# 기본값은 docker-compose.yml 의 로컬 개발용 root 비밀번호 (운영 값 아님). performance_schema 를 못 읽으면 결정적 경합 테스트는 skip
-ROOT_PW = os.environ.get("E2E_DB_ROOT_PASSWORD", "dudoong")
 SEQ = iter(range(10_000))
 
 
@@ -563,28 +565,16 @@ def _rb(seq):
     return f"rb{next(seq)}"
 
 
-def _perf_schema_available():
-    result = subprocess.run(
-        ["mysql", "-h", "127.0.0.1", "-P", "13306", "-uroot", f"-p{ROOT_PW}", "-N", "-e", "SELECT COUNT(*) FROM performance_schema.data_lock_waits"],
-        capture_output=True, text=True,
-    )
-    return result.returncode == 0
-
-
-needs_lock_inspection = pytest.mark.skipif(
-    not _perf_schema_available(), reason="performance_schema 를 읽을 수 없음 (E2E_DB_ROOT_PASSWORD 확인) — 결정적 경합 테스트 skip",
-)
+# performance_schema 를 root 로 못 읽으면 결정적 경합 테스트는 skip (conftest e2e_db_root, E2E_DB_ROOT_PASSWORD)
+needs_lock_inspection = pytest.mark.usefixtures("e2e_db_root")
 
 
 def _lock_waits():
-    result = subprocess.run(
-        ["mysql", "-h", "127.0.0.1", "-P", "13306", "-uroot", f"-p{ROOT_PW}", "-N", "-e",
-         "SELECT COUNT(*) FROM performance_schema.data_lock_waits w JOIN performance_schema.data_locks l "
-         f"ON l.ENGINE_LOCK_ID = w.REQUESTING_ENGINE_LOCK_ID WHERE l.OBJECT_SCHEMA = '{DB_NAME}'"],
-        capture_output=True, text=True,
-    )
-    assert result.returncode == 0, result.stderr
-    return int(result.stdout.strip())
+    return int(DB.query(
+        "SELECT COUNT(*) FROM performance_schema.data_lock_waits w JOIN performance_schema.data_locks l "
+        f"ON l.ENGINE_LOCK_ID = w.REQUESTING_ENGINE_LOCK_ID WHERE l.OBJECT_SCHEMA = '{DB.name}'",
+        root=True, database=False,
+    ))
 
 
 class _RowLock:
@@ -592,7 +582,7 @@ class _RowLock:
 
     def __init__(self, lock_sql):
         self.p = subprocess.Popen(
-            ["mysql", "-h", "127.0.0.1", "-P", "13306", "-u", "dudoong", "-pdudoong", "--unbuffered", "-N", DB_NAME],
+            DB.command("--unbuffered", "-N"), env=DB.env(),
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
         )
         self.p.stdin.write(f"BEGIN;\n{lock_sql};\nSELECT 'LOCKED';\n")

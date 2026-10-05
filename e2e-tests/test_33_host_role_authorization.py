@@ -7,7 +7,6 @@ HostRole AOP 호스트 권한 E2E 테스트.
 NOTE: DB에서 OID 기반으로 user_id를 직접 조회합니다 (me API userId 불일치 방지).
 """
 import os
-import subprocess
 import pytest
 import requests
 from datetime import datetime, timedelta
@@ -19,23 +18,8 @@ def _future_date_str(days_ahead=30):
     return future.strftime("%Y.%m.%d %H:%M")
 
 
-def mysql_query(sql):
-    """MySQL 쿼리 실행 후 stdout 반환"""
-    result = subprocess.run(
-        ["mysql", "-h", "127.0.0.1", "-P", "13306", "-u", "dudoong", "-pdudoong",
-         "dudoong", "-N", "-e", sql],
-        capture_output=True, text=True
-    )
-    return result.stdout.strip()
 
 
-def mysql_exec(sql):
-    """MySQL 실행 (결과 불필요)"""
-    subprocess.run(
-        ["mysql", "-h", "127.0.0.1", "-P", "13306", "-u", "dudoong", "-pdudoong",
-         "dudoong", "-e", sql],
-        capture_output=True, text=True
-    )
 
 
 def login_user(base_url, email, name):
@@ -155,14 +139,14 @@ class TestMasterAccess:
 class TestSuperAdminBypass:
     """SUPER_ADMIN은 호스트 멤버가 아니어도 모든 접근 가능"""
 
-    def test_super_admin_can_access_any_host(self, api_base, user_b, host_and_event):
+    def test_super_admin_can_access_any_host(self, api_base, user_b, host_and_event, e2e_db):
         """SUPER_ADMIN으로 승격된 유저는 아무 호스트에도 접근 가능"""
         user_id = user_b["user_id"]
         if not user_id:
             pytest.skip("유저 ID를 가져올 수 없음")
 
         # DB에서 SUPER_ADMIN으로 승격
-        mysql_exec(f"UPDATE tbl_user SET account_role='SUPER_ADMIN' WHERE user_id={user_id}")
+        e2e_db.query(f"UPDATE tbl_user SET account_role='SUPER_ADMIN' WHERE user_id={user_id}")
 
         try:
             # 호스트 멤버가 아닌데 접근 가능해야 함
@@ -176,4 +160,4 @@ class TestSuperAdminBypass:
             assert_status(resp, 200)
         finally:
             # DB 원복: USER로 되돌리기
-            mysql_exec(f"UPDATE tbl_user SET account_role='USER' WHERE user_id={user_id}")
+            e2e_db.query(f"UPDATE tbl_user SET account_role='USER' WHERE user_id={user_id}")

@@ -7,12 +7,10 @@ P-5 잔여·매진(승인 대기 차감, 주문 재고 검사와 같은 기준) 
 승인형 1인 제한 동시 주문(같은 사용자 2장 + 3장 > 4 → 1건만) → 호스트 취소·환불 완료 사용자 알림(v1·v2 경로).
 
 재실행해도 충돌하지 않도록 유저 이메일에 실행마다 다른 접미사를 붙인다.
-DB 직접 접근은 운영 어드민 경로 검증(test_08)에서 사용자 역할을 ADMIN 으로 바꿀 때만 한다 — 대상 DB 이름은 환경변수 E2E_DB (기본 dudoong).
+DB 직접 접근은 운영 어드민 경로 검증(test_08)에서 사용자 역할을 ADMIN 으로 바꿀 때만 한다 — 접속 정보는 conftest 의 e2e_db fixture(환경변수 E2E_DB 등, #737).
 """
 import io
-import os
 import re
-import subprocess
 import time
 import uuid
 import zipfile
@@ -32,7 +30,6 @@ END = START + timedelta(minutes=120)
 PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", "latitude": 37.548369, "longitude": 126.920036}
 ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-123-456789"}
 BUYERS = ["b1", "b2", "b3", "late", "evil", "lim1", "lim2", "lim3", "cancel1", "cancel2", "free1", "adm1", "adm2", "admin", "fcfs_v2", "fcfs_v1", "fcfs_self", "wrong"]
-E2E_DB = os.environ.get("E2E_DB", "dudoong")
 
 
 class FollowupState:
@@ -355,19 +352,14 @@ def test_09_fcfs_host_cancel_and_wrong_refund_complete(base_url, s):
     _later_reference(base_url, s, "wrong")
     assert not _notifications(base_url, s, "wrong", "ORDER_REFUND_COMPLETED")
 
-def _make_admin(email):
-    """운영 어드민 API 는 DB 의 account_role 을 매 요청 읽는다 (JwtTokenFilter). test_33·34 와 같은 mysql CLI, DB 이름만 환경변수"""
-    result = subprocess.run(
-        ["mysql", "-h", "127.0.0.1", "-P", "13306", "-u", "dudoong", "-pdudoong", E2E_DB, "-e",
-         f"UPDATE tbl_user SET account_role='ADMIN' WHERE email='{email}'"],
-        capture_output=True, text=True,
-    )
-    assert result.returncode == 0, result.stderr
+def _make_admin(e2e_db, email):
+    """운영 어드민 API 는 DB 의 account_role 을 매 요청 읽는다 (JwtTokenFilter)"""
+    e2e_db.query(f"UPDATE tbl_user SET account_role='ADMIN' WHERE email='{email}'")
 
 
-def test_08_admin_paths_notifications(base_url, s):
+def test_08_admin_paths_notifications(base_url, s, e2e_db):
     """운영 어드민(DuDoong-Admin 모듈, Api 서버의 /internal-api) 취소·환불 확인·환불 상태 변경도 같은 도메인 이벤트 → 같은 알림"""
-    _make_admin(_email("admin"))
+    _make_admin(e2e_db, _email("admin"))
     internal = base_url.replace("/api", "/internal-api")
     o1 = _ok_order(base_url, s, "adm1", s.b, 1)
     assert_status(requests.post(_ev(base_url, s, f"/orders/{o1}/approve"), headers=_h(s, "manager")), 200)

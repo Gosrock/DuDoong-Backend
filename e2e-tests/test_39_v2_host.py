@@ -7,7 +7,6 @@ v2 호스트 / 멤버 API E2E 테스트 (#704).
 
 재실행해도 충돌하지 않도록 유저 이메일에 실행마다 다른 접미사를 붙인다.
 """
-import subprocess
 import uuid
 from datetime import datetime, timedelta
 
@@ -70,13 +69,6 @@ def _add_members(base_url, s, who, members):
     )
 
 
-def _mysql_exec(sql):
-    """로컬 MySQL(docker, 기존 E2E 와 같은 접속 정보)에 직접 실행"""
-    result = subprocess.run(
-        ["mysql", "-h", "127.0.0.1", "-P", "13306", "-u", "dudoong", "-pdudoong", "dudoong", "-e", sql],
-        capture_output=True, text=True,
-    )
-    assert result.returncode == 0, result.stderr
 
 
 def _future(days):
@@ -194,11 +186,11 @@ def test_08_add_members_errors_rollback(base_url, s):
     assert resp.json()["code"] == "HOST_400_10"
 
 
-def test_08b_add_member_ambiguous_email(base_url, s):
+def test_08b_add_member_ambiguous_email(base_url, s, e2e_db):
     """같은 이메일의 정상 계정이 2개 이상이면 누구인지 특정할 수 없어 400 (HOST_400_18)"""
     email = f"v2host-dup-{RUN}@dudoong.com"
     for i in range(2):
-        _mysql_exec(
+        e2e_db.query(
             "INSERT INTO tbl_user (created_at, updated_at, account_role, account_state, last_login_at, "
             "marketing_agree, oid, provider, email, name, receive_mail) VALUES "
             f"(NOW(), NOW(), 'USER', 'NORMAL', NOW(), b'0', 'v2host-dup-{RUN}-{i}', 'KAKAO', '{email}', '중복{i}', b'1')"

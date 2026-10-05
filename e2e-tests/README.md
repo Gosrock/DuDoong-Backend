@@ -86,6 +86,37 @@ pytest test_05_order_flow.py::test_create_order -v -s
 API_BASE_URL=http://staging.dudoong.com/api pytest -v
 ```
 
+### 3-1) DB 직접 접근 · 새 DB 로 실행 (#737)
+
+일부 테스트(test_33/34/37/39/47/48)는 역할 승격·공연 시각 이동·상태 확인을 위해 로컬 MySQL 에 SQL 로 직접 접근한다.
+접속 정보는 `conftest.py` 의 `e2e_db` fixture 하나에서만 받고, 값은 환경변수로 정한다. 기본값은 `docker-compose.yml` 의 로컬 개발용 값이다 (운영 값 금지).
+
+| 환경변수 | 기본값 | 용도 |
+|---|---|---|
+| `E2E_DB` | `dudoong` | 서버가 쓰는 DB 이름 (서버 `spring.datasource.url` 과 같아야 함) |
+| `E2E_DB_USER` / `E2E_DB_PASSWORD` | `dudoong` / `dudoong` | 일반 SQL |
+| `E2E_DB_ROOT_PASSWORD` | `dudoong` | `performance_schema` 조회 (test_48 결정적 경합). 못 읽으면 그 테스트만 skip |
+| `E2E_DB_HOST` / `E2E_DB_PORT` | `127.0.0.1` / `13306` | MySQL 주소 |
+
+- 필요: 호스트에 `mysql` CLI. 비밀번호는 인자가 아니라 `MYSQL_PWD` 환경변수로 넘긴다.
+- **사전 검사**: `e2e_db` 를 처음 쓸 때 서버로 표식 유저를 만들고(로컬 로그인) `E2E_DB` 에서 그 유저를 찾는다. 없으면(서버와 다른 DB) 전체 실행을 바로 멈춘다(exit code 3, `[E2E DB 사전 검사 실패]`).
+  서버 설정을 읽는 API 가 없어서(운영 코드 변경 없음) 데이터로 확인한다. DB 를 쓰지 않는 테스트만 돌리면 검사하지 않는다(스테이징 등).
+- 새 DB 로 전체 실행 예 (스키마 = baseline + migration):
+
+```bash
+# 1) DB 만들기 (docker-compose mysql, root 비밀번호는 로컬 개발용)
+docker exec -i -e MYSQL_PWD=dudoong dudoong-backend-mysql-1 mysql -uroot -e "CREATE DATABASE e2e_mine CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; GRANT ALL ON e2e_mine.* TO 'dudoong'@'%';"
+for f in ../db/schema/baseline-*.sql $(ls ../db/migration/V*.sql | sort); do docker exec -i -e MYSQL_PWD=dudoong dudoong-backend-mysql-1 mysql -uroot e2e_mine < "$f"; done
+# 2) 서버를 그 DB 로 (Java 21)
+java -jar ../DuDoong-Api/build/libs/DuDoong-Api-0.0.1-SNAPSHOT.jar --spring.profiles.active=local --server.port=18080 \
+  --spring.datasource.url="jdbc:mysql://127.0.0.1:13306/e2e_mine?useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true&tinyInt1isBit=false"
+# 3) 같은 DB 이름으로 테스트
+E2E_DB=e2e_mine API_BASE_URL=http://127.0.0.1:18080/api pytest -q
+```
+
+- 기존 방식(서버 local 프로필 = DB `dudoong`, 포트 8080)은 환경변수 없이 그대로 `pytest` 하면 된다.
+- 운영 어드민 경로(`/internal-api`)는 같은 Api 서버에서 제공되므로 별도 서버가 필요 없다.
+
 ### 4) 테스트 실행 순서
 
 `conftest.py`의 `auth_token` 픽스처가 최초 1회 로그인을 수행하므로, 테스트는 다음 순서로 실행됩니다:
