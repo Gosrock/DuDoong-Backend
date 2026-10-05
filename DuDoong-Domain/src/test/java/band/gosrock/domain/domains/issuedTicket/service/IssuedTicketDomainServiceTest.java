@@ -199,10 +199,13 @@ public class IssuedTicketDomainServiceTest {
         given(issuedTicketOptionAnswer1.getAdditionalPrice()).willReturn(w3000);
 
         // when
-        issuedTicketDomainService.processingEntranceIssuedTicket(1L, "UUID");
+        issuedTicketDomainService.processingEntranceIssuedTicket(1L, issuedTicket1.getUuid());
 
         // then
         assertEquals(issuedTicket1.getIssuedTicketStatus(), IssuedTicketStatus.ENTRANCE_COMPLETED);
+        // 선물 대기 판정은 티켓 행을 잠근 뒤 잠금 읽기로 (#719 리뷰)
+        verify(ticketGiftGuard).validateNotGiftPendingLocked(issuedTicket1);
+        verify(ticketGiftGuard, never()).validateNotGiftPending(any());
     }
 
     @Test
