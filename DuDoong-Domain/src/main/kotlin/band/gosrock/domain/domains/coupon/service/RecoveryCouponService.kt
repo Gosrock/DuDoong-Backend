@@ -8,7 +8,8 @@ import band.gosrock.domain.domains.coupon.adaptor.IssuedCouponAdaptor
 class RecoveryCouponService(
     private val issuedCouponAdaptor: IssuedCouponAdaptor,
 ) {
-    @RedissonLock(LockName = "쿠폰", identifier = "couponId")
+    /** 쿠폰 회복 (v1 주문 철회 BEFORE_COMMIT·결제 확정 실패 핸들러). 락 키는 발급 쿠폰 id — identifier 가 실제 파라미터 이름과 달라 늘 BadLockIdentifier(AOP_500_1)였다 (#746) */
+    @RedissonLock(LockName = "쿠폰", identifier = "issuedCouponId")
     fun execute(userId: Long, issuedCouponId: Long): Long {
         val coupon = issuedCouponAdaptor.query(issuedCouponId)
         coupon.validMine(userId)
