@@ -1,5 +1,6 @@
 package band.gosrock.api.v2.host
 
+import band.gosrock.api.v2.support.V2ImageKeys
 import band.gosrock.api.supports.ApiIntegrateSpringBootTest
 import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.event.domain.EventPlace
@@ -393,18 +394,20 @@ class V2HostControllerTest {
         fun `매니저가 부분 수정하면 null 필드는 유지되고 빈 문자열은 비운다`() {
             val team = Team()
             val prefix = presignedUrlService.hostImageKeyPrefix(team.hostId)
+            val profileKey = V2ImageKeys.issued(prefix)
+            val coverKey = V2ImageKeys.issued(prefix, "jpeg")
 
             mockMvc.patch("/api/v2/hosts/${team.hostId}") {
                 with(auth(team.manager))
                 contentType = MediaType.APPLICATION_JSON
-                content = json(mapOf("name" to "새이름", "profileImageKey" to "${prefix}profile.png", "coverImageKey" to "${prefix}cover.png"))
+                content = json(mapOf("name" to "새이름", "profileImageKey" to profileKey, "coverImageKey" to coverKey))
             }.andExpect {
                 status { isOk() }
                 jsonPath("$.data.name") { value("새이름") }
                 jsonPath("$.data.introduce") { value("소개") }
                 jsonPath("$.data.contacts.length()") { value(4) }
-                jsonPath("$.data.profileImageUrl") { value(org.hamcrest.Matchers.endsWith("${prefix}profile.png")) }
-                jsonPath("$.data.coverImageUrl") { value(org.hamcrest.Matchers.endsWith("${prefix}cover.png")) }
+                jsonPath("$.data.profileImageUrl") { value(org.hamcrest.Matchers.endsWith(profileKey)) }
+                jsonPath("$.data.coverImageUrl") { value(org.hamcrest.Matchers.endsWith(coverKey)) }
             }
 
             mockMvc.patch("/api/v2/hosts/${team.hostId}") {
@@ -416,7 +419,7 @@ class V2HostControllerTest {
                 jsonPath("$.data.name") { value("새이름") }
                 jsonPath("$.data.introduce") { value(null as Any?) }
                 jsonPath("$.data.coverImageUrl") { value(null as Any?) }
-                jsonPath("$.data.profileImageUrl") { value(org.hamcrest.Matchers.endsWith("${prefix}profile.png")) }
+                jsonPath("$.data.profileImageUrl") { value(org.hamcrest.Matchers.endsWith(profileKey)) }
             }
 
             // 실제 저장 확인
@@ -427,14 +430,10 @@ class V2HostControllerTest {
         }
 
         @Test
-        fun `이미지 key 는 이 호스트 prefix 만 허용하고 외부 URL, 다른 호스트 key, 경로 이동은 400`() {
+        fun `이미지 key 는 이 호스트에 발급한 형식(prefix + UUID + jpeg·jpg·png)만 허용 — 외부·카카오 URL, 다른 호스트 key, 경로 조작(인코딩 포함), 다른 확장자·쿼리는 400`() {
             val team = Team()
             val otherHostId = createHost(newUser())
-            listOf(
-                "https://evil.example.com/a.png",
-                "${presignedUrlService.hostImageKeyPrefix(otherHostId)}a.png",
-                "${presignedUrlService.hostImageKeyPrefix(team.hostId)}../$otherHostId/a.png",
-            ).forEach { key ->
+            V2ImageKeys.rejected(presignedUrlService.hostImageKeyPrefix(team.hostId), presignedUrlService.hostImageKeyPrefix(otherHostId)).forEach { key ->
                 listOf("profileImageKey", "coverImageKey").forEach { field ->
                     mockMvc.patch("/api/v2/hosts/${team.hostId}") {
                         with(auth(team.master))

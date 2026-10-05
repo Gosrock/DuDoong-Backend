@@ -92,7 +92,7 @@ class V2EventBrowseControllerTest : V2TicketApiTestSupport() {
         }.andExpect { status { isOk() } }
     }
 
-    private fun posterKey(eventId: Long) = "${presignedUrlService.eventImageKeyPrefix(eventId)}poster.png"
+    private fun posterKey(eventId: Long) = "${presignedUrlService.eventImageKeyPrefix(eventId)}$POSTER_FILE"
 
     private val placeBody = mapOf("name" to "롤링홀", "address" to "서울 마포구 어울마당로 35", "latitude" to 37.548369, "longitude" to 126.920036)
 
@@ -198,7 +198,7 @@ class V2EventBrowseControllerTest : V2TicketApiTestSupport() {
                 assertEquals("홈$tok-a", homeItem.at("/name").asText())
                 assertEquals("홈$tok", homeItem.at("/hostName").asText())
                 assertEquals("롤링홀", homeItem.at("/placeName").asText())
-                assertTrue(homeItem.at("/posterImageUrl").asText().endsWith("poster.png"))
+                assertTrue(homeItem.at("/posterImageUrl").asText().endsWith(POSTER_FILE))
             }
         }
     }
@@ -240,7 +240,7 @@ class V2EventBrowseControllerTest : V2TicketApiTestSupport() {
             assertEquals(now.plusDays(2).f(), item.at("/startAt").asText())
             assertEquals(now.plusDays(2).plusMinutes(120).f(), item.at("/endAt").asText())
             assertEquals("롤링홀", item.at("/placeName").asText())
-            assertTrue(item.at("/posterImageUrl").asText().endsWith("poster.png"))
+            assertTrue(item.at("/posterImageUrl").asText().endsWith(POSTER_FILE))
             assertEquals(listOf("EVENT_TYPE:정기공연", "AREA:홍대"), item.at("/tags").map { "${it.at("/category").asText()}:${it.at("/name").asText()}" })
             assertEquals(listOf(정기, 홍대), item.at("/tags").map { it.at("/tagId").asLong() })
             val band = list(w.tok).at("/content").first { it.at("/eventId").asLong() == w.bandSoon4 }
@@ -395,7 +395,7 @@ class V2EventBrowseControllerTest : V2TicketApiTestSupport() {
             val body = anonymousGet("/api/v2/events/$id").andExpect { status { isOk() } }.data()
             assertEquals(id, body.at("/eventId").asLong())
             assertEquals("상세$tok", body.at("/name").asText())
-            assertTrue(body.at("/posterImageUrl").asText().endsWith("poster.png"))
+            assertTrue(body.at("/posterImageUrl").asText().endsWith(POSTER_FILE))
             assertEquals(now.plusDays(1).f(), body.at("/startAt").asText())
             assertEquals(now.plusDays(1).plusMinutes(120).f(), body.at("/endAt").asText())
             assertEquals(120, body.at("/runTime").asInt())
@@ -667,5 +667,10 @@ class V2EventBrowseControllerTest : V2TicketApiTestSupport() {
                 content = json(mapOf("hostId" to team.hostId, "name" to "x"))
             }.andExpect { status { isUnauthorized() } }
         }
+    }
+
+    companion object {
+        /** 발급 형식(UUID + 확장자) 그대로의 포스터 파일명 */
+        private const val POSTER_FILE = "0f0f0f0f-0000-4000-8000-000000000001.png"
     }
 }

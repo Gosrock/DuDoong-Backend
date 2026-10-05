@@ -51,11 +51,13 @@ import org.hibernate.annotations.Where
 /**
  * check_in_token unique: 셀프 체크인 QR 토큰 (v2, #712, V004)
  * (status, start_at): 사용자 앱 홈·공연 리스트 (v2, #716, V006)
+ * (host_id, status): 마이페이지 관심 호스트의 호스트별 공개 공연·상태 필터 (v2, #729, V009)
  */
 @Table(
     indexes = [
         Index(name = "uk_event_check_in_token", columnList = "check_in_token", unique = true),
         Index(name = "idx_event_status_start_at", columnList = "status, start_at"),
+        Index(name = "idx_event_host_id_status", columnList = "host_id, status"),
     ],
 )
 @Where(clause = "status != 'DELETED'")

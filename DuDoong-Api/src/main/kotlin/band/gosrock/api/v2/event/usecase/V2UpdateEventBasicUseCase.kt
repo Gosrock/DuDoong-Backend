@@ -50,10 +50,10 @@ class V2UpdateEventBasicUseCase(
         return readEventManageUseCase.toResponse(userId, eventRepository.save(event))
     }
 
-    /** 빈 문자열(포스터 제거)이거나, E-10 이 이 공연에 발급한 key 여야 한다. 외부 URL / 다른 공연 key 거부 */
+    /** 빈 문자열(포스터 제거)이거나, E-10 이 이 공연에 발급한 형식 그대로의 key(prefix + UUID + jpeg/jpg/png)여야 한다. 외부 URL / 다른 공연 key / 경로 조작 거부 */
     private fun validateImageKey(eventId: Long, key: String?) {
         if (key == null || key.isEmpty()) return
-        if (!key.startsWith(presignedUrlService.eventImageKeyPrefix(eventId)) || key.contains("..")) {
+        if (!presignedUrlService.isEventImageKey(eventId, key)) {
             throw InvalidEventImageKeyException.EXCEPTION
         }
     }
