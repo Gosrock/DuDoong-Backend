@@ -160,12 +160,12 @@ def test_03_order_excel_option_columns(base_url, s):
     assert rows[0] == ORDER_BASE + ["뒷풀이", "메모"]
     assert len(rows) - 1 == 4, "주문 4건 = 4행 (라인 수와 무관)"
     by_no = {r[0]: r + [""] * (len(rows[0]) - len(r)) for r in rows[1:]}
-    assert by_no[s.orders["all"]["orderNo"]][11:] == ["예", "일괄"]
+    assert by_no[s.orders["all"]["orderNo"]][len(ORDER_BASE):] == ["예", "일괄"]
     # 응답 안의 쉼표와 헷갈리지 않게 응답끼리는 줄바꿈
-    assert by_no[s.orders["per"]["orderNo"]][11:] == ["예 ×2\n아니요 ×1", "'=1+1 ×2\n김, 이 ×1"]
+    assert by_no[s.orders["per"]["orderNo"]][len(ORDER_BASE):] == ["예 ×2\n아니요 ×1", "'=1+1 ×2\n김, 이 ×1"]
     # 라인 1개도 수식 방어, 응답 안의 줄바꿈은 공백
-    assert by_no[s.orders["formula"]["orderNo"]][11:] == ["아니요", "'@SUM(1) 둘째줄"]
-    assert by_no[s.orders["plain"]["orderNo"]][11:] == ["", ""]
+    assert by_no[s.orders["formula"]["orderNo"]][len(ORDER_BASE):] == ["아니요", "'@SUM(1) 둘째줄"]
+    assert by_no[s.orders["plain"]["orderNo"]][len(ORDER_BASE):] == ["", ""]
 
 
 def test_04_same_header_rule_as_issued_ticket_excel(base_url, s):
