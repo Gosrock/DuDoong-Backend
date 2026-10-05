@@ -16,6 +16,7 @@ import org.mockito.ArgumentMatchers.anyList
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
+import org.mockito.Mockito.never
 import org.mockito.Mockito.timeout
 import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
@@ -114,6 +115,18 @@ class V2NotificationHandlerThreadTest : V2OperationTestSupport() {
         verify(notificationDomainService, timeout(10_000)).markOrderApprovedRead(buyer.id!!, orderUuid)
         val thread = threads.getValue("markRead")
         assertTrue(thread.startsWith("notification-") && thread != requestThread, "읽음 처리가 조회 스레드에서 실행됨: $thread")
+    }
+
+    @Test
+    fun `T-2 - 안 읽은 승인 알림이 없으면 읽음 처리(UPDATE)를 하지 않는다 (#719 재리뷰)`() {
+        given(notificationDomainService.hasUnreadOrderApproved(anyLong(), anyString())).willReturn(false)
+        val shop = Shop()
+        val buyer = newBuyer()
+        val orderUuid = shop.approved(buyer)
+        v2Get(buyer, "/me/tickets/${shop.ticketUuids(orderUuid)[0]}").andExpect { status { isOk() } }
+        verify(notificationDomainService, timeout(10_000)).hasUnreadOrderApproved(buyer.id!!, orderUuid)
+        Thread.sleep(500)
+        verify(notificationDomainService, never()).markOrderApprovedRead(anyLong(), anyString())
     }
 
     /** 실행 경로를 만들지 않은 핸들러(사용자 취소·환불 요청 등)까지 포함해, 리스너 메서드 전부가 전용 executor 를 지정했는지 본다 */

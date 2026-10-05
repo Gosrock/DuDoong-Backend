@@ -16,5 +16,9 @@ class V2GiftNameMaskTest {
         assertEquals("*", V2GiftUseCase.maskName("김"))
         assertEquals("남**희", V2GiftUseCase.maskName("남궁민희"))
         assertEquals("d*****g", V2GiftUseCase.maskName("dudoong"))
+        // 코드 포인트 단위: 보조 문자(이모지)를 반으로 자르지 않는다
+        assertEquals("😀*수", V2GiftUseCase.maskName("😀철수"))
+        assertEquals("김*😀", V2GiftUseCase.maskName("김수😀"))
+        assertEquals("😀*", V2GiftUseCase.maskName("😀😀"))
     }
 }

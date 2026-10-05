@@ -926,9 +926,14 @@ class V2TicketGiftControllerTest : V2GiftTestSupport() {
             val (orderUuid, uuids) = approvedOrder(shop, sender)
             fun refundable() = mockMvc.get("/api/v1/orders/$orderUuid") { with(auth(sender)) }
                 .andExpect { status { isOk() } }.data().at("/refundInfo/availAble").asBoolean()
+            fun hostRefundable() = mockMvc.get("/api/v1/events/${shop.eventId}/orders/$orderUuid") { with(auth(shop.team.master)) }
+                .andExpect { status { isOk() } }.data().at("/refundInfo/availAble").asBoolean()
             assertTrue(refundable())
             val giftId = giftOk(sender, uuids[0]).at("/giftId").asLong()
             assertFalse(refundable())
+            // v1 사용자 주문 목록·최근 주문도 같은 기준, 호스트 주문 상세는 선물 반영 없음
+            assertFalse(mockMvc.get("/api/v1/orders/recent") { with(auth(sender)) }.andExpect { status { isOk() } }.data().at("/refundInfo/availAble").asBoolean())
+            assertTrue(hostRefundable(), "호스트 상세는 사용자 환불 가능 표시에 선물을 반영하지 않는다")
             cancelGift(sender, giftId).andExpect { status { isOk() } }
             assertTrue(refundable())
             giveAndAccept(sender, newBuyer(), uuids[0])
