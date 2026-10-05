@@ -69,8 +69,6 @@ def _add_members(base_url, s, who, members):
     )
 
 
-
-
 def _future(days):
     return (datetime.now() + timedelta(days=days)).strftime("%Y.%m.%d %H:%M")
 

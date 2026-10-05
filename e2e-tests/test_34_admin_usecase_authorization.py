@@ -12,10 +12,6 @@ import requests
 from conftest import assert_status, get_data
 
 
-
-
-
-
 @pytest.fixture(scope="module")
 def api_base():
     return os.environ.get("API_BASE_URL", "http://localhost:8080/api")
@@ -27,8 +23,8 @@ def admin_base(api_base):
 
 
 @pytest.fixture(scope="module")
-def test_user(api_base):
-    """일반 로그인으로 토큰 획득 + DB에서 user_id를 이메일 기반으로 직접 조회"""
+def test_user(api_base, e2e_db):
+    """일반 로그인으로 토큰 획득 + JWT sub 의 user_id. 이전 실행이 역할을 남겼을 수 있어 USER 로 초기화한다"""
     email = "admin@dudoong.com"
     url = f"{api_base}/v1/auth/oauth/local/login"
     payload = {
@@ -49,6 +45,7 @@ def test_user(api_base):
     jwt_payload = json.loads(base64.b64decode(payload_part))
     user_id = int(jwt_payload["sub"])
     print(f"[test_user] email={email}, jwt_sub={user_id}")
+    e2e_db.query(f"UPDATE tbl_user SET account_role='USER' WHERE user_id={user_id}")
 
     return {"token": token, "user_id": user_id}
 
@@ -67,28 +64,21 @@ class TestAdminAccess:
 
     def test_admin_can_read_dashboard(self, admin_base, test_user, e2e_db):
         user_id = test_user["user_id"]
-        e2e_db.query(f"UPDATE tbl_user SET account_role='ADMIN' WHERE user_id={user_id}")
-        try:
+        with e2e_db.account_role(user_id, "ADMIN"):
             headers = {"Authorization": f"Bearer {test_user['token']}"}
             resp = requests.get(f"{admin_base}/v1/dashboard", headers=headers)
             assert_status(resp, 200)
-        finally:
-            e2e_db.query(f"UPDATE tbl_user SET account_role='USER' WHERE user_id={user_id}")
 
     def test_admin_can_read_users(self, admin_base, test_user, e2e_db):
         user_id = test_user["user_id"]
-        e2e_db.query(f"UPDATE tbl_user SET account_role='ADMIN' WHERE user_id={user_id}")
-        try:
+        with e2e_db.account_role(user_id, "ADMIN"):
             headers = {"Authorization": f"Bearer {test_user['token']}"}
             resp = requests.get(f"{admin_base}/v1/users", headers=headers)
             assert_status(resp, 200)
-        finally:
-            e2e_db.query(f"UPDATE tbl_user SET account_role='USER' WHERE user_id={user_id}")
 
     def test_admin_cannot_change_user_role(self, admin_base, test_user, e2e_db):
         user_id = test_user["user_id"]
-        e2e_db.query(f"UPDATE tbl_user SET account_role='ADMIN' WHERE user_id={user_id}")
-        try:
+        with e2e_db.account_role(user_id, "ADMIN"):
             headers = {"Authorization": f"Bearer {test_user['token']}"}
             resp = requests.patch(
                 f"{admin_base}/v1/users/{user_id}/role",
@@ -96,8 +86,6 @@ class TestAdminAccess:
                 headers=headers,
             )
             assert resp.status_code == 403, f"ADMIN이 역할 변경 가능. status={resp.status_code}"
-        finally:
-            e2e_db.query(f"UPDATE tbl_user SET account_role='USER' WHERE user_id={user_id}")
 
 
 class TestSuperAdminFullAccess:
@@ -105,8 +93,7 @@ class TestSuperAdminFullAccess:
 
     def test_super_admin_full_access(self, admin_base, test_user, e2e_db):
         user_id = test_user["user_id"]
-        e2e_db.query(f"UPDATE tbl_user SET account_role='SUPER_ADMIN' WHERE user_id={user_id}")
-        try:
+        with e2e_db.account_role(user_id, "SUPER_ADMIN"):
             headers = {"Authorization": f"Bearer {test_user['token']}"}
 
             # 읽기
@@ -116,5 +103,3 @@ class TestSuperAdminFullAccess:
             # 유저 목록
             resp = requests.get(f"{admin_base}/v1/users", headers=headers)
             assert_status(resp, 200)
-        finally:
-            e2e_db.query(f"UPDATE tbl_user SET account_role='USER' WHERE user_id={user_id}")

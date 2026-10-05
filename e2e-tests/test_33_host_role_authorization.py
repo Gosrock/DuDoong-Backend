@@ -18,10 +18,6 @@ def _future_date_str(days_ahead=30):
     return future.strftime("%Y.%m.%d %H:%M")
 
 
-
-
-
-
 def login_user(base_url, email, name):
     """로컬 로그인하여 (accessToken, jwt_user_id) 반환"""
     import base64, json as _json
@@ -57,9 +53,10 @@ def user_a(api_base):
 
 
 @pytest.fixture(scope="module")
-def user_b(api_base):
-    """외부 유저 (호스트 멤버 아님)"""
+def user_b(api_base, e2e_db):
+    """외부 유저 (호스트 멤버 아님). 이전 실행이 SUPER_ADMIN 을 남겼을 수 있어 USER 로 초기화한다"""
     token, user_id = login_user(api_base, "outsider-v2@dudoong.com", "외부유저")
+    e2e_db.query(f"UPDATE tbl_user SET account_role='USER' WHERE user_id={user_id}")
     return {"token": token, "user_id": user_id, "headers": {"Authorization": f"Bearer {token}"}}
 
 
@@ -145,10 +142,8 @@ class TestSuperAdminBypass:
         if not user_id:
             pytest.skip("유저 ID를 가져올 수 없음")
 
-        # DB에서 SUPER_ADMIN으로 승격
-        e2e_db.query(f"UPDATE tbl_user SET account_role='SUPER_ADMIN' WHERE user_id={user_id}")
-
-        try:
+        # DB에서 SUPER_ADMIN으로 승격 (블록이 끝나면 USER 로 원복)
+        with e2e_db.account_role(user_id, "SUPER_ADMIN"):
             # 호스트 멤버가 아닌데 접근 가능해야 함
             url = f"{api_base}/v1/hosts/{host_and_event['host_id']}/events"
             resp = requests.get(url, headers=user_b["headers"])
@@ -158,6 +153,3 @@ class TestSuperAdminBypass:
             url = f"{api_base}/v1/events/{host_and_event['event_id']}/checklist"
             resp = requests.get(url, headers=user_b["headers"])
             assert_status(resp, 200)
-        finally:
-            # DB 원복: USER로 되돌리기
-            e2e_db.query(f"UPDATE tbl_user SET account_role='USER' WHERE user_id={user_id}")
