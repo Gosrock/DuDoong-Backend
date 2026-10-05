@@ -12,6 +12,7 @@ import band.gosrock.api.v2.order.dto.response.V2MyOrderEventResponse
 import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.event.domain.Event
+import band.gosrock.domain.domains.event.repository.EventRepository
 import band.gosrock.domain.domains.event.service.v2.V2EventDisplayRule
 import band.gosrock.domain.domains.gift.domain.TicketGift
 import band.gosrock.domain.domains.gift.domain.TicketGiftStatus
@@ -33,6 +34,7 @@ class V2GiftUseCase(
     private val giftDomainService: V2TicketGiftDomainService,
     private val issuedTicketRepository: IssuedTicketRepository,
     private val eventAdaptor: EventAdaptor,
+    private val eventRepository: EventRepository,
     private val userAdaptor: UserAdaptor,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -83,9 +85,10 @@ class V2GiftUseCase(
     @Transactional(readOnly = true)
     fun landing(viewerId: Long, token: String): V2GiftLandingResponse {
         val gift = giftDomainService.queryByToken(token)
-        val event = eventAdaptor.findById(gift.eventId)
+        // 삭제된 공연은 조회되지 않는다(@Where) — 운영 삭제로 취소된 선물도 404 가 아니라 CANCELED 화면을 보여 준다
+        val event = eventRepository.findById(gift.eventId).orElse(null)
         val viewState = giftDomainService.viewStateOf(gift, event, viewerId, LocalDateTime.now())
-        val pending = gift.status == TicketGiftStatus.PENDING
+        val pending = gift.status == TicketGiftStatus.PENDING && event != null
         val ticket = if (pending) issuedTicketRepository.findById(gift.issuedTicketId).orElse(null) else null
         return V2GiftLandingResponse(
             status = gift.status,
@@ -94,7 +97,7 @@ class V2GiftUseCase(
             isReceiver = viewState == V2GiftViewState.ALREADY_ACCEPTED && viewerId != ANONYMOUS && gift.receiverUserId == viewerId,
             giftId = gift.id.takeIf { viewerId != ANONYMOUS && gift.senderUserId == viewerId },
             senderName = if (pending) nameOf(gift.senderUserId)?.let(::maskName) else null,
-            event = if (pending) {
+            event = if (pending && event != null) {
                 V2GiftEventResponse(
                     eventId = event.id!!,
                     name = event.eventBasic?.name,

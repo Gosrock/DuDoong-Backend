@@ -292,14 +292,17 @@ class V2TicketGiftDomainService(
         }
     }
 
-    /** G-3 랜딩 상태 (판정 순서: 선물 상태 → 만료 → 본인 링크 → 받기 가능). [viewerId] 0 = 비로그인 */
-    fun viewStateOf(gift: TicketGift, event: Event, viewerId: Long, now: LocalDateTime): V2GiftViewState = when (gift.status) {
+    /**
+     * G-3 랜딩 상태 (판정 순서: 선물 상태 → 만료 → 본인 링크 → 받기 가능). [viewerId] 0 = 비로그인.
+     * [event] null = 삭제된 공연(엔티티 @Where 로 조회되지 않음) — 대기 선물이면 종료로 본다 (정상 흐름에서는 삭제 연쇄로 이미 CANCELED)
+     */
+    fun viewStateOf(gift: TicketGift, event: Event?, viewerId: Long, now: LocalDateTime): V2GiftViewState = when (gift.status) {
         TicketGiftStatus.CANCELED -> V2GiftViewState.CANCELED
         TicketGiftStatus.REJECTED -> V2GiftViewState.REJECTED
         TicketGiftStatus.RETURNED -> V2GiftViewState.RETURNED
         TicketGiftStatus.ACCEPTED -> V2GiftViewState.ALREADY_ACCEPTED
         TicketGiftStatus.PENDING -> when {
-            isEventEnded(event, now) -> V2GiftViewState.EXPIRED
+            event == null || isEventEnded(event, now) -> V2GiftViewState.EXPIRED
             gift.senderUserId == viewerId -> V2GiftViewState.OWN_LINK
             else -> V2GiftViewState.AVAILABLE
         }

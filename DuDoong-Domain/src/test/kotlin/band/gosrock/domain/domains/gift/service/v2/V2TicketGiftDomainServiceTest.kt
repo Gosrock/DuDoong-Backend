@@ -275,4 +275,14 @@ class V2TicketGiftDomainServiceTest {
         assertEquals(TicketGiftCancelReason.ORDER_CANCELED, pending.cancelReason)
         assertEquals(TicketGiftCancelReason.SENDER_WITHDRAWN, alreadyCanceled.cancelReason)
     }
+
+    @Test
+    fun `G-2·G-8 락 전 소유 확인 - 남의 선물·없는 선물은 잠금 키를 읽기 전에 Gift_404_1`() {
+        `when`(ticketGiftRepository.findSenderUserIdById(7L)).thenReturn(1L)
+        `when`(ticketGiftRepository.findOrderUuidById(7L)).thenReturn("order")
+        assertEquals("order", service.orderUuidOfMyGift(1L, 7L))
+        assertEquals("Gift_404_1", code(runCatching { service.orderUuidOfMyGift(2L, 7L) }.exceptionOrNull() as DuDoongCodeException))
+        assertEquals("Gift_404_1", code(runCatching { service.orderUuidOfMyGift(1L, 999L) }.exceptionOrNull() as DuDoongCodeException))
+        verify(ticketGiftRepository, times(1)).findOrderUuidById(7L)
+    }
 }

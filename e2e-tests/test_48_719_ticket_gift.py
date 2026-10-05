@@ -28,7 +28,9 @@ END = START + timedelta(minutes=120)
 PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", "latitude": 37.548369, "longitude": 126.920036}
 SECTIONS = [{"title": "공연 소개", "content": "<p>선물 테스트</p>", "sortOrder": 0}]
 DB_NAME = os.environ.get("E2E_DB", "dudoong")
-PEOPLE = ["master", "manager", "guest", "sender", "receiver", "other", "admin", "racer1", "racer2", "racer3", "racer4", "racer5", "limit"] + [f"buyer{i}" for i in range(1, 10)]
+RACE_ROUNDS = int(os.environ.get("GIFT_RACE_ROUNDS", "6"))
+PEOPLE = ["master", "manager", "guest", "sender", "receiver", "other", "admin", "racer1", "racer2", "racer3", "racer4", "racer5", "limit"] + \
+    [f"buyer{i}" for i in range(1, 10)] + [f"rb{i}" for i in range(RACE_ROUNDS * 6)]
 
 
 class GiftState:
@@ -203,7 +205,9 @@ def test_02_create_landing_accept_uuid_swap(base_url, s):
     assert _code(_gift(base_url, s, "other", uuids[1])) == "IssuedTicket_404_1"
 
     anon = _landing(base_url, s, None, token)
-    assert anon["viewState"] == "AVAILABLE" and anon["isLoggedIn"] is False and anon["senderName"] == "선물sender"
+    # 공개 랜딩: 보낸 사람 이름은 가운데를 가리고(선물sender → 선******r), 옵션 답변은 주지 않는다
+    assert anon["viewState"] == "AVAILABLE" and anon["isLoggedIn"] is False and anon["senderName"] == "선******r"
+    assert "optionAnswers" not in anon["ticket"] and anon["ticket"]["ticketPrice"] == 0
     assert anon["event"]["placeName"] == "롤링홀" and "동생" not in str(anon)
     assert _landing(base_url, s, "sender", token)["viewState"] == "OWN_LINK"
     assert _code(_accept(base_url, s, "sender", token)) == "Gift_400_4"
@@ -383,6 +387,7 @@ def test_07_admin_paths(base_url, s):
     g2 = _gift_ok(base_url, s, "sender", uuids[0])
     assert requests.delete(f"{admin}/v1/events/{s.events['removed']}", headers=_h(s, "admin")).status_code in (200, 204)
     assert _sent(base_url, s, "sender")[g2["giftId"]]["cancelReason"] == "EVENT_REMOVED"
+    assert _landing(base_url, s, None, g2["giftToken"])["viewState"] == "CANCELED"
 
 
 def test_08_expired(base_url, s):
@@ -534,3 +539,151 @@ def test_14_new_approved_bar(base_url, s):
     assert bar("buyer2")["orderUuids"] == [order2]
     assert_status(requests.post(f"{base_url}/v2/me/notifications/read", json={"all": True}, headers=_h(s, "buyer2")), 200)
     assert bar("buyer2")["hasNew"] is False
+
+
+# ===== MySQL 동시성 — 티켓 행 잠금·잠금 읽기·주문 락 (#719 리뷰) =====
+# 회차마다 다른 구매자(rbN): 같은 사용자의 같은 주문은 10초 안 중복 요청으로 앞 주문을 돌려준다
+
+def _rb(seq):
+    return f"rb{next(seq)}"
+
+
+def _pending_count(ticket_uuid):
+    return _sql(f"SELECT COUNT(*) FROM tbl_ticket_gift g JOIN tbl_issued_ticket t ON t.issued_ticket_id = g.issued_ticket_id WHERE t.uuid = '{ticket_uuid}' AND g.status = 'PENDING'")
+
+
+def _ticket_status_by_id(ticket_id):
+    return _sql(f"SELECT issued_ticket_status FROM tbl_issued_ticket WHERE issued_ticket_id = {ticket_id}")
+
+
+def _ticket_id(ticket_uuid):
+    return int(_sql(f"SELECT issued_ticket_id FROM tbl_issued_ticket WHERE uuid = '{ticket_uuid}'"))
+
+
+SEQ = iter(range(10_000))
+
+
+def test_15_race_gift_vs_v1_entrance(base_url, s):
+    """G-1 ↔ v1 입장: 입장된 티켓에 대기 선물이 남는 일이 없다 (둘 중 하나만 성공)"""
+    ev = s.events["race"]
+    for _ in range(RACE_ROUNDS):
+        who = _rb(SEQ)
+        _, uuids = _buy(base_url, s, who, "race", 1)
+        tid = _ticket_id(uuids[0])
+        g, e = _race(
+            lambda: _gift(base_url, s, who, uuids[0]),
+            lambda: requests.patch(f"{base_url}/v1/events/{ev}/issuedTickets/{uuids[0]}", headers=_h(s, "manager")),
+        )
+        status, pending = _ticket_status_by_id(tid), _pending_count(uuids[0])
+        assert not (status == "ENTRANCE_COMPLETED" and pending != "0"), (g.text, e.text)
+        assert [g.status_code, e.status_code].count(200) == 1, (g.text, e.text)
+        if g.status_code == 200:
+            assert _code(e) == "IssuedTicket_400_8" and status == "ENTRANCE_INCOMPLETE" and pending == "1"
+        else:
+            assert _code(g) == "Gift_400_1" and status == "ENTRANCE_COMPLETED"
+
+
+def test_16_race_gift_vs_v2_scan(base_url, s):
+    """G-1 ↔ v2 호스트 스캔: ENTERED 와 대기 선물이 함께 남지 않는다"""
+    ev = s.events["race"]
+    for _ in range(RACE_ROUNDS):
+        who = _rb(SEQ)
+        _, uuids = _buy(base_url, s, who, "race", 1)
+        tid = _ticket_id(uuids[0])
+        g, c = _race(
+            lambda: _gift(base_url, s, who, uuids[0]),
+            lambda: requests.post(_ev(base_url, ev, "/check-ins"), json={"ticketUuid": uuids[0]}, headers=_h(s, "guest")),
+        )
+        result = get_data(c)["result"]
+        status, pending = _ticket_status_by_id(tid), _pending_count(uuids[0])
+        if g.status_code == 200:
+            assert result == "GIFT_PENDING" and status == "ENTRANCE_INCOMPLETE" and pending == "1", (g.text, c.text)
+        else:
+            assert _code(g) == "Gift_400_1" and result == "ENTERED" and status == "ENTRANCE_COMPLETED" and pending == "0", (g.text, c.text)
+
+
+def test_17_race_accept_vs_old_qr_scan(base_url, s):
+    """G-4 ↔ 옛 QR 스캔: 대기 중이었던 옛 QR 은 어느 순서로도 입장되지 않는다 (GIFT_PENDING 또는 OTHER_EVENT)"""
+    ev = s.events["race"]
+    for _ in range(RACE_ROUNDS):
+        who = _rb(SEQ)
+        _, uuids = _buy(base_url, s, who, "race", 1)
+        tid = _ticket_id(uuids[0])
+        g = _gift_ok(base_url, s, who, uuids[0])
+        a, c = _race(
+            lambda: _accept(base_url, s, "racer3", g["giftToken"]),
+            lambda: requests.post(_ev(base_url, ev, "/check-ins"), json={"ticketUuid": uuids[0]}, headers=_h(s, "guest")),
+        )
+        assert a.status_code == 200, a.text
+        assert get_data(c)["result"] in ("GIFT_PENDING", "OTHER_EVENT"), c.text
+        assert _ticket_status_by_id(tid) == "ENTRANCE_INCOMPLETE"
+        assert int(_sql(f"SELECT user_id FROM tbl_issued_ticket WHERE issued_ticket_id = {tid}")) == s.user_ids["racer3"]
+
+
+def test_18_race_accept_vs_sender_suspend(base_url, s):
+    """G-4 ↔ 보낸 사람 운영 정지: (수락됨) 또는 (CANCELED SENDER_WITHDRAWN + 수락 실패) 중 하나"""
+    admin = _admin_base(base_url)
+    for _ in range(RACE_ROUNDS):
+        who = _rb(SEQ)
+        _, uuids = _buy(base_url, s, who, "race", 1)
+        g = _gift_ok(base_url, s, who, uuids[0])
+        a, u = _race(
+            lambda: _accept(base_url, s, "racer4", g["giftToken"]),
+            lambda: requests.patch(f"{admin}/v1/users/{s.user_ids[who]}/status", json={"status": "SUSPENDED"}, headers=_h(s, "admin")),
+        )
+        assert u.status_code in (200, 204), u.text
+        status, reason = _sql(f"SELECT status, IFNULL(cancel_reason, '-') FROM tbl_ticket_gift WHERE ticket_gift_id = {g['giftId']}").split()
+        if a.status_code == 200:
+            assert status == "ACCEPTED", (a.text, status)
+        else:
+            assert _code(a) == "Gift_400_3" and status == "CANCELED" and reason == "SENDER_WITHDRAWN", (a.text, status, reason)
+
+
+def test_19_race_gift_vs_admin_event_delete(base_url, s):
+    """G-1 ↔ 운영 공연 삭제: 삭제된 공연에 대기 선물이 남지 않는다"""
+    admin = _admin_base(base_url)
+    for i in range(min(RACE_ROUNDS, 4)):
+        key = f"del{i}"
+        _new_event(base_url, s, key)
+        who = _rb(SEQ)
+        _, uuids = _buy(base_url, s, who, key, 1)
+        g, d = _race(
+            lambda: _gift(base_url, s, who, uuids[0]),
+            lambda: requests.delete(f"{admin}/v1/events/{s.events[key]}", headers=_h(s, "admin")),
+        )
+        assert d.status_code in (200, 204), d.text
+        assert _sql(f"SELECT status FROM tbl_event WHERE event_id = {s.events[key]}") == "DELETED"
+        assert _pending_count(uuids[0]) == "0", (g.text, d.text)
+        if g.status_code == 200:
+            assert _sql(f"SELECT cancel_reason FROM tbl_ticket_gift WHERE ticket_gift_id = {get_data(g)['giftId']}") == "EVENT_REMOVED"
+        else:
+            # 삭제가 먼저 커밋되면 공연이 조회되지 않아(@Where) Event_404_1, 공연 상태만 바뀐 시점이면 Gift_400_1
+            assert _code(g) in ("Gift_400_1", "Event_404_1"), g.text
+
+
+def test_20_race_reject_vs_other_order_approve(base_url, s):
+    """같은 티켓 상품에서 선물 거절(주문 A 락 → 티켓 행) ↔ 다른 주문 승인(주문 B 락 → 티켓관리 락) 동시: 교착 없이 둘 다 성공"""
+    ev = s.events["bar"]
+
+    def order(who):
+        resp = requests.post(f"{base_url}/v2/orders", json={
+            "eventId": ev, "ticketItemId": s.tickets["bar"], "quantity": 1,
+            "options": {"applyToAll": True, "answers": []}, "perTicketOptions": None,
+            "paymentMethod": "FREE", "depositorName": None, "agreeRefundPolicy": True,
+        }, headers=_h(s, who))
+        assert_status(resp, 200)
+        return get_data(resp)["orderUuid"]
+
+    for _ in range(min(RACE_ROUNDS, 4)):
+        a_who, b_who = _rb(SEQ), _rb(SEQ)
+        a_order = order(a_who)
+        assert_status(requests.post(_ev(base_url, ev, f"/orders/{a_order}/approve"), headers=_h(s, "manager")), 200)
+        ticket_uuid = get_data(requests.get(f"{base_url}/v2/me/orders/{a_order}", headers=_h(s, a_who)))["issuedTickets"][0]["ticketUuid"]
+        g = _gift_ok(base_url, s, a_who, ticket_uuid)
+        b_order = order(b_who)
+        r, p = _race(
+            lambda: requests.post(f"{base_url}/v2/gifts/{g['giftToken']}/reject", headers=_h(s, "racer5")),
+            lambda: requests.post(_ev(base_url, ev, f"/orders/{b_order}/approve"), headers=_h(s, "manager")),
+        )
+        assert r.status_code == 200 and p.status_code == 200, (r.text, p.text)
+        assert _sql(f"SELECT order_status FROM tbl_order WHERE uuid = '{b_order}'") == "APPROVED"

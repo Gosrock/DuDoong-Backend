@@ -734,9 +734,14 @@ class V2TicketGiftControllerTest : V2GiftTestSupport() {
             val shop = Shop()
             val sender = newBuyer()
             val (_, uuids) = approvedOrder(shop, sender)
-            val g = giftOk(sender, uuids[0]).at("/giftId").asLong()
+            val created = giftOk(sender, uuids[0])
+            val g = created.at("/giftId").asLong()
             adminDeleteEvent(admin, shop.eventId).andExpect { status { is2xxSuccessful() } }
             assertEquals(TicketGiftCancelReason.EVENT_REMOVED, giftOf(g).cancelReason)
+            // 삭제된 공연은 조회되지 않지만(@Where) 랜딩은 404 가 아니라 취소된 선물 화면
+            val landed = landing(null, created.at("/giftToken").asText())
+            assertEquals("CANCELED", landed.at("/viewState").asText())
+            assertTrue(landed.at("/event").isNull)
 
             val shop2 = Shop()
             val sender2 = newBuyer()
