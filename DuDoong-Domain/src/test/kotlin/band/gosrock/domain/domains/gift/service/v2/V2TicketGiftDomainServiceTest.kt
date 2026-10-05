@@ -136,6 +136,9 @@ class V2TicketGiftDomainServiceTest {
         assertEquals(V2GiftViewState.AVAILABLE, service.viewStateOf(gift(), event(), viewerId = 2L, now = now))
         assertEquals(V2GiftViewState.AVAILABLE, service.viewStateOf(gift(), event(), viewerId = 0L, now = now))
         assertEquals(V2GiftViewState.AVAILABLE, service.viewStateOf(gift(), event(startAt = now.minusMinutes(30)), viewerId = 2L, now = now), "시작 후 종료 전")
+        // #734: 수락·거절 판정과 같은 기준 — OPEN 이 아니거나(준비중) 삭제된 공연(null)이면 만료
+        assertEquals(V2GiftViewState.EXPIRED, service.viewStateOf(gift(), event(EventStatus.PREPARING), viewerId = 2L, now = now))
+        assertEquals(V2GiftViewState.EXPIRED, service.viewStateOf(gift(), null, viewerId = 2L, now = now))
     }
 
     // ===== 생성 차단 =====
@@ -168,8 +171,8 @@ class V2TicketGiftDomainServiceTest {
         assertEquals("Gift_400_3", code(service.respondBlocker(ticket(1L), gift(TicketGiftStatus.CANCELED), open, 1L, now)))
         assertEquals("Gift_400_6", code(service.respondBlocker(ticket(1L, IssuedTicketStatus.CANCELED), gift(), open, 2L, now)))
         assertEquals("Gift_400_6", code(service.respondBlocker(ticket(3L), gift(), open, 2L, now)), "소유자가 보낸 사람이 아님 (방어)")
-        // #734: 공연 OPEN 만 (비공개 전환은 연쇄로 대기 선물이 취소되지만 판정도 막는다), 삭제된 공연(null)은 만료
-        assertEquals("Gift_400_6", code(service.respondBlocker(ticket(1L), gift(), event(EventStatus.PREPARING), 2L, now)))
+        // #734: 받을 수 있는 공연 = 있고 + OPEN + 종료 전 (랜딩 viewState 와 같은 기준). 비공개(준비중)·삭제(null)는 만료
+        assertEquals("Gift_400_5", code(service.respondBlocker(ticket(1L), gift(), event(EventStatus.PREPARING), 2L, now)))
         assertEquals("Gift_400_5", code(service.respondBlocker(ticket(1L), gift(), null, 2L, now)))
 
         `when`(orderAdaptor.findByOrderUuid(anyString())).thenReturn(order(1L, OrderStatus.CANCELED))

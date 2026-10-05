@@ -23,6 +23,10 @@ class WithDrawUseCase(
         log.info("[WithDrawUseCase][execute] 회원 탈퇴 userId={}", userId)
         refreshTokenAdaptor.deleteByUserId(userId)
         val oid = userDomainService.withDrawUser(userId)
-        oid?.let { kakaoOauthHelper.unlink(it) }
+        if (oid == null) {
+            log.warn("[WithDrawUseCase][execute] 카카오 oid 가 없어 연결 해제를 건너뜀 userId={}", userId)
+            return
+        }
+        kakaoOauthHelper.unlink(oid)
     }
 }

@@ -282,9 +282,7 @@ class V2TicketGiftDomainService(
      * refresh 로, 없으면 잠금 find 로 읽는다 — 어느 쪽이든 최신 커밋 값이다
      */
     private fun lockGift(giftId: Long): TicketGift? {
-        val session = entityManager.unwrap(SessionImplementor::class.java)
-        val persister = session.factory.mappingMetamodel.getEntityDescriptor(TicketGift::class.java)
-        val managed = session.persistenceContextInternal.getEntity(session.generateEntityKey(giftId, persister)) as TicketGift?
+        val managed = managedGiftOrNull(giftId)
         if (managed != null) {
             entityManager.refresh(managed, LockModeType.PESSIMISTIC_WRITE)
             return managed
@@ -292,10 +290,26 @@ class V2TicketGiftDomainService(
         return entityManager.find(TicketGift::class.java, giftId, LockModeType.PESSIMISTIC_WRITE)
     }
 
+    /**
+     * 이 영속성 컨텍스트에 이미 올라온 선물 (SQL 없음). **Hibernate 내부 API**(`SessionImplementor`·`persistenceContextInternal`)는 이 함수에서만 쓴다 —
+     * Hibernate 업그레이드 시 확인 (api/v2 README)
+     */
+    private fun managedGiftOrNull(giftId: Long): TicketGift? {
+        val session = entityManager.unwrap(SessionImplementor::class.java)
+        val persister = session.factory.mappingMetamodel.getEntityDescriptor(TicketGift::class.java)
+        return session.persistenceContextInternal.getEntity(session.generateEntityKey(giftId, persister)) as TicketGift?
+    }
+
     // ===== 판정 (조회 화면과 전이가 같은 함수를 쓴다) =====
 
     /** 공연 종료 = 선물 만료 기준 (8-4 A11) */
     fun isEventEnded(event: Event, now: LocalDateTime): Boolean = V2EventDisplayRule.of(event, now) == V2EventDisplayStatus.PAST
+
+    /**
+     * 대기 선물을 받을 수 있는 공연: 있고(삭제 아님) + OPEN + 종료 전. 아니면 랜딩 EXPIRED·수락/거절 Gift_400_5 — 랜딩([viewStateOf])과 전이([respondBlocker])가 같은 기준 (#734).
+     * 비공개(준비중)·삭제는 연쇄로 대기 선물이 취소되므로 정상 흐름에서는 종료된 공연만 해당한다
+     */
+    fun isReceivableEvent(event: Event?, now: LocalDateTime): Boolean = event != null && event.status == EventStatus.OPEN && !isEventEnded(event, now)
 
     /** G-1 을 막는 사유. 없으면 null. 순서: 받은 티켓·주문 상태·입장·공연 → 대기 중 선물 */
     fun giftBlocker(ticket: IssuedTicket, order: Order, event: Event, latest: TicketGift?, userId: Long, now: LocalDateTime): DuDoongCodeException? {
@@ -308,17 +322,15 @@ class V2TicketGiftDomainService(
     }
 
     /**
-     * G-4·G-5 를 막는 사유. 순서는 랜딩 viewState 와 같다: 대기 아님 → 만료(삭제된 공연 포함) → 본인 링크 → 공연 OPEN 아님·원 주문·티켓 비정상.
-     * [event] 는 공유 잠금으로 읽은 공연 (삭제됐으면 null). 비공개(준비중) 전환은 연쇄로 대기 선물이 취소되지만, 판정도 OPEN 만 받는다 (#734)
+     * G-4·G-5 를 막는 사유. 순서는 랜딩 viewState 와 같다: 대기 아님 → 받을 수 없는 공연([isReceivableEvent] — 종료·삭제·OPEN 아님) → 본인 링크 → 원 주문·티켓 비정상.
+     * [event] 는 공유 잠금으로 읽은 공연 (삭제됐으면 null)
      */
     fun respondBlocker(ticket: IssuedTicket, gift: TicketGift, event: Event?, userId: Long, now: LocalDateTime): DuDoongCodeException? {
         if (!gift.isPending()) return GiftNotPendingException.EXCEPTION
-        if (event == null || isEventEnded(event, now)) return GiftExpiredException.EXCEPTION
+        if (!isReceivableEvent(event, now)) return GiftExpiredException.EXCEPTION
         if (gift.senderUserId == userId) return GiftOwnLinkException.EXCEPTION
         val order = orderAdaptor.findByOrderUuid(gift.orderUuid)
-        if (event.status != EventStatus.OPEN || !order.orderStatus.isCanWithDraw() || !ticket.issuedTicketStatus.isBeforeEntrance() ||
-            ticket.getUserId() != gift.senderUserId
-        ) {
+        if (!order.orderStatus.isCanWithDraw() || !ticket.issuedTicketStatus.isBeforeEntrance() || ticket.getUserId() != gift.senderUserId) {
             return GiftOrderInvalidException.EXCEPTION
         }
         return null
@@ -353,7 +365,7 @@ class V2TicketGiftDomainService(
 
     /**
      * G-3 랜딩 상태 (판정 순서: 선물 상태 → 만료 → 본인 링크 → 받기 가능). [viewerId] 0 = 비로그인.
-     * [event] null = 삭제된 공연(엔티티 @Where 로 조회되지 않음) — 대기 선물이면 종료로 본다 (정상 흐름에서는 삭제 연쇄로 이미 CANCELED)
+     * 만료 = [isReceivableEvent] 아님 (수락·거절 판정과 같은 기준). [event] null = 삭제된 공연(엔티티 @Where 로 조회되지 않음) — 정상 흐름에서는 삭제 연쇄로 이미 CANCELED
      */
     fun viewStateOf(gift: TicketGift, event: Event?, viewerId: Long, now: LocalDateTime): V2GiftViewState = when (gift.status) {
         TicketGiftStatus.CANCELED -> V2GiftViewState.CANCELED
@@ -361,7 +373,7 @@ class V2TicketGiftDomainService(
         TicketGiftStatus.RETURNED -> V2GiftViewState.RETURNED
         TicketGiftStatus.ACCEPTED -> V2GiftViewState.ALREADY_ACCEPTED
         TicketGiftStatus.PENDING -> when {
-            event == null || isEventEnded(event, now) -> V2GiftViewState.EXPIRED
+            !isReceivableEvent(event, now) -> V2GiftViewState.EXPIRED
             gift.senderUserId == viewerId -> V2GiftViewState.OWN_LINK
             else -> V2GiftViewState.AVAILABLE
         }

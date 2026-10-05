@@ -867,6 +867,8 @@ def test_21_race_return_vs_sender_suspend(base_url, s):
         assert u.status_code in (200, 204), u.text
         owner = int(_sql(f"SELECT user_id FROM tbl_issued_ticket WHERE issued_ticket_id = {tid}"))
         gift_status = _sql(f"SELECT status FROM tbl_ticket_gift WHERE ticket_gift_id = {g['giftId']}")
+        # 먼저 보낸 쪽이 먼저 잠금을 받는다 (InnoDB 잠금 대기 순서 — 회차별 단언, #734 리뷰 M-2)
+        assert (r.status_code == 200) == return_first, ("먼저 보낸 쪽이 이겨야 함", return_first, r.text, u.text)
         if r.status_code == 200:
             assert owner == s.user_ids[who] and gift_status == "RETURNED", (r.text, owner, gift_status)
             return "RETURN_WON"
@@ -897,6 +899,7 @@ def test_22_race_accept_vs_admin_event_prepare(base_url, s):
         assert p.status_code in (200, 204), p.text
         assert _sql(f"SELECT status FROM tbl_event WHERE event_id = {s.events[key]}") == "PREPARING"
         status, reason = _sql(f"SELECT status, IFNULL(cancel_reason, '-') FROM tbl_ticket_gift WHERE ticket_gift_id = {g['giftId']}").split()
+        assert (a.status_code == 200) == accept_first, ("먼저 보낸 쪽이 이겨야 함", accept_first, a.text, p.text)
         if a.status_code == 200:
             assert status == "ACCEPTED", (a.text, status)
             return "ACCEPT_WON"
@@ -931,6 +934,7 @@ def test_23_race_return_vs_admin_event_delete(base_url, s):
         assert d.status_code in (200, 204), d.text
         assert _sql(f"SELECT status FROM tbl_event WHERE event_id = {s.events[key]}") == "DELETED"
         owner = int(_sql(f"SELECT user_id FROM tbl_issued_ticket WHERE issued_ticket_id = {tid}"))
+        assert (r.status_code == 200) == return_first, ("먼저 보낸 쪽이 이겨야 함", return_first, r.text, d.text)
         if r.status_code == 200:
             assert owner == s.user_ids[who], (r.text, owner)
             return "RETURN_WON"

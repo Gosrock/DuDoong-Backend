@@ -11,7 +11,9 @@ import band.gosrock.domain.domains.gift.domain.TicketGiftStatus
 import band.gosrock.domain.domains.gift.service.TicketGiftGuard
 import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.user.domain.AccountState
-import com.zaxxer.hikari.HikariDataSource
+import java.lang.reflect.InvocationTargetException
+import java.lang.reflect.Proxy
+import java.sql.Connection
 import javax.sql.DataSource
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -25,7 +27,9 @@ import org.mockito.Mockito.clearInvocations
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.config.BeanPostProcessor
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.test.mock.mockito.MockBean
@@ -33,6 +37,8 @@ import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
+import org.springframework.jdbc.datasource.DelegatingDataSource
+import org.springframework.test.util.ReflectionTestUtils
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
@@ -47,7 +53,7 @@ import org.springframework.transaction.support.TransactionTemplate
  */
 @ApiIntegrateSpringBootTest
 @AutoConfigureMockMvc
-@Import(V2GiftFollowupTest.ConnectionProbe::class)
+@Import(V2GiftFollowupTest.ConnectionProbe::class, V2GiftFollowupTest.CountingDataSourcePostProcessor::class)
 @DisplayName("v2 선물 후속 (#734)")
 class V2GiftFollowupTest : V2GiftTestSupport() {
 
@@ -61,16 +67,61 @@ class V2GiftFollowupTest : V2GiftTestSupport() {
 
     @Autowired private lateinit var transactionManager: PlatformTransactionManager
 
-    /** 탈퇴 커밋 직전(BEFORE_COMMIT, 선물 연쇄와 같은 시점)에 풀에서 사용 중인 커넥션 수를 기록한다 */
-    @TestConfiguration
-    class ConnectionProbe(private val dataSource: DataSource) {
-        @Volatile var activeAtCommit: Int = -1
+    /**
+     * 스레드별로 지금 쥔 커넥션 수와 최댓값을 센다 (#734 리뷰 M-1). 풀 전체 활성 수(Hikari)는 알림 executor 등 다른 스레드의 커넥션이 섞여 흔들린다.
+     * MockMvc 요청·락 트랜잭션·연쇄 후보 읽기(REQUIRES_NEW)는 모두 테스트 스레드에서 돈다
+     */
+    object ThreadConnections {
+        private val counts = ThreadLocal.withInitial { IntArray(2) }
 
-        fun active(): Int = (dataSource as HikariDataSource).hikariPoolMXBean.activeConnections
+        val open: Int get() = counts.get()[0]
+
+        val peak: Int get() = counts.get()[1]
+
+        fun reset() = counts.get().fill(0)
+
+        fun opened() = counts.get().let { it[0]++; it[1] = maxOf(it[1], it[0]) }
+
+        fun closed() = counts.get().let { it[0]-- }
+    }
+
+    /** DataSource 를 감싸 [ThreadConnections] 를 센다 (이 테스트 클래스의 컨텍스트에만 적용) */
+    @TestConfiguration
+    class CountingDataSourcePostProcessor : BeanPostProcessor {
+        override fun postProcessAfterInitialization(bean: Any, beanName: String): Any =
+            if (bean is DataSource && bean !is CountingDataSource) CountingDataSource(bean) else bean
+    }
+
+    class CountingDataSource(target: DataSource) : DelegatingDataSource(target) {
+        override fun getConnection(): Connection = track(super.getConnection())
+
+        override fun getConnection(username: String, password: String): Connection = track(super.getConnection(username, password))
+
+        private fun track(connection: Connection): Connection {
+            ThreadConnections.opened()
+            var closed = false
+            return Proxy.newProxyInstance(Connection::class.java.classLoader, arrayOf(Connection::class.java)) { _, method, args ->
+                if (method.name == "close" && !closed) {
+                    closed = true
+                    ThreadConnections.closed()
+                }
+                try {
+                    method.invoke(connection, *(args ?: emptyArray()))
+                } catch (e: InvocationTargetException) {
+                    throw e.targetException
+                }
+            } as Connection
+        }
+    }
+
+    /** 탈퇴 커밋 직전(BEFORE_COMMIT, 선물 연쇄 뒤)에 이 스레드가 쥔 커넥션 수를 기록한다 */
+    @TestConfiguration
+    class ConnectionProbe {
+        @Volatile var openAtCommit: Int = -1
 
         @TransactionalEventListener(classes = [UserDeactivatedEvent::class], phase = TransactionPhase.BEFORE_COMMIT)
         fun record(event: UserDeactivatedEvent) {
-            activeAtCommit = active()
+            openAtCommit = ThreadConnections.open
         }
     }
 
@@ -85,12 +136,23 @@ class V2GiftFollowupTest : V2GiftTestSupport() {
             val (_, uuids) = approvedOrder(shop, sender)
             val g = giftOk(sender, uuids[0]).at("/giftId").asLong()
             val oid = userRepository.findById(sender.id!!).get().oauthInfo!!.oid!!
-            val before = probe.active()
+            ThreadConnections.reset()
             mockMvc.delete("/api/v1/auth/me") { with(auth(sender)) }.andExpect { status { isOk() } }
-            assertEquals(1, probe.activeAtCommit - before, "탈퇴 커밋 시점에 이 요청이 쥔 커넥션 수 (예전: 유스케이스 트랜잭션 + 탈퇴 락 트랜잭션 = 2)")
+            assertEquals(1, probe.openAtCommit, "탈퇴 커밋 시점에 이 요청이 쥔 커넥션 수 (예전: 유스케이스·메서드 트랜잭션 + 탈퇴 락 트랜잭션 = 2)")
+            assertEquals(2, ThreadConnections.peak, "최댓값 = 탈퇴 트랜잭션 + 연쇄 후보 읽기(V2TicketGiftCandidateReader, REQUIRES_NEW) (예전 3)")
+            assertEquals(0, ThreadConnections.open, "요청이 끝나면 모두 반납")
             assertEquals(AccountState.DELETED, userRepository.findById(sender.id!!).get().accountState)
             assertEquals(TicketGiftCancelReason.SENDER_WITHDRAWN, giftOf(g).cancelReason)
             verify(kakaoOauthHelper).unlink(oid) // 탈퇴로 지워지기 전 oid
+        }
+
+        @Test
+        fun `oid 가 없는 사용자 탈퇴 - 탈퇴는 되고 카카오 연결 해제는 건너뛴다`() {
+            val user = newBuyer()
+            userRepository.findById(user.id!!).get().also { ReflectionTestUtils.setField(it, "oauthInfo", null) }.let { userRepository.save(it) }
+            mockMvc.delete("/api/v1/auth/me") { with(auth(user)) }.andExpect { status { isOk() } }
+            assertEquals(AccountState.DELETED, userRepository.findById(user.id!!).get().accountState)
+            verifyNoInteractions(kakaoOauthHelper)
         }
     }
 
