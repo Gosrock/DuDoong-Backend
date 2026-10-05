@@ -92,7 +92,8 @@ class LockConnectionProbe {
         val method = (joinPoint.signature as MethodSignature).method
         val name = "${method.declaringClass.simpleName}.${method.name}"
         current.get().addLast(name)
-        val callerTx = if (TransactionSynchronizationManager.isActualTransactionActive()) TransactionSynchronizationManager.getCurrentTransactionName() ?: "?" else null
+        val callerTx = if (TransactionSynchronizationManager.isActualTransactionActive()) shortTxName(TransactionSynchronizationManager.getCurrentTransactionName()) else null
+        lastCallerTx.get()[name] = callerTx
         stat(name).also { synchronized(it) { it.calls++; it.entry = maxOf(it.entry, ThreadConnections.open); callerTx?.let(it.callerTx::add) } }
         try {
             return joinPoint.proceed()
@@ -115,6 +116,14 @@ class LockConnectionProbe {
     }
 
     companion object {
+        private val lastCallerTx = ThreadLocal.withInitial { mutableMapOf<String, String?>() }
+
+        /** 이 스레드에서 [method](`클래스.메서드`)를 마지막으로 불렀을 때 진행 중이던 호출 측 트랜잭션 (없으면 null) */
+        fun lastCallerTxOf(method: String): String? = lastCallerTx.get()[method]
+
+        /** 트랜잭션 이름(`패키지.클래스.메서드`, 이름 없으면 "?")을 `클래스.메서드` 로 */
+        fun shortTxName(name: String?): String = name?.split('.')?.takeLast(2)?.joinToString(".") ?: "?"
+
         private val current = ThreadLocal.withInitial { ArrayDeque<String>() }
         val stats = ConcurrentHashMap<String, Stat>()
 
@@ -130,7 +139,7 @@ class LockConnectionProbe {
                     out.writeText(
                         "method\tcalls\tentry\twaiting\tinside\tcallerTx\n" +
                             stats.toSortedMap().entries.joinToString("\n") { (k, v) ->
-                                "$k\t${v.calls}\t${v.entry}\t${v.waiting}\t${v.inside}\t${v.callerTx.joinToString(",") { it.substringAfterLast('.', it).let { m -> it.substringBeforeLast('.').substringAfterLast('.') + "." + m } }}"
+                                "$k\t${v.calls}\t${v.entry}\t${v.waiting}\t${v.inside}\t${v.callerTx.joinToString(",")}"
                             } + "\n",
                     )
                 },

@@ -3,10 +3,15 @@ v1 쿠폰 E2E (#746). 쿠폰 캠페인 생성(SUPER_ADMIN — conftest e2e_db.ac
 쿠폰 적용 주문(유료 선착순 티켓, 제휴 호스트 — 쿠폰 사용 락 키) → MySQL 결정적 경합(발급 재고 감소가 발급 락 안에서 커밋되는지).
 
 예전에는 SUPER_ADMIN 이 없어 캠페인 생성부터 skip 됐고, 쿠폰 사용·회복 락 키가 파라미터 이름과 달라 쿠폰 주문이 늘 500(AOP_500_1)이었다.
+결정적 경합(test_03)은 performance_schema(root, conftest e2e_db_root)와 Redis(REDIS_HOST/REDIS_PORT, 기본 127.0.0.1:6379) 가 필요하다 —
+못 읽으면 skip, E2E_REQUIRE_LOCK_INSPECTION=1 이면 실패.
 재실행해도 충돌하지 않도록 유저 이메일·쿠폰 코드에 실행마다 다른 접미사를 붙인다.
 """
 import base64
 import json
+import os
+import shutil
+import socket
 import subprocess
 import threading
 import time
@@ -155,21 +160,22 @@ def test_02_order_with_coupon_uses_coupon(base_url, s):
 needs_lock_inspection = pytest.mark.usefixtures("e2e_db_root")
 
 
-def _lock_waits():
+def _lock_waits(table):
+    """이 DB 의 table 행에 대한 잠금 대기 수 (다른 테이블·다른 DB 의 대기는 세지 않는다)"""
     return int(DB.query(
         "SELECT COUNT(*) FROM performance_schema.data_lock_waits w JOIN performance_schema.data_locks l "
-        f"ON l.ENGINE_LOCK_ID = w.REQUESTING_ENGINE_LOCK_ID WHERE l.OBJECT_SCHEMA = '{DB.name}'",
+        f"ON l.ENGINE_LOCK_ID = w.REQUESTING_ENGINE_LOCK_ID WHERE l.OBJECT_SCHEMA = '{DB.name}' AND l.OBJECT_NAME = '{table}'",
         root=True, database=False,
     ))
 
 
-def _await_waits(n, timeout=6.0):
+def _await_waits(n, table, timeout=6.0):
     deadline = time.time() + timeout
     while time.time() < deadline:
-        if _lock_waits() >= n:
+        if _lock_waits(table) >= n:
             return
         time.sleep(0.05)
-    raise AssertionError(f"잠금 대기 {n}건이 안 됨 (현재 {_lock_waits()})")
+    raise AssertionError(f"{table} 잠금 대기 {n}건이 안 됨 (현재 {_lock_waits(table)})")
 
 
 class _RowLock:
@@ -194,16 +200,55 @@ class _RowLock:
         self.p.wait(timeout=10)
 
 
+REDIS_HOST = os.environ.get("REDIS_HOST", "127.0.0.1")
+REDIS_PORT = int(os.environ.get("REDIS_PORT", "6379"))
+
+
+def _redis_exists(key):
+    """EXISTS key (1/0). redis-py 가 있으면 그것으로, 없으면 redis-cli -h -p, 그것도 없으면 RESP 를 소켓으로 직접 보낸다. 접속 실패는 ConnectionError"""
+    try:
+        import redis  # 선택 의존성
+    except ImportError:
+        redis = None
+    if redis is not None:
+        try:
+            return redis.Redis(host=REDIS_HOST, port=REDIS_PORT, socket_timeout=5).exists(key)
+        except redis.RedisError as e:
+            raise ConnectionError(e) from e
+    if shutil.which("redis-cli"):
+        out = subprocess.run(["redis-cli", "-h", REDIS_HOST, "-p", str(REDIS_PORT), "EXISTS", key], capture_output=True, text=True, timeout=10)
+        if out.returncode != 0 or not out.stdout.strip().isdigit():
+            raise ConnectionError(out.stderr or out.stdout)
+        return int(out.stdout.strip())
+    raw = key.encode()
+    with socket.create_connection((REDIS_HOST, REDIS_PORT), timeout=5) as conn:
+        conn.sendall(b"*2\r\n$6\r\nEXISTS\r\n$" + str(len(raw)).encode() + b"\r\n" + raw + b"\r\n")
+        reply = conn.recv(64)
+    if not reply.startswith(b":"):
+        raise ConnectionError(reply)
+    return int(reply[1:].split(b"\r\n")[0])
+
+
+@pytest.fixture(scope="module")
+def redis_lock_inspection():
+    """Redisson 락 키를 볼 수 있는 Redis (REDIS_HOST/REDIS_PORT, 기본 로컬 127.0.0.1:6379 — 서버가 쓰는 Redis 와 같아야 한다).
+    접속할 수 없으면 skip, E2E_REQUIRE_LOCK_INSPECTION=1 이면 실패"""
+    try:
+        _redis_exists("e2e-redis-ping")
+    except (OSError, ConnectionError, subprocess.SubprocessError) as e:
+        reason = f"Redis({REDIS_HOST}:{REDIS_PORT})에 접속할 수 없음: {e}"
+        if os.environ.get("E2E_REQUIRE_LOCK_INSPECTION") == "1":
+            pytest.fail(f"{reason} — E2E_REQUIRE_LOCK_INSPECTION=1")
+        pytest.skip(reason)
+
+
 def _redis_lock_held(key):
-    """Redisson 락(해시 키)이 지금 잡혀 있는지. 로컬 docker-compose 의 redis 컨테이너로 확인"""
-    container = subprocess.run(["docker", "ps", "--filter", "publish=6379", "--format", "{{.Names}}"], capture_output=True, text=True).stdout.split()
-    assert container, "redis 컨테이너(6379)를 찾을 수 없음"
-    out = subprocess.run(["docker", "exec", container[0], "redis-cli", "EXISTS", key], capture_output=True, text=True, timeout=10)
-    assert out.returncode == 0, out.stderr
-    return out.stdout.strip() == "1"
+    """Redisson 락(해시 키)이 지금 잡혀 있는지"""
+    return _redis_exists(key) == 1
 
 
 @needs_lock_inspection
+@pytest.mark.usefixtures("redis_lock_inspection")
 def test_03_race_issue_stock_decrease_inside_lock(base_url, s):
     """캠페인 행을 별도 세션이 FOR SHARE 로 잡은 채(발급 쿠폰 INSERT 의 FK 확인은 통과, 재고 UPDATE 만 대기) race1 발급 → race2 발급 → 해제.
     - 재고 감소는 발급 락 안에서 커밋돼야 한다: race1 이 재고 UPDATE 를 기다리는 동안 발급 락이 잡혀 있다 (예전: 락 트랜잭션은 INSERT 만 하고 락을 푼 뒤 호출 측 커밋에서 UPDATE)
@@ -222,7 +267,7 @@ def test_03_race_issue_stock_decrease_inside_lock(base_url, s):
     try:
         t1 = threading.Thread(target=run, args=("race1", "race1"))
         t1.start()
-        _await_waits(1)
+        _await_waits(1, "tbl_coupon_campaign")
         held = _redis_lock_held(f"{ISSUE_LOCK}:{campaign_id}")
         t2 = threading.Thread(target=run, args=("race2", "race2"))
         t2.start()
