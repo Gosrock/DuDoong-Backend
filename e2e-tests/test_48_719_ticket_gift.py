@@ -4,7 +4,8 @@ v2 사용자 앱 티켓탭·선물 E2E 테스트 (#719).
 시나리오: 호스트·공연·무료 티켓(즉시 발급) 준비 → 선물 생성·랜딩(viewState)·수락(uuid 교체)·거절·회수·반환·메모 →
 v1 경로 보호(입장·티켓 상세·주문 티켓 목록·사용자 환불, 옛 uuid 404) → v2 체크인(GIFT_PENDING·OTHER_EVENT) →
 연쇄 취소(v1 호스트 취소, 운영 취소, 운영 사용자 정지, 운영 공연 삭제) → 선물 만료(DB 로 공연 시각 이동) → 알림 →
-1인 제한(원 구매자 기준) → MySQL 동시성(같은 링크 동시 수락, 수락 ↔ 회수, 수락 ↔ v1 호스트 취소, 생성 ↔ 사용자 취소).
+1인 제한(원 구매자 기준) → MySQL 동시성(같은 링크 동시 수락, 수락 ↔ 회수, 수락 ↔ v1 호스트 취소, 생성 ↔ 사용자 취소,
+반환 ↔ 보낸 사람 정지·수락 ↔ 운영 비공개 전환 — #734 잠금 순서 공연 → 사용자 → 티켓 → 선물).
 
 DB 직접 접근(운영자 권한 부여, 공연 시각 이동)은 conftest 의 e2e_db fixture(환경변수 E2E_DB 등, #737)로 한다.
 재실행해도 충돌하지 않도록 유저 이메일에 실행마다 다른 접미사를 붙인다.
@@ -30,7 +31,7 @@ PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", 
 SECTIONS = [{"title": "공연 소개", "content": "<p>선물 테스트</p>", "sortOrder": 0}]
 RACE_ROUNDS = int(os.environ.get("GIFT_RACE_ROUNDS", "6"))
 PEOPLE = ["master", "manager", "guest", "sender", "receiver", "other", "admin", "racer1", "racer2", "racer3", "racer4", "racer5", "limit"] + \
-    [f"buyer{i}" for i in range(1, 10)] + [f"rb{i}" for i in range(RACE_ROUNDS * 9)]
+    [f"buyer{i}" for i in range(1, 10)] + [f"rb{i}" for i in range(RACE_ROUNDS * 12)]
 
 
 class GiftState:
@@ -842,3 +843,98 @@ def test_20_race_reject_vs_other_order_approve(base_url, s):
         assert _sql(f"SELECT order_status FROM tbl_order WHERE uuid = '{b_order}'") == "APPROVED"
     print("결과 분포:", outcomes)
     assert outcomes == {(200, 200): min(RACE_ROUNDS, 4)}
+
+
+@needs_lock_inspection
+def test_21_race_return_vs_sender_suspend(base_url, s):
+    """G-6 반환 ↔ 보낸 사람 운영 정지 (사용자 행 경합, #734): 반환은 티켓보다 먼저 보낸 사람 행을 FOR SHARE 로 읽는다.
+    정지가 먼저면 반환은 최신 상태(정지)를 보고 Gift_400_7 — 티켓은 받은 사람에게 그대로. 반환이 먼저면 보낸 사람에게 돌아간다.
+    반환이 사용자 행을 잠그지 않으면(스냅샷 읽기) 대기가 생기지 않아 _await_waits 에서 실패한다"""
+    admin = _admin_base(base_url)
+
+    def round_(return_first):
+        who = _rb(SEQ)
+        _, uuids = _buy(base_url, s, who, "race", 1)
+        g = _gift_ok(base_url, s, who, uuids[0])
+        resp = _accept(base_url, s, "racer1", g["giftToken"])
+        assert_status(resp, 200)
+        received = get_data(resp)["ticketUuid"]
+        tid = _ticket_id(received)
+        ret = lambda: requests.post(f"{base_url}/v2/me/tickets/{received}/return", headers=_h(s, "racer1"))
+        suspend = lambda: requests.patch(f"{admin}/v1/users/{s.user_ids[who]}/status", json={"status": "SUSPENDED"}, headers=_h(s, "admin"))
+        x, y = _contend(f"SELECT user_id FROM tbl_user WHERE user_id = {s.user_ids[who]} FOR UPDATE", ret if return_first else suspend, suspend if return_first else ret)
+        r, u = (x, y) if return_first else (y, x)
+        assert u.status_code in (200, 204), u.text
+        owner = int(_sql(f"SELECT user_id FROM tbl_issued_ticket WHERE issued_ticket_id = {tid}"))
+        gift_status = _sql(f"SELECT status FROM tbl_ticket_gift WHERE ticket_gift_id = {g['giftId']}")
+        if r.status_code == 200:
+            assert owner == s.user_ids[who] and gift_status == "RETURNED", (r.text, owner, gift_status)
+            return "RETURN_WON"
+        assert _code(r) == "Gift_400_7" and owner == s.user_ids["racer1"] and gift_status == "ACCEPTED", (r.text, owner, gift_status)
+        return "SUSPEND_WON"
+
+    assert set(_rounds_both_orders(round_)) == {"RETURN_WON", "SUSPEND_WON"}
+
+
+@needs_lock_inspection
+def test_22_race_accept_vs_admin_event_prepare(base_url, s):
+    """G-4 수락 ↔ 운영 비공개(준비중) 전환 (공연 행 경합, #734): 수락은 티켓보다 먼저 공연 행을 FOR SHARE 로 읽는다.
+    전환이 먼저면 연쇄로 선물이 CANCELED(EVENT_REMOVED) 되고 수락은 Gift_400_3, 수락이 먼저면 ACCEPTED 로 남는다 (연쇄는 대기만 취소).
+    수락이 공연 행을 잠그지 않으면 대기가 생기지 않아 _await_waits 에서 실패한다"""
+    admin = _admin_base(base_url)
+    counter = iter(range(1000))
+
+    def round_(accept_first):
+        key = f"prep{next(counter)}"
+        _new_event(base_url, s, key)
+        who = _rb(SEQ)
+        _, uuids = _buy(base_url, s, who, key, 1)
+        g = _gift_ok(base_url, s, who, uuids[0])
+        accept = lambda: _accept(base_url, s, "racer2", g["giftToken"])
+        prepare = lambda: requests.patch(f"{admin}/v1/events/{s.events[key]}/status", json={"status": "PREPARING"}, headers=_h(s, "admin"))
+        x, y = _contend(f"SELECT event_id FROM tbl_event WHERE event_id = {s.events[key]} FOR UPDATE", accept if accept_first else prepare, prepare if accept_first else accept)
+        a, p = (x, y) if accept_first else (y, x)
+        assert p.status_code in (200, 204), p.text
+        assert _sql(f"SELECT status FROM tbl_event WHERE event_id = {s.events[key]}") == "PREPARING"
+        status, reason = _sql(f"SELECT status, IFNULL(cancel_reason, '-') FROM tbl_ticket_gift WHERE ticket_gift_id = {g['giftId']}").split()
+        if a.status_code == 200:
+            assert status == "ACCEPTED", (a.text, status)
+            return "ACCEPT_WON"
+        assert _code(a) == "Gift_400_3" and status == "CANCELED" and reason == "EVENT_REMOVED", (a.text, status, reason)
+        return "PREPARE_WON"
+
+    assert set(_rounds_both_orders(round_)) == {"ACCEPT_WON", "PREPARE_WON"}
+
+
+@needs_lock_inspection
+def test_23_race_return_vs_admin_event_delete(base_url, s):
+    """G-6 반환 ↔ 운영 공연 삭제 (공연 행 경합, #734): 반환은 티켓보다 먼저 공연 행을 FOR SHARE 로 읽는다.
+    삭제가 먼저면 반환은 삭제된 공연을 보고 Gift_400_7 (티켓은 받은 사람에게 그대로), 반환이 먼저면 보낸 사람에게 돌아간 뒤 삭제된다.
+    반환이 공연 행을 잠그지 않으면 대기가 생기지 않아 _await_waits 에서 실패한다"""
+    admin = _admin_base(base_url)
+    counter = iter(range(1000))
+
+    def round_(return_first):
+        key = f"rdel{next(counter)}"
+        _new_event(base_url, s, key)
+        who = _rb(SEQ)
+        _, uuids = _buy(base_url, s, who, key, 1)
+        g = _gift_ok(base_url, s, who, uuids[0])
+        resp = _accept(base_url, s, "racer3", g["giftToken"])
+        assert_status(resp, 200)
+        received = get_data(resp)["ticketUuid"]
+        tid = _ticket_id(received)
+        ret = lambda: requests.post(f"{base_url}/v2/me/tickets/{received}/return", headers=_h(s, "racer3"))
+        delete = lambda: requests.delete(f"{admin}/v1/events/{s.events[key]}", headers=_h(s, "admin"))
+        x, y = _contend(f"SELECT event_id FROM tbl_event WHERE event_id = {s.events[key]} FOR UPDATE", ret if return_first else delete, delete if return_first else ret)
+        r, d = (x, y) if return_first else (y, x)
+        assert d.status_code in (200, 204), d.text
+        assert _sql(f"SELECT status FROM tbl_event WHERE event_id = {s.events[key]}") == "DELETED"
+        owner = int(_sql(f"SELECT user_id FROM tbl_issued_ticket WHERE issued_ticket_id = {tid}"))
+        if r.status_code == 200:
+            assert owner == s.user_ids[who], (r.text, owner)
+            return "RETURN_WON"
+        assert _code(r) == "Gift_400_7" and owner == s.user_ids["racer3"], (r.text, owner)
+        return "DELETE_WON"
+
+    assert set(_rounds_both_orders(round_)) == {"RETURN_WON", "DELETE_WON"}

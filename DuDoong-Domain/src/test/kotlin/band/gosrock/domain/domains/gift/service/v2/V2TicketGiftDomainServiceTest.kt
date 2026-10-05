@@ -20,6 +20,7 @@ import band.gosrock.domain.domains.user.domain.AccountState
 import band.gosrock.domain.domains.user.domain.User
 import jakarta.persistence.EntityManager
 import java.time.LocalDateTime
+import org.hibernate.engine.spi.SessionImplementor
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
@@ -159,22 +160,25 @@ class V2TicketGiftDomainServiceTest {
     // ===== 수락·거절 차단 =====
 
     @Test
-    fun `G-4·G-5 차단 순서 - 대기 아님 400_3 → 만료 400_5 → 본인 링크 400_4 → 원 주문·티켓 비정상 400_6`() {
-        `when`(eventAdaptor.findById(anyLong())).thenReturn(event())
+    fun `G-4·G-5 차단 순서 - 대기 아님 400_3 → 만료(삭제 포함) 400_5 → 본인 링크 400_4 → 공연 OPEN 아님·원 주문·티켓 비정상 400_6`() {
         `when`(orderAdaptor.findByOrderUuid(anyString())).thenReturn(order(1L))
-        assertNull(service.respondBlocker(ticket(1L), gift(), 2L, now))
-        assertEquals("Gift_400_4", code(service.respondBlocker(ticket(1L), gift(), 1L, now)))
-        assertEquals("Gift_400_3", code(service.respondBlocker(ticket(1L), gift(TicketGiftStatus.CANCELED), 1L, now)))
-        assertEquals("Gift_400_6", code(service.respondBlocker(ticket(1L, IssuedTicketStatus.CANCELED), gift(), 2L, now)))
-        assertEquals("Gift_400_6", code(service.respondBlocker(ticket(3L), gift(), 2L, now)), "소유자가 보낸 사람이 아님 (방어)")
+        val open = event()
+        assertNull(service.respondBlocker(ticket(1L), gift(), open, 2L, now))
+        assertEquals("Gift_400_4", code(service.respondBlocker(ticket(1L), gift(), open, 1L, now)))
+        assertEquals("Gift_400_3", code(service.respondBlocker(ticket(1L), gift(TicketGiftStatus.CANCELED), open, 1L, now)))
+        assertEquals("Gift_400_6", code(service.respondBlocker(ticket(1L, IssuedTicketStatus.CANCELED), gift(), open, 2L, now)))
+        assertEquals("Gift_400_6", code(service.respondBlocker(ticket(3L), gift(), open, 2L, now)), "소유자가 보낸 사람이 아님 (방어)")
+        // #734: 공연 OPEN 만 (비공개 전환은 연쇄로 대기 선물이 취소되지만 판정도 막는다), 삭제된 공연(null)은 만료
+        assertEquals("Gift_400_6", code(service.respondBlocker(ticket(1L), gift(), event(EventStatus.PREPARING), 2L, now)))
+        assertEquals("Gift_400_5", code(service.respondBlocker(ticket(1L), gift(), null, 2L, now)))
 
         `when`(orderAdaptor.findByOrderUuid(anyString())).thenReturn(order(1L, OrderStatus.CANCELED))
-        assertEquals("Gift_400_6", code(service.respondBlocker(ticket(1L), gift(), 2L, now)))
-        assertEquals("Gift_400_4", code(service.respondBlocker(ticket(1L), gift(), 1L, now)))
+        assertEquals("Gift_400_6", code(service.respondBlocker(ticket(1L), gift(), open, 2L, now)))
+        assertEquals("Gift_400_4", code(service.respondBlocker(ticket(1L), gift(), open, 1L, now)))
 
-        `when`(eventAdaptor.findById(anyLong())).thenReturn(event(startAt = now.minusHours(3)))
-        assertEquals("Gift_400_5", code(service.respondBlocker(ticket(1L), gift(), 1L, now)))
-        assertEquals("Gift_400_3", code(service.respondBlocker(ticket(1L), gift(TicketGiftStatus.ACCEPTED), 2L, now)))
+        val ended = event(startAt = now.minusHours(3))
+        assertEquals("Gift_400_5", code(service.respondBlocker(ticket(1L), gift(), ended, 1L, now)))
+        assertEquals("Gift_400_3", code(service.respondBlocker(ticket(1L), gift(TicketGiftStatus.ACCEPTED), ended, 2L, now)))
     }
 
     // ===== 반환 차단 =====
@@ -191,6 +195,11 @@ class V2TicketGiftDomainServiceTest {
         assertEquals("Gift_400_7", code(service.returnBlocker(ticket(2L, IssuedTicketStatus.ENTRANCE_COMPLETED), accepted, event(), 2L, now)))
         assertEquals("Gift_400_7", code(service.returnBlocker(ticket(2L, IssuedTicketStatus.CANCELED), accepted, event(), 2L, now)))
         assertEquals("Gift_400_7", code(service.returnBlocker(ticket(2L), accepted, event(startAt = now), 2L, now)))
+        assertEquals("Gift_400_7", code(service.returnBlocker(ticket(2L), accepted, null, 2L, now)), "삭제된 공연")
+        assertEquals("Gift_400_8", code(service.returnBlocker(ticket(2L), null, null, 2L, now)), "받은 티켓 아님이 먼저")
+        // 반환 전이는 공유 잠금으로 읽은 보낸 사람을 넘긴다 (#734) — 넘기면 다시 조회하지 않고 그 상태로 판정
+        val locked = User().also { ReflectionTestUtils.setField(it, "id", 1L); ReflectionTestUtils.setField(it, "accountState", AccountState.SUSPENDED) }
+        assertEquals("Gift_400_7", code(service.returnBlocker(ticket(2L), accepted, event(), 2L, now, locked)))
         for (state in listOf(AccountState.DELETED, AccountState.FORBIDDEN, AccountState.SUSPENDED)) {
             ReflectionTestUtils.setField(sender, "accountState", state)
             assertEquals("Gift_400_7", code(service.returnBlocker(ticket(2L), accepted, event(), 2L, now)), state.name)
@@ -295,22 +304,35 @@ class V2TicketGiftDomainServiceTest {
         val g1 = gift()
         val g2 = gift().also { ReflectionTestUtils.setField(it, "id", 9L); ReflectionTestUtils.setField(it, "issuedTicketId", 102L) }
         `when`(candidateReader.pendingBySender(1L)).thenReturn(listOf(V2GiftCandidate(9L, 102L), V2GiftCandidate(7L, 100L)))
-        `when`(ticketGiftRepository.findByIdForUpdate(7L)).thenReturn(g1)
-        `when`(ticketGiftRepository.findByIdForUpdate(9L)).thenReturn(g2)
-        // 잠금 읽기 사이에 g2 가 수락됨
-        doAnswer { inv -> (inv.arguments[0] as TicketGift).takeIf { it.id == 9L }?.accept(5L, now); null }
-            .`when`(entityManager).refresh(org.mockito.ArgumentMatchers.any(TicketGift::class.java), org.mockito.ArgumentMatchers.eq(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE))
+        // 영속성 컨텍스트에 없는 선물 → 잠금 find 1번 (#734: 잠금 SELECT 2번 → 1번), 잠금 읽기 시점에 g2 는 이미 수락됨
+        val session = mock(SessionImplementor::class.java, org.mockito.Mockito.RETURNS_DEEP_STUBS)
+        `when`(session.persistenceContextInternal.getEntity(org.mockito.ArgumentMatchers.any(org.hibernate.engine.spi.EntityKey::class.java))).thenReturn(null)
+        `when`(entityManager.unwrap(SessionImplementor::class.java)).thenReturn(session)
+        `when`(entityManager.find(TicketGift::class.java, 7L, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)).thenReturn(g1)
+        `when`(entityManager.find(TicketGift::class.java, 9L, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)).thenReturn(g2.also { it.accept(5L, now) })
         assertEquals(1, service.cancelPendingBySender(1L))
         val order = org.mockito.Mockito.inOrder(entityManager, candidateReader, issuedTicketRepository)
         // 사용자 행 UPDATE(X 잠금)를 flush 로 먼저 실행한 뒤 후보를 읽는다
         order.verify(entityManager).flush()
         order.verify(candidateReader).pendingBySender(1L)
         order.verify(issuedTicketRepository).findAllByIdInForUpdate(setOf(102L, 100L))
-        order.verify(entityManager, times(2)).refresh(org.mockito.ArgumentMatchers.any(TicketGift::class.java), org.mockito.ArgumentMatchers.eq(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE))
+        order.verify(entityManager).find(TicketGift::class.java, 7L, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+        order.verify(entityManager).find(TicketGift::class.java, 9L, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+        verify(entityManager, never()).refresh(org.mockito.ArgumentMatchers.any(TicketGift::class.java), org.mockito.ArgumentMatchers.any(jakarta.persistence.LockModeType::class.java))
         assertEquals(TicketGiftCancelReason.SENDER_WITHDRAWN, g1.cancelReason)
         assertEquals(TicketGiftStatus.ACCEPTED, g2.status)
         // 원 트랜잭션 스냅샷으로 후보를 찾지 않는다
         verify(ticketGiftRepository, never()).findAllBySenderUserIdAndStatus(1L, TicketGiftStatus.PENDING)
+
+        // 이 트랜잭션에서 이미 읽은 선물(영속성 컨텍스트)이면 find 는 상태를 다시 읽지 않으므로 refresh(잠금) 1번으로 읽는다
+        org.mockito.Mockito.clearInvocations(entityManager)
+        val g3 = gift().also { ReflectionTestUtils.setField(it, "id", 11L); ReflectionTestUtils.setField(it, "issuedTicketId", 103L) }
+        `when`(candidateReader.pendingBySender(2L)).thenReturn(listOf(V2GiftCandidate(11L, 103L)))
+        `when`(session.persistenceContextInternal.getEntity(org.mockito.ArgumentMatchers.any(org.hibernate.engine.spi.EntityKey::class.java))).thenReturn(g3)
+        assertEquals(1, service.cancelPendingBySender(2L))
+        verify(entityManager).refresh(g3, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+        verify(entityManager, never()).find(TicketGift::class.java, 11L, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+        assertEquals(TicketGiftCancelReason.SENDER_WITHDRAWN, g3.cancelReason)
 
         // 공연 연쇄도 같은 순서 — 앞 단언의 flush 호출과 섞이지 않게 기록을 비운다
         org.mockito.Mockito.clearInvocations(entityManager, candidateReader)
