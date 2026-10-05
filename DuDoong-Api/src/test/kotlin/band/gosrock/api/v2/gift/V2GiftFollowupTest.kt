@@ -2,6 +2,7 @@ package band.gosrock.api.v2.gift
 
 import band.gosrock.api.auth.service.helper.KakaoOauthHelper
 import band.gosrock.api.supports.ApiIntegrateSpringBootTest
+import band.gosrock.api.supports.ThreadConnections
 import band.gosrock.domain.common.events.event.EventDeletionEvent
 import band.gosrock.domain.common.events.event.EventStatusChangeEvent
 import band.gosrock.domain.common.events.user.UserDeactivatedEvent
@@ -11,10 +12,6 @@ import band.gosrock.domain.domains.gift.domain.TicketGiftStatus
 import band.gosrock.domain.domains.gift.service.TicketGiftGuard
 import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.user.domain.AccountState
-import java.lang.reflect.InvocationTargetException
-import java.lang.reflect.Proxy
-import java.sql.Connection
-import javax.sql.DataSource
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -29,7 +26,6 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.config.BeanPostProcessor
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.test.mock.mockito.MockBean
@@ -37,7 +33,6 @@ import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
-import org.springframework.jdbc.datasource.DelegatingDataSource
 import org.springframework.test.util.ReflectionTestUtils
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
@@ -53,7 +48,7 @@ import org.springframework.transaction.support.TransactionTemplate
  */
 @ApiIntegrateSpringBootTest
 @AutoConfigureMockMvc
-@Import(V2GiftFollowupTest.ConnectionProbe::class, V2GiftFollowupTest.CountingDataSourcePostProcessor::class)
+@Import(V2GiftFollowupTest.ConnectionProbe::class)
 @DisplayName("v2 선물 후속 (#734)")
 class V2GiftFollowupTest : V2GiftTestSupport() {
 
@@ -66,53 +61,6 @@ class V2GiftFollowupTest : V2GiftTestSupport() {
     @Autowired private lateinit var eventPublisher: ApplicationEventPublisher
 
     @Autowired private lateinit var transactionManager: PlatformTransactionManager
-
-    /**
-     * 스레드별로 지금 쥔 커넥션 수와 최댓값을 센다 (#734 리뷰 M-1). 풀 전체 활성 수(Hikari)는 알림 executor 등 다른 스레드의 커넥션이 섞여 흔들린다.
-     * MockMvc 요청·락 트랜잭션·연쇄 후보 읽기(REQUIRES_NEW)는 모두 테스트 스레드에서 돈다
-     */
-    object ThreadConnections {
-        private val counts = ThreadLocal.withInitial { IntArray(2) }
-
-        val open: Int get() = counts.get()[0]
-
-        val peak: Int get() = counts.get()[1]
-
-        fun reset() = counts.get().fill(0)
-
-        fun opened() = counts.get().let { it[0]++; it[1] = maxOf(it[1], it[0]) }
-
-        fun closed() = counts.get().let { it[0]-- }
-    }
-
-    /** DataSource 를 감싸 [ThreadConnections] 를 센다 (이 테스트 클래스의 컨텍스트에만 적용) */
-    @TestConfiguration
-    class CountingDataSourcePostProcessor : BeanPostProcessor {
-        override fun postProcessAfterInitialization(bean: Any, beanName: String): Any =
-            if (bean is DataSource && bean !is CountingDataSource) CountingDataSource(bean) else bean
-    }
-
-    class CountingDataSource(target: DataSource) : DelegatingDataSource(target) {
-        override fun getConnection(): Connection = track(super.getConnection())
-
-        override fun getConnection(username: String, password: String): Connection = track(super.getConnection(username, password))
-
-        private fun track(connection: Connection): Connection {
-            ThreadConnections.opened()
-            var closed = false
-            return Proxy.newProxyInstance(Connection::class.java.classLoader, arrayOf(Connection::class.java)) { _, method, args ->
-                if (method.name == "close" && !closed) {
-                    closed = true
-                    ThreadConnections.closed()
-                }
-                try {
-                    method.invoke(connection, *(args ?: emptyArray()))
-                } catch (e: InvocationTargetException) {
-                    throw e.targetException
-                }
-            } as Connection
-        }
-    }
 
     /** 탈퇴 커밋 직전(BEFORE_COMMIT, 선물 연쇄 뒤)에 이 스레드가 쥔 커넥션 수를 기록한다 */
     @TestConfiguration
