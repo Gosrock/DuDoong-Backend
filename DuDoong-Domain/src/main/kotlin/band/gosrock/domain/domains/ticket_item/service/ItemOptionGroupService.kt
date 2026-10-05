@@ -1,6 +1,7 @@
 package band.gosrock.domain.domains.ticket_item.service
 
 import band.gosrock.common.annotation.DomainService
+import band.gosrock.domain.common.aop.redissonLock.LockNames
 import band.gosrock.domain.common.aop.redissonLock.RedissonLock
 import band.gosrock.domain.domains.ticket_item.adaptor.OptionGroupAdaptor
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor
@@ -16,7 +17,7 @@ class ItemOptionGroupService(
     private val ticketItemRepository: TicketItemRepository
 ) {
 
-    @RedissonLock(LockName = "티켓관리", identifier = "ticketItemId")
+    @RedissonLock(LockName = LockNames.TICKET, identifier = "ticketItemId")
     fun addItemOptionGroup(ticketItemId: Long, optionGroupId: Long, eventId: Long): TicketItem {
         val ticketItem = ticketItemAdaptor.queryTicketItem(ticketItemId)
         val optionGroup = optionGroupAdaptor.queryOptionGroup(optionGroupId)
@@ -29,7 +30,7 @@ class ItemOptionGroupService(
         return ticketItemRepository.save(ticketItem)
     }
 
-    @RedissonLock(LockName = "티켓관리", identifier = "ticketItemId")
+    @RedissonLock(LockName = LockNames.TICKET, identifier = "ticketItemId")
     fun removeItemOptionGroup(ticketItemId: Long, optionGroupId: Long, eventId: Long): TicketItem {
         val ticketItem = ticketItemAdaptor.queryTicketItem(ticketItemId)
         val optionGroup = optionGroupAdaptor.queryOptionGroup(optionGroupId)

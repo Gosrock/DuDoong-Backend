@@ -2,6 +2,7 @@ package band.gosrock.admin.service
 
 import band.gosrock.admin.model.dto.response.AdminTicketItemResponse
 import band.gosrock.common.annotation.UseCase
+import band.gosrock.domain.common.aop.redissonLock.LockNames
 import band.gosrock.domain.common.aop.redissonLock.RedissonLock
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor
 
@@ -10,7 +11,7 @@ class AdminAdjustTicketStockUseCase(
     private val ticketItemAdaptor: TicketItemAdaptor,
     private val adminAuthValidator: AdminAuthValidator,
 ) {
-    @RedissonLock(LockName = "티켓관리", identifier = "ticketItemId")
+    @RedissonLock(LockName = LockNames.TICKET, identifier = "ticketItemId")
     fun execute(userId: Long, ticketItemId: Long, delta: Long): AdminTicketItemResponse {
         adminAuthValidator.validateAdminOrAbove(userId)
         val ticketItem = ticketItemAdaptor.queryTicketItem(ticketItemId)
