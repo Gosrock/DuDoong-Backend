@@ -222,8 +222,12 @@ class V2TicketGiftDomainService(
 
     /** 보낸 사람 탈퇴·운영 정지 → 그 사람이 보낸 대기 선물 CANCELED(SENDER_WITHDRAWN) (DEC-026 #9·#10). 받은 사람 쪽은 기존 탈퇴 정책 */
     @Transactional(propagation = Propagation.MANDATORY)
-    fun cancelPendingBySender(senderUserId: Long): Int =
-        cancelCandidates(candidateReader.pendingBySender(senderUserId), TicketGiftCancelReason.SENDER_WITHDRAWN)
+    fun cancelPendingBySender(senderUserId: Long): Int {
+        // 사용자 행 UPDATE(상태 변경)를 먼저 실행해 X 잠금을 잡는다. BEFORE_COMMIT 은 커밋 flush 전이라 그대로 두면
+        // 후보를 읽는 시점에 아직 잠금이 없어, 진행 중인 선물 생성(사용자 행 S)과 줄 서지 않는다 (#719 재리뷰 E2E 로 확인)
+        entityManager.flush()
+        return cancelCandidates(candidateReader.pendingBySender(senderUserId), TicketGiftCancelReason.SENDER_WITHDRAWN)
+    }
 
     /**
      * 공연 운영 삭제·비공개 전환(DELETED·PREPARING) → 대기 선물 CANCELED(EVENT_REMOVED) (DEC-026 #9).
@@ -232,6 +236,8 @@ class V2TicketGiftDomainService(
     @Transactional(propagation = Propagation.MANDATORY)
     fun cancelPendingByEventRemoved(eventId: Long, status: EventStatus): Int {
         if (status !in EVENT_REMOVED_STATUSES) return 0
+        // 공연 행 UPDATE 를 먼저 실행해 X 잠금을 잡은 뒤 후보를 읽는다 (사용자 연쇄와 같은 이유)
+        entityManager.flush()
         return cancelCandidates(candidateReader.pendingByEvent(eventId), TicketGiftCancelReason.EVENT_REMOVED)
     }
 
@@ -242,7 +248,8 @@ class V2TicketGiftDomainService(
     private fun cancelCandidates(candidates: List<V2GiftCandidate>, reason: TicketGiftCancelReason): Int {
         if (candidates.isEmpty()) return 0
         issuedTicketRepository.findAllByIdInForUpdate(candidates.map { it.issuedTicketId }.toSet())
-        val gifts = candidates.sortedBy { it.giftId }.mapNotNull { ticketGiftRepository.findById(it.giftId).orElse(null) }
+        // 원 트랜잭션의 일반 읽기는 스냅샷이라 방금 커밋된 선물이 안 보일 수 있다 → 잠금 읽기로 가져온다
+        val gifts = candidates.sortedBy { it.giftId }.mapNotNull { ticketGiftRepository.findByIdForUpdate(it.giftId) }
         return cancelLocked(gifts, reason)
     }
 

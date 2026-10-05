@@ -11,6 +11,7 @@ DB 직접 접근(운영자 권한 부여, 공연 시각 이동)은 E2E_DB(기본
 """
 import os
 import subprocess
+import threading
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
@@ -30,7 +31,7 @@ SECTIONS = [{"title": "공연 소개", "content": "<p>선물 테스트</p>", "so
 DB_NAME = os.environ.get("E2E_DB", "dudoong")
 RACE_ROUNDS = int(os.environ.get("GIFT_RACE_ROUNDS", "6"))
 PEOPLE = ["master", "manager", "guest", "sender", "receiver", "other", "admin", "racer1", "racer2", "racer3", "racer4", "racer5", "limit"] + \
-    [f"buyer{i}" for i in range(1, 10)] + [f"rb{i}" for i in range(RACE_ROUNDS * 6)]
+    [f"buyer{i}" for i in range(1, 10)] + [f"rb{i}" for i in range(RACE_ROUNDS * 9)]
 
 
 class GiftState:
@@ -533,6 +534,10 @@ def test_14_new_approved_bar(base_url, s):
     resp = requests.get(f"{base_url}/v2/me/orders/{order_uuid}", headers=_h(s, "buyer1"))
     ticket_uuid = get_data(resp)["issuedTickets"][0]["ticketUuid"]
     assert_status(_ticket(base_url, s, "buyer1", ticket_uuid), 200)
+    # 읽음 처리는 조회 커밋 뒤 알림 전용 풀에서 (비동기)
+    deadline = time.time() + 10
+    while time.time() < deadline and bar("buyer1")["hasNew"]:
+        time.sleep(0.2)
     assert bar("buyer1") == {"hasNew": False, "orderUuids": []}
 
     order2 = approve("buyer2")
@@ -541,11 +546,80 @@ def test_14_new_approved_bar(base_url, s):
     assert bar("buyer2")["hasNew"] is False
 
 
-# ===== MySQL 동시성 — 티켓 행 잠금·잠금 읽기·주문 락 (#719 리뷰) =====
+# ===== MySQL 동시성 — 경합을 결정적으로 재현 (#719 재리뷰) =====
+# 별도 mysql 세션이 행을 먼저 잠근 채(BEGIN; SELECT ... FOR UPDATE) 두 요청을 보내고, performance_schema 로 두 요청이 모두 그 DB 에서
+# 잠금 대기 중인지 확인한 뒤 COMMIT 으로 풀어 준다 → 매 회차 두 요청이 실제로 같은 행에서 경합한다.
+# 어느 쪽이 먼저 잠금을 받는지는 InnoDB 가 정하므로 회차마다 보내는 순서를 바꾸고, 결과 종류를 세어 양쪽 결과가 모두 나왔는지 단언한다.
 # 회차마다 다른 구매자(rbN): 같은 사용자의 같은 주문은 10초 안 중복 요청으로 앞 주문을 돌려준다
+# performance_schema 조회는 root(docker-compose 개발용, E2E_DB_ROOT_PASSWORD) 권한이 필요하다
+
+
+ROOT_PW = os.environ.get("E2E_DB_ROOT_PASSWORD", "dudoong")
+SEQ = iter(range(10_000))
+
 
 def _rb(seq):
     return f"rb{next(seq)}"
+
+
+def _lock_waits():
+    result = subprocess.run(
+        ["mysql", "-h", "127.0.0.1", "-P", "13306", "-uroot", f"-p{ROOT_PW}", "-N", "-e",
+         "SELECT COUNT(*) FROM performance_schema.data_lock_waits w JOIN performance_schema.data_locks l "
+         f"ON l.ENGINE_LOCK_ID = w.REQUESTING_ENGINE_LOCK_ID WHERE l.OBJECT_SCHEMA = '{DB_NAME}'"],
+        capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    return int(result.stdout.strip())
+
+
+class _RowLock:
+    """별도 세션에서 BEGIN; <잠금 SELECT>; 를 실행해 둔 채로 있다가 release() 에서 COMMIT"""
+
+    def __init__(self, lock_sql):
+        self.p = subprocess.Popen(
+            ["mysql", "-h", "127.0.0.1", "-P", "13306", "-u", "dudoong", "-pdudoong", "--unbuffered", "-N", DB_NAME],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        )
+        self.p.stdin.write(f"BEGIN;\n{lock_sql};\nSELECT 'LOCKED';\n")
+        self.p.stdin.flush()
+        while True:
+            line = self.p.stdout.readline()
+            assert line, self.p.stderr.read()
+            if line.strip() == "LOCKED":
+                break
+
+    def release(self):
+        self.p.stdin.write("COMMIT;\n")
+        self.p.stdin.close()
+        self.p.wait(timeout=10)
+
+
+def _await_waits(n, timeout=6.0):
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if _lock_waits() >= n:
+            return
+        time.sleep(0.05)
+    raise AssertionError(f"잠금 대기 {n}건이 안 됨 (현재 {_lock_waits()})")
+
+
+def _contend(lock_sql, first, second):
+    """lock_sql 로 행을 잡아 두고 first → (대기 확인) → second → (둘 다 대기 확인) → 해제. 두 응답을 (first, second) 순으로 돌려준다"""
+    results = {}
+    holder = _RowLock(lock_sql)
+    try:
+        t1 = threading.Thread(target=lambda: results.__setitem__(0, first()))
+        t1.start()
+        _await_waits(1)
+        t2 = threading.Thread(target=lambda: results.__setitem__(1, second()))
+        t2.start()
+        _await_waits(2)
+    finally:
+        holder.release()
+    t1.join(30)
+    t2.join(30)
+    return results[0], results[1]
 
 
 def _pending_count(ticket_uuid):
@@ -560,109 +634,165 @@ def _ticket_id(ticket_uuid):
     return int(_sql(f"SELECT issued_ticket_id FROM tbl_issued_ticket WHERE uuid = '{ticket_uuid}'"))
 
 
-SEQ = iter(range(10_000))
+def _lock_ticket(tid):
+    return f"SELECT issued_ticket_id FROM tbl_issued_ticket WHERE issued_ticket_id = {tid} FOR UPDATE"
+
+
+def _rounds_both_orders(run_round):
+    """회차마다 순서를 바꿔 실행하고 결과 종류를 센다"""
+    seen = {}
+    for i in range(max(RACE_ROUNDS, 2)):
+        label = run_round(i % 2 == 0)
+        seen[label] = seen.get(label, 0) + 1
+    print("결과 분포:", seen)
+    return seen
 
 
 def test_15_race_gift_vs_v1_entrance(base_url, s):
-    """G-1 ↔ v1 입장: 입장된 티켓에 대기 선물이 남는 일이 없다 (둘 중 하나만 성공)"""
+    """G-1 ↔ v1 입장 (티켓 행 경합): 입장된 티켓에 대기 선물이 남지 않는다, 양쪽 결과(선물 먼저 / 입장 먼저)가 모두 나온다"""
     ev = s.events["race"]
-    for _ in range(RACE_ROUNDS):
+
+    def round_(gift_first):
         who = _rb(SEQ)
         _, uuids = _buy(base_url, s, who, "race", 1)
         tid = _ticket_id(uuids[0])
-        g, e = _race(
-            lambda: _gift(base_url, s, who, uuids[0]),
-            lambda: requests.patch(f"{base_url}/v1/events/{ev}/issuedTickets/{uuids[0]}", headers=_h(s, "manager")),
-        )
+        gift = lambda: _gift(base_url, s, who, uuids[0])
+        enter = lambda: requests.patch(f"{base_url}/v1/events/{ev}/issuedTickets/{uuids[0]}", headers=_h(s, "manager"))
+        a, b = _contend(_lock_ticket(tid), gift if gift_first else enter, enter if gift_first else gift)
+        g, e = (a, b) if gift_first else (b, a)
         status, pending = _ticket_status_by_id(tid), _pending_count(uuids[0])
         assert not (status == "ENTRANCE_COMPLETED" and pending != "0"), (g.text, e.text)
         assert [g.status_code, e.status_code].count(200) == 1, (g.text, e.text)
         if g.status_code == 200:
             assert _code(e) == "IssuedTicket_400_8" and status == "ENTRANCE_INCOMPLETE" and pending == "1"
-        else:
-            assert _code(g) == "Gift_400_1" and status == "ENTRANCE_COMPLETED"
+            return "GIFT_WON"
+        assert _code(g) == "Gift_400_1" and status == "ENTRANCE_COMPLETED"
+        return "ENTRANCE_WON"
+
+    assert set(_rounds_both_orders(round_)) == {"GIFT_WON", "ENTRANCE_WON"}
 
 
 def test_16_race_gift_vs_v2_scan(base_url, s):
-    """G-1 ↔ v2 호스트 스캔: ENTERED 와 대기 선물이 함께 남지 않는다"""
+    """G-1 ↔ v2 호스트 스캔 (티켓 행 경합): ENTERED 와 대기 선물이 함께 남지 않는다, 양쪽 결과 모두"""
     ev = s.events["race"]
-    for _ in range(RACE_ROUNDS):
+
+    def round_(gift_first):
         who = _rb(SEQ)
         _, uuids = _buy(base_url, s, who, "race", 1)
         tid = _ticket_id(uuids[0])
-        g, c = _race(
-            lambda: _gift(base_url, s, who, uuids[0]),
-            lambda: requests.post(_ev(base_url, ev, "/check-ins"), json={"ticketUuid": uuids[0]}, headers=_h(s, "guest")),
-        )
+        gift = lambda: _gift(base_url, s, who, uuids[0])
+        scan = lambda: requests.post(_ev(base_url, ev, "/check-ins"), json={"ticketUuid": uuids[0]}, headers=_h(s, "guest"))
+        a, b = _contend(_lock_ticket(tid), gift if gift_first else scan, scan if gift_first else gift)
+        g, c = (a, b) if gift_first else (b, a)
         result = get_data(c)["result"]
         status, pending = _ticket_status_by_id(tid), _pending_count(uuids[0])
         if g.status_code == 200:
             assert result == "GIFT_PENDING" and status == "ENTRANCE_INCOMPLETE" and pending == "1", (g.text, c.text)
-        else:
-            assert _code(g) == "Gift_400_1" and result == "ENTERED" and status == "ENTRANCE_COMPLETED" and pending == "0", (g.text, c.text)
+            return "GIFT_WON"
+        assert _code(g) == "Gift_400_1" and result == "ENTERED" and status == "ENTRANCE_COMPLETED" and pending == "0", (g.text, c.text)
+        return "SCAN_WON"
+
+    assert set(_rounds_both_orders(round_)) == {"GIFT_WON", "SCAN_WON"}
 
 
 def test_17_race_accept_vs_old_qr_scan(base_url, s):
-    """G-4 ↔ 옛 QR 스캔: 대기 중이었던 옛 QR 은 어느 순서로도 입장되지 않는다 (GIFT_PENDING 또는 OTHER_EVENT)"""
+    """G-4 ↔ 옛 QR 스캔 (티켓 행 경합): 옛 QR 은 입장되지 않는다 — 스캔이 먼저면 GIFT_PENDING, 수락이 먼저면 OTHER_EVENT (uuid 재확인)"""
     ev = s.events["race"]
-    for _ in range(RACE_ROUNDS):
+
+    def round_(accept_first):
         who = _rb(SEQ)
         _, uuids = _buy(base_url, s, who, "race", 1)
         tid = _ticket_id(uuids[0])
         g = _gift_ok(base_url, s, who, uuids[0])
-        a, c = _race(
-            lambda: _accept(base_url, s, "racer3", g["giftToken"]),
-            lambda: requests.post(_ev(base_url, ev, "/check-ins"), json={"ticketUuid": uuids[0]}, headers=_h(s, "guest")),
-        )
+        accept = lambda: _accept(base_url, s, "racer3", g["giftToken"])
+        scan = lambda: requests.post(_ev(base_url, ev, "/check-ins"), json={"ticketUuid": uuids[0]}, headers=_h(s, "guest"))
+        x, y = _contend(_lock_ticket(tid), accept if accept_first else scan, scan if accept_first else accept)
+        a, c = (x, y) if accept_first else (y, x)
         assert a.status_code == 200, a.text
-        assert get_data(c)["result"] in ("GIFT_PENDING", "OTHER_EVENT"), c.text
         assert _ticket_status_by_id(tid) == "ENTRANCE_INCOMPLETE"
         assert int(_sql(f"SELECT user_id FROM tbl_issued_ticket WHERE issued_ticket_id = {tid}")) == s.user_ids["racer3"]
+        result = get_data(c)["result"]
+        assert result in ("GIFT_PENDING", "OTHER_EVENT"), c.text
+        return result
+
+    assert set(_rounds_both_orders(round_)) == {"GIFT_PENDING", "OTHER_EVENT"}
 
 
 def test_18_race_accept_vs_sender_suspend(base_url, s):
-    """G-4 ↔ 보낸 사람 운영 정지: (수락됨) 또는 (CANCELED SENDER_WITHDRAWN + 수락 실패) 중 하나"""
+    """G-4 ↔ 보낸 사람 운영 정지 (티켓 행 경합): (수락됨) 또는 (CANCELED SENDER_WITHDRAWN + 수락 Gift_400_3), 양쪽 결과 모두"""
     admin = _admin_base(base_url)
-    for _ in range(RACE_ROUNDS):
+
+    def round_(accept_first):
         who = _rb(SEQ)
         _, uuids = _buy(base_url, s, who, "race", 1)
+        tid = _ticket_id(uuids[0])
         g = _gift_ok(base_url, s, who, uuids[0])
-        a, u = _race(
-            lambda: _accept(base_url, s, "racer4", g["giftToken"]),
-            lambda: requests.patch(f"{admin}/v1/users/{s.user_ids[who]}/status", json={"status": "SUSPENDED"}, headers=_h(s, "admin")),
-        )
+        accept = lambda: _accept(base_url, s, "racer4", g["giftToken"])
+        suspend = lambda: requests.patch(f"{admin}/v1/users/{s.user_ids[who]}/status", json={"status": "SUSPENDED"}, headers=_h(s, "admin"))
+        x, y = _contend(_lock_ticket(tid), accept if accept_first else suspend, suspend if accept_first else accept)
+        a, u = (x, y) if accept_first else (y, x)
         assert u.status_code in (200, 204), u.text
         status, reason = _sql(f"SELECT status, IFNULL(cancel_reason, '-') FROM tbl_ticket_gift WHERE ticket_gift_id = {g['giftId']}").split()
         if a.status_code == 200:
             assert status == "ACCEPTED", (a.text, status)
-        else:
-            assert _code(a) == "Gift_400_3" and status == "CANCELED" and reason == "SENDER_WITHDRAWN", (a.text, status, reason)
+            return "ACCEPT_WON"
+        assert _code(a) == "Gift_400_3" and status == "CANCELED" and reason == "SENDER_WITHDRAWN", (a.text, status, reason)
+        return "SUSPEND_WON"
+
+    assert set(_rounds_both_orders(round_)) == {"ACCEPT_WON", "SUSPEND_WON"}
+
+
+def test_18b_race_gift_vs_sender_suspend(base_url, s):
+    """G-1 ↔ 보낸 사람 운영 정지 (사용자 행 경합): 정지된 사용자에게 대기 선물이 남지 않는다"""
+    admin = _admin_base(base_url)
+
+    def round_(gift_first):
+        who = _rb(SEQ)
+        _, uuids = _buy(base_url, s, who, "race", 1)
+        gift = lambda: _gift(base_url, s, who, uuids[0])
+        suspend = lambda: requests.patch(f"{admin}/v1/users/{s.user_ids[who]}/status", json={"status": "SUSPENDED"}, headers=_h(s, "admin"))
+        x, y = _contend(f"SELECT user_id FROM tbl_user WHERE user_id = {s.user_ids[who]} FOR UPDATE", gift if gift_first else suspend, suspend if gift_first else gift)
+        g, u = (x, y) if gift_first else (y, x)
+        assert u.status_code in (200, 204), u.text
+        assert _pending_count(uuids[0]) == "0", (g.text, u.text)
+        if g.status_code == 200:
+            assert _sql(f"SELECT cancel_reason FROM tbl_ticket_gift WHERE ticket_gift_id = {get_data(g)['giftId']}") == "SENDER_WITHDRAWN"
+            return "GIFT_THEN_CANCELED"
+        assert _code(g) == "Gift_400_1", g.text
+        return "GIFT_REJECTED"
+
+    assert set(_rounds_both_orders(round_)) == {"GIFT_THEN_CANCELED", "GIFT_REJECTED"}
 
 
 def test_19_race_gift_vs_admin_event_delete(base_url, s):
-    """G-1 ↔ 운영 공연 삭제: 삭제된 공연에 대기 선물이 남지 않는다"""
+    """G-1 ↔ 운영 공연 삭제 (공연 행 경합): 삭제된 공연에 대기 선물이 남지 않는다, 양쪽 결과 모두"""
     admin = _admin_base(base_url)
-    for i in range(min(RACE_ROUNDS, 4)):
-        key = f"del{i}"
+    counter = iter(range(1000))
+
+    def round_(gift_first):
+        key = f"del{next(counter)}"
         _new_event(base_url, s, key)
         who = _rb(SEQ)
         _, uuids = _buy(base_url, s, who, key, 1)
-        g, d = _race(
-            lambda: _gift(base_url, s, who, uuids[0]),
-            lambda: requests.delete(f"{admin}/v1/events/{s.events[key]}", headers=_h(s, "admin")),
-        )
+        gift = lambda: _gift(base_url, s, who, uuids[0])
+        delete = lambda: requests.delete(f"{admin}/v1/events/{s.events[key]}", headers=_h(s, "admin"))
+        x, y = _contend(f"SELECT event_id FROM tbl_event WHERE event_id = {s.events[key]} FOR UPDATE", gift if gift_first else delete, delete if gift_first else gift)
+        g, d = (x, y) if gift_first else (y, x)
         assert d.status_code in (200, 204), d.text
         assert _sql(f"SELECT status FROM tbl_event WHERE event_id = {s.events[key]}") == "DELETED"
         assert _pending_count(uuids[0]) == "0", (g.text, d.text)
         if g.status_code == 200:
             assert _sql(f"SELECT cancel_reason FROM tbl_ticket_gift WHERE ticket_gift_id = {get_data(g)['giftId']}") == "EVENT_REMOVED"
-        else:
-            # 삭제가 먼저 커밋되면 공연이 조회되지 않아(@Where) Event_404_1, 공연 상태만 바뀐 시점이면 Gift_400_1
-            assert _code(g) in ("Gift_400_1", "Event_404_1"), g.text
+            return "GIFT_THEN_CANCELED"
+        assert _code(g) == "Gift_400_1", g.text
+        return "GIFT_REJECTED"
+
+    assert set(_rounds_both_orders(round_)) == {"GIFT_THEN_CANCELED", "GIFT_REJECTED"}
 
 
 def test_20_race_reject_vs_other_order_approve(base_url, s):
-    """같은 티켓 상품에서 선물 거절(주문 A 락 → 티켓 행) ↔ 다른 주문 승인(주문 B 락 → 티켓관리 락) 동시: 교착 없이 둘 다 성공"""
+    """같은 티켓 상품에서 선물 거절(주문 A 락 → 티켓 행) ↔ 다른 주문 승인(주문 B 락 → 티켓관리 락): 서로 다른 행이라 결정적 경합 대상이 아니므로
+    회차마다 동시에 보내고 결과를 센다 — 교착 없이 매번 둘 다 성공"""
     ev = s.events["bar"]
 
     def order(who):
@@ -674,6 +804,7 @@ def test_20_race_reject_vs_other_order_approve(base_url, s):
         assert_status(resp, 200)
         return get_data(resp)["orderUuid"]
 
+    outcomes = {}
     for _ in range(min(RACE_ROUNDS, 4)):
         a_who, b_who = _rb(SEQ), _rb(SEQ)
         a_order = order(a_who)
@@ -685,5 +816,8 @@ def test_20_race_reject_vs_other_order_approve(base_url, s):
             lambda: requests.post(f"{base_url}/v2/gifts/{g['giftToken']}/reject", headers=_h(s, "racer5")),
             lambda: requests.post(_ev(base_url, ev, f"/orders/{b_order}/approve"), headers=_h(s, "manager")),
         )
-        assert r.status_code == 200 and p.status_code == 200, (r.text, p.text)
+        key = (r.status_code, p.status_code)
+        outcomes[key] = outcomes.get(key, 0) + 1
         assert _sql(f"SELECT order_status FROM tbl_order WHERE uuid = '{b_order}'") == "APPROVED"
+    print("결과 분포:", outcomes)
+    assert outcomes == {(200, 200): min(RACE_ROUNDS, 4)}

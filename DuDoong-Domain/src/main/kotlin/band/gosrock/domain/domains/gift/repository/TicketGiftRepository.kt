@@ -43,6 +43,15 @@ interface TicketGiftRepository : JpaRepository<TicketGift, Long> {
 
     fun findAllBySenderUserIdAndStatus(senderUserId: Long, status: TicketGiftStatus): List<TicketGift>
 
+    /** 연쇄 후보용 공유 잠금 읽기 (최신 커밋 값). [band.gosrock.domain.domains.gift.service.v2.V2TicketGiftCandidateReader] 의 짧은 별도 트랜잭션에서만 쓴다 */
+    @Lock(LockModeType.PESSIMISTIC_READ)
+    @Query("select g from TicketGift g where g.senderUserId = :senderUserId and g.status = :status order by g.id")
+    fun findAllBySenderLocked(@Param("senderUserId") senderUserId: Long, @Param("status") status: TicketGiftStatus): List<TicketGift>
+
+    @Lock(LockModeType.PESSIMISTIC_READ)
+    @Query("select g from TicketGift g where g.eventId = :eventId and g.status = :status order by g.id")
+    fun findAllByEventLocked(@Param("eventId") eventId: Long, @Param("status") status: TicketGiftStatus): List<TicketGift>
+
     fun findAllByEventIdAndStatus(eventId: Long, status: TicketGiftStatus): List<TicketGift>
 
     fun findAllByOrderUuidAndStatus(orderUuid: String, status: TicketGiftStatus): List<TicketGift>

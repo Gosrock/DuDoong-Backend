@@ -295,8 +295,8 @@ class V2TicketGiftDomainServiceTest {
         val g1 = gift()
         val g2 = gift().also { ReflectionTestUtils.setField(it, "id", 9L); ReflectionTestUtils.setField(it, "issuedTicketId", 102L) }
         `when`(candidateReader.pendingBySender(1L)).thenReturn(listOf(V2GiftCandidate(9L, 102L), V2GiftCandidate(7L, 100L)))
-        `when`(ticketGiftRepository.findById(7L)).thenReturn(java.util.Optional.of(g1))
-        `when`(ticketGiftRepository.findById(9L)).thenReturn(java.util.Optional.of(g2))
+        `when`(ticketGiftRepository.findByIdForUpdate(7L)).thenReturn(g1)
+        `when`(ticketGiftRepository.findByIdForUpdate(9L)).thenReturn(g2)
         // 잠금 읽기 사이에 g2 가 수락됨
         doAnswer { inv -> (inv.arguments[0] as TicketGift).takeIf { it.id == 9L }?.accept(5L, now); null }
             .`when`(entityManager).refresh(org.mockito.ArgumentMatchers.any(TicketGift::class.java), org.mockito.ArgumentMatchers.eq(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE))
