@@ -1,5 +1,6 @@
 package band.gosrock.api.v2.gift.controller
 
+import band.gosrock.api.v2.common.swagger.V2ApiTags
 import band.gosrock.api.v2.common.V2PageResponse
 import band.gosrock.api.v2.gift.dto.V2GiftDirection
 import band.gosrock.api.v2.gift.dto.V2MyTicketSort
@@ -32,7 +33,7 @@ import org.springframework.web.bind.annotation.RestController
 
 /** 사용자 앱 티켓탭·선물 (#719, 11 문서 8장). G-3 랜딩만 비로그인 허용 (SecurityConfig.V2_PUBLIC_GET_PATHS, 로그인했으면 사용자를 읽는다) */
 @SecurityRequirement(name = "access-token")
-@Tag(name = "v2. 사용자 앱 - 티켓탭·선물")
+@Tag(name = V2ApiTags.GIFT, description = V2ApiTags.GIFT_DESCRIPTION)
 @RestController
 @RequestMapping("/api/v2")
 @Validated

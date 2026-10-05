@@ -128,7 +128,7 @@ class V2SwaggerGroupsTest {
         /** `[호스팅] 1. 호스트·멤버` */
         private val TAG_FORMAT = Regex("""^\[(호스팅|사용자)] (\d+)\. \S.*$""")
 
-        /** `[H-1]`, `[O-0]` 등 */
-        private val SCREEN_ID = Regex("""^\[[A-Z]-\d+]""")
+        /** `[H-1]`, `[O-0]`, `[G-7a]`(문서 화면의 하위 API) 등 */
+        private val SCREEN_ID = Regex("""^\[[A-Z]-\d+[a-z]?]""")
     }
 }
