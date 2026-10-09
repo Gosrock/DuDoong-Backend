@@ -6,7 +6,7 @@ package band.gosrock.api.config
  * 바뀌는 것은 로그·알림 내용뿐이다(요청 처리에는 영향 없음). 잘린 본문(로그 상한)이나 깨진 JSON 에서도 동작하도록 정규식으로 처리한다.
  *
  * 대상 키(대소문자 무시): 계좌(bankName·accountHolder·accountNumber, v2 티켓 계좌 bank·holder·number), 입금자명, 연락처(phoneNumber·email·contactValue·value),
- * 선물 메모(memo — 받는 사람 이름 등을 적는 칸, #719), 결제·인증 값(paymentKey·refreshToken·idToken, #764).
+ * 선물 메모(memo — 받는 사람 이름 등을 적는 칸, #719), 결제·인증 값(paymentKey·refreshToken·idToken, #764; 카카오 accessToken, #763).
  * 키 이름 패턴(#764): `phone`·`phoneNumber`·`phoneNo` 로 끝나는 키(receiverPhone 등), `accountNumber`·`accountNo` 로 끝나는 키(refundAccountNumber 등).
  * 경로: 선물 링크 토큰(`/api/v2/gifts/{token}`, #719)은 링크를 가진 사람이 받으므로 요청 로그·Slack 의 URL 에서 [maskPath] 로 가린다
  */
@@ -17,7 +17,7 @@ object SensitiveBodyMasker {
     val SENSITIVE_KEYS: Set<String> = setOf(
         "accountNumber", "accountHolder", "bankName", "bank", "holder", "number",
         "depositorName", "phoneNumber", "email", "contactValue", "value", "memo",
-        "paymentKey", "refreshToken", "idToken",
+        "paymentKey", "refreshToken", "idToken", "accessToken",
     )
 
     /** 접미사로 고르는 키: 연락처(…phone·…phoneNumber·…phoneNo)·계좌번호(…accountNumber·…accountNo) */
