@@ -142,7 +142,7 @@ def test_02_order_with_coupon_uses_coupon(base_url, s):
     ev = f"{base_url}/v2/events/{s.event_id}"
     key = get_data(requests.post(f"{ev}/images", json={"purpose": "POSTER", "extension": "PNG"}, headers=_h(s, "master")))["key"]
     assert_status(requests.patch(f"{ev}/basic", json={"posterImageKey": key, "place": PLACE, "contacts": [{"type": "EMAIL", "value": "a@a.com"}]}, headers=_h(s, "master")), 200)
-    assert_status(requests.put(f"{ev}/sections", json=SECTIONS, headers=_h(s, "master")), 200)
+    assert_status(requests.put(f"{ev}/sections", json={"sections": SECTIONS}, headers=_h(s, "master")), 200)
     assert_status(requests.post(f"{ev}/open", headers=_h(s, "master")), 200)
 
     cart = requests.post(f"{base_url}/v1/carts", json={"items": [{"itemId": s.ticket_id, "quantity": 1, "options": []}]}, headers=_h(s, "buyer"))

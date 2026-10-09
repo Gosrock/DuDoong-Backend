@@ -111,7 +111,7 @@ def test_01_host_member_added(base_url, s):
         n = _wait(base_url, s, who, "HOST_MEMBER_ADDED")
         assert len(n) == 1
         n = n[0]
-        assert n["target"] == {"type": "HOST", "id": str(s.host_id), "eventId": None}
+        assert n["target"] == {"type": "HOST", "targetId": str(s.host_id), "eventId": None}
         assert s.host_name in n["body"] and role in n["body"], n["body"]
         assert n["extra"]["hostName"] == s.host_name
         assert n["isRead"] is False
@@ -160,7 +160,7 @@ def test_03_approved_refused(base_url, s):
     for who in ("approved", "canceled"):
         assert_status(requests.post(_ev(base_url, s, f"/orders/{o[who]}/approve"), headers=_h(s, "manager")), 200)
     n = _wait(base_url, s, "approved", "ORDER_APPROVED")[0]
-    assert n["target"] == {"type": "ORDER", "id": o["approved"], "eventId": s.event_id}
+    assert n["target"] == {"type": "ORDER", "targetId": o["approved"], "eventId": s.event_id}
     assert n["title"] == "티켓 주문이 승인되었습니다!"
 
     resp = requests.post(_ev(base_url, s, f"/orders/{o['refused']}/refuse"), json={"reasonType": "ETC", "reasonText": "중복 주문"}, headers=_h(s, "manager"))

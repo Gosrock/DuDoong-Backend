@@ -173,7 +173,7 @@ def test_04_create_event(base_url, s):
     assert manage["contacts"] == [] and manage["tags"] == []
 
     c = _checklist(base_url, s, s.event_id)
-    assert c == {"basic": False, "detail": False, "ticket": False, "ticketRequired": True, "canOpen": False}
+    assert c == {"isBasicFilled": False, "isDetailFilled": False, "hasValidTicket": False, "ticketRequired": True, "canOpen": False}
     resp = requests.post(f"{base_url}/v2/events/{s.event_id}/open", headers=_h(s, "manager"))
     assert_status(resp, 400)
     assert resp.json()["code"] == "Event_400_7"
@@ -263,7 +263,7 @@ def test_06_sections(base_url, s):
 def test_07_ticket_then_open(base_url, s):
     _v1_free_ticket(base_url, s, s.event_id)
     c = _checklist(base_url, s, s.event_id)
-    assert c == {"basic": True, "detail": True, "ticket": True, "ticketRequired": True, "canOpen": True}
+    assert c == {"isBasicFilled": True, "isDetailFilled": True, "hasValidTicket": True, "ticketRequired": True, "canOpen": True}
 
     assert_status(requests.post(f"{base_url}/v2/events/{s.event_id}/open", headers=_h(s, "guest")), 403)
     resp = requests.post(f"{base_url}/v2/events/{s.event_id}/open", headers=_h(s, "manager"))
@@ -343,7 +343,7 @@ def test_11_no_ticket_event(base_url, s):
     _fill(base_url, s, s.no_ticket_event_id)
 
     c = _checklist(base_url, s, s.no_ticket_event_id)
-    assert c == {"basic": True, "detail": True, "ticket": False, "ticketRequired": False, "canOpen": True}
+    assert c == {"isBasicFilled": True, "isDetailFilled": True, "hasValidTicket": False, "ticketRequired": False, "canOpen": True}
 
     # v1 open 은 hasTicket=false 여도 티켓을 요구 (v1 동작 불변). v1 detail 조건을 위해 포스터+content 를 v1 로 채운다
     resp = requests.post(f"{base_url}/v2/events", json={"hostId": s.host_id, "name": "v1오픈시도", "startAt": _f(START), "endAt": _f(END), "hasTicket": False}, headers=_h(s, "manager"))
