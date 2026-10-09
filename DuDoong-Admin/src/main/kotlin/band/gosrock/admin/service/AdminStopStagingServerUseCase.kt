@@ -4,6 +4,7 @@ import band.gosrock.admin.exception.StagingServerNotConfiguredException
 import band.gosrock.admin.model.dto.response.AdminStagingServerResponse
 import band.gosrock.common.annotation.UseCase
 import band.gosrock.infrastructure.outer.aws.StagingServerClient
+import band.gosrock.infrastructure.outer.aws.StagingServerInfo
 import band.gosrock.infrastructure.outer.aws.StagingServerState
 import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
@@ -26,9 +27,9 @@ class AdminStopStagingServerUseCase(
         }
 
         log.info("[ADMIN-INFRA] STAGING STOP - userId={}, from={}", adminUserId, current.state)
-        stagingServerClient.stop()
+        val newState = stagingServerClient.stop()
         return AdminStagingServerResponse.of(
-            stagingServerClient.describe(),
+            StagingServerInfo(newState, null),
             LocalDateTime.now(AdminStagingServerResponse.KST),
         )
     }

@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.Mockito.never
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.Mockito.`when`
@@ -116,18 +117,19 @@ class AdminStagingServerUseCaseTest {
     inner class StartTest {
 
         @Test
-        @DisplayName("STOPPED 이면 start 를 호출하고 이후 상태를 내려준다")
+        @DisplayName("STOPPED 이면 start 를 호출하고, 다시 조회하지 않고 start 응답 상태(PENDING)를 내려준다")
         fun startFromStopped() {
             givenUser(1L, AccountRole.ADMIN)
             `when`(stagingServerClient.isConfigured()).thenReturn(true)
-            `when`(stagingServerClient.describe())
-                .thenReturn(info(StagingServerState.STOPPED), info(StagingServerState.PENDING))
+            `when`(stagingServerClient.describe()).thenReturn(info(StagingServerState.STOPPED))
+            `when`(stagingServerClient.start()).thenReturn(StagingServerState.PENDING)
 
             val response = startUseCase.execute(1L)
 
             verify(stagingServerClient).start()
+            verify(stagingServerClient, times(1)).describe()
             assertEquals("PENDING", response.state)
-            assertEquals(LocalDateTime.of(2026, 10, 9, 10, 0), response.launchedAt)
+            assertNull(response.launchedAt)
         }
 
         @Test
@@ -184,16 +186,17 @@ class AdminStagingServerUseCaseTest {
     inner class StopTest {
 
         @Test
-        @DisplayName("RUNNING 이면 stop 을 호출하고 이후 상태를 내려준다")
+        @DisplayName("RUNNING 이면 stop 을 호출하고, 다시 조회하지 않고 stop 응답 상태(STOPPING)를 내려준다")
         fun stopFromRunning() {
             givenUser(1L, AccountRole.ADMIN)
             `when`(stagingServerClient.isConfigured()).thenReturn(true)
-            `when`(stagingServerClient.describe())
-                .thenReturn(info(StagingServerState.RUNNING), info(StagingServerState.STOPPING))
+            `when`(stagingServerClient.describe()).thenReturn(info(StagingServerState.RUNNING))
+            `when`(stagingServerClient.stop()).thenReturn(StagingServerState.STOPPING)
 
             val response = stopUseCase.execute(1L)
 
             verify(stagingServerClient).stop()
+            verify(stagingServerClient, times(1)).describe()
             assertEquals("STOPPING", response.state)
             assertNull(response.launchedAt)
         }

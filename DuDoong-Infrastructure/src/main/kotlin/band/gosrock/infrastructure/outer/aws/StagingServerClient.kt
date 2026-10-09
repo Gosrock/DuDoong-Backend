@@ -40,11 +40,18 @@ class StagingServerClient(
         )
     }
 
-    fun start() {
-        ec2Client.startInstances(StartInstancesRequest.builder().instanceIds(instanceId).build())
+    /**
+     * 시작 요청 직후의 상태(보통 PENDING)를 돌려준다.
+     * 바로 describe 하면 아직 이전 상태가 보일 수 있어 응답의 currentState 를 쓴다.
+     */
+    fun start(): StagingServerState {
+        val response = ec2Client.startInstances(StartInstancesRequest.builder().instanceIds(instanceId).build())
+        return StagingServerState.fromEc2StateName(response.startingInstances().firstOrNull()?.currentState()?.nameAsString())
     }
 
-    fun stop() {
-        ec2Client.stopInstances(StopInstancesRequest.builder().instanceIds(instanceId).build())
+    /** 중지 요청 직후의 상태(보통 STOPPING)를 돌려준다. */
+    fun stop(): StagingServerState {
+        val response = ec2Client.stopInstances(StopInstancesRequest.builder().instanceIds(instanceId).build())
+        return StagingServerState.fromEc2StateName(response.stoppingInstances().firstOrNull()?.currentState()?.nameAsString())
     }
 }

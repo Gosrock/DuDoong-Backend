@@ -4,6 +4,7 @@ import band.gosrock.admin.exception.StagingServerNotConfiguredException
 import band.gosrock.admin.model.dto.response.AdminStagingServerResponse
 import band.gosrock.common.annotation.UseCase
 import band.gosrock.infrastructure.outer.aws.StagingServerClient
+import band.gosrock.infrastructure.outer.aws.StagingServerInfo
 import band.gosrock.infrastructure.outer.aws.StagingServerState
 import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
@@ -26,9 +27,10 @@ class AdminStartStagingServerUseCase(
         }
 
         log.info("[ADMIN-INFRA] STAGING START - userId={}, from={}", adminUserId, current.state)
-        stagingServerClient.start()
+        val newState = stagingServerClient.start()
+        // 켜진 시각은 아직 확정 전이라 비워 두고, 화면 폴링(PENDING)으로 채운다
         return AdminStagingServerResponse.of(
-            stagingServerClient.describe(),
+            StagingServerInfo(newState, null),
             LocalDateTime.now(AdminStagingServerResponse.KST),
         )
     }
