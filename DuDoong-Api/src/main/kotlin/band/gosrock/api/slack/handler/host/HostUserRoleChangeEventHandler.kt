@@ -42,7 +42,7 @@ class HostUserRoleChangeEventHandler(
             // todo :: host users foreach
             // todo :: 마스터 유저 권한 부여 api
             hostMasterChangeEmailService.execute(user.toEmailUserInfo(), hostName, role)
-            slackMessageProvider.sendMessage(host.slackUrl, message)
+            slackMessageProvider.sendMessage(host.slackUrl, message, host.id)
         } else {
             hostUserRoleChangeEmailService.execute(user.toEmailUserInfo(), hostName, role)
         }

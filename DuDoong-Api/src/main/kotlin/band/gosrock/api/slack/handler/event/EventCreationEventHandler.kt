@@ -27,6 +27,6 @@ class EventCreationEventHandler(
     fun handle(eventCreationEvent: EventCreationEvent) {
         val host = hostAdaptor.findById(eventCreationEvent.hostId!!)
         val message = EventSlackAlarm.creationOf(eventCreationEvent.eventName!!)
-        slackMessageProvider.sendMessage(host.slackUrl, message)
+        slackMessageProvider.sendMessage(host.slackUrl, message, host.id)
     }
 }

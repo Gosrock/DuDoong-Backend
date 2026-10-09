@@ -22,7 +22,6 @@ import jakarta.validation.constraints.Min
 import org.springdoc.core.annotations.ParameterObject
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
-import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -36,7 +35,7 @@ import org.springframework.web.bind.annotation.RestController
 @Tag(name = "9. [응원톡]")
 @RestController
 @RequestMapping("/api/v1/events/{eventId}/comments")
-@Validated
+// 클래스 @Validated 없이 스프링 기본 메서드 검증으로 limit 상한을 본다 (#764). 위반은 HandlerMethodValidationException → 검증 메시지 응답
 class CommentController(
     private val createCommentUseCase: CreateCommentUseCase,
     private val retrieveCommentUseCase: RetrieveCommentUseCase,

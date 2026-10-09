@@ -32,6 +32,6 @@ class WithDrawOrderEventHandler(
         val event = eventAdaptor.findById(order.eventId!!)
         val host = hostAdaptor.findById(event.hostId!!)
         val message = HostSlackAlarm.withDrawOrder(event, order)
-        slackMessageProvider.sendMessage(host.slackUrl!!, message)
+        slackMessageProvider.sendMessage(host.slackUrl, message, host.id)
     }
 }

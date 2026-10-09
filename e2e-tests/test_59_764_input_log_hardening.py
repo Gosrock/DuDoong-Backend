@@ -5,7 +5,7 @@
   E2E 는 127.0.0.1 에서 접속하므로 X-Forwarded-For 를 붙이면 "nginx 가 전달한 요청" 과 같다.
   서버의 요청 제한을 낮춰 띄웠을 때만 돈다: 서버 RATE_LIMIT_OVERDRAFT=N·RATE_LIMIT_REFILL=N, pytest E2E_RATE_LIMIT_OVERDRAFT=N
 - presigned URL 발급은 유저별 분당 30회 (서버 기본값)
-- 호스트 슬랙 URL 은 Slack Incoming Webhook 형식만, 회원가입 프로필 이미지는 카카오 CDN 주소만
+- 호스트 슬랙 URL 은 Slack Incoming Webhook 형식만, 회원가입 프로필 이미지는 카카오 CDN 주소만 저장(아니면 기본 이미지)
 - X-Trace-Id 형식 검증, 응원톡 랜덤 limit 상한, 스프링 기본 예외 응답 문구
 
 재실행해도 충돌하지 않도록 유저 이메일·IP 에 실행마다 다른 값을 쓴다. DB 직접 접근은 하지 않는다.
@@ -133,7 +133,9 @@ def test_06_host_slack_url_must_be_slack_webhook(base_url):
 
 
 def test_07_register_profile_image_kakao_only(base_url):
-    assert_status(_login(base_url, "other-image", "https://example.com/kakao.png"), 400)
+    # 카카오 CDN 주소가 아니면 가입은 그대로 하고 기본 이미지(null)로 둔다
+    other = _token(base_url, "other-image", "https://example.com/kakao.png")
+    assert get_data(requests.get(f"{base_url}/v1/users/me", headers=_h(other)))["profileImage"] is None
     token = _token(base_url, "kakao-image", KAKAO_IMAGE)
     me = get_data(requests.get(f"{base_url}/v1/users/me", headers=_h(token)))
     assert me["profileImage"] == KAKAO_IMAGE, me

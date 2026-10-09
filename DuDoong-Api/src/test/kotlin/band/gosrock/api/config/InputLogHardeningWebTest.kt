@@ -3,6 +3,16 @@ package band.gosrock.api.config
 import band.gosrock.api.supports.ApiIntegrateProfileResolver
 import band.gosrock.api.supports.ApiIntegrateTestConfig
 import band.gosrock.common.exception.TooManyRequestException
+import band.gosrock.domain.domains.comment.domain.Comment
+import band.gosrock.domain.domains.comment.domain.CommentStatus
+import band.gosrock.domain.domains.comment.repository.CommentRepository
+import band.gosrock.domain.domains.event.domain.Event
+import band.gosrock.domain.domains.event.repository.EventRepository
+import band.gosrock.domain.domains.user.domain.OauthInfo
+import band.gosrock.domain.domains.user.domain.OauthProvider
+import band.gosrock.domain.domains.user.domain.Profile
+import band.gosrock.domain.domains.user.domain.User
+import band.gosrock.domain.domains.user.repository.UserRepository
 import band.gosrock.infrastructure.config.s3.ImageFileExtension
 import band.gosrock.infrastructure.config.s3.S3UploadPresignedUrlService
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -14,7 +24,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -63,7 +72,11 @@ class InputLogHardeningWebTest {
 
     @Autowired private lateinit var presignedUrlService: S3UploadPresignedUrlService
 
-    @Autowired private lateinit var springDataWebProperties: SpringDataWebProperties
+    @Autowired private lateinit var userRepository: UserRepository
+
+    @Autowired private lateinit var eventRepository: EventRepository
+
+    @Autowired private lateinit var commentRepository: CommentRepository
 
     private val http = HttpClient.newHttpClient()
 
@@ -115,7 +128,12 @@ class InputLogHardeningWebTest {
     }
 
     @Test
-    fun `사설·루프백만 있는 체인은 화이트리스트로 통과시키지 않는다`() {
+    fun `nginx 가 사설 IP 하나로 덮어쓴 경우 그 IP 가 화이트리스트면 통과한다`() {
+        assertEquals(List(5) { 200 }, hitHealth(5, "X-Forwarded-For" to "10.255.255.254"))
+    }
+
+    @Test
+    fun `사설·루프백만 있는 체인(2개 이상)은 화이트리스트로 통과시키지 않는다`() {
         // 모두 신뢰 프록시면 RemoteIpValve 는 맨 왼쪽 값을 쓴다 — 화이트리스트(127.0.0.1·10.255.255.254)와 같아도 제한한다.
         // Redis 버킷이 실행 간에 남으므로 처음 몇 번의 결과는 정하지 않고 429 가 나오는지만 본다
         assertTrue(429 in hitHealth(8, "X-Forwarded-For" to "127.0.0.1, 10.0.0.5"))
@@ -149,7 +167,9 @@ class InputLogHardeningWebTest {
             with(user("1").roles("USER"))
             param("limit", "51")
         }.andExpect { status { isBadRequest() } }.andReturn().response.getContentAsString(Charsets.UTF_8)
-        assertTrue(body.contains("limit 값은 50 이하여야 합니다."), body)
+        // 컨트롤러에 클래스 @Validated 가 없어 스프링 기본 메서드 검증(HandlerMethodValidationException)을 탄다 —
+        // GlobalExceptionHandler 가 일반 문구 대신 검증 메시지를 남기는 분기
+        assertEquals("{limit=limit 값은 50 이하여야 합니다.}", objectMapper.readTree(body).at("/reason").asText(), body)
 
         val ok = mockMvc.get("/api/v1/events/1/comments/random") {
             with(user("1").roles("USER"))
@@ -159,8 +179,20 @@ class InputLogHardeningWebTest {
     }
 
     @Test
-    fun `Pageable size 상한은 100`() {
-        assertEquals(100, springDataWebProperties.pageable.maxPageSize)
+    fun `Pageable size=1000 요청은 100 으로 줄어든다`() {
+        val writer = userRepository.save(
+            User(profile = Profile(name = "작성자", email = "c764-${java.util.UUID.randomUUID()}@test.com"), oauthInfo = OauthInfo(OauthProvider.KAKAO, "c764-${java.util.UUID.randomUUID()}")),
+        )
+        val eventId = eventRepository.save(Event(hostId = 1L, name = "페이지상한", startAt = null, runTime = 60L)).id!!
+        commentRepository.saveAll((1..101).map { Comment("응원 $it", "닉$it", writer, eventId, CommentStatus.ACTIVE) })
+
+        val body = mockMvc.get("/api/v1/events/$eventId/comments") {
+            with(user("1").roles("USER"))
+            param("size", "1000")
+        }.andExpect { status { isOk() } }.andReturn().response.getContentAsString(Charsets.UTF_8)
+        val data = objectMapper.readTree(body).at("/data")
+        assertEquals(100, data.at("/content").size(), body.take(300))
+        assertTrue(data.at("/hasNext").asBoolean(), "101건 중 100건만 내려와 다음 페이지가 있다")
     }
 
     @Test

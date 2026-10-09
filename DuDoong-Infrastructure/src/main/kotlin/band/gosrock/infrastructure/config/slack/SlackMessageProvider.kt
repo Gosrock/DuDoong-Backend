@@ -24,15 +24,15 @@ class SlackMessageProvider(
     )
 
     /** 이벤트 핸들러 자체에서 비동기로 실행하기 때문에 @Async 어노테이션 지움 */
-    fun sendMessage(url: String?, text: String) {
-        if (url == null) return
+    fun sendMessage(url: String?, text: String, hostId: Long? = null) {
+        val target = url?.trim() ?: return
         // 형식 검증 전에 저장된 URL 은 보내지 않는다 (#764)
-        if (!isSlackWebhookUrl(url)) {
-            log.warn("허용되지 않은 슬랙 웹훅 URL 이라 알림을 건너뜀")
+        if (!isSlackWebhookUrl(target)) {
+            log.warn("허용되지 않은 슬랙 웹훅 URL 이라 알림을 건너뜀 hostId={}", hostId)
             return
         }
         try {
-            doSend(url, text)
+            doSend(target, text)
         } catch (e: Exception) {
             // ignored
         }

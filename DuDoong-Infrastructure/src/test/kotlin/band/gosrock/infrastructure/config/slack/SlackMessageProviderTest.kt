@@ -52,6 +52,21 @@ class SlackMessageProviderTest {
     }
 
     @Test
+    fun `형식이 아닌 저장 URL 을 건너뛸 때 WARN 로그에 hostId 를 남기고 URL 은 남기지 않는다`() {
+        val logger = org.slf4j.LoggerFactory.getLogger(SlackMessageProvider::class.java) as ch.qos.logback.classic.Logger
+        val appender = ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>().also { it.start() }
+        logger.addAppender(appender)
+        try {
+            provider.sendMessage("http://127.0.0.1:1/services/secret-path", "알림", 42L)
+            val warn = appender.list.single { it.level == ch.qos.logback.classic.Level.WARN }.formattedMessage
+            assertTrue(warn.contains("hostId=42"), warn)
+            assertFalse(warn.contains("secret-path"), warn)
+        } finally {
+            logger.detachAppender(appender)
+        }
+    }
+
+    @Test
     fun `웹훅 전송 클라이언트는 리다이렉트를 따라가지 않는다`() {
         val followed = AtomicInteger()
         val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0).apply {

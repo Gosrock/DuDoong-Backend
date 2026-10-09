@@ -61,6 +61,22 @@ class InputLogHardeningUnitTest {
         }
 
         @Test
+        fun `지난 키는 1분에 한 번 정리하고, 키가 상한을 넘으면 새 키 알림은 생략한다`() {
+            val sender = SlackThrottleErrorSender(ObjectMapper(), mock(SlackErrorNotificationProvider::class.java))
+            val t0 = 10_000_000L
+            listOf("a", "b", "c").forEach { assertTrue(sender.tryAcquire(it, t0)) }
+            assertTrue(sender.tryAcquire("d", t0 + 1000))
+            assertEquals(4, sender.trackedKeyCount(), "1분 안에는 정리하지 않는다")
+            assertTrue(sender.tryAcquire("e", t0 + SlackThrottleErrorSender.INTERVAL_MILLIS + 500))
+            assertEquals(2, sender.trackedKeyCount(), "1분 지난 a·b·c 는 정리, d·e 는 남는다")
+
+            val t1 = t0 + 10 * SlackThrottleErrorSender.INTERVAL_MILLIS
+            (0 until SlackThrottleErrorSender.MAX_KEYS).forEach { sender.tryAcquire("k$it", t1) }
+            assertFalse(sender.tryAcquire("new", t1 + 1))
+            assertEquals(SlackThrottleErrorSender.MAX_KEYS, sender.trackedKeyCount())
+        }
+
+        @Test
         fun `비동기 풀이 가득 차 거절돼도 예외를 던지지 않는다`() {
             val provider = mock(SlackErrorNotificationProvider::class.java)
             doThrow(TaskRejectedException("full")).`when`(provider).sendNotification(anyList())
@@ -81,15 +97,16 @@ class InputLogHardeningUnitTest {
         }
 
         @Test
-        fun `회원가입 프로필 이미지는 카카오 CDN 주소·빈 값만`() {
-            fun valid(image: String?) = validator.validate(RegisterRequest(email = "a@b.c", name = "n", profileImage = image)).isEmpty()
-            assertTrue(valid(null))
-            assertTrue(valid(""))
-            assertTrue(valid("http://k.kakaocdn.net/dn/abc/img_640x640.jpg"))
-            assertTrue(valid("https://img1.kakaocdn.net/thumb/R640x640/abc.jpg"))
-            assertFalse(valid("https://example.com/kakao.png"))
-            assertFalse(valid("https://k.kakaocdn.net.example.com/a.jpg"))
-            assertFalse(valid("https://example.com/k.kakaocdn.net/a.jpg"))
+        fun `회원가입 프로필 이미지는 카카오 CDN 주소만 저장하고, 아니면 가입은 그대로 기본 이미지(null)`() {
+            fun saved(image: String?): String? {
+                val request = RegisterRequest(email = "a@b.c", name = "n", profileImage = image)
+                assertTrue(validator.validate(request).isEmpty(), "형식이 달라도 400 이 아니다: $image")
+                return request.toProfile().profileImage?.imageKey
+            }
+            assertEquals("http://k.kakaocdn.net/dn/abc/img_640x640.jpg", saved("http://k.kakaocdn.net/dn/abc/img_640x640.jpg"))
+            assertEquals("https://img1.kakaocdn.net/thumb/R640x640/abc.jpg", saved("https://img1.kakaocdn.net/thumb/R640x640/abc.jpg"))
+            listOf(null, "", "https://example.com/kakao.png", "https://k.kakaocdn.net.example.com/a.jpg", "https://example.com/k.kakaocdn.net/a.jpg")
+                .forEach { assertEquals(null, saved(it), "$it") }
         }
     }
 
@@ -154,7 +171,7 @@ class InputLogHardeningUnitTest {
         private val values = mapOf(
             "auth.jwt.secret-key" to jwtDefault,
             "toss.secret-key" to "test_sk_ADpexMgkW36weAqp4bNVGbR5ozO0",
-            "toss.mid" to "gosroc9mwo",
+            "toss.mid" to "gosroc9mwo", // 비밀값 아님 — 기본값이어도 경고하지 않는다
             "aws.access-key" to "testKey",
             "aws.secret-key" to "secretKey",
         )
@@ -170,8 +187,9 @@ class InputLogHardeningUnitTest {
 
         @Test
         fun `공개 기본값과 같은 설정 이름만 고른다`() {
-            assertEquals(values.keys.toList(), warner("prod").first.defaultSecretsInUse())
-            assertEquals(listOf("toss.mid"), warner("prod", values.mapValues { "real-${it.key}" } - "toss.mid").first.defaultSecretsInUse())
+            assertEquals(values.keys.toList() - "toss.mid", warner("prod").first.defaultSecretsInUse())
+            assertEquals(listOf("toss.secret-key"), warner("prod", values.mapValues { "real-${it.key}" } - "toss.secret-key").first.defaultSecretsInUse())
+            assertEquals(emptyList<String>(), warner("prod", values.mapValues { "real-${it.key}" } - "toss.mid").first.defaultSecretsInUse())
         }
 
         @Test

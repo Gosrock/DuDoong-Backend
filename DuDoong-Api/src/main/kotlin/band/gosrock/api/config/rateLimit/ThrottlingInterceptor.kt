@@ -82,13 +82,16 @@ class ThrottlingInterceptor(
     }
 
     /**
-     * 화이트리스트 판정 (#764). 사설 대역 프록시를 거쳤는데(RemoteIpValve 가 X-Forwarded-By 를 남김) 정해진 주소도 프록시 대역이면
-     * X-Forwarded-For 체인 전체가 프록시 대역이라는 뜻이다. 이때 RemoteIpValve 는 맨 왼쪽 값을 쓰므로 화이트리스트로 통과시키지 않는다
+     * 화이트리스트 판정 (#764). 원래 X-Forwarded-For 가 2개 이상이고 모두 사설·루프백이면(RemoteIpValve 는 이때 맨 왼쪽 값을 쓴다)
+     * 화이트리스트로 통과시키지 않는다. 사설 대역을 거친 주소는 RemoteIpValve 가 X-Forwarded-By 로 남기므로
+     * 정해진 주소가 프록시 대역이고 X-Forwarded-By 가 그 주소 하나만이 아니면 2개 이상인 체인이다.
+     * nginx 가 실제 IP 하나로 덮어쓴 경우(사설 IP 1개)는 그 IP 로 그대로 판정한다
      */
     private fun isWhitelisted(request: HttpServletRequest, remoteAddr: String): Boolean {
         if (!aclWhiteList.contains(remoteAddr)) return false
-        val viaTrustedProxy = request.getHeader("X-Forwarded-By") != null
-        return !(viaTrustedProxy && proxyPattern.matches(remoteAddr))
+        val forwardedBy = request.getHeader("X-Forwarded-By")?.split(",")?.map { it.trim() } ?: return true
+        val allProxyChain = proxyPattern.matches(remoteAddr) && forwardedBy != listOf(remoteAddr)
+        return !allProxyChain
     }
 
     private fun responseTooManyRequestError(

@@ -70,9 +70,19 @@ class SlackThrottleErrorSender(
         }
     }
 
-    /** 키별로 [INTERVAL_MILLIS] 에 한 번만 true. 맵이 커지면 지난 키를 비운다 */
+    @Volatile
+    private var lastCleanupAt = 0L
+
+    /**
+     * 키별로 [INTERVAL_MILLIS] 에 한 번만 true.
+     * 지난 키 정리는 [INTERVAL_MILLIS] 에 한 번만 한다(요청마다 전체를 훑지 않는다). 그 사이 키가 [MAX_KEYS] 를 넘으면 새 키 알림은 생략한다(메모리 상한)
+     */
     internal fun tryAcquire(key: String, nowMillis: Long): Boolean {
-        if (lastSentAt.size > MAX_KEYS) lastSentAt.entries.removeIf { nowMillis - it.value >= INTERVAL_MILLIS }
+        if (nowMillis - lastCleanupAt >= INTERVAL_MILLIS) {
+            lastCleanupAt = nowMillis
+            lastSentAt.entries.removeIf { nowMillis - it.value >= INTERVAL_MILLIS }
+        }
+        if (lastSentAt.size >= MAX_KEYS && !lastSentAt.containsKey(key)) return false
         var acquired = false
         lastSentAt.compute(key) { _, last ->
             if (last == null || nowMillis - last >= INTERVAL_MILLIS) {
@@ -85,8 +95,10 @@ class SlackThrottleErrorSender(
         return acquired
     }
 
+    internal fun trackedKeyCount(): Int = lastSentAt.size
+
     companion object {
         const val INTERVAL_MILLIS = 60_000L
-        private const val MAX_KEYS = 10_000
+        internal const val MAX_KEYS = 10_000
     }
 }

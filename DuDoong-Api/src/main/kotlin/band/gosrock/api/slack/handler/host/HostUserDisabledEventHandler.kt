@@ -33,6 +33,6 @@ class HostUserDisabledEventHandler(
         val hostName = hostUserDisabledEvent.hostName!!
         val message = HostSlackAlarm.disabledOf(user)
         hostUserDisabledEmailService.execute(user.toEmailUserInfo(), hostName)
-        slackMessageProvider.sendMessage(host.slackUrl, message)
+        slackMessageProvider.sendMessage(host.slackUrl, message, host.id)
     }
 }

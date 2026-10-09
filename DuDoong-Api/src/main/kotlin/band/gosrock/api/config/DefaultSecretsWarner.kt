@@ -54,7 +54,8 @@ class DefaultSecretsWarner(
         private const val JWT_KEY = "auth.jwt.secret-key"
         private val DEPLOYED_PROFILES = setOf("prod", "staging")
         private val SECRET_SOURCES = listOf(
-            "application-common.yml" to listOf("auth.jwt.secret-key", "toss.secret-key", "toss.mid"),
+            // toss.mid 는 비밀값이 아니고 기본값이 실제 MID 라 넣지 않는다
+            "application-common.yml" to listOf("auth.jwt.secret-key", "toss.secret-key"),
             "application-infrastructure.yml" to listOf("aws.access-key", "aws.secret-key"),
         )
 
