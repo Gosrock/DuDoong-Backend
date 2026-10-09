@@ -547,7 +547,7 @@ def test_14_new_approved_bar(base_url, s):
 
     order2 = approve("buyer2")
     assert bar("buyer2")["orderUuids"] == [order2]
-    assert_status(requests.post(f"{base_url}/v2/me/notifications/read", json={"all": True}, headers=_h(s, "buyer2")), 200)
+    assert_status(requests.post(f"{base_url}/v2/me/notifications/read", json={"readAll": True}, headers=_h(s, "buyer2")), 200)
     assert bar("buyer2")["hasNew"] is False
 
 

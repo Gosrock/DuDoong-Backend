@@ -415,6 +415,7 @@ def test_11_idor(base_url, s):
     resp = requests.patch(
         f"{base_url}/v2/events/{s.other_event_id}/ticket-items/{s.other_ticket_id}", json=_free(name="탈취"), headers=_h(s, "manager"),
     )
+    # 명시적 null 이 섞인 본문이어도 권한 검사(403)가 먼저 (#755)
     assert_status(resp, 403)
     resp = requests.get(f"{base_url}/v2/events/{s.other_event_id}/ticket-items/manage", headers=_h(s, "other"))
     assert_status(resp, 200)
@@ -453,9 +454,9 @@ def test_13_v1_long_name_resend(base_url, s):
     assert current["saleState"] == "SOLD" and current["name"] == long_name
 
     form = _free(name=current["name"], description="새 설명", supplyCount=10, purchaseLimit=2)
-    resp = requests.patch(_ticket_url(base_url, s, ticket_id), json=form, headers=_h(s, "manager"))
+    resp = requests.patch(_ticket_url(base_url, s, ticket_id), json=_patch_body(form), headers=_h(s, "manager"))
     assert_status(resp, 200)
     assert get_data(resp)["name"] == long_name and get_data(resp)["description"] == "새 설명"
-    resp = requests.patch(_ticket_url(base_url, s, ticket_id), json={**form, "name": "새이름"}, headers=_h(s, "manager"))
+    resp = requests.patch(_ticket_url(base_url, s, ticket_id), json=_patch_body({**form, "name": "새이름"}), headers=_h(s, "manager"))
     assert_status(resp, 400)
     assert _code(resp) == "Ticket_Item_400_14"

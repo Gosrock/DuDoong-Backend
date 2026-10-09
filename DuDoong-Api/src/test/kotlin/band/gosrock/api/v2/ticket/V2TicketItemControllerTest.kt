@@ -233,6 +233,8 @@ class V2TicketItemControllerTest : V2TicketApiTestSupport() {
                     jsonPath("$.reason") { value(org.hamcrest.Matchers.containsString("clear")) }
                 }
             }
+            // 권한 검사가 먼저 — 일반 멤버는 본문과 관계없이 403
+            patchTicketRaw(team.guest, team.eventId, id, mapOf("supplyCount" to null)).andExpect { status { isForbidden() } }
             // 나머지 필드의 null 은 '변경 안 함'
             patchTicketRaw(team.manager, team.eventId, id, mapOf("name" to null, "price" to null, "account" to null, "isQuantityPublic" to null)).andExpect {
                 status { isOk() }

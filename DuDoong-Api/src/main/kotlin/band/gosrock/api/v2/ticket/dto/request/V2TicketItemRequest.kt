@@ -8,6 +8,7 @@ import band.gosrock.domain.domains.ticket_item.service.v2.V2TicketClearableField
 import band.gosrock.domain.domains.ticket_item.service.v2.V2TicketItemForm
 import band.gosrock.domain.domains.ticket_item.service.v2.V2TicketItemPatch
 import band.gosrock.domain.domains.ticket_item.exception.TicketItemNullFieldException
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -154,21 +155,29 @@ data class V2UpdateTicketItemRequest(
     )
     @field:Size(max = 5)
     val clear: Set<V2TicketClearableField>? = null,
+
+    /** 본문에서 명시적 null 로 온 '값 없음' 필드 ([read] 가 채운다). 거부는 [toPatch] — 유스케이스 안이라 호스트 권한 검사(403)가 먼저 */
+    @field:JsonIgnore
+    @field:Schema(hidden = true)
+    val explicitNullKeys: Set<String> = emptySet(),
 ) {
-    fun toPatch(): V2TicketItemPatch = V2TicketItemPatch(
-        payType = payType?.domain,
-        name = name,
-        description = description,
-        price = price,
-        supplyCount = supplyCount,
-        account = account?.toVo(),
-        approvalRequired = approvalRequired,
-        isQuantityPublic = isQuantityPublic,
-        purchaseLimit = purchaseLimit,
-        saleStartAt = saleStartAt,
-        saleEndAt = saleEndAt,
-        clear = clear.orEmpty(),
-    )
+    fun toPatch(): V2TicketItemPatch {
+        if (explicitNullKeys.isNotEmpty()) throw TicketItemNullFieldException.EXCEPTION
+        return V2TicketItemPatch(
+            payType = payType?.domain,
+            name = name,
+            description = description,
+            price = price,
+            supplyCount = supplyCount,
+            account = account?.toVo(),
+            approvalRequired = approvalRequired,
+            isQuantityPublic = isQuantityPublic,
+            purchaseLimit = purchaseLimit,
+            saleStartAt = saleStartAt,
+            saleEndAt = saleEndAt,
+            clear = clear.orEmpty(),
+        )
+    }
 
     companion object {
         private const val RAW_TEXT_MAX = 255
@@ -177,12 +186,11 @@ data class V2UpdateTicketItemRequest(
         val CLEARABLE_KEYS = setOf("supplyCount", "purchaseLimit", "saleStartAt", "saleEndAt", "description")
 
         /**
-         * T-3 본문 읽기. 키가 없는 것과 명시적 null 을 구분해야 해서 트리로 받는다: [CLEARABLE_KEYS] 에 null 이면 Ticket_Item_400_15,
-         * 그 밖에는 DTO 로 바꿔 `@Valid` 와 같은 검증(실패하면 400 BAD_REQUEST, 형식 오류도 400)을 한다
+         * T-3 본문 읽기. 키가 없는 것과 명시적 null 을 구분해야 해서 트리로 받는다: [CLEARABLE_KEYS] 의 명시적 null 은 [explicitNullKeys] 에 담아
+         * 유스케이스에서 거부(Ticket_Item_400_15 — 권한 검사 뒤), DTO 변환·`@Valid` 와 같은 검증(실패하면 400 BAD_REQUEST, 형식 오류도 400)은 여기서
          */
         fun read(body: JsonNode, objectMapper: ObjectMapper, validator: Validator): V2UpdateTicketItemRequest {
             if (!body.isObject) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "본문은 객체여야 합니다")
-            if (CLEARABLE_KEYS.any { body.has(it) && body[it].isNull }) throw TicketItemNullFieldException.EXCEPTION
             val request = try {
                 objectMapper.treeToValue(body, V2UpdateTicketItemRequest::class.java)
             } catch (e: JsonProcessingException) {
@@ -190,7 +198,7 @@ data class V2UpdateTicketItemRequest(
             }
             val violations = validator.validate(request)
             if (violations.isNotEmpty()) throw ConstraintViolationException(violations)
-            return request
+            return request.copy(explicitNullKeys = CLEARABLE_KEYS.filter { body.has(it) && body[it].isNull }.toSet())
         }
     }
 }
