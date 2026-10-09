@@ -250,7 +250,7 @@ class V2NotificationControllerTest : V2OperationTestSupport() {
             val saved = keys.map { saveNotification(me, it) }
 
             val first = list(me, page = 0, size = 2).andExpect { status { isOk() } }.data()
-            assertEquals(listOf(saved[2].id, saved[1].id), first.at("/content").map { it.at("/id").asLong() })
+            assertEquals(listOf(saved[2].id, saved[1].id), first.at("/content").map { it.at("/notificationId").asLong() })
             assertTrue(first.at("/hasNext").asBoolean())
             assertTrue(first.at("/totalElements").isNull)
             val e: JsonNode = first.at("/content/0")
@@ -258,14 +258,14 @@ class V2NotificationControllerTest : V2OperationTestSupport() {
             assertEquals("제목-${keys[2]}", e.at("/title").asText())
             assertEquals("본문-${keys[2]}", e.at("/body").asText())
             assertEquals("ORDER", e.at("/target/type").asText())
-            assertEquals(keys[2], e.at("/target/id").asText())
+            assertEquals(keys[2], e.at("/target/targetId").asText())
             assertEquals(1L, e.at("/target/eventId").asLong())
             assertEquals("공연", e.at("/extra/eventName").asText())
             assertFalse(e.at("/isRead").asBoolean())
             assertTrue(e.at("/createdAt").asText().matches(Regex("""\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}""")), e.at("/createdAt").asText())
 
             val second = list(me, page = 1, size = 2).andExpect { status { isOk() } }.data()
-            assertEquals(listOf(saved[0].id), second.at("/content").map { it.at("/id").asLong() })
+            assertEquals(listOf(saved[0].id), second.at("/content").map { it.at("/notificationId").asLong() })
             assertFalse(second.at("/hasNext").asBoolean())
 
             // 남의 알림은 보이지 않음
@@ -298,7 +298,7 @@ class V2NotificationControllerTest : V2OperationTestSupport() {
                 status { isOk() }
                 jsonPath("$.data.updatedCount") { value(0) }
             }
-            assertTrue(list(me).data().at("/content").first { it.at("/id").asLong() == mine[0].id }.at("/isRead").asBoolean())
+            assertTrue(list(me).data().at("/content").first { it.at("/notificationId").asLong() == mine[0].id }.at("/isRead").asBoolean())
 
             // 남이 내 알림 읽음 처리 시도 → 무시
             read(other, mapOf("notificationIds" to listOf(mine[1].id))).andExpect { jsonPath("$.data.updatedCount") { value(0) } }
@@ -308,11 +308,11 @@ class V2NotificationControllerTest : V2OperationTestSupport() {
             read(me, emptyMap()).andExpect { jsonPath("$.data.updatedCount") { value(0) } }
 
             // 전체 읽음 → 나머지 2건, 다시 → 0건. 남의 것은 그대로
-            read(me, mapOf("all" to true)).andExpect {
+            read(me, mapOf("readAll" to true)).andExpect {
                 jsonPath("$.data.updatedCount") { value(2) }
                 jsonPath("$.data.unreadCount") { value(0) }
             }
-            read(me, mapOf("all" to true)).andExpect {
+            read(me, mapOf("readAll" to true)).andExpect {
                 status { isOk() }
                 jsonPath("$.data.updatedCount") { value(0) }
             }
@@ -327,7 +327,7 @@ class V2NotificationControllerTest : V2OperationTestSupport() {
         fun `비로그인 401`() {
             list(null).andExpect { status { isUnauthorized() } }
             v2Get(null, "/me/notifications/unread-count").andExpect { status { isUnauthorized() } }
-            read(null, mapOf("all" to true)).andExpect { status { isUnauthorized() } }
+            read(null, mapOf("readAll" to true)).andExpect { status { isUnauthorized() } }
         }
 
         @Test
@@ -340,9 +340,9 @@ class V2NotificationControllerTest : V2OperationTestSupport() {
             assertEquals(2, unreadCount(shop.team.manager))
             val content = list(shop.team.manager).andExpect { status { isOk() } }.data().at("/content")
             assertEquals(listOf("ORDER_PENDING_APPROVE", "HOST_MEMBER_ADDED"), content.map { it.at("/type").asText() })
-            assertEquals(orderUuid, content[0].at("/target/id").asText())
+            assertEquals(orderUuid, content[0].at("/target/targetId").asText())
             assertEquals(shop.eventId, content[0].at("/target/eventId").asLong())
-            assertEquals(shop.team.hostId.toString(), content[1].at("/target/id").asText())
+            assertEquals(shop.team.hostId.toString(), content[1].at("/target/targetId").asText())
             assertTrue(content[1].at("/target/eventId").isNull)
         }
     }

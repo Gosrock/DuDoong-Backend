@@ -426,7 +426,7 @@ class V2TicketGiftControllerTest : V2GiftTestSupport() {
             assertEquals("보*닉", anonymous.at("/senderName").asText(), "공개 랜딩은 이름 가운데를 가린다")
             assertEquals(shop.eventId, anonymous.at("/event/eventId").asLong())
             assertEquals("일반", anonymous.at("/ticket/ticketName").asText())
-            assertEquals(6000, anonymous.at("/ticket/ticketPrice").asLong())
+            assertEquals(6000, anonymous.at("/ticket/unitPrice").asLong())
             assertTrue(anonymous.at("/ticket/optionAnswers").isMissingNode, "옵션 답변(개인 입력)은 주지 않는다")
             assertFalse(anonymous.toString().contains("홍길동"))
             assertFalse(anonymous.toString().contains("비밀메모"))
@@ -1141,7 +1141,7 @@ class V2TicketGiftControllerTest : V2GiftTestSupport() {
             assertEquals(listOf(orderUuid), bar.at("/orderUuids").map { it.asText() })
             myTickets(buyer)
             assertTrue(newApproved(buyer).at("/hasNew").asBoolean())
-            v2Post(buyer, "/me/notifications/read", mapOf("all" to true)).andExpect { status { isOk() } }
+            v2Post(buyer, "/me/notifications/read", mapOf("readAll" to true)).andExpect { status { isOk() } }
             assertFalse(newApproved(buyer).at("/hasNew").asBoolean())
         }
 

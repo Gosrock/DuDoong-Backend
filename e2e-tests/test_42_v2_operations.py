@@ -28,7 +28,7 @@ START = (datetime.now() + timedelta(days=30)).replace(hour=18, minute=0, second=
 END = START + timedelta(minutes=120)
 PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", "latitude": 37.548369, "longitude": 126.920036}
 SECTIONS = [{"title": "공연 소개", "content": "<p>운영 테스트</p>", "sortOrder": 0}]
-ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-123-456789"}
+ACCOUNT = {"bankName": "신한은행", "accountHolder": "고스락", "accountNumber": "110-123-456789"}
 BUYERS = ["approved", "refused", "v1refused", "canceled", "pending", "self", "multi"]
 EXTRA = ["boundary", "conc_checkin", "conc0", "conc1", "conc2"]
 
@@ -198,7 +198,7 @@ def test_01_setup(base_url, s):
             headers=_h(s, who),
         )
         assert_status(resp, 200)
-        assert_status(requests.put(f"{base_url}/v2/events/{event_id}/sections", json=SECTIONS, headers=_h(s, who)), 200)
+        assert_status(requests.put(f"{base_url}/v2/events/{event_id}/sections", json={"sections": SECTIONS}, headers=_h(s, who)), 200)
         assert_status(requests.post(f"{base_url}/v2/events/{event_id}/open", headers=_h(s, who)), 200)
 
 
@@ -213,7 +213,7 @@ def test_02_v1_orders(base_url, s):
     assert {o["status"] for o in data["orders"]["content"]} == {"PENDING_APPROVE"}
     # 결제금액 = (6000 + 옵션 '예' 1000) x 매수
     approved = next(o for o in data["orders"]["content"] if o["orderUuid"] == s.orders["approved"])
-    assert approved["totalQuantity"] == 2 and approved["totalPaymentAmount"] == 14000
+    assert approved["quantity"] == 2 and approved["totalAmount"] == 14000
     assert approved["buyerPhone"] == "010-4242-0001"
 
 
@@ -289,7 +289,7 @@ def test_05_dashboard(base_url, s):
     assert data["tickets"]["totalSoldCount"] == 5 and data["tickets"]["totalSupplyCount"] == 30
     assert data["tickets"]["items"][0]["soldCount"] == 5
     assert data["salesAmount"] == 7000 * 5
-    assert data["entrance"] == {"issuedCount": 5, "enteredCount": 0, "notEnteredCount": 5, "entranceRate": 0.0}
+    assert data["entranceStats"] == {"issuedCount": 5, "enteredCount": 0, "notEnteredCount": 5, "entranceRate": 0.0}
 
 
 def test_06_issued_tickets(base_url, s):

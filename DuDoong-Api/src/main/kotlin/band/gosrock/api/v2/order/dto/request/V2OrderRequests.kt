@@ -38,8 +38,8 @@ data class V2CreateOrderRequest(
     val perTicketOptions: List<@NotNull @Valid List<@NotNull @Valid V2OrderAnswerRequest>>? = null,
 
     @field:NotNull
-    @field:Schema(description = "BANK_TRANSFER(직접 계좌이체) / TOSS_TRANSFER(토스 송금) — 두둥티켓, FREE — 무료티켓. 안 맞으면 Order_400_21")
-    val paymentMethod: OrderPaymentChannel?,
+    @field:Schema(description = "BANK_TRANSFER(직접 계좌이체) / TOSS_TRANSFER(토스 송금) — 두둥티켓, FREE — 무료티켓. 안 맞으면 Order_400_21. 응답의 paymentChannel 과 같은 이름 (#755: paymentMethod → paymentChannel)")
+    val paymentChannel: OrderPaymentChannel?,
 
     @field:Size(max = 100)
     @field:Schema(description = "입금자명 (두둥티켓 필수, 앞뒤 공백 제외 1~20자, 기본값은 프론트가 닉네임으로 채움). 무료티켓은 무시", example = "128구구")

@@ -1,5 +1,6 @@
 package band.gosrock.api.v2.event.usecase
 
+import band.gosrock.api.v2.common.V2ContactResponse
 import band.gosrock.api.v2.event.dto.response.V2EventDetailResponse
 import band.gosrock.api.v2.event.dto.response.V2EventHostSummaryResponse
 import band.gosrock.api.v2.event.dto.response.V2EventPlaceResponse
@@ -43,7 +44,7 @@ class V2ReadEventDetailUseCase(
                 name = host.profile?.name,
                 profileImageUrl = host.profile?.profileImage?.generateImageUrl(),
             ),
-            contacts = v2EventBrowseDomainService.displayContacts(event, host),
+            contacts = v2EventBrowseDomainService.displayContacts(event, host).map(V2ContactResponse::from),
             displayStatus = V2EventDisplayRule.of(event, LocalDateTime.now()),
         )
     }

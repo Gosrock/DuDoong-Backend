@@ -103,16 +103,16 @@ def _registered_event(base_url, s, host_id, name, start):
     ticket_id = get_data(resp)["ticketItemId"]
     key = get_data(requests.post(f"{ev}/images", json={"purpose": "POSTER", "extension": "PNG"}, headers=h))["key"]
     assert_status(requests.patch(f"{ev}/basic", json={"posterImageKey": key, "place": PLACE, "contacts": [{"type": "EMAIL", "value": "a@a.com"}]}, headers=h), 200)
-    assert_status(requests.put(f"{ev}/sections", json=SECTIONS, headers=h), 200)
+    assert_status(requests.put(f"{ev}/sections", json={"sections": SECTIONS}, headers=h), 200)
     assert_status(requests.post(f"{ev}/open", headers=h), 200)
     return event_id, ticket_id
 
 
 def _free_order(base_url, s, who, event_id, ticket_id, quantity):
-    resp = requests.post(f"{base_url}/v2/orders", json={
+    resp = requests.post(f"{base_url}/v2/me/orders", json={
         "eventId": event_id, "ticketItemId": ticket_id, "quantity": quantity,
         "options": {"applyToAll": True, "answers": []}, "perTicketOptions": None,
-        "paymentMethod": "FREE", "depositorName": None, "agreeRefundPolicy": True,
+        "paymentChannel": "FREE", "depositorName": None, "agreeRefundPolicy": True,
     }, headers=_h(s, who))
     assert_status(resp, 200)
     data = get_data(resp)

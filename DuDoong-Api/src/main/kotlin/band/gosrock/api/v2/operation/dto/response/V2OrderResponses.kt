@@ -47,9 +47,10 @@ data class V2OrderElement(
     val buyerPhone: String?,
     @field:Schema(description = "티켓 이름 (주문 이름)")
     val ticketName: String?,
-    val totalQuantity: Long,
-    @field:Schema(description = "총 결제금액(원)")
-    val totalPaymentAmount: Long,
+    @field:Schema(description = "총 매수 (#755: 사용자 앱 O-2·O-3 과 같은 이름)")
+    val quantity: Long,
+    @field:Schema(description = "총 결제금액(원) (#755: 사용자 앱과 같은 이름)")
+    val totalAmount: Long,
     @field:DateFormat
     @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm")
     val orderedAt: LocalDateTime?,
@@ -74,7 +75,8 @@ data class V2RefundAccountResponse(
     val bankName: String,
     val accountHolder: String,
     val accountNumber: String,
-    @field:Schema(description = "계좌를 마지막으로 입력·수정한 시각 (#728). 사용자가 송금 전에 바꿀 수 있어 송금 직전 확인용")
+    @field:DateFormat
+    @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm", description = "계좌를 마지막으로 입력·수정한 시각 (#728). 사용자가 송금 전에 바꿀 수 있어 송금 직전 확인용")
     val updatedAt: LocalDateTime?,
 )
 
@@ -137,7 +139,8 @@ data class V2RefundElement(
     val orderNo: String?,
     val buyerName: String?,
     val ticketName: String?,
-    val totalPaymentAmount: Long,
+    @field:Schema(description = "총 결제금액(원)")
+    val totalAmount: Long,
     val status: V2OrderStatus?,
     val refundStatus: V2RefundStatus,
     @field:Schema(description = "거절·취소 사유 문구 (cancel_reason)")

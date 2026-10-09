@@ -22,7 +22,7 @@ START = (datetime.now() + timedelta(days=30)).replace(hour=18, minute=0, second=
 END = START + timedelta(minutes=120)
 PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", "latitude": 37.548369, "longitude": 126.920036}
 SECTIONS = [{"title": "공연 소개", "content": "<p>티켓 테스트</p>", "sortOrder": 0}]
-ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-123-456789"}
+ACCOUNT = {"bankName": "신한은행", "accountHolder": "고스락", "accountNumber": "110-123-456789"}
 
 
 class V2TicketState:
@@ -76,6 +76,11 @@ def _dudoong(**overrides):
     }
     body.update(overrides)
     return body
+
+
+def _patch_body(body):
+    """T-3 부분 수정 본문: '값 없음' 필드의 None 은 보내지 않는다 (명시적 null 은 400, '값 없음'은 clear — #755)"""
+    return {k: v for k, v in body.items() if not (v is None and k in ("supplyCount", "purchaseLimit", "saleStartAt", "saleEndAt", "description"))}
 
 
 def _free(**overrides):
@@ -251,7 +256,7 @@ def test_04_options(base_url, s):
 def test_05_checklist_and_open(base_url, s):
     resp = requests.get(f"{base_url}/v2/events/{s.event_id}/checklist", headers=_h(s, "guest"))
     assert_status(resp, 200)
-    assert get_data(resp)["ticket"] is True
+    assert get_data(resp)["hasValidTicket"] is True
     key = get_data(requests.post(f"{base_url}/v2/events/{s.event_id}/images", json={"purpose": "POSTER", "extension": "PNG"}, headers=_h(s, "manager")))["key"]
     resp = requests.patch(
         f"{base_url}/v2/events/{s.event_id}/basic",
@@ -259,7 +264,7 @@ def test_05_checklist_and_open(base_url, s):
         headers=_h(s, "manager"),
     )
     assert_status(resp, 200)
-    assert_status(requests.put(f"{base_url}/v2/events/{s.event_id}/sections", json=SECTIONS, headers=_h(s, "manager")), 200)
+    assert_status(requests.put(f"{base_url}/v2/events/{s.event_id}/sections", json={"sections": SECTIONS}, headers=_h(s, "manager")), 200)
     resp = requests.post(f"{base_url}/v2/events/{s.event_id}/open", headers=_h(s, "manager"))
     assert_status(resp, 200)
     tickets = _tickets(base_url, s)
@@ -308,8 +313,8 @@ def test_07b_pending_approve_lock(base_url, s):
 
     t = _tickets(base_url, s)[ticket_id]
     assert t["saleState"] == "BEFORE_SALE" and t["isSold"] is False and t["hasPendingOrders"] is True
-    for body in [_dudoong(name="승인대기", price=7000), _dudoong(name="승인대기", account={**ACCOUNT, "number": "999"})]:
-        resp = requests.patch(_ticket_url(base_url, s, ticket_id), json=body, headers=_h(s, "manager"))
+    for body in [_dudoong(name="승인대기", price=7000), _dudoong(name="승인대기", account={**ACCOUNT, "accountNumber": "999"})]:
+        resp = requests.patch(_ticket_url(base_url, s, ticket_id), json=_patch_body(body), headers=_h(s, "manager"))
         assert_status(resp, 400)
         assert _code(resp) == "Ticket_Item_400_14"
     opt_url = f"{base_url}/v2/events/{s.event_id}/options/{option_id}"
@@ -337,11 +342,11 @@ def test_07b_pending_approve_lock(base_url, s):
 
 def test_08_sold_ticket_restrictions(base_url, s):
     url = _ticket_url(base_url, s, s.dudoong_id)
-    for body in [_dudoong(name="이름변경"), _dudoong(price=7000), _dudoong(supplyCount=9), _dudoong(account={**ACCOUNT, "number": "999"}), _free()]:
-        resp = requests.patch(url, json=body, headers=_h(s, "manager"))
+    for body in [_dudoong(name="이름변경"), _dudoong(price=7000), _dudoong(supplyCount=9), _dudoong(account={**ACCOUNT, "accountNumber": "999"}), _free()]:
+        resp = requests.patch(url, json=_patch_body(body), headers=_h(s, "manager"))
         assert_status(resp, 400)
         assert _code(resp) == "Ticket_Item_400_14", resp.text[:300]
-    resp = requests.patch(url, json=_dudoong(description="설명변경", supplyCount=20, isQuantityPublic=False, purchaseLimit=2, saleEndAt=_f(START - timedelta(hours=1))), headers=_h(s, "manager"))
+    resp = requests.patch(url, json=_patch_body(_dudoong(description="설명변경", supplyCount=20, isQuantityPublic=False, purchaseLimit=2, saleEndAt=_f(START - timedelta(hours=1)))), headers=_h(s, "manager"))
     assert_status(resp, 200)
     data = get_data(resp)
     assert data["description"] == "설명변경" and data["supplyCount"] == 20 and data["remaining"] == 19 and data["soldCount"] == 1
@@ -401,7 +406,7 @@ def test_10_option_lock(base_url, s):
 
 def test_11_idor(base_url, s):
     # 다른 공연의 티켓·옵션 id 를 내 공연 경로로 → 404, 남의 공연 경로 → 403
-    resp = requests.patch(_ticket_url(base_url, s, s.other_ticket_id), json=_free(), headers=_h(s, "manager"))
+    resp = requests.patch(_ticket_url(base_url, s, s.other_ticket_id), json=_patch_body(_free()), headers=_h(s, "manager"))
     assert_status(resp, 404)
     assert_status(requests.delete(_ticket_url(base_url, s, s.other_ticket_id), headers=_h(s, "manager")), 404)
     assert_status(requests.post(_ticket_url(base_url, s, s.other_ticket_id, "/suspend"), headers=_h(s, "manager")), 404)
@@ -410,6 +415,7 @@ def test_11_idor(base_url, s):
     resp = requests.patch(
         f"{base_url}/v2/events/{s.other_event_id}/ticket-items/{s.other_ticket_id}", json=_free(name="탈취"), headers=_h(s, "manager"),
     )
+    # 명시적 null 이 섞인 본문이어도 권한 검사(403)가 먼저 (#755)
     assert_status(resp, 403)
     resp = requests.get(f"{base_url}/v2/events/{s.other_event_id}/ticket-items/manage", headers=_h(s, "other"))
     assert_status(resp, 200)
@@ -426,7 +432,7 @@ def test_12_v1_create_on_no_ticket_event_unchanged(base_url, s):
     )
     assert resp.status_code in (200, 201), resp.text[:300]
     checklist = get_data(requests.get(f"{base_url}/v2/events/{s.no_ticket_event_id}/checklist", headers=_h(s, "guest")))
-    assert checklist["ticketRequired"] is False and checklist["ticket"] is True
+    assert checklist["ticketRequired"] is False and checklist["hasValidTicket"] is True
     tickets = _tickets(base_url, s, event_id=s.no_ticket_event_id)
     assert len(tickets) == 1 and list(tickets.values())[0]["payType"] == "FREE"
 
@@ -448,9 +454,9 @@ def test_13_v1_long_name_resend(base_url, s):
     assert current["saleState"] == "SOLD" and current["name"] == long_name
 
     form = _free(name=current["name"], description="새 설명", supplyCount=10, purchaseLimit=2)
-    resp = requests.patch(_ticket_url(base_url, s, ticket_id), json=form, headers=_h(s, "manager"))
+    resp = requests.patch(_ticket_url(base_url, s, ticket_id), json=_patch_body(form), headers=_h(s, "manager"))
     assert_status(resp, 200)
     assert get_data(resp)["name"] == long_name and get_data(resp)["description"] == "새 설명"
-    resp = requests.patch(_ticket_url(base_url, s, ticket_id), json={**form, "name": "새이름"}, headers=_h(s, "manager"))
+    resp = requests.patch(_ticket_url(base_url, s, ticket_id), json=_patch_body({**form, "name": "새이름"}), headers=_h(s, "manager"))
     assert_status(resp, 400)
     assert _code(resp) == "Ticket_Item_400_14"

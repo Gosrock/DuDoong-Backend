@@ -8,6 +8,7 @@ MySQL 경합: 주문 행을 별도 세션으로 잡아 둔 채 v1 환불 완료(
 
 DB 직접 접근(v1 주문 흉내, 행 잠금 세션)은 conftest 의 e2e_db fixture(#737), 잠금 대기 조회는 e2e_db_root(못 읽으면 경합 테스트 skip).
 """
+import re
 import subprocess
 import threading
 import time
@@ -25,7 +26,7 @@ START = (datetime.now() + timedelta(days=30)).replace(hour=18, minute=0, second=
 END = START + timedelta(minutes=120)
 PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", "latitude": 37.548369, "longitude": 126.920036}
 SECTIONS = [{"title": "공연 소개", "content": "<p>환불 계좌 테스트</p>", "sortOrder": 0}]
-ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-123-456789"}
+ACCOUNT = {"bankName": "신한은행", "accountHolder": "고스락", "accountNumber": "110-123-456789"}
 REFUND_ACCOUNT = {"bankName": "국민은행", "accountHolder": "홍길동", "accountNumber": "123-45-678901"}
 GUIDE = "주문상세에서 환불 계좌를 입력해 주세요."
 PEOPLE = ["master", "manager", "guest", "refused", "unconfirmed", "v1", "canceled", "self", "other", "race1", "race2"]
@@ -71,10 +72,10 @@ def _ev(base_url, s, path=""):
 
 
 def _order(base_url, s, who):
-    resp = requests.post(f"{base_url}/v2/orders", json={
+    resp = requests.post(f"{base_url}/v2/me/orders", json={
         "eventId": s.event_id, "ticketItemId": s.ticket_id, "quantity": 1,
         "options": {"applyToAll": True, "answers": []}, "perTicketOptions": None,
-        "paymentMethod": "BANK_TRANSFER", "depositorName": "입금자", "agreeRefundPolicy": True,
+        "paymentChannel": "BANK_TRANSFER", "depositorName": "입금자", "agreeRefundPolicy": True,
     }, headers=_h(s, who))
     assert_status(resp, 200)
     return get_data(resp)["orderUuid"]
@@ -102,7 +103,7 @@ def _notifications(base_url, s, who, type_, order_uuid, count=1):
     while True:
         resp = requests.get(f"{base_url}/v2/me/notifications", params={"size": 50}, headers=_h(s, who))
         assert_status(resp, 200)
-        found = [n for n in get_data(resp)["content"] if n["type"] == type_ and n["target"]["id"] == order_uuid]
+        found = [n for n in get_data(resp)["content"] if n["type"] == type_ and n["target"]["targetId"] == order_uuid]
         if len(found) >= count or time.time() > deadline:
             return found
         time.sleep(0.2)
@@ -133,7 +134,7 @@ def test_01_setup(base_url, s):
     s.ticket_id = get_data(resp)["ticketItemId"]
     key = get_data(requests.post(_ev(base_url, s, "/images"), json={"purpose": "POSTER", "extension": "PNG"}, headers=_h(s, "manager")))["key"]
     assert_status(requests.patch(_ev(base_url, s, "/basic"), json={"posterImageKey": key, "place": PLACE, "contacts": [{"type": "EMAIL", "value": "a@a.com"}]}, headers=_h(s, "manager")), 200)
-    assert_status(requests.put(_ev(base_url, s, "/sections"), json=SECTIONS, headers=_h(s, "manager")), 200)
+    assert_status(requests.put(_ev(base_url, s, "/sections"), json={"sections": SECTIONS}, headers=_h(s, "manager")), 200)
     assert_status(requests.post(_ev(base_url, s, "/open"), headers=_h(s, "manager")), 200)
 
 
@@ -143,7 +144,7 @@ def test_02_refused_input_host_view_complete_then_locked(base_url, s):
     assert_status(requests.post(_ev(base_url, s, f"/orders/{order_uuid}/refuse"), json={"reasonType": "AMOUNT_MISMATCH"}, headers=_h(s, "manager")), 200)
 
     d = _detail(base_url, s, "refused", order_uuid)
-    assert d["refundAccountRequired"] is True and d["refundAccountEditable"] is True and d["refundAccount"] is None
+    assert d["refundAccountRequired"] is True and d["canEditRefundAccount"] is True and d["refundAccount"] is None
 
     # 거절 알림은 주문상세로 이동 (target = ORDER / orderUuid) + 계좌 입력 안내
     found = _notifications(base_url, s, "refused", "ORDER_REFUSED", order_uuid)
@@ -157,16 +158,18 @@ def test_02_refused_input_host_view_complete_then_locked(base_url, s):
     resp = _put(base_url, s, "refused", order_uuid)
     assert_status(resp, 200)
     d = get_data(resp)
-    assert d["refundAccountRequired"] is False and d["refundAccountEditable"] is True
+    assert d["refundAccountRequired"] is False and d["canEditRefundAccount"] is True
     assert d["refundAccount"] == {"bankName": "국민은행", "accountHolder": "홍길동", "maskedAccountNumber": "*********8901"}
 
     # 호스트: 매니저 이상만 전체 계좌 + 마지막 입력·수정 시각, 일반 멤버는 null (R-2·F-1)
     host_account = _host_detail(base_url, s, "manager", order_uuid)["refundAccount"]
     assert host_account["accountNumber"] == "123-45-678901" and host_account["updatedAt"], host_account
+    # 날짜 형식은 다른 필드와 같다 (#755)
+    assert re.fullmatch(r"\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}", host_account["updatedAt"]), host_account
     assert _host_detail(base_url, s, "guest", order_uuid)["refundAccount"] is None
     rows = get_data(requests.get(_ev(base_url, s, "/refunds"), headers=_h(s, "manager")))["content"]
     row_account = next(r for r in rows if r["orderUuid"] == order_uuid)["refundAccount"]
-    assert row_account["bankName"] == "국민은행" and row_account["updatedAt"], row_account
+    assert row_account["bankName"] == "국민은행" and re.fullmatch(r"\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}", row_account["updatedAt"]), row_account
 
     # 같은 값 재입력은 변경 아님. 다른 값으로 수정 → 호스트 마스터·매니저 변경 알림 1건씩 (첫 입력은 알림 없음)
     assert_status(_put(base_url, s, "refused", order_uuid), 200)
@@ -180,7 +183,7 @@ def test_02_refused_input_host_view_complete_then_locked(base_url, s):
     resp = _put(base_url, s, "refused", order_uuid)
     assert resp.status_code == 400 and _code(resp) == "Order_400_28"
     d = _detail(base_url, s, "refused", order_uuid)
-    assert d["refundAccountEditable"] is False and d["refundAccount"]["bankName"] == "우리은행"
+    assert d["canEditRefundAccount"] is False and d["refundAccount"]["bankName"] == "우리은행"
 
 
 def test_03_deposit_unconfirmed_and_v1_order(base_url, s):
@@ -188,7 +191,7 @@ def test_03_deposit_unconfirmed_and_v1_order(base_url, s):
     unconfirmed = _order(base_url, s, "unconfirmed")
     assert_status(requests.post(_ev(base_url, s, f"/orders/{unconfirmed}/refuse"), json={"reasonType": "DEPOSIT_UNCONFIRMED"}, headers=_h(s, "manager")), 200)
     d = _detail(base_url, s, "unconfirmed", unconfirmed)
-    assert d["refundAccountRequired"] is False and d["refundAccountEditable"] is True
+    assert d["refundAccountRequired"] is False and d["canEditRefundAccount"] is True
     found = _notifications(base_url, s, "unconfirmed", "ORDER_REFUSED", unconfirmed)
     assert found and GUIDE not in found[0]["body"], found
     assert_status(_put(base_url, s, "unconfirmed", unconfirmed), 200)
@@ -199,7 +202,7 @@ def test_03_deposit_unconfirmed_and_v1_order(base_url, s):
     assert_status(requests.post(_ev(base_url, s, f"/orders/{v1}/refuse"), json={"reasonType": "AMOUNT_MISMATCH"}, headers=_h(s, "manager")), 200)
     assert _code(_put(base_url, s, "v1", v1)) == "Order_400_27"
     d = _detail(base_url, s, "v1", v1)
-    assert d["refundAccountRequired"] is False and d["refundAccountEditable"] is False
+    assert d["refundAccountRequired"] is False and d["canEditRefundAccount"] is False
     found = _notifications(base_url, s, "v1", "ORDER_REFUSED", v1)
     assert found and GUIDE not in found[0]["body"], found
 
@@ -215,7 +218,7 @@ def test_04_host_cancel_and_user_cancel(base_url, s):
     own = _order(base_url, s, "self")
     assert_status(requests.post(f"{base_url}/v2/me/orders/{own}/cancel", json={"refundAccount": REFUND_ACCOUNT}, headers=_h(s, "self")), 200)
     d = _detail(base_url, s, "self", own)
-    assert d["refundAccountRequired"] is False and d["refundAccountEditable"] is True
+    assert d["refundAccountRequired"] is False and d["canEditRefundAccount"] is True
     assert_status(_put(base_url, s, "self", own, {"bankName": "하나은행", "accountHolder": "본인", "accountNumber": "111-222-333"}), 200)
     assert _detail(base_url, s, "self", own)["refundAccount"]["bankName"] == "하나은행"
 

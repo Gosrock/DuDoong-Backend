@@ -27,7 +27,7 @@ class V2UpdateHostMemberRoleUseCase(
     ): List<V2HostMemberResponse> {
         val host = hostAdaptor.findByIdForUpdate(hostId)
         return readHostMembersUseCase.toMemberResponses(
-            v2HostDomainService.changeActiveHostUserRole(host, targetUserId, request.role!!)
+            v2HostDomainService.changeActiveHostUserRole(host, targetUserId, request.role!!.domain)
         )
     }
 }

@@ -7,7 +7,7 @@ data class V2MyHostResponse(
     val hostId: Long,
     val name: String?,
     val profileImageUrl: String?,
-    @field:Schema(description = "내 역할 (MASTER / MANAGER / GUEST)")
+    @field:Schema(description = "내 역할 (MASTER / MANAGER / GUEST)", allowableValues = ["MASTER", "MANAGER", "GUEST"])
     val myRole: String,
     @field:Schema(description = "등록된 공연 수 (삭제 제외)")
     val eventCount: Long,

@@ -8,7 +8,7 @@ data class V2HostMemberResponse(
     val userId: Long,
     val name: String?,
     val profileImageUrl: String?,
-    @field:Schema(description = "역할 (MASTER / MANAGER / GUEST)")
+    @field:Schema(description = "역할 (MASTER / MANAGER / GUEST)", allowableValues = ["MASTER", "MANAGER", "GUEST"])
     val role: String,
 ) {
     companion object {

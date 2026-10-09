@@ -88,9 +88,9 @@ class V2OrderManageControllerTest : V2OperationTestSupport() {
                 assertEquals("APPROVED", it.at("/status").asText())
                 assertEquals("승인자", it.at("/buyerName").asText())
                 assertEquals("010-3333-4444", it.at("/buyerPhone").asText())
-                assertEquals(2, it.at("/totalQuantity").asLong())
+                assertEquals(2, it.at("/quantity").asLong())
                 // (6000 + 옵션 '예' 1000) x 2
-                assertEquals(14000, it.at("/totalPaymentAmount").asLong())
+                assertEquals(14000, it.at("/totalAmount").asLong())
                 assertEquals("NONE", it.at("/refundStatus").asText())
                 assertTrue(it.at("/orderNo").asText().startsWith("R"))
             }
@@ -385,10 +385,10 @@ class V2OrderManageControllerTest : V2OperationTestSupport() {
             assertEquals(20, items.getValue(m.shop.ticketId).at("/supplyCount").asLong())
             assertTrue(items.getValue(unlimited).at("/supplyCount").isNull)
             assertEquals(14000, data.at("/salesAmount").asLong())
-            assertEquals(3, data.at("/entrance/issuedCount").asLong())
-            assertEquals(1, data.at("/entrance/enteredCount").asLong())
-            assertEquals(2, data.at("/entrance/notEnteredCount").asLong())
-            assertEquals(33.3, data.at("/entrance/entranceRate").asDouble())
+            assertEquals(3, data.at("/entranceStats/issuedCount").asLong())
+            assertEquals(1, data.at("/entranceStats/enteredCount").asLong())
+            assertEquals(2, data.at("/entranceStats/notEnteredCount").asLong())
+            assertEquals(33.3, data.at("/entranceStats/entranceRate").asDouble())
 
             v2Get(m.shop.team.outsider, "/events/${m.shop.eventId}/dashboard").andExpect { status { isForbidden() } }
         }

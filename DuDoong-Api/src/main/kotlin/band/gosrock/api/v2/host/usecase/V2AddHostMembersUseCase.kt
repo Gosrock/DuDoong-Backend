@@ -31,7 +31,7 @@ class V2AddHostMembersUseCase(
     @HostRolesAllowed(role = MANAGER, findHostFrom = HOST_ID)
     fun execute(userId: Long, hostId: Long, request: V2AddHostMembersRequest): List<V2HostMemberResponse> {
         val host = hostAdaptor.findByIdForUpdate(hostId)
-        val members = request.members!!.map { it.email!!.trim() to it.role!! }
+        val members = request.members!!.map { it.email!!.trim() to it.role!!.domain }
 
         // 역할 검증 먼저 (MASTER 지정 불가, 매니저 요청자는 GUEST 만)
         members.forEach { (_, role) -> v2HostDomainService.validateCanManageRole(host, userId, role) }

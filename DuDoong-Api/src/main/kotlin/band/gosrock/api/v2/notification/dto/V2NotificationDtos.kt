@@ -12,7 +12,8 @@ import jakarta.validation.constraints.Size
 import java.time.LocalDateTime
 
 data class V2NotificationResponse(
-    val id: Long,
+    @field:Schema(description = "알림 id (N-3 notificationIds 에 넣는 값). #755: id → notificationId")
+    val notificationId: Long,
     @field:Schema(description = "HOST_MEMBER_ADDED / ORDER_PENDING_APPROVE / ORDER_APPROVED / ORDER_REFUSED / ORDER_REFUND_REQUESTED(사용자 환불 요청, 호스트 마스터·매니저) / ORDER_CANCELED_BY_USER(돌려줄 돈 없는 사용자 취소, 호스트 마스터·매니저) / ORDER_CANCELED_BY_HOST(승인 후 호스트 취소, 주문자) / ORDER_REFUND_COMPLETED(환불 완료, 주문자) / REFUND_ACCOUNT_CHANGED(환불 계좌 변경, 호스트 마스터·매니저) / " +
         "GIFT_SENT(선물 링크 생성, 보낸 사람) / GIFT_ACCEPTED(수락, 보낸 사람) / GIFT_RECEIVED(수락, 받은 사람) / GIFT_REJECTED(거절, 보낸 사람) / " +
         "GIFT_RETURNED(수락 후 반환, 보낸 사람) / GIFT_TICKET_CANCELED(선물받은 티켓이 원 주문 취소로 취소, 받은 사람)")
@@ -43,11 +44,11 @@ data class V2NotificationResponse(
         }
 
         fun of(notification: Notification) = V2NotificationResponse(
-            id = notification.id!!,
+            notificationId = notification.id!!,
             type = notification.type,
             title = notification.title,
             body = notification.body,
-            target = V2NotificationTarget(type = notification.targetType, id = notification.targetId, eventId = notification.eventId),
+            target = V2NotificationTarget(type = notification.targetType, targetId = notification.targetId, eventId = notification.eventId),
             extra = parseExtra(notification),
             isRead = notification.isRead,
             createdAt = notification.createdAt,
@@ -56,9 +57,10 @@ data class V2NotificationResponse(
 }
 
 data class V2NotificationTarget(
-    @field:Schema(description = "HOST: id = hostId, ORDER: id = orderUuid (+ eventId), GIFT: id = giftId (+ eventId)")
+    @field:Schema(description = "HOST: targetId = hostId, ORDER: targetId = orderUuid (+ eventId), GIFT: targetId = giftId (+ eventId)")
     val type: NotificationTargetType,
-    val id: String,
+    @field:Schema(description = "대상 리소스 id (문자열). #755: id → targetId")
+    val targetId: String,
     val eventId: Long?,
 )
 
@@ -68,13 +70,13 @@ data class V2ReadNotificationsRequest(
     @field:Schema(description = "읽음 처리할 알림 id. 본인 것이 아니거나 없는 id 는 무시")
     @field:Size(max = 100)
     val notificationIds: List<Long>? = null,
-    @field:Schema(description = "true 면 전체 읽음 (notificationIds 무시)")
-    val all: Boolean? = null,
+    @field:Schema(description = "true 면 전체 읽음 (notificationIds 무시). #755: all → readAll")
+    val readAll: Boolean? = null,
 )
 
 data class V2ReadNotificationsResponse(
     @field:Schema(description = "이번 요청으로 읽음 처리된 건수 (이미 읽은 것·남의 것 제외)")
-    val updatedCount: Int,
+    val updatedCount: Long,
     @field:Schema(description = "처리 후 안읽음 수")
     val unreadCount: Long,
 )

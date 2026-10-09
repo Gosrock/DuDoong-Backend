@@ -28,7 +28,7 @@ FMT = "%Y.%m.%d %H:%M"
 START = (datetime.now() + timedelta(days=30)).replace(hour=18, minute=0, second=0, microsecond=0)
 END = START + timedelta(minutes=120)
 PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", "latitude": 37.548369, "longitude": 126.920036}
-ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-123-456789"}
+ACCOUNT = {"bankName": "신한은행", "accountHolder": "고스락", "accountNumber": "110-123-456789"}
 BUYERS = ["b1", "b2", "b3", "late", "evil", "lim1", "lim2", "lim3", "cancel1", "cancel2", "free1", "adm1", "adm2", "admin", "fcfs_v2", "fcfs_v1", "fcfs_self", "wrong"]
 
 
@@ -81,9 +81,9 @@ def _v2_order(base_url, s, who, item_id, quantity, depositor="입금자", method
     body = {
         "eventId": s.event_id, "ticketItemId": item_id, "quantity": quantity,
         "options": {"applyToAll": True, "answers": []}, "perTicketOptions": None,
-        "paymentMethod": method, "depositorName": depositor, "agreeRefundPolicy": True,
+        "paymentChannel": method, "depositorName": depositor, "agreeRefundPolicy": True,
     }
-    return requests.post(f"{base_url}/v2/orders", json=body, headers=_h(s, who))
+    return requests.post(f"{base_url}/v2/me/orders", json=body, headers=_h(s, who))
 
 
 def _ok_order(base_url, s, who, item_id, quantity, **kw):
@@ -151,7 +151,7 @@ def _wait_notification(base_url, s, who, type_, target, timeout=10):
     while time.time() < deadline:
         resp = requests.get(f"{base_url}/v2/me/notifications", params={"size": 100}, headers=_h(s, who))
         assert_status(resp, 200)
-        found = [n for n in get_data(resp)["content"] if n["type"] == type_ and n["target"]["id"] == target]
+        found = [n for n in get_data(resp)["content"] if n["type"] == type_ and n["target"]["targetId"] == target]
         if found:
             return found
         time.sleep(0.2)
@@ -186,7 +186,7 @@ def test_01_setup(base_url, s):
     key = get_data(requests.post(_ev(base_url, s, "/images"), json={"purpose": "POSTER", "extension": "PNG"}, headers=_h(s, "manager")))["key"]
     resp = requests.patch(_ev(base_url, s, "/basic"), json={"posterImageKey": key, "place": PLACE, "contacts": [{"type": "EMAIL", "value": "a@a.com"}]}, headers=_h(s, "manager"))
     assert_status(resp, 200)
-    assert_status(requests.put(_ev(base_url, s, "/sections"), json=[{"title": "소개", "content": "<p>726</p>", "sortOrder": 0}], headers=_h(s, "manager")), 200)
+    assert_status(requests.put(_ev(base_url, s, "/sections"), json={"sections": [{"title": "소개", "content": "<p>726</p>", "sortOrder": 0}]}, headers=_h(s, "manager")), 200)
     assert_status(requests.post(_ev(base_url, s, "/open"), headers=_h(s, "manager")), 200)
 
 
@@ -325,7 +325,7 @@ def test_07_host_cancel_and_refund_complete_notifications(base_url, s):
         assert_status(requests.patch(f"{base_url}/v1/events/{s.event_id}/refunds/{o2}/complete", headers=_h(s, "master")), 200)
     assert _wait_notification(base_url, s, "cancel2", "ORDER_REFUND_COMPLETED", o2)
     _later_reference(base_url, s, "cancel2")
-    assert len([n for n in _notifications(base_url, s, "cancel2", "ORDER_REFUND_COMPLETED") if n["target"]["id"] == o2]) == 1
+    assert len([n for n in _notifications(base_url, s, "cancel2", "ORDER_REFUND_COMPLETED") if n["target"]["targetId"] == o2]) == 1
 
     # 거절은 거절 알림만, 0원(무료) 환불 완료는 알림 없음
     assert _wait_notification(base_url, s, "b2", "ORDER_REFUSED", s.orders["b2"])
@@ -337,7 +337,7 @@ def test_07_host_cancel_and_refund_complete_notifications(base_url, s):
     assert resp.status_code == 400 and resp.json()["code"] == "Order_400_17"
     _later_reference(base_url, s, "free1")
     assert not _notifications(base_url, s, "free1", "ORDER_REFUND_COMPLETED")
-    assert not [n for n in _notifications(base_url, s, "free1", "ORDER_CANCELED_BY_HOST") if n["target"]["id"] == f]
+    assert not [n for n in _notifications(base_url, s, "free1", "ORDER_CANCELED_BY_HOST") if n["target"]["targetId"] == f]
 
 
 def test_09_fcfs_host_cancel_and_wrong_refund_complete(base_url, s):
@@ -352,7 +352,7 @@ def test_09_fcfs_host_cancel_and_wrong_refund_complete(base_url, s):
     o = _ok_order(base_url, s, "fcfs_self", s.fcfs, 1, depositor=None, method="FREE")
     assert_status(requests.post(f"{base_url}/v2/me/orders/{o}/cancel", json={}, headers=_h(s, "fcfs_self")), 200)
     _later_reference(base_url, s, "fcfs_self")
-    assert not [n for n in _notifications(base_url, s, "fcfs_self", "ORDER_CANCELED_BY_HOST") if n["target"]["id"] == o]
+    assert not [n for n in _notifications(base_url, s, "fcfs_self", "ORDER_CANCELED_BY_HOST") if n["target"]["targetId"] == o]
 
     # 승인 완료 주문 v1 환불 완료 → 알림 없음
     approved = _ok_order(base_url, s, "wrong", s.b, 1)

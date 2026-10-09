@@ -24,7 +24,7 @@ FMT = "%Y.%m.%d %H:%M"
 START = (datetime.now() + timedelta(days=30)).replace(hour=18, minute=0, second=0, microsecond=0)
 END = START + timedelta(minutes=120)
 PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", "latitude": 37.548369, "longitude": 126.920036}
-ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-123-456789"}
+ACCOUNT = {"bankName": "신한은행", "accountHolder": "고스락", "accountNumber": "110-123-456789"}
 ORDER_BASE = ["주문번호", "주문자", "연락처", "입금자명", "결제 방식", "티켓", "매수", "결제금액", "주문일시", "상태", "환불", "거절·취소 사유"]
 TICKET_BASE = ["티켓번호", "티켓 종류", "티켓 이름", "주문자", "연락처", "소유자", "소유자 연락처", "선물", "주문번호", "발급일시", "입장", "체크인 시각"]
 
@@ -69,9 +69,9 @@ def _order(base_url, s, who, item_id, quantity, answers=None, per_ticket=None):
     body = {
         "eventId": s.event_id, "ticketItemId": item_id, "quantity": quantity,
         "options": {"applyToAll": per_ticket is None, "answers": answers or []}, "perTicketOptions": per_ticket,
-        "paymentMethod": "BANK_TRANSFER", "depositorName": f"입금{who}", "agreeRefundPolicy": True,
+        "paymentChannel": "BANK_TRANSFER", "depositorName": f"입금{who}", "agreeRefundPolicy": True,
     }
-    resp = requests.post(f"{base_url}/v2/orders", json=body, headers=_h(s, who))
+    resp = requests.post(f"{base_url}/v2/me/orders", json=body, headers=_h(s, who))
     assert_status(resp, 200)
     return get_data(resp)
 
@@ -148,7 +148,7 @@ def test_01_setup(base_url, s):
     assert_status(requests.put(_ev(base_url, s, f"/ticket-items/{s.ticket}/options"), json={"optionIds": [s.yes_no, s.memo]}, headers=_h(s, "master")), 200)
     key = get_data(requests.post(_ev(base_url, s, "/images"), json={"purpose": "POSTER", "extension": "PNG"}, headers=_h(s, "master")))["key"]
     assert_status(requests.patch(_ev(base_url, s, "/basic"), json={"posterImageKey": key, "place": PLACE, "contacts": [{"type": "EMAIL", "value": "a@a.com"}]}, headers=_h(s, "master")), 200)
-    assert_status(requests.put(_ev(base_url, s, "/sections"), json=[{"title": "소개", "content": "<p>730</p>", "sortOrder": 0}], headers=_h(s, "master")), 200)
+    assert_status(requests.put(_ev(base_url, s, "/sections"), json={"sections": [{"title": "소개", "content": "<p>730</p>", "sortOrder": 0}]}, headers=_h(s, "master")), 200)
     assert_status(requests.post(_ev(base_url, s, "/open"), headers=_h(s, "master")), 200)
 
 

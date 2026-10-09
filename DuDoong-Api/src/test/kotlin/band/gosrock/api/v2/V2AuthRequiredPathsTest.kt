@@ -145,7 +145,7 @@ class V2AuthRequiredPathsTest {
             "POST /api/v2/events/{}/open",
             "POST /api/v2/events/{}/ticket-items",
             "POST /api/v2/events",
-            "POST /api/v2/orders",
+            "POST /api/v2/me/orders",
             "GET /api/v2/me/orders",
             "GET /api/v2/me/orders/{}",
             "POST /api/v2/me/orders/{}/cancel",

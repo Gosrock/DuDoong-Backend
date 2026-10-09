@@ -89,7 +89,7 @@ def _poster_key(base_url, s, event_id):
 def _fill(base_url, s, event_id):
     body = {"posterImageKey": _poster_key(base_url, s, event_id), "place": PLACE, "contacts": [{"type": "EMAIL", "value": "a@a.com"}]}
     assert_status(_patch_basic(base_url, s, event_id, body), 200)
-    assert_status(requests.put(f"{base_url}/v2/events/{event_id}/sections", json=SECTIONS, headers=_h(s, "manager")), 200)
+    assert_status(requests.put(f"{base_url}/v2/events/{event_id}/sections", json={"sections": SECTIONS}, headers=_h(s, "manager")), 200)
 
 
 def _v1_free_ticket(base_url, s, event_id):
@@ -173,7 +173,7 @@ def test_04_create_event(base_url, s):
     assert manage["contacts"] == [] and manage["tags"] == []
 
     c = _checklist(base_url, s, s.event_id)
-    assert c == {"basic": False, "detail": False, "ticket": False, "ticketRequired": True, "canOpen": False}
+    assert c == {"isBasicFilled": False, "isDetailFilled": False, "hasValidTicket": False, "ticketRequired": True, "canOpen": False}
     resp = requests.post(f"{base_url}/v2/events/{s.event_id}/open", headers=_h(s, "manager"))
     assert_status(resp, 400)
     assert resp.json()["code"] == "Event_400_7"
@@ -191,7 +191,7 @@ def test_05_basic_info_contacts_tags(base_url, s):
     # 포스터 없이 장소·문의처만 있으면 기본 정보 미충족
     resp = _patch_basic(base_url, s, s.event_id, {"place": PLACE, "contacts": [{"type": "EMAIL", "value": "a@a.com"}]})
     assert_status(resp, 200)
-    assert _checklist(base_url, s, s.event_id)["basic"] is False
+    assert _checklist(base_url, s, s.event_id)["isBasicFilled"] is False
 
     resp = _patch_basic(
         base_url,
@@ -212,7 +212,7 @@ def test_05_basic_info_contacts_tags(base_url, s):
     assert [t["category"] for t in data["tags"]] == ["EVENT_TYPE", "GENRE", "AREA"]
 
     c = _checklist(base_url, s, s.event_id)
-    assert c["basic"] is True and c["detail"] is False and c["canOpen"] is False
+    assert c["isBasicFilled"] is True and c["isDetailFilled"] is False and c["canOpen"] is False
 
     # 잘못된 값
     for body, code in [
@@ -235,11 +235,11 @@ def test_06_sections(base_url, s):
     url = f"{base_url}/v2/events/{s.event_id}/sections"
     # HTML 은 서버에서 sanitize
     dirty = [{"title": "공연 소개", "content": '<p>x<script>alert(1)</script></p><img src="https://a.com/a.png" onerror="alert(2)">', "sortOrder": 0}]
-    saved = get_data(requests.put(url, json=dirty, headers=_h(s, "manager")))[0]
+    saved = get_data(requests.put(url, json={"sections": dirty}, headers=_h(s, "manager")))[0]
     assert "<script" not in saved["content"] and "onerror" not in saved["content"]
     assert '<img src="https://a.com/a.png">' in saved["content"]
 
-    resp = requests.put(url, json=SECTIONS, headers=_h(s, "manager"))
+    resp = requests.put(url, json={"sections": SECTIONS}, headers=_h(s, "manager"))
     assert_status(resp, 200)
     assert [x["title"] for x in get_data(resp)] == ["공연 소개", "예매안내", "세트리스트", "유의사항"]
     assert {x["contentFormat"] for x in get_data(resp)} == {"HTML"}
@@ -250,20 +250,20 @@ def test_06_sections(base_url, s):
     assert_status(requests.get(url, headers=_h(s, "guest")), 200)
 
     # 개수 초과 / 제목 초과 / 일반 멤버
-    resp = requests.put(url, json=[{"title": f"s{i}", "content": "", "sortOrder": i} for i in range(11)], headers=_h(s, "manager"))
+    resp = requests.put(url, json={"sections": [{"title": f"s{i}", "content": "", "sortOrder": i} for i in range(11)]}, headers=_h(s, "manager"))
     assert_status(resp, 400)
     assert resp.json()["code"] == "Event_400_21"
-    assert_status(requests.put(url, json=[{"title": "가" * 21, "content": "", "sortOrder": 0}], headers=_h(s, "manager")), 400)
-    assert_status(requests.put(url, json=SECTIONS, headers=_h(s, "guest")), 403)
+    assert_status(requests.put(url, json={"sections": [{"title": "가" * 21, "content": "", "sortOrder": 0}]}, headers=_h(s, "manager")), 400)
+    assert_status(requests.put(url, json={"sections": SECTIONS}, headers=_h(s, "guest")), 403)
 
     c = _checklist(base_url, s, s.event_id)
-    assert c["basic"] is True and c["detail"] is True and c["ticket"] is False and c["canOpen"] is False
+    assert c["isBasicFilled"] is True and c["isDetailFilled"] is True and c["hasValidTicket"] is False and c["canOpen"] is False
 
 
 def test_07_ticket_then_open(base_url, s):
     _v1_free_ticket(base_url, s, s.event_id)
     c = _checklist(base_url, s, s.event_id)
-    assert c == {"basic": True, "detail": True, "ticket": True, "ticketRequired": True, "canOpen": True}
+    assert c == {"isBasicFilled": True, "isDetailFilled": True, "hasValidTicket": True, "ticketRequired": True, "canOpen": True}
 
     assert_status(requests.post(f"{base_url}/v2/events/{s.event_id}/open", headers=_h(s, "guest")), 403)
     resp = requests.post(f"{base_url}/v2/events/{s.event_id}/open", headers=_h(s, "manager"))
@@ -343,7 +343,7 @@ def test_11_no_ticket_event(base_url, s):
     _fill(base_url, s, s.no_ticket_event_id)
 
     c = _checklist(base_url, s, s.no_ticket_event_id)
-    assert c == {"basic": True, "detail": True, "ticket": False, "ticketRequired": False, "canOpen": True}
+    assert c == {"isBasicFilled": True, "isDetailFilled": True, "hasValidTicket": False, "ticketRequired": False, "canOpen": True}
 
     # v1 open 은 hasTicket=false 여도 티켓을 요구 (v1 동작 불변). v1 detail 조건을 위해 포스터+content 를 v1 로 채운다
     resp = requests.post(f"{base_url}/v2/events", json={"hostId": s.host_id, "name": "v1오픈시도", "startAt": _f(START), "endAt": _f(END), "hasTicket": False}, headers=_h(s, "manager"))

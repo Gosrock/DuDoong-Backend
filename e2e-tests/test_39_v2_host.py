@@ -379,7 +379,7 @@ def test_17_image_upload_url(base_url, s):
 
 
 def test_18_master_transfer(base_url, s):
-    url = f"{base_url}/v2/hosts/{s.host_id}/master-transfer"
+    url = f"{base_url}/v2/hosts/{s.host_id}/transfer-master"
     assert_status(requests.post(url, json={"userId": s.user_ids["guest"]}, headers=_h(s, "manager")), 403)
     # 비멤버 대상은 권한 문제가 아니라 대상 없음 → 404
     resp = requests.post(url, json={"userId": s.user_ids["outsider"]}, headers=_h(s, "master"))

@@ -27,7 +27,7 @@ START = (datetime.now() + timedelta(days=30)).replace(hour=18, minute=0, second=
 END = START + timedelta(minutes=120)
 PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", "latitude": 37.548369, "longitude": 126.920036}
 SECTIONS = [{"title": "공연 소개", "content": "<p>주문 테스트</p>", "sortOrder": 0}]
-ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-123-456789"}
+ACCOUNT = {"bankName": "신한은행", "accountHolder": "고스락", "accountNumber": "110-123-456789"}
 REFUND_ACCOUNT = {"bankName": "국민은행", "accountHolder": "홍길동", "accountNumber": "123-45-678901"}
 BUYERS = ["bank", "toss", "split", "free", "refused", "dup", "cancel_pending", "race1", "race2", "race3", "v1buyer"]
 
@@ -93,14 +93,14 @@ def _body(
         "quantity": quantity,
         "options": {"applyToAll": per_ticket is None, "answers": answers if answers is not None else []},
         "perTicketOptions": per_ticket,
-        "paymentMethod": method,
+        "paymentChannel": method,
         "depositorName": depositor,
         "agreeRefundPolicy": agree,
     }
 
 
 def _order(base_url, s, who, body):
-    return requests.post(f"{base_url}/v2/orders", json=body, headers=_h(s, who))
+    return requests.post(f"{base_url}/v2/me/orders", json=body, headers=_h(s, who))
 
 
 def _order_ok(base_url, s, who, body):
@@ -151,7 +151,7 @@ def _wait_notification(base_url, s, who, type_, target):
     while time.time() < deadline:
         resp = requests.get(f"{base_url}/v2/me/notifications", params={"size": 100}, headers=_h(s, who))
         assert_status(resp, 200)
-        found = [n for n in get_data(resp)["content"] if n["type"] == type_ and n["target"]["id"] == target]
+        found = [n for n in get_data(resp)["content"] if n["type"] == type_ and n["target"]["targetId"] == target]
         if found:
             return found
         time.sleep(0.2)
@@ -201,7 +201,7 @@ def test_01_setup(base_url, s):
     key = get_data(requests.post(_ev(base_url, s, "/images"), json={"purpose": "POSTER", "extension": "PNG"}, headers=_h(s, "manager")))["key"]
     resp = requests.patch(_ev(base_url, s, "/basic"), json={"posterImageKey": key, "place": PLACE, "contacts": [{"type": "EMAIL", "value": "a@a.com"}]}, headers=_h(s, "manager"))
     assert_status(resp, 200)
-    assert_status(requests.put(_ev(base_url, s, "/sections"), json=SECTIONS, headers=_h(s, "manager")), 200)
+    assert_status(requests.put(_ev(base_url, s, "/sections"), json={"sections": SECTIONS}, headers=_h(s, "manager")), 200)
     assert_status(requests.post(_ev(base_url, s, "/open"), headers=_h(s, "manager")), 200)
 
     # 공개 티켓 목록(P-5): 세 티켓 모두 구매 가능
@@ -263,7 +263,7 @@ def test_03_validation_errors(base_url, s):
         assert _code(resp) == code, (body, resp.text[:300])
     assert_status(_order(base_url, s, "dup", _body(s, answers=_answers(s), agree=False)), 400)
     assert_status(_order(base_url, s, "dup", _body(s, answers=_answers(s), agree=None)), 400)
-    assert_status(requests.post(f"{base_url}/v2/orders", json=_body(s, answers=_answers(s))), 401)
+    assert_status(requests.post(f"{base_url}/v2/me/orders", json=_body(s, answers=_answers(s))), 401)
     assert _mine(base_url, s, "dup")["content"] == []
 
 

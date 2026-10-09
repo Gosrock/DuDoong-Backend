@@ -183,7 +183,7 @@ class V2EventControllerTest {
         mockMvc.put("/api/v2/events/$eventId/sections") {
             with(auth(requester))
             contentType = MediaType.APPLICATION_JSON
-            content = json(sections)
+            content = json(mapOf("sections" to sections))
         }
 
     private val placeBody = mapOf("name" to "롤링홀", "address" to "서울 마포구 어울마당로 35", "latitude" to 37.548369, "longitude" to 126.920036)
@@ -505,8 +505,8 @@ class V2EventControllerTest {
                 jsonPath("$.data.tags[0].name") { value("정기공연") }
                 jsonPath("$.data.tags[1].category") { value("GENRE") }
                 jsonPath("$.data.tags[2].tagId") { value(hongdae) }
-                jsonPath("$.data.checklist.basic") { value(true) }
-                jsonPath("$.data.checklist.detail") { value(false) }
+                jsonPath("$.data.checklist.isBasicFilled") { value(true) }
+                jsonPath("$.data.checklist.isDetailFilled") { value(false) }
                 jsonPath("$.data.checklist.ticketRequired") { value(false) }
             }
 
@@ -800,7 +800,7 @@ class V2EventControllerTest {
             val eventId = createEvent(team.master, team.hostId)
 
             var c = checklist(team.guest, eventId)
-            assertEquals(listOf(false, false, false, true, false), listOf(c["basic"], c["detail"], c["ticket"], c["ticketRequired"], c["canOpen"]).map { it.asBoolean() })
+            assertEquals(listOf(false, false, false, true, false), listOf(c["isBasicFilled"], c["isDetailFilled"], c["hasValidTicket"], c["ticketRequired"], c["canOpen"]).map { it.asBoolean() })
             openV2(team.master, eventId).andExpect {
                 status { isBadRequest() }
                 jsonPath("$.code") { value("Event_400_7") }
@@ -808,31 +808,31 @@ class V2EventControllerTest {
 
             // 장소만으로는 부족 (문의처 필요)
             patchBasic(team.master, eventId, mapOf("place" to placeBody)).andExpect { status { isOk() } }
-            assertFalse(checklist(team.guest, eventId)["basic"].asBoolean())
+            assertFalse(checklist(team.guest, eventId)["isBasicFilled"].asBoolean())
             patchBasic(team.master, eventId, mapOf("contacts" to listOf(mapOf("type" to "EMAIL", "value" to "a@a.com"))))
             // 포스터 필수
-            assertFalse(checklist(team.guest, eventId)["basic"].asBoolean())
+            assertFalse(checklist(team.guest, eventId)["isBasicFilled"].asBoolean())
             patchBasic(team.master, eventId, mapOf("posterImageKey" to posterKey(eventId))).andExpect { status { isOk() } }
             c = checklist(team.guest, eventId)
-            assertTrue(c["basic"].asBoolean())
-            assertFalse(c["detail"].asBoolean())
+            assertTrue(c["isBasicFilled"].asBoolean())
+            assertFalse(c["isDetailFilled"].asBoolean())
 
             // 본문이 빈 섹션만 있으면 미충족
             putSections(team.master, eventId, listOf(mapOf("title" to "공연 소개", "content" to "  ", "sortOrder" to 0)))
-            assertFalse(checklist(team.guest, eventId)["detail"].asBoolean())
+            assertFalse(checklist(team.guest, eventId)["isDetailFilled"].asBoolean())
             putSections(team.master, eventId, defaultSections)
             c = checklist(team.guest, eventId)
-            assertTrue(c["detail"].asBoolean())
+            assertTrue(c["isDetailFilled"].asBoolean())
             assertFalse(c["canOpen"].asBoolean())
 
             // 삭제된 티켓은 세지 않는다
             saveTicket(eventId, TicketItemStatus.DELETED)
-            assertFalse(checklist(team.guest, eventId)["ticket"].asBoolean())
+            assertFalse(checklist(team.guest, eventId)["hasValidTicket"].asBoolean())
             openV2(team.master, eventId).andExpect { jsonPath("$.code") { value("Event_400_7") } }
 
             saveTicket(eventId)
             c = checklist(team.guest, eventId)
-            assertTrue(c["ticket"].asBoolean())
+            assertTrue(c["hasValidTicket"].asBoolean())
             assertTrue(c["canOpen"].asBoolean())
 
             openV2(team.guest, eventId).andExpect { status { isForbidden() } }
@@ -852,7 +852,7 @@ class V2EventControllerTest {
             fillBasicAndDetail(team.master, eventId)
 
             val c = checklist(team.master, eventId)
-            assertFalse(c["ticket"].asBoolean())
+            assertFalse(c["hasValidTicket"].asBoolean())
             assertFalse(c["ticketRequired"].asBoolean())
             assertTrue(c["canOpen"].asBoolean())
             openV2(team.master, eventId).andExpect {
@@ -1061,7 +1061,7 @@ class V2EventControllerTest {
             mockMvc.get("/api/v2/events/$eventId/manage") { with(auth(team.guest)) }.andExpect {
                 jsonPath("$.data.endAt") { value(baseStart.plusMinutes(90).f()) }
                 jsonPath("$.data.hasTicket") { value(true) }
-                jsonPath("$.data.checklist.detail") { value(true) }
+                jsonPath("$.data.checklist.isDetailFilled") { value(true) }
             }
         }
 

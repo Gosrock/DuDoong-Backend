@@ -28,6 +28,16 @@ enum class V2ApiArea(val group: String, val tagPrefix: String) {
             "mypage" to USER,
         )
 
+        /**
+         * 한 operation 이 보이는 영역 그룹: 컨트롤러 영역([of]) + [V2AlsoIn] 으로 더한 영역 (#755). 화면이 두 앱에서 쓰이는 API
+         * (알림, 셀프 체크인, 호스트 홈·팔로우·호스트 공연, 공연 섹션, 태그)를 사용자앱 그룹에도 보이게 한다. 태그는 원래 영역 그대로
+         */
+        fun areasOf(method: java.lang.reflect.Method): Set<V2ApiArea> {
+            val primary = of(method.declaringClass) ?: return emptySet()
+            val also = (method.getAnnotation(V2AlsoIn::class.java) ?: method.declaringClass.getAnnotation(V2AlsoIn::class.java))?.value.orEmpty()
+            return setOf(primary) + also
+        }
+
         fun of(controller: Class<*>): V2ApiArea? {
             controller.getAnnotation(V2Area::class.java)?.let { return it.value }
             val name = controller.name
@@ -36,6 +46,11 @@ enum class V2ApiArea(val group: String, val tagPrefix: String) {
         }
     }
 }
+
+/** 컨트롤러 영역 그룹에 더해 다른 영역 그룹에도 보일 operation(메서드) 또는 컨트롤러 전체에 붙인다 (#755) */
+@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class V2AlsoIn(vararg val value: V2ApiArea)
 
 /** 패키지 기본 영역([V2ApiArea.of])과 다른 영역에 둘 v2 컨트롤러에 붙인다 */
 @Target(AnnotationTarget.CLASS)

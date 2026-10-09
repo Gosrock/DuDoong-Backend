@@ -1,6 +1,6 @@
 package band.gosrock.api.v2.host.dto.request
 
-import band.gosrock.domain.domains.host.domain.HostRole
+import band.gosrock.api.v2.host.dto.V2HostMemberRole
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Email
@@ -28,5 +28,5 @@ data class V2AddHostMemberRequest(
 
     @field:Schema(description = "역할. MANAGER 또는 GUEST (매니저 요청자는 GUEST 만)", example = "GUEST")
     @field:NotNull
-    val role: HostRole?,
+    val role: V2HostMemberRole?,
 )

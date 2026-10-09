@@ -44,7 +44,7 @@ data class V2MeHostResponse(
     val hostId: Long,
     val name: String?,
     val profileImageUrl: String?,
-    @field:Schema(description = "내 역할 (MASTER / MANAGER / GUEST)")
+    @field:Schema(description = "내 역할 (MASTER / MANAGER / GUEST)", allowableValues = ["MASTER", "MANAGER", "GUEST"])
     val myRole: String,
 ) {
     companion object {
@@ -101,8 +101,10 @@ data class V2RepresentativeEventResponse(
     val name: String?,
     val posterImageUrl: String?,
     @field:DateFormat
+    @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm")
     val startAt: LocalDateTime?,
     @field:DateFormat
+    @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm")
     val endAt: LocalDateTime?,
     @field:Schema(description = "UPCOMING(시작 전) / ONGOING(진행 중) / PAST(공연 종료)")
     val displayStatus: V2EventDisplayStatus,
@@ -139,6 +141,7 @@ data class V2ArchiveEventResponse(
     val name: String?,
     val posterImageUrl: String?,
     @field:DateFormat
+    @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm")
     val startAt: LocalDateTime?,
     val host: V2ArchiveHostResponse,
     @field:Schema(description = "주문상세(O-3) 이동용: 이 공연에서 내가 주문하고 입장한 티켓의 주문(가장 최근). 선물받은 티켓으로만 입장했으면 null")

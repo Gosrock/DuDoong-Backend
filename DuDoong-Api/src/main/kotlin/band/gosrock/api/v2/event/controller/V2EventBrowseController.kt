@@ -1,5 +1,6 @@
 package band.gosrock.api.v2.event.controller
 
+import band.gosrock.api.v2.common.V2Paging
 import band.gosrock.api.v2.common.swagger.V2ApiArea
 import band.gosrock.api.v2.common.swagger.V2ApiTags
 import band.gosrock.api.v2.common.swagger.V2Area
@@ -50,14 +51,14 @@ class V2EventBrowseController(
     )
     @GetMapping("/events")
     fun searchEvents(
-        @Parameter(description = "공연명 OR 호스트명 (최대 $MAX_KEYWORD_LENGTH 자)")
-        @RequestParam(required = false) @Size(max = MAX_KEYWORD_LENGTH) keyword: String?,
+        @Parameter(description = "공연명 OR 호스트명 (최대 ${V2Paging.KEYWORD_MAX_LENGTH} 자)")
+        @RequestParam(required = false) @Size(max = V2Paging.KEYWORD_MAX_LENGTH) keyword: String?,
         @Parameter(description = "태그 id (쉼표 구분, 예: 1,2, 최대 $MAX_TAG_IDS 개)")
         @RequestParam(required = false) @Size(max = MAX_TAG_IDS) tagIds: List<Long>?,
         @RequestParam(defaultValue = "false") includePast: Boolean,
         @RequestParam(defaultValue = "UPCOMING") sort: V2EventSort,
         @RequestParam(defaultValue = "0") @Min(0) page: Int,
-        @RequestParam(defaultValue = "10") @Min(1) @Max(MAX_PAGE_SIZE) size: Int,
+        @RequestParam(defaultValue = V2Paging.CARD_DEFAULT_SIZE) @Min(1) @Max(V2Paging.MAX_SIZE) size: Int,
     ): V2PageResponse<V2EventListItemResponse> = searchEventsUseCase.execute(keyword, tagIds.orEmpty(), includePast, page, size)
 
     @Operation(summary = "[P-3] 공개 공연 상세 (비로그인 허용). 준비중·삭제 공연은 404")
@@ -69,9 +70,6 @@ class V2EventBrowseController(
     fun getOnSaleTicketItems(@PathVariable eventId: Long): List<V2PublicTicketItemResponse> = readOnSaleTicketItemsUseCase.execute(eventId)
 
     companion object {
-        private const val MAX_PAGE_SIZE = 50L
-        private const val MAX_KEYWORD_LENGTH = 50
-
         /** 필터 태그 id 상한 (태그는 운영자 관리, 초기 22개). 넘으면 요청 검증 400 (없는 태그 id 의 Event_400_23 과 구분) */
         private const val MAX_TAG_IDS = 50
     }

@@ -77,7 +77,7 @@ class V2ReadTicketItemsUseCase(
             pendingApproveCount = pendingApproveCount,
             isPurchasable = v2TicketItemDomainService.isPurchasable(item, event, now),
             account = item.accountInfo?.takeIf { item.payType == TicketPayType.DUDOONG_TICKET }
-                ?.let { V2TicketAccountResponse(bank = it.bankName, holder = it.accountHolder, number = it.accountNumber) },
+                ?.let { V2TicketAccountResponse(bankName = it.bankName, accountHolder = it.accountHolder, accountNumber = it.accountNumber) },
             options = item.itemOptionGroups.mapNotNull { it.optionGroup }
                 .filter { it.optionGroupStatus == OptionGroupStatus.VALID }
                 .sortedBy { it.id }

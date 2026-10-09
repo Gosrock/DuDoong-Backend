@@ -106,7 +106,7 @@ class V2GiftUseCase(
             } else {
                 null
             },
-            ticket = ticket?.let { V2GiftTicketResponse(ticketName = it.itemInfo?.ticketName, ticketPrice = it.itemInfo?.price?.longValue() ?: 0L) },
+            ticket = ticket?.let { V2GiftTicketResponse(ticketName = it.itemInfo?.ticketName, unitPrice = it.itemInfo?.price?.longValue() ?: 0L) },
         )
     }
 
@@ -131,7 +131,7 @@ class V2GiftUseCase(
                     giftId = gift.id!!,
                     status = gift.status,
                     cancelReason = gift.cancelReason,
-                    isExpired = gift.isPending() && event != null && giftDomainService.isEventEnded(event, now),
+                    isGiftExpired = gift.isPending() && event != null && giftDomainService.isEventEnded(event, now),
                     counterpartName = names[if (sent) gift.receiverUserId else gift.senderUserId],
                     memo = gift.memo.takeIf { sent },
                     giftToken = gift.token.takeIf { sent && gift.isPending() },

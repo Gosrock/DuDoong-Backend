@@ -61,7 +61,7 @@ class V2ReadDashboardUseCase(
                 items = items,
             ),
             salesAmount = v2OrderQuery.sumSalesAmount(eventId),
-            entrance = V2EntranceStatsResponse.of(v2IssuedTicketQuery.stats(V2IssuedTicketSearch(eventId = eventId))),
+            entranceStats = V2EntranceStatsResponse.of(v2IssuedTicketQuery.stats(V2IssuedTicketSearch(eventId = eventId))),
             displayStatus = V2EventDisplayRule.of(event, now),
             dDay = V2EventDisplayRule.dDayOf(event, now),
         )

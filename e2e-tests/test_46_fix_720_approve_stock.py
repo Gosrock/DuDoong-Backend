@@ -23,7 +23,7 @@ FMT = "%Y.%m.%d %H:%M"
 START = (datetime.now() + timedelta(days=30)).replace(hour=18, minute=0, second=0, microsecond=0)
 END = START + timedelta(minutes=120)
 PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", "latitude": 37.548369, "longitude": 126.920036}
-ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-123-456789"}
+ACCOUNT = {"bankName": "신한은행", "accountHolder": "고스락", "accountNumber": "110-123-456789"}
 BUYERS = ["b1", "b2", "a_v1", "a_v2", "late", "b_more"]
 QUANTITY_LACK = "Ticket_Item_400_1"
 
@@ -75,9 +75,9 @@ def _v2_order(base_url, s, who, item_id, quantity):
     body = {
         "eventId": s.event_id, "ticketItemId": item_id, "quantity": quantity,
         "options": {"applyToAll": True, "answers": []}, "perTicketOptions": None,
-        "paymentMethod": "BANK_TRANSFER", "depositorName": "입금자", "agreeRefundPolicy": True,
+        "paymentChannel": "BANK_TRANSFER", "depositorName": "입금자", "agreeRefundPolicy": True,
     }
-    return requests.post(f"{base_url}/v2/orders", json=body, headers=_h(s, who))
+    return requests.post(f"{base_url}/v2/me/orders", json=body, headers=_h(s, who))
 
 
 def _lack(resp):
@@ -114,7 +114,7 @@ def test_01_setup(base_url, s):
     key = get_data(requests.post(_ev(base_url, s, "/images"), json={"purpose": "POSTER", "extension": "PNG"}, headers=_h(s, "manager")))["key"]
     resp = requests.patch(_ev(base_url, s, "/basic"), json={"posterImageKey": key, "place": PLACE, "contacts": [{"type": "EMAIL", "value": "a@a.com"}]}, headers=_h(s, "manager"))
     assert_status(resp, 200)
-    assert_status(requests.put(_ev(base_url, s, "/sections"), json=[{"title": "소개", "content": "<p>720</p>", "sortOrder": 0}], headers=_h(s, "manager")), 200)
+    assert_status(requests.put(_ev(base_url, s, "/sections"), json={"sections": [{"title": "소개", "content": "<p>720</p>", "sortOrder": 0}]}, headers=_h(s, "manager")), 200)
     assert_status(requests.post(_ev(base_url, s, "/open"), headers=_h(s, "manager")), 200)
 
 

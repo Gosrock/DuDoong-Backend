@@ -21,7 +21,7 @@ FMT = "%Y.%m.%d %H:%M"
 START = (datetime.now() + timedelta(days=30)).replace(hour=18, minute=0, second=0, microsecond=0)
 END = START + timedelta(minutes=120)
 PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", "latitude": 37.548369, "longitude": 126.920036}
-ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-123-456789"}
+ACCOUNT = {"bankName": "신한은행", "accountHolder": "고스락", "accountNumber": "110-123-456789"}
 BUYERS = ["approved", "refused", "v1refused", "canceled"]
 
 
@@ -111,7 +111,7 @@ def test_01_host_member_added(base_url, s):
         n = _wait(base_url, s, who, "HOST_MEMBER_ADDED")
         assert len(n) == 1
         n = n[0]
-        assert n["target"] == {"type": "HOST", "id": str(s.host_id), "eventId": None}
+        assert n["target"] == {"type": "HOST", "targetId": str(s.host_id), "eventId": None}
         assert s.host_name in n["body"] and role in n["body"], n["body"]
         assert n["extra"]["hostName"] == s.host_name
         assert n["isRead"] is False
@@ -137,7 +137,7 @@ def test_02_order_pending_approve(base_url, s):
     s.ticket_id = get_data(resp)["ticketItemId"]
     key = get_data(requests.post(_ev(base_url, s, "/images"), json={"purpose": "POSTER", "extension": "PNG"}, headers=_h(s, "manager")))["key"]
     assert_status(requests.patch(_ev(base_url, s, "/basic"), json={"posterImageKey": key, "place": PLACE, "contacts": [{"type": "EMAIL", "value": "a@a.com"}]}, headers=_h(s, "manager")), 200)
-    assert_status(requests.put(_ev(base_url, s, "/sections"), json=[{"title": "공연 소개", "content": "<p>알림</p>", "sortOrder": 0}], headers=_h(s, "manager")), 200)
+    assert_status(requests.put(_ev(base_url, s, "/sections"), json={"sections": [{"title": "공연 소개", "content": "<p>알림</p>", "sortOrder": 0}]}, headers=_h(s, "manager")), 200)
     assert_status(requests.post(_ev(base_url, s, "/open"), headers=_h(s, "manager")), 200)
 
     for who in BUYERS:
@@ -145,7 +145,7 @@ def test_02_order_pending_approve(base_url, s):
 
     for who in ("master", "manager"):
         found = _wait(base_url, s, who, "ORDER_PENDING_APPROVE", count=len(BUYERS))
-        assert {n["target"]["id"] for n in found} == set(s.orders.values())
+        assert {n["target"]["targetId"] for n in found} == set(s.orders.values())
         assert {n["target"]["type"] for n in found} == {"ORDER"}
         assert {n["target"]["eventId"] for n in found} == {s.event_id}
         assert all("알림공연" in n["body"] for n in found)
@@ -160,13 +160,13 @@ def test_03_approved_refused(base_url, s):
     for who in ("approved", "canceled"):
         assert_status(requests.post(_ev(base_url, s, f"/orders/{o[who]}/approve"), headers=_h(s, "manager")), 200)
     n = _wait(base_url, s, "approved", "ORDER_APPROVED")[0]
-    assert n["target"] == {"type": "ORDER", "id": o["approved"], "eventId": s.event_id}
+    assert n["target"] == {"type": "ORDER", "targetId": o["approved"], "eventId": s.event_id}
     assert n["title"] == "티켓 주문이 승인되었습니다!"
 
     resp = requests.post(_ev(base_url, s, f"/orders/{o['refused']}/refuse"), json={"reasonType": "ETC", "reasonText": "중복 주문"}, headers=_h(s, "manager"))
     assert_status(resp, 200)
     n = _wait(base_url, s, "refused", "ORDER_REFUSED")[0]
-    assert n["target"]["id"] == o["refused"]
+    assert n["target"]["targetId"] == o["refused"]
     # v1 앱 주문(결제 채널 없음)이라 환불 계좌 입력 안내는 붙지 않는다 (#728 v2 주문만)
     assert n["body"].endswith("사유: 중복 주문"), n["body"]
     assert n["extra"]["refuseReasonType"] == "ETC" and n["extra"]["refuseReason"] == "중복 주문"
@@ -193,7 +193,7 @@ def test_04_list_paging(base_url, s):
     assert first["totalElements"] is None and first["totalPages"] is None
     all_items = _list(base_url, s, "manager", size=100)["content"]
     assert len(all_items) == 5
-    ids = [n["id"] for n in all_items]
+    ids = [n["notificationId"] for n in all_items]
     assert ids == sorted(ids, reverse=True)
     assert all_items[-1]["type"] == "HOST_MEMBER_ADDED"
     last = _list(base_url, s, "manager", page=2, size=2)
@@ -204,8 +204,8 @@ def test_04_list_paging(base_url, s):
 def test_05_unread_and_read(base_url, s):
     url = f"{base_url}/v2/me/notifications/read"
     assert _unread(base_url, s, "manager") == 5
-    mine = [n["id"] for n in _list(base_url, s, "manager", size=100)["content"]]
-    others = [n["id"] for n in _list(base_url, s, "master", size=100)["content"]]
+    mine = [n["notificationId"] for n in _list(base_url, s, "manager", size=100)["content"]]
+    others = [n["notificationId"] for n in _list(base_url, s, "master", size=100)["content"]]
     master_unread = _unread(base_url, s, "master")
 
     # 내 것 2개 + 마스터 것 1개 → 내 것만
@@ -217,7 +217,7 @@ def test_05_unread_and_read(base_url, s):
     resp = requests.post(url, json={"notificationIds": mine[:2]}, headers=_h(s, "manager"))
     assert_status(resp, 200)
     assert get_data(resp)["updatedCount"] == 0
-    read_flags = {n["id"]: n["isRead"] for n in _list(base_url, s, "manager", size=100)["content"]}
+    read_flags = {n["notificationId"]: n["isRead"] for n in _list(base_url, s, "manager", size=100)["content"]}
     assert read_flags[mine[0]] is True and read_flags[mine[2]] is False
 
     # 남(외부인)이 매니저 알림 읽음 시도 → 무시
@@ -227,9 +227,9 @@ def test_05_unread_and_read(base_url, s):
     assert _unread(base_url, s, "manager") == 3
 
     # 전체 읽음 → 3건, 다시 → 0건
-    resp = requests.post(url, json={"all": True}, headers=_h(s, "manager"))
+    resp = requests.post(url, json={"readAll": True}, headers=_h(s, "manager"))
     assert get_data(resp) == {"updatedCount": 3, "unreadCount": 0}
-    resp = requests.post(url, json={"all": True}, headers=_h(s, "manager"))
+    resp = requests.post(url, json={"readAll": True}, headers=_h(s, "manager"))
     assert_status(resp, 200)
     assert get_data(resp) == {"updatedCount": 0, "unreadCount": 0}
     assert _unread(base_url, s, "master") == master_unread
@@ -238,4 +238,4 @@ def test_05_unread_and_read(base_url, s):
 def test_06_unauthorized(base_url, s):
     assert_status(requests.get(f"{base_url}/v2/me/notifications"), 401)
     assert_status(requests.get(f"{base_url}/v2/me/notifications/unread-count"), 401)
-    assert_status(requests.post(f"{base_url}/v2/me/notifications/read", json={"all": True}), 401)
+    assert_status(requests.post(f"{base_url}/v2/me/notifications/read", json={"readAll": True}), 401)

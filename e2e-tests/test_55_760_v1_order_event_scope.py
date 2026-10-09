@@ -21,7 +21,7 @@ START = (datetime.now() + timedelta(days=30)).replace(hour=18, minute=0, second=
 END = START + timedelta(minutes=120)
 PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", "latitude": 37.548369, "longitude": 126.920036}
 SECTIONS = [{"title": "공연 소개", "content": "<p>공연 소속 검증</p>", "sortOrder": 0}]
-ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-123-456789"}
+ACCOUNT = {"bankName": "신한은행", "accountHolder": "고스락", "accountNumber": "110-123-456789"}
 
 
 class ScopeState:
@@ -116,7 +116,7 @@ def test_01_setup(base_url, s):
             headers=_h(s, who),
         )
         assert_status(resp, 200)
-        assert_status(requests.put(f"{base_url}/v2/events/{event_id}/sections", json=SECTIONS, headers=_h(s, who)), 200)
+        assert_status(requests.put(f"{base_url}/v2/events/{event_id}/sections", json={"sections": SECTIONS}, headers=_h(s, who)), 200)
         assert_status(requests.post(f"{base_url}/v2/events/{event_id}/open", headers=_h(s, who)), 200)
 
     # B 공연 주문: 승인 대기 / 승인 완료 / 거절(환불 요청), A 공연 주문: 승인 대기

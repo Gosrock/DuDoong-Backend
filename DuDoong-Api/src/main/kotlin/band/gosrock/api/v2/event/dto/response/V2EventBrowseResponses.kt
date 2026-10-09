@@ -4,7 +4,7 @@ import band.gosrock.api.v2.tag.dto.V2TagResponse
 import band.gosrock.api.v2.ticket.dto.V2TicketOptionType
 import band.gosrock.api.v2.ticket.dto.V2TicketPayType
 import band.gosrock.common.annotation.DateFormat
-import band.gosrock.domain.common.vo.HostContactVo
+import band.gosrock.api.v2.common.V2ContactResponse
 import band.gosrock.domain.domains.event.service.v2.V2EventDisplayStatus
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
@@ -15,6 +15,7 @@ data class V2HomeEventResponse(
     val name: String?,
     val posterImageUrl: String?,
     @field:DateFormat
+    @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm")
     val startAt: LocalDateTime?,
     val placeName: String?,
     val hostName: String?,
@@ -34,8 +35,10 @@ data class V2EventListItemResponse(
     val name: String?,
     val posterImageUrl: String?,
     @field:DateFormat
+    @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm")
     val startAt: LocalDateTime?,
     @field:DateFormat
+    @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm")
     val endAt: LocalDateTime?,
     val placeName: String?,
     val hostName: String?,
@@ -51,8 +54,10 @@ data class V2EventDetailResponse(
     val name: String?,
     val posterImageUrl: String?,
     @field:DateFormat
+    @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm")
     val startAt: LocalDateTime?,
     @field:DateFormat
+    @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm")
     val endAt: LocalDateTime?,
     @field:Schema(description = "진행 시간(분)")
     val runTime: Long?,
@@ -64,7 +69,7 @@ data class V2EventDetailResponse(
     val tags: List<V2TagResponse>,
     val host: V2EventHostSummaryResponse,
     @field:Schema(description = "문의처. 공연 문의처가 없으면 호스트 연락처(v2 연락처, 없으면 v1 전화/이메일)")
-    val contacts: List<HostContactVo>,
+    val contacts: List<V2ContactResponse>,
     @field:Schema(description = "UPCOMING(등록·시작 전) / ONGOING(시작 ~ 종료 전) / PAST(종료·정산중·지난공연)")
     val displayStatus: V2EventDisplayStatus,
 )

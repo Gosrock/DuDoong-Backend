@@ -48,10 +48,11 @@ data class V2TicketItemManageResponse(
     val options: List<V2AppliedOptionResponse>,
 )
 
+/** 입금 계좌 (#755: 사용자 앱 O-0·O-3 계좌와 같은 이름) */
 data class V2TicketAccountResponse(
-    val bank: String?,
-    val holder: String?,
-    val number: String?,
+    val bankName: String?,
+    val accountHolder: String?,
+    val accountNumber: String?,
 )
 
 data class V2AppliedOptionResponse(

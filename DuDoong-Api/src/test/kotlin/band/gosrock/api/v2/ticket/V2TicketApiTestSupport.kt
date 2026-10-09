@@ -124,7 +124,7 @@ abstract class V2TicketApiTestSupport {
 
     // ===== 티켓 =====
 
-    protected val account = mapOf("bank" to "신한은행", "holder" to "고스락", "number" to "110-123-456789")
+    protected val account = mapOf("bankName" to "신한은행", "accountHolder" to "고스락", "accountNumber" to "110-123-456789")
 
     protected fun dudoongBody(
         name: String = "일반",
@@ -158,7 +158,14 @@ abstract class V2TicketApiTestSupport {
     protected fun createTicket(requester: User, eventId: Long, body: Map<String, Any?> = dudoongBody()): Long =
         postTicket(requester, eventId, body).andExpect { status { isOk() } }.data().at("/ticketItemId").asLong()
 
+    /**
+     * T-3 부분 수정. 폼 본문(T-2 와 같은 모양)을 넘기면 '값 없음' 필드의 null 은 빼고 보낸다 — 명시적 null 은 400 이라(#755),
+     * 프론트가 바꾸지 않는 필드를 보내지 않는 것과 같다. 명시적 null 자체를 시험할 때는 [patchTicketRaw]
+     */
     protected fun patchTicket(requester: User, eventId: Long, ticketItemId: Long, body: Map<String, Any?>): ResultActionsDsl =
+        patchTicketRaw(requester, eventId, ticketItemId, body.filterNot { (key, value) -> value == null && key in CLEARABLE_TICKET_KEYS })
+
+    protected fun patchTicketRaw(requester: User, eventId: Long, ticketItemId: Long, body: Map<String, Any?>): ResultActionsDsl =
         mockMvc.patch("/api/v2/events/$eventId/ticket-items/$ticketItemId") {
             with(auth(requester))
             contentType = MediaType.APPLICATION_JSON
@@ -289,4 +296,8 @@ abstract class V2TicketApiTestSupport {
                 eventId = eventId,
             ),
         )
+
+    companion object {
+        private val CLEARABLE_TICKET_KEYS = setOf("supplyCount", "purchaseLimit", "saleStartAt", "saleEndAt", "description")
+    }
 }

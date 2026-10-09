@@ -1,5 +1,7 @@
 package band.gosrock.api.v2.tag.controller
 
+import band.gosrock.api.v2.common.swagger.V2AlsoIn
+import band.gosrock.api.v2.common.swagger.V2ApiArea
 import band.gosrock.api.v2.common.swagger.V2ApiTags
 import band.gosrock.api.v2.tag.dto.V2TagGroupResponse
 import band.gosrock.api.v2.tag.usecase.V2ReadTagsUseCase
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController
 class V2TagController(
     private val readTagsUseCase: V2ReadTagsUseCase,
 ) {
+    @V2AlsoIn(V2ApiArea.USER)
     @Operation(summary = "[E-11] 공연 태그 목록, 분류별 묶음 (비로그인 허용)")
     @GetMapping("/tags")
     fun getTags(): List<V2TagGroupResponse> = readTagsUseCase.execute()

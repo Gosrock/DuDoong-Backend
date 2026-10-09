@@ -28,7 +28,9 @@ import com.tngtech.archunit.core.importer.ClassFileImporter
 import com.tngtech.archunit.core.importer.ImportOption
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
+import com.fasterxml.jackson.annotation.JsonValue
 import jakarta.persistence.Entity
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
@@ -38,6 +40,21 @@ import org.junit.jupiter.api.Test
  */
 @DisplayName("v1/v2 API 경계 아키텍처")
 class V2ApiArchitectureTest {
+
+    /**
+     * v2 요청·응답 DTO 가 쓰는 enum 은 코드값 그대로 직렬화돼야 한다 (#755 C23). 도메인 enum 에 `@JsonValue`(한글 표시값)가 붙으면
+     * v2 계약·Swagger 가 말없이 바뀌므로(HostRole 사례 → 요청은 `V2HostMemberRole`) 막는다
+     */
+    @Test
+    fun `v2 DTO 의 enum 필드에는 @JsonValue 가 없다 (코드값 그대로)`() {
+        val dtoClasses = classes.filter { it.packageName.startsWith(API_V2.removeSuffix("..")) && it.packageName.contains(".dto") && !it.isEnum }
+        val violations = dtoClasses.flatMap { dto ->
+            dto.fields.map { it.rawType }.filter { it.isEnum }
+                .filter { enum -> enum.methods.any { m -> m.isAnnotatedWith(JsonValue::class.java) } || enum.fields.any { f -> f.isAnnotatedWith(JsonValue::class.java) } }
+                .map { "${dto.simpleName} → ${it.name}" }
+        }
+        assertTrue(violations.isEmpty(), "@JsonValue 가 붙은 enum 을 v2 DTO 에서 쓴다: $violations")
+    }
 
     @Test
     fun `v1 api 는 api v2 에 의존하지 않는다 (GlobalExceptionHandler, SwaggerConfig 는 아래 규칙으로 따로 검사)`() {

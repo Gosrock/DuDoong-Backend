@@ -21,8 +21,10 @@ data class V2MyEventResponse(
     val name: String?,
     val posterImageUrl: String?,
     @field:DateFormat
+    @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm")
     val startAt: LocalDateTime?,
     @field:DateFormat
+    @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm")
     val endAt: LocalDateTime?,
     @field:Schema(description = "공연장 이름. 미입력이면 null")
     val placeName: String?,

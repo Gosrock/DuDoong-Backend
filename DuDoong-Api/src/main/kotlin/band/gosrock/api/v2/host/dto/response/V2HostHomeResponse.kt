@@ -1,6 +1,7 @@
 package band.gosrock.api.v2.host.dto.response
 
 import band.gosrock.common.annotation.DateFormat
+import band.gosrock.api.v2.common.V2ContactResponse
 import band.gosrock.domain.common.vo.HostContactVo
 import band.gosrock.domain.domains.host.domain.Host
 import io.swagger.v3.oas.annotations.media.Schema
@@ -14,16 +15,16 @@ data class V2HostHomeResponse(
     val profileImageUrl: String?,
     val coverImageUrl: String?,
     @field:Schema(description = "대표 연락처. v2 연락처가 없으면 v1 연락처(전화/이메일)로 대체")
-    val contacts: List<HostContactVo>,
-    @field:Schema(description = "개설일")
+    val contacts: List<V2ContactResponse>,
+    @field:Schema(description = "개설일", type = "string", pattern = "yyyy.MM.dd HH:mm")
     @field:DateFormat
     val createdAt: LocalDateTime?,
     @field:Schema(description = "활성 멤버 수")
-    val memberCount: Int,
+    val memberCount: Long,
     val followerCount: Long,
     @field:Schema(description = "내가 팔로우 중인지 (비로그인 false)")
     val isFollowing: Boolean,
-    @field:Schema(description = "내 역할 (MASTER / MANAGER / GUEST). 활성 멤버가 아니면 null")
+    @field:Schema(description = "내 역할 (MASTER / MANAGER / GUEST). 활성 멤버가 아니면 null", allowableValues = ["MASTER", "MANAGER", "GUEST"])
     val myRole: String?,
 ) {
     companion object {
@@ -34,9 +35,9 @@ data class V2HostHomeResponse(
                 introduce = host.profile?.introduce,
                 profileImageUrl = host.profile?.profileImage?.generateImageUrl(),
                 coverImageUrl = host.profile?.coverImage?.generateImageUrl(),
-                contacts = contacts,
+                contacts = contacts.map(V2ContactResponse::from),
                 createdAt = host.createdAt,
-                memberCount = host.getActiveHostUsers().size,
+                memberCount = host.getActiveHostUsers().size.toLong(),
                 followerCount = followerCount,
                 isFollowing = isFollowing,
                 myRole = host.getActiveRoleOf(userId)?.name,
