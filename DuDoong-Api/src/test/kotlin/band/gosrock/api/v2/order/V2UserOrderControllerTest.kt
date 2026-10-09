@@ -163,7 +163,7 @@ class V2UserOrderControllerTest : V2UserOrderTestSupport() {
             val host = hostDetail(shop.team.guest, shop.eventId, uuid)
             assertEquals(2, host.at("/lines").size())
             assertEquals(2, host.at("/issuedTickets").size())
-            assertEquals(13000, host.at("/order/totalPaymentAmount").asLong())
+            assertEquals(13000, host.at("/order/totalAmount").asLong())
             // 대시보드 판매금액 = 주문 결제금액 (라인 분할과 무관)
             assertEquals(13000, v2Get(shop.team.guest, "/events/${shop.eventId}/dashboard").andExpect { status { isOk() } }.data().at("/salesAmount").asLong())
         }

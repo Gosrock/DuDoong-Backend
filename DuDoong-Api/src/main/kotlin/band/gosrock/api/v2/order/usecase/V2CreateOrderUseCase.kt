@@ -26,7 +26,7 @@ class V2CreateOrderUseCase(
         val ticketItemId = request.ticketItemId!!
         log.info(
             "[V2CreateOrderUseCase] 주문 생성 userId={} eventId={} ticketItemId={} quantity={} method={} applyToAll={}",
-            userId, request.eventId, ticketItemId, request.quantity, request.paymentMethod, request.applyToAll(),
+            userId, request.eventId, ticketItemId, request.quantity, request.paymentChannel, request.applyToAll(),
         )
         val created = v2UserOrderDomainService.create(
             ticketItemId,
@@ -37,7 +37,7 @@ class V2CreateOrderUseCase(
                 quantity = request.quantity!!,
                 applyToAll = request.applyToAll(),
                 answerSets = request.answerSets(),
-                paymentChannel = request.paymentMethod!!,
+                paymentChannel = request.paymentChannel!!,
                 depositorName = request.depositorName,
             ),
         )

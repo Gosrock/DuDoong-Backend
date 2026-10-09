@@ -434,7 +434,7 @@ class V2AuditFollowupTest : V2GiftTestSupport() {
             listOf("GIFT_SENT", "GIFT_ACCEPTED", "GIFT_RECEIVED", "GIFT_REJECTED", "GIFT_RETURNED", "GIFT_TICKET_CANCELED").forEach {
                 assertTrue(notificationType.contains(it), "$it: $notificationType")
             }
-            assertTrue(schemas["V2NotificationTarget"]["properties"]["type"]["description"].asText().contains("GIFT: id = giftId"))
+            assertTrue(schemas["V2NotificationTarget"]["properties"]["type"]["description"].asText().contains("GIFT: targetId = giftId"))
         }
     }
 

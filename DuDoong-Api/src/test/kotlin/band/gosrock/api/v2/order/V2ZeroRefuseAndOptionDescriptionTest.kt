@@ -99,7 +99,7 @@ class V2ZeroRefuseAndOptionDescriptionTest : V2UserOrderTestSupport() {
             val mine = myOrder(buyer, orderUuid).andExpect { status { isOk() } }.data()
             assertEquals("REFUSED", mine.at("/status").asText())
             assertEquals("NONE", mine.at("/refundStatus").asText())
-            assertFalse(mine.at("/refundAccountEditable").asBoolean())
+            assertFalse(mine.at("/canEditRefundAccount").asBoolean())
             assertFalse(mine.at("/refundAccountRequired").asBoolean())
             assertFalse(refusedBody(buyer, orderUuid).contains("환불 계좌"))
         }

@@ -43,7 +43,7 @@ abstract class V2UserOrderTestSupport : V2OperationTestSupport() {
         "quantity" to quantity,
         "options" to mapOf("applyToAll" to (perTicket == null), "answers" to answers),
         "perTicketOptions" to perTicket,
-        "paymentMethod" to method,
+        "paymentChannel" to method,
         "depositorName" to depositorName,
         "agreeRefundPolicy" to agree,
     )
@@ -51,7 +51,7 @@ abstract class V2UserOrderTestSupport : V2OperationTestSupport() {
     protected fun shopBody(shop: Shop, quantity: Long = 1, yes: Boolean = true, method: String = "BANK_TRANSFER", depositorName: String? = "입금자") =
         orderBody(shop.eventId, shop.ticketId, quantity, answers(shop, yes), method = method, depositorName = depositorName)
 
-    protected fun v2CreateOrder(buyer: User?, body: Map<String, Any?>): ResultActionsDsl = v2Post(buyer, "/orders", body)
+    protected fun v2CreateOrder(buyer: User?, body: Map<String, Any?>): ResultActionsDsl = v2Post(buyer, "/me/orders", body)
 
     /** 성공해야 하는 주문 → 주문 상세(data) */
     protected fun v2OrderOk(buyer: User, body: Map<String, Any?>): JsonNode =

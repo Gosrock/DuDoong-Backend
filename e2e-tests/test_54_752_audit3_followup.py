@@ -103,7 +103,7 @@ def _new_event(base_url, s, key, approval=False, option_description=None):
         assert_status(requests.put(_ev(base_url, event_id, f"/ticket-items/{ticket_id}/options"), json={"optionIds": [s.options[key]]}, headers=_h(s, "manager")), 200)
     key_img = get_data(requests.post(_ev(base_url, event_id, "/images"), json={"purpose": "POSTER", "extension": "PNG"}, headers=_h(s, "manager")))["key"]
     assert_status(requests.patch(_ev(base_url, event_id, "/basic"), json={"posterImageKey": key_img, "place": PLACE, "contacts": [{"type": "EMAIL", "value": "a@a.com"}]}, headers=_h(s, "manager")), 200)
-    assert_status(requests.put(_ev(base_url, event_id, "/sections"), json=SECTIONS, headers=_h(s, "manager")), 200)
+    assert_status(requests.put(_ev(base_url, event_id, "/sections"), json={"sections": SECTIONS}, headers=_h(s, "manager")), 200)
     assert_status(requests.post(_ev(base_url, event_id, "/open"), headers=_h(s, "manager")), 200)
     s.events[key], s.tickets[key] = event_id, ticket_id
     return event_id
@@ -113,13 +113,13 @@ def _order_body(s, key, quantity=1):
     return {
         "eventId": s.events[key], "ticketItemId": s.tickets[key], "quantity": quantity,
         "options": {"applyToAll": True, "answers": []}, "perTicketOptions": None,
-        "paymentMethod": "FREE", "depositorName": None, "agreeRefundPolicy": True,
+        "paymentChannel": "FREE", "depositorName": None, "agreeRefundPolicy": True,
     }
 
 
 def _buy(base_url, s, who, key, quantity=1):
     """무료 즉시 발급 주문 → (orderUuid, 티켓 uuid 목록)"""
-    resp = requests.post(f"{base_url}/v2/orders", json=_order_body(s, key, quantity), headers=_h(s, who))
+    resp = requests.post(f"{base_url}/v2/me/orders", json=_order_body(s, key, quantity), headers=_h(s, who))
     assert_status(resp, 200)
     data = get_data(resp)
     assert data["status"] == "APPROVED"
@@ -297,7 +297,7 @@ def test_08_duplicate_order_in_progress_400_26(base_url, s):
     # 앞 요청이 확정(발급) 중인 상태: 생성 직후 상태로 되돌림
     _sql(f"UPDATE tbl_order SET order_status = 'PENDING_PAYMENT' WHERE uuid = '{order_uuid}'")
     count = int(_sql(f"SELECT COUNT(*) FROM tbl_order WHERE user_id = {s.user_ids['buyer']}").strip())
-    resp = requests.post(f"{base_url}/v2/orders", json=_order_body(s, "order"), headers=_h(s, "buyer"))
+    resp = requests.post(f"{base_url}/v2/me/orders", json=_order_body(s, "order"), headers=_h(s, "buyer"))
     assert resp.status_code == 400 and _code(resp) == "Order_400_26"
     assert int(_sql(f"SELECT COUNT(*) FROM tbl_order WHERE user_id = {s.user_ids['buyer']}").strip()) == count
     _sql(f"UPDATE tbl_order SET order_status = 'APPROVED' WHERE uuid = '{order_uuid}'")
@@ -315,7 +315,7 @@ def test_10_zero_amount_refuse_has_no_refund_request(base_url, s):
     ev = s.events["free_approval"]
 
     def pending_order(who):
-        resp = requests.post(f"{base_url}/v2/orders", json=_order_body(s, "free_approval"), headers=_h(s, who))
+        resp = requests.post(f"{base_url}/v2/me/orders", json=_order_body(s, "free_approval"), headers=_h(s, who))
         assert_status(resp, 200)
         assert get_data(resp)["status"] == "PENDING_APPROVE"
         return get_data(resp)["orderUuid"]
@@ -333,7 +333,7 @@ def test_10_zero_amount_refuse_has_no_refund_request(base_url, s):
     assert resp.status_code == 400 and _code(resp) == "Order_400_17"
     mine = get_data(requests.get(f"{base_url}/v2/me/orders/{v2_order}", headers=_h(s, "buyer")))
     assert mine["status"] == "REFUSED" and mine["refundStatus"] == "NONE"
-    assert mine["refundAccountEditable"] is False and mine["refundAccountRequired"] is False
+    assert mine["canEditRefundAccount"] is False and mine["refundAccountRequired"] is False
 
     # v1 거절은 그대로: 0원도 환불 요청
     v1_order = pending_order("other")
@@ -346,7 +346,7 @@ def test_10_zero_amount_refuse_has_no_refund_request(base_url, s):
 def test_11_o3_option_answer_has_description(base_url, s):
     body = _order_body(s, "described")
     body["options"]["answers"] = [{"optionId": s.options["described"], "answer": "통로 쪽"}]
-    resp = requests.post(f"{base_url}/v2/orders", json=body, headers=_h(s, "buyer"))
+    resp = requests.post(f"{base_url}/v2/me/orders", json=body, headers=_h(s, "buyer"))
     assert_status(resp, 200)
     order_uuid = get_data(resp)["orderUuid"]
     detail = get_data(requests.get(f"{base_url}/v2/me/orders/{order_uuid}", headers=_h(s, "buyer")))

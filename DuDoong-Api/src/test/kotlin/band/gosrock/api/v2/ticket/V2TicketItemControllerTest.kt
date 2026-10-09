@@ -47,9 +47,9 @@ class V2TicketItemControllerTest : V2TicketApiTestSupport() {
                 jsonPath("$.data.isSold") { value(false) }
                 // 준비중 공연이라 아직 살 수 없다
                 jsonPath("$.data.isPurchasable") { value(false) }
-                jsonPath("$.data.account.bank") { value("신한은행") }
-                jsonPath("$.data.account.holder") { value("고스락") }
-                jsonPath("$.data.account.number") { value("110-123-456789") }
+                jsonPath("$.data.account.bankName") { value("신한은행") }
+                jsonPath("$.data.account.accountHolder") { value("고스락") }
+                jsonPath("$.data.account.accountNumber") { value("110-123-456789") }
                 jsonPath("$.data.options.length()") { value(0) }
             }
             // 일반 멤버도 관리 목록 조회 가능, 재고 비공개여도 remaining 이 보인다
@@ -119,7 +119,7 @@ class V2TicketItemControllerTest : V2TicketApiTestSupport() {
             postTicket(team.manager, team.eventId, dudoongBody(name = "  ")).andExpect { status { isBadRequest() } }
             postTicket(team.manager, team.eventId, dudoongBody(overrides = mapOf("description" to "가".repeat(31)))).andExpect { status { isBadRequest() } }
             postTicket(team.manager, team.eventId, dudoongBody(supplyCount = 0)).andExpect { status { isBadRequest() } }
-            postTicket(team.manager, team.eventId, dudoongBody(overrides = mapOf("account" to mapOf("bank" to "", "holder" to "a", "number" to "1"))))
+            postTicket(team.manager, team.eventId, dudoongBody(overrides = mapOf("account" to mapOf("bankName" to "", "accountHolder" to "a", "accountNumber" to "1"))))
                 .andExpect { status { isBadRequest() } }
             postTicket(team.manager, team.eventId, dudoongBody(overrides = mapOf("payType" to "UNKNOWN"))).andExpect { status { isBadRequest() } }
             postTicket(team.manager, team.eventId, dudoongBody(overrides = mapOf("approvalRequired" to null))).andExpect { status { isBadRequest() } }
@@ -175,13 +175,13 @@ class V2TicketItemControllerTest : V2TicketApiTestSupport() {
         }
 
         @Test
-        fun `v2 티켓을 만들면 체크리스트 ticket 이 충족된다`() {
+        fun `v2 티켓을 만들면 체크리스트 hasValidTicket 이 충족된다`() {
             val team = Team()
             mockMvc.get("/api/v2/events/${team.eventId}/checklist") { with(auth(team.guest)) }
-                .andExpect { jsonPath("$.data.ticket") { value(false) } }
+                .andExpect { jsonPath("$.data.hasValidTicket") { value(false) } }
             createTicket(team.manager, team.eventId)
             mockMvc.get("/api/v2/events/${team.eventId}/checklist") { with(auth(team.guest)) }
-                .andExpect { jsonPath("$.data.ticket") { value(true) } }
+                .andExpect { jsonPath("$.data.hasValidTicket") { value(true) } }
         }
     }
 
@@ -206,6 +206,96 @@ class V2TicketItemControllerTest : V2TicketApiTestSupport() {
             val item = ticketItemRepository.findById(id).get()
             assertEquals(TicketType.APPROVAL, item.type)
             assertEquals(null, item.accountInfo?.bankName)
+        }
+
+        @Test
+        fun `부분 수정 (#755) - 보낸 필드만 바뀌고 null·빠진 필드는 그대로 (null 은 무제한이 아님)`() {
+            val team = Team()
+            val saleEnd = LocalDateTime.now().plusDays(3).withSecond(0).withNano(0)
+            val id = createTicket(team.manager, team.eventId, dudoongBody(supplyCount = 100, overrides = mapOf("purchaseLimit" to 4, "saleEndAt" to saleEnd.f())))
+            patchTicket(team.manager, team.eventId, id, mapOf("name" to "새 이름")).andExpect {
+                status { isOk() }
+                jsonPath("$.data.name") { value("새 이름") }
+                jsonPath("$.data.payType") { value("DUDOONG") }
+                jsonPath("$.data.price") { value(6000) }
+                jsonPath("$.data.supplyCount") { value(100) }
+                jsonPath("$.data.purchaseLimit") { value(4) }
+                jsonPath("$.data.saleEndAt") { value(saleEnd.f()) }
+                jsonPath("$.data.description") { value("일반 입장") }
+                jsonPath("$.data.account.bankName") { value("신한은행") }
+                jsonPath("$.data.isQuantityPublic") { value(true) }
+            }
+            // 명시적 null 도 '변경 안 함'
+            patchTicket(team.manager, team.eventId, id, mapOf("supplyCount" to null, "purchaseLimit" to null, "saleEndAt" to null, "description" to null)).andExpect {
+                status { isOk() }
+                jsonPath("$.data.supplyCount") { value(100) }
+                jsonPath("$.data.purchaseLimit") { value(4) }
+                jsonPath("$.data.saleEndAt") { value(saleEnd.f()) }
+                jsonPath("$.data.description") { value("일반 입장") }
+            }
+            // 빈 본문도 그대로
+            patchTicket(team.manager, team.eventId, id, emptyMap()).andExpect { status { isOk() }; jsonPath("$.data.name") { value("새 이름") } }
+        }
+
+        @Test
+        fun `값 없음으로 바꾸기는 clear (#755) - 무제한·제한 없음·등록 즉시·공연 시작까지·설명 없음, 값과 함께 주면 400`() {
+            val team = Team()
+            val saleStart = LocalDateTime.now().plusHours(2).withSecond(0).withNano(0)
+            val id = createTicket(
+                team.manager, team.eventId,
+                dudoongBody(supplyCount = 100, overrides = mapOf("purchaseLimit" to 4, "saleStartAt" to saleStart.f(), "saleEndAt" to saleStart.plusDays(1).f())),
+            )
+            // 무제한은 재고 공개와 함께 쓸 수 없다 (생성과 같은 규칙)
+            patchTicket(team.manager, team.eventId, id, mapOf("clear" to listOf("SUPPLY_COUNT"))).andExpect {
+                status { isBadRequest() }
+                jsonPath("$.code") { value("Ticket_Item_400_15") }
+            }
+            patchTicket(
+                team.manager, team.eventId, id,
+                mapOf("isQuantityPublic" to false, "clear" to listOf("SUPPLY_COUNT", "PURCHASE_LIMIT", "SALE_START_AT", "SALE_END_AT", "DESCRIPTION")),
+            ).andExpect {
+                status { isOk() }
+                jsonPath("$.data.supplyCount") { value(null as Any?) }
+                jsonPath("$.data.remaining") { value(null as Any?) }
+                jsonPath("$.data.purchaseLimit") { value(null as Any?) }
+                jsonPath("$.data.saleStartAt") { value(null as Any?) }
+                jsonPath("$.data.saleEndAt") { value(null as Any?) }
+                jsonPath("$.data.description") { value(null as Any?) }
+                jsonPath("$.data.price") { value(6000) }
+            }
+            // 무제한인 티켓에 다른 필드만 바꾸면 무제한 그대로
+            patchTicket(team.manager, team.eventId, id, mapOf("price" to 7000)).andExpect {
+                jsonPath("$.data.supplyCount") { value(null as Any?) }
+                jsonPath("$.data.purchaseLimit") { value(null as Any?) }
+                jsonPath("$.data.price") { value(7000) }
+            }
+            patchTicket(team.manager, team.eventId, id, mapOf("supplyCount" to 50, "clear" to listOf("SUPPLY_COUNT"))).andExpect {
+                status { isBadRequest() }
+                jsonPath("$.code") { value("Ticket_Item_400_15") }
+            }
+            patchTicket(team.manager, team.eventId, id, mapOf("clear" to listOf("NAME"))).andExpect { status { isBadRequest() } }
+            patchTicket(team.manager, team.eventId, id, mapOf("supplyCount" to 50)).andExpect { jsonPath("$.data.supplyCount") { value(50) } }
+        }
+
+        @Test
+        fun `판매된 티켓도 부분 수정 (#755) - 허용 필드만 보내면 잠긴 필드는 현재 값 그대로라 통과, 잠긴 필드를 바꾸면 400`() {
+            val team = Team()
+            val id = createTicket(team.manager, team.eventId, freeBody(supplyCount = 10))
+            setEventStatus(team.eventId, EventStatus.OPEN)
+            v1Buy(newUser("구매자"), team.master, team.eventId, id, quantity = 2, approval = false)
+            patchTicket(team.manager, team.eventId, id, mapOf("description" to "부분 설명", "supplyCount" to 15)).andExpect {
+                status { isOk() }
+                jsonPath("$.data.description") { value("부분 설명") }
+                jsonPath("$.data.supplyCount") { value(15) }
+                jsonPath("$.data.remaining") { value(13) }
+                jsonPath("$.data.name") { value("무료") }
+            }
+            listOf(mapOf("name" to "다른이름"), mapOf("approvalRequired" to true), mapOf("supplyCount" to 1)).forEach { body ->
+                patchTicket(team.manager, team.eventId, id, body).andExpect {
+                    status { isBadRequest() }
+                    jsonPath("$.code") { value("Ticket_Item_400_14") }
+                }
+            }
         }
 
         @Test
@@ -258,7 +348,7 @@ class V2TicketItemControllerTest : V2TicketApiTestSupport() {
             assertEquals(1L, manageItem(team.guest, team.eventId, id).at("/soldCount").asLong())
             patchTicket(team.manager, team.eventId, id, dudoongBody(price = 7000, supplyCount = 10))
                 .andExpect { jsonPath("$.code") { value("Ticket_Item_400_14") } }
-            patchTicket(team.manager, team.eventId, id, dudoongBody(supplyCount = 10, overrides = mapOf("account" to account + ("number" to "999"))))
+            patchTicket(team.manager, team.eventId, id, dudoongBody(supplyCount = 10, overrides = mapOf("account" to account + ("accountNumber" to "999"))))
                 .andExpect { jsonPath("$.code") { value("Ticket_Item_400_14") } }
             // 같은 값(폼 전체 재전송)은 허용
             patchTicket(team.manager, team.eventId, id, dudoongBody(supplyCount = 10)).andExpect { status { isOk() } }
@@ -449,7 +539,7 @@ class V2TicketItemControllerTest : V2TicketApiTestSupport() {
 
             patchTicket(team.manager, team.eventId, ticket, dudoongBody(price = 7000, supplyCount = 10))
                 .andExpect { status { isBadRequest() }; jsonPath("$.code") { value("Ticket_Item_400_14") } }
-            patchTicket(team.manager, team.eventId, ticket, dudoongBody(supplyCount = 10, overrides = mapOf("account" to account + ("number" to "999"))))
+            patchTicket(team.manager, team.eventId, ticket, dudoongBody(supplyCount = 10, overrides = mapOf("account" to account + ("accountNumber" to "999"))))
                 .andExpect { jsonPath("$.code") { value("Ticket_Item_400_14") } }
             patchOption(team.manager, team.eventId, option, mapOf("yesAdditionalPrice" to 2000))
                 .andExpect { status { isBadRequest() }; jsonPath("$.code") { value("Option_Group_400_5") } }

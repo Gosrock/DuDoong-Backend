@@ -128,8 +128,8 @@ class V2HostController(
         @PathVariable("userId") targetUserId: Long,
     ): List<V2HostMemberResponse> = removeHostMemberUseCase.execute(currentUserId, hostId, targetUserId)
 
-    @Operation(summary = "[H-12] 마스터 양도 (마스터만). 기존 마스터는 매니저가 된다")
-    @PostMapping("/hosts/{hostId}/master-transfer")
+    @Operation(summary = "[H-12] 마스터 양도 (마스터만). 기존 마스터는 매니저가 된다. 경로는 다른 동작 경로처럼 동사 먼저 (#755: master-transfer → transfer-master, v1 과 같음)")
+    @PostMapping("/hosts/{hostId}/transfer-master")
     fun transferMaster(
         @CurrentUserId userId: Long,
         @PathVariable hostId: Long,

@@ -20,6 +20,6 @@ class V2NotificationUseCase(
 
     fun read(userId: Long, request: V2ReadNotificationsRequest): V2ReadNotificationsResponse {
         val updated = notificationDomainService.markRead(userId, request.notificationIds, request.all == true)
-        return V2ReadNotificationsResponse(updatedCount = updated, unreadCount = notificationDomainService.countUnread(userId))
+        return V2ReadNotificationsResponse(updatedCount = updated.toLong(), unreadCount = notificationDomainService.countUnread(userId))
     }
 }

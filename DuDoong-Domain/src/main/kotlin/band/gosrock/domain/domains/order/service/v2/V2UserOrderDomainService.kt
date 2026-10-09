@@ -278,7 +278,7 @@ class V2UserOrderDomainService(
         else -> null
     }
 
-    /** O-3 `refundAccountEditable`: 지금 환불 계좌를 입력·수정할 수 있는지 */
+    /** O-3 `canEditRefundAccount`: 지금 환불 계좌를 입력·수정할 수 있는지 */
     fun canEditRefundAccount(order: Order): Boolean = refundAccountBlocker(order) == null
 
     /**

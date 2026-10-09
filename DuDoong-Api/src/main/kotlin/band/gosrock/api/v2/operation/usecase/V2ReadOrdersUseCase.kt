@@ -137,7 +137,7 @@ class V2ReadOrdersUseCase(
         val rows = orders.map { order ->
             val e = mapper.toOrderElement(order, users[order.userId])
             listOf(
-                e.orderNo, e.buyerName, e.buyerPhone, e.depositorName, paymentChannelLabel(order), e.ticketName, e.totalQuantity, e.totalPaymentAmount,
+                e.orderNo, e.buyerName, e.buyerPhone, e.depositorName, paymentChannelLabel(order), e.ticketName, e.quantity, e.totalAmount,
                 e.orderedAt?.format(EXCEL_DATE), e.status?.let { STATUS_LABELS[it.name] }, REFUND_LABELS[e.refundStatus.name],
                 e.refuseReason ?: e.cancelReason,
             ) + mapper.excelOptionCells(order.orderLineItems, columns).let { cells -> columns.groupIds.map { cells[it] } }

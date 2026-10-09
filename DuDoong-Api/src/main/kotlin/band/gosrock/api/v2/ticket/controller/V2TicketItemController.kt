@@ -3,6 +3,7 @@ package band.gosrock.api.v2.ticket.controller
 import band.gosrock.api.v2.common.swagger.V2ApiTags
 import band.gosrock.api.v2.ticket.dto.request.V2ReplaceTicketOptionsRequest
 import band.gosrock.api.v2.ticket.dto.request.V2TicketItemRequest
+import band.gosrock.api.v2.ticket.dto.request.V2UpdateTicketItemRequest
 import band.gosrock.api.v2.ticket.dto.response.V2TicketItemManageResponse
 import band.gosrock.api.v2.ticket.usecase.V2ChangeTicketItemSellableUseCase
 import band.gosrock.api.v2.ticket.usecase.V2CreateTicketItemUseCase
@@ -52,13 +53,16 @@ class V2TicketItemController(
         @RequestBody @Valid request: V2TicketItemRequest,
     ): V2TicketItemManageResponse = createTicketItemUseCase.execute(userId, eventId, request)
 
-    @Operation(summary = "[T-3] 티켓 수정 (매니저 이상). 폼 전체 전송. 판매된 티켓은 설명·판매기간·재고공개·매수제한·수량 증가만")
+    @Operation(
+        summary = "[T-3] 티켓 부분 수정 (매니저 이상). null = 변경 안 함, 무제한·제한 없음·등록 즉시·공연 시작까지·설명 없음은 clear 로. " +
+            "판매된 티켓은 설명·판매기간·재고공개·매수제한·수량 증가만 (Ticket_Item_400_14)",
+    )
     @PatchMapping("/{ticketItemId}")
     fun updateTicketItem(
         @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @PathVariable ticketItemId: Long,
-        @RequestBody @Valid request: V2TicketItemRequest,
+        @RequestBody @Valid request: V2UpdateTicketItemRequest,
     ): V2TicketItemManageResponse = updateTicketItemUseCase.execute(userId, eventId, ticketItemId, request)
 
     @Operation(summary = "[T-4] 티켓 삭제 (매니저 이상). 재고 감소·승인 대기 주문이 없을 때만. 남은 티켓 목록 반환")

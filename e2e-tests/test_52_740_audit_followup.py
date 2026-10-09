@@ -128,7 +128,7 @@ def test_02_place_detail_address(base_url, s):
     # 등록(OPEN) 후 공개 상세(P-3)·호스트 공연 리스트(H-14)
     key = get_data(requests.post(_ev(base_url, s, "/images"), json={"purpose": "POSTER", "extension": "PNG"}, headers=_h(s, "master")))["key"]
     assert_status(requests.patch(_ev(base_url, s, "/basic"), json={"posterImageKey": key}, headers=_h(s, "master")), 200)
-    assert_status(requests.put(_ev(base_url, s, "/sections"), json=SECTIONS, headers=_h(s, "master")), 200)
+    assert_status(requests.put(_ev(base_url, s, "/sections"), json={"sections": SECTIONS}, headers=_h(s, "master")), 200)
     assert_status(requests.post(_ev(base_url, s, "/open"), headers=_h(s, "master")), 200)
     assert get_data(requests.get(_ev(base_url, s)))["place"]["detailAddress"] == "지하 1층"
     host_events = get_data(requests.get(f"{base_url}/v2/hosts/{s.host_id}/events"))["content"]
@@ -136,10 +136,10 @@ def test_02_place_detail_address(base_url, s):
 
 
 def test_03_issued_tickets_gift_pending(base_url, s):
-    resp = requests.post(f"{base_url}/v2/orders", json={
+    resp = requests.post(f"{base_url}/v2/me/orders", json={
         "eventId": s.event_id, "ticketItemId": s.ticket_id, "quantity": 2,
         "options": {"applyToAll": True, "answers": []}, "perTicketOptions": None,
-        "paymentMethod": "FREE", "depositorName": None, "agreeRefundPolicy": True,
+        "paymentChannel": "FREE", "depositorName": None, "agreeRefundPolicy": True,
     }, headers=_h(s, "sender"))
     assert_status(resp, 200)
     data = get_data(resp)

@@ -133,7 +133,7 @@ class V2TicketItemDomainService(
         ticketItemService.createTicketItem(newTicketItem(event, form, now), false)
 
     /**
-     * 폼 전체 수정. 판매 전이면 모든 필드, 잠김([isLocked])이면 설명·판매기간·재고공개·매수제한·수량 증가만 (DEC-006).
+     * 폼 수정 (T-3 은 [mergedForm] 으로 만든 폼). 판매 전이면 모든 필드, 잠김([isLocked])이면 설명·판매기간·재고공개·매수제한·수량 증가만 (DEC-006).
      * 잠긴 필드는 저장값과 요청값을 양쪽 trim 해 비교하고 다를 때만 400 이라, 수정 화면이 전체 값을 그대로 보내도 된다.
      * 바뀌지 않은 이름·설명은 길이 검증 없이 저장값 그대로 둔다 (v1 에서 만든 긴 이름 호환)
      */
@@ -171,11 +171,40 @@ class V2TicketItemDomainService(
         item.validateTicketPayType(false)
     }
 
+    /** T-3 부분 수정 (#755): 락 안에서 현재 값에 [patch] 를 덮어쓴 폼으로 [applyUpdate] */
     @RedissonLock(LockName = TICKET_LOCK, identifier = "ticketItemId")
-    fun updateTicketItem(eventId: Long, ticketItemId: Long, form: V2TicketItemForm, now: LocalDateTime) {
+    fun updateTicketItem(eventId: Long, ticketItemId: Long, patch: V2TicketItemPatch, now: LocalDateTime) {
         val item = queryTicketItem(eventId, ticketItemId)
-        applyUpdate(item, eventAdaptor.findById(eventId), form, hasPendingOrders(ticketItemId), now)
+        applyUpdate(item, eventAdaptor.findById(eventId), mergedForm(item, patch), hasPendingOrders(ticketItemId), now)
         ticketItemAdaptor.save(item)
+    }
+
+    /**
+     * 현재 티켓 값 + [patch] → 폼. null 인 필드는 현재 값, [V2TicketItemPatch.clear] 의 필드는 '값 없음'.
+     * 현재 값의 '값 없음'(무제한·제한 없음 저장값, 판매 기간 null)은 폼에서도 null 이라, 보내지 않은 필드는 그대로 남는다
+     */
+    fun mergedForm(item: TicketItem, patch: V2TicketItemPatch): V2TicketItemForm {
+        val clear = patch.clear
+        fun <T> pick(field: V2TicketClearableField, value: T?, current: T?): T? {
+            if (field in clear) {
+                if (value != null) throw InvalidTicketItemFieldException.EXCEPTION
+                return null
+            }
+            return value ?: current
+        }
+        return V2TicketItemForm(
+            payType = patch.payType ?: item.payType!!,
+            name = patch.name ?: item.name.orEmpty(),
+            description = pick(V2TicketClearableField.DESCRIPTION, patch.description, item.description),
+            price = patch.price ?: item.price!!.longValue(),
+            supplyCount = pick(V2TicketClearableField.SUPPLY_COUNT, patch.supplyCount, item.supplyCount.takeUnless { item.isUnlimitedSupply() }),
+            account = patch.account ?: item.accountInfo,
+            approvalRequired = patch.approvalRequired ?: (item.type == TicketType.APPROVAL),
+            isQuantityPublic = patch.isQuantityPublic ?: (item.isQuantityPublic == true),
+            purchaseLimit = pick(V2TicketClearableField.PURCHASE_LIMIT, patch.purchaseLimit, item.purchaseLimit.takeUnless { item.hasNoPurchaseLimit() }),
+            saleStartAt = pick(V2TicketClearableField.SALE_START_AT, patch.saleStartAt, item.saleStartAt),
+            saleEndAt = pick(V2TicketClearableField.SALE_END_AT, patch.saleEndAt, item.saleEndAt),
+        )
     }
 
     /**

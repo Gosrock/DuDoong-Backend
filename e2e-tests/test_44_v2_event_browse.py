@@ -20,7 +20,7 @@ FMT = "%Y.%m.%d %H:%M"
 BASE = (datetime.now() + timedelta(days=20)).replace(hour=19, minute=0, second=0, microsecond=0)
 PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", "latitude": 37.548369, "longitude": 126.920036}
 SECTIONS = [{"title": "공연 소개", "content": "<p>탐색 테스트</p>", "sortOrder": 0}]
-ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-987-654321"}
+ACCOUNT = {"bankName": "신한은행", "accountHolder": "고스락", "accountNumber": "110-987-654321"}
 
 
 class BrowseState:
@@ -91,7 +91,7 @@ def _event(base_url, s, who, host_id, name, start, tag_names, contacts=None):
         "contacts": contacts or [{"type": "INSTAGRAM", "value": "@browse"}],
     }
     assert_status(requests.patch(f"{base_url}/v2/events/{event_id}/basic", json=body, headers=_h(s, who)), 200)
-    assert_status(requests.put(f"{base_url}/v2/events/{event_id}/sections", json=SECTIONS, headers=_h(s, who)), 200)
+    assert_status(requests.put(f"{base_url}/v2/events/{event_id}/sections", json={"sections": SECTIONS}, headers=_h(s, who)), 200)
     return event_id
 
 
@@ -281,7 +281,7 @@ def test_10_tickets(base_url, s):
     assert dudoong["remaining"] is None and dudoong["purchaseLimit"] is None
     # 계좌 미노출
     assert "account" not in dudoong
-    assert ACCOUNT["number"] not in resp.text and ACCOUNT["bank"] not in resp.text
+    assert ACCOUNT["accountNumber"] not in resp.text and ACCOUNT["bankName"] not in resp.text
 
     # 판매 재개하면 보인다
     assert_status(requests.post(f"{base_url}/v2/events/{s.open_a}/ticket-items/{s.suspended_id}/resume", headers=_h(s, "master")), 200)

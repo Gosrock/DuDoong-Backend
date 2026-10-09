@@ -686,7 +686,7 @@ class V2HostControllerTest {
         fun `마스터 양도 후 기존 마스터는 매니저, 비멤버-대기 멤버 대상은 404, 매니저 요청은 403`() {
             val team = Team()
             fun transfer(requester: User, target: User) =
-                mockMvc.post("/api/v2/hosts/${team.hostId}/master-transfer") {
+                mockMvc.post("/api/v2/hosts/${team.hostId}/transfer-master") {
                     with(auth(requester))
                     contentType = MediaType.APPLICATION_JSON
                     content = json(mapOf("userId" to target.id))
@@ -800,7 +800,7 @@ class V2HostControllerTest {
                 contentType = MediaType.APPLICATION_JSON
                 content = json(mapOf("role" to "MANAGER"))
             }.andExpect { status { isOk() } }
-            mockMvc.post("/api/v2/hosts/${team.hostId}/master-transfer") {
+            mockMvc.post("/api/v2/hosts/${team.hostId}/transfer-master") {
                 with(auth(admin))
                 contentType = MediaType.APPLICATION_JSON
                 content = json(mapOf("userId" to team.manager.id))

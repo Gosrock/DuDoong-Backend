@@ -4,7 +4,7 @@ import band.gosrock.api.v2.common.swagger.V2ApiTags
 import band.gosrock.api.v2.common.V2PageResponse
 import band.gosrock.api.v2.event.dto.request.V2CreateEventRequest
 import band.gosrock.api.v2.event.dto.request.V2EventImageUploadRequest
-import band.gosrock.api.v2.event.dto.request.V2EventSectionRequest
+import band.gosrock.api.v2.event.dto.request.V2UpdateEventSectionsRequest
 import band.gosrock.api.v2.event.dto.request.V2UpdateEventBasicRequest
 import band.gosrock.api.v2.event.dto.response.V2CreateEventResponse
 import band.gosrock.api.v2.event.dto.response.V2EventChecklistResponse
@@ -97,13 +97,13 @@ class V2EventController(
         @PathVariable eventId: Long,
     ): List<V2EventSectionResponse> = readEventSectionsUseCase.execute(userId, eventId)
 
-    @Operation(summary = "[E-6] 섹션 전체 저장 (매니저 이상). 본문은 배열, 1~10개")
+    @Operation(summary = "[E-6] 섹션 전체 저장 (매니저 이상). 본문 {sections: [...]}, 1~10개 (#755: 맨 배열 → 객체)")
     @PutMapping("/events/{eventId}/sections")
     fun updateEventSections(
         @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
-        @RequestBody request: List<V2EventSectionRequest?>,
-    ): List<V2EventSectionResponse> = updateEventSectionsUseCase.execute(userId, eventId, request)
+        @RequestBody request: V2UpdateEventSectionsRequest,
+    ): List<V2EventSectionResponse> = updateEventSectionsUseCase.execute(userId, eventId, request.sections.orEmpty())
 
     @Operation(summary = "[E-7] 등록 체크리스트 (일반 멤버 이상). hasTicket=false 면 티켓 면제")
     @GetMapping("/events/{eventId}/checklist")

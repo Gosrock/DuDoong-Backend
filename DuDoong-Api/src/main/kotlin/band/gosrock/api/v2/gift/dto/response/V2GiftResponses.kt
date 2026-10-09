@@ -49,8 +49,8 @@ data class V2MyTicketElement(
     @field:Schema(description = "티켓 번호 (T1000xxxx)")
     val issuedTicketNo: String?,
     val ticketName: String?,
-    @field:Schema(description = "유료 옵션 추가금 합(원)")
-    val optionPrice: Long,
+    @field:Schema(description = "유료 옵션 추가금 합(원). #755: optionPrice → optionAmount")
+    val optionAmount: Long,
     val state: V2MyTicketState,
     @field:Schema(description = "BEFORE / DONE / CANCELED")
     val entrance: V2EntranceState,
@@ -84,10 +84,10 @@ data class V2MyTicketDetailResponse(
     val ticketUuid: String?,
     val issuedTicketNo: String?,
     val ticketName: String?,
-    @field:Schema(description = "티켓 가격(원)")
-    val ticketPrice: Long,
+    @field:Schema(description = "티켓 1장 가격(원, 발급 시점). #755: ticketPrice → unitPrice")
+    val unitPrice: Long,
     val optionAnswers: List<V2OptionAnswerResponse>,
-    val optionPrice: Long,
+    val optionAmount: Long,
     val state: V2MyTicketState,
     val entrance: V2EntranceState,
     @field:DateFormat
@@ -184,8 +184,8 @@ data class V2GiftEventResponse(
 
 data class V2GiftTicketResponse(
     val ticketName: String?,
-    @field:Schema(description = "티켓 가격(원)")
-    val ticketPrice: Long,
+    @field:Schema(description = "티켓 1장 가격(원, 발급 시점). #755: ticketPrice → unitPrice")
+    val unitPrice: Long,
 )
 
 /** G-7 보낸·받은 선물 내역 */
@@ -194,7 +194,7 @@ data class V2GiftElement(
     val status: TicketGiftStatus,
     val cancelReason: TicketGiftCancelReason?,
     @field:Schema(description = "대기 중인데 공연이 끝남 (선물 만료)")
-    val isExpired: Boolean,
+    val isGiftExpired: Boolean,
     @field:Schema(description = "상대 닉네임: SENT 면 받은 사람(대기·취소면 null), RECEIVED 면 보낸 사람")
     val counterpartName: String?,
     @field:Schema(description = "메모 (SENT 만)")

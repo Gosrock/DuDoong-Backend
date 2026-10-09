@@ -11,7 +11,8 @@ data class V2DashboardResponse(
     val tickets: V2DashboardTicketsResponse,
     @field:Schema(description = "판매금액 합계(원) = 승인·결제 완료 주문 결제금액 합")
     val salesAmount: Long,
-    val entrance: V2EntranceStatsResponse,
+    @field:Schema(description = "입장 현황 (Q-1 과 같은 객체). #755: entrance → entranceStats (다른 API 의 entrance 는 티켓 입장 상태 enum)")
+    val entranceStats: V2EntranceStatsResponse,
     @field:Schema(description = "표시용 상태 (PREPARING / UPCOMING / ONGOING / PAST, #740)")
     val displayStatus: V2EventDisplayStatus,
     // getDDay() 는 Jackson 기본 규칙으로 "dday" 가 되므로 이름을 명시한다

@@ -59,7 +59,7 @@ class V2OrderController(
         summary = "[O-1] 주문 생성 (로그인). 두둥티켓은 '입금했어요' 시점에 승인 대기로, 무료는 승인 ON 이면 승인 대기·OFF 면 즉시 발급. " +
             "같은 사용자의 같은 주문이 10초 안에 다시 오면 앞 주문을 돌려준다. 응답은 O-3 과 같은 주문 상세",
     )
-    @PostMapping("/orders")
+    @PostMapping("/me/orders")
     fun createOrder(@CurrentUserId userId: Long, @RequestBody @Valid request: V2CreateOrderRequest): V2MyOrderDetailResponse =
         createOrderUseCase.execute(userId, request)
 

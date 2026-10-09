@@ -104,7 +104,7 @@ def _new_event(base_url, s, key, purchase_limit=4, approval=False):
     ticket_id = get_data(resp)["ticketItemId"]
     key_img = get_data(requests.post(_ev(base_url, event_id, "/images"), json={"purpose": "POSTER", "extension": "PNG"}, headers=_h(s, "manager")))["key"]
     assert_status(requests.patch(_ev(base_url, event_id, "/basic"), json={"posterImageKey": key_img, "place": PLACE, "contacts": [{"type": "EMAIL", "value": "a@a.com"}]}, headers=_h(s, "manager")), 200)
-    assert_status(requests.put(_ev(base_url, event_id, "/sections"), json=SECTIONS, headers=_h(s, "manager")), 200)
+    assert_status(requests.put(_ev(base_url, event_id, "/sections"), json={"sections": SECTIONS}, headers=_h(s, "manager")), 200)
     assert_status(requests.post(_ev(base_url, event_id, "/open"), headers=_h(s, "manager")), 200)
     s.events[key], s.tickets[key] = event_id, ticket_id
     return event_id
@@ -112,10 +112,10 @@ def _new_event(base_url, s, key, purchase_limit=4, approval=False):
 
 def _buy(base_url, s, who, key, quantity=1):
     """무료 즉시 발급 주문 → (orderUuid, 티켓 uuid 목록)"""
-    resp = requests.post(f"{base_url}/v2/orders", json={
+    resp = requests.post(f"{base_url}/v2/me/orders", json={
         "eventId": s.events[key], "ticketItemId": s.tickets[key], "quantity": quantity,
         "options": {"applyToAll": True, "answers": []}, "perTicketOptions": None,
-        "paymentMethod": "FREE", "depositorName": None, "agreeRefundPolicy": True,
+        "paymentChannel": "FREE", "depositorName": None, "agreeRefundPolicy": True,
     }, headers=_h(s, who))
     assert_status(resp, 200)
     data = get_data(resp)
@@ -168,7 +168,7 @@ def _wait_notification(base_url, s, who, type_, target):
     while time.time() < deadline:
         resp = requests.get(f"{base_url}/v2/me/notifications", params={"size": 100}, headers=_h(s, who))
         assert_status(resp, 200)
-        found = [n for n in get_data(resp)["content"] if n["type"] == type_ and n["target"]["id"] == str(target)]
+        found = [n for n in get_data(resp)["content"] if n["type"] == type_ and n["target"]["targetId"] == str(target)]
         if found:
             return found
         time.sleep(0.2)
@@ -213,7 +213,7 @@ def test_02_create_landing_accept_uuid_swap(base_url, s):
     anon = _landing(base_url, s, None, token)
     # 공개 랜딩: 보낸 사람 이름은 가운데를 가리고(선물sender → 선******r), 옵션 답변은 주지 않는다
     assert anon["viewState"] == "AVAILABLE" and anon["isLoggedIn"] is False and anon["senderName"] == "선******r"
-    assert "optionAnswers" not in anon["ticket"] and anon["ticket"]["ticketPrice"] == 0
+    assert "optionAnswers" not in anon["ticket"] and anon["ticket"]["unitPrice"] == 0
     assert anon["event"]["placeName"] == "롤링홀" and "동생" not in str(anon)
     assert _landing(base_url, s, "sender", token)["viewState"] == "OWN_LINK"
     assert _code(_accept(base_url, s, "sender", token)) == "Gift_400_4"
@@ -357,7 +357,7 @@ def test_07_admin_paths(base_url, s):
     assert len(_wait_notification(base_url, s, "receiver", "GIFT_TICKET_CANCELED", accepted["giftId"])) == 1
     assert len(_wait_notification(base_url, s, "sender", "ORDER_CANCELED_BY_HOST", order_uuid)) == 1
     resp = requests.get(f"{base_url}/v2/me/notifications", params={"size": 100}, headers=_h(s, "receiver"))
-    assert not [n for n in get_data(resp)["content"] if n["type"] == "ORDER_CANCELED_BY_HOST" and n["target"]["id"] == order_uuid]
+    assert not [n for n in get_data(resp)["content"] if n["type"] == "ORDER_CANCELED_BY_HOST" and n["target"]["targetId"] == order_uuid]
     resp = requests.get(f"{base_url}/v2/me/notifications", params={"size": 100}, headers=_h(s, "sender"))
     assert not [n for n in get_data(resp)["content"] if n["type"] == "GIFT_TICKET_CANCELED"]
 
@@ -424,9 +424,9 @@ def test_09_purchase_limit_by_buyer(base_url, s):
     body = {
         "eventId": s.events["limit"], "ticketItemId": s.tickets["limit"], "quantity": 1,
         "options": {"applyToAll": True, "answers": []}, "perTicketOptions": None,
-        "paymentMethod": "FREE", "depositorName": None, "agreeRefundPolicy": True,
+        "paymentChannel": "FREE", "depositorName": None, "agreeRefundPolicy": True,
     }
-    resp = requests.post(f"{base_url}/v2/orders", json=body, headers=_h(s, "limit"))
+    resp = requests.post(f"{base_url}/v2/me/orders", json=body, headers=_h(s, "limit"))
     assert resp.status_code == 400, resp.text
     # v1 장바구니도 같은 기준
     resp = requests.post(f"{base_url}/v1/carts", json={"items": [{"itemId": s.tickets["limit"], "quantity": 1, "options": []}]}, headers=_h(s, "limit"))
@@ -519,10 +519,10 @@ def test_14_new_approved_bar(base_url, s):
         return get_data(resp)
 
     def approve(who):
-        resp = requests.post(f"{base_url}/v2/orders", json={
+        resp = requests.post(f"{base_url}/v2/me/orders", json={
             "eventId": s.events["bar"], "ticketItemId": s.tickets["bar"], "quantity": 1,
             "options": {"applyToAll": True, "answers": []}, "perTicketOptions": None,
-            "paymentMethod": "FREE", "depositorName": None, "agreeRefundPolicy": True,
+            "paymentChannel": "FREE", "depositorName": None, "agreeRefundPolicy": True,
         }, headers=_h(s, who))
         assert_status(resp, 200)
         order_uuid = get_data(resp)["orderUuid"]
@@ -818,10 +818,10 @@ def test_20_race_reject_vs_other_order_approve(base_url, s):
     ev = s.events["bar"]
 
     def order(who):
-        resp = requests.post(f"{base_url}/v2/orders", json={
+        resp = requests.post(f"{base_url}/v2/me/orders", json={
             "eventId": ev, "ticketItemId": s.tickets["bar"], "quantity": 1,
             "options": {"applyToAll": True, "answers": []}, "perTicketOptions": None,
-            "paymentMethod": "FREE", "depositorName": None, "agreeRefundPolicy": True,
+            "paymentChannel": "FREE", "depositorName": None, "agreeRefundPolicy": True,
         }, headers=_h(s, who))
         assert_status(resp, 200)
         return get_data(resp)["orderUuid"]

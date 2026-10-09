@@ -92,12 +92,12 @@ class V2RefundAccountInputTest : V2UserOrderTestSupport() {
             val orderUuid = refused(shop, buyer)
             val before = detail(buyer, orderUuid)
             assertTrue(before.at("/refundAccountRequired").asBoolean())
-            assertTrue(before.at("/refundAccountEditable").asBoolean())
+            assertTrue(before.at("/canEditRefundAccount").asBoolean())
             assertTrue(before.at("/refundAccount").isNull)
 
             val after = putAccount(buyer, orderUuid, refundAccount).andExpect { status { isOk() } }.data()
             assertFalse(after.at("/refundAccountRequired").asBoolean())
-            assertTrue(after.at("/refundAccountEditable").asBoolean())
+            assertTrue(after.at("/canEditRefundAccount").asBoolean())
             assertEquals("국민은행", after.at("/refundAccount/bankName").asText())
             assertEquals("*********8901", after.at("/refundAccount/maskedAccountNumber").asText())
             assertFalse(after.toString().contains("123-45-678901"), "주문자 응답에 계좌번호 전체가 없다")
@@ -122,12 +122,14 @@ class V2RefundAccountInputTest : V2UserOrderTestSupport() {
             val hostView = hostDetail(shop.team.manager, shop.eventId, orderUuid)
             assertEquals("123-45-678901", hostView.at("/refundAccount/accountNumber").asText())
             assertFalse(hostView.at("/refundAccount/updatedAt").isNull, "송금 전 확인용 마지막 입력·수정 시각")
+            // 다른 날짜 필드와 같은 형식 (#755 — 예전에는 ISO 로 나갔다)
+            assertTrue(Regex("""\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}""").matches(hostView.at("/refundAccount/updatedAt").asText()), hostView.at("/refundAccount/updatedAt").asText())
             assertEquals("123-45-678901", hostDetail(shop.team.master, shop.eventId, orderUuid).at("/refundAccount/accountNumber").asText())
             assertTrue(hostDetail(shop.team.guest, shop.eventId, orderUuid).at("/refundAccount").isNull)
             fun refundRow(user: User) = v2Get(user, "/events/${shop.eventId}/refunds").andExpect { status { isOk() } }.data()
                 .at("/content").first { it.at("/orderUuid").asText() == orderUuid }
             assertEquals("홍길동", refundRow(shop.team.manager).at("/refundAccount/accountHolder").asText())
-            assertFalse(refundRow(shop.team.manager).at("/refundAccount/updatedAt").isNull)
+            assertTrue(Regex("""\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}""").matches(refundRow(shop.team.manager).at("/refundAccount/updatedAt").asText()))
             assertTrue(refundRow(shop.team.guest).at("/refundAccount").isNull)
         }
 
@@ -139,7 +141,7 @@ class V2RefundAccountInputTest : V2UserOrderTestSupport() {
             cancelMy(buyer, orderUuid, refundAccount).andExpect { status { isOk() } }
             val d = detail(buyer, orderUuid)
             assertFalse(d.at("/refundAccountRequired").asBoolean())
-            assertTrue(d.at("/refundAccountEditable").asBoolean())
+            assertTrue(d.at("/canEditRefundAccount").asBoolean())
             putAccount(buyer, orderUuid, account2).andExpect { status { isOk() } }
             assertEquals("우리은행", savedAccount(orderUuid)!!.bankName)
         }
@@ -152,7 +154,7 @@ class V2RefundAccountInputTest : V2UserOrderTestSupport() {
             assertNull(orderRepository.findByOrderUuid(v1).get().paymentChannel, "v1 주문은 결제 채널이 없다")
             cancelMy(buyer, v1, refundAccount).andExpect { status { isOk() } }
             val d = detail(buyer, v1)
-            assertTrue(d.at("/refundAccountEditable").asBoolean())
+            assertTrue(d.at("/canEditRefundAccount").asBoolean())
             assertFalse(d.at("/refundAccountRequired").asBoolean())
             putAccount(buyer, v1, account2).andExpect { status { isOk() } }
             assertEquals("우리은행", savedAccount(v1)!!.bankName)
@@ -168,7 +170,7 @@ class V2RefundAccountInputTest : V2UserOrderTestSupport() {
             val orderUuid = refused(shop, buyer, "DEPOSIT_UNCONFIRMED")
             val d = detail(buyer, orderUuid)
             assertFalse(d.at("/refundAccountRequired").asBoolean())
-            assertTrue(d.at("/refundAccountEditable").asBoolean())
+            assertTrue(d.at("/canEditRefundAccount").asBoolean())
             putAccount(buyer, orderUuid, refundAccount).andExpect { status { isOk() } }
             assertEquals("국민은행", savedAccount(orderUuid)!!.bankName)
         }
@@ -230,7 +232,7 @@ class V2RefundAccountInputTest : V2UserOrderTestSupport() {
             assertEquals("Order_400_28", putAccount(buyer, v2Done, account2).andExpect { status { isBadRequest() } }.code())
             assertEquals("국민은행", savedAccount(v2Done)!!.bankName)
             val d = detail(buyer, v2Done)
-            assertFalse(d.at("/refundAccountEditable").asBoolean())
+            assertFalse(d.at("/canEditRefundAccount").asBoolean())
             assertFalse(d.at("/refundAccountRequired").asBoolean())
 
             // v1 환불 완료(주문 락 없음)도 같은 결과
@@ -247,7 +249,7 @@ class V2RefundAccountInputTest : V2UserOrderTestSupport() {
             val buyer = newBuyer()
             val pending = v2OrderOk(buyer, shopBody(shop)).at("/orderUuid").asText()
             assertEquals("Order_400_27", putAccount(buyer, pending, refundAccount).andExpect { status { isBadRequest() } }.code())
-            assertFalse(detail(buyer, pending).at("/refundAccountEditable").asBoolean())
+            assertFalse(detail(buyer, pending).at("/canEditRefundAccount").asBoolean())
             val approved = shop.approved(newBuyer())
             val approvedOwner = userRepository.findById(orderRepository.findByOrderUuid(approved).get().userId!!).get()
             assertEquals("Order_400_27", putAccount(approvedOwner, approved, refundAccount).andExpect { status { isBadRequest() } }.code())
@@ -285,7 +287,7 @@ class V2RefundAccountInputTest : V2UserOrderTestSupport() {
             asV1Order(orderUuid)
             assertEquals("Order_400_27", putAccount(buyer, orderUuid, refundAccount).andExpect { status { isBadRequest() } }.code())
             val d = detail(buyer, orderUuid)
-            assertFalse(d.at("/refundAccountEditable").asBoolean())
+            assertFalse(d.at("/canEditRefundAccount").asBoolean())
             assertFalse(d.at("/refundAccountRequired").asBoolean())
             completeRefund(shop, orderUuid)
             assertEquals("Order_400_27", putAccount(buyer, orderUuid, refundAccount).andExpect { status { isBadRequest() } }.code(), "대상 판정이 완료 판정보다 먼저")

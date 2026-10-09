@@ -31,7 +31,7 @@ START = (datetime.now() + timedelta(days=30)).replace(hour=18, minute=0, second=
 END = START + timedelta(minutes=120)
 PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", "latitude": 37.548369, "longitude": 126.920036}
 SECTIONS = [{"title": "공연 소개", "content": "<p>주문 락 테스트</p>", "sortOrder": 0}]
-ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-123-456789"}
+ACCOUNT = {"bankName": "신한은행", "accountHolder": "고스락", "accountNumber": "110-123-456789"}
 ROUNDS = 2
 PEOPLE = ["master"] + [f"limit{i}" for i in range(ROUNDS)] + [f"a{i}" for i in range(ROUNDS)] + [f"b{i}" for i in range(ROUNDS)]
 TICKET_LOCK = "티켓관리"
@@ -101,10 +101,10 @@ def _v1_order(base_url, s, who, key, quantity):
 
 
 def _v2_order(base_url, s, who, key, quantity):
-    return requests.post(f"{base_url}/v2/orders", json={
+    return requests.post(f"{base_url}/v2/me/orders", json={
         "eventId": s.event_id, "ticketItemId": s.tickets[key], "quantity": quantity,
         "options": {"applyToAll": True, "answers": []}, "perTicketOptions": None,
-        "paymentMethod": "BANK_TRANSFER", "depositorName": f"입금{uuid.uuid4().hex[:4]}", "agreeRefundPolicy": True,
+        "paymentChannel": "BANK_TRANSFER", "depositorName": f"입금{uuid.uuid4().hex[:4]}", "agreeRefundPolicy": True,
     }, headers=_h(s, who))
 
 
@@ -130,7 +130,7 @@ def test_01_setup(base_url, s):
         _ticket(base_url, s, f"stock{i}", supply=3, limit=10)
     key = get_data(requests.post(_ev(base_url, s, "/images"), json={"purpose": "POSTER", "extension": "PNG"}, headers=_h(s, "master")))["key"]
     assert_status(requests.patch(_ev(base_url, s, "/basic"), json={"posterImageKey": key, "place": PLACE, "contacts": [{"type": "EMAIL", "value": "a@a.com"}]}, headers=_h(s, "master")), 200)
-    assert_status(requests.put(_ev(base_url, s, "/sections"), json=SECTIONS, headers=_h(s, "master")), 200)
+    assert_status(requests.put(_ev(base_url, s, "/sections"), json={"sections": SECTIONS}, headers=_h(s, "master")), 200)
     assert_status(requests.post(_ev(base_url, s, "/open"), headers=_h(s, "master")), 200)
 
 

@@ -124,7 +124,7 @@ abstract class V2TicketApiTestSupport {
 
     // ===== 티켓 =====
 
-    protected val account = mapOf("bank" to "신한은행", "holder" to "고스락", "number" to "110-123-456789")
+    protected val account = mapOf("bankName" to "신한은행", "accountHolder" to "고스락", "accountNumber" to "110-123-456789")
 
     protected fun dudoongBody(
         name: String = "일반",

@@ -22,7 +22,7 @@ START = (datetime.now() + timedelta(days=30)).replace(hour=18, minute=0, second=
 END = START + timedelta(minutes=120)
 PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", "latitude": 37.548369, "longitude": 126.920036}
 SECTIONS = [{"title": "공연 소개", "content": "<p>티켓 테스트</p>", "sortOrder": 0}]
-ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-123-456789"}
+ACCOUNT = {"bankName": "신한은행", "accountHolder": "고스락", "accountNumber": "110-123-456789"}
 
 
 class V2TicketState:
@@ -251,7 +251,7 @@ def test_04_options(base_url, s):
 def test_05_checklist_and_open(base_url, s):
     resp = requests.get(f"{base_url}/v2/events/{s.event_id}/checklist", headers=_h(s, "guest"))
     assert_status(resp, 200)
-    assert get_data(resp)["ticket"] is True
+    assert get_data(resp)["hasValidTicket"] is True
     key = get_data(requests.post(f"{base_url}/v2/events/{s.event_id}/images", json={"purpose": "POSTER", "extension": "PNG"}, headers=_h(s, "manager")))["key"]
     resp = requests.patch(
         f"{base_url}/v2/events/{s.event_id}/basic",
@@ -259,7 +259,7 @@ def test_05_checklist_and_open(base_url, s):
         headers=_h(s, "manager"),
     )
     assert_status(resp, 200)
-    assert_status(requests.put(f"{base_url}/v2/events/{s.event_id}/sections", json=SECTIONS, headers=_h(s, "manager")), 200)
+    assert_status(requests.put(f"{base_url}/v2/events/{s.event_id}/sections", json={"sections": SECTIONS}, headers=_h(s, "manager")), 200)
     resp = requests.post(f"{base_url}/v2/events/{s.event_id}/open", headers=_h(s, "manager"))
     assert_status(resp, 200)
     tickets = _tickets(base_url, s)
@@ -308,7 +308,7 @@ def test_07b_pending_approve_lock(base_url, s):
 
     t = _tickets(base_url, s)[ticket_id]
     assert t["saleState"] == "BEFORE_SALE" and t["isSold"] is False and t["hasPendingOrders"] is True
-    for body in [_dudoong(name="승인대기", price=7000), _dudoong(name="승인대기", account={**ACCOUNT, "number": "999"})]:
+    for body in [_dudoong(name="승인대기", price=7000), _dudoong(name="승인대기", account={**ACCOUNT, "accountNumber": "999"})]:
         resp = requests.patch(_ticket_url(base_url, s, ticket_id), json=body, headers=_h(s, "manager"))
         assert_status(resp, 400)
         assert _code(resp) == "Ticket_Item_400_14"
@@ -337,7 +337,7 @@ def test_07b_pending_approve_lock(base_url, s):
 
 def test_08_sold_ticket_restrictions(base_url, s):
     url = _ticket_url(base_url, s, s.dudoong_id)
-    for body in [_dudoong(name="이름변경"), _dudoong(price=7000), _dudoong(supplyCount=9), _dudoong(account={**ACCOUNT, "number": "999"}), _free()]:
+    for body in [_dudoong(name="이름변경"), _dudoong(price=7000), _dudoong(supplyCount=9), _dudoong(account={**ACCOUNT, "accountNumber": "999"}), _free()]:
         resp = requests.patch(url, json=body, headers=_h(s, "manager"))
         assert_status(resp, 400)
         assert _code(resp) == "Ticket_Item_400_14", resp.text[:300]
@@ -426,7 +426,7 @@ def test_12_v1_create_on_no_ticket_event_unchanged(base_url, s):
     )
     assert resp.status_code in (200, 201), resp.text[:300]
     checklist = get_data(requests.get(f"{base_url}/v2/events/{s.no_ticket_event_id}/checklist", headers=_h(s, "guest")))
-    assert checklist["ticketRequired"] is False and checklist["ticket"] is True
+    assert checklist["ticketRequired"] is False and checklist["hasValidTicket"] is True
     tickets = _tickets(base_url, s, event_id=s.no_ticket_event_id)
     assert len(tickets) == 1 and list(tickets.values())[0]["payType"] == "FREE"
 
