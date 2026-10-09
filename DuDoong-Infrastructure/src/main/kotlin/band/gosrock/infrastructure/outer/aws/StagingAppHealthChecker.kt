@@ -16,8 +16,9 @@ import org.springframework.stereotype.Component
 class StagingAppHealthChecker {
     companion object {
         private const val HEALTH_PATH = "/api/v1/examples/health"
-        private val CONNECT_TIMEOUT: Duration = Duration.ofSeconds(2)
-        private val REQUEST_TIMEOUT: Duration = Duration.ofSeconds(3)
+        // 같은 VPC 사설 IP 라 정상이면 수 밀리초. 짧게 둬서 조회 요청 스레드를 오래 잡지 않는다
+        private val CONNECT_TIMEOUT: Duration = Duration.ofSeconds(1)
+        private val REQUEST_TIMEOUT: Duration = Duration.ofSeconds(2)
     }
 
     private val httpClient: HttpClient = HttpClient.newBuilder()
