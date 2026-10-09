@@ -71,7 +71,7 @@ class TicketItemController(
         @PathVariable ticketItemId: Long,
     ): GetTicketItemOptionsResponse = unapplyTicketOptionUseCase.execute(userId, unapplyTicketOptionRequest, eventId, ticketItemId)
 
-    @Operation(summary = "해당 이벤트의 티켓상품을 모두 조회합니다.")
+    @Operation(summary = "해당 이벤트의 티켓상품을 모두 조회합니다.", description = "공개 공연(준비중 제외)만 조회되며 계좌 정보는 내려가지 않습니다.")
     @DisableSwaggerSecurity
     @GetMapping
     fun getEventTicketItems(@PathVariable eventId: Long): GetEventTicketItemsResponse =
@@ -89,10 +89,10 @@ class TicketItemController(
         @PathVariable ticketItemId: Long,
     ): GetTicketItemOptionsResponse = getTicketOptionsUseCase.execute(eventId, ticketItemId)
 
-    @Operation(summary = "해당 이벤트의 티켓상품 옵션 적용 현황을 모두 조회합니다.")
+    @Operation(summary = "해당 이벤트의 티켓상품 옵션 적용 현황을 모두 조회합니다. 호스트 멤버만 가능합니다.")
     @GetMapping("/appliedOptionGroups")
-    fun getAppliedOptionGroups(@PathVariable eventId: Long): GetAppliedOptionGroupsResponse =
-        getAppliedOptionGroupsUseCase.execute(eventId)
+    fun getAppliedOptionGroups(@CurrentUserId userId: Long, @PathVariable eventId: Long): GetAppliedOptionGroupsResponse =
+        getAppliedOptionGroupsUseCase.execute(userId, eventId)
 
     @Operation(summary = "해당 티켓상품을 삭제합니다.")
     @PatchMapping("/{ticketItemId}")

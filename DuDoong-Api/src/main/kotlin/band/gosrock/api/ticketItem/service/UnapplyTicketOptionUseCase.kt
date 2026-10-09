@@ -1,7 +1,7 @@
 package band.gosrock.api.ticketItem.service
 
 import band.gosrock.api.common.aop.hostRole.FindHostFrom.EVENT_ID
-import band.gosrock.api.common.aop.hostRole.HostQualification.GUEST
+import band.gosrock.api.common.aop.hostRole.HostQualification.MANAGER
 import band.gosrock.api.common.aop.hostRole.HostRolesAllowed
 import band.gosrock.api.ticketItem.dto.request.UnapplyTicketOptionRequest
 import band.gosrock.api.ticketItem.dto.response.GetTicketItemOptionsResponse
@@ -15,7 +15,7 @@ class UnapplyTicketOptionUseCase(
     private val ticketOptionMapper: TicketOptionMapper,
 ) {
 
-    @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID, applyTransaction = false)
+    @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID, applyTransaction = false)
     fun execute(
         userId: Long,
         unapplyTicketOptionRequest: UnapplyTicketOptionRequest,

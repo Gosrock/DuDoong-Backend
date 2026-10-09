@@ -1,5 +1,6 @@
 package band.gosrock.api.event.model.mapper
 
+import band.gosrock.api.event.model.EventContentSanitizer
 import band.gosrock.api.event.model.dto.request.CreateEventRequest
 import band.gosrock.api.event.model.dto.request.UpdateEventBasicRequest
 import band.gosrock.api.event.model.dto.request.UpdateEventDetailRequest
@@ -48,7 +49,7 @@ class EventMapper(
     fun toEventDetail(updateEventDetailRequest: UpdateEventDetailRequest): EventDetail {
         return EventDetail(
             posterImageKey = updateEventDetailRequest.posterImageKey,
-            content = updateEventDetailRequest.content,
+            content = updateEventDetailRequest.content?.let(EventContentSanitizer::sanitize),
         )
     }
 

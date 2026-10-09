@@ -17,6 +17,6 @@ class RejectHostUseCase(
     fun execute(userId: Long, hostId: Long): HostDetailResponse {
         val host = hostAdaptor.findById(hostId)
 
-        return hostMapper.toHostDetailResponse(hostService.removeHostUser(host, userId))
+        return hostMapper.toHostDetailResponse(hostService.removeHostUser(host, userId), userId)
     }
 }

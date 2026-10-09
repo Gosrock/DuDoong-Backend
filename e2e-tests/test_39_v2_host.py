@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 import pytest
 import requests
 
-from conftest import assert_status, get_data
+from conftest import assert_status, get_data, issued_event_image_key, issued_host_image_key
 
 RUN = uuid.uuid4().hex[:8]
 
@@ -305,7 +305,7 @@ def test_14_prepare_events(base_url, s):
     ), 200)
     assert_status(requests.patch(
         f"{base_url}/v1/events/{event_id}/details",
-        json={"posterImageKey": "e2e/v2/poster.jpeg", "content": "v2 E2E"},
+        json={"posterImageKey": issued_event_image_key(base_url, headers, event_id), "content": "v2 E2E"},
         headers=headers,
     ), 200)
     resp = requests.post(
@@ -418,7 +418,7 @@ def test_20_v1_profile_patch_syncs_v2_contacts(base_url, s):
     resp = requests.patch(
         f"{base_url}/v1/hosts/{s.host_id}/profile",
         json={
-            "profileImageKey": "e2e/v1/profile.png",
+            "profileImageKey": issued_host_image_key(base_url, _h(s, "manager"), s.host_id),
             "introduce": "v1 소개",
             "contactNumber": "010-9999-8888",
             "contactEmail": "v1@dudoong.com",

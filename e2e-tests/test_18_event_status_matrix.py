@@ -13,7 +13,7 @@ import pytest
 import requests
 from datetime import datetime, timedelta
 
-from conftest import assert_status, get_data
+from conftest import assert_status, get_data, issued_event_image_key
 
 
 def _future_date_str(days_ahead: int = 30) -> str:
@@ -42,7 +42,7 @@ def _create_open_event(base_url, auth_headers, host_id, name="상태매트릭스
     assert resp.status_code == 200, f"기본정보 수정 실패: {resp.text[:200]}"
 
     # 상세정보
-    detail_payload = {"posterImageKey": "test/event/status-matrix/poster.jpeg", "content": f"{name} 상세 내용입니다."}
+    detail_payload = {"posterImageKey": issued_event_image_key(base_url, auth_headers, event_id), "content": f"{name} 상세 내용입니다."}
     resp = requests.patch(f"{base_url}/v1/events/{event_id}/details", json=detail_payload, headers=auth_headers)
     assert resp.status_code == 200, f"상세정보 수정 실패: {resp.text[:200]}"
 

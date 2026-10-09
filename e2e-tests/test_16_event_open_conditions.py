@@ -6,7 +6,7 @@ import pytest
 import requests
 from datetime import datetime, timedelta
 
-from conftest import assert_status, get_data
+from conftest import assert_status, get_data, issued_event_image_key
 
 
 def _future_date_str(days_ahead: int = 30) -> str:
@@ -118,7 +118,7 @@ def test_open_without_ticket(base_url, auth_headers, state):
     # 상세정보 수정
     detail_url = f"{base_url}/v1/events/{event_id}/details"
     detail_payload = {
-        "posterImageKey": "test/event/open-cond/poster.jpeg",
+        "posterImageKey": issued_event_image_key(base_url, auth_headers, event_id),
         "content": "오픈 조건 테스트 공연 (티켓 없음).",
     }
     print(f"[test_open_without_ticket] PATCH {detail_url}")
@@ -165,7 +165,7 @@ def test_open_with_all_conditions(base_url, auth_headers, state):
     # 상세정보 수정
     detail_url = f"{base_url}/v1/events/{event_id}/details"
     detail_payload = {
-        "posterImageKey": "test/event/open-cond/all-poster.jpeg",
+        "posterImageKey": issued_event_image_key(base_url, auth_headers, event_id),
         "content": "오픈 조건 전체 충족 테스트 공연입니다.",
     }
     print(f"[test_open_with_all_conditions] PATCH {detail_url}")

@@ -38,7 +38,7 @@ data class TicketItemResponse(
     @field:Schema(description = "재고공개 여부")
     val isQuantityPublic: Boolean?,
 
-    @field:Schema(description = "계좌 정보")
+    @field:Schema(description = "계좌 정보. 어드민(호스트) 조회에서만 내려가고 공개 조회에서는 null")
     val accountInfo: AccountInfoVo?,
 
     @field:Schema(description = "재고가 감소한 티켓인지 리턴")
@@ -66,7 +66,7 @@ data class TicketItemResponse(
             supplyCount = ticketItem.supplyCount,
             quantity = if (isAdmin || ticketItem.isQuantityPublic == true) ticketItem.quantity else null,
             isQuantityPublic = ticketItem.isQuantityPublic,
-            accountInfo = ticketItem.accountInfo,
+            accountInfo = if (isAdmin) ticketItem.accountInfo else null,
             isSold = ticketItem.isSold(),
             isQuantityLeft = ticketItem.isQuantityLeft(),
             isUnlimitedSupply = ticketItem.isUnlimitedSupply(),

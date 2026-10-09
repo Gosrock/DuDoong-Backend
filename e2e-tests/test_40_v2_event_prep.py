@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 import pytest
 import requests
 
-from conftest import assert_status, get_data
+from conftest import assert_status, get_data, issued_event_image_key
 
 RUN = uuid.uuid4().hex[:8]
 FMT = "%Y.%m.%d %H:%M"
@@ -327,7 +327,7 @@ def test_10_v1_detail_compat(base_url, s):
     # v1 details 수정 → v2 공연 소개 섹션 반영 (다른 섹션 유지)
     resp = requests.patch(
         f"{base_url}/v1/events/{s.event_id}/details",
-        json={"posterImageKey": "e2e/v1/poster.png", "content": "v1에서 고친 소개"},
+        json={"posterImageKey": issued_event_image_key(base_url, _h(s, "master"), s.event_id), "content": "v1에서 고친 소개"},
         headers=_h(s, "master"),
     )
     assert_status(resp, 200)
@@ -355,7 +355,7 @@ def test_11_no_ticket_event(base_url, s):
     ), 200)
     assert_status(requests.patch(
         f"{base_url}/v1/events/{v1_try_id}/details",
-        json={"posterImageKey": "e2e/v1/poster.png", "content": "본문"},
+        json={"posterImageKey": issued_event_image_key(base_url, _h(s, "master"), v1_try_id), "content": "본문"},
         headers=_h(s, "master"),
     ), 200)
     assert_status(requests.patch(f"{base_url}/v1/events/{v1_try_id}/open", headers=_h(s, "master")), 400)

@@ -5,7 +5,7 @@
 import pytest
 import requests
 
-from conftest import assert_status, get_data
+from conftest import assert_status, get_data, issued_event_image_key
 
 
 # 이 모듈 내에서만 사용하는 로컬 상태
@@ -85,7 +85,7 @@ def test_setup_dudoong_event(base_url, auth_headers, state):
     # 이벤트 상세 정보 설정
     detail_resp = requests.patch(
         f"{base_url}/v1/events/{_dudoong_state['event_id']}/details",
-        json={"posterImageKey": "test/event/e2e/poster.jpeg", "content": "두둥티켓 테스트 상세 내용"},
+        json={"posterImageKey": issued_event_image_key(base_url, auth_headers, _dudoong_state['event_id']), "content": "두둥티켓 테스트 상세 내용"},
         headers=auth_headers,
     )
     print(f"[setup] detail status={detail_resp.status_code}")

@@ -5,7 +5,7 @@ PREPARING 상태 이벤트에 주문을 시도하면 실패하는지 검증합�
 import pytest
 import requests
 
-from conftest import assert_status, get_data
+from conftest import assert_status, get_data, issued_event_image_key
 
 
 _preopen_state: dict = {
@@ -57,7 +57,7 @@ def test_setup_preparing_event(base_url, auth_headers, state):
     )
     requests.patch(
         f"{base_url}/v1/events/{_preopen_state['event_id']}/details",
-        json={"posterImageKey": "test/event/e2e/poster.jpeg", "content": "오픈 전 주문 차단 테스트"},
+        json={"posterImageKey": issued_event_image_key(base_url, auth_headers, _preopen_state['event_id']), "content": "오픈 전 주문 차단 테스트"},
         headers=auth_headers,
     )
 

@@ -30,7 +30,7 @@ class UpdateHostSlackUrlUseCase(
 
         return try {
             slackMessageProvider.register(slackUrl)
-            hostMapper.toHostDetailResponse(hostService.updateHostSlackUrl(host, slackUrl))
+            hostMapper.toHostDetailResponse(hostService.updateHostSlackUrl(host, slackUrl), userId)
         } catch (e: UnknownHostException) {
             throw InvalidSlackUrlException.EXCEPTION
         }
