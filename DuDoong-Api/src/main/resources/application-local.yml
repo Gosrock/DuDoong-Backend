@@ -1,7 +1,3 @@
-# 로컬 전용 AWS 키 자리값 (#764). application-infrastructure.yml 의 ${AWS_ACCESS_KEY}·${AWS_SECRET_KEY} 자리에 들어간다 (환경변수가 있으면 환경변수가 우선)
-AWS_ACCESS_KEY: local-access-key
-AWS_SECRET_KEY: local-secret-key
-
 swagger:
   user: user
   password: password

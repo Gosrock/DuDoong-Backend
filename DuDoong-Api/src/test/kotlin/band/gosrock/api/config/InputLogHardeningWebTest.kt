@@ -47,7 +47,7 @@ import kotlin.random.Random
         "throttle.overdraft=3",
         "throttle.greedyRefill=3",
         "throttle.presigned-url-per-minute=2",
-        "acl.whiteList=127.0.0.1,203.0.113.250",
+        "acl.whiteList=127.0.0.1,203.0.113.250,10.255.255.254",
     ],
 )
 @AutoConfigureMockMvc
@@ -98,6 +98,28 @@ class InputLogHardeningWebTest {
         assertEquals(List(5) { 200 }, hitHealth(5, "X-Forwarded-For" to "203.0.113.250, 172.31.5.6"))
         // 화이트리스트 IP 가 클라이언트가 보낸 부분에만 있으면 쓰지 않는다
         assertEquals(listOf(200, 200, 200, 429), hitHealth(4, "X-Forwarded-For" to "203.0.113.250, ${randomIp()}, 172.31.5.6"))
+    }
+
+    @Test
+    fun `nginx 변경 전 체인 - 위조값(127·사설) 뒤에 실제 IP 가 붙으면 실제 IP 로 제한한다`() {
+        // 클라이언트가 "127.0.0.1, 10.0.0.5" 를 보내고 ALB 가 실제 IP, nginx 가 ALB IP 를 덧붙인 형태
+        assertEquals(listOf(200, 200, 200, 429), hitHealth(4, "X-Forwarded-For" to "127.0.0.1, 10.0.0.5, ${randomIp()}, 172.31.5.6"))
+        // ALB 가 없을 때(EP09): nginx 가 실제 IP 를 덧붙인 형태
+        assertEquals(listOf(200, 200, 200, 429), hitHealth(4, "X-Forwarded-For" to "127.0.0.1, 10.0.0.5, ${randomIp()}"))
+    }
+
+    @Test
+    fun `nginx 변경 후(Deploy #30) - 실제 IP 하나로 덮어쓴 값은 그 IP 로 판정한다 (ALB 유무 같음)`() {
+        assertEquals(listOf(200, 200, 200, 429), hitHealth(4, "X-Forwarded-For" to randomIp()))
+        assertEquals(List(5) { 200 }, hitHealth(5, "X-Forwarded-For" to "203.0.113.250"))
+    }
+
+    @Test
+    fun `사설·루프백만 있는 체인은 화이트리스트로 통과시키지 않는다`() {
+        // 모두 신뢰 프록시면 RemoteIpValve 는 맨 왼쪽 값을 쓴다 — 화이트리스트(127.0.0.1·10.255.255.254)와 같아도 제한한다.
+        // Redis 버킷이 실행 간에 남으므로 처음 몇 번의 결과는 정하지 않고 429 가 나오는지만 본다
+        assertTrue(429 in hitHealth(8, "X-Forwarded-For" to "127.0.0.1, 10.0.0.5"))
+        assertTrue(429 in hitHealth(8, "X-Forwarded-For" to "10.255.255.254, 172.31.5.6"))
     }
 
     @Test

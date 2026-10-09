@@ -3,8 +3,6 @@ package band.gosrock.api.config
 import band.gosrock.api.auth.model.dto.request.RegisterRequest
 import band.gosrock.api.host.model.dto.request.UpdateHostSlackRequest
 import band.gosrock.api.slack.sender.SlackThrottleErrorSender
-import band.gosrock.common.properties.JwtProperties
-import band.gosrock.common.properties.TossPaymentsProperties
 import band.gosrock.infrastructure.config.slack.SlackErrorNotificationProvider
 import ch.qos.logback.classic.LoggerContext
 import ch.qos.logback.classic.PatternLayout
@@ -14,7 +12,6 @@ import jakarta.validation.Validation
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -25,8 +22,6 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.mockingDetails
 import org.slf4j.MDC
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean
-import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.context.annotation.Profile
 import org.springframework.core.env.Profiles
 import org.springframework.core.io.ClassPathResource
@@ -153,63 +148,58 @@ class InputLogHardeningUnitTest {
     }
 
     @Nested
-    @DisplayName("비밀값 기동 검사")
+    @DisplayName("운영 기본 비밀값 경고")
     inner class Secrets {
-        private val okJwt = "0123456789abcdef0123456789abcdef0123"
+        private val jwtDefault = "testkeytestkeytestkeytestkeytestkeytestkeytestkeytestkeytestkey"
+        private val values = mapOf(
+            "auth.jwt.secret-key" to jwtDefault,
+            "toss.secret-key" to "test_sk_ADpexMgkW36weAqp4bNVGbR5ozO0",
+            "toss.mid" to "gosroc9mwo",
+            "aws.access-key" to "testKey",
+            "aws.secret-key" to "secretKey",
+        )
 
-        private fun validate(jwt: String, tossKey: String = "live_sk_x", mid: String = "mid", vararg profiles: String) {
-            val env = MockEnvironment().apply { setActiveProfiles(*profiles) }
-            RequiredSecretsValidator(env, JwtProperties(jwt, 3600, 3600), TossPaymentsProperties(tossKey, mid)).afterPropertiesSet()
+        private fun warner(profile: String, overrides: Map<String, String> = emptyMap()): Pair<DefaultSecretsWarner, SlackErrorNotificationProvider> {
+            val env = MockEnvironment().apply {
+                setActiveProfiles(profile)
+                (values + overrides).forEach { (k, v) -> setProperty(k, v) }
+            }
+            val slack = mock(SlackErrorNotificationProvider::class.java)
+            return DefaultSecretsWarner(env, slack) to slack
         }
 
         @Test
-        fun `값이 없으면(자리표시자 그대로) 기동 실패`() {
-            assertThrows(IllegalStateException::class.java) { validate("\${JWT_SECRET_KEY}") }
-            assertThrows(IllegalStateException::class.java) { validate("") }
-            assertThrows(IllegalStateException::class.java) { validate(okJwt, tossKey = "\${TOSS_PAYMENTS_KEY}") }
-            assertThrows(IllegalStateException::class.java) { validate(okJwt, mid = " ") }
+        fun `공개 기본값과 같은 설정 이름만 고른다`() {
+            assertEquals(values.keys.toList(), warner("prod").first.defaultSecretsInUse())
+            assertEquals(listOf("toss.mid"), warner("prod", values.mapValues { "real-${it.key}" } - "toss.mid").first.defaultSecretsInUse())
         }
 
         @Test
-        fun `JWT 키는 32바이트 이상`() {
-            assertThrows(IllegalStateException::class.java) { validate("a".repeat(31)) }
-            assertDoesNotThrow { validate("a".repeat(32)) }
+        fun `운영에서 기본값이면 ERROR 로그·Slack 알림에 이름만 남기고 값은 남기지 않는다 (기동은 계속)`() {
+            val logger = org.slf4j.LoggerFactory.getLogger(DefaultSecretsWarner::class.java) as ch.qos.logback.classic.Logger
+            val appender = ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>().also { it.start() }
+            logger.addAppender(appender)
+            try {
+                val (w, slack) = warner("prod")
+                assertDoesNotThrow { w.warnIfDefaultSecrets() }
+                val errors = appender.list.filter { it.level == ch.qos.logback.classic.Level.ERROR }.map { it.formattedMessage }
+                assertEquals(1, errors.size, errors.toString())
+                assertTrue(errors[0].contains("auth.jwt.secret-key") && errors[0].contains("aws.secret-key"), errors[0])
+                val sent = mockingDetails(slack).invocations.filter { it.method.name == "sendNotification" }.joinToString { it.arguments[0].toString() }
+                assertTrue(sent.contains("auth.jwt.secret-key"), sent)
+                (values.values + errors).forEach { _ -> }
+                values.values.forEach { v -> assertFalse(errors[0].contains(v) || sent.contains(v), "값 노출: $v") }
+            } finally {
+                logger.detachAppender(appender)
+            }
         }
 
         @Test
-        fun `운영·스테이징은 테스트용 JWT 키를 거부하고, 그 밖 프로필은 허용`() {
-            val testKey = "testkeytestkeytestkeytestkeytestkeytestkeytestkeytestkeytestkey"
-            assertThrows(IllegalStateException::class.java) { validate(testKey, profiles = arrayOf("prod")) }
-            assertThrows(IllegalStateException::class.java) { validate(testKey, profiles = arrayOf("staging", "infrastructure")) }
-            assertDoesNotThrow { validate(testKey, profiles = arrayOf("local", "common-local")) }
-            assertDoesNotThrow { validate(okJwt, profiles = arrayOf("prod")) }
-        }
-
-        @Test
-        fun `스프링 컨텍스트에서 값이 없으면 기동이 실패하고, 있으면 뜬다`() {
-            // 테스트 JVM 에는 build.gradle.kts 가 JWT_SECRET_KEY 등을 넣으므로, 없는 상황은 다른 이름의 자리표시자로 만든다
-            val runner = ApplicationContextRunner()
-                .withUserConfiguration(SecretPropertiesConfig::class.java, RequiredSecretsValidator::class.java)
-                .withPropertyValues("auth.jwt.access-exp=3600", "auth.jwt.refresh-exp=3600")
-            runner.withPropertyValues("auth.jwt.secret-key=\${MISSING_JWT_764}", "toss.secret-key=\${MISSING_TOSS_764}", "toss.mid=\${MISSING_MID_764}")
-                .run { context ->
-                    assertTrue(context.startupFailure != null)
-                    val message = generateSequence(context.startupFailure) { it.cause }.joinToString(" | ") { it.message.orEmpty() }
-                    assertTrue(message.contains("JWT_SECRET_KEY 가 없습니다") && message.contains("TOSS_PAYMENTS_KEY 가 없습니다"), message)
-                }
-            runner.withPropertyValues("auth.jwt.secret-key=$okJwt", "toss.secret-key=live_sk_x", "toss.mid=mid")
-                .run { context -> assertTrue(context.startupFailure == null, context.startupFailure?.toString()) }
-        }
-
-        @Test
-        fun `공통 yml 에는 JWT·토스·AWS 키 기본값이 없다`() {
-            val common = YamlPropertiesFactoryBean().apply { setResources(ClassPathResource("application-common.yml")) }.`object`!!
-            assertEquals("\${JWT_SECRET_KEY}", common.getProperty("auth.jwt.secret-key"))
-            assertEquals("\${TOSS_PAYMENTS_KEY}", common.getProperty("toss.secret-key"))
-            assertEquals("\${TOSS_MID}", common.getProperty("toss.mid"))
-            val infra = YamlPropertiesFactoryBean().apply { setResources(ClassPathResource("application-infrastructure.yml")) }.`object`!!
-            assertEquals("\${AWS_ACCESS_KEY}", infra.getProperty("aws.access-key"))
-            assertEquals("\${AWS_SECRET_KEY}", infra.getProperty("aws.secret-key"))
+        fun `운영이 아니거나 실제 값이면 아무것도 하지 않는다`() {
+            listOf(warner("local"), warner("staging"), warner("prod", values.mapValues { "real-${it.key}" })).forEach { (w, slack) ->
+                w.warnIfDefaultSecrets()
+                assertEquals(0, mockingDetails(slack).invocations.size)
+            }
         }
     }
 
@@ -222,7 +212,4 @@ class InputLogHardeningUnitTest {
         assertTrue(active("local"))
         assertTrue(active("dev"))
     }
-
-    @EnableConfigurationProperties(JwtProperties::class, TossPaymentsProperties::class)
-    class SecretPropertiesConfig
 }

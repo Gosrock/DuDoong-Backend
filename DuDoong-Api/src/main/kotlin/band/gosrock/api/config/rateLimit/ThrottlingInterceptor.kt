@@ -28,6 +28,14 @@ class ThrottlingInterceptor(
     @Value("\${acl.whiteList}")
     private lateinit var aclWhiteList: List<String>
 
+    @Value("\${server.tomcat.remoteip.internal-proxies}")
+    private lateinit var internalProxies: String
+
+    @Value("\${server.tomcat.remoteip.trusted-proxies}")
+    private lateinit var trustedProxies: String
+
+    private val proxyPattern by lazy { Regex("$internalProxies|$trustedProxies") }
+
     override fun preHandle(
         request: HttpServletRequest,
         response: HttpServletResponse,
@@ -40,7 +48,7 @@ class ThrottlingInterceptor(
         log.info("remoteAddr : $remoteAddr")
 
         // next js ssr 대응
-        if (aclWhiteList.contains(remoteAddr)) {
+        if (isWhitelisted(request, remoteAddr)) {
             log.info("white List pass$remoteAddr")
             return true
         }
@@ -71,6 +79,16 @@ class ThrottlingInterceptor(
         responseTooManyRequestError(request, response)
 
         return false
+    }
+
+    /**
+     * 화이트리스트 판정 (#764). 사설 대역 프록시를 거쳤는데(RemoteIpValve 가 X-Forwarded-By 를 남김) 정해진 주소도 프록시 대역이면
+     * X-Forwarded-For 체인 전체가 프록시 대역이라는 뜻이다. 이때 RemoteIpValve 는 맨 왼쪽 값을 쓰므로 화이트리스트로 통과시키지 않는다
+     */
+    private fun isWhitelisted(request: HttpServletRequest, remoteAddr: String): Boolean {
+        if (!aclWhiteList.contains(remoteAddr)) return false
+        val viaTrustedProxy = request.getHeader("X-Forwarded-By") != null
+        return !(viaTrustedProxy && proxyPattern.matches(remoteAddr))
     }
 
     private fun responseTooManyRequestError(

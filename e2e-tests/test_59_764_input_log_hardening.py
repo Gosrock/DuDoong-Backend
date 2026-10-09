@@ -81,6 +81,24 @@ def test_03_429_body_is_standard_error(base_url, limit):
     assert resp.json()["code"] == "GLOBAL_429_1"
 
 
+def test_03b_chain_before_nginx_change(base_url, limit):
+    """nginx 변경 전: 클라이언트가 보낸 "127.0.0.1, 10.0.0.5" 뒤에 실제 IP(ALB 가 붙임)와 ALB IP(nginx 가 붙임)"""
+    statuses = _health(base_url, limit + 1, {"X-Forwarded-For": f"127.0.0.1, 10.0.0.5, {_random_ip()}, 172.31.5.6"})
+    assert statuses[limit:] == [429], statuses
+
+
+def test_03c_single_ip_after_nginx_change(base_url, limit):
+    """nginx 변경 후(Deploy #30)·ALB 제거 후(EP09): nginx 가 실제 IP 하나로 덮어쓴 값"""
+    statuses = _health(base_url, limit + 1, {"X-Forwarded-For": _random_ip()})
+    assert statuses[limit:] == [429], statuses
+
+
+def test_03d_private_only_chain_not_whitelisted(base_url, limit):
+    """루프백·사설 주소만 있는 체인은 맨 왼쪽 값이 쓰이므로 화이트리스트(127.0.0.1)로 통과시키지 않는다.
+    Redis 버킷이 실행 간에 남으므로 429 가 나오는지만 본다"""
+    assert 429 in _health(base_url, limit + 3, {"X-Forwarded-For": "127.0.0.1, 10.0.0.5"})
+
+
 def test_04_direct_loopback_is_whitelisted(base_url, limit):
     assert _health(base_url, limit + 3) == [200] * (limit + 3)
 
