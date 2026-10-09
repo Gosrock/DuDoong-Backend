@@ -175,6 +175,12 @@ class InputLogHardeningUnitTest {
         }
 
         @Test
+        fun `JWT 키가 기본값이 아니어도 testkey 로 시작하면 고른다`() {
+            val real = values.mapValues { "real-${it.key}" }
+            assertEquals(listOf("auth.jwt.secret-key"), warner("staging", real + ("auth.jwt.secret-key" to "testkey-other-0123456789012345678901")).first.defaultSecretsInUse())
+        }
+
+        @Test
         fun `운영에서 기본값이면 ERROR 로그·Slack 알림에 이름만 남기고 값은 남기지 않는다 (기동은 계속)`() {
             val logger = org.slf4j.LoggerFactory.getLogger(DefaultSecretsWarner::class.java) as ch.qos.logback.classic.Logger
             val appender = ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>().also { it.start() }
@@ -195,8 +201,15 @@ class InputLogHardeningUnitTest {
         }
 
         @Test
-        fun `운영이 아니거나 실제 값이면 아무것도 하지 않는다`() {
-            listOf(warner("local"), warner("staging"), warner("prod", values.mapValues { "real-${it.key}" })).forEach { (w, slack) ->
+        fun `스테이징도 같은 경고를 남긴다`() {
+            val (w, slack) = warner("staging")
+            assertDoesNotThrow { w.warnIfDefaultSecrets() }
+            assertEquals(1, mockingDetails(slack).invocations.count { it.method.name == "sendNotification" })
+        }
+
+        @Test
+        fun `운영·스테이징이 아니거나 실제 값이면 아무것도 하지 않는다`() {
+            listOf(warner("local"), warner("dev"), warner("prod", values.mapValues { "real-${it.key}" })).forEach { (w, slack) ->
                 w.warnIfDefaultSecrets()
                 assertEquals(0, mockingDetails(slack).invocations.size)
             }
