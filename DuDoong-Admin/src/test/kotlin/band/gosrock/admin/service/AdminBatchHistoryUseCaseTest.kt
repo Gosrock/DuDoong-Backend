@@ -169,13 +169,13 @@ class AdminBatchHistoryUseCaseTest {
         }
 
         @Test
-        @DisplayName("소요 시간을 초로 계산하고, 종료 메시지는 500자로 자른다")
+        @DisplayName("소요 시간을 초로 계산하고, 종료 메시지는 첫 줄만 200자로 자른다")
         fun mapsDurationAndTruncates() {
             givenUser(AccountRole.ADMIN)
             val start = LocalDateTime.of(2026, 10, 8, 3, 0, 0)
             val pageable = PageRequest.of(0, 20)
             `when`(adminBatchExecutionQuery.findExecutions(null, pageable)).thenReturn(
-                PageImpl(listOf(execution(start, start.plusSeconds(95), "x".repeat(2000))), pageable, 41),
+                PageImpl(listOf(execution(start, start.plusSeconds(95), "x".repeat(2000) + "\n\tat secret.Stack(Trace.java:1)")), pageable, 41),
             )
 
             val page = adminGetBatchExecutionsUseCase.execute(1L, null, pageable)
@@ -187,7 +187,8 @@ class AdminBatchHistoryUseCaseTest {
             assertEquals("FAILED", item.status)
             assertEquals("FAILED", item.exitCode)
             assertEquals(95.0, item.durationSeconds)
-            assertEquals(500, item.exitMessage?.length)
+            assertEquals(200, item.exitMessage?.length)
+            assertTrue(item.exitMessage!!.none { it == '\n' })
             assertEquals(mapOf("eventId" to "42"), item.parameters)
         }
 
@@ -218,6 +219,23 @@ class AdminBatchHistoryUseCaseTest {
             assertEquals(0.1, AdminBatchExecutionResponse.durationSecondsOf(start, start.plusNanos(50_000_000)))
             assertEquals(0.0, AdminBatchExecutionResponse.durationSecondsOf(start, start))
             assertNull(AdminBatchExecutionResponse.durationSecondsOf(start, null))
+        }
+    }
+
+    @Nested
+    @DisplayName("종료 메시지 요약")
+    inner class ExitMessageTest {
+
+        @Test
+        @DisplayName("스택트레이스는 버리고 첫 줄(예외와 메시지)만 남긴다")
+        fun firstLineOnly() {
+            val message = "\n  java.sql.SQLException: Access denied for user 'x'@'host'\n\tat com.mysql.Driver(Driver.java:10)\nCaused by: ..."
+            assertEquals(
+                "java.sql.SQLException: Access denied for user 'x'@'host'",
+                AdminBatchExecutionResponse.summarizeExitMessage(message),
+            )
+            assertNull(AdminBatchExecutionResponse.summarizeExitMessage("   \n  "))
+            assertNull(AdminBatchExecutionResponse.summarizeExitMessage(null))
         }
     }
 }

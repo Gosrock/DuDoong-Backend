@@ -17,7 +17,14 @@ data class AdminBatchExecutionResponse(
     val parameters: Map<String, String>,
 ) {
     companion object {
-        const val EXIT_MESSAGE_MAX_LENGTH = 500
+        /**
+         * EXIT_MESSAGE 에는 스택트레이스가 통째로 들어가 DB 접속 정보·SQL·수신자 연락처가 섞일 수 있다.
+         * 첫 줄(예외 클래스와 메시지)만 앞부분까지 보여 준다. 자세한 내용은 CloudWatch Logs 에서 본다
+         */
+        const val EXIT_MESSAGE_MAX_LENGTH = 200
+
+        fun summarizeExitMessage(message: String?): String? =
+            message?.lineSequence()?.map { it.trim() }?.firstOrNull { it.isNotEmpty() }?.take(EXIT_MESSAGE_MAX_LENGTH)
 
         fun durationSecondsOf(start: LocalDateTime?, end: LocalDateTime?): Double? {
             if (start == null || end == null) return null
@@ -33,7 +40,7 @@ data class AdminBatchExecutionResponse(
                 startTime = row.startTime,
                 endTime = row.endTime,
                 durationSeconds = durationSecondsOf(row.startTime, row.endTime),
-                exitMessage = row.exitMessage?.takeIf { it.isNotBlank() }?.take(EXIT_MESSAGE_MAX_LENGTH),
+                exitMessage = summarizeExitMessage(row.exitMessage),
                 parameters = row.parameters,
             )
     }
