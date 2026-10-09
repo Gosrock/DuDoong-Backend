@@ -17,7 +17,7 @@ class AdminGetStagingServerUseCase(
     fun execute(adminUserId: Long): AdminStagingServerResponse {
         adminAuthValidator.validateAdminOrAbove(adminUserId)
         val now = LocalDateTime.now(AdminStagingServerResponse.KST)
-        val info = stagingServerClient.describe()
+        val info = withStagingErrors("DESCRIBE") { stagingServerClient.describe() }
         val base = AdminStagingServerResponse.of(info, now)
         if (info.state != StagingServerState.RUNNING) return base
 

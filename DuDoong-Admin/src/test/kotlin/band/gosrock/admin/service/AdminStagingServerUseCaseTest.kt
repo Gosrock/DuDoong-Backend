@@ -7,6 +7,7 @@ import band.gosrock.domain.domains.user.adaptor.UserAdaptor
 import band.gosrock.domain.domains.user.domain.AccountRole
 import band.gosrock.domain.domains.user.domain.User
 import band.gosrock.infrastructure.outer.aws.StagingAppHealthChecker
+import band.gosrock.infrastructure.outer.aws.StagingServerControlException
 import band.gosrock.infrastructure.outer.aws.StagingServerClient
 import band.gosrock.infrastructure.outer.aws.StagingServerInfo
 import band.gosrock.infrastructure.outer.aws.StagingServerState
@@ -311,7 +312,7 @@ class AdminStagingServerUseCaseTest {
         }
 
         @Test
-        @DisplayName("RUNNING 이고 헬스체크 실패여도 켠 지 5분 안이면 STARTING")
+        @DisplayName("RUNNING 이고 헬스체크 실패여도 켠 지 10분 안이면 STARTING")
         fun starting() {
             givenUser(1L, AccountRole.ADMIN)
             val justLaunched = Instant.now().minusSeconds(60)
@@ -323,7 +324,7 @@ class AdminStagingServerUseCaseTest {
         }
 
         @Test
-        @DisplayName("RUNNING 이고 켠 지 5분이 지나도 헬스체크 실패면 DOWN")
+        @DisplayName("RUNNING 이고 켠 지 10분이 지나도 헬스체크 실패면 DOWN")
         fun down() {
             givenUser(1L, AccountRole.ADMIN)
             `when`(stagingServerClient.describe())
@@ -355,13 +356,48 @@ class AdminStagingServerUseCaseTest {
         }
 
         @Test
-        @DisplayName("appStatusOf 경계: 4분 59초는 STARTING, 5분은 DOWN, 켜진 시각 없으면 DOWN")
+        @DisplayName("appStatusOf 경계: 9분 59초는 STARTING, 10분은 DOWN, 켜진 시각 없으면 DOWN")
         fun appStatusOfBoundary() {
             val launched = LocalDateTime.of(2026, 10, 9, 10, 0)
-            assertEquals("STARTING", AdminStagingServerResponse.appStatusOf(false, launched, launched.plusMinutes(4).plusSeconds(59)))
-            assertEquals("DOWN", AdminStagingServerResponse.appStatusOf(false, launched, launched.plusMinutes(5)))
+            assertEquals("STARTING", AdminStagingServerResponse.appStatusOf(false, launched, launched.plusMinutes(9).plusSeconds(59)))
+            assertEquals("DOWN", AdminStagingServerResponse.appStatusOf(false, launched, launched.plusMinutes(10)))
             assertEquals("DOWN", AdminStagingServerResponse.appStatusOf(false, null, launched))
             assertEquals("UP", AdminStagingServerResponse.appStatusOf(true, null, launched))
+        }
+    }
+
+    @Nested
+    @DisplayName("AWS 오류")
+    inner class AwsErrorTest {
+
+        @Test
+        @DisplayName("끄는 중에 켜기처럼 상태 충돌이면 409 (ADMIN_409_1)")
+        fun stateConflict() {
+            givenUser(1L, AccountRole.ADMIN)
+            `when`(stagingServerClient.isConfigured()).thenReturn(true)
+            `when`(stagingServerClient.describe()).thenReturn(info(StagingServerState.STOPPED))
+            `when`(stagingServerClient.start()).thenThrow(
+                StagingServerControlException(StagingServerControlException.Kind.STATE_CONFLICT, "IncorrectInstanceState"),
+            )
+
+            val exception = assertThrows(DuDoongCodeException::class.java) { startUseCase.execute(1L) }
+
+            assertEquals(AdminErrorCode.STAGING_SERVER_STATE_CONFLICT, exception.errorCode)
+            assertEquals(409, exception.getErrorReason().status)
+        }
+
+        @Test
+        @DisplayName("권한·네트워크 문제면 조회도 503 (ADMIN_503_1)")
+        fun unavailable() {
+            givenUser(1L, AccountRole.ADMIN)
+            `when`(stagingServerClient.describe()).thenThrow(
+                StagingServerControlException(StagingServerControlException.Kind.UNAVAILABLE, "UnauthorizedOperation"),
+            )
+
+            val exception = assertThrows(DuDoongCodeException::class.java) { getUseCase.execute(1L) }
+
+            assertEquals(AdminErrorCode.STAGING_SERVER_UNAVAILABLE, exception.errorCode)
+            assertEquals(503, exception.getErrorReason().status)
         }
     }
 }

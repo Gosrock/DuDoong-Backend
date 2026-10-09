@@ -20,14 +20,14 @@ class AdminStartStagingServerUseCase(
         adminAuthValidator.validateAdminOrAbove(adminUserId)
         if (!stagingServerClient.isConfigured()) throw StagingServerNotConfiguredException.EXCEPTION
 
-        val current = stagingServerClient.describe()
+        val current = withStagingErrors("DESCRIBE") { stagingServerClient.describe() }
         if (current.state == StagingServerState.RUNNING || current.state == StagingServerState.PENDING) {
             log.info("[ADMIN-INFRA] STAGING START SKIPPED - userId={}, state={}", adminUserId, current.state)
             return AdminStagingServerResponse.of(current, LocalDateTime.now(AdminStagingServerResponse.KST))
         }
 
         log.info("[ADMIN-INFRA] STAGING START - userId={}, from={}", adminUserId, current.state)
-        val newState = stagingServerClient.start()
+        val newState = withStagingErrors("START") { stagingServerClient.start() }
         // 켜진 시각은 아직 확정 전이라 비워 두고, 화면 폴링(PENDING)으로 채운다
         return AdminStagingServerResponse.of(
             StagingServerInfo(newState, null),

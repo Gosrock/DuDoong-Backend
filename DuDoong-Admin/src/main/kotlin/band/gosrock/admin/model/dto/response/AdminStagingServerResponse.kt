@@ -20,8 +20,8 @@ data class AdminStagingServerResponse(
         private const val STAGING_URL = "https://staging.dudoong.com"
         private val AUTO_STOP_TIME: LocalTime = LocalTime.of(2, 0)
 
-        /** 켠 뒤 이 시간 안에 헬스체크가 실패하면 아직 뜨는 중(STARTING)으로 본다 */
-        val APP_STARTUP_GRACE: Duration = Duration.ofMinutes(5)
+        /** 켠 뒤 이 시간 안에 헬스체크가 실패하면 아직 뜨는 중(STARTING)으로 본다. t3.micro 에서 컨테이너 6개 기동을 고려 */
+        val APP_STARTUP_GRACE: Duration = Duration.ofMinutes(10)
 
         fun of(info: StagingServerInfo, now: LocalDateTime, appStatus: String? = null): AdminStagingServerResponse {
             val launched = info.state == StagingServerState.PENDING || info.state == StagingServerState.RUNNING
@@ -42,7 +42,7 @@ data class AdminStagingServerResponse(
 
         /**
          * 헬스체크 결과로 앱 상태를 정한다.
-         * 응답 200 → UP, 실패해도 켠 지 5분 안이면 STARTING, 그 뒤로도 실패면 DOWN.
+         * 응답 200 → UP, 실패해도 켠 지 10분 안이면 STARTING, 그 뒤로도 실패면 DOWN.
          */
         fun appStatusOf(healthy: Boolean, launchedAt: LocalDateTime?, now: LocalDateTime): String =
             when {

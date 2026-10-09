@@ -20,14 +20,14 @@ class AdminStopStagingServerUseCase(
         adminAuthValidator.validateAdminOrAbove(adminUserId)
         if (!stagingServerClient.isConfigured()) throw StagingServerNotConfiguredException.EXCEPTION
 
-        val current = stagingServerClient.describe()
+        val current = withStagingErrors("DESCRIBE") { stagingServerClient.describe() }
         if (current.state == StagingServerState.STOPPED || current.state == StagingServerState.STOPPING) {
             log.info("[ADMIN-INFRA] STAGING STOP SKIPPED - userId={}, state={}", adminUserId, current.state)
             return AdminStagingServerResponse.of(current, LocalDateTime.now(AdminStagingServerResponse.KST))
         }
 
         log.info("[ADMIN-INFRA] STAGING STOP - userId={}, from={}", adminUserId, current.state)
-        val newState = stagingServerClient.stop()
+        val newState = withStagingErrors("STOP") { stagingServerClient.stop() }
         return AdminStagingServerResponse.of(
             StagingServerInfo(newState, null),
             LocalDateTime.now(AdminStagingServerResponse.KST),
