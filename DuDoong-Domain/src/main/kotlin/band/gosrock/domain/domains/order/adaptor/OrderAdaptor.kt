@@ -27,6 +27,13 @@ class OrderAdaptor(private val orderRepository: OrderRepository) {
     fun findByOrderUuid(uuid: String): Order =
         orderRepository.findByOrderUuid(uuid).orElseThrow { OrderNotFoundException.EXCEPTION }
 
+    /** 공연 소속 주문 조회. 다른 공연의 주문은 존재를 드러내지 않도록 404 (#760) */
+    fun findEventOrder(eventId: Long, uuid: String): Order {
+        val order = findByOrderUuid(uuid)
+        if (order.eventId != eventId) throw OrderNotFoundException.EXCEPTION
+        return order
+    }
+
     /** 승인 대기(PENDING_APPROVE) 주문이 있는 티켓 id */
     fun findItemIdsHavingPendingApproveOrder(itemIds: Collection<Long>): Set<Long> =
         if (itemIds.isEmpty()) emptySet()

@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.order.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willCallRealMethod;
 import static org.mockito.BDDMockito.willDoNothing;
@@ -51,7 +52,7 @@ class OrderApproveServiceConcurrencyFailTest {
         willDoNothing().given(orderValidator).validUserNotDeleted(any());
         willCallRealMethod().given(orderValidator).validCanApproveOrder(any());
         willCallRealMethod().given(orderValidator).validStatusCanApprove(any());
-        given(orderAdaptor.findByOrderUuid(any())).willReturn(order);
+        given(orderAdaptor.findEventOrder(anyLong(), any())).willReturn(order);
     }
 
     @Test
@@ -61,7 +62,7 @@ class OrderApproveServiceConcurrencyFailTest {
         // when
         AtomicLong successCount = new AtomicLong();
         CunCurrencyExecutorService.execute(
-                () -> orderApproveService.execute(order.getUuid()), successCount);
+                () -> orderApproveService.execute(1L, order.getUuid()), successCount);
 
         // then
         // 가끔 동시요청이 ci 환경에서 중복안될때가 있음 로그로 확인하셈!

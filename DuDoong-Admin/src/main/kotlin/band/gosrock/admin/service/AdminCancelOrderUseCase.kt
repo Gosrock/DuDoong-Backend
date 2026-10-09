@@ -17,13 +17,13 @@ class AdminCancelOrderUseCase(
 ) {
 
     /**
-     * 운영 취소. v1 호스트 취소와 같은 [WithdrawOrderService.cancelOrder] (`주문:{uuid}` 락 + 새 트랜잭션)로 처리한다 (#719):
+     * 운영 취소. v1 호스트 취소와 같은 락·검증을 쓰는 [WithdrawOrderService.cancelOrderByAdmin] (`주문:{uuid}` 락 + 새 트랜잭션, 공연 경로 없음 #760)로 처리한다 (#719):
      * 선물 수락·생성과 같은 주문 락으로 줄 서고, 선물 연쇄 처리(대기 선물 무효)도 같은 트랜잭션에서 된다.
      * 응답은 커밋 뒤에 다시 읽으므로 바깥 트랜잭션을 두지 않는다 (REPEATABLE READ 스냅샷에 옛 상태가 남지 않게)
      */
     fun execute(userId: Long, orderUuid: String, reason: String? = null): AdminOrderResponse {
         adminAuthValidator.validateAdminOrAbove(userId)
-        withdrawOrderService.cancelOrder(orderUuid, reason)
+        withdrawOrderService.cancelOrderByAdmin(orderUuid, reason)
         val order = orderAdaptor.findByOrderUuid(orderUuid)
 
         val userName = order.userId?.let {

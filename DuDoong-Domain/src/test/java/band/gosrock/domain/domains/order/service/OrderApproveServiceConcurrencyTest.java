@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.order.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willCallRealMethod;
 import static org.mockito.BDDMockito.willDoNothing;
@@ -52,7 +53,7 @@ class OrderApproveServiceConcurrencyTest {
         willDoNothing().given(orderValidator).validUserNotDeleted(any());
         willCallRealMethod().given(orderValidator).validCanApproveOrder(any());
         willCallRealMethod().given(orderValidator).validStatusCanApprove(any());
-        given(orderAdaptor.findByOrderUuid(any())).willReturn(order);
+        given(orderAdaptor.findEventOrder(anyLong(), any())).willReturn(order);
     }
 
     @Test
@@ -62,7 +63,7 @@ class OrderApproveServiceConcurrencyTest {
         // when
         AtomicLong successCount = new AtomicLong();
         CunCurrencyExecutorService.execute(
-                () -> orderApproveService.execute(order.getUuid()), successCount);
+                () -> orderApproveService.execute(1L, order.getUuid()), successCount);
         // then
         assertThat(successCount.get()).isEqualTo(1);
     }

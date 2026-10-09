@@ -19,7 +19,7 @@ class ApproveOrderUseCase(
     @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID, applyTransaction = false)
     fun execute(userId: Long, eventId: Long, orderUuid: String): OrderResponse {
         log.info("[ApproveOrderUseCase][execute] 주문 승인 userId={} eventId={} orderUuid={}", userId, eventId, orderUuid)
-        val confirmOrderUuid = orderApproveService.execute(orderUuid)
+        val confirmOrderUuid = orderApproveService.execute(eventId, orderUuid)
         return orderMapper.toOrderResponse(confirmOrderUuid)
     }
 }

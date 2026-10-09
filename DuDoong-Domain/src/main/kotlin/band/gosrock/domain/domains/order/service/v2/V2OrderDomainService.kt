@@ -55,7 +55,7 @@ class V2OrderDomainService(
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     fun approve(eventId: Long, orderUuid: String) {
         validateEventOrder(eventId, orderUuid)
-        orderApproveService.execute(orderUuid)
+        orderApproveService.execute(eventId, orderUuid)
     }
 
     /**

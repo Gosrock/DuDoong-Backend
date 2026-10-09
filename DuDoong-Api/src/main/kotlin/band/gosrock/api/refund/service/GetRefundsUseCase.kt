@@ -43,7 +43,7 @@ class GetRefundsUseCase(
 
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
     fun getDetail(userId: Long, eventId: Long, orderUuid: String): RefundResponse {
-        val order = orderAdaptor.findByOrderUuid(orderUuid)
+        val order = orderAdaptor.findEventOrder(eventId, orderUuid)
         val userName = order.userId?.let {
             runCatching { userAdaptor.queryUser(it).profile?.name }.getOrNull()
         }

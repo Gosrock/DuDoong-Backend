@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.order.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willDoNothing;
@@ -30,12 +31,12 @@ class OrderApproveServiceTest {
     void 주문승인_승인로직_한번만_호출() {
         // given
         willDoNothing().given(order).approve(orderValidator);
-        given(orderAdaptor.findByOrderUuid(any())).willReturn(order);
+        given(orderAdaptor.findEventOrder(anyLong(), any())).willReturn(order);
         OrderApproveService orderApproveService =
                 new OrderApproveService(orderAdaptor, orderValidator);
 
         // when
-        orderApproveService.execute("uuid");
+        orderApproveService.execute(1L, "uuid");
 
         // then
         then(order).should(times(1)).approve(any());
