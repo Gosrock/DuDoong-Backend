@@ -5,7 +5,7 @@
 import pytest
 import requests
 
-from conftest import assert_status, get_data
+from conftest import assert_status, get_data, issued_event_image_key
 
 
 _state: dict = {
@@ -93,7 +93,7 @@ def test_setup_refund_reason_scenario(base_url, auth_headers, state, e2e_db):
     # 상세 설정
     requests.patch(
         f"{base_url}/v1/events/{_state['event_id']}/details",
-        json={"posterImageKey": "test/event/e2e/poster.jpeg", "content": "환불 사유 테스트 상세"},
+        json={"posterImageKey": issued_event_image_key(base_url, auth_headers, _state['event_id']), "content": "환불 사유 테스트 상세"},
         headers=auth_headers,
     )
 

@@ -31,8 +31,9 @@ open class HostService(
         return hostRepository.save(host)
     }
 
+    /** 활성 멤버의 역할 변경 (v2 와 같은 규칙, [Host.changeActiveHostUserRole]) */
     open fun updateHostUserRole(host: Host, userId: Long, role: HostRole): Host {
-        host.setHostUserRole(userId, role)
+        host.changeActiveHostUserRole(userId, role)
         return hostRepository.save(host)
     }
 

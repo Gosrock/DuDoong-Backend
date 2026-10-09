@@ -17,6 +17,6 @@ class JoinHostUseCase(
     fun execute(userId: Long, hostId: Long): HostDetailResponse {
         val host = hostAdaptor.findById(hostId)
 
-        return hostMapper.toHostDetailResponse(hostService.activateHostUser(host, userId))
+        return hostMapper.toHostDetailResponse(hostService.activateHostUser(host, userId), userId)
     }
 }

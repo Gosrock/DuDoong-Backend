@@ -7,9 +7,11 @@ import band.gosrock.domain.common.model.BaseTimeEntity
 import band.gosrock.domain.common.vo.HostInfoVo
 import band.gosrock.domain.common.vo.HostProfileVo
 import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException
+import band.gosrock.domain.domains.host.exception.CannotAssignMasterRoleException
 import band.gosrock.domain.domains.host.exception.CannotModifyMasterHostRoleException
 import band.gosrock.domain.domains.host.exception.ForbiddenHostException
 import band.gosrock.domain.domains.host.exception.HostUserNotFoundException
+import band.gosrock.domain.domains.host.exception.ManagerCanManageGuestOnlyException
 import band.gosrock.domain.domains.host.exception.NotAcceptedHostException
 import band.gosrock.domain.domains.host.exception.NotManagerHostException
 import band.gosrock.domain.domains.host.exception.NotMasterHostException
@@ -145,6 +147,25 @@ class Host(
         this.hostUsers.firstOrNull { it.userId == userId }
             ?.setHostRole(role)
             ?: throw HostUserNotFoundException.EXCEPTION
+    }
+
+    /**
+     * 멤버 추가·초대에서 요청자가 지정할 수 있는 역할인지 검증합니다 (v1·v2 공통).
+     * MASTER 는 지정할 수 없고(양도 API 사용), GUEST 가 아닌 역할(MANAGER)은 마스터만 다룰 수 있습니다.
+     * (요청자의 매니저 이상 권한 자체는 @HostRolesAllowed 에서 검증)
+     */
+    fun validateCanManageRole(requesterUserId: Long, targetRole: HostRole) {
+        if (targetRole == HostRole.MASTER) throw CannotAssignMasterRoleException.EXCEPTION
+        if (targetRole != HostRole.GUEST && this.masterUserId != requesterUserId) {
+            throw ManagerCanManageGuestOnlyException.EXCEPTION
+        }
+    }
+
+    /** 활성 멤버의 역할을 GUEST ↔ MANAGER 로 변경합니다 (v1·v2 공통). MASTER 지정 불가, 초대 대기·비멤버·마스터는 대상이 될 수 없습니다 */
+    fun changeActiveHostUserRole(targetUserId: Long, role: HostRole) {
+        if (role == HostRole.MASTER) throw CannotAssignMasterRoleException.EXCEPTION
+        if (!isActiveHostUserId(targetUserId)) throw HostUserNotFoundException.EXCEPTION
+        setHostUserRole(targetUserId, role)
     }
 
     fun removeHostUser(userId: Long) {

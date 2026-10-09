@@ -5,7 +5,7 @@
 import pytest
 import requests
 
-from conftest import assert_status, get_data
+from conftest import assert_status, get_data, issued_event_image_key
 
 
 # 이 모듈 내에서만 사용하는 로컬 상태
@@ -66,7 +66,7 @@ def test_refund_and_verify_stock_restore(base_url, auth_headers, state):
     )
     requests.patch(
         f"{base_url}/v1/events/{refund_event_id}/details",
-        json={"posterImageKey": "test/event/e2e/poster.jpeg", "content": "환불 테스트 상세"},
+        json={"posterImageKey": issued_event_image_key(base_url, auth_headers, refund_event_id), "content": "환불 테스트 상세"},
         headers=auth_headers,
     )
 

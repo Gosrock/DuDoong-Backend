@@ -23,6 +23,6 @@ class TransferMasterUseCase(
         val host = hostAdaptor.findById(hostId)
         host.transferMaster(userId, request.newMasterUserId)
         hostRepository.save(host)
-        return hostMapper.toHostDetailResponse(host)
+        return hostMapper.toHostDetailResponse(host, userId)
     }
 }

@@ -93,6 +93,20 @@ def get_data(response):
     return body
 
 
+def issued_event_image_key(base_url, headers, event_id):
+    """v1 이미지 업로드 API 가 이 공연에 발급한 key. v1 공연 상세 수정은 발급한 key(또는 지금 저장된 key)만 받는다 (#761)"""
+    resp = requests.post(f"{base_url}/v1/events/{event_id}/images", params={"imageFileExtension": "JPEG"}, headers=headers)
+    assert_status(resp, 200)
+    return get_data(resp)["key"]
+
+
+def issued_host_image_key(base_url, headers, host_id):
+    """v1 이미지 업로드 API 가 이 호스트에 발급한 key. v1 호스트 프로필 수정은 발급한 key(또는 지금 저장된 key)만 받는다 (#761)"""
+    resp = requests.post(f"{base_url}/v1/hosts/{host_id}/images", params={"imageFileExtension": "JPEG"}, headers=headers)
+    assert_status(resp, 200)
+    return get_data(resp)["key"]
+
+
 # ===== DB 직접 접근 (#737) =====
 
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}

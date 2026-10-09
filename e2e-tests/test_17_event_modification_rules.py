@@ -6,7 +6,7 @@ import pytest
 import requests
 from datetime import datetime, timedelta
 
-from conftest import assert_status, get_data
+from conftest import assert_status, get_data, issued_event_image_key
 
 
 def _future_date_str(days_ahead: int = 30) -> str:
@@ -52,7 +52,7 @@ def _setup_open_event(base_url: str, auth_headers: dict, host_id: int, name: str
     # 상세정보 수정
     detail_url = f"{base_url}/v1/events/{event_id}/details"
     detail_payload = {
-        "posterImageKey": "test/event/mod-rules/poster.jpeg",
+        "posterImageKey": issued_event_image_key(base_url, auth_headers, event_id),
         "content": f"{name} 상세 내용입니다.",
     }
     detail_resp = requests.patch(detail_url, json=detail_payload, headers=auth_headers)
@@ -123,7 +123,7 @@ def test_modify_preparing_event_detail(base_url, auth_headers, state):
 
     url = f"{base_url}/v1/events/{event_id}/details"
     payload = {
-        "posterImageKey": "test/event/mod-rules/prep-detail.jpeg",
+        "posterImageKey": issued_event_image_key(base_url, auth_headers, event_id),
         "content": "PREPARING 상태에서 상세정보를 수정합니다.",
     }
     print(f"\n[test_modify_preparing_event_detail] PATCH {url}")
@@ -183,7 +183,7 @@ def test_open_event_then_modify_detail(base_url, auth_headers, state):
 
     url = f"{base_url}/v1/events/{event_id}/details"
     payload = {
-        "posterImageKey": "test/event/mod-rules/open-detail-updated.jpeg",
+        "posterImageKey": issued_event_image_key(base_url, auth_headers, event_id),
         "content": "OPEN 상태에서 상세정보 수정 시도입니다.",
     }
     print(f"\n[test_open_event_then_modify_detail] PATCH {url}")

@@ -24,8 +24,9 @@ class InviteHostUseCase(
         val invitedUser = userAdaptor.queryUserByEmail(inviteHostRequest.email)
         val invitedUserId = invitedUser.id!!
         val role = inviteHostRequest.role
+        host.validateCanManageRole(userId, role)
         val hostUser = hostMapper.toHostUser(hostId, invitedUserId, role)
 
-        return hostMapper.toHostDetailResponse(hostService.inviteHostUser(host, hostUser))
+        return hostMapper.toHostDetailResponse(hostService.inviteHostUser(host, hostUser), userId)
     }
 }

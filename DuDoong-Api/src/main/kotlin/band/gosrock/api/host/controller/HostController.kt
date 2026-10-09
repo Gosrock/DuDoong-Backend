@@ -12,6 +12,7 @@ import band.gosrock.api.host.model.dto.response.HostDetailResponse
 import band.gosrock.api.host.model.dto.response.HostEventProfileResponse
 import band.gosrock.api.host.model.dto.response.HostProfileResponse
 import band.gosrock.api.host.model.dto.response.HostResponse
+import band.gosrock.api.host.model.dto.response.InviteUserResponse
 import band.gosrock.api.host.service.CreateHostUseCase
 import band.gosrock.api.host.service.InviteHostUseCase
 import band.gosrock.api.host.service.JoinHostUseCase
@@ -25,7 +26,6 @@ import band.gosrock.api.host.service.UpdateHostProfileUseCase
 import band.gosrock.api.host.service.UpdateHostSlackUrlUseCase
 import band.gosrock.api.host.service.UpdateHostUserRoleUseCase
 import band.gosrock.common.annotation.CurrentUserId
-import band.gosrock.domain.common.vo.UserProfileVo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -72,19 +72,19 @@ class HostController(
         return readHostsUseCase.execute(userId, pageable)
     }
 
-    @Operation(summary = "고유 아이디에 해당하는 호스트 정보를 가져옵니다.")
+    @Operation(summary = "고유 아이디에 해당하는 호스트 정보를 가져옵니다. 초대를 수락한 멤버만 가능하며, slackUrl 은 매니저 이상에게만 내려갑니다.")
     @GetMapping("/{hostId}")
-    fun getHostById(@PathVariable hostId: Long): HostDetailResponse {
-        return readHostUseCase.execute(hostId)
+    fun getHostById(@CurrentUserId userId: Long, @PathVariable hostId: Long): HostDetailResponse {
+        return readHostUseCase.execute(userId, hostId)
     }
 
-    @Operation(summary = "해당 호스트에 가입하지 않은 유저를 이메일로 검색합니다.")
+    @Operation(summary = "해당 호스트에 가입하지 않은 유저를 이메일로 검색합니다. 매니저 이상만 가능합니다.")
     @GetMapping("/{hostId}/invite/users")
     fun getInviteUserListByEmail(
         @CurrentUserId userId: Long,
         @PathVariable hostId: Long,
         @RequestParam(value = "email") @Email email: String,
-    ): UserProfileVo {
+    ): InviteUserResponse {
         return readInviteUsersUseCase.execute(userId, hostId, email)
     }
 
@@ -116,7 +116,7 @@ class HostController(
         return rejectHostUseCase.execute(userId, hostId)
     }
 
-    @Operation(summary = "다른 유저를 호스트 유저로 초대합니다.")
+    @Operation(summary = "다른 유저를 호스트 유저로 초대합니다. 매니저 이상만 가능하며, 매니저는 GUEST 로만 초대할 수 있습니다. MASTER 로는 초대할 수 없습니다.")
     @PostMapping("/{hostId}/invite")
     fun inviteHost(
         @CurrentUserId userId: Long,
@@ -126,7 +126,7 @@ class HostController(
         return inviteHostUseCase.execute(userId, hostId, inviteHostRequest)
     }
 
-    @Operation(summary = "호스트 유저의 권한을 변경합니다. 매니저 이상만 가능합니다.")
+    @Operation(summary = "호스트 유저의 권한을 변경합니다. 마스터만 가능하며 MASTER 로는 바꿀 수 없습니다 (마스터 양도 API 사용).")
     @PatchMapping("/{hostId}/role")
     fun patchHostUserRole(
         @CurrentUserId userId: Long,

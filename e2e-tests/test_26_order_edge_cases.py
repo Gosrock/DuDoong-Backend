@@ -5,7 +5,7 @@
 import pytest
 import requests
 
-from conftest import get_data
+from conftest import get_data, issued_event_image_key
 
 
 # 이 모듈 내에서만 사용하는 로컬 상태
@@ -64,7 +64,7 @@ def test_setup_stock_exhaustion(base_url, auth_headers, state):
     # 상세 정보 설정
     requests.patch(
         f"{base_url}/v1/events/{_edge_state['exhausted_event_id']}/details",
-        json={"posterImageKey": "test/event/e2e/poster.jpeg", "content": "재고 소진 테스트"},
+        json={"posterImageKey": issued_event_image_key(base_url, auth_headers, _edge_state['exhausted_event_id']), "content": "재고 소진 테스트"},
         headers=auth_headers,
     )
 

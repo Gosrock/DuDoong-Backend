@@ -3,9 +3,9 @@ package band.gosrock.api.host.model.mapper
 import band.gosrock.api.host.model.dto.request.CreateHostRequest
 import band.gosrock.api.host.model.dto.request.UpdateHostRequest
 import band.gosrock.api.host.model.dto.response.HostDetailResponse
+import band.gosrock.api.host.model.dto.response.HostMemberResponse
+import band.gosrock.api.host.model.dto.response.InviteUserResponse
 import band.gosrock.common.annotation.Mapper
-import band.gosrock.domain.common.vo.HostUserVo
-import band.gosrock.domain.common.vo.UserInfoVo
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor
 import band.gosrock.domain.domains.host.domain.Host
 import band.gosrock.domain.domains.host.domain.HostProfile
@@ -13,6 +13,7 @@ import band.gosrock.domain.domains.host.domain.HostRole
 import band.gosrock.domain.domains.host.domain.HostUser
 import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
+import band.gosrock.domain.domains.user.domain.AccountRole
 import org.springframework.transaction.annotation.Transactional
 
 @Mapper
@@ -57,40 +58,33 @@ class HostMapper(
         return HostUser(host = host, userId = userId, role = HostRole.MASTER)
     }
 
-    fun toHostInviteUserList(hostId: Long, email: String) =
+    fun toHostInviteUserList(hostId: Long, email: String): InviteUserResponse =
         userAdaptor.queryUserByEmail(email).let { inviteUser ->
             val host = hostAdaptor.findById(hostId)
             if (host.hasHostUserId(inviteUser.id!!)) {
                 throw AlreadyJoinedHostException.EXCEPTION
             }
-            inviteUser.toUserProfileVo()
+            InviteUserResponse.from(inviteUser)
         }
 
-    fun toHostDetailResponse(hostId: Long): HostDetailResponse {
+    /** viewerUserId 가 활성 매니저 이상이거나 SUPER_ADMIN 일 때만 slackUrl 을 담는다 (v2 민감 정보 노출 기준과 같음) */
+    fun toHostDetailResponse(hostId: Long, viewerUserId: Long): HostDetailResponse {
         val host = hostAdaptor.findById(hostId)
-        return toHostDetailResponseExecute(host)
+        return toHostDetailResponse(host, viewerUserId)
     }
 
-    fun toHostDetailResponse(host: Host): HostDetailResponse {
-        return toHostDetailResponseExecute(host)
-    }
-
-    private fun toHostDetailResponseExecute(host: Host): HostDetailResponse {
+    fun toHostDetailResponse(host: Host, viewerUserId: Long): HostDetailResponse {
         val userIds = host.getHostUser_UserIds()
-        val userList = userAdaptor.queryUserListByIdIn(userIds)
-        val userMap = userList.associateBy { it.id }
-        val hostUserVoList = mutableListOf<HostUserVo>()
-
-        for (userId in userIds) {
-            val user = userMap[userId]
-            if (user != null) {
-                val userInfoVo: UserInfoVo = user.toUserInfoVo()
-                val hostUser = host.getHostUserByUserId(userId)
-                val hostUserVo = HostUserVo.from(userInfoVo, hostUser)
-                hostUserVoList.add(hostUserVo)
-            }
+        val userMap = userAdaptor.queryUserListByIdIn(userIds).associateBy { it.id }
+        val members = userIds.mapNotNull { userId ->
+            userMap[userId]?.let { HostMemberResponse.of(it, host.getHostUserByUserId(userId)) }
         }
+        return HostDetailResponse.of(host, members, showSlackUrl = canViewSlackUrl(host, viewerUserId))
+    }
 
-        return HostDetailResponse.of(host, hostUserVoList)
+    private fun canViewSlackUrl(host: Host, viewerUserId: Long): Boolean {
+        val viewerRole = host.getActiveRoleOf(viewerUserId)
+        if (viewerRole == HostRole.MASTER || viewerRole == HostRole.MANAGER) return true
+        return userAdaptor.queryUser(viewerUserId).accountRole == AccountRole.SUPER_ADMIN
     }
 }

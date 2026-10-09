@@ -10,11 +10,8 @@ import band.gosrock.domain.domains.host.domain.HostContactType
 import band.gosrock.domain.domains.host.domain.HostRole
 import band.gosrock.domain.domains.host.domain.HostUser
 import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException
-import band.gosrock.domain.domains.host.exception.CannotAssignMasterRoleException
 import band.gosrock.domain.domains.host.exception.CannotRemoveMasterException
-import band.gosrock.domain.domains.host.exception.HostUserNotFoundException
 import band.gosrock.domain.domains.host.exception.InvalidHostContactException
-import band.gosrock.domain.domains.host.exception.ManagerCanManageGuestOnlyException
 import band.gosrock.domain.domains.host.repository.HostRepository
 import org.springframework.transaction.annotation.Transactional
 
@@ -63,17 +60,9 @@ class V2HostDomainService(
         )
     }
 
-    /**
-     * 요청자가 해당 역할의 멤버를 추가/삭제할 수 있는지 검증합니다.
-     * MASTER 역할은 지정 대상이 될 수 없고, GUEST 가 아닌 역할(MANAGER)은 마스터만 다룰 수 있습니다.
-     * (요청자의 매니저 이상 권한 자체는 @HostRolesAllowed 에서 검증)
-     */
-    fun validateCanManageRole(host: Host, requesterUserId: Long, targetRole: HostRole) {
-        if (targetRole == HostRole.MASTER) throw CannotAssignMasterRoleException.EXCEPTION
-        if (targetRole != HostRole.GUEST && host.masterUserId != requesterUserId) {
-            throw ManagerCanManageGuestOnlyException.EXCEPTION
-        }
-    }
+    /** 요청자가 해당 역할의 멤버를 추가/삭제할 수 있는지 검증합니다. 규칙은 v1 초대와 같다 ([Host.validateCanManageRole]) */
+    fun validateCanManageRole(host: Host, requesterUserId: Long, targetRole: HostRole) =
+        host.validateCanManageRole(requesterUserId, targetRole)
 
     /** 수락 단계 없이 즉시 활성 멤버로 추가합니다 (DEC-015). 이미 멤버(초대 대기 포함)이면 예외. 추가된 사람 알림용 [V2HostMembersAddedEvent] 발행 */
     fun addActiveHostUsers(host: Host, requesterUserId: Long, newHostUsers: List<HostUser>): Host {
@@ -92,9 +81,7 @@ class V2HostDomainService(
 
     /** 활성 멤버의 역할을 GUEST ↔ MANAGER 로 변경합니다. 마스터 대상 / MASTER 지정 불가 */
     fun changeActiveHostUserRole(host: Host, targetUserId: Long, role: HostRole): Host {
-        if (role == HostRole.MASTER) throw CannotAssignMasterRoleException.EXCEPTION
-        if (!host.isActiveHostUserId(targetUserId)) throw HostUserNotFoundException.EXCEPTION
-        host.setHostUserRole(targetUserId, role)
+        host.changeActiveHostUserRole(targetUserId, role)
         return hostRepository.save(host)
     }
 

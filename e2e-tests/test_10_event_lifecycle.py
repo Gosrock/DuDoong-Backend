@@ -6,7 +6,7 @@ import pytest
 import requests
 from datetime import datetime, timedelta
 
-from conftest import assert_status, get_data
+from conftest import assert_status, get_data, issued_event_image_key
 
 
 def _future_date_str(days_ahead: int = 30) -> str:
@@ -85,7 +85,7 @@ def test_event_status_open(base_url, auth_headers):
     # 상세 정보 수정
     detail_url = f"{base_url}/v1/events/{event_id}/details"
     detail_payload = {
-        "posterImageKey": "test/event/lifecycle/poster.jpeg",
+        "posterImageKey": issued_event_image_key(base_url, auth_headers, event_id),
         "content": "라이프사이클 테스트 공연입니다.",
     }
     print(f"[test_event_status_open] PATCH {detail_url}")

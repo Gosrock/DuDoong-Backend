@@ -37,10 +37,10 @@ class TicketOptionController(
         @PathVariable eventId: Long,
     ): OptionGroupResponse = createTicketOptionUseCase.execute(userId, createTicketOptionRequest, eventId)
 
-    @Operation(summary = "해당 이벤트에 속하는 옵션을 모두 조회합니다.")
+    @Operation(summary = "해당 이벤트에 속하는 옵션을 모두 조회합니다. 호스트 멤버만 가능합니다.")
     @GetMapping
-    fun getEventOptions(@PathVariable eventId: Long): GetEventOptionsResponse =
-        getEventOptionsUseCase.execute(eventId)
+    fun getEventOptions(@CurrentUserId userId: Long, @PathVariable eventId: Long): GetEventOptionsResponse =
+        getEventOptionsUseCase.execute(userId, eventId)
 
     @Operation(summary = "해당 옵션그룹을 삭제합니다.")
     @PatchMapping("/{optionGroupId}")

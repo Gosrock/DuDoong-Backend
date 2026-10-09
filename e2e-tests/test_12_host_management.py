@@ -5,7 +5,7 @@
 import pytest
 import requests
 
-from conftest import assert_status, get_data
+from conftest import assert_status, get_data, issued_host_image_key
 
 
 def test_update_host_profile(base_url, auth_headers, state):
@@ -19,7 +19,7 @@ def test_update_host_profile(base_url, auth_headers, state):
         "contactEmail": "updated-host@dudoong.com",
         "contactNumber": "010-9999-8888",
         "introduce": "E2E 테스트를 위한 호스트입니다.",
-        "profileImageKey": "test/host/profile.jpeg",
+        "profileImageKey": issued_host_image_key(base_url, auth_headers, state.host_id),
     }
     print(f"\n[test_update_host_profile] PATCH {url}")
     print(f"[test_update_host_profile] payload={payload}")

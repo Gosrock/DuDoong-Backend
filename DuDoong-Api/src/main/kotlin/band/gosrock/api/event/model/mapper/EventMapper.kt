@@ -8,6 +8,7 @@ import band.gosrock.api.event.model.dto.response.EventDetailResponse
 import band.gosrock.api.event.model.dto.response.EventProfileResponse
 import band.gosrock.api.event.model.dto.response.EventResponse
 import band.gosrock.common.annotation.Mapper
+import band.gosrock.common.helper.HtmlSanitizer
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.event.domain.EventBasic
@@ -48,7 +49,7 @@ class EventMapper(
     fun toEventDetail(updateEventDetailRequest: UpdateEventDetailRequest): EventDetail {
         return EventDetail(
             posterImageKey = updateEventDetailRequest.posterImageKey,
-            content = updateEventDetailRequest.content,
+            content = updateEventDetailRequest.content?.let(HtmlSanitizer::sanitizeV1EventContent),
         )
     }
 

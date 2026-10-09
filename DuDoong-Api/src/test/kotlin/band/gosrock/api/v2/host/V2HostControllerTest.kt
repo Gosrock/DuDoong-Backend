@@ -289,7 +289,7 @@ class V2HostControllerTest {
                 contentType = MediaType.APPLICATION_JSON
                 content = json(
                     mapOf(
-                        "profileImageKey" to "v1/profile.png",
+                        "profileImageKey" to V2ImageKeys.issued(presignedUrlService.hostImageKeyPrefix(hostId)),
                         "introduce" to "v1 소개",
                         "contactNumber" to "010-9999-8888",
                         "contactEmail" to "v1@gosrock.band",

@@ -1,7 +1,7 @@
 package band.gosrock.api.host.service
 
 import band.gosrock.api.common.aop.hostRole.FindHostFrom.HOST_ID
-import band.gosrock.api.common.aop.hostRole.HostQualification.MANAGER
+import band.gosrock.api.common.aop.hostRole.HostQualification.MASTER
 import band.gosrock.api.common.aop.hostRole.HostRolesAllowed
 import band.gosrock.api.host.model.dto.request.UpdateHostUserRoleRequest
 import band.gosrock.api.host.model.dto.response.HostDetailResponse
@@ -18,14 +18,15 @@ class UpdateHostUserRoleUseCase(
     private val hostMapper: HostMapper,
 ) {
     @Transactional
-    @HostRolesAllowed(role = MANAGER, findHostFrom = HOST_ID)
+    @HostRolesAllowed(role = MASTER, findHostFrom = HOST_ID)
     fun execute(userId: Long, hostId: Long, updateHostUserRoleRequest: UpdateHostUserRoleRequest): HostDetailResponse {
         val host = hostAdaptor.findById(hostId)
         val updateUserId = updateHostUserRoleRequest.userId
         val updateUserRole = updateHostUserRoleRequest.role
 
         return hostMapper.toHostDetailResponse(
-            hostService.updateHostUserRole(host, updateUserId, updateUserRole)
+            hostService.updateHostUserRole(host, updateUserId, updateUserRole),
+            userId,
         )
     }
 }
