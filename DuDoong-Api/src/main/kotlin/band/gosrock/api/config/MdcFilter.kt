@@ -18,6 +18,12 @@ class MdcFilter : OncePerRequestFilter() {
     companion object {
         private const val MAX_BODY_LOG_SIZE = 2048
         private val EXCLUDED_PATHS = listOf("/api/v1/auth", "/api/v1/payment")
+
+        /** 받아 쓰는 X-Trace-Id 형식 (nginx $request_id 는 32자리 hex). 아니면 새로 만든다 (#764) */
+        private val TRACE_ID = Regex("^[A-Za-z0-9-]{1,64}$")
+
+        fun resolveTraceId(header: String?): String =
+            header?.takeIf { TRACE_ID.matches(it) } ?: UUID.randomUUID().toString().replace("-", "").substring(0, 8)
     }
 
     override fun doFilterInternal(
@@ -27,8 +33,7 @@ class MdcFilter : OncePerRequestFilter() {
     ) {
         val wrappedRequest = ContentCachingRequestWrapper(request, MAX_BODY_LOG_SIZE)
         try {
-            val traceId = request.getHeader("X-Trace-Id")
-                ?: UUID.randomUUID().toString().replace("-", "").substring(0, 8)
+            val traceId = resolveTraceId(request.getHeader("X-Trace-Id"))
             MDC.put("traceId", traceId)
             response.setHeader("X-Trace-Id", traceId)
             filterChain.doFilter(wrappedRequest, response)

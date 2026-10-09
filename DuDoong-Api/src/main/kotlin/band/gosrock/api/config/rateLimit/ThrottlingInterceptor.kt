@@ -11,6 +11,7 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.HandlerInterceptor
 import org.springframework.web.util.ContentCachingRequestWrapper
+import org.springframework.web.util.WebUtils
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 
@@ -33,6 +34,8 @@ class ThrottlingInterceptor(
         handler: Any,
     ): Boolean {
         val userId = SecurityUtils.getCurrentUserId()
+        // 프록시 헤더는 신뢰하는 프록시(server.tomcat.remoteip.internal-proxies)가 붙인 값만 반영된 주소다 (#764).
+        // 클라이언트가 보낸 Forwarded·X-Forwarded-For 값으로는 바뀌지 않는다
         val remoteAddr = request.remoteAddr
         log.info("remoteAddr : $remoteAddr")
 
@@ -57,10 +60,14 @@ class ThrottlingInterceptor(
             return true
         }
 
-        // 슬랙 알림 메시지 발송.
+        // 슬랙 알림 메시지 발송 (키별 분당 1회, 비동기). 알림 실패는 429 응답에 영향을 주지 않는다
         // limit is exceeded
-        val cachingRequest = request as ContentCachingRequestWrapper
-        slackThrottleErrorSender.execute(cachingRequest, userId)
+        try {
+            WebUtils.getNativeRequest(request, ContentCachingRequestWrapper::class.java)
+                ?.let { slackThrottleErrorSender.execute(it, userId) }
+        } catch (e: Exception) {
+            log.warn("rate limit Slack 알림 실패: {}", e.toString())
+        }
         responseTooManyRequestError(request, response)
 
         return false

@@ -11,6 +11,7 @@ import band.gosrock.domain.domains.user.domain.User
 import com.fasterxml.jackson.databind.JsonNode
 import java.io.ByteArrayInputStream
 import java.util.UUID
+import org.apache.poi.ss.usermodel.Cell
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.beans.factory.annotation.Autowired
@@ -107,10 +108,15 @@ abstract class V2OperationTestSupport : V2TicketApiTestSupport() {
         return XSSFWorkbook(ByteArrayInputStream(bytes)).getSheetAt(0)
     }
 
-    protected fun Sheet.headers(): List<String> = getRow(0).map { it.stringCellValue }
+    /**
+     * 셀 표시값. 수식 방어 셀은 값은 그대로 두고 quotePrefixed 스타일을 붙이므로(#764) 기대값에서 구분되게 앞에 ' 를 붙여 돌려준다
+     */
+    private fun Cell.shown(): String = toString().let { if (cellStyle.quotePrefixed) "'$it" else it }
+
+    protected fun Sheet.headers(): List<String> = getRow(0).map { it.shown() }
 
     protected fun Sheet.column(header: String): List<String> {
         val index = headers().indexOf(header)
-        return (1..lastRowNum).map { getRow(it).getCell(index)?.toString().orEmpty() }
+        return (1..lastRowNum).map { getRow(it).getCell(index)?.shown().orEmpty() }
     }
 }

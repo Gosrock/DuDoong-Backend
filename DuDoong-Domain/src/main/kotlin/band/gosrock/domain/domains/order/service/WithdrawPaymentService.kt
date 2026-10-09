@@ -12,7 +12,7 @@ class WithdrawPaymentService(private val paymentsCancelClient: PaymentsCancelCli
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun execute(orderUuid: String, paymentKey: String, reason: String): PaymentsResponse {
-        log.info("취소처리 $orderUuid : $paymentKey$reason")
+        log.info("취소처리 $orderUuid : $reason")
         return paymentsCancelClient.execute(
             orderUuid,
             paymentKey,

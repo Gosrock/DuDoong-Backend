@@ -84,6 +84,11 @@ def _xlsx_rows(content):
         if "xl/sharedStrings.xml" in z.namelist():
             root = ElementTree.fromstring(z.read("xl/sharedStrings.xml"))
             shared = ["".join(t.text or "" for t in si.iter(f"{{{ns['m']}}}t")) for si in root.findall("m:si", ns)]
+        # 수식 방어 셀은 값은 그대로 두고 quotePrefix 스타일을 붙인다 (#764). 기대값에서 구분되게 앞에 ' 를 붙여 돌려준다
+        quoted = set()
+        if "xl/styles.xml" in z.namelist():
+            xfs = ElementTree.fromstring(z.read("xl/styles.xml")).find("m:cellXfs", ns)
+            quoted = {i for i, xf in enumerate(xfs.findall("m:xf", ns)) if xf.get("quotePrefix") in ("1", "true")}
         sheet = ElementTree.fromstring(z.read("xl/worksheets/sheet1.xml"))
         rows = []
         for row in sheet.iter(f"{{{ns['m']}}}row"):
@@ -102,6 +107,8 @@ def _xlsx_rows(content):
                 else:
                     value = "" if v is None else v.text
                     value = shared[int(value)] if c.get("t") == "s" and value != "" else value
+                if int(c.get("s", "0")) in quoted:
+                    value = "'" + value
                 cells.append(value)
             rows.append(cells)
         return rows

@@ -37,7 +37,8 @@ import jakarta.servlet.ServletContext
 
 /** Swagger 사용 환경을 위한 설정 파일 */
 @Configuration
-@org.springframework.context.annotation.Profile("!staging", "!prod")
+// 스테이징·운영 둘 다 아닐 때만 (#764). ("!staging", "!prod") 는 OR 라서 항상 참이었다
+@org.springframework.context.annotation.Profile("!staging & !prod")
 class SwaggerConfig(
     private val applicationContext: ApplicationContext,
 ) {

@@ -39,7 +39,7 @@ class ConfirmOrderFailHandler(
         )
 
         if (order.isNeedPaid()) {
-            log.info("${doneOrderEvent.orderUuid}:${doneOrderEvent.paymentKey} 주문 실패 시 결제 취소")
+            log.info("${doneOrderEvent.orderUuid} 주문 실패 시 결제 취소")
             cancelPaymentService.execute(order.uuid!!, doneOrderEvent.paymentKey!!, "서버 오류로 인한 환불")
         }
     }

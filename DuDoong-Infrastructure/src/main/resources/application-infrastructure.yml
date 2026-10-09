@@ -1,7 +1,8 @@
 # 공통적용
 aws:
-  access-key: ${AWS_ACCESS_KEY:testKey}
-  secret-key: ${AWS_SECRET_KEY:secretKey}
+  # 키는 기본값을 두지 않는다 (#764). 값이 없으면 기동이 실패한다. 로컬은 application-local.yml, 테스트는 build.gradle.kts 의 test 설정
+  access-key: ${AWS_ACCESS_KEY}
+  secret-key: ${AWS_SECRET_KEY}
   s3:
     bucket: ${AWS_S3_BUCKET:bucket}
     private-bucket : ${AWS_S3_BUCKET_PRIVATE:bucket-private}

@@ -31,7 +31,7 @@ class WithDrawOrderHandler(
             else -> "결제 취소"
         }
 
-        log.info("${withDrawOrderEvent.orderUuid} 주문 철회 ${order.paymentKey}$reason")
+        log.info("${withDrawOrderEvent.orderUuid} 주문 철회 $reason")
         withdrawPaymentService.execute(withDrawOrderEvent.orderUuid, order.paymentKey, reason)
     }
 }

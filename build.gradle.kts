@@ -85,6 +85,12 @@ subprojects {
         useJUnitPlatform()
         // Api 통합 테스트는 컨텍스트 여러 개(설정별 캐시) + 공유 H2 를 한 JVM 에 올린다. 기본 512MB 로는 #719 테스트 추가 후 OOM (2026-10-05)
         maxHeapSize = "1g"
+        // 비밀값은 yml 기본값이 없다 (#764). 테스트 전용 값을 넣는다 (운영 값 아님). 같은 이름의 환경변수보다 우선한다
+        systemProperty("JWT_SECRET_KEY", "testkeytestkeytestkeytestkeytestkeytestkeytestkeytestkeytestkey")
+        systemProperty("TOSS_PAYMENTS_KEY", "test_sk_ADpexMgkW36weAqp4bNVGbR5ozO0")
+        systemProperty("TOSS_MID", "gosroc9mwo")
+        systemProperty("AWS_ACCESS_KEY", "test-access-key")
+        systemProperty("AWS_SECRET_KEY", "test-secret-key")
     }
 }
 

@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
 import org.springdoc.core.annotations.ParameterObject
 import org.springframework.data.domain.Pageable
@@ -80,6 +81,14 @@ class CommentController(
     @GetMapping("/random")
     fun getRandomComment(
         @PathVariable eventId: Long,
-        @RequestParam @Min(value = 1L, message = "limit 값은 0보다 커야 합니다.") limit: Long,
+        // 랜덤 조회(ORDER BY RAND())는 상한으로 묶는다 (#764)
+        @RequestParam
+        @Min(value = 1L, message = "limit 값은 0보다 커야 합니다.")
+        @Max(value = MAX_RANDOM_LIMIT, message = "limit 값은 50 이하여야 합니다.")
+        limit: Long,
     ): RetrieveRandomCommentResponse = retrieveRandomCommentUseCase.execute(eventId, limit)
+
+    companion object {
+        const val MAX_RANDOM_LIMIT = 50L
+    }
 }
