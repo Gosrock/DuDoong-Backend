@@ -379,7 +379,24 @@ class Order() : BaseTimeEntity() {
 
     // ===== v2 공유 데이터 (검증·조합 규칙은 service.v2.V2OrderDomainService) =====
 
-    /** 거절 사유 종류 기록. [refuse] 와 같은 트랜잭션·락 안에서 V2OrderDomainService 가 호출한다 */
+    /**
+     * v2 거절 (R-4, #752): v1 [refuse] 와 같은 전이(CANCELED·표시 문구·철회 이벤트)에 환불 요청(REFUND_REQUESTED)은 [refundRequested] 일 때만 건다 —
+     * 0원 주문은 돌려줄 돈이 없어 환불 목록(F-1)에 올리지 않는다 (사용자 결정 2026-10-09). v1 거절은 [refuse] 그대로(0원도 환불 요청)
+     */
+    internal fun refuseByHost(orderValidator: OrderValidator, reason: String?, refundRequested: Boolean) {
+        orderValidator.validCanRefuse(this)
+        val now = LocalDateTime.now()
+        orderStatus = OrderStatus.CANCELED
+        cancelReason = reason?.take(500)
+        if (refundRequested) {
+            refundStatus = RefundStatus.REFUND_REQUESTED
+            refundStatusChangedAt = now
+        }
+        withDrawAt = now
+        Events.raise(WithDrawOrderEvent.from(this))
+    }
+
+    /** 거절 사유 종류 기록. [refuseByHost] 와 같은 트랜잭션·락 안에서 V2OrderDomainService 가 호출한다 */
     internal fun recordRefuseReasonType(type: OrderRefuseReasonType) {
         this.refuseReasonType = type
     }

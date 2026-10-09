@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.order.service.v2
 
 import band.gosrock.common.annotation.DomainService
 import band.gosrock.domain.common.aop.redissonLock.RedissonLock
+import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
 import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.order.domain.OrderRefuseReasonType
@@ -67,14 +68,14 @@ class V2OrderDomainService(
     }
 
     /**
-     * 승인 대기 주문 거절. 상태는 v1 과 같은 CANCELED(+ 환불 요청)이고, 사유 종류는 refuse_reason_type,
-     * 표시 문구는 v1 화면 호환을 위해 cancel_reason 에 기록한다 (기타는 직접 입력값)
+     * 승인 대기 주문 거절. 상태는 v1 과 같은 CANCELED 이고 환불 요청은 결제 금액이 있을 때만 건다(0원은 환불 목록에 올리지 않음, #752 — v1 거절은 그대로).
+     * 사유 종류는 refuse_reason_type, 표시 문구는 v1 화면 호환을 위해 cancel_reason 에 기록한다 (기타는 직접 입력값)
      */
     @RedissonLock(LockName = ORDER_LOCK, identifier = "orderUuid")
     fun refuse(eventId: Long, orderUuid: String, reasonType: OrderRefuseReasonType, reasonText: String?) {
         val reason = refuseReasonText(reasonType, reasonText)
         val order = queryEventOrder(eventId, orderUuid)
-        order.refuse(orderValidator, reason)
+        order.refuseByHost(orderValidator, reason, refundRequested = order.getTotalPaymentPrice().isGreaterThan(Money.ZERO))
         order.recordRefuseReasonType(reasonType)
     }
 

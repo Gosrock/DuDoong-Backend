@@ -125,6 +125,8 @@ data class V2OrderIssuedTicketResponse(
 
 data class V2OptionAnswerResponse(
     val optionName: String?,
+    @field:Schema(description = "옵션 설명 (질문 아래 안내 문구, #752)")
+    val description: String?,
     val answer: String?,
     val additionalPrice: Long,
 )

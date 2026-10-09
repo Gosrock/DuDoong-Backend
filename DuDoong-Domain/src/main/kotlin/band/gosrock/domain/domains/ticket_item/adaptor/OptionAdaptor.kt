@@ -19,4 +19,7 @@ class OptionAdaptor(
     fun findAllByIds(ids: List<Long>): List<Option> {
         return optionRepository.findAllById(ids)
     }
+
+    /** 옵션 그룹을 함께 읽는다 (fetch join) */
+    fun findAllWithGroupByIds(ids: List<Long>): List<Option> = optionRepository.findAllWithGroupByIdIn(ids)
 }

@@ -36,6 +36,7 @@ class State:
     host_id: int = 0
     events: dict = {}
     tickets: dict = {}
+    options: dict = {}
 
 
 @pytest.fixture(scope="module")
@@ -80,8 +81,8 @@ def _ev(base_url, event_id, path=""):
     return f"{base_url}/v2/events/{event_id}{path}"
 
 
-def _new_event(base_url, s, key):
-    """무료 선착순(즉시 발급) 티켓 1개짜리 공개 공연"""
+def _new_event(base_url, s, key, approval=False, option_description=None):
+    """무료 티켓 1개짜리 공개 공연 (기본 선착순 즉시 발급). option_description 이 있으면 주관식 옵션을 만들어 붙인다"""
     resp = requests.post(
         f"{base_url}/v2/events",
         json={"hostId": s.host_id, "name": f"후속공연{key}", "startAt": START.strftime(FMT), "endAt": END.strftime(FMT), "hasTicket": True},
@@ -91,10 +92,15 @@ def _new_event(base_url, s, key):
     event_id = get_data(resp)["eventId"]
     resp = requests.post(_ev(base_url, event_id, "/ticket-items"), json={
         "payType": "FREE", "name": "무료", "description": "무료", "price": 0, "supplyCount": 100, "account": None,
-        "approvalRequired": False, "isQuantityPublic": True, "purchaseLimit": 4, "saleStartAt": None, "saleEndAt": None,
+        "approvalRequired": approval, "isQuantityPublic": True, "purchaseLimit": 4, "saleStartAt": None, "saleEndAt": None,
     }, headers=_h(s, "manager"))
     assert_status(resp, 200)
     ticket_id = get_data(resp)["ticketItemId"]
+    if option_description:
+        resp = requests.post(_ev(base_url, event_id, "/options"), json={"name": "요청사항", "description": option_description, "type": "SUBJECTIVE"}, headers=_h(s, "manager"))
+        assert_status(resp, 200)
+        s.options[key] = get_data(resp)["optionId"]
+        assert_status(requests.put(_ev(base_url, event_id, f"/ticket-items/{ticket_id}/options"), json={"optionIds": [s.options[key]]}, headers=_h(s, "manager")), 200)
     key_img = get_data(requests.post(_ev(base_url, event_id, "/images"), json={"purpose": "POSTER", "extension": "PNG"}, headers=_h(s, "manager")))["key"]
     assert_status(requests.patch(_ev(base_url, event_id, "/basic"), json={"posterImageKey": key_img, "place": PLACE, "contacts": [{"type": "EMAIL", "value": "a@a.com"}]}, headers=_h(s, "manager")), 200)
     assert_status(requests.put(_ev(base_url, event_id, "/sections"), json=SECTIONS, headers=_h(s, "manager")), 200)
@@ -158,6 +164,8 @@ def test_01_setup(base_url, s):
     assert_status(resp, 200)
     for key in ("gift", "ended", "preparing", "order"):
         _new_event(base_url, s, key)
+    _new_event(base_url, s, "free_approval", approval=True)
+    _new_event(base_url, s, "described", option_description="좌석 관련 요청을 적어 주세요")
 
 
 def test_02_swagger_hides_current_user_id(base_url, s):
@@ -301,3 +309,46 @@ def test_09_o3_lines_have_no_gift_fields(base_url, s):
     detail = get_data(requests.get(f"{base_url}/v2/me/orders/{order_uuid}", headers=_h(s, "sender")))
     assert detail["lines"] and all(not ({"giftState", "isGiftExpired", "giftId"} & set(line)) for line in detail["lines"])
     assert sorted(t["giftState"] for t in detail["issuedTickets"]) == ["NONE", "PENDING"]
+
+
+def test_10_zero_amount_refuse_has_no_refund_request(base_url, s):
+    ev = s.events["free_approval"]
+
+    def pending_order(who):
+        resp = requests.post(f"{base_url}/v2/orders", json=_order_body(s, "free_approval"), headers=_h(s, who))
+        assert_status(resp, 200)
+        assert get_data(resp)["status"] == "PENDING_APPROVE"
+        return get_data(resp)["orderUuid"]
+
+    # v2 거절(R-4): 0원 주문은 환불 요청 없음 → F-1 환불 목록·D-1 환불 요청 수에 없고 F-2 완료는 Order_400_17
+    v2_order = pending_order("buyer")
+    assert_status(requests.post(_ev(base_url, ev, f"/orders/{v2_order}/refuse"), json={"reasonType": "SOLD_OUT"}, headers=_h(s, "manager")), 200)
+    assert _sql(f"SELECT order_status, refund_status FROM tbl_order WHERE uuid = '{v2_order}'").split() == ["CANCELED", "NONE"]
+    host = get_data(requests.get(_ev(base_url, ev, f"/orders/{v2_order}"), headers=_h(s, "guest")))
+    assert host["order"]["status"] == "REFUSED" and host["order"]["refundStatus"] == "NONE"
+    refunds = get_data(requests.get(_ev(base_url, ev, "/refunds"), headers=_h(s, "guest")))
+    assert refunds["totalElements"] == 0
+    assert get_data(requests.get(_ev(base_url, ev, "/dashboard"), headers=_h(s, "guest")))["orders"]["refundRequested"] == 0
+    resp = requests.post(_ev(base_url, ev, f"/refunds/{v2_order}/complete"), headers=_h(s, "manager"))
+    assert resp.status_code == 400 and _code(resp) == "Order_400_17"
+    mine = get_data(requests.get(f"{base_url}/v2/me/orders/{v2_order}", headers=_h(s, "buyer")))
+    assert mine["status"] == "REFUSED" and mine["refundStatus"] == "NONE"
+    assert mine["refundAccountEditable"] is False and mine["refundAccountRequired"] is False
+
+    # v1 거절은 그대로: 0원도 환불 요청
+    v1_order = pending_order("other")
+    assert_status(requests.post(f"{base_url}/v1/events/{ev}/orders/{v1_order}/refuse", json={"reason": "v1 거절"}, headers=_h(s, "master")), 200)
+    assert _sql(f"SELECT order_status, refund_status FROM tbl_order WHERE uuid = '{v1_order}'").split() == ["CANCELED", "REFUND_REQUESTED"]
+    refunds = get_data(requests.get(_ev(base_url, ev, "/refunds"), headers=_h(s, "guest")))
+    assert [r["orderUuid"] for r in refunds["content"]] == [v1_order]
+
+
+def test_11_o3_option_answer_has_description(base_url, s):
+    body = _order_body(s, "described")
+    body["options"]["answers"] = [{"optionId": s.options["described"], "answer": "통로 쪽"}]
+    resp = requests.post(f"{base_url}/v2/orders", json=body, headers=_h(s, "buyer"))
+    assert_status(resp, 200)
+    order_uuid = get_data(resp)["orderUuid"]
+    detail = get_data(requests.get(f"{base_url}/v2/me/orders/{order_uuid}", headers=_h(s, "buyer")))
+    answers = [a for line in detail["lines"] for a in line["optionAnswers"]] + [a for t in detail["issuedTickets"] for a in t["optionAnswers"]]
+    assert answers and all(a == {"optionName": "요청사항", "description": "좌석 관련 요청을 적어 주세요", "answer": "통로 쪽", "additionalPrice": 0} for a in answers)
