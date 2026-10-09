@@ -227,9 +227,9 @@ def test_05_unread_and_read(base_url, s):
     assert _unread(base_url, s, "manager") == 3
 
     # 전체 읽음 → 3건, 다시 → 0건
-    resp = requests.post(url, json={"all": True}, headers=_h(s, "manager"))
+    resp = requests.post(url, json={"readAll": True}, headers=_h(s, "manager"))
     assert get_data(resp) == {"updatedCount": 3, "unreadCount": 0}
-    resp = requests.post(url, json={"all": True}, headers=_h(s, "manager"))
+    resp = requests.post(url, json={"readAll": True}, headers=_h(s, "manager"))
     assert_status(resp, 200)
     assert get_data(resp) == {"updatedCount": 0, "unreadCount": 0}
     assert _unread(base_url, s, "master") == master_unread
@@ -238,4 +238,4 @@ def test_05_unread_and_read(base_url, s):
 def test_06_unauthorized(base_url, s):
     assert_status(requests.get(f"{base_url}/v2/me/notifications"), 401)
     assert_status(requests.get(f"{base_url}/v2/me/notifications/unread-count"), 401)
-    assert_status(requests.post(f"{base_url}/v2/me/notifications/read", json={"all": True}), 401)
+    assert_status(requests.post(f"{base_url}/v2/me/notifications/read", json={"readAll": True}), 401)

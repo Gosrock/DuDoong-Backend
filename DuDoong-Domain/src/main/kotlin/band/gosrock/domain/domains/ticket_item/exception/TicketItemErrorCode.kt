@@ -96,6 +96,9 @@ enum class TicketItemErrorCode(
     @ExplainError("값을 바꾼 이름(1~12자)·설명(~30자)이 길이를 넘는 경우, 무제한 티켓의 재고 공개를 켜려는 경우")
     INVALID_TICKET_ITEM_FIELD(BAD_REQUEST, "Ticket_Item_400_15", "티켓 입력값이 올바르지 않습니다."),
 
+    @ExplainError("v2 티켓 부분 수정(T-3)에서 supplyCount·purchaseLimit·saleStartAt·saleEndAt·description 에 명시적 null 을 보낸 경우. null 은 '변경 안 함'이 아니라 오해(예전 의미: 무제한·없음)를 막기 위해 거부한다 (#755)")
+    TICKET_ITEM_NULL_FIELD(BAD_REQUEST, "Ticket_Item_400_15", "값을 비우려면 null 대신 clear 에 필드 이름을 넣어 주세요 (무제한·제한 없음·등록 즉시·공연 시작까지·설명 없음)."),
+
     @ExplainError("v2 에서 지원하지 않는 옵션 응답 형식(객관식)으로 만들려는 경우")
     UNSUPPORTED_V2_OPTION_TYPE(BAD_REQUEST, "Option_Group_400_4", "v2 에서는 주관식·네/아니오 옵션만 만들 수 있습니다."),
 

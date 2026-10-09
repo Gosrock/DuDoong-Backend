@@ -46,7 +46,7 @@ class V2NotificationController(
     @GetMapping("/unread-count")
     fun getUnreadCount(@CurrentUserId userId: Long): V2UnreadCountResponse = notificationUseCase.unreadCount(userId)
 
-    @Operation(summary = "[N-3] 읽음 처리 (멱등). all=true 면 전체, 아니면 notificationIds(최대 100). 남의 알림·없는 id 는 무시")
+    @Operation(summary = "[N-3] 읽음 처리 (멱등). readAll=true 면 전체, 아니면 notificationIds(최대 100). 남의 알림·없는 id 는 무시")
     @PostMapping("/read")
     fun read(
         @CurrentUserId userId: Long,

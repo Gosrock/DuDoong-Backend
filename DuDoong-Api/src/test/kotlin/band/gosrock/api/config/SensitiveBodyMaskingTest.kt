@@ -25,8 +25,8 @@ import org.springframework.web.util.ContentCachingRequestWrapper
 class SensitiveBodyMaskingTest {
 
     private val body = """{"eventId":1,"depositorName":"홍길동","refundAccount":{"bankName":"국민은행","accountHolder":"김철수","accountNumber":"123-45-678901"},""" +
-        """"account":{"bank":"신한은행","holder":"고스락","number":"110-123-456789"},"contacts":[{"type":"PHONE","value":"010-9876-5432"}],""" +
-        """"phoneNumber":"010-1111-2222","email":"me@test.com","contactValue":"x@y.z","quantity":2}"""
+        """"account":{"bankName":"신한은행","accountHolder":"고스락","accountNumber":"110-123-456789"},"contacts":[{"type":"PHONE","value":"010-9876-5432"}],""" +
+        """"phoneNumber":"010-1111-2222","email":"me@test.com","contactValue":"x@y.z","quantity":2,"number":7}"""
 
     private val secrets = listOf("홍길동", "국민은행", "김철수", "123-45-678901", "신한은행", "110-123-456789", "010-9876-5432", "010-1111-2222", "me@test.com", "x@y.z")
 
@@ -36,6 +36,8 @@ class SensitiveBodyMaskingTest {
         secrets.forEach { assertFalse(masked.contains(it), "$it 노출: $masked") }
         assertTrue(masked.contains("\"accountNumber\":\"***\""))
         assertTrue(masked.contains("\"quantity\":2") && masked.contains("\"eventId\":1") && masked.contains("\"type\":\"PHONE\""))
+        // 계좌와 무관한 number 키는 가리지 않는다 (#755 — 옛 v2 티켓 계좌 키 bank·holder·number 를 뺐다)
+        assertTrue(masked.contains("\"number\":7"), masked)
         assertEquals(ObjectMapper().readTree(masked).at("/refundAccount/accountNumber").asText(), "***")
     }
 
@@ -106,7 +108,7 @@ class SensitiveBodyMaskingTest {
     fun `Slack 500 알림 본문에 계좌번호·입금자명·연락처가 없다`() {
         val provider = mock(SlackErrorNotificationProvider::class.java)
         val request = ContentCachingRequestWrapper(
-            MockHttpServletRequest("POST", "/api/v2/orders").apply {
+            MockHttpServletRequest("POST", "/api/v2/me/orders").apply {
                 contentType = "application/json"
                 setContent(body.toByteArray(Charsets.UTF_8))
             },

@@ -308,11 +308,11 @@ class V2NotificationControllerTest : V2OperationTestSupport() {
             read(me, emptyMap()).andExpect { jsonPath("$.data.updatedCount") { value(0) } }
 
             // 전체 읽음 → 나머지 2건, 다시 → 0건. 남의 것은 그대로
-            read(me, mapOf("all" to true)).andExpect {
+            read(me, mapOf("readAll" to true)).andExpect {
                 jsonPath("$.data.updatedCount") { value(2) }
                 jsonPath("$.data.unreadCount") { value(0) }
             }
-            read(me, mapOf("all" to true)).andExpect {
+            read(me, mapOf("readAll" to true)).andExpect {
                 status { isOk() }
                 jsonPath("$.data.updatedCount") { value(0) }
             }
@@ -327,7 +327,7 @@ class V2NotificationControllerTest : V2OperationTestSupport() {
         fun `비로그인 401`() {
             list(null).andExpect { status { isUnauthorized() } }
             v2Get(null, "/me/notifications/unread-count").andExpect { status { isUnauthorized() } }
-            read(null, mapOf("all" to true)).andExpect { status { isUnauthorized() } }
+            read(null, mapOf("readAll" to true)).andExpect { status { isUnauthorized() } }
         }
 
         @Test

@@ -70,8 +70,8 @@ data class V2ReadNotificationsRequest(
     @field:Schema(description = "읽음 처리할 알림 id. 본인 것이 아니거나 없는 id 는 무시")
     @field:Size(max = 100)
     val notificationIds: List<Long>? = null,
-    @field:Schema(description = "true 면 전체 읽음 (notificationIds 무시)")
-    val all: Boolean? = null,
+    @field:Schema(description = "true 면 전체 읽음 (notificationIds 무시). #755: all → readAll")
+    val readAll: Boolean? = null,
 )
 
 data class V2ReadNotificationsResponse(

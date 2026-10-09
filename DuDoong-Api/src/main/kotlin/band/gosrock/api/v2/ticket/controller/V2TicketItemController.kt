@@ -12,7 +12,13 @@ import band.gosrock.api.v2.ticket.usecase.V2ReadTicketItemsUseCase
 import band.gosrock.api.v2.ticket.usecase.V2ReplaceTicketItemOptionsUseCase
 import band.gosrock.api.v2.ticket.usecase.V2UpdateTicketItemUseCase
 import band.gosrock.common.annotation.CurrentUserId
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.parameters.RequestBody as SwaggerRequestBody
+import jakarta.validation.Validator
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
@@ -37,6 +43,8 @@ class V2TicketItemController(
     private val deleteTicketItemUseCase: V2DeleteTicketItemUseCase,
     private val changeTicketItemSellableUseCase: V2ChangeTicketItemSellableUseCase,
     private val replaceTicketItemOptionsUseCase: V2ReplaceTicketItemOptionsUseCase,
+    private val objectMapper: ObjectMapper,
+    private val validator: Validator,
 ) {
     @Operation(summary = "[T-1] 관리용 티켓 목록 (일반 멤버 이상). 재고 항상 공개, saleState·적용 옵션 포함")
     @GetMapping("/manage")
@@ -54,16 +62,18 @@ class V2TicketItemController(
     ): V2TicketItemManageResponse = createTicketItemUseCase.execute(userId, eventId, request)
 
     @Operation(
-        summary = "[T-3] 티켓 부분 수정 (매니저 이상). null = 변경 안 함, 무제한·제한 없음·등록 즉시·공연 시작까지·설명 없음은 clear 로. " +
-            "판매된 티켓은 설명·판매기간·재고공개·매수제한·수량 증가만 (Ticket_Item_400_14)",
+        summary = "[T-3] 티켓 부분 수정 (매니저 이상). 보내지 않은 필드는 그대로, 무제한·제한 없음·등록 즉시·공연 시작까지·설명 없음은 clear 로 " +
+            "(그 5개 필드에 명시적 null 은 Ticket_Item_400_15). payType 을 바꾸면 price 도 함께. 판매된 티켓은 설명·판매기간·재고공개·매수제한·수량 증가만 (Ticket_Item_400_14)",
     )
     @PatchMapping("/{ticketItemId}")
     fun updateTicketItem(
         @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @PathVariable ticketItemId: Long,
-        @RequestBody @Valid request: V2UpdateTicketItemRequest,
-    ): V2TicketItemManageResponse = updateTicketItemUseCase.execute(userId, eventId, ticketItemId, request)
+        @SwaggerRequestBody(content = [Content(mediaType = "application/json", schema = Schema(implementation = V2UpdateTicketItemRequest::class))])
+        @RequestBody body: JsonNode,
+    ): V2TicketItemManageResponse =
+        updateTicketItemUseCase.execute(userId, eventId, ticketItemId, V2UpdateTicketItemRequest.read(body, objectMapper, validator))
 
     @Operation(summary = "[T-4] 티켓 삭제 (매니저 이상). 재고 감소·승인 대기 주문이 없을 때만. 남은 티켓 목록 반환")
     @DeleteMapping("/{ticketItemId}")

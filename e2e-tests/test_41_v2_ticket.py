@@ -78,6 +78,11 @@ def _dudoong(**overrides):
     return body
 
 
+def _patch_body(body):
+    """T-3 부분 수정 본문: '값 없음' 필드의 None 은 보내지 않는다 (명시적 null 은 400, '값 없음'은 clear — #755)"""
+    return {k: v for k, v in body.items() if not (v is None and k in ("supplyCount", "purchaseLimit", "saleStartAt", "saleEndAt", "description"))}
+
+
 def _free(**overrides):
     body = _dudoong(payType="FREE", name="무료", price=0, account=None, approvalRequired=False)
     body.update(overrides)
@@ -309,7 +314,7 @@ def test_07b_pending_approve_lock(base_url, s):
     t = _tickets(base_url, s)[ticket_id]
     assert t["saleState"] == "BEFORE_SALE" and t["isSold"] is False and t["hasPendingOrders"] is True
     for body in [_dudoong(name="승인대기", price=7000), _dudoong(name="승인대기", account={**ACCOUNT, "accountNumber": "999"})]:
-        resp = requests.patch(_ticket_url(base_url, s, ticket_id), json=body, headers=_h(s, "manager"))
+        resp = requests.patch(_ticket_url(base_url, s, ticket_id), json=_patch_body(body), headers=_h(s, "manager"))
         assert_status(resp, 400)
         assert _code(resp) == "Ticket_Item_400_14"
     opt_url = f"{base_url}/v2/events/{s.event_id}/options/{option_id}"
@@ -338,10 +343,10 @@ def test_07b_pending_approve_lock(base_url, s):
 def test_08_sold_ticket_restrictions(base_url, s):
     url = _ticket_url(base_url, s, s.dudoong_id)
     for body in [_dudoong(name="이름변경"), _dudoong(price=7000), _dudoong(supplyCount=9), _dudoong(account={**ACCOUNT, "accountNumber": "999"}), _free()]:
-        resp = requests.patch(url, json=body, headers=_h(s, "manager"))
+        resp = requests.patch(url, json=_patch_body(body), headers=_h(s, "manager"))
         assert_status(resp, 400)
         assert _code(resp) == "Ticket_Item_400_14", resp.text[:300]
-    resp = requests.patch(url, json=_dudoong(description="설명변경", supplyCount=20, isQuantityPublic=False, purchaseLimit=2, saleEndAt=_f(START - timedelta(hours=1))), headers=_h(s, "manager"))
+    resp = requests.patch(url, json=_patch_body(_dudoong(description="설명변경", supplyCount=20, isQuantityPublic=False, purchaseLimit=2, saleEndAt=_f(START - timedelta(hours=1)))), headers=_h(s, "manager"))
     assert_status(resp, 200)
     data = get_data(resp)
     assert data["description"] == "설명변경" and data["supplyCount"] == 20 and data["remaining"] == 19 and data["soldCount"] == 1
@@ -401,7 +406,7 @@ def test_10_option_lock(base_url, s):
 
 def test_11_idor(base_url, s):
     # 다른 공연의 티켓·옵션 id 를 내 공연 경로로 → 404, 남의 공연 경로 → 403
-    resp = requests.patch(_ticket_url(base_url, s, s.other_ticket_id), json=_free(), headers=_h(s, "manager"))
+    resp = requests.patch(_ticket_url(base_url, s, s.other_ticket_id), json=_patch_body(_free()), headers=_h(s, "manager"))
     assert_status(resp, 404)
     assert_status(requests.delete(_ticket_url(base_url, s, s.other_ticket_id), headers=_h(s, "manager")), 404)
     assert_status(requests.post(_ticket_url(base_url, s, s.other_ticket_id, "/suspend"), headers=_h(s, "manager")), 404)

@@ -129,12 +129,14 @@ def test_03_ticket_patch_partial_and_clear(base_url, s):
     data = get_data(_patch(base_url, s, s.ticket_id, {"name": "일반석"}))
     assert data["name"] == "일반석" and data["supplyCount"] == 100 and data["purchaseLimit"] == 4
     assert data["saleEndAt"] == sale_end and data["description"] == "일반 입장" and data["account"] == ACCOUNT and data["price"] == 5000
-    # 명시적 null 도 변경 안 함
-    data = get_data(_patch(base_url, s, s.ticket_id, {"supplyCount": None, "purchaseLimit": None, "saleEndAt": None}))
-    assert data["supplyCount"] == 100 and data["purchaseLimit"] == 4 and data["saleEndAt"] == sale_end
+    # '값 없음' 필드의 명시적 null 은 400 + clear 안내 (예전 의미로 보낸 요청이 말없이 무시되지 않게)
+    for key in ("supplyCount", "purchaseLimit", "saleStartAt", "saleEndAt", "description"):
+        resp = _patch(base_url, s, s.ticket_id, {key: None})
+        assert resp.status_code == 400 and _code(resp) == "Ticket_Item_400_15" and "clear" in resp.json()["reason"], (key, resp.text)
+    assert _ticket(base_url, s, s.ticket_id)["supplyCount"] == 100
     # 지금처럼 전체 값을 보내도 같은 결과
     full = {"payType": "DUDOONG", "name": "일반석", "description": "일반 입장", "price": 5000, "supplyCount": 100, "account": ACCOUNT,
-            "approvalRequired": True, "isQuantityPublic": True, "purchaseLimit": 4, "saleStartAt": None, "saleEndAt": sale_end}
+            "approvalRequired": True, "isQuantityPublic": True, "purchaseLimit": 4, "saleEndAt": sale_end}
     assert get_data(_patch(base_url, s, s.ticket_id, full)) == data
     # '값 없음'은 clear
     data = get_data(_patch(base_url, s, s.ticket_id, {"clear": ["PURCHASE_LIMIT", "SALE_END_AT", "DESCRIPTION"]}))
@@ -239,6 +241,7 @@ def test_09_swagger(base_url, s):
     assert schemas["V2UpdateHostMemberRoleRequest"]["properties"]["role"]["enum"] == ["MASTER", "MANAGER", "GUEST"]
     assert set(schemas["V2TicketAccountResponse"]["properties"]) == {"bankName", "accountHolder", "accountNumber"}
     assert "clear" in schemas["V2UpdateTicketItemRequest"]["properties"]
+    assert set(schemas["V2ReadNotificationsRequest"]["properties"]) == {"notificationIds", "readAll"}
     assert "paymentChannel" in schemas["V2CreateOrderRequest"]["properties"] and "paymentMethod" not in schemas["V2CreateOrderRequest"]["properties"]
     excel = all_docs["paths"]["/api/v2/events/{eventId}/orders/export"]["get"]["responses"]["200"]["content"]
     assert list(excel) == ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]

@@ -175,7 +175,10 @@ class V2TicketItemDomainService(
     @RedissonLock(LockName = TICKET_LOCK, identifier = "ticketItemId")
     fun updateTicketItem(eventId: Long, ticketItemId: Long, patch: V2TicketItemPatch, now: LocalDateTime) {
         val item = queryTicketItem(eventId, ticketItemId)
-        applyUpdate(item, eventAdaptor.findById(eventId), mergedForm(item, patch), hasPendingOrders(ticketItemId), now)
+        val event = eventAdaptor.findById(eventId)
+        // 정산중·지난 공연 거부를 입력 검사(clear 충돌 등)보다 먼저 — 폼 수정 때와 같은 에러 우선순위
+        v2EventDomainService.validateEditable(event)
+        applyUpdate(item, event, mergedForm(item, patch), hasPendingOrders(ticketItemId), now)
         ticketItemAdaptor.save(item)
     }
 
@@ -193,10 +196,10 @@ class V2TicketItemDomainService(
             return value ?: current
         }
         return V2TicketItemForm(
-            payType = patch.payType ?: item.payType!!,
+            payType = patch.payType ?: checkNotNull(item.payType) { "티켓 ${item.id} 의 결제 방식(pay_type)이 비어 있음" },
             name = patch.name ?: item.name.orEmpty(),
             description = pick(V2TicketClearableField.DESCRIPTION, patch.description, item.description),
-            price = patch.price ?: item.price!!.longValue(),
+            price = patch.price ?: checkNotNull(item.price) { "티켓 ${item.id} 의 가격(amount)이 비어 있음" }.longValue(),
             supplyCount = pick(V2TicketClearableField.SUPPLY_COUNT, patch.supplyCount, item.supplyCount.takeUnless { item.isUnlimitedSupply() }),
             account = patch.account ?: item.accountInfo,
             approvalRequired = patch.approvalRequired ?: (item.type == TicketType.APPROVAL),

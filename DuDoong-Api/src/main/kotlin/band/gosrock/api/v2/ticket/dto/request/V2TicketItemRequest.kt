@@ -7,7 +7,15 @@ import band.gosrock.domain.domains.ticket_item.service.v2.V2TicketItemDomainServ
 import band.gosrock.domain.domains.ticket_item.service.v2.V2TicketClearableField
 import band.gosrock.domain.domains.ticket_item.service.v2.V2TicketItemForm
 import band.gosrock.domain.domains.ticket_item.service.v2.V2TicketItemPatch
+import band.gosrock.domain.domains.ticket_item.exception.TicketItemNullFieldException
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.validation.ConstraintViolationException
+import jakarta.validation.Validator
+import org.springframework.http.HttpStatus
+import org.springframework.web.server.ResponseStatusException
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
@@ -92,25 +100,26 @@ data class V2TicketItemRequest(
  * T-3 티켓 부분 수정 (#755). **null(키 없음) = 변경 안 함** — 다른 v2 PATCH 와 같다. 바꿀 필드만 보내도 되고, 지금처럼 전체 값을 보내도 결과가 같다.
  * '값 없음'(무제한·제한 없음·등록 즉시·공연 시작까지·설명 없음)으로 바꾸려면 [clear] 에 필드 이름을 넣는다 (null 을 보내는 것으로는 바뀌지 않음).
  * 판매된 티켓의 잠긴 필드 규칙(DEC-006·DEC-020)은 그대로: 종류·이름·가격·계좌·승인 여부는 현재 값과 같아야 하고 수량은 늘리기만.
+ * '값 없음'이 있는 5개 필드([CLEARABLE_KEYS])에 **명시적 null** 을 보내면 400 (Ticket_Item_400_15) — 예전 의미(null = 무제한·없음)로 보낸 요청이 말없이 무시되지 않게. 본문은 [read] 로 읽는다
  */
 data class V2UpdateTicketItemRequest(
-    @field:Schema(description = "결제 방식. DUDOONG / FREE (PRICE 는 400). null 이면 그대로", example = "DUDOONG")
+    @field:Schema(description = "결제 방식. DUDOONG / FREE (PRICE 는 400). null 이면 그대로. 바꿀 때는 price 도 함께 보낸다(FREE = 0, DUDOONG = 1 이상 — 빠지면 현재 가격으로 검사돼 400)", example = "DUDOONG")
     val payType: V2TicketPayType? = null,
 
     @field:Schema(description = "티켓 이름 (1~${V2TicketItemDomainService.NAME_MAX_LENGTH}자, 길이는 값이 바뀔 때만 검증). null 이면 그대로", example = "일반 티켓")
     @field:Size(max = RAW_TEXT_MAX)
     val name: String? = null,
 
-    @field:Schema(description = "티켓 설명 (~${V2TicketItemDomainService.DESCRIPTION_MAX_LENGTH}자). null 이면 그대로, 비우려면 clear 에 DESCRIPTION", example = "일반 입장 티켓")
+    @field:Schema(description = "티켓 설명 (~${V2TicketItemDomainService.DESCRIPTION_MAX_LENGTH}자). 보내지 않으면 그대로, 비우려면 clear 에 DESCRIPTION (명시적 null 은 400)", example = "일반 입장 티켓")
     @field:Size(max = RAW_TEXT_MAX)
     val description: String? = null,
 
-    @field:Schema(description = "가격(원). null 이면 그대로", example = "6000")
+    @field:Schema(description = "가격(원). null 이면 그대로. payType 을 바꾸면 함께 보낸다", example = "6000")
     @field:PositiveOrZero
     @field:Max(V2TicketItemDomainService.MAX_PRICE)
     val price: Long? = null,
 
-    @field:Schema(description = "판매 수량. null 이면 그대로, 무제한은 clear 에 SUPPLY_COUNT", example = "100")
+    @field:Schema(description = "판매 수량. 보내지 않으면 그대로, 무제한은 clear 에 SUPPLY_COUNT (명시적 null 은 400)", example = "100")
     @field:Min(1)
     @field:Max(V2TicketItemDomainService.MAX_SUPPLY_COUNT)
     val supplyCount: Long? = null,
@@ -125,16 +134,16 @@ data class V2UpdateTicketItemRequest(
     @field:Schema(description = "재고 공개 여부. null 이면 그대로 (무제한이면 true 불가)")
     val isQuantityPublic: Boolean? = null,
 
-    @field:Schema(description = "1인 구매 매수 제한. null 이면 그대로, 제한 없음은 clear 에 PURCHASE_LIMIT", example = "4")
+    @field:Schema(description = "1인 구매 매수 제한. 보내지 않으면 그대로, 제한 없음은 clear 에 PURCHASE_LIMIT (명시적 null 은 400)", example = "4")
     @field:Min(1)
     @field:Max(V2TicketItemDomainService.MAX_SUPPLY_COUNT)
     val purchaseLimit: Long? = null,
 
-    @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm", description = "판매 시작. null 이면 그대로, 등록 즉시는 clear 에 SALE_START_AT")
+    @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm", description = "판매 시작. 보내지 않으면 그대로, 등록 즉시는 clear 에 SALE_START_AT (명시적 null 은 400)")
     @field:DateFormat
     val saleStartAt: LocalDateTime? = null,
 
-    @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm", description = "판매 종료. null 이면 그대로, 공연 시작까지는 clear 에 SALE_END_AT")
+    @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm", description = "판매 종료. 보내지 않으면 그대로, 공연 시작까지는 clear 에 SALE_END_AT (명시적 null 은 400)")
     @field:DateFormat
     val saleEndAt: LocalDateTime? = null,
 
@@ -163,6 +172,26 @@ data class V2UpdateTicketItemRequest(
 
     companion object {
         private const val RAW_TEXT_MAX = 255
+
+        /** '값 없음'이 있는 필드 — 명시적 null 을 받지 않는다 (clear 를 쓴다) */
+        val CLEARABLE_KEYS = setOf("supplyCount", "purchaseLimit", "saleStartAt", "saleEndAt", "description")
+
+        /**
+         * T-3 본문 읽기. 키가 없는 것과 명시적 null 을 구분해야 해서 트리로 받는다: [CLEARABLE_KEYS] 에 null 이면 Ticket_Item_400_15,
+         * 그 밖에는 DTO 로 바꿔 `@Valid` 와 같은 검증(실패하면 400 BAD_REQUEST, 형식 오류도 400)을 한다
+         */
+        fun read(body: JsonNode, objectMapper: ObjectMapper, validator: Validator): V2UpdateTicketItemRequest {
+            if (!body.isObject) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "본문은 객체여야 합니다")
+            if (CLEARABLE_KEYS.any { body.has(it) && body[it].isNull }) throw TicketItemNullFieldException.EXCEPTION
+            val request = try {
+                objectMapper.treeToValue(body, V2UpdateTicketItemRequest::class.java)
+            } catch (e: JsonProcessingException) {
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "요청 형식이 올바르지 않습니다: ${e.originalMessage}", e)
+            }
+            val violations = validator.validate(request)
+            if (violations.isNotEmpty()) throw ConstraintViolationException(violations)
+            return request
+        }
     }
 }
 

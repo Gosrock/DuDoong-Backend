@@ -225,14 +225,33 @@ class V2TicketItemControllerTest : V2TicketApiTestSupport() {
                 jsonPath("$.data.account.bankName") { value("신한은행") }
                 jsonPath("$.data.isQuantityPublic") { value(true) }
             }
-            // 명시적 null 도 '변경 안 함'
-            patchTicket(team.manager, team.eventId, id, mapOf("supplyCount" to null, "purchaseLimit" to null, "saleEndAt" to null, "description" to null)).andExpect {
-                status { isOk() }
-                jsonPath("$.data.supplyCount") { value(100) }
-                jsonPath("$.data.purchaseLimit") { value(4) }
-                jsonPath("$.data.saleEndAt") { value(saleEnd.f()) }
-                jsonPath("$.data.description") { value("일반 입장") }
+            // '값 없음'이 있는 필드에 명시적 null 은 400 — 예전 의미(무제한·없음)로 보낸 요청이 말없이 무시되지 않게, clear 를 안내
+            for (key in listOf("supplyCount", "purchaseLimit", "saleStartAt", "saleEndAt", "description")) {
+                patchTicketRaw(team.manager, team.eventId, id, mapOf(key to null)).andExpect {
+                    status { isBadRequest() }
+                    jsonPath("$.code") { value("Ticket_Item_400_15") }
+                    jsonPath("$.reason") { value(org.hamcrest.Matchers.containsString("clear")) }
+                }
             }
+            // 나머지 필드의 null 은 '변경 안 함'
+            patchTicketRaw(team.manager, team.eventId, id, mapOf("name" to null, "price" to null, "account" to null, "isQuantityPublic" to null)).andExpect {
+                status { isOk() }
+                jsonPath("$.data.name") { value("새 이름") }
+                jsonPath("$.data.price") { value(6000) }
+                jsonPath("$.data.account.bankName") { value("신한은행") }
+            }
+            val item = ticketItemRepository.findById(id).get()
+            assertEquals(100L, item.supplyCount)
+            assertEquals(4L, item.purchaseLimit)
+            assertEquals(saleEnd, item.saleEndAt)
+            // 본문이 객체가 아니거나 형식이 틀리면 400
+            mockMvc.patch("/api/v2/events/${team.eventId}/ticket-items/$id") {
+                with(auth(team.manager))
+                contentType = MediaType.APPLICATION_JSON
+                content = "[1]"
+            }.andExpect { status { isBadRequest() } }
+            patchTicketRaw(team.manager, team.eventId, id, mapOf("supplyCount" to "많이")).andExpect { status { isBadRequest() } }
+            patchTicketRaw(team.manager, team.eventId, id, mapOf("supplyCount" to 0)).andExpect { status { isBadRequest() } }
             // 빈 본문도 그대로
             patchTicket(team.manager, team.eventId, id, emptyMap()).andExpect { status { isOk() }; jsonPath("$.data.name") { value("새 이름") } }
         }
@@ -275,6 +294,87 @@ class V2TicketItemControllerTest : V2TicketApiTestSupport() {
             }
             patchTicket(team.manager, team.eventId, id, mapOf("clear" to listOf("NAME"))).andExpect { status { isBadRequest() } }
             patchTicket(team.manager, team.eventId, id, mapOf("supplyCount" to 50)).andExpect { jsonPath("$.data.supplyCount") { value(50) } }
+        }
+
+        @Test
+        fun `판매된 티켓에 clear SUPPLY_COUNT (#755) - 무제한으로 늘리기는 허용, 판매분은 유지`() {
+            val team = Team()
+            val id = createTicket(team.manager, team.eventId, freeBody(supplyCount = 10))
+            setEventStatus(team.eventId, EventStatus.OPEN)
+            v1Buy(newUser("구매자"), team.master, team.eventId, id, quantity = 2, approval = false)
+            patchTicket(team.manager, team.eventId, id, mapOf("isQuantityPublic" to false, "clear" to listOf("SUPPLY_COUNT"))).andExpect {
+                status { isOk() }
+                jsonPath("$.data.supplyCount") { value(null as Any?) }
+                jsonPath("$.data.remaining") { value(null as Any?) }
+                jsonPath("$.data.soldCount") { value(2) }
+                jsonPath("$.data.saleState") { value("SOLD") }
+            }
+            val item = ticketItemRepository.findById(id).get()
+            assertEquals(TicketItem.UNLIMITED_SUPPLY_COUNT, item.supplyCount)
+            assertEquals(TicketItem.UNLIMITED_SUPPLY_COUNT - 2, item.quantity)
+        }
+
+        @Test
+        fun `결제 방식 변경 (#755) - 판매 전 DUDOONG 을 payType FREE·price 0 으로 바꾸면 계좌가 지워지고, FREE 를 DUDOONG 으로 바꿀 때 계좌가 없으면 400`() {
+            val team = Team()
+            val dudoong = createTicket(team.manager, team.eventId, dudoongBody(supplyCount = 10))
+            patchTicket(team.manager, team.eventId, dudoong, mapOf("payType" to "FREE", "price" to 0)).andExpect {
+                status { isOk() }
+                jsonPath("$.data.payType") { value("FREE") }
+                jsonPath("$.data.price") { value(0) }
+                jsonPath("$.data.account") { value(null as Any?) }
+            }
+            assertEquals(null, ticketItemRepository.findById(dudoong).get().accountInfo?.bankName)
+            // price 를 같이 보내지 않으면 현재 가격(6000)으로 검사돼 400
+            val other = createTicket(team.manager, team.eventId, dudoongBody(name = "다른", supplyCount = 10))
+            patchTicket(team.manager, team.eventId, other, mapOf("payType" to "FREE")).andExpect {
+                status { isBadRequest() }
+                jsonPath("$.code") { value("Ticket_Item_400_3") }
+            }
+            val free = createTicket(team.manager, team.eventId, freeBody(name = "무료2", supplyCount = 10))
+            patchTicket(team.manager, team.eventId, free, mapOf("payType" to "DUDOONG", "price" to 6000)).andExpect {
+                status { isBadRequest() }
+                jsonPath("$.code") { value("Ticket_Item_400_8") }
+            }
+            patchTicket(team.manager, team.eventId, free, mapOf("payType" to "DUDOONG", "price" to 6000, "account" to account)).andExpect {
+                status { isOk() }
+                jsonPath("$.data.payType") { value("DUDOONG") }
+                jsonPath("$.data.approvalRequired") { value(true) }
+                jsonPath("$.data.account.accountNumber") { value("110-123-456789") }
+            }
+        }
+
+        @Test
+        fun `승인 대기 주문만 있어 잠긴 티켓도 부분 수정 (#755) - 허용 필드는 통과, 가격·수량 감소는 400`() {
+            val team = Team()
+            val id = createTicket(team.manager, team.eventId, dudoongBody(supplyCount = 10))
+            setEventStatus(team.eventId, EventStatus.OPEN)
+            v1Order(newUser("대기"), team.eventId, id)
+            manageItem(team.guest, team.eventId, id).let {
+                assertEquals("BEFORE_SALE", it.at("/saleState").asText())
+                assertTrue(it.at("/hasPendingOrders").asBoolean())
+            }
+            patchTicket(team.manager, team.eventId, id, mapOf("description" to "대기 중 설명", "supplyCount" to 12, "purchaseLimit" to 2)).andExpect {
+                status { isOk() }
+                jsonPath("$.data.description") { value("대기 중 설명") }
+                jsonPath("$.data.supplyCount") { value(12) }
+                jsonPath("$.data.purchaseLimit") { value(2) }
+            }
+            listOf(mapOf("price" to 7000), mapOf("supplyCount" to 9), mapOf("name" to "바꿈"), mapOf("account" to account + ("accountNumber" to "999"))).forEach { body ->
+                patchTicket(team.manager, team.eventId, id, body).andExpect {
+                    status { isBadRequest() }
+                    jsonPath("$.code") { value("Ticket_Item_400_14") }
+                }
+            }
+        }
+
+        @Test
+        fun `정산중·지난 공연은 입력 오류보다 먼저 공연 상태 오류 (#755, 폼 수정과 같은 우선순위)`() {
+            val team = Team()
+            val id = createTicket(team.manager, team.eventId, dudoongBody(supplyCount = 10))
+            setEventStatus(team.eventId, EventStatus.CALCULATING)
+            val formError = patchTicket(team.manager, team.eventId, id, mapOf("supplyCount" to 5, "clear" to listOf("SUPPLY_COUNT"))).andExpect { status { isBadRequest() } }.body().at("/code").asText()
+            assertTrue(formError.startsWith("Event_"), "공연 상태 오류가 먼저: $formError")
         }
 
         @Test

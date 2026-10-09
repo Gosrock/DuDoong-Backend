@@ -1141,7 +1141,7 @@ class V2TicketGiftControllerTest : V2GiftTestSupport() {
             assertEquals(listOf(orderUuid), bar.at("/orderUuids").map { it.asText() })
             myTickets(buyer)
             assertTrue(newApproved(buyer).at("/hasNew").asBoolean())
-            v2Post(buyer, "/me/notifications/read", mapOf("all" to true)).andExpect { status { isOk() } }
+            v2Post(buyer, "/me/notifications/read", mapOf("readAll" to true)).andExpect { status { isOk() } }
             assertFalse(newApproved(buyer).at("/hasNew").asBoolean())
         }
 
