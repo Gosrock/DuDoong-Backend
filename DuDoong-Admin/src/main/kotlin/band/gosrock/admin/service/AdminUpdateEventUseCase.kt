@@ -3,6 +3,7 @@ package band.gosrock.admin.service
 import band.gosrock.admin.model.dto.request.AdminUpdateEventRequest
 import band.gosrock.admin.model.dto.response.AdminEventResponse
 import band.gosrock.common.annotation.UseCase
+import band.gosrock.common.helper.HtmlSanitizer
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.event.repository.EventRepository
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor
@@ -25,7 +26,7 @@ class AdminUpdateEventUseCase(
             name = request.name,
             startAt = request.startAt,
             runTime = request.runTime?.toLong(),
-            content = request.content,
+            content = request.content?.let(HtmlSanitizer::sanitizeV1EventContent),
             placeName = request.placeName,
             placeAddress = request.placeAddress,
         )

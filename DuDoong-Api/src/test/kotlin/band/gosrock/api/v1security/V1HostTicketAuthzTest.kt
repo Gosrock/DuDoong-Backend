@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.http.MediaType
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.web.servlet.ResultActionsDsl
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
@@ -129,11 +130,11 @@ class V1HostTicketAuthzTest : V2TicketApiTestSupport() {
         }
 
         @Test
-        fun `매니저와 마스터에게는 slackUrl 이 내려간다`() {
+        fun `매니저, 마스터, 멤버가 아닌 SUPER_ADMIN 에게는 slackUrl 이 내려간다`() {
             val team = Team()
             setSlackUrl(team.hostId, "https://hooks.slack.com/services/v1-761")
 
-            listOf(team.manager, team.master).forEach {
+            listOf(team.manager, team.master, superAdmin()).forEach {
                 getHost(it, team.hostId).andExpect {
                     status { isOk() }
                     jsonPath("$.data.slackUrl") { value("https://hooks.slack.com/services/v1-761") }
@@ -195,6 +196,24 @@ class V1HostTicketAuthzTest : V2TicketApiTestSupport() {
             val invitee = newUser()
             invite(team.master, team.hostId, invitee.profile!!.email!!, "MANAGER").andExpect { status { isOk() } }
             assertEquals(HostRole.MANAGER, hostRepository.findById(team.hostId).get().getHostUserByUserId(invitee.id!!).role)
+        }
+
+        @Test
+        fun `초대 대기 멤버의 역할은 바꿀 수 없다 (v2 와 같이 활성 멤버만)`() {
+            val team = Team()
+            val pending = newUser("초대대기")
+            addPendingMember(team.hostId, pending, HostRole.GUEST)
+
+            changeRole(team.master, team.hostId, pending.id!!, "MANAGER").expectCode(404, "HOST_404_2")
+            assertEquals(HostRole.GUEST, hostRepository.findById(team.hostId).get().getHostUserByUserId(pending.id!!).role)
+        }
+
+        @Test
+        fun `멤버가 아닌 SUPER_ADMIN 도 v2 처럼 GUEST 로만 초대할 수 있다`() {
+            val team = Team()
+            val admin = superAdmin()
+            invite(admin, team.hostId, newUser().profile!!.email!!, "MANAGER").expectCode(400, "HOST_400_11")
+            invite(admin, team.hostId, newUser().profile!!.email!!, "GUEST").andExpect { status { isOk() } }
         }
 
         @Test
@@ -268,7 +287,16 @@ class V1HostTicketAuthzTest : V2TicketApiTestSupport() {
             val team = Team()
             createTicket(team.master, team.eventId)
 
-            mockMvc.get("/api/v1/events/${team.eventId}/ticketItems").expectCode(404, "Event_404_1")
+            val pending = newUser("초대대기")
+            addPendingMember(team.hostId, pending, HostRole.GUEST)
+            val url = "/api/v1/events/${team.eventId}/ticketItems"
+
+            // 준비중: 비로그인·비멤버·초대 대기는 404, 활성 멤버는 미리보기 (계좌는 여전히 없음)
+            mockMvc.get(url).expectCode(404, "Event_404_1")
+            listOf(team.outsider, pending).forEach { mockMvc.get(url) { with(auth(it)) }.expectCode(404, "Event_404_1") }
+            val preview = mockMvc.get(url) { with(auth(team.guest)) }.andExpect { status { isOk() } }.data().at("/ticketItems")
+            assertEquals(1, preview.size())
+            assertTrue(preview[0].at("/accountInfo").isNull, "미리보기에 계좌 노출: ${preview[0]}")
 
             setEventStatus(team.eventId, EventStatus.OPEN)
             val items = mockMvc.get("/api/v1/events/${team.eventId}/ticketItems").andExpect { status { isOk() } }.data().at("/ticketItems")
@@ -342,6 +370,20 @@ class V1HostTicketAuthzTest : V2TicketApiTestSupport() {
             listOf("<h2>공지</h2>", "<span style=\"color: #ff0000\">빨강</span>", "<del>취소</del>", "<hr>", "src=\"https://cdn.example.com/a.png\"", "덮기").forEach {
                 assertTrue(saved.contains(it), "서식 손실($it): $saved")
             }
+        }
+
+        @Test
+        fun `운영 어드민의 공연 수정 본문도 같은 기준으로 sanitize 된다`() {
+            val team = Team()
+            mockMvc.patch("/internal-api/v1/events/${team.eventId}") {
+                with(user(superAdmin().id.toString()).roles("SUPER_ADMIN"))
+                contentType = MediaType.APPLICATION_JSON
+                content = json(mapOf("content" to "<p>어드민<script>alert(1)</script><span style=\"color: #00ff00\">초록</span></p>"))
+            }.andExpect { status { isOk() } }
+
+            val saved = eventRepository.findById(team.eventId).get().eventDetail!!.content!!
+            assertFalse(saved.contains("<script") || saved.contains("alert(1)"), "어드민 경로 sanitize 누락: $saved")
+            assertTrue(saved.contains("<span style=\"color: #00ff00\">초록</span>"), "어드민 경로 서식 손실: $saved")
         }
 
         @Test

@@ -23,7 +23,6 @@ class UpdateHostUserRoleUseCase(
         val host = hostAdaptor.findById(hostId)
         val updateUserId = updateHostUserRoleRequest.userId
         val updateUserRole = updateHostUserRoleRequest.role
-        hostService.validateCanAssignRole(host, userId, updateUserRole)
 
         return hostMapper.toHostDetailResponse(
             hostService.updateHostUserRole(host, updateUserId, updateUserRole),

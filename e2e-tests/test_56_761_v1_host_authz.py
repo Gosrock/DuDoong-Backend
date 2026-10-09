@@ -160,6 +160,11 @@ def test_03_host_detail_manager_sees_slack(base_url, s):
     for who in ("manager", "master"):
         data = get_data(requests.get(_v1(base_url, f"/hosts/{s.host_id}"), headers=_h(s, who)))
         assert data["slackUrl"] == SLACK, who
+    # 멤버가 아닌 SUPER_ADMIN 도 볼 수 있다 (역할은 토큰에 들어가므로 승격 후 다시 로그인)
+    with DB.account_role(s.user_ids["outsider"], "SUPER_ADMIN"):
+        token, _ = _login(base_url, s.emails["outsider"], "761outsider")
+        data = get_data(requests.get(_v1(base_url, f"/hosts/{s.host_id}"), headers={"Authorization": f"Bearer {token}"}))
+        assert data["slackUrl"] == SLACK
 
 
 # ===== H-2 =====
@@ -203,6 +208,8 @@ def test_07_role_change_master_only(base_url, s):
     assert [m["role"] for m in data["hostUsers"] if m["userId"] == guest_id] == ["매니저"]
     # 되돌리기
     assert_status(requests.patch(url, json={"userId": guest_id, "role": "GUEST"}, headers=_h(s, "master")), 200)
+    # 초대 대기 멤버의 역할은 바꿀 수 없다 (v2 와 같이 활성 멤버만)
+    _assert_error(requests.patch(url, json={"userId": s.user_ids["pending"], "role": "MANAGER"}, headers=_h(s, "master")), 404, "HOST_404_2")
 
 
 # ===== H-3 =====
@@ -234,8 +241,14 @@ def test_08_v1_ticket_writes_need_manager(base_url, s):
 # ===== M-1 =====
 
 def test_09_public_ticket_items(base_url, s):
-    # 준비중 공연은 404
-    _assert_error(requests.get(_v1(base_url, f"/events/{s.events['prep']}/ticketItems")), 404, "Event_404_1")
+    # 준비중 공연: 비로그인·비멤버·초대 대기는 404, 활성 멤버는 미리보기 (계좌 없음)
+    prep_url = _v1(base_url, f"/events/{s.events['prep']}/ticketItems")
+    _assert_error(requests.get(prep_url), 404, "Event_404_1")
+    for who in ("outsider", "pending"):
+        _assert_error(requests.get(prep_url, headers=_h(s, who)), 404, "Event_404_1")
+    resp = requests.get(prep_url, headers=_h(s, "guest"))
+    assert_status(resp, 200)
+    assert ACCOUNT["number"] not in resp.text
     # 공개 공연: 비로그인 조회 가능, 계좌 없음
     resp = requests.get(_v1(base_url, f"/events/{s.events['open']}/ticketItems"))
     assert_status(resp, 200)

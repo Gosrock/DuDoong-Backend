@@ -970,7 +970,7 @@ class V2EventControllerTest {
         mockMvc.patch("/api/v1/events/$eventId/details") {
             with(auth(requester))
             contentType = MediaType.APPLICATION_JSON
-            content = json(mapOf("posterImageKey" to "v1/poster.png", "content" to detailContent))
+            content = json(mapOf("posterImageKey" to posterKey(eventId), "content" to detailContent))
         }
 
     @Nested

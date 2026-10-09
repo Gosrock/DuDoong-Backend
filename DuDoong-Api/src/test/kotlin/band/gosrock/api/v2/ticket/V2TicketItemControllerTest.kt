@@ -375,7 +375,8 @@ class V2TicketItemControllerTest : V2TicketApiTestSupport() {
                 jsonPath("$.data.ticketItems[0].payType") { value("두둥티켓") }
                 jsonPath("$.data.ticketItems[0].approveType") { value("승인") }
                 jsonPath("$.data.ticketItems[0].supplyCount") { value(5) }
-                jsonPath("$.data.ticketItems[0].accountInfo.bankName") { value("신한은행") }
+                // 공개 목록에는 계좌가 없다 (#761). 계좌는 호스트용 /ticketItems/admin 에만
+                jsonPath("$.data.ticketItems[0].accountInfo") { value(null as Any?) }
                 jsonPath("$.data.ticketItems[1].payType") { value("무료티켓") }
                 jsonPath("$.data.ticketItems[1].approveType") { value("선착순") }
                 jsonPath("$.data.ticketItems[0].isUnlimitedSupply") { value(false) }
@@ -542,7 +543,8 @@ class V2TicketItemControllerTest : V2TicketApiTestSupport() {
             val suspended = createTicket(team.manager, team.eventId, freeBody(name = "중단"))
             val notStarted = createTicket(team.manager, team.eventId, freeBody(name = "판매전", overrides = mapOf("saleStartAt" to LocalDateTime.now().plusDays(1).f())))
             suspend(team.manager, team.eventId, suspended).andExpect { status { isOk() } }
-            mockMvc.get("/api/v1/events/${team.eventId}/ticketItems").andExpect {
+            // 준비중 공연이라 활성 멤버로 미리보기 (#761)
+            mockMvc.get("/api/v1/events/${team.eventId}/ticketItems") { with(auth(team.guest)) }.andExpect {
                 jsonPath("$.data.ticketItems.length()") { value(1) }
                 jsonPath("$.data.ticketItems[0].ticketItemId") { value(onSale) }
             }

@@ -9,8 +9,6 @@ import band.gosrock.api.ticketItem.dto.response.TicketItemResponse
 import band.gosrock.common.annotation.Mapper
 import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
-import band.gosrock.domain.domains.event.exception.EventNotFoundException
-import band.gosrock.domain.domains.event.service.v2.V2EventBrowseDomainService
 import band.gosrock.domain.domains.ticket_item.adaptor.TicketItemAdaptor
 import band.gosrock.domain.domains.ticket_item.domain.TicketItem
 import java.time.LocalDateTime
@@ -43,8 +41,6 @@ class TicketItemMapper(
     @Transactional(readOnly = true)
     fun toGetEventTicketItemsResponse(eventId: Long, isAdmin: Boolean): GetEventTicketItemsResponse {
         val event = eventAdaptor.findById(eventId)
-        // 공개 목록은 공개 공연만. 준비중 공연은 존재를 드러내지 않는다 (v2 공개 공연 기준과 같음)
-        if (!isAdmin && event.status !in V2EventBrowseDomainService.PUBLIC_STATUSES) throw EventNotFoundException.EXCEPTION
         val now = LocalDateTime.now()
         // 공개 목록에는 판매 중(판매 중단 아님 + 판매 기간 안)인 티켓만. 어드민 목록은 전부
         val ticketItems = ticketItemAdaptor.findAllByEventId(event.id!!)

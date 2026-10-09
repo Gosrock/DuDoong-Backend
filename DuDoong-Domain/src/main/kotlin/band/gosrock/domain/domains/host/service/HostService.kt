@@ -7,9 +7,7 @@ import band.gosrock.domain.domains.host.domain.Host
 import band.gosrock.domain.domains.host.domain.HostProfile
 import band.gosrock.domain.domains.host.domain.HostRole
 import band.gosrock.domain.domains.host.domain.HostUser
-import band.gosrock.domain.domains.host.exception.CannotAssignMasterRoleException
 import band.gosrock.domain.domains.host.exception.InvalidSlackUrlException
-import band.gosrock.domain.domains.host.exception.ManagerCanManageGuestOnlyException
 import band.gosrock.domain.domains.host.repository.HostRepository
 import org.apache.commons.codec.binary.StringUtils
 import org.springframework.transaction.annotation.Transactional
@@ -33,8 +31,9 @@ open class HostService(
         return hostRepository.save(host)
     }
 
+    /** 활성 멤버의 역할 변경 (v2 와 같은 규칙, [Host.changeActiveHostUserRole]) */
     open fun updateHostUserRole(host: Host, userId: Long, role: HostRole): Host {
-        host.setHostUserRole(userId, role)
+        host.changeActiveHostUserRole(userId, role)
         return hostRepository.save(host)
     }
 
@@ -56,17 +55,6 @@ open class HostService(
     open fun removeHostUser(host: Host, userId: Long): Host {
         host.removeHostUser(userId)
         return hostRepository.save(host)
-    }
-
-    /**
-     * v1 멤버 초대·역할 변경에서 지정할 수 있는 역할인지 검증합니다 (v2 와 같은 규칙).
-     * MASTER 는 지정할 수 없고(양도 API 사용), GUEST 가 아닌 역할은 마스터만 지정할 수 있습니다.
-     */
-    fun validateCanAssignRole(host: Host, requesterUserId: Long, role: HostRole) {
-        if (role == HostRole.MASTER) throw CannotAssignMasterRoleException.EXCEPTION
-        if (role != HostRole.GUEST && host.masterUserId != requesterUserId) {
-            throw ManagerCanManageGuestOnlyException.EXCEPTION
-        }
     }
 
     fun validateDuplicatedSlackUrl(host: Host, url: String) {

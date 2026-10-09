@@ -13,6 +13,7 @@ import band.gosrock.domain.domains.host.domain.HostRole
 import band.gosrock.domain.domains.host.domain.HostUser
 import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
+import band.gosrock.domain.domains.user.domain.AccountRole
 import org.springframework.transaction.annotation.Transactional
 
 @Mapper
@@ -66,7 +67,7 @@ class HostMapper(
             InviteUserResponse.from(inviteUser)
         }
 
-    /** viewerUserId 가 매니저 이상(활성)일 때만 slackUrl 을 담는다 */
+    /** viewerUserId 가 활성 매니저 이상이거나 SUPER_ADMIN 일 때만 slackUrl 을 담는다 (v2 민감 정보 노출 기준과 같음) */
     fun toHostDetailResponse(hostId: Long, viewerUserId: Long): HostDetailResponse {
         val host = hostAdaptor.findById(hostId)
         return toHostDetailResponse(host, viewerUserId)
@@ -78,7 +79,12 @@ class HostMapper(
         val members = userIds.mapNotNull { userId ->
             userMap[userId]?.let { HostMemberResponse.of(it, host.getHostUserByUserId(userId)) }
         }
+        return HostDetailResponse.of(host, members, showSlackUrl = canViewSlackUrl(host, viewerUserId))
+    }
+
+    private fun canViewSlackUrl(host: Host, viewerUserId: Long): Boolean {
         val viewerRole = host.getActiveRoleOf(viewerUserId)
-        return HostDetailResponse.of(host, members, showSlackUrl = viewerRole == HostRole.MASTER || viewerRole == HostRole.MANAGER)
+        if (viewerRole == HostRole.MASTER || viewerRole == HostRole.MANAGER) return true
+        return userAdaptor.queryUser(viewerUserId).accountRole == AccountRole.SUPER_ADMIN
     }
 }
