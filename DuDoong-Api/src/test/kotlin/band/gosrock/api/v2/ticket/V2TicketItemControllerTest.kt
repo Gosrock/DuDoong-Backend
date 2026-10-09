@@ -251,7 +251,15 @@ class V2TicketItemControllerTest : V2TicketApiTestSupport() {
                 content = "[1]"
             }.andExpect { status { isBadRequest() } }
             patchTicketRaw(team.manager, team.eventId, id, mapOf("supplyCount" to "많이")).andExpect { status { isBadRequest() } }
-            patchTicketRaw(team.manager, team.eventId, id, mapOf("supplyCount" to 0)).andExpect { status { isBadRequest() } }
+            // 요청 검증(@Min·@Size 등)은 @Valid 때와 같이 BAD_REQUEST
+            patchTicketRaw(team.manager, team.eventId, id, mapOf("supplyCount" to 0)).andExpect {
+                status { isBadRequest() }
+                jsonPath("$.code") { value("BAD_REQUEST") }
+            }
+            patchTicketRaw(team.manager, team.eventId, id, mapOf("name" to "가".repeat(256))).andExpect {
+                status { isBadRequest() }
+                jsonPath("$.code") { value("BAD_REQUEST") }
+            }
             // 빈 본문도 그대로
             patchTicket(team.manager, team.eventId, id, emptyMap()).andExpect { status { isOk() }; jsonPath("$.data.name") { value("새 이름") } }
         }
