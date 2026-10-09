@@ -68,7 +68,7 @@ class ReadOrderUseCase(
 
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
     fun getEventOrderDetail(userId: Long, eventId: Long, orderUuid: String): OrderResponse {
-        val order = orderAdaptor.findByOrderUuid(orderUuid)
+        val order = orderAdaptor.findEventOrder(eventId, orderUuid)
         return orderMapper.toOrderResponse(order)
     }
 

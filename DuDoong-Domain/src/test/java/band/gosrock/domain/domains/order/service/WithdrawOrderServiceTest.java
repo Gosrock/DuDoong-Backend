@@ -2,6 +2,7 @@ package band.gosrock.domain.domains.order.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
 
@@ -44,6 +45,7 @@ class WithdrawOrderServiceTest {
                 Order.forTest(userId, null, List.of(orderLineItem), OrderStatus.CONFIRM, OrderMethod.PAYMENT, null);
         order.addUUID();
         given(orderAdaptor.findByOrderUuid(any())).willReturn(order);
+        given(orderAdaptor.findEventOrder(anyLong(), any())).willReturn(order);
         given(orderLineItem.getTotalOrderLinePrice()).willReturn(Money.ZERO);
         willDoNothing().given(orderValidator).validAvailableRefundDate(any());
     }
@@ -54,7 +56,7 @@ class WithdrawOrderServiceTest {
         AtomicLong successCount = new AtomicLong();
         // when
         CunCurrencyExecutorService.execute(
-                () -> withdrawOrderService.cancelOrder(order.getUuid()), successCount);
+                () -> withdrawOrderService.cancelOrder(1L, order.getUuid()), successCount);
 
         assertThat(successCount.get()).isGreaterThanOrEqualTo(1);
     }

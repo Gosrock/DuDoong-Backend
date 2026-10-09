@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import org.mockito.ArgumentMatchers.anyLong
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
@@ -102,7 +104,7 @@ class V2OrderDomainServiceTest {
             assertThrows<OrderNotFoundException> { service.queryEventOrder(1L, "u") }
             assertThrows<OrderNotFoundException> { service.approve(1L, "u") }
             assertThrows<OrderNotFoundException> { service.cancel(1L, "u", null) }
-            verify(orderApproveService, never()).execute("u")
+            verify(orderApproveService, never()).execute(anyLong(), anyString())
             assertEquals(OrderStatus.PENDING_APPROVE, orderAdaptor.findByOrderUuid("u").orderStatus)
             // 없는 주문도 404
             assertThrows<OrderNotFoundException> { service.approve(1L, "none") }
@@ -115,7 +117,7 @@ class V2OrderDomainServiceTest {
             `when`(v2OrderQuery.findEventId("u")).thenReturn(1L)
             assertSame(o, service.queryEventOrder(1L, "u"))
             service.approve(1L, "u")
-            verify(orderApproveService).execute("u")
+            verify(orderApproveService).execute(1L, "u")
             // 취소: 같은 공연 주문의 v2 전이, 사유 trim, 0원이면 환불 요청 없음 / 유료면 환불 요청
             for ((price, requested) in listOf(Money.ZERO to false, Money.wons(1000) to true)) {
                 val target = mock(Order::class.java)

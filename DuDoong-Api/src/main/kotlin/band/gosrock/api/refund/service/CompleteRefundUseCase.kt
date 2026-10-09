@@ -23,7 +23,7 @@ class CompleteRefundUseCase(
     @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID, applyTransaction = false)
     fun execute(userId: Long, eventId: Long, orderUuid: String): RefundResponse {
         log.info("[CompleteRefundUseCase][execute] 환불 완료 처리 userId={} eventId={} orderUuid={}", userId, eventId, orderUuid)
-        val order = orderAdaptor.findByOrderUuid(orderUuid)
+        val order = orderAdaptor.findEventOrder(eventId, orderUuid)
         order.completeRefund()
 
         val userName = order.userId?.let {

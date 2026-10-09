@@ -46,7 +46,7 @@ class CompleteRefundUseCaseTest {
             cancelReason = "단순 변심",
             refundStatus = RefundStatus.REFUND_REQUESTED,
         )
-        given(orderAdaptor.findByOrderUuid("test-uuid")).willReturn(order)
+        given(orderAdaptor.findEventOrder(100L, "test-uuid")).willReturn(order)
 
         // when
         val response = completeRefundUseCase.execute(1L, 100L, "test-uuid")

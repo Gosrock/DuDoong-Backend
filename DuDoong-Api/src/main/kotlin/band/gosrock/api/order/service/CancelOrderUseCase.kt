@@ -19,7 +19,7 @@ class CancelOrderUseCase(
     @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID, applyTransaction = false)
     fun execute(userId: Long, eventId: Long, orderUuid: String, reason: String? = null): OrderResponse {
         log.info("[CancelOrderUseCase][execute] 주문 취소 userId={} eventId={} orderUuid={} reason={}", userId, eventId, orderUuid, reason)
-        withdrawOrderService.cancelOrder(orderUuid, reason)
+        withdrawOrderService.cancelOrder(eventId, orderUuid, reason)
         return orderMapper.toOrderResponse(orderUuid)
     }
 }

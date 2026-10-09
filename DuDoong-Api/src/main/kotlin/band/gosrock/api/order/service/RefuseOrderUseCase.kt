@@ -19,7 +19,7 @@ class RefuseOrderUseCase(
     @HostRolesAllowed(role = MANAGER, findHostFrom = EVENT_ID, applyTransaction = false)
     fun execute(userId: Long, eventId: Long, orderUuid: String, reason: String? = null): OrderResponse {
         log.info("[RefuseOrderUseCase][execute] 주문 거부 userId={} eventId={} orderUuid={} reason={}", userId, eventId, orderUuid, reason)
-        withdrawOrderService.refuseOrder(orderUuid, reason)
+        withdrawOrderService.refuseOrder(eventId, orderUuid, reason)
         return orderMapper.toOrderResponse(orderUuid)
     }
 }
