@@ -20,10 +20,11 @@ class JwtOIDCProvider {
     private val log = LoggerFactory.getLogger(JwtOIDCProvider::class.java)
     private val KID = "kid"
 
-    fun getKidFromUnsignedTokenHeader(token: String, iss: String, aud: String): String {
+    fun getKidFromUnsignedTokenHeader(token: String): String {
         val unsignedToken = getUnsignedToken(token)
         val splitToken = unsignedToken.split(".")
-        val headerJson = String(Base64.getUrlDecoder().decode(splitToken[0]))
+        val headerJson = runCatching { String(Base64.getUrlDecoder().decode(splitToken[0])) }
+            .getOrElse { throw InvalidTokenException.EXCEPTION }
         // Parse kid from header manually since JJWT 0.12 removed unsigned JWT parsing
         val kidRegex = """"kid"\s*:\s*"([^"]+)"""".toRegex()
         val match = kidRegex.find(headerJson) ?: throw InvalidTokenException.EXCEPTION
@@ -36,10 +37,14 @@ class JwtOIDCProvider {
         return "${splitToken[0]}.${splitToken[1]}."
     }
 
-    fun getOIDCTokenJws(token: String, modulus: String, exponent: String): Jws<Claims> =
-        try {
+    /**
+     * 서명·만료에 더해 발급자(iss)와 대상(aud)을 검증한다. aud 는 허용 목록 중 하나라도 들어 있으면 통과한다 (카카오 앱 키가 여러 개일 수 있다)
+     */
+    fun getOIDCTokenJws(token: String, modulus: String, exponent: String, iss: String, audiences: Set<String>): Jws<Claims> {
+        val jws = try {
             Jwts.parser()
                 .verifyWith(getRSAPublicKey(modulus, exponent) as java.security.PublicKey)
+                .requireIssuer(iss)
                 .build()
                 .parseSignedClaims(token)
         } catch (e: ExpiredJwtException) {
@@ -48,9 +53,15 @@ class JwtOIDCProvider {
             log.error(e.toString())
             throw InvalidTokenException.EXCEPTION
         }
+        if (jws.payload.audience.orEmpty().none { it in audiences }) {
+            log.error("OIDC id_token aud 불일치 aud={}", jws.payload.audience)
+            throw InvalidTokenException.EXCEPTION
+        }
+        return jws
+    }
 
-    fun getOIDCTokenBody(token: String, modulus: String, exponent: String): OIDCDecodePayload {
-        val body = getOIDCTokenJws(token, modulus, exponent).payload
+    fun getOIDCTokenBody(token: String, modulus: String, exponent: String, iss: String, audiences: Set<String>): OIDCDecodePayload {
+        val body = getOIDCTokenJws(token, modulus, exponent, iss, audiences).payload
         return OIDCDecodePayload(
             iss = body.issuer,
             aud = body.audience.firstOrNull() ?: "",

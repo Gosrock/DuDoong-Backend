@@ -82,9 +82,14 @@ pytest test_05_order_flow.py::test_create_order -v -s
 **커스텀 API URL로 실행:**
 ```bash
 # 기본값: http://localhost:8080/api
-# 다른 URL에서 테스트하려면
-API_BASE_URL=http://staging.dudoong.com/api pytest -v
+# 다른 포트·서버에서 테스트하려면
+API_BASE_URL=http://127.0.0.1:18080/api pytest -v
 ```
+
+- 테스트는 개발용 로그인(`/v1/auth/oauth/local/login`)으로 계정을 만든다. 이 API 는 서버가 `local`·`dev` 프로필일 때만 열린다 (#762). staging·prod 서버에는 E2E 를 돌릴 수 없다.
+- 개발용 로그인 계정의 oid 는 `local:{email}` 이다 (#762 이전 계정은 oid 가 email 이라 같은 이메일로 로그인하면 새 계정이 생긴다).
+  고정 이메일을 쓰는 테스트(test_19 등)가 같은 이메일 계정 2개로 실패하면, **로컬 DB 에서만** 기존 개발용 계정을 옮긴다:
+  `UPDATE tbl_user SET oid = CONCAT('local:', oid) WHERE provider = 'KAKAO' AND oid LIKE '%@%' AND oid NOT LIKE 'DELETED:%' AND oid NOT LIKE 'local:%';`
 
 ### 3-1) DB 직접 접근 · 새 DB 로 실행 (#737)
 

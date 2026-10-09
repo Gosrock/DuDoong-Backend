@@ -4,6 +4,7 @@ import band.gosrock.api.auth.service.helper.CookieHelper
 import band.gosrock.common.consts.DuDoongStatic
 import band.gosrock.common.jwt.JwtTokenProvider
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
+import band.gosrock.domain.domains.user.domain.AccountState
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -29,8 +30,7 @@ class JwtTokenFilter(
         val token = resolveToken(request)
 
         if (token != null) {
-            val authentication = getAuthentication(token)
-            SecurityContextHolder.getContext().authentication = authentication
+            getAuthentication(token)?.let { SecurityContextHolder.getContext().authentication = it }
         }
 
         filterChain.doFilter(request, response)
@@ -58,12 +58,16 @@ class JwtTokenFilter(
         return null
     }
 
-    fun getAuthentication(token: String): Authentication {
+    /** 정상이 아닌 계정이면 null (익명 처리) */
+    fun getAuthentication(token: String): Authentication? {
         val accessTokenInfo = jwtTokenProvider.parseAccessToken(token)
         val userId = accessTokenInfo.userId
 
         // 매 요청마다 DB에서 실시간 role 조회 → 역할 변경 즉시 반영
         val user = userAdaptor.queryUser(userId)
+        // 정지·탈퇴 계정의 토큰은 발급 이후에도 쓸 수 없다. 예외 대신 익명으로 둔다:
+        // 보호 경로는 entry point 가 401, 공개 경로·로그인·로그아웃(쿠키 삭제)은 그대로 동작한다 (재로그인은 403 USER_403_1)
+        if (user.accountState != AccountState.NORMAL) return null
         val role = user.accountRole.value
 
         val userDetails = AuthDetails(userId.toString(), role)

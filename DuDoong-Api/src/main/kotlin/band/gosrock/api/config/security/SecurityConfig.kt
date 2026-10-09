@@ -58,6 +58,8 @@ class SecurityConfig(
             auth
                 .requestMatchers("/api/v1/auth/oauth/**").permitAll()
                 .requestMatchers("/api/v1/auth/token/refresh").permitAll()
+                // 정지·탈퇴 계정(익명 처리)도 쿠키를 지울 수 있게 연다. 로그인 상태면 refresh 도 지운다
+                .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/events/{eventId:[0-9]*$}").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/events/{eventId:[0-9]*$}/ticketItems").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/events/{eventId:[0-9]*$}/comments/**").permitAll()

@@ -174,6 +174,6 @@ class AdminEventController(
         @PathVariable ticketItemId: Long,
         @RequestBody request: AdminAdjustTicketStockRequest,
     ): AdminTicketItemResponse {
-        return adminAdjustTicketStockUseCase.execute(userId, ticketItemId, request.delta)
+        return adminAdjustTicketStockUseCase.execute(userId, eventId, ticketItemId, request.delta)
     }
 }

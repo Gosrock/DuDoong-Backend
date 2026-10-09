@@ -7,6 +7,7 @@ import band.gosrock.domain.common.model.BaseTimeEntity
 import band.gosrock.domain.common.vo.UserInfoVo
 import band.gosrock.domain.common.vo.UserProfileVo
 import band.gosrock.domain.domains.user.exception.AlreadyDeletedUserException
+import band.gosrock.domain.domains.user.exception.DeletedUserStateChangeException
 import band.gosrock.domain.domains.user.exception.EmptyPhoneNumException
 import band.gosrock.domain.domains.user.exception.ForbiddenUserException
 import band.gosrock.infrastructure.config.alilmTalk.dto.AlimTalkUserInfo
@@ -118,6 +119,8 @@ class User(
     }
 
     fun changeAccountState(newState: AccountState) {
+        // 탈퇴는 되돌릴 수 없다: oid·프로필이 지워진 계정이 다시 정상이 되지 않게 한다 (#762)
+        if (accountState == AccountState.DELETED) throw DeletedUserStateChangeException.EXCEPTION
         if (newState == AccountState.DELETED) {
             withDrawUser()
             return
