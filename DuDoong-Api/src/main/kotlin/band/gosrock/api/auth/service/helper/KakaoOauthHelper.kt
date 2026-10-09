@@ -68,8 +68,8 @@ class KakaoOauthHelper(
         val oidcPublicKeysResponse = kakaoOauthClient.getKakaoOIDCOpenKeys()
         return oauthOIDCHelper.getPayloadFromIdToken(
             token,
-            oauthProperties.getKakaoBaseUrl(),
-            oauthProperties.getKakaoAppId(),
+            oauthProperties.getKakaoIssuer(),
+            oauthProperties.getKakaoAudiences(),
             oidcPublicKeysResponse
         )
     }

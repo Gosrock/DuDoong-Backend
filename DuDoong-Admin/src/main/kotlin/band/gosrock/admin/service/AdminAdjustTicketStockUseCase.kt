@@ -12,9 +12,10 @@ class AdminAdjustTicketStockUseCase(
     private val adminAuthValidator: AdminAuthValidator,
 ) {
     @RedissonLock(LockName = LockNames.TICKET, identifier = "ticketItemId")
-    fun execute(userId: Long, ticketItemId: Long, delta: Long): AdminTicketItemResponse {
+    fun execute(userId: Long, eventId: Long, ticketItemId: Long, delta: Long): AdminTicketItemResponse {
         adminAuthValidator.validateAdminOrAbove(userId)
         val ticketItem = ticketItemAdaptor.queryTicketItem(ticketItemId)
+        ticketItem.validateEventId(eventId)
         ticketItem.adminAdjustStock(delta)
         ticketItemAdaptor.save(ticketItem)
         return AdminTicketItemResponse.from(ticketItem)

@@ -2,8 +2,10 @@ package band.gosrock.api.config.security
 
 import band.gosrock.api.auth.service.helper.CookieHelper
 import band.gosrock.common.consts.DuDoongStatic
+import band.gosrock.common.exception.InvalidTokenException
 import band.gosrock.common.jwt.JwtTokenProvider
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
+import band.gosrock.domain.domains.user.domain.AccountState
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -64,6 +66,8 @@ class JwtTokenFilter(
 
         // 매 요청마다 DB에서 실시간 role 조회 → 역할 변경 즉시 반영
         val user = userAdaptor.queryUser(userId)
+        // 정지·탈퇴 계정의 토큰은 발급 이후에도 쓸 수 없다. 401 로 돌려 클라이언트가 재로그인하게 한다 (로그인·리프레시는 403 USER_403_1)
+        if (user.accountState != AccountState.NORMAL) throw InvalidTokenException.EXCEPTION
         val role = user.accountRole.value
 
         val userDetails = AuthDetails(userId.toString(), role)

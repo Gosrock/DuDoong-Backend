@@ -18,8 +18,9 @@ class ApiBlockingAspect(
     @Around("@annotation(band.gosrock.common.annotation.DevelopOnlyApi)")
     @Throws(Throwable::class)
     fun checkApiAcceptingCondition(joinPoint: ProceedingJoinPoint): Any? {
-        if (springEnvironmentHelper.isProdProfile()) {
-            throw DuDoongDynamicException(405, "Blocked Api", "not working api in production")
+        // 허용 목록: local·dev 프로필에서만 연다 (staging·prod·그 밖의 프로필은 막는다)
+        if (!springEnvironmentHelper.isLocalOrDevProfile()) {
+            throw DuDoongDynamicException(405, "Blocked Api", "not working api in this environment")
         }
         return joinPoint.proceed()
     }

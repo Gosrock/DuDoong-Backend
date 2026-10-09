@@ -11,6 +11,7 @@ class SpringEnvironmentHelper(
     private val PROD = "prod"
     private val STAGING = "staging"
     private val DEV = "dev"
+    private val LOCAL = "local"
     private val PROD_AND_STAGING = listOf("staging", "prod")
 
     fun isProdProfile(): Boolean {
@@ -26,6 +27,13 @@ class SpringEnvironmentHelper(
     fun isDevProfile(): Boolean {
         val currentProfile = environment.activeProfiles.toList()
         return currentProfile.contains(DEV)
+    }
+
+    /** 개발용 API 를 열어도 되는 프로필 (허용 목록). local·dev 이면서 staging·prod 가 아닐 때만 true */
+    fun isLocalOrDevProfile(): Boolean {
+        val currentProfile = environment.activeProfiles.toList()
+        return CollectionUtils.containsAny(currentProfile, listOf(LOCAL, DEV)) &&
+            !CollectionUtils.containsAny(currentProfile, PROD_AND_STAGING)
     }
 
     fun isProdAndStagingProfile(): Boolean {

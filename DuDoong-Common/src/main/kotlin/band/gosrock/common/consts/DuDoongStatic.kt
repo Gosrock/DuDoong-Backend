@@ -4,6 +4,8 @@ object DuDoongStatic {
     const val AUTH_HEADER = "Authorization"
     const val BEARER = "Bearer "
     const val WITHDRAW_PREFIX = "DELETED:"
+    // 개발용 로그인 계정의 oid 접두사. 카카오 회원번호(숫자)와 겹치지 않는다
+    const val LOCAL_OID_PREFIX = "local:"
     const val TOKEN_TYPE = "type"
     const val ADMIN_AUDIENCE = "admin"
     const val ADMIN_TOKEN_HEADER = "X-Admin-Token"

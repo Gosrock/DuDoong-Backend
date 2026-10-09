@@ -2,6 +2,7 @@ package band.gosrock.api.auth.service.helper
 
 import band.gosrock.common.annotation.Helper
 import band.gosrock.common.dto.OIDCDecodePayload
+import band.gosrock.common.exception.InvalidTokenException
 import band.gosrock.common.jwt.JwtOIDCProvider
 import band.gosrock.infrastructure.outer.api.oauth.dto.OIDCPublicKeysResponse
 
@@ -10,19 +11,20 @@ class OauthOIDCHelper(
     private val jwtOIDCProvider: JwtOIDCProvider
 ) {
 
-    private fun getKidFromUnsignedIdToken(token: String, iss: String, aud: String): String =
-        jwtOIDCProvider.getKidFromUnsignedTokenHeader(token, iss, aud)
-
     fun getPayloadFromIdToken(
         token: String,
         iss: String,
-        aud: String,
+        audiences: Set<String>,
         oidcPublicKeysResponse: OIDCPublicKeysResponse
     ): OIDCDecodePayload {
-        val kid = getKidFromUnsignedIdToken(token, iss, aud)
+        val kid = jwtOIDCProvider.getKidFromUnsignedTokenHeader(token)
 
-        val oidcPublicKeyDto = oidcPublicKeysResponse.keys!!.first { it.kid == kid }
+        // 공개키 목록에 없는 kid 는 잘못된 토큰 (401)
+        val oidcPublicKeyDto = oidcPublicKeysResponse.keys?.firstOrNull { it.kid == kid }
+            ?: throw InvalidTokenException.EXCEPTION
+        val modulus = oidcPublicKeyDto.n ?: throw InvalidTokenException.EXCEPTION
+        val exponent = oidcPublicKeyDto.e ?: throw InvalidTokenException.EXCEPTION
 
-        return jwtOIDCProvider.getOIDCTokenBody(token, oidcPublicKeyDto.n!!, oidcPublicKeyDto.e!!)
+        return jwtOIDCProvider.getOIDCTokenBody(token, modulus, exponent, iss, audiences)
     }
 }

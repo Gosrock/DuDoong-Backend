@@ -47,6 +47,7 @@ class ExampleController(
     fun health() {}
 
     @PostMapping
+    @DevelopOnlyApi
     @ApiErrorExceptionsExample(ExampleException2Docs::class)
     fun create(): ExampleResponse = exampleApiService.createExample()
 

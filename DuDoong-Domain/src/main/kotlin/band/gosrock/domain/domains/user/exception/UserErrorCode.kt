@@ -33,7 +33,10 @@ enum class UserErrorCode(
     USER_NAME_INVALID(BAD_REQUEST, "USER_400_4", "이름은 공백만으로 지을 수 없습니다."),
 
     @ExplainError("v2 프로필 이미지(M-2): 프로필 이미지 업로드(M-3)로 본인에게 발급한 key 가 아닌 경우")
-    USER_PROFILE_IMAGE_KEY_INVALID(BAD_REQUEST, "USER_400_5", "본인에게 업로드한 이미지가 아닙니다.");
+    USER_PROFILE_IMAGE_KEY_INVALID(BAD_REQUEST, "USER_400_5", "본인에게 업로드한 이미지가 아닙니다."),
+
+    @ExplainError("다른 멤버가 있거나 진행중·정산중 공연이 있는 호스트의 마스터가 탈퇴하려는 경우 (#762)")
+    USER_HOST_MASTER_CANNOT_WITHDRAW(BAD_REQUEST, "USER_400_6", "마스터인 호스트가 있어 탈퇴할 수 없습니다. 마스터를 양도한 뒤 탈퇴해 주세요.");
 
     override fun getErrorReason(): ErrorReason =
         ErrorReason(status = status, code = code, reason = reason)
