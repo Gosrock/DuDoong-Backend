@@ -278,23 +278,28 @@ class Order() : BaseTimeEntity() {
         }
     }
 
+    /** 승인 완료 주문 호스트 취소 (v1). 0원 주문도 환불 요청을 건다 — v2 는 [cancelByHost] */
     fun cancel(orderValidator: OrderValidator, reason: String? = null) {
         orderValidator.validCanCancel(this)
-        orderStatus = OrderStatus.CANCELED
-        cancelReason = reason?.take(500)
-        refundStatus = RefundStatus.REFUND_REQUESTED
-        refundStatusChangedAt = LocalDateTime.now()
-        withDrawAt = LocalDateTime.now()
-        Events.raise(WithDrawOrderEvent.from(this))
+        withdrawByHost(reason, refundRequested = true)
     }
 
+    /** 승인 대기 주문 거절 (v1). 0원 주문도 환불 요청을 건다 — v2 는 [refuseByHost] */
     fun refuse(orderValidator: OrderValidator, reason: String? = null) {
         orderValidator.validCanRefuse(this)
+        withdrawByHost(reason, refundRequested = true)
+    }
+
+    /** 호스트 취소·거절 공통 전이: CANCELED·표시 문구·철회 이벤트(발급 티켓 철회·선물 연쇄·알림), 환불 요청은 [refundRequested] 일 때만 */
+    private fun withdrawByHost(reason: String?, refundRequested: Boolean) {
+        val now = LocalDateTime.now()
         orderStatus = OrderStatus.CANCELED
         cancelReason = reason?.take(500)
-        refundStatus = RefundStatus.REFUND_REQUESTED
-        refundStatusChangedAt = LocalDateTime.now()
-        withDrawAt = LocalDateTime.now()
+        if (refundRequested) {
+            refundStatus = RefundStatus.REFUND_REQUESTED
+            refundStatusChangedAt = now
+        }
+        withDrawAt = now
         Events.raise(WithDrawOrderEvent.from(this))
     }
 
@@ -379,7 +384,22 @@ class Order() : BaseTimeEntity() {
 
     // ===== v2 공유 데이터 (검증·조합 규칙은 service.v2.V2OrderDomainService) =====
 
-    /** 거절 사유 종류 기록. [refuse] 와 같은 트랜잭션·락 안에서 V2OrderDomainService 가 호출한다 */
+    /**
+     * v2 거절 (R-4, #752): v1 [refuse] 와 같은 검증·전이에 환불 요청(REFUND_REQUESTED)은 [refundRequested] 일 때만 건다 —
+     * 0원 주문은 돌려줄 돈이 없어 환불 목록(F-1)에 올리지 않는다 (사용자 결정 2026-10-09). v1 거절은 [refuse] 그대로(0원도 환불 요청)
+     */
+    internal fun refuseByHost(orderValidator: OrderValidator, reason: String?, refundRequested: Boolean) {
+        orderValidator.validCanRefuse(this)
+        withdrawByHost(reason, refundRequested)
+    }
+
+    /** v2 호스트 취소 (R-5, #752): [refuseByHost] 와 같은 기준. v1 취소(호스트·운영 어드민)는 [cancel] 그대로 */
+    internal fun cancelByHost(orderValidator: OrderValidator, reason: String?, refundRequested: Boolean) {
+        orderValidator.validCanCancel(this)
+        withdrawByHost(reason, refundRequested)
+    }
+
+    /** 거절 사유 종류 기록. [refuseByHost] 와 같은 트랜잭션·락 안에서 V2OrderDomainService 가 호출한다 */
     internal fun recordRefuseReasonType(type: OrderRefuseReasonType) {
         this.refuseReasonType = type
     }

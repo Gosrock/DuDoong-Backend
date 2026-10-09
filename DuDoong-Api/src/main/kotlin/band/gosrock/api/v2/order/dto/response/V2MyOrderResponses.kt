@@ -74,7 +74,7 @@ data class V2MyOrderDetailResponse(
     val depositorName: String?,
     @field:Schema(description = "결제 금액·입금 계좌. **유료 주문만** (무료는 null). 토스 송금 딥링크는 프론트가 이 값으로 만든다")
     val payment: V2MyOrderPaymentResponse?,
-    @field:Schema(description = "주문 라인별 옵션 답변 (티켓별 입력이면 수량 1 라인 N개)")
+    @field:Schema(description = "주문 라인별 옵션 답변 (티켓별 입력이면 수량 1 라인 N개). 선물 상태는 티켓 단위라 `issuedTickets` 에만 있다 (#752)")
     val lines: List<V2MyOrderLineResponse>,
     @field:Schema(description = "거절 사유 종류 (REFUSED, v2 거절만). DEPOSIT_UNCONFIRMED / AMOUNT_MISMATCH / SOLD_OUT / ETC")
     val refuseReasonType: OrderRefuseReasonType?,
@@ -126,12 +126,6 @@ data class V2MyOrderLineResponse(
     @field:Schema(description = "(티켓 가격 + 옵션 추가금) x 수량")
     val linePrice: Long,
     val optionAnswers: List<V2OptionAnswerResponse>,
-    @field:Schema(description = "NONE / PENDING(선물 대기중) / SENT(선물 완료). 주문상세는 주문자만 보므로 RECEIVED 는 없음 (#719)")
-    val giftState: V2GiftState = V2GiftState.NONE,
-    @field:Schema(description = "선물 대기 중인데 공연이 끝남 (선물 만료)")
-    val isGiftExpired: Boolean = false,
-    @field:Schema(description = "PENDING·SENT 의 선물 id")
-    val giftId: Long? = null,
 )
 
 data class V2MyRefundAccountResponse(

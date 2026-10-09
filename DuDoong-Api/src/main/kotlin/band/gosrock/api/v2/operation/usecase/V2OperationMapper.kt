@@ -200,23 +200,27 @@ class V2OperationMapper(
         }
     }
 
-    /** 옵션 행 id → 질문(옵션 그룹) 이름. 여러 답변의 옵션을 한 번에 조회한다 */
-    fun optionNamesOf(optionIds: Collection<Long?>): Map<Long?, String?> {
+    /** 옵션 행 id → 질문(옵션 그룹 이름·설명). 여러 답변의 옵션을 옵션 그룹과 함께 쿼리 1개로 조회한다 (#752) */
+    fun optionQuestionsOf(optionIds: Collection<Long?>): Map<Long?, OptionQuestion> {
         val ids = optionIds.filterNotNull().distinct()
         if (ids.isEmpty()) return emptyMap()
-        return optionAdaptor.findAllByIds(ids).associate { it.id to it.getQuestionName() }
+        return optionAdaptor.findAllWithGroupByIds(ids).associate { it.id to OptionQuestion(it.getQuestionName(), it.getQuestionDescription()) }
     }
 
-    /** (optionId, answer, additionalPrice) → 옵션 이름 포함 응답. [names] 는 [optionNamesOf] 로 미리 조회한 것 */
-    fun toOptionAnswers(answers: List<Triple<Long?, String?, Long>>, names: Map<Long?, String?>): List<V2OptionAnswerResponse> =
-        answers.map { (optionId, answer, price) -> V2OptionAnswerResponse(optionName = names[optionId], answer = answer, additionalPrice = price) }
+    /** (optionId, answer, additionalPrice) → 질문 이름·설명 포함 응답. [questions] 는 [optionQuestionsOf] 로 미리 조회한 것 */
+    fun toOptionAnswers(answers: List<Triple<Long?, String?, Long>>, questions: Map<Long?, OptionQuestion>): List<V2OptionAnswerResponse> =
+        answers.map { (optionId, answer, price) ->
+            V2OptionAnswerResponse(optionName = questions[optionId]?.name, description = questions[optionId]?.description, answer = answer, additionalPrice = price)
+        }
+
+    data class OptionQuestion(val name: String?, val description: String?)
 
     fun ticketAnswerRows(ticket: IssuedTicket): List<Triple<Long?, String?, Long>> =
         ticket.issuedTicketOptionAnswers.sortedBy { it.id }.map { Triple(it.optionId, it.answer, it.additionalPrice.longValue()) }
 
     fun ticketOptionAnswers(ticket: IssuedTicket): List<V2OptionAnswerResponse> {
         val rows = ticketAnswerRows(ticket)
-        return toOptionAnswers(rows, optionNamesOf(rows.map { it.first }))
+        return toOptionAnswers(rows, optionQuestionsOf(rows.map { it.first }))
     }
 
     fun toCheckInResponse(outcome: V2CheckInOutcome): V2CheckInResponse {

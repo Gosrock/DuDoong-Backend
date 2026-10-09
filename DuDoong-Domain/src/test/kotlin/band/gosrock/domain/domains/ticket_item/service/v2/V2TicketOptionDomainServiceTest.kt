@@ -22,6 +22,7 @@ import band.gosrock.domain.domains.ticket_item.domain.TicketPayType
 import band.gosrock.domain.domains.ticket_item.domain.TicketType
 import band.gosrock.domain.domains.ticket_item.exception.ForbiddenLockedOptionChangeException
 import band.gosrock.domain.domains.ticket_item.exception.ForbiddenOptionPriceException
+import band.gosrock.domain.domains.ticket_item.exception.InvalidOptionDescriptionException
 import band.gosrock.domain.domains.ticket_item.exception.InvalidOptionPriceException
 import band.gosrock.domain.domains.ticket_item.exception.UnsupportedV2OptionTypeException
 import java.time.LocalDateTime
@@ -96,6 +97,25 @@ class V2TicketOptionDomainServiceTest {
         assertThrows<InvalidOptionPriceException> { service.newOptionGroup(event(), "a", "b", OptionGroupType.TRUE_FALSE, 10_000_001) }
         assertEquals(10_000_000L, service.yesAdditionalPrice(service.newOptionGroup(event(), "a", "b", OptionGroupType.TRUE_FALSE, 10_000_000)))
         assertThrows<UnsupportedV2OptionTypeException> { service.newOptionGroup(event(), "a", "b", OptionGroupType.MULTIPLE_CHOICE, null) }
+    }
+
+    @Test
+    fun `설명 50자 - 생성은 trim 후 50자까지, 수정은 값이 바뀔 때만 검증 (기존 긴 설명 재전송 허용, #752)`() {
+        assertEquals("가".repeat(50), service.newOptionGroup(event(), "a", " ${"가".repeat(50)} ", OptionGroupType.TRUE_FALSE, null).description)
+        assertThrows<InvalidOptionDescriptionException> { service.newOptionGroup(event(), "a", "가".repeat(51), OptionGroupType.TRUE_FALSE, null) }
+
+        val option = yesNo()
+        assertThrows<InvalidOptionDescriptionException> { service.applyUpdate(option, emptyList(), emptySet(), null, "나".repeat(51), null) }
+        assertEquals("참석하나요?", option.description)
+        // v1 에서 만든 긴 설명: 그대로(앞뒤 공백 무시) 다시 보내면 통과, 바꾸면 400
+        val long = "다".repeat(60)
+        option.description = long
+        service.applyUpdate(option, emptyList(), emptySet(), "새이름", " $long ", null)
+        assertEquals(long, option.description)
+        assertEquals("새이름", option.name)
+        assertThrows<InvalidOptionDescriptionException> { service.applyUpdate(option, emptyList(), emptySet(), null, long.dropLast(1), null) }
+        service.applyUpdate(option, emptyList(), emptySet(), null, "나".repeat(50), null)
+        assertEquals("나".repeat(50), option.description)
     }
 
     @Test

@@ -262,6 +262,26 @@ class V2TicketGiftControllerTest : V2GiftTestSupport() {
         }
 
         @Test
+        fun `Gift_400_5 문구는 종료·준비중 공연 모두 '선물을 받을 수 없는 공연입니다' (#752)`() {
+            val ended = Shop()
+            val endedSender = newBuyer()
+            val endedToken = giftOk(endedSender, approvedOrder(ended, endedSender).second[0]).at("/giftToken").asText()
+            endEvent(ended.eventId)
+            val preparing = Shop()
+            val preparingSender = newBuyer()
+            val preparingToken = giftOk(preparingSender, approvedOrder(preparing, preparingSender).second[0]).at("/giftToken").asText()
+            // 연쇄 처리 없이 상태만 바꿔 대기 선물을 남긴다 (정상 흐름에서는 준비중 전환이 대기 선물을 취소)
+            setEventStatus(preparing.eventId, EventStatus.PREPARING)
+            for (token in listOf(endedToken, preparingToken)) {
+                accept(newBuyer(), token).andExpect {
+                    status { isBadRequest() }
+                    jsonPath("$.code") { value("Gift_400_5") }
+                    jsonPath("$.reason") { value("선물을 받을 수 없는 공연입니다.") }
+                }
+            }
+        }
+
+        @Test
         fun `G-4 이미 수락된 링크는 Gift_400_3 (1회용)`() {
             val shop = Shop()
             val sender = newBuyer()

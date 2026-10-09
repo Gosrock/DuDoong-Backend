@@ -4,7 +4,7 @@ import band.gosrock.domain.domains.event.service.v2.EventChecklist
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class V2EventChecklistResponse(
-    @field:Schema(description = "기본 정보: 이름·일정·장소·문의처 1개 이상")
+    @field:Schema(description = "기본 정보: 포스터·이름·일정(시작/종료)·장소(이름·주소·좌표)·문의처 1개 이상")
     val basic: Boolean,
     @field:Schema(description = "상세 정보: 본문이 있는 섹션 1개 이상 (섹션 없는 기존 공연은 v1 content)")
     val detail: Boolean,

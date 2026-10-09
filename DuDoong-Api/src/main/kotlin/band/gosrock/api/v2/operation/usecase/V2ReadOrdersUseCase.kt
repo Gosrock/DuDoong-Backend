@@ -88,7 +88,7 @@ class V2ReadOrdersUseCase(
         val issued = issuedTicketAdaptor.findAllByOrderUuid(orderUuid).sortedBy { it.id }
         val ticketAnswers = issued.associate { it.id to mapper.ticketAnswerRows(it) }
         // 라인·발급 티켓 답변의 옵션 이름을 한 번에 조회
-        val names = mapper.optionNamesOf((lineAnswers.values + ticketAnswers.values).flatten().map { it.first })
+        val names = mapper.optionQuestionsOf((lineAnswers.values + ticketAnswers.values).flatten().map { it.first })
         val lines = orderLines.map { line ->
             V2OrderLineResponse(
                 ticketItemId = line.orderItem?.itemId,

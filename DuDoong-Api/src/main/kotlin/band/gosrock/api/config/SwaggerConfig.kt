@@ -3,6 +3,7 @@ package band.gosrock.api.config
 import band.gosrock.api.v2.common.V2ErrorPolicy
 import band.gosrock.common.annotation.ApiErrorCodeExample
 import band.gosrock.common.annotation.ApiErrorExceptionsExample
+import band.gosrock.common.annotation.CurrentUserId
 import band.gosrock.common.annotation.DisableSwaggerSecurity
 import band.gosrock.common.annotation.ExplainError
 import band.gosrock.common.dto.ErrorReason
@@ -26,6 +27,7 @@ import io.swagger.v3.oas.models.security.SecurityScheme
 import io.swagger.v3.oas.models.servers.Server
 import org.springdoc.core.customizers.GlobalOperationCustomizer
 import org.springdoc.core.models.GroupedOpenApi
+import org.springdoc.core.utils.SpringDocUtils
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -39,6 +41,12 @@ import jakarta.servlet.ServletContext
 class SwaggerConfig(
     private val applicationContext: ApplicationContext,
 ) {
+    init {
+        // @CurrentUserId 는 토큰에서 채우는 값이라 요청 파라미터가 아니다. 숨기지 않으면 모든 그룹(v1·v2·internal)에 필수 query `userId` 로 보인다 (#752).
+        // 문서만 바뀌고 인자 해석(CurrentUserIdResolver)은 그대로
+        SpringDocUtils.getConfig().addAnnotationsToIgnore(CurrentUserId::class.java)
+    }
+
     @Bean
     fun openAPI(servletContext: ServletContext): OpenAPI {
         val contextPath = servletContext.contextPath

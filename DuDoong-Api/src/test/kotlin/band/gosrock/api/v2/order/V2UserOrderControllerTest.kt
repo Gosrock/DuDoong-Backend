@@ -155,6 +155,9 @@ class V2UserOrderControllerTest : V2UserOrderTestSupport() {
             v1Approve(shop.team.master, shop.eventId, uuid).andExpect { status { isOk() } }
             val detail = myOrder(buyer, uuid).andExpect { status { isOk() } }.data()
             val ticketAnswers = detail.at("/issuedTickets").map { t -> t.at("/optionAnswers").map { it.at("/answer").asText() } }.toSet()
+            // 선물 상태는 티켓 단위라 issuedTickets 에만 (라인에는 없음, #752)
+            assertTrue(detail.at("/lines").all { line -> listOf("giftState", "isGiftExpired", "giftId").none { line.has(it) } })
+            assertTrue(detail.at("/issuedTickets").all { it.has("giftState") && it.has("isGiftExpired") && it.has("giftId") })
             assertEquals(setOf(listOf("예", "첫째"), listOf("아니요", "둘째")), ticketAnswers)
             // 호스트 v2 상세도 같은 구조
             val host = hostDetail(shop.team.guest, shop.eventId, uuid)
@@ -384,6 +387,27 @@ class V2UserOrderControllerTest : V2UserOrderTestSupport() {
             v1Approve(shop.team.master, shop.eventId, different).andExpect { status { isOk() } }
             // 1인 제한: 발급 2 + 승인 대기 1 + 새 1 = 4 이하
             assertNotEquals(first, v2OrderOk(buyer, shopBody(shop)).at("/orderUuid").asText())
+        }
+
+        @Test
+        fun `같은 무료 선착순 요청의 앞 주문이 아직 확정 전이면 Order_400_26 (이중 확정 방지), 새 주문·발급 없음`() {
+            val shop = Shop()
+            val free = freeTicket(shop, approvalRequired = false)
+            val buyer = newBuyer()
+            val first = v2OrderOk(buyer, freeBodyOf(shop, free)).at("/orderUuid").asText()
+            // 앞 요청이 확정(발급) 중인 상태를 만든다: 생성 직후 상태(PENDING_PAYMENT)로 되돌림
+            val order = orderRepository.findByOrderUuid(first).get()
+            ReflectionTestUtils.setField(order, "orderStatus", OrderStatus.PENDING_PAYMENT)
+            orderRepository.save(order)
+            val stockBefore = stock(free)
+            v2CreateOrder(buyer, freeBodyOf(shop, free)).andExpect {
+                status { isBadRequest() }
+                jsonPath("$.code") { value("Order_400_26") }
+            }
+            assertEquals(1, orderRepository.findAll().count { it.userId == buyer.id })
+            assertEquals(stockBefore, stock(free))
+            // 내용이 다른 요청(수량 2)은 중복이 아니라 그대로 진행
+            assertEquals("APPROVED", v2OrderOk(buyer, freeBodyOf(shop, free, quantity = 2)).at("/status").asText())
         }
 
         @Test

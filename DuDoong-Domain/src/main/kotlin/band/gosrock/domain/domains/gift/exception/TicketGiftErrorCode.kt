@@ -28,8 +28,8 @@ enum class TicketGiftErrorCode(
     @ExplainError("보낸 사람이 자기 링크를 수락·거절하려 함")
     GIFT_OWN_LINK(BAD_REQUEST, "Gift_400_4", "내가 보낸 선물은 받을 수 없습니다."),
 
-    @ExplainError("선물 만료 — 공연이 끝나(종료 시각 경과 또는 정산중·지난공연·삭제) 수락·거절할 수 없음 (DEC-026 #7). 보낸 사람 회수는 가능")
-    GIFT_EXPIRED(BAD_REQUEST, "Gift_400_5", "공연이 끝나 받을 수 없는 선물입니다."),
+    @ExplainError("선물 만료 — 받을 수 있는 공연(있음 + OPEN + 종료 전)이 아니라 수락·거절할 수 없음: 공연 종료(종료 시각 경과·정산중·지난공연), 준비중, 삭제 (DEC-026 #7, #734). 보낸 사람 회수는 가능")
+    GIFT_EXPIRED(BAD_REQUEST, "Gift_400_5", "선물을 받을 수 없는 공연입니다."),
 
     @ExplainError("원 주문이 정상(승인/확정) 상태가 아니거나 티켓이 유효하지 않음 (수락·거절 시). 방어용 — 주문 취소 연쇄 처리로 대기 선물이 먼저 취소된다")
     GIFT_ORDER_INVALID(BAD_REQUEST, "Gift_400_6", "선물을 받을 수 없는 상태입니다."),

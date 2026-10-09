@@ -16,6 +16,7 @@ import band.gosrock.api.v2.gift.usecase.V2GiftUseCase
 import band.gosrock.api.v2.gift.usecase.V2MyTicketUseCase
 import band.gosrock.common.annotation.CurrentUserId
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.constraints.Max
@@ -48,6 +49,7 @@ class V2TicketGiftController(
     @GetMapping("/me/tickets")
     fun getMyTickets(
         @CurrentUserId userId: Long,
+        @Parameter(description = "정렬 (선택). 값은 UPCOMING(기본) 하나 — 공연 임박순: 종료 전 공연(진행 중 → 시작 임박순) → 지난 공연(최근 시작 순)")
         @RequestParam(defaultValue = "UPCOMING") sort: V2MyTicketSort,
     ): V2MyTicketsResponse = myTicketUseCase.tickets(userId)
 
@@ -111,7 +113,7 @@ class V2TicketGiftController(
     fun getGift(@CurrentUserId userId: Long, @PathVariable giftToken: String): V2GiftLandingResponse =
         giftUseCase.landing(userId, giftToken)
 
-    @Operation(summary = "[G-4] 선물 받기 (로그인). 대기 중·공연 종료 전·본인 링크 아님. 소유자 변경 + 티켓 uuid(QR) 새로 발급. 같은 링크 동시 수락은 1명만")
+    @Operation(summary = "[G-4] 선물 받기 (로그인). 대기 중·받을 수 있는 공연(OPEN·종료 전, 아니면 Gift_400_5)·본인 링크 아님. 소유자 변경 + 티켓 uuid(QR) 새로 발급. 같은 링크 동시 수락은 1명만")
     @PostMapping("/gifts/{giftToken}/accept")
     fun acceptGift(@CurrentUserId userId: Long, @PathVariable giftToken: String): V2GiftResultResponse =
         giftUseCase.accept(userId, giftToken)

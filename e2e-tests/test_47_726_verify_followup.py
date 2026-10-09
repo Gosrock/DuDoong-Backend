@@ -325,7 +325,9 @@ def test_07_host_cancel_and_refund_complete_notifications(base_url, s):
     f = _ok_order(base_url, s, "free1", s.free, 1, depositor=None, method="FREE")
     assert_status(requests.post(_ev(base_url, s, f"/orders/{f}/refuse"), json={"reasonType": "SOLD_OUT"}, headers=_h(s, "manager")), 200)
     assert _wait_notification(base_url, s, "free1", "ORDER_REFUSED", f)
-    assert_status(requests.post(_ev(base_url, s, f"/refunds/{f}/complete"), headers=_h(s, "manager")), 200)
+    # 0원 v2 거절은 환불 요청이 없다 (#752) — 완료할 것도 없음
+    resp = requests.post(_ev(base_url, s, f"/refunds/{f}/complete"), headers=_h(s, "manager"))
+    assert resp.status_code == 400 and resp.json()["code"] == "Order_400_17"
     _later_reference(base_url, s, "free1")
     assert not _notifications(base_url, s, "free1", "ORDER_REFUND_COMPLETED")
     assert not [n for n in _notifications(base_url, s, "free1", "ORDER_CANCELED_BY_HOST") if n["target"]["id"] == f]

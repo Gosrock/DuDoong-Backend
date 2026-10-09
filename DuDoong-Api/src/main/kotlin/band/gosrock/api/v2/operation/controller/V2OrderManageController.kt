@@ -79,7 +79,7 @@ class V2OrderManageController(
     fun approveOrder(@CurrentUserId userId: Long, @PathVariable eventId: Long, @PathVariable orderUuid: String): V2OrderDetailResponse =
         changeOrderUseCase.approve(userId, eventId, orderUuid)
 
-    @Operation(summary = "[R-4] 거절 (매니저 이상). 상태는 v1 과 같은 CANCELED + 환불 요청, v2 목록에서는 REFUSED. 사유 문구는 v1 cancelReason 에도 기록")
+    @Operation(summary = "[R-4] 거절 (매니저 이상). 상태는 v1 과 같은 CANCELED, v2 목록에서는 REFUSED. 환불 요청은 결제 금액이 있을 때만 (0원 주문은 환불 요청 없음 — F-1 에 안 나옴). 사유 문구는 v1 cancelReason 에도 기록")
     @PostMapping("/orders/{orderUuid}/refuse")
     fun refuseOrder(
         @CurrentUserId userId: Long,
@@ -88,7 +88,7 @@ class V2OrderManageController(
         @RequestBody @Valid request: V2RefuseOrderRequest,
     ): V2OrderDetailResponse = changeOrderUseCase.refuse(userId, eventId, orderUuid, request)
 
-    @Operation(summary = "[R-5] 승인 완료 주문 취소 (매니저 이상). 발급 티켓 취소·재고 복구·환불 요청 (v1 과 같은 로직)")
+    @Operation(summary = "[R-5] 승인 완료 주문 취소 (매니저 이상). 발급 티켓 취소·재고 복구 (v1 과 같은 로직), 환불 요청은 결제 금액이 있을 때만 (0원 주문은 환불 요청 없음 — F-1 에 안 나옴)")
     @PostMapping("/orders/{orderUuid}/cancel")
     fun cancelOrder(
         @CurrentUserId userId: Long,

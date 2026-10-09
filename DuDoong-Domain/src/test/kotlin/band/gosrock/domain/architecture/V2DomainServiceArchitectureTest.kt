@@ -102,7 +102,7 @@ class V2DomainServiceArchitectureTest {
             // TicketItem (#707)
             TicketItem::class.java to setOf("changeAccountInfo", "changeSupplyCount"),
             // Order (#712, #718)
-            Order::class.java to setOf("recordRefuseReasonType", "recordV2Payment", "withdrawByUser"),
+            Order::class.java to setOf("recordRefuseReasonType", "recordV2Payment", "withdrawByUser", "refuseByHost", "cancelByHost"),
             // 선물 (#719): 수락·반환 때 소유자·uuid 교체, 선물 전이 기록
             IssuedTicket::class.java to setOf("transferOwner"),
             TicketGift::class.java to setOf("accept", "reject", "returnToSender", "cancel", "changeMemo"),

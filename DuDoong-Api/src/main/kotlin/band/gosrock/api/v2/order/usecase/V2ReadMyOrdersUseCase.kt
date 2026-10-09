@@ -86,7 +86,7 @@ class V2ReadMyOrdersUseCase(
         val giftStates = orderTickets.associate { it.id to giftDomainService.giftStateOf(it, order.userId, latestGifts[it.id], userId) }
         val tickets = orderTickets.filter { it.getUserId() == userId || giftStates[it.id] == V2GiftState.SENT }.sortedBy { it.id }
         val ticketAnswers = tickets.associate { it.id to mapper.ticketAnswerRows(it) }
-        val names = mapper.optionNamesOf((lineAnswers.values + ticketAnswers.values).flatten().map { it.first })
+        val names = mapper.optionQuestionsOf((lineAnswers.values + ticketAnswers.values).flatten().map { it.first })
         val v2Status = V2OrderStatus.of(order)
         val paid = order.getTotalPaymentPrice().isGreaterThan(Money.ZERO)
         val refundAccount = order.id?.let { v2UserOrderDomainService.refundAccountOf(it) }
