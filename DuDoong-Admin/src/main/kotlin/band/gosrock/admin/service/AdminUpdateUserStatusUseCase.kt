@@ -1,5 +1,6 @@
 package band.gosrock.admin.service
 
+import band.gosrock.admin.exception.AdminCannotChangeOwnStatusException
 import band.gosrock.admin.exception.AdminSuperAdminRequiredException
 import band.gosrock.admin.model.dto.request.AdminUpdateUserStatusRequest
 import band.gosrock.admin.model.dto.response.AdminUserResponse
@@ -32,6 +33,7 @@ class AdminUpdateUserStatusUseCase(
      */
     fun execute(userId: Long, targetUserId: Long, request: AdminUpdateUserStatusRequest): AdminUserResponse {
         val operator = adminAuthValidator.validateAdminOrAbove(userId)
+        if (userId == targetUserId) throw AdminCannotChangeOwnStatusException.EXCEPTION
         val targetUser = userAdaptor.queryUser(targetUserId)
         if (targetUser.accountRole == AccountRole.SUPER_ADMIN && operator.accountRole != AccountRole.SUPER_ADMIN) {
             throw AdminSuperAdminRequiredException.EXCEPTION
@@ -39,7 +41,11 @@ class AdminUpdateUserStatusUseCase(
         val oid = targetUser.oauthInfo?.oid
 
         val changed = userDomainService.changeAccountStateByAdmin(targetUserId, request.status)
-        if (request.status != AccountState.NORMAL) refreshTokenAdaptor.deleteByUserId(targetUserId)
+        if (request.status != AccountState.NORMAL) {
+            // 상태 변경은 이미 커밋됐다. 실패해도 토큰은 JwtTokenFilter·RefreshUseCase 가 계정 상태로 거부한다
+            runCatching { refreshTokenAdaptor.deleteByUserId(targetUserId) }
+                .onFailure { log.warn("[AdminUpdateUserStatusUseCase] refresh 삭제 실패 userId={} error={}", targetUserId, it.toString()) }
+        }
         if (request.status == AccountState.DELETED) unlinkKakao(targetUserId, oid)
         return AdminUserResponse.from(changed)
     }

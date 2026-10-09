@@ -2,7 +2,6 @@ package band.gosrock.domain.domains.user.service
 
 import band.gosrock.common.annotation.DomainService
 import band.gosrock.domain.common.aop.redissonLock.RedissonLock
-import band.gosrock.domain.domains.event.adaptor.EventAdaptor
 import band.gosrock.domain.domains.event.domain.EventStatus
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
@@ -13,7 +12,6 @@ import band.gosrock.domain.domains.user.domain.User
 import band.gosrock.domain.domains.user.exception.AlreadySignUpUserException
 import band.gosrock.domain.domains.user.exception.HostMasterCannotWithdrawException
 import band.gosrock.domain.domains.user.repository.UserRepository
-import org.springframework.data.domain.PageRequest
 import org.springframework.transaction.annotation.Transactional
 
 @DomainService
@@ -21,7 +19,6 @@ open class UserDomainService(
     private val userRepository: UserRepository,
     private val userAdaptor: UserAdaptor,
     private val hostAdaptor: HostAdaptor,
-    private val eventAdaptor: EventAdaptor,
 ) {
     @Transactional
     @RedissonLock(LockName = "유저등록", identifier = "oid", paramClassType = OauthInfo::class)
@@ -90,15 +87,12 @@ open class UserDomainService(
     }
 
     /**
-     * 활성 호스트(다른 활성 멤버가 있거나 진행중·정산중 공연이 있는 호스트)의 마스터는 탈퇴할 수 없다 (#762).
+     * 활성 호스트의 마스터는 탈퇴할 수 없다 (#762). 활성 호스트 = 탈퇴하지 않은 다른 활성 멤버가 있거나 진행중·정산중 공연이 있는 호스트.
+     * 정지 멤버는 센다: 운영이 정지를 풀 수 있고, 마스터가 직접 내보내면(멤버 삭제) 탈퇴할 수 있다.
      * 혼자 있고 진행 중인 공연이 없는 호스트는 남겨도 영향받는 사람이 없어 막지 않는다 (호스트 삭제 기능은 없다, DEC-013)
      */
     fun validateNotActiveHostMaster(userId: Long) {
-        val active = hostAdaptor.findAllByMasterUserId(userId).any { host ->
-            host.getActiveHostUsers().any { it.userId != userId } ||
-                eventAdaptor.findAllByHostIdAndStatusIn(host.id!!, ACTIVE_EVENT_STATUSES, PageRequest.of(0, 1)).hasContent()
-        }
-        if (active) throw HostMasterCannotWithdrawException.EXCEPTION
+        if (hostAdaptor.existsActiveHostMasteredBy(userId, ACTIVE_EVENT_STATUSES)) throw HostMasterCannotWithdrawException.EXCEPTION
     }
 
     @Transactional

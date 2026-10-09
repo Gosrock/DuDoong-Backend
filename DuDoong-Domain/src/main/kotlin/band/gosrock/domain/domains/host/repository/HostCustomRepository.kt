@@ -1,5 +1,6 @@
 package band.gosrock.domain.domains.host.repository
 
+import band.gosrock.domain.domains.event.domain.EventStatus
 import band.gosrock.domain.domains.host.domain.Host
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -17,4 +18,10 @@ interface HostCustomRepository {
     fun flushChanges()
 
     fun queryPageHostsByActiveUserId(userId: Long, keyword: String?, pageable: Pageable): Page<Host>
+
+    /**
+     * [userId] 가 마스터인 호스트 중 탈퇴하지 않은 다른 활성 멤버가 있거나 [eventStatuses] 상태의 공연이 있는 호스트가 있는지 (#762).
+     * 쿼리 1번 (exists)
+     */
+    fun existsActiveHostMasteredBy(userId: Long, eventStatuses: Collection<EventStatus>): Boolean
 }

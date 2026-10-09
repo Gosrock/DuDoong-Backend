@@ -24,7 +24,9 @@ class WithDrawUseCase(
         log.info("[WithDrawUseCase][execute] 회원 탈퇴 userId={}", userId)
         // 탈퇴가 거절되면(호스트 마스터 등) 로그인은 유지되도록 refresh 는 탈퇴 뒤에 지운다
         val oid = userDomainService.withDrawUser(userId)
-        refreshTokenAdaptor.deleteByUserId(userId)
+        // 탈퇴는 이미 커밋됐다. refresh 삭제가 실패해도(토큰은 JwtTokenFilter·RefreshUseCase 가 계정 상태로 거부) 연결 해제는 계속한다
+        runCatching { refreshTokenAdaptor.deleteByUserId(userId) }
+            .onFailure { log.warn("[WithDrawUseCase][execute] refresh 삭제 실패 userId={} error={}", userId, it.toString()) }
         if (oid == null) {
             log.warn("[WithDrawUseCase][execute] 카카오 oid 가 없어 연결 해제를 건너뜀 userId={}", userId)
             return

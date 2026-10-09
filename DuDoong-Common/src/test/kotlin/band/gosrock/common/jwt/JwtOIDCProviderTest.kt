@@ -9,6 +9,7 @@ import java.util.Base64
 import java.util.Date
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertSame
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -26,11 +27,12 @@ class JwtOIDCProviderTest {
     private val iss = "https://kauth.kakao.com"
     private val audiences = setOf("rest-key", "native-key")
 
-    private fun idToken(iss: String = this.iss, aud: String = "rest-key", kid: String = "kid-1"): String =
+    /** single = true 면 카카오처럼 aud 를 배열이 아닌 문자열 하나로 넣는다 */
+    private fun idToken(iss: String = this.iss, aud: String = "rest-key", kid: String = "kid-1", single: Boolean = false): String =
         Jwts.builder()
             .header().keyId(kid).and()
             .issuer(iss)
-            .audience().add(aud).and()
+            .let { if (single) it.audience().single(aud) else it.audience().add(aud).and() }
             .subject("12345")
             .claim("email", "a@b.com")
             .expiration(Date(System.currentTimeMillis() + 60_000))
@@ -42,6 +44,15 @@ class JwtOIDCProviderTest {
     @Test
     fun `iss 와 aud 가 맞으면 통과한다`() {
         assertEquals("12345", body(idToken()).sub)
+    }
+
+    @Test
+    fun `aud 가 문자열 하나로 와도(카카오 형식) 검증한다`() {
+        val token = idToken(single = true)
+        val payload = String(Base64.getUrlDecoder().decode(token.split(".")[1]))
+        assertTrue(payload.contains("\"aud\":\"rest-key\""), payload)
+        assertEquals("rest-key", body(token).aud)
+        assertThrows<InvalidTokenException> { body(idToken(aud = "other-app", single = true)) }
     }
 
     @Test

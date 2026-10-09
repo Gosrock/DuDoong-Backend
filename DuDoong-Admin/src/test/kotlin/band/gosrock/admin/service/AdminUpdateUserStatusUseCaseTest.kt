@@ -1,5 +1,6 @@
 package band.gosrock.admin.service
 
+import band.gosrock.admin.exception.AdminCannotChangeOwnStatusException
 import band.gosrock.admin.exception.AdminSuperAdminRequiredException
 import band.gosrock.admin.model.dto.request.AdminUpdateUserStatusRequest
 import band.gosrock.common.properties.OauthProperties
@@ -159,5 +160,36 @@ class AdminUpdateUserStatusUseCaseTest {
             useCase.execute(operatorId, targetId, AdminUpdateUserStatusRequest(AccountState.DELETED))
         }
         verifyNoInteractions(refreshTokenAdaptor, kakaoInfoClient)
+    }
+
+    @Test
+    fun `자기 자신의 상태는 바꿀 수 없다`() {
+        `when`(adminAuthValidator.validateAdminOrAbove(operatorId)).thenReturn(user(operatorId, AccountRole.ADMIN))
+
+        val e = assertThrows<AdminCannotChangeOwnStatusException> {
+            useCase.execute(operatorId, operatorId, AdminUpdateUserStatusRequest(AccountState.SUSPENDED))
+        }
+        assertEquals(400, e.getErrorReason().status)
+        verifyNoInteractions(userDomainService, refreshTokenAdaptor, kakaoInfoClient)
+    }
+
+    @Test
+    fun `ADMIN 은 다른 ADMIN 의 상태를 바꿀 수 있다`() {
+        val target = user(targetId, AccountRole.ADMIN)
+        stub(AccountRole.ADMIN, target)
+        stubChange(AccountState.SUSPENDED, target)
+
+        assertEquals(AccountState.SUSPENDED, useCase.execute(operatorId, targetId, AdminUpdateUserStatusRequest(AccountState.SUSPENDED)).accountState)
+    }
+
+    @Test
+    fun `refresh 삭제가 실패해도 탈퇴 응답은 성공하고 카카오 연결 해제는 계속한다`() {
+        val target = user(targetId, AccountRole.USER)
+        stub(AccountRole.ADMIN, target)
+        stubChange(AccountState.DELETED, target)
+        `when`(refreshTokenAdaptor.deleteByUserId(targetId)).thenThrow(RuntimeException("redis down"))
+
+        assertEquals(AccountState.DELETED, useCase.execute(operatorId, targetId, AdminUpdateUserStatusRequest(AccountState.DELETED)).accountState)
+        verify(kakaoInfoClient).unlinkUser(anyString(), anyUnlinkTarget())
     }
 }

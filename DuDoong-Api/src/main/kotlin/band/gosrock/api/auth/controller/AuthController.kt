@@ -177,7 +177,8 @@ class AuthController(
     @SecurityRequirement(name = "access-token")
     @PostMapping("/logout")
     fun logoutUser(@CurrentUserId userId: Long): ResponseEntity<Void> {
-        logoutUseCase.execute(userId)
+        // 익명(정지·탈퇴 계정 포함)은 userId 0: 쿠키만 지운다
+        if (userId != 0L) logoutUseCase.execute(userId)
         return ResponseEntity.ok().headers(cookieHelper.deleteCookies()).body(null)
     }
 

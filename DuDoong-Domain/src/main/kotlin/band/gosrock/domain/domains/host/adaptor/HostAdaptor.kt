@@ -1,6 +1,7 @@
 package band.gosrock.domain.domains.host.adaptor
 
 import band.gosrock.common.annotation.Adaptor
+import band.gosrock.domain.domains.event.domain.EventStatus
 import band.gosrock.domain.domains.host.domain.Host
 import band.gosrock.domain.domains.host.exception.HostNotFoundException
 import band.gosrock.domain.domains.host.repository.HostRepository
@@ -21,6 +22,10 @@ class HostAdaptor(private val hostRepository: HostRepository) {
     /** 자신이 속해있는 호스트 리스트를 무한스크롤로 가져오는 쿼리 요청 */
     fun querySliceHostsByUserId(userId: Long, pageable: Pageable): Slice<Host> =
         hostRepository.querySliceHostsByUserId(userId, pageable)
+
+    /** 탈퇴하지 않은 다른 활성 멤버나 [eventStatuses] 상태의 공연이 있는, 자신이 마스터인 호스트가 있는지 (#762) */
+    fun existsActiveHostMasteredBy(userId: Long, eventStatuses: Collection<EventStatus>): Boolean =
+        hostRepository.existsActiveHostMasteredBy(userId, eventStatuses)
 
     /** 자신이 마스터인 호스트 리스트를 가져오는 쿼리 요청 */
     fun findAllByMasterUserId(userId: Long): List<Host> =

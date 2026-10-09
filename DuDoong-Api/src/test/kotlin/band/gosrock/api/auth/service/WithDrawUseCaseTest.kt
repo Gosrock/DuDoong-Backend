@@ -50,4 +50,14 @@ class WithDrawUseCaseTest {
         verify(refreshTokenAdaptor).deleteByUserId(1L)
         verify(kakaoOauthHelper, never()).unlink(anyString())
     }
+
+    @Test
+    fun `refresh 삭제가 실패해도 성공하고 카카오 연결 해제는 계속한다`() {
+        `when`(userDomainService.withDrawUser(1L)).thenReturn("12345")
+        `when`(refreshTokenAdaptor.deleteByUserId(1L)).thenThrow(RuntimeException("redis down"))
+
+        useCase.execute(1L)
+
+        verify(kakaoOauthHelper).unlink("12345")
+    }
 }

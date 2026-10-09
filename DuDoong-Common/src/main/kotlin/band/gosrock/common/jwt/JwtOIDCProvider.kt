@@ -54,7 +54,7 @@ class JwtOIDCProvider {
             throw InvalidTokenException.EXCEPTION
         }
         if (jws.payload.audience.orEmpty().none { it in audiences }) {
-            log.error("OIDC id_token aud 불일치")
+            log.error("OIDC id_token aud 불일치 aud={}", jws.payload.audience)
             throw InvalidTokenException.EXCEPTION
         }
         return jws

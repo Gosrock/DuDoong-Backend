@@ -1,11 +1,16 @@
 package band.gosrock.domain.domains.host.repository
 
 import band.gosrock.domain.common.util.SliceUtil
+import band.gosrock.domain.domains.event.domain.EventStatus
+import band.gosrock.domain.domains.event.domain.QEvent.event
 import band.gosrock.domain.domains.host.domain.Host
 import band.gosrock.domain.domains.host.domain.QHost.host
 import band.gosrock.domain.domains.host.domain.QHostUser.hostUser
+import band.gosrock.domain.domains.user.domain.AccountState
+import band.gosrock.domain.domains.user.domain.QUser.user
 import com.querydsl.core.types.OrderSpecifier
 import com.querydsl.core.types.dsl.BooleanExpression
+import com.querydsl.jpa.JPAExpressions
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
 import jakarta.persistence.LockModeType
@@ -24,6 +29,26 @@ class HostCustomRepositoryImpl(
         // 권한 AOP 등에서 먼저 읽어 캐시된 엔티티일 수 있으므로 락과 함께 다시 읽는다
         entityManager.refresh(found, LockModeType.PESSIMISTIC_WRITE)
         return found
+    }
+
+    override fun existsActiveHostMasteredBy(userId: Long, eventStatuses: Collection<EventStatus>): Boolean {
+        val otherMember = JPAExpressions.selectOne()
+            .from(hostUser, user)
+            .where(
+                hostUser.host.eq(host),
+                hostUserActive(),
+                hostUser.userId.ne(userId),
+                user.id.eq(hostUser.userId),
+                user.accountState.ne(AccountState.DELETED),
+            )
+        val activeEvent = JPAExpressions.selectOne()
+            .from(event)
+            .where(event.hostId.eq(host.id), event.status.`in`(eventStatuses))
+        return queryFactory
+            .selectOne()
+            .from(host)
+            .where(host.masterUserId.eq(userId), otherMember.exists().or(activeEvent.exists()))
+            .fetchFirst() != null
     }
 
     override fun flushChanges() {

@@ -20,6 +20,9 @@ enum class AdminErrorCode(
     @ExplainError("SUPER_ADMIN 전용 기능에 일반 관리자가 접근하려는 경우")
     ADMIN_SUPER_ADMIN_REQUIRED(FORBIDDEN, "ADMIN_403_2", "SUPER_ADMIN 권한이 필요합니다."),
 
+    @ExplainError("운영자가 자기 계정의 상태(정지·탈퇴 등)를 바꾸려는 경우 (#762)")
+    ADMIN_CANNOT_CHANGE_OWN_STATUS(BAD_REQUEST, "ADMIN_400_2", "자기 계정의 상태는 바꿀 수 없습니다."),
+
     @ExplainError("스테이징 서버 인스턴스 ID 가 설정되지 않은 환경에서 시작/중지를 요청한 경우")
     STAGING_SERVER_NOT_CONFIGURED(BAD_REQUEST, "ADMIN_400_1", "스테이징 서버 설정이 없습니다."),
 
