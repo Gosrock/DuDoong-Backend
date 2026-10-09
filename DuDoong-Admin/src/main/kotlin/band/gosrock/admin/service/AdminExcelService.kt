@@ -175,17 +175,28 @@ class AdminExcelService {
      * 헤더 + 행으로 된 단순 표 시트 (v2 호스트 주문·발급 티켓 엑셀, #712).
      * 숫자는 숫자 셀, null 은 빈 칸, 그 외는 문자열 셀.
      *
-     * @param escapeFormula true 면 `= + - @ 탭 CR` 로 시작하는 문자열 앞에 `'` 를 붙인다 (CSV/수식 인젝션 방어).
+     * @param escapeFormula true 면 `= + - @ 탭 CR` 로 시작하는 문자열 셀을 quotePrefixed 스타일(텍스트로 고정)로 만든다 (수식 인젝션 방어).
+     *   값은 바꾸지 않는다 — 예전처럼 앞에 `'` 를 붙이면 값 자체가 달라졌다 (#764)
      *   사용자 입력(이름·옵션 답변·사유)이 들어가는 v2 호스트 엑셀에서 켠다. 기존 운영 어드민 엑셀은 이 메서드를 쓰지 않아 동작 그대로
      */
     fun generateTableExcel(sheetName: String, headers: List<String>, rows: List<List<Any?>>, escapeFormula: Boolean = false): ByteArray {
         val workbook = XSSFWorkbook()
         val sheet = workbook.createSheet(sheetName)
         val headerRow = sheet.createRow(0)
-        // 헤더도 사용자가 정한 값(v2 옵션 질문 이름)이 들어갈 수 있어 같이 방어한다
-        headers.forEachIndexed { i, h -> headerRow.createCell(i).setCellValue(if (escapeFormula) escapeFormula(h) else h) }
         // 여러 줄 값(v2 주문 엑셀 옵션 응답 등)은 셀 안에서 줄바꿈이 보이도록 자동 줄바꿈
         val wrapStyle = workbook.createCellStyle().apply { wrapText = true }
+        val quoteStyle = workbook.createCellStyle().apply { quotePrefixed = true }
+        val quoteWrapStyle = workbook.createCellStyle().apply {
+            quotePrefixed = true
+            wrapText = true
+        }
+        // 헤더도 사용자가 정한 값(v2 옵션 질문 이름)이 들어갈 수 있어 같이 방어한다
+        headers.forEachIndexed { i, h ->
+            headerRow.createCell(i).apply {
+                setCellValue(h)
+                if (escapeFormula && isFormulaLike(h)) cellStyle = quoteStyle
+            }
+        }
         rows.forEachIndexed { idx, values ->
             val row = sheet.createRow(idx + 1)
             values.forEachIndexed { col, value ->
@@ -193,10 +204,16 @@ class AdminExcelService {
                     null -> row.createCell(col).setCellValue("")
                     is Number -> row.createCell(col).setCellValue(value.toDouble())
                     else -> {
-                        val text = value.toString().let { if (escapeFormula) escapeFormula(it) else it }
+                        val text = value.toString()
+                        val quote = escapeFormula && isFormulaLike(text)
+                        val multiline = '\n' in text
                         row.createCell(col).apply {
                             setCellValue(text)
-                            if ('\n' in text) cellStyle = wrapStyle
+                            when {
+                                quote && multiline -> cellStyle = quoteWrapStyle
+                                quote -> cellStyle = quoteStyle
+                                multiline -> cellStyle = wrapStyle
+                            }
                         }
                     }
                 }
@@ -205,8 +222,7 @@ class AdminExcelService {
         return toByteArray(workbook)
     }
 
-    private fun escapeFormula(text: String): String =
-        if (text.isNotEmpty() && text[0] in FORMULA_PREFIXES) "'$text" else text
+    private fun isFormulaLike(text: String): Boolean = text.isNotEmpty() && text[0] in FORMULA_PREFIXES
 
     private fun toByteArray(workbook: XSSFWorkbook): ByteArray {
         val out = ByteArrayOutputStream()

@@ -28,6 +28,6 @@ class HostUserJoinEventHandler(
         val user = userAdaptor.queryUser(hostUserJoinEvent.userId!!)
         val host = hostAdaptor.findById(hostUserJoinEvent.hostId!!)
         val message = HostSlackAlarm.joinOf(host, user)
-        slackMessageProvider.sendMessage(host.slackUrl, message)
+        slackMessageProvider.sendMessage(host.slackUrl, message, host.id)
     }
 }

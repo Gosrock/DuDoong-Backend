@@ -12,6 +12,7 @@ import band.gosrock.domain.domains.ticket_item.domain.OptionGroup
 import band.gosrock.domain.domains.ticket_item.domain.OptionGroupType
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -298,13 +299,15 @@ class AdminExcelServiceTest {
         }
 
         @Test
-        @DisplayName("escapeFormula=true 면 = + - @ 탭 CR 로 시작하는 문자열 앞에 ' , 아니면 그대로")
+        @DisplayName("escapeFormula=true 면 = + - @ 탭 CR 로 시작하는 문자열 셀만 quotePrefixed(값은 그대로), 아니면 스타일 없음 (#764)")
         fun escapesFormula() {
             val values = listOf("=1+1", "+82", "-3", "@SUM(A1)", "\tx", "\rx", "홍길동", "010-1234-5678", "")
             val escaped = readRow(adminExcelService.generateTableExcel("s", values.map { "h" }, listOf(values), escapeFormula = true))
-            assertEquals(listOf("'=1+1", "'+82", "'-3", "'@SUM(A1)", "'\tx", "'\rx", "홍길동", "010-1234-5678", ""), escaped)
+            assertEquals(values, escaped.map { it.first })
+            assertEquals(listOf(true, true, true, true, true, true, false, false, false), escaped.map { it.second })
             val raw = readRow(adminExcelService.generateTableExcel("s", values.map { "h" }, listOf(values)))
-            assertEquals(values, raw)
+            assertEquals(values, raw.map { it.first })
+            assertTrue(raw.none { it.second })
         }
 
         @Test
@@ -312,9 +315,9 @@ class AdminExcelServiceTest {
         fun escapesHeaders() {
             fun headers(escape: Boolean) = XSSFWorkbook(ByteArrayInputStream(
                 adminExcelService.generateTableExcel("s", listOf("주문번호", "=cmd"), emptyList(), escapeFormula = escape),
-            )).use { wb -> (0..1).map { wb.getSheetAt(0).getRow(0).getCell(it).stringCellValue } }
-            assertEquals(listOf("주문번호", "'=cmd"), headers(true))
-            assertEquals(listOf("주문번호", "=cmd"), headers(false))
+            )).use { wb -> (0..1).map { wb.getSheetAt(0).getRow(0).getCell(it).let { c -> c.stringCellValue to c.cellStyle.quotePrefixed } } }
+            assertEquals(listOf("주문번호" to false, "=cmd" to true), headers(true))
+            assertEquals(listOf("주문번호" to false, "=cmd" to false), headers(false))
         }
 
         @Test
@@ -329,10 +332,22 @@ class AdminExcelServiceTest {
             }
         }
 
-        private fun readRow(bytes: ByteArray): List<String> =
+        @Test
+        @DisplayName("수식처럼 시작하는 여러 줄 값은 quotePrefixed + 자동 줄바꿈 (#764)")
+        fun quotesMultilineFormulaCells() {
+            val bytes = adminExcelService.generateTableExcel("s", listOf("a"), listOf(listOf("=SUM(1) ×2\n김 ×1")), escapeFormula = true)
+            XSSFWorkbook(ByteArrayInputStream(bytes)).use { wb ->
+                val cell = wb.getSheetAt(0).getRow(1).getCell(0)
+                assertEquals("=SUM(1) ×2\n김 ×1", cell.stringCellValue)
+                assertTrue(cell.cellStyle.quotePrefixed && cell.cellStyle.wrapText)
+            }
+        }
+
+        /** 둘째 줄 셀의 (값, quotePrefixed) */
+        private fun readRow(bytes: ByteArray): List<Pair<String, Boolean>> =
             XSSFWorkbook(ByteArrayInputStream(bytes)).use { wb ->
                 val row = wb.getSheetAt(0).getRow(1)
-                (0 until row.lastCellNum).map { row.getCell(it).stringCellValue }
+                (0 until row.lastCellNum).map { row.getCell(it).let { c -> c.stringCellValue to c.cellStyle.quotePrefixed } }
             }
     }
 }

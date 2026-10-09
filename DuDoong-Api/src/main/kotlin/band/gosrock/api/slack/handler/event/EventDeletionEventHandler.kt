@@ -26,6 +26,6 @@ class EventDeletionEventHandler(
         val host = hostAdaptor.findById(eventDeletionEvent.hostId)
         val eventName = eventDeletionEvent.eventName
         val message = EventSlackAlarm.deletionOf(eventName)
-        slackMessageProvider.sendMessage(host.slackUrl, message)
+        slackMessageProvider.sendMessage(host.slackUrl, message, host.id)
     }
 }

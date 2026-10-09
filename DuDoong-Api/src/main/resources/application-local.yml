@@ -2,9 +2,10 @@ swagger:
   user: user
   password: password
 
+# 요청 제한 E2E(#764)는 RATE_LIMIT_OVERDRAFT·RATE_LIMIT_REFILL 을 낮춰 띄운다
 throttle:
-  overdraft: 9999
-  greedyRefill: 9999
+  overdraft: ${RATE_LIMIT_OVERDRAFT:9999}
+  greedyRefill: ${RATE_LIMIT_REFILL:9999}
 
 acl.whiteList: 127.0.0.1,127.0.0.2
 

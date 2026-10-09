@@ -4,7 +4,8 @@ tasks.jar { enabled = true }
 dependencies {
     api("org.springframework.boot:spring-boot-starter-data-jpa")
     api("com.mysql:mysql-connector-j")
-    runtimeOnly("com.h2database:h2")
+    // H2 는 테스트에서만 쓴다 — 운영 jar 에 넣지 않는다 (#764). Domain 을 쓰는 모듈의 테스트도 각자 testRuntimeOnly 로 넣는다
+    testRuntimeOnly("com.h2database:h2")
     implementation(project(":DuDoong-Common"))
     implementation(project(":DuDoong-Infrastructure"))
 

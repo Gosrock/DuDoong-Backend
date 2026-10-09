@@ -11,6 +11,7 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.HandlerInterceptor
 import org.springframework.web.util.ContentCachingRequestWrapper
+import org.springframework.web.util.WebUtils
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 
@@ -27,17 +28,27 @@ class ThrottlingInterceptor(
     @Value("\${acl.whiteList}")
     private lateinit var aclWhiteList: List<String>
 
+    @Value("\${server.tomcat.remoteip.internal-proxies}")
+    private lateinit var internalProxies: String
+
+    @Value("\${server.tomcat.remoteip.trusted-proxies}")
+    private lateinit var trustedProxies: String
+
+    private val proxyPattern by lazy { Regex("$internalProxies|$trustedProxies") }
+
     override fun preHandle(
         request: HttpServletRequest,
         response: HttpServletResponse,
         handler: Any,
     ): Boolean {
         val userId = SecurityUtils.getCurrentUserId()
+        // 프록시 헤더는 신뢰하는 프록시(server.tomcat.remoteip.internal-proxies)가 붙인 값만 반영된 주소다 (#764).
+        // 클라이언트가 보낸 Forwarded·X-Forwarded-For 값으로는 바뀌지 않는다
         val remoteAddr = request.remoteAddr
         log.info("remoteAddr : $remoteAddr")
 
         // next js ssr 대응
-        if (aclWhiteList.contains(remoteAddr)) {
+        if (isWhitelisted(request, remoteAddr)) {
             log.info("white List pass$remoteAddr")
             return true
         }
@@ -57,13 +68,30 @@ class ThrottlingInterceptor(
             return true
         }
 
-        // 슬랙 알림 메시지 발송.
+        // 슬랙 알림 메시지 발송 (키별 분당 1회, 비동기). 알림 실패는 429 응답에 영향을 주지 않는다
         // limit is exceeded
-        val cachingRequest = request as ContentCachingRequestWrapper
-        slackThrottleErrorSender.execute(cachingRequest, userId)
+        try {
+            WebUtils.getNativeRequest(request, ContentCachingRequestWrapper::class.java)
+                ?.let { slackThrottleErrorSender.execute(it, userId) }
+        } catch (e: Exception) {
+            log.warn("rate limit Slack 알림 실패: {}", e.toString())
+        }
         responseTooManyRequestError(request, response)
 
         return false
+    }
+
+    /**
+     * 화이트리스트 판정 (#764). 원래 X-Forwarded-For 가 2개 이상이고 모두 사설·루프백이면(RemoteIpValve 는 이때 맨 왼쪽 값을 쓴다)
+     * 화이트리스트로 통과시키지 않는다. 사설 대역을 거친 주소는 RemoteIpValve 가 X-Forwarded-By 로 남기므로
+     * 정해진 주소가 프록시 대역이고 X-Forwarded-By 가 그 주소 하나만이 아니면 2개 이상인 체인이다.
+     * nginx 가 실제 IP 하나로 덮어쓴 경우(사설 IP 1개)는 그 IP 로 그대로 판정한다
+     */
+    private fun isWhitelisted(request: HttpServletRequest, remoteAddr: String): Boolean {
+        if (!aclWhiteList.contains(remoteAddr)) return false
+        val forwardedBy = request.getHeader("X-Forwarded-By")?.split(",")?.map { it.trim() } ?: return true
+        val allProxyChain = proxyPattern.matches(remoteAddr) && forwardedBy != listOf(remoteAddr)
+        return !allProxyChain
     }
 
     private fun responseTooManyRequestError(

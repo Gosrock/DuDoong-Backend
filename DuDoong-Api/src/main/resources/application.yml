@@ -4,7 +4,8 @@ api:
 
 logging:
   pattern:
-    console: "[%d{HH:mm:ss.SSS}] [%X{traceId:-no-trace}] [%-5level] %logger{36} - %msg%n"
+    # 메시지 안의 개행(CR·LF)은 공백으로 바꿔 한 줄에 남긴다 (#764)
+    console: "[%d{HH:mm:ss.SSS}] [%X{traceId:-no-trace}] [%-5level] %logger{36} - %replace(%msg){'[\\r\\n]+', ' '}%n"
 spring:
   profiles:
     include:
@@ -15,6 +16,11 @@ spring:
       local: infrastructure, domain-local, common-local
   autoconfigure:
     exclude: org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+  # Pageable size 상한 (#764). 넘으면 100 으로 줄인다
+  data:
+    web:
+      pageable:
+        max-page-size: 100
 springdoc:
   default-produces-media-type: application/json
   default-consumes-media-type: application/json
@@ -24,11 +30,24 @@ springdoc:
     urls-primary-name: v2-전체
 
 server:
-  forward-headers-strategy: framework
+  # 클라이언트 IP 는 Tomcat RemoteIpValve 가 정한다 (#764). X-Forwarded-For 를 오른쪽부터 보며 루프백(nginx)·VPC 사설 대역(ALB)을 건너뛰고
+  # 처음 나온 주소를 클라이언트로 쓴다. Forwarded·X-Forwarded-Host/Port 헤더는 쓰지 않는다.
+  # 사설 대역을 trusted-proxies 로 두면 체인에 있던 사설 주소가 X-Forwarded-By 로 남는다 — 화이트리스트 판정(ThrottlingInterceptor)에 쓴다
+  forward-headers-strategy: native
+  tomcat:
+    remoteip:
+      internal-proxies: "127\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|0:0:0:0:0:0:0:1|::1"
+      trusted-proxies: "10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|192\\.168\\.\\d{1,3}\\.\\d{1,3}|172\\.(1[6-9]|2[0-9]|3[0-1])\\.\\d{1,3}\\.\\d{1,3}"
+      remote-ip-header: X-Forwarded-For
+      protocol-header: X-Forwarded-Proto
+      host-header: ""
+      port-header: ""
 
 throttle:
   overdraft: ${RATE_LIMIT_OVERDRAFT:60}
   greedyRefill: ${RATE_LIMIT_REFILL:60}
+  # 이미지 업로드 presigned URL 유저별 분당 발급 수 (#764)
+  presigned-url-per-minute: ${PRESIGNED_URL_RATE_LIMIT:30}
 
 acl.whiteList : ${ACL_WHITELIST:127.0.0.1,127.0.0.2}
 ---

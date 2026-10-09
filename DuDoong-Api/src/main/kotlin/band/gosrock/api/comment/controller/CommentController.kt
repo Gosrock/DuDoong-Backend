@@ -17,11 +17,11 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
 import org.springdoc.core.annotations.ParameterObject
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
-import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.RestController
 @Tag(name = "9. [응원톡]")
 @RestController
 @RequestMapping("/api/v1/events/{eventId}/comments")
-@Validated
+// 클래스 @Validated 없이 스프링 기본 메서드 검증으로 limit 상한을 본다 (#764). 위반은 HandlerMethodValidationException → 검증 메시지 응답
 class CommentController(
     private val createCommentUseCase: CreateCommentUseCase,
     private val retrieveCommentUseCase: RetrieveCommentUseCase,
@@ -80,6 +80,14 @@ class CommentController(
     @GetMapping("/random")
     fun getRandomComment(
         @PathVariable eventId: Long,
-        @RequestParam @Min(value = 1L, message = "limit 값은 0보다 커야 합니다.") limit: Long,
+        // 랜덤 조회(ORDER BY RAND())는 상한으로 묶는다 (#764)
+        @RequestParam
+        @Min(value = 1L, message = "limit 값은 0보다 커야 합니다.")
+        @Max(value = MAX_RANDOM_LIMIT, message = "limit 값은 50 이하여야 합니다.")
+        limit: Long,
     ): RetrieveRandomCommentResponse = retrieveRandomCommentUseCase.execute(eventId, limit)
+
+    companion object {
+        const val MAX_RANDOM_LIMIT = 50L
+    }
 }

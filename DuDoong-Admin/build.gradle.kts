@@ -11,4 +11,6 @@ dependencies {
     implementation(project(":DuDoong-Infrastructure"))
     implementation("org.apache.poi:poi:5.2.0")
     implementation("org.apache.poi:poi-ooxml:5.2.0")
+    // 통합 테스트용 H2. Domain 에서 runtimeOnly 를 뺐다 (#764)
+    testRuntimeOnly("com.h2database:h2")
 }

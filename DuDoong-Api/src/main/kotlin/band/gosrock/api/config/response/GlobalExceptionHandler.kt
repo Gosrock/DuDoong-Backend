@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.context.request.ServletWebRequest
 import org.springframework.web.context.request.WebRequest
 import org.springframework.web.method.HandlerMethod
+import org.springframework.web.method.annotation.HandlerMethodValidationException
 import org.springframework.web.servlet.HandlerMapping
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
 import org.springframework.web.util.ContentCachingRequestWrapper
@@ -50,9 +51,19 @@ class GlobalExceptionHandler(
             .build()
             .toUriString()
         val status = HttpStatus.valueOf(statusCode.value())
-        val errorResponse = ErrorResponse(status.value(), status.name, ex.message ?: "", url)
+        // 스프링 예외 메시지(타입·파서 내부 정보)는 내보내지 않는다 (#764). 메서드 파라미터 검증 실패는 검증 메시지를 그대로 쓴다
+        val reason = when (ex) {
+            is HandlerMethodValidationException -> validationMessages(ex)
+            else -> status.reasonPhrase
+        }
+        val errorResponse = ErrorResponse(status.value(), status.name, reason, url)
         return super.handleExceptionInternal(ex, errorResponse, headers, statusCode, request)
     }
+
+    private fun validationMessages(ex: HandlerMethodValidationException): String =
+        ex.allValidationResults
+            .associate { result -> result.methodParameter.parameterName to result.resolvableErrors.joinToString(", ") { it.defaultMessage ?: "" } }
+            .toString()
 
     override fun handleMethodArgumentNotValid(
         ex: MethodArgumentNotValidException,

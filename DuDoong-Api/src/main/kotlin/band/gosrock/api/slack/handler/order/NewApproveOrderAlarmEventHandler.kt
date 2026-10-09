@@ -32,6 +32,6 @@ class NewApproveOrderAlarmEventHandler(
         val event = eventAdaptor.findById(order.eventId!!)
         val host = hostAdaptor.findById(event.hostId!!)
         val message = HostSlackAlarm.newApproveOrder(event, order)
-        slackMessageProvider.sendMessage(host.slackUrl!!, message)
+        slackMessageProvider.sendMessage(host.slackUrl, message, host.id)
     }
 }

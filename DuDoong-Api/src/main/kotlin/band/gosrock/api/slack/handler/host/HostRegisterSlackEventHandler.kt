@@ -25,6 +25,6 @@ class HostRegisterSlackEventHandler(
     fun handle(hostRegisterSlackEvent: HostRegisterSlackEvent) {
         val host = hostAdaptor.findById(hostRegisterSlackEvent.hostId!!)
         val message = HostSlackAlarm.slackRegistrationOf(host)
-        slackMessageProvider.sendMessage(host.slackUrl, message)
+        slackMessageProvider.sendMessage(host.slackUrl, message, host.id)
     }
 }

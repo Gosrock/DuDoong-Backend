@@ -28,6 +28,6 @@ class EventStatusChangeEventHandler(
         val host = hostAdaptor.findById(eventStatusChangeEvent.hostId)
         val event = eventAdaptor.findById(eventStatusChangeEvent.eventId)
         val message = EventSlackAlarm.changeStatusOf(event)
-        slackMessageProvider.sendMessage(host.slackUrl, message)
+        slackMessageProvider.sendMessage(host.slackUrl, message, host.id)
     }
 }
