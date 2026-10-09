@@ -2,8 +2,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     java
-    id("org.springframework.boot") version "3.2.0"
-    id("io.spring.dependency-management") version "1.1.4" apply false
+    id("org.springframework.boot") version "3.2.12"
+    id("io.spring.dependency-management") version "1.1.6" apply false
     kotlin("jvm") version "1.9.22" apply false
     kotlin("plugin.spring") version "1.9.22" apply false
     kotlin("plugin.jpa") version "1.9.22" apply false
@@ -31,6 +31,10 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlin.plugin.jpa")
     apply(plugin = "org.jetbrains.kotlin.plugin.allopen")
     apply(plugin = "org.jetbrains.kotlin.kapt")
+
+    // Boot 3.2.12 기본 Tomcat(10.1.33)은 multipart CVE-2025-48988(10.1.42 수정)·CVE-2025-52520(10.1.43 수정) 이전 버전이다 (#765).
+    // 10.1.x 최신 패치로 고정한다. Boot 를 올릴 때 BOM 기본값이 이보다 높아지면 이 줄을 지운다
+    extra["tomcat.version"] = "10.1.60"
 
     java {
         toolchain {
