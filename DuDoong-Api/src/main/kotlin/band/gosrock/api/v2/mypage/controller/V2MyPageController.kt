@@ -1,5 +1,6 @@
 package band.gosrock.api.v2.mypage.controller
 
+import band.gosrock.api.v2.common.V2Paging
 import band.gosrock.api.v2.common.swagger.V2ApiTags
 import band.gosrock.api.v2.common.V2PageResponse
 import band.gosrock.api.v2.mypage.dto.request.V2MeImageUploadRequest
@@ -51,7 +52,7 @@ class V2MyPageController(
 
     @Operation(summary = "[M-3] 프로필 이미지 업로드 url 발급 (JPEG/JPG/PNG). 업로드 후 key 를 M-2 profileImageKey 로")
     @PostMapping("/images")
-    fun getImageUploadUrl(
+    fun getProfileImageUploadUrl(
         @CurrentUserId userId: Long,
         @RequestBody @Valid request: V2MeImageUploadRequest,
     ): V2MeImageUploadResponse = meUseCase.getImageUploadUrl(userId, request)
@@ -65,7 +66,7 @@ class V2MyPageController(
         @CurrentUserId userId: Long,
         @RequestParam(defaultValue = "ALL") status: V2FollowingHostFilter,
         @RequestParam(defaultValue = "0") @Min(0) page: Int,
-        @RequestParam(defaultValue = "20") @Min(1) @Max(MAX_PAGE_SIZE) size: Int,
+        @RequestParam(defaultValue = V2Paging.DEFAULT_SIZE) @Min(1) @Max(V2Paging.MAX_SIZE) size: Int,
     ): V2PageResponse<V2FollowingHostResponse> = readFollowingHostsUseCase.execute(userId, status, page, size)
 
     @Operation(
@@ -77,10 +78,6 @@ class V2MyPageController(
         @CurrentUserId userId: Long,
         @RequestParam(required = false) @Min(2000) @Max(9998) year: Int?,
         @RequestParam(defaultValue = "0") @Min(0) page: Int,
-        @RequestParam(defaultValue = "20") @Min(1) @Max(MAX_PAGE_SIZE) size: Int,
+        @RequestParam(defaultValue = V2Paging.DEFAULT_SIZE) @Min(1) @Max(V2Paging.MAX_SIZE) size: Int,
     ): V2ArchiveResponse = readArchiveUseCase.execute(userId, year, page, size)
-
-    companion object {
-        private const val MAX_PAGE_SIZE = 50L
-    }
 }

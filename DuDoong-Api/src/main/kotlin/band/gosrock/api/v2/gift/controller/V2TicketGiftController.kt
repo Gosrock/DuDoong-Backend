@@ -1,5 +1,6 @@
 package band.gosrock.api.v2.gift.controller
 
+import band.gosrock.api.v2.common.V2Paging
 import band.gosrock.api.v2.common.swagger.V2ApiTags
 import band.gosrock.api.v2.common.V2PageResponse
 import band.gosrock.api.v2.gift.dto.V2GiftDirection
@@ -14,7 +15,9 @@ import band.gosrock.api.v2.gift.dto.response.V2MyTicketsResponse
 import band.gosrock.api.v2.gift.dto.response.V2NewApprovedResponse
 import band.gosrock.api.v2.gift.usecase.V2GiftUseCase
 import band.gosrock.api.v2.gift.usecase.V2MyTicketUseCase
+import band.gosrock.common.annotation.ApiErrorCodeExample
 import band.gosrock.common.annotation.CurrentUserId
+import band.gosrock.domain.domains.gift.exception.TicketGiftErrorCode
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -65,6 +68,7 @@ class V2TicketGiftController(
     fun getMyTicket(@CurrentUserId userId: Long, @PathVariable ticketUuid: String): V2MyTicketDetailResponse =
         myTicketUseCase.ticket(userId, ticketUuid)
 
+    @ApiErrorCodeExample(TicketGiftErrorCode::class)
     @Operation(
         summary = "[G-1] 선물 링크 생성 (로그인, 주문자 = 소유자). 입장 전·공연 시작 전·원 주문 승인/확정·대기 선물 없음. " +
             "생성 후 티켓은 선물 대기 — 모든 입장 경로에서 막히고, 수락 전까지 만료 없음",
@@ -76,35 +80,41 @@ class V2TicketGiftController(
         @RequestBody(required = false) request: V2GiftMemoRequest?,
     ): V2GiftCreatedResponse = giftUseCase.create(userId, ticketUuid, request?.memo)
 
+    @ApiErrorCodeExample(TicketGiftErrorCode::class)
     @Operation(summary = "[G-6] 수락 후 반환 (로그인, 받은 사람). 입장 전·공연 시작 전. 보낸 사람에게 돌아가고 티켓 uuid(QR)가 바뀐다")
     @PostMapping("/me/tickets/{ticketUuid}/return")
     fun returnGift(@CurrentUserId userId: Long, @PathVariable ticketUuid: String): V2GiftResultResponse =
         giftUseCase.returnTicket(userId, ticketUuid)
 
+    @ApiErrorCodeExample(TicketGiftErrorCode::class)
     @Operation(summary = "[G-7] 보낸/받은 선물 내역 (로그인, 최신 순). 메모·링크는 보낸 사람에게만")
     @GetMapping("/me/gifts")
     fun getMyGifts(
         @CurrentUserId userId: Long,
         @RequestParam direction: V2GiftDirection,
         @RequestParam(defaultValue = "0") @Min(0) page: Int,
-        @RequestParam(defaultValue = "20") @Min(1) @Max(MAX_PAGE_SIZE) size: Int,
+        @RequestParam(defaultValue = V2Paging.DEFAULT_SIZE) @Min(1) @Max(V2Paging.MAX_SIZE) size: Int,
     ): V2PageResponse<V2GiftElement> = giftUseCase.history(userId, direction, page, size)
 
+    @ApiErrorCodeExample(TicketGiftErrorCode::class)
     @Operation(summary = "[G-7a] 보낸 사람의 선물 완료 티켓 상세 (로그인). T-1 의 SENT 행 giftId 로 연다. 티켓 정보·선물 상태만 — uuid·QR 없음. 선물 완료가 아니면 Gift_404_1")
     @GetMapping("/me/gifts/{giftId}/ticket")
     fun getSentGiftTicket(@CurrentUserId userId: Long, @PathVariable giftId: Long): V2MyTicketDetailResponse =
         myTicketUseCase.sentTicket(userId, giftId)
 
+    @ApiErrorCodeExample(TicketGiftErrorCode::class)
     @Operation(summary = "[G-2] 선물 취소(회수) (로그인, 보낸 사람). 대기 중이면 언제든(공연 시작·종료 후에도). 링크 무효, 티켓 복귀. 알림 없음")
     @DeleteMapping("/me/gifts/{giftId}")
     fun cancelGift(@CurrentUserId userId: Long, @PathVariable giftId: Long): V2GiftResultResponse =
         giftUseCase.cancel(userId, giftId)
 
+    @ApiErrorCodeExample(TicketGiftErrorCode::class)
     @Operation(summary = "[G-8] 메모 수정 (로그인, 보낸 사람, 대기 중일 때만). 빈 값이면 메모 삭제")
     @PatchMapping("/me/gifts/{giftId}")
     fun changeGiftMemo(@CurrentUserId userId: Long, @PathVariable giftId: Long, @RequestBody request: V2GiftMemoRequest): V2GiftResultResponse =
         giftUseCase.changeMemo(userId, giftId, request.memo)
 
+    @ApiErrorCodeExample(TicketGiftErrorCode::class)
     @Operation(
         summary = "[G-3] 선물 랜딩 (비로그인 가능). 보는 사람 기준 viewState: 선물 상태 → 만료(EXPIRED) → 본인 링크(OWN_LINK) → AVAILABLE. " +
             "대기 중이 아니면 상태만. 없는 토큰은 Gift_404_1",
@@ -113,17 +123,15 @@ class V2TicketGiftController(
     fun getGift(@CurrentUserId userId: Long, @PathVariable giftToken: String): V2GiftLandingResponse =
         giftUseCase.landing(userId, giftToken)
 
+    @ApiErrorCodeExample(TicketGiftErrorCode::class)
     @Operation(summary = "[G-4] 선물 받기 (로그인). 대기 중·받을 수 있는 공연(OPEN·종료 전, 아니면 Gift_400_5)·본인 링크 아님. 소유자 변경 + 티켓 uuid(QR) 새로 발급. 같은 링크 동시 수락은 1명만")
     @PostMapping("/gifts/{giftToken}/accept")
     fun acceptGift(@CurrentUserId userId: Long, @PathVariable giftToken: String): V2GiftResultResponse =
         giftUseCase.accept(userId, giftToken)
 
+    @ApiErrorCodeExample(TicketGiftErrorCode::class)
     @Operation(summary = "[G-5] 선물 거절 (로그인). 수락과 같은 조건. 티켓은 보낸 사람에게 그대로")
     @PostMapping("/gifts/{giftToken}/reject")
     fun rejectGift(@CurrentUserId userId: Long, @PathVariable giftToken: String): V2GiftResultResponse =
         giftUseCase.reject(userId, giftToken)
-
-    companion object {
-        const val MAX_PAGE_SIZE = 50L
-    }
 }

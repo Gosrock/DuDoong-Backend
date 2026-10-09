@@ -1,5 +1,6 @@
 package band.gosrock.api.v2.operation.controller
 
+import band.gosrock.api.v2.common.V2Paging
 import band.gosrock.api.v2.common.swagger.V2ApiTags
 import band.gosrock.api.v2.common.V2PageResponse
 import band.gosrock.api.v2.operation.dto.V2OrderStatusFilter
@@ -16,11 +17,15 @@ import band.gosrock.api.v2.operation.usecase.V2ReadOrdersUseCase
 import band.gosrock.common.annotation.CurrentUserId
 import band.gosrock.domain.domains.order.service.v2.V2OrderSearchType
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.Size
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
@@ -53,19 +58,22 @@ class V2OrderManageController(
         @PathVariable eventId: Long,
         @RequestParam(defaultValue = "ALL") status: V2OrderStatusFilter,
         @RequestParam(required = false) searchType: V2OrderSearchType?,
-        @RequestParam(required = false) keyword: String?,
+        @RequestParam(required = false) @Size(max = V2Paging.KEYWORD_MAX_LENGTH) keyword: String?,
         @RequestParam(defaultValue = "0") @Min(0) page: Int,
-        @RequestParam(defaultValue = "20") @Min(1) @Max(MAX_PAGE_SIZE) size: Int,
+        @RequestParam(defaultValue = V2Paging.DEFAULT_SIZE) @Min(1) @Max(V2Paging.TABLE_MAX_SIZE) size: Int,
     ): V2OrderListResponse = readOrdersUseCase.execute(userId, eventId, status, searchType, keyword, page, size)
 
-    @Operation(summary = "[R-6] 주문 엑셀 다운로드 (일반 멤버 이상). R-1 과 같은 필터, 전체 행 (xlsx)")
+    @Operation(
+        summary = "[R-6] 주문 엑셀 다운로드 (일반 멤버 이상). R-1 과 같은 필터, 전체 행 (xlsx)",
+        responses = [ApiResponse(responseCode = "200", description = "xlsx 파일 (응답 래퍼 없음)", content = [Content(mediaType = V2Excel.XLSX_MEDIA_TYPE, schema = Schema(type = "string", format = "binary"))])],
+    )
     @GetMapping("/orders/export")
     fun exportOrders(
         @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @RequestParam(defaultValue = "ALL") status: V2OrderStatusFilter,
         @RequestParam(required = false) searchType: V2OrderSearchType?,
-        @RequestParam(required = false) keyword: String?,
+        @RequestParam(required = false) @Size(max = V2Paging.KEYWORD_MAX_LENGTH) keyword: String?,
     ): ResponseEntity<ByteArray> =
         V2Excel.attachment("orders-$eventId.xlsx", readOrdersUseCase.export(userId, eventId, status, searchType, keyword))
 
@@ -97,22 +105,18 @@ class V2OrderManageController(
         @RequestBody(required = false) @Valid request: V2CancelOrderRequest?,
     ): V2OrderDetailResponse = changeOrderUseCase.cancel(userId, eventId, orderUuid, request)
 
-    @Operation(summary = "[F-1] 환불 목록 (일반 멤버 이상). status 없으면 요청·완료 전부, 최신 순")
+    @Operation(summary = "[F-1] 환불 목록 (일반 멤버 이상). status=ALL(기본)이면 요청·완료 전부, 최신 순")
     @GetMapping("/refunds")
     fun getRefunds(
         @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
-        @RequestParam(required = false) status: V2RefundStatusFilter?,
+        @RequestParam(defaultValue = "ALL") status: V2RefundStatusFilter,
         @RequestParam(defaultValue = "0") @Min(0) page: Int,
-        @RequestParam(defaultValue = "20") @Min(1) @Max(MAX_PAGE_SIZE) size: Int,
+        @RequestParam(defaultValue = V2Paging.DEFAULT_SIZE) @Min(1) @Max(V2Paging.TABLE_MAX_SIZE) size: Int,
     ): V2PageResponse<V2RefundElement> = readOrdersUseCase.refunds(userId, eventId, status, page, size)
 
     @Operation(summary = "[F-2] 환불 완료 (매니저 이상, DEC-016). 환불 요청 주문만 (아니면 Order_400_17), 이미 완료면 그대로 200")
     @PostMapping("/refunds/{orderUuid}/complete")
     fun completeRefund(@CurrentUserId userId: Long, @PathVariable eventId: Long, @PathVariable orderUuid: String): V2OrderDetailResponse =
         changeOrderUseCase.completeRefund(userId, eventId, orderUuid)
-
-    companion object {
-        const val MAX_PAGE_SIZE = 100L
-    }
 }

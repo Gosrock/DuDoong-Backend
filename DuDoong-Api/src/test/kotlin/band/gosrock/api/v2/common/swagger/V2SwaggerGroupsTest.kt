@@ -65,21 +65,35 @@ class V2SwaggerGroupsTest {
         assertTrue(unclassified.isEmpty(), "영역 미분류: $unclassified — V2ApiArea.PACKAGE_AREAS 또는 @V2Area 추가")
     }
 
+    /** 핸들러 매핑의 v2 (메서드 경로) → 핸들러 메서드 */
+    private fun v2HandlerMethods(): Map<String, java.lang.reflect.Method> =
+        handlerMapping.handlerMethods.flatMap { (info, handler) ->
+            val patterns = info.pathPatternsCondition?.patternValues ?: info.patternsCondition?.patterns.orEmpty()
+            patterns.filter { it.startsWith("/api/v2/") }.flatMap { p -> info.methodsCondition.methods.map { "${it.name} $p" to handler.method } }
+        }.toMap()
+
     @Test
-    fun `v2 경로는 영역 그룹 중 정확히 하나에 들어가고, 합치면 v2-전체·핸들러 매핑과 같다`() {
+    fun `v2 경로는 컨트롤러 영역 그룹에 들어가고 @V2AlsoIn 이면 다른 영역 그룹에도, 합치면 v2-전체·핸들러 매핑과 같다`() {
         val all = ops(V2SwaggerGroups.ALL).map { it.key }.toSet()
         val hosting = ops(V2ApiArea.HOSTING.group).map { it.key }.toSet()
         val user = ops(V2ApiArea.USER.group).map { it.key }.toSet()
         assertEquals(v2Handlers().keys, all, "v2-전체 문서 = 핸들러 매핑")
-        assertEquals(emptySet<String>(), hosting intersect user, "두 영역에 모두 있음")
         assertEquals(all, hosting + user, "어느 영역에도 없음: ${all - hosting - user}")
-        // 영역 분류 기준과 그룹 내용이 같다
-        v2Handlers().forEach { (key, controller) ->
-            val expected = if (V2ApiArea.of(controller) == V2ApiArea.HOSTING) hosting else user
-            assertTrue(key in expected, "$key ($controller) 가 ${V2ApiArea.of(controller)} 그룹에 없음")
+        // 영역 분류 기준(컨트롤러 영역 + @V2AlsoIn)과 그룹 내용이 같다
+        v2HandlerMethods().forEach { (key, method) ->
+            val areas = V2ApiArea.areasOf(method)
+            assertEquals(V2ApiArea.HOSTING in areas, key in hosting, "$key 호스팅 그룹 (영역 $areas)")
+            assertEquals(V2ApiArea.USER in areas, key in user, "$key 사용자앱 그룹 (영역 $areas)")
         }
         // 같은 경로라도 영역이 다르면 나뉜다 (P-2 공연 리스트 / E-2 공연 생성)
-        assertTrue("GET /api/v2/events" in user && "POST /api/v2/events" in hosting)
+        assertTrue("GET /api/v2/events" in user && "POST /api/v2/events" in hosting && "POST /api/v2/events" !in user)
+        // 두 앱이 함께 쓰는 API 는 사용자앱 그룹에도 (#755 C09)
+        val shared = setOf(
+            "GET /api/v2/me/notifications", "GET /api/v2/me/notifications/unread-count", "POST /api/v2/me/notifications/read",
+            "POST /api/v2/check-ins/self", "GET /api/v2/hosts/{hostId}", "PUT /api/v2/hosts/{hostId}/follow", "DELETE /api/v2/hosts/{hostId}/follow",
+            "GET /api/v2/hosts/{hostId}/events", "GET /api/v2/events/{eventId}/sections", "GET /api/v2/tags",
+        )
+        assertEquals(shared, hosting intersect user, "두 그룹에 모두 보이는 API")
     }
 
     @Test
@@ -90,7 +104,9 @@ class V2SwaggerGroupsTest {
                 val tag = op.tags.single()
                 val match = TAG_FORMAT.matchEntire(tag)
                 assertNotNull(match, "${op.key} 태그 형식: $tag")
-                assertEquals(area.tagPrefix, "[${match!!.groupValues[1]}]", "${op.key} 의 태그 $tag 가 ${area.group} 과 다른 영역")
+                // 태그는 컨트롤러 영역 그대로 (@V2AlsoIn 으로 다른 그룹에 보여도)
+                val primary = V2ApiArea.of(v2Handlers().getValue(op.key))!!
+                assertEquals(primary.tagPrefix, "[${match!!.groupValues[1]}]", "${op.key} 의 태그 $tag 가 컨트롤러 영역 $primary 과 다름")
             }
         }
         val docs = docs(V2SwaggerGroups.ALL)
@@ -193,6 +209,51 @@ class V2SwaggerGroupsTest {
         // 이름이 같은 진짜 경로 변수는 그대로 (H-10 멤버 역할 변경 `{userId}`)
         val roleChange = docs(V2SwaggerGroups.ALL)["paths"]["/api/v2/hosts/{hostId}/members/{userId}/role"]["patch"]["parameters"]
         assertTrue(roleChange.any { it["name"].asText() == "userId" && it["in"].asText() == "path" && it["required"].asBoolean() })
+    }
+
+    @Test
+    fun `날짜는 Swagger 에도 실제 형식 yyyy_MM_dd HH_mm 으로 (date-time 표기 없음, #755 C22)`() {
+        val dateTimes = mutableListOf<String>()
+        docs(V2SwaggerGroups.ALL)["components"]["schemas"].fields().forEach { (name, schema) ->
+            schema["properties"]?.fields()?.forEach { (field, prop) ->
+                if (prop["format"]?.asText() == "date-time") dateTimes += "$name.$field"
+            }
+        }
+        assertEquals(emptyList<String>(), dateTimes)
+        val listItem = docs(V2SwaggerGroups.ALL)["components"]["schemas"]["V2EventListItemResponse"]["properties"]["startAt"]
+        assertEquals("yyyy.MM.dd HH:mm", listItem["pattern"].asText())
+    }
+
+    @Test
+    fun `요청 역할 enum 은 실제로 받는 영문 값(한글 아님), 응답 역할에도 허용값 (#755 C03)`() {
+        val schemas = docs(V2SwaggerGroups.ALL)["components"]["schemas"]
+        for (request in listOf("V2UpdateHostMemberRoleRequest", "V2AddHostMemberRequest")) {
+            // MASTER 는 받되 HOST_400_10 (예전과 같은 동작) — 한글 표시값이 아니라 실제로 받는 영문 이름
+            assertEquals(listOf("MASTER", "MANAGER", "GUEST"), schemas[request]["properties"]["role"]["enum"].map { it.asText() }, request)
+        }
+        assertEquals(listOf("MASTER", "MANAGER", "GUEST"), schemas["V2HostMemberResponse"]["properties"]["role"]["enum"].map { it.asText() })
+    }
+
+    @Test
+    fun `성공 응답은 공통 래퍼, 엑셀은 xlsx, 에러는 공통 형식 또는 에러 코드 예시, operationId 는 이름이 겹치지 않는다 (#755 C10·C26·C27)`() {
+        val docs = docs(V2SwaggerGroups.ALL)
+        val me = docs["paths"]["/api/v2/me"]["get"]["responses"]
+        val wrapper = me["200"]["content"]["application/json"]["schema"]
+        assertEquals(setOf("success", "status", "data", "timeStamp"), wrapper["properties"].fieldNames().asSequence().toSet())
+        assertTrue(wrapper["properties"]["data"]["\$ref"].asText().endsWith("V2MeResponse"), wrapper.toString())
+        assertTrue(me.has("4XX"), "공통 에러 응답")
+        assertEquals(setOf("success", "status", "code", "reason", "timeStamp", "path"), me["4XX"]["content"]["application/json"]["schema"]["properties"].fieldNames().asSequence().toSet())
+        for (path in listOf("/api/v2/events/{eventId}/orders/export", "/api/v2/events/{eventId}/issued-tickets/export")) {
+            val content = docs["paths"][path]["get"]["responses"]["200"]["content"]
+            assertEquals(listOf("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"), content.fieldNames().asSequence().toList(), path)
+        }
+        // 선물 API 는 에러 코드 예시 (Gift_*)
+        val accept = docs["paths"]["/api/v2/gifts/{giftToken}/accept"]["post"]["responses"]
+        assertTrue(accept["400"]["content"]["application/json"]["examples"].has("Gift_400_5"), accept.toString())
+        val operationIds = docs["paths"].flatMap { item -> item.toList().mapNotNull { it["operationId"]?.asText() } }
+        assertEquals(operationIds.size, operationIds.toSet().size, "operationId 중복")
+        assertTrue(operationIds.none { Regex("_\\d+$").containsMatchIn(it) }, "자동 접미 operationId: ${operationIds.filter { Regex("_\\d+$").containsMatchIn(it) }}")
+        assertTrue(listOf("getHostImageUploadUrl", "getEventImageUploadUrl", "getProfileImageUploadUrl").all { it in operationIds })
     }
 
     companion object {

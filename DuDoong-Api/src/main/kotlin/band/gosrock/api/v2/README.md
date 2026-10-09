@@ -39,7 +39,52 @@ band.gosrock.api.v2
   - 태그는 `V2ApiTags` 상수 `[호스팅|사용자] 번호. 이름` (와이어프레임 순서, 영역 안 번호 중복 금지, 설명 필수). summary 는 화면 ID(`[H-1]`)로 시작.
   - 정렬은 Swagger UI 설정(tagsSorter/operationsSorter) 없이 문서 순서로: 태그는 `V2ApiTags.ORDERED`(호스팅 1~8 → 사용자 1~4, 새 태그는 여기 추가), 경로는 태그마다 화면 ID 순(접두 문자 → 숫자 → 하위 표기, 접두 문자 순서는 태그별로 `V2ApiTags.PREFIX_ORDER` — 운영 D → R → F, 티켓 T → O. 여러 태그에 걸친 경로는 위상 정렬).
     - 한계: 같은 경로의 메서드는 Swagger UI 가 묶어 고정 순서(GET → PUT → POST → DELETE → PATCH)로 보여 줘 화면 ID 순이 아니다 — 티켓 T-4(DELETE) → T-3(PATCH), 옵션 O-4 → O-3, 선물 G-2·G-8(`/me/gifts/{giftId}`)이 G-3 앞. v1·internal 태그는 예전처럼 이름순 태그 상수를 바꾸면 `const` 인라인 때문에 증분 빌드가 옛 값을 남길 수 있어 `clean` 후 확인
+  - 두 앱이 함께 쓰는 API 는 `@V2AlsoIn(V2ApiArea.USER)` 로 사용자앱 그룹에도 보인다(태그는 원래 영역): N-1~N-3, Q-5, H-3, H-13(PUT·DELETE), H-14, E-5, E-11 (#755)
+  - 응답 표기 (#755): 성공 200 은 공통 래퍼 `{success, status, data, timeStamp}` 로 감싸 보이고(엑셀은 xlsx), 4xx 가 따로 적히지 않은 operation 에는 공통 에러 형식 `4XX`. 선물 G-* 는 `@ApiErrorCodeExample(TicketGiftErrorCode)` 로 코드 예시. 날짜는 `@DateFormat` + `@Schema(type = "string", pattern = "yyyy.MM.dd HH:mm")` 를 함께 단다(테스트로 고정)
 - SUPER_ADMIN: `@HostRolesAllowed` 권한 검사만 건너뛴다. 요청자 역할을 보는 도메인 규칙은 그대로라, 멤버가 아니면 마스터 전용 규칙(매니저 추가·삭제, 마스터 양도)은 막히고 GUEST 추가·삭제, 역할 변경, 조회·수정은 된다.
+
+## API 규약 (#755)
+
+v2 82개 API 를 검토해 정한 규칙. 새 API 도 이 규칙을 따르고, 예외는 여기에 적는다. 화면 ID 가 두 앱에서 겹치면(O-1~O-5, T-1~T-3) `호스팅 O-1` / `사용자 O-1` 로 구분해 쓴다.
+
+**URL**
+- `/api/v2/` + 소문자 kebab-case. 컬렉션은 복수(`events`, `ticket-items`), 1:1 하위 리소스·화면 묶음은 단수(`basic`, `checklist`, `dashboard`)
+- 공연에 속한 리소스는 `/events/{eventId}/...`, 호스트에 속한 리소스는 `/hosts/{hostId}/...`. 한 단계 아래 id 까지만 중첩
+- 로그인 사용자 **본인 기준** 목록·조회·생성·전이는 `/me/...` (O-1 주문 생성도 `POST /me/orders`, #755). 예외: Q-5 `/check-ins/self`(토큰이 공연을 정함)
+- 같은 리소스에 공개 GET 이 있으면 호스트 관리용은 `/manage` 하위(E-3, T-1)
+- 경로 변수 이름은 v2 전체에서 하나: `eventId`, `hostId`, `ticketItemId`, `optionId`(옵션 그룹), `giftId`, `userId`, `orderUuid`, `ticketUuid`, `giftToken`
+- 호스트가 만드는 관리 리소스는 숫자 id, 주문·발급 티켓은 uuid(v1 공유·추측 방지·QR), 비로그인 공유 링크는 추측 불가 토큰
+
+**메서드** (v1 은 상태 전이를 `PATCH /{id}/open` 등으로 했다 — v2 에서 바꿈)
+- GET 조회(부수효과 없음. 예외: Q-4 QR 토큰 최초 생성, T-2·G-7a 승인 알림 읽음 처리 비동기)
+- POST 생성·presigned URL 발급·**상태 전이**. 상태 전이는 `POST /{리소스}/{id}/{동사 원형}`(`open`, `approve`, `refuse`, `cancel`, `complete`, `suspend`, `resume`, `accept`, `reject`, `return`, `read`, `transfer-master`) — 전이마다 권한·검증·부수효과(발급·알림·환불 요청)가 달라 `status` 필드 PATCH 로 하지 않는다
+- PUT 전체 교체·upsert(E-6 섹션, 티켓 옵션 지정, 환불 계좌, 팔로우). 빠진 항목은 지워진다. 본문은 객체로 감싼다(`{sections: [...]}`, `{optionIds: [...]}` — 나중에 필드를 더할 수 있게)
+- PATCH 부분 수정: **null(키 없음) = 변경 안 함**. 객체·배열 필드는 통째 교체(E-4 `place`·`contacts`·`tagIds`, H-4 `contacts`). T-3 도 같다(#755) — '값 없음'(무제한·제한 없음·등록 즉시·공연 시작까지·설명 없음)은 `clear` 에 필드 이름을 넣는다
+- DELETE 삭제(소프트 삭제·행 삭제)와 링크 무효화(G-2 선물 회수 — 행은 CANCELED 로 남지만 사용자에게는 '없애기')
+- **같은 전이를 다시 보내면**: 결과가 같아 부작용이 없는 전이는 200(T-5 판매 중단·T-6 재개·F-2 환불 완료·N-3 읽음·H-13 팔로우/해제), 발급·환불 요청·알림이 따르는 전이는 현재 상태 오류 400(R-3 `Order_400_3`, R-4·R-5, O-4 `Order_400_5`, E-8, E-9 `Event_400_19`, G-2·G-4·G-5 `Gift_400_3`, G-6 `Gift_400_8`). 프론트는 400 이면 최신 상태를 다시 읽는다
+
+**응답**
+- 성공은 **항상 200**(생성도 201 이 아니라 200 + 만든 리소스 id 또는 상세, 삭제도 204 가 아니라 200 + 본문). 공통 래퍼 `{success, status, data, timeStamp}`, 엑셀만 래퍼 없이 xlsx
+- 변경·삭제 응답은 화면을 다시 그릴 값: 수정은 수정된 리소스, 목록에서 지우면 남은 목록(T-4, O-4, H-11, 멤버 변경 H-7·H-10·H-12), 상태 전이는 전이 결과
+- 목록: `V2PageResponse`. 페이지 크기는 `V2Paging`(기본 20, 카드형 10, 상한 50, 운영 표·알림 100), 검색어는 50자까지. 필터 enum 은 `ALL` 기본값(F-1 도 `ALL`, #755). 한 화면에 다 보이는 작은 목록은 배열
+- null 정책: 필드는 항상 키가 있고 값이 없으면 null. 그 역할에게 보이지 않는 값도 null
+
+**DTO·필드**
+- 클래스 `V2*Request` / `V2*Response`(목록 원소는 `*Element` 도), 필드 camelCase, 식별자 `{리소스}Id`·`{리소스}Uuid`(알림도 `notificationId`, 대상은 `target.targetId`), 사람이 읽는 번호 `orderNo`·`issuedTicketNo`
+- 날짜: `LocalDateTime` + `@DateFormat`(`yyyy.MM.dd HH:mm`) + Schema pattern. 이름 `*At` 은 그 사건(`orderedAt`, `withdrawnAt`, `canceledAt`), 리소스 생성은 `createdAt`(주문만 `orderedAt`)
+- 금액 `Long`(원): 티켓 리소스 가격 `price`, 주문·발급 티켓 안의 가격은 주문 시점 `unitPrice`, 합계 `*Amount`(`totalAmount`, `optionAmount`), 옵션 답변 추가금 `additionalPrice`. 수량·건수 `Long`(`quantity`, `*Count`)
+- Boolean: 상태 `is*`, 소유·존재 `has*`, 가능 여부 `can*`(`canCancel`, `canEditRefundAccount`), 설정값 `*Required` 허용
+- 계좌는 어디서나 `bankName` / `accountHolder` / `accountNumber`(환불 계좌 본인 화면은 `maskedAccountNumber`). 결제 방식은 요청·응답 모두 `paymentChannel`
+- enum: 코드값(대문자) 그대로, 표시명은 프론트. `@JsonValue` 로 한글을 내는 도메인 enum 은 v2 DTO 에 쓰지 않고 `V2*` enum 으로 감싼다(`V2HostMemberRole`, `V2TicketPayType` … ArchUnit 고정). 도메인 VO 도 응답에 직접 쓰지 않는다(`V2ContactResponse`)
+- 같은 의미 = 같은 이름. 의도적 예외: `remaining`(사용자 화면 = 재고 − 승인 대기, 호스트 T-1 = 재고 + `pendingApproveCount` 별도, DEC-027 #2), G-7 `counterpartName`(방향이 섞인 목록), 화면 판정 상태 `*State`(`saleState`, `giftState`, `viewState`, 사용자 T-1·T-2 `state`) vs 저장 상태 `status`(공연 `displayStatus` 는 예외로 유지)
+
+**에러**
+- 형식 `{success:false, status, code, reason, timeStamp, path}`, code `{도메인}_{HTTP}_{번호}`. 도메인 접두는 그 enum 의 기존 접두 그대로
+- 401 비로그인(필터), **403 호스트 권한 실패만**(`V2ErrorPolicy`, code 는 v1 숫자 그대로 `HOST_400_*` — 프론트는 HTTP 상태로 403 을 분기하고 code 로 사유 구분), 404 없는 리소스 + **남의 리소스**(남의 주문·티켓·선물, 다른 공연의 주문·티켓·옵션 — 존재를 숨김) + 비공개 공연, 400 검증·업무 규칙(중복·이미 처리됨 포함, 409 안 씀). Q-2 체크인은 항상 200 + `result`
+- 403/404 기준: 호스트 리소스에서 멤버 아님·역할 부족은 403(호스트·공연은 공개라 존재를 알려도 됨), 사용자 개인 리소스·다른 공연 소속은 404
+- 검증 위치: DTO 는 형식·컬럼 상한(`GLOBAL_400_1`), 업무 길이·조합은 도메인(전용 코드). 같은 필드가 길이에 따라 두 코드 중 하나일 수 있다(옵션 설명 255 / 50자)
+
+**인증**: `@CurrentUserId userId` 를 컨트롤러 첫 파라미터로(Swagger 에서 숨김, 비로그인 공개 경로에서는 0), 호스트 권한은 유스케이스 메서드의 `@HostRolesAllowed`. 대상 사용자가 경로에 있으면 `currentUserId` / `targetUserId`
 
 ## v1 / v2 로직 경계 (DEC-018)
 
@@ -52,7 +97,7 @@ band.gosrock.api.v2
   - `V2EventDomainService`: 생성, 수정 가능 상태, 기본 정보 수정(hasTicket 잠금, 시작 시각), 문의처·태그·섹션 교체 검증, 섹션 대체 표시, 체크리스트, 등록, 삭제
   - `V2HostDomainService`: 프로필 부분 수정, 연락처 교체 검증·대체 표시, 멤버 즉시 추가·역할 변경·삭제
   - `V2HostFollowDomainService`: 팔로우 / 언팔로우
-  - `V2TicketItemDomainService`: 티켓 생성(티켓 없음 공연 거부, DUDOONG/FREE), 폼 전체 수정(잠기면 DEC-006 허용 필드만, 잠긴 필드는 양쪽 trim 비교·바뀐 값만 길이 검증), 판매 기간 검증, 판매 상태(`saleState`)·구매 가능 판정, **잠금 판정(`isLocked` = 재고 감소 OR 승인 대기 주문)**, 판매 중단·재개(멱등), 옵션 전체 지정
+  - `V2TicketItemDomainService`: 티켓 생성(티켓 없음 공연 거부, DUDOONG/FREE), 부분 수정(T-3, #755: 락 안에서 현재 값에 `V2TicketItemPatch` 를 덮어쓴 폼(`mergedForm`)으로 — null 은 그대로, `clear` 는 값 없음. 잠기면 DEC-006 허용 필드만, 잠긴 필드는 양쪽 trim 비교·바뀐 값만 길이 검증), 판매 기간 검증, 판매 상태(`saleState`)·구매 가능 판정, **잠금 판정(`isLocked` = 재고 감소 OR 승인 대기 주문)**, 판매 중단·재개(멱등), 옵션 전체 지정
   - `V2TicketOptionDomainService`: 옵션 생성(SUBJECTIVE / YES_NO=TRUE_FALSE), 부분 수정(잠긴 티켓에 붙으면 이름·설명만, DEC-012), 삭제(잠긴 티켓에 붙으면 불가, 판매 전 티켓에서는 떼고 삭제). 수정·삭제는 붙은 티켓들의 `티켓관리:{id}` 락을 id 순으로 잡고 판정
     - 설명 최대 50자 (Figma, 사용자 결정 2026-10-09 #752): 검사는 도메인(`V2TicketOptionDomainService`)이 앞뒤 공백을 지운 값으로 한다 — 생성(O-2)은 항상, 수정(O-3)은 **값이 바뀔 때만**(양쪽 trim 비교). 넘으면 둘 다 `Option_Group_400_6`, 요청 DTO 상한은 컬럼 길이 255. 길이는 Kotlin `String.length`(UTF-16 단위)라 이모지 등 보조 문자는 2자로 센다(MySQL `CHAR_LENGTH` 와 다를 수 있음). 수정에서 값이 바뀔 때만 보는 이유: v1 옵션 API 는 길이 제한이 없어(바꾸지 않음) 앞으로 50자를 넘는 설명이 생길 수 있고, 수정 화면이 폼 전체를 다시 보내면 설명을 건드리지 않았는데도 거부되기 때문 — 티켓 이름·설명(값이 바뀔 때만 검증)과 같은 방식. **기존에 50자를 넘는 설명을 고치려면 50자 이하로 줄여야 한다**(한 글자만 바꿔도 새 값으로 검사). prod 기존 설명은 1,540건 모두 50자 이하(최대 50자, `CHAR_LENGTH`, 2026-10-09 읽기 전용 조회)라 지금 영향받는 데이터는 없다
   - `V2OrderDomainService` (#712): 주문의 공연 소속 확인(다른 공연 주문은 404), 승인(v1 `OrderApproveService` 그대로 호출), 거절(사유 종류 검증 + `Order.refuseByHost` + `Order.recordRefuseReasonType`, 표시 문구는 v1 `cancel_reason`)·호스트 취소(`Order.cancelByHost`) — 둘 다 internal, v1 `refuse`·`cancel` 과 같은 `주문` 락·검증·철회 이벤트(발급 티켓 철회·선물 연쇄·알림)에 **환불 요청은 결제 금액이 있을 때만**: 0원 v2 거절·호스트 취소는 F-1 환불 목록·D-1 환불 요청 수에 들어가지 않고 F-2 완료는 `Order_400_17` (사용자 결정 2026-10-09 #752). v1 거절·취소(호스트·운영 어드민 `WithdrawOrderService`)는 0원도 환불 요청 그대로 — 엔티티의 공통 전이 `withdrawByHost` 에 v1 은 항상 `true` 를 넘긴다, 환불 완료(요청 상태만, 완료는 멱등). 상태 분류는 `V2OrderStatus` (v1 상태값 유지, REFUSED = CANCELED + 사유 종류 있음 또는 approved_at 없음)

@@ -21,8 +21,9 @@ enum class V2EntranceFilter(val domain: V2EntranceState?) {
     DONE(V2EntranceState.DONE),
 }
 
-/** F-1 환불 상태 필터. null 이면 요청·완료 전부 */
-enum class V2RefundStatusFilter(val domain: RefundStatus) {
+/** F-1 환불 상태 필터. ALL(기본) = 요청·완료 전부 — 다른 목록 필터와 같이 ALL 을 둔다 (#755) */
+enum class V2RefundStatusFilter(val domain: RefundStatus?) {
+    ALL(null),
     REQUESTED(RefundStatus.REFUND_REQUESTED),
     COMPLETED(RefundStatus.REFUND_COMPLETED),
 }

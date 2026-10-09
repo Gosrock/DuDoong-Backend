@@ -1,5 +1,8 @@
 package band.gosrock.api.v2.host.controller
 
+import band.gosrock.api.v2.common.V2Paging
+import band.gosrock.api.v2.common.swagger.V2AlsoIn
+import band.gosrock.api.v2.common.swagger.V2ApiArea
 import band.gosrock.api.v2.common.swagger.V2ApiTags
 import band.gosrock.api.v2.common.V2PageResponse
 import band.gosrock.api.v2.host.dto.request.V2AddHostMembersRequest
@@ -34,6 +37,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.Size
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -69,9 +73,9 @@ class V2HostController(
     @GetMapping("/me/hosts")
     fun getMyHosts(
         @CurrentUserId userId: Long,
-        @RequestParam(required = false) keyword: String?,
+        @RequestParam(required = false) @Size(max = V2Paging.KEYWORD_MAX_LENGTH) keyword: String?,
         @RequestParam(defaultValue = "0") @Min(0) page: Int,
-        @RequestParam(defaultValue = "10") @Min(1) @Max(MAX_PAGE_SIZE) size: Int,
+        @RequestParam(defaultValue = V2Paging.CARD_DEFAULT_SIZE) @Min(1) @Max(V2Paging.MAX_SIZE) size: Int,
     ): V2PageResponse<V2MyHostResponse> = readMyHostsUseCase.execute(userId, keyword, page, size)
 
     @Operation(summary = "[H-2] 호스트 생성. 생성자는 마스터")
@@ -81,6 +85,7 @@ class V2HostController(
         @RequestBody @Valid request: V2CreateHostRequest,
     ): V2CreateHostResponse = createHostUseCase.execute(userId, request)
 
+    @V2AlsoIn(V2ApiArea.USER)
     @Operation(summary = "[H-3] 공개 호스트 홈 (비로그인 허용)")
     @GetMapping("/hosts/{hostId}")
     fun getHostHome(
@@ -136,6 +141,7 @@ class V2HostController(
         @RequestBody @Valid request: V2TransferMasterRequest,
     ): List<V2HostMemberResponse> = transferMasterUseCase.execute(userId, hostId, request)
 
+    @V2AlsoIn(V2ApiArea.USER)
     @Operation(summary = "[H-13] 호스트 팔로우 (멱등)")
     @PutMapping("/hosts/{hostId}/follow")
     fun follow(
@@ -143,6 +149,7 @@ class V2HostController(
         @PathVariable hostId: Long,
     ): V2HostFollowResponse = hostFollowUseCase.follow(userId, hostId)
 
+    @V2AlsoIn(V2ApiArea.USER)
     @Operation(summary = "[H-13] 호스트 팔로우 해제 (멱등)")
     @DeleteMapping("/hosts/{hostId}/follow")
     fun unfollow(
@@ -150,24 +157,21 @@ class V2HostController(
         @PathVariable hostId: Long,
     ): V2HostFollowResponse = hostFollowUseCase.unfollow(userId, hostId)
 
+    @V2AlsoIn(V2ApiArea.USER)
     @Operation(summary = "[H-14] 호스트 공연 리스트 (비로그인 허용). 비멤버는 공개 공연만, 멤버는 준비중 포함")
     @GetMapping("/hosts/{hostId}/events")
     fun getHostEvents(
         @CurrentUserId userId: Long,
         @PathVariable hostId: Long,
         @RequestParam(defaultValue = "0") @Min(0) page: Int,
-        @RequestParam(defaultValue = "10") @Min(1) @Max(MAX_PAGE_SIZE) size: Int,
+        @RequestParam(defaultValue = V2Paging.CARD_DEFAULT_SIZE) @Min(1) @Max(V2Paging.MAX_SIZE) size: Int,
     ): V2PageResponse<V2HostEventResponse> = readHostEventsUseCase.execute(userId, hostId, page, size)
 
     @Operation(summary = "[H-15] 호스트 프로필/커버 이미지 업로드 url 발급 (매니저 이상)")
     @PostMapping("/hosts/{hostId}/images")
-    fun getImageUploadUrl(
+    fun getHostImageUploadUrl(
         @CurrentUserId userId: Long,
         @PathVariable hostId: Long,
         @RequestBody @Valid request: V2HostImageUploadRequest,
     ): V2HostImageUploadResponse = getHostImageUploadUrlUseCase.execute(userId, hostId, request)
-
-    companion object {
-        private const val MAX_PAGE_SIZE = 50L
-    }
 }

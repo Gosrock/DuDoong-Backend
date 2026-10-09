@@ -1,5 +1,8 @@
 package band.gosrock.api.v2.operation.controller
 
+import band.gosrock.api.v2.common.V2Paging
+import band.gosrock.api.v2.common.swagger.V2AlsoIn
+import band.gosrock.api.v2.common.swagger.V2ApiArea
 import band.gosrock.api.v2.common.swagger.V2ApiTags
 import band.gosrock.api.v2.operation.dto.V2EntranceFilter
 import band.gosrock.api.v2.operation.dto.request.V2CheckInRequest
@@ -14,12 +17,16 @@ import band.gosrock.api.v2.operation.usecase.V2ReadIssuedTicketsUseCase
 import band.gosrock.common.annotation.CurrentUserId
 import band.gosrock.domain.domains.order.repository.condition.AdminTableSearchType
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.Size
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
@@ -48,12 +55,15 @@ class V2IssuedTicketController(
         @Parameter(description = SEARCH_TYPE_DESCRIPTION)
         @RequestParam(required = false) searchType: AdminTableSearchType?,
         @Parameter(description = "검색어 (searchType 기준, 현재 소유자의 이름 또는 연락처 부분일치)")
-        @RequestParam(required = false) keyword: String?,
+        @RequestParam(required = false) @Size(max = V2Paging.KEYWORD_MAX_LENGTH) keyword: String?,
         @RequestParam(defaultValue = "0") @Min(0) page: Int,
-        @RequestParam(defaultValue = "20") @Min(1) @Max(V2OrderManageController.MAX_PAGE_SIZE) size: Int,
+        @RequestParam(defaultValue = V2Paging.DEFAULT_SIZE) @Min(1) @Max(V2Paging.TABLE_MAX_SIZE) size: Int,
     ): V2IssuedTicketListResponse = readIssuedTicketsUseCase.execute(userId, eventId, entrance, searchType, keyword, page, size)
 
-    @Operation(summary = "[I-3] 발급 티켓 엑셀 다운로드 (일반 멤버 이상). I-1 과 같은 필터 + 옵션 응답 컬럼 (xlsx)")
+    @Operation(
+        summary = "[I-3] 발급 티켓 엑셀 다운로드 (일반 멤버 이상). I-1 과 같은 필터 + 옵션 응답 컬럼 (xlsx)",
+        responses = [ApiResponse(responseCode = "200", description = "xlsx 파일 (응답 래퍼 없음)", content = [Content(mediaType = V2Excel.XLSX_MEDIA_TYPE, schema = Schema(type = "string", format = "binary"))])],
+    )
     @GetMapping("/events/{eventId}/issued-tickets/export")
     fun exportIssuedTickets(
         @CurrentUserId userId: Long,
@@ -62,7 +72,7 @@ class V2IssuedTicketController(
         @Parameter(description = SEARCH_TYPE_DESCRIPTION)
         @RequestParam(required = false) searchType: AdminTableSearchType?,
         @Parameter(description = "검색어 (searchType 기준, 현재 소유자의 이름 또는 연락처 부분일치)")
-        @RequestParam(required = false) keyword: String?,
+        @RequestParam(required = false) @Size(max = V2Paging.KEYWORD_MAX_LENGTH) keyword: String?,
     ): ResponseEntity<ByteArray> =
         V2Excel.attachment("issued-tickets-$eventId.xlsx", readIssuedTicketsUseCase.export(userId, eventId, entrance, searchType, keyword))
 
@@ -89,6 +99,7 @@ class V2IssuedTicketController(
     fun getCheckInQr(@CurrentUserId userId: Long, @PathVariable eventId: Long): V2CheckInQrResponse =
         checkInUseCase.qr(userId, eventId)
 
+    @V2AlsoIn(V2ApiArea.USER)
     @Operation(summary = "[Q-5] 관객 셀프 체크인 (로그인 유저). 토큰 공연(OPEN)의 본인 티켓 입장. 여러 장이면 SELECT_TICKET + candidates → ticketUuid 로 재요청")
     @PostMapping("/check-ins/self")
     fun selfCheckIn(@CurrentUserId userId: Long, @RequestBody @Valid request: V2SelfCheckInRequest): V2CheckInResponse =

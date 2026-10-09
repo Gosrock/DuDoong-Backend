@@ -1,6 +1,16 @@
 package band.gosrock.api.v2.common.swagger
 
+import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.PathItem
+import io.swagger.v3.oas.models.media.BooleanSchema
+import io.swagger.v3.oas.models.media.Content
+import io.swagger.v3.oas.models.media.IntegerSchema
+import io.swagger.v3.oas.models.media.MediaType
+import io.swagger.v3.oas.models.media.ObjectSchema
+import io.swagger.v3.oas.models.media.Schema
+import io.swagger.v3.oas.models.media.StringSchema
+import io.swagger.v3.oas.models.responses.ApiResponse
+import io.swagger.v3.oas.models.responses.ApiResponses
 import io.swagger.v3.oas.models.Paths
 import io.swagger.v3.oas.models.info.Info
 import org.springdoc.core.models.GroupedOpenApi
@@ -29,13 +39,40 @@ class V2SwaggerGroups {
         GroupedOpenApi.builder()
             .group(name)
             .pathsToMatch("/api/v2/**")
-            .apply { if (area != null) addOpenApiMethodFilter { V2ApiArea.of(it.declaringClass) == area } }
+            .apply { if (area != null) addOpenApiMethodFilter { area in V2ApiArea.areasOf(it) } }
             .addOpenApiCustomizer { openApi ->
                 openApi.info(Info().title("두둥 v2 API - $name").version("v2").description("$summary\n\n$GUIDE"))
                 openApi.tags = openApi.tags?.sortedBy { tag -> V2ApiTags.ORDERED.indexOf(tag.name).let { if (it < 0) Int.MAX_VALUE else it } }
                 openApi.paths?.let { paths -> openApi.paths = Paths().apply { sortPaths(paths).forEach { path -> addPathItem(path, paths[path]) } } }
+                openApi.paths?.values?.flatMap { it.readOperations() }?.forEach { wrapResponses(it) }
             }
             .build()
+
+    /**
+     * 응답 표기 (#755 C10): 실제 JSON 처럼 성공 200 을 공통 래퍼 `{success, status, data, timeStamp}` 로 감싸 보이고(엑셀 xlsx 는 그대로),
+     * 4xx 응답이 따로 적히지 않은 operation 에는 공통 에러 형식 `4XX` 를 붙인다. 개별 에러 코드는 summary 와 `@ApiErrorCodeExample` 로
+     */
+    private fun wrapResponses(operation: Operation) {
+        operation.responses?.get("200")?.content?.forEach { (mediaType, content) ->
+            val wrapped = content.schema?.properties?.containsKey("success") == true
+            if ((mediaType.contains("json") || mediaType == "*/*") && !wrapped) content.schema = successWrapper(content.schema)
+        }
+        val responses = operation.responses ?: ApiResponses().also { operation.responses = it }
+        if (responses.keys.none { it.startsWith("4") }) {
+            responses.addApiResponse(
+                "4XX",
+                ApiResponse().description("에러 (공통 형식). code 는 {도메인}_{HTTP}_{번호}, 주요 코드는 summary 참고. 호스트 권한 실패는 403 + HOST_400_*")
+                    .content(Content().addMediaType("application/json", MediaType().schema(ERROR_SCHEMA))),
+            )
+        }
+    }
+
+    private fun successWrapper(data: Schema<*>?): Schema<*> =
+        ObjectSchema()
+            .addProperty("success", BooleanSchema().example(true))
+            .addProperty("status", IntegerSchema().example(200))
+            .addProperty("data", data ?: ObjectSchema())
+            .addProperty("timeStamp", StringSchema().description("응답 시각 (ISO)"))
 
     /**
      * 경로 순서. Swagger UI 는 태그별로 문서의 경로 순서대로 보여 주고, 같은 경로의 메서드는 묶는다. 그래서 태그마다
@@ -88,6 +125,15 @@ class V2SwaggerGroups {
 
     companion object {
         const val ALL = "v2-전체"
+
+        /** 공통 에러 응답 `ErrorResponse` 의 모양 */
+        private val ERROR_SCHEMA: Schema<*> = ObjectSchema()
+            .addProperty("success", BooleanSchema().example(false))
+            .addProperty("status", IntegerSchema().example(400))
+            .addProperty("code", StringSchema().example("Order_400_15"))
+            .addProperty("reason", StringSchema())
+            .addProperty("timeStamp", StringSchema())
+            .addProperty("path", StringSchema())
 
         /** 그룹 설명 공통: 권한 표기·응답·에러 코드 안내 */
         val GUIDE = """

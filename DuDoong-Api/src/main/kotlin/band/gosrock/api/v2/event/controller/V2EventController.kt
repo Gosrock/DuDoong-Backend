@@ -1,5 +1,8 @@
 package band.gosrock.api.v2.event.controller
 
+import band.gosrock.api.v2.common.V2Paging
+import band.gosrock.api.v2.common.swagger.V2AlsoIn
+import band.gosrock.api.v2.common.swagger.V2ApiArea
 import band.gosrock.api.v2.common.swagger.V2ApiTags
 import band.gosrock.api.v2.common.V2PageResponse
 import band.gosrock.api.v2.event.dto.request.V2CreateEventRequest
@@ -30,6 +33,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.Size
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -63,9 +67,9 @@ class V2EventController(
     @GetMapping("/me/events")
     fun getMyEvents(
         @CurrentUserId userId: Long,
-        @RequestParam(required = false) keyword: String?,
+        @RequestParam(required = false) @Size(max = V2Paging.KEYWORD_MAX_LENGTH) keyword: String?,
         @RequestParam(defaultValue = "0") @Min(0) page: Int,
-        @RequestParam(defaultValue = "10") @Min(1) @Max(MAX_PAGE_SIZE) size: Int,
+        @RequestParam(defaultValue = V2Paging.CARD_DEFAULT_SIZE) @Min(1) @Max(V2Paging.MAX_SIZE) size: Int,
     ): V2PageResponse<V2MyEventResponse> = readMyEventsUseCase.execute(userId, keyword, page, size)
 
     @Operation(summary = "[E-2] 간편 공연 만들기 (hostId 의 매니저 이상). 상태는 준비중")
@@ -90,6 +94,7 @@ class V2EventController(
         @RequestBody @Valid request: V2UpdateEventBasicRequest,
     ): V2EventManageResponse = updateEventBasicUseCase.execute(userId, eventId, request)
 
+    @V2AlsoIn(V2ApiArea.USER)
     @Operation(summary = "[E-5] 상세 정보 섹션 목록 (비로그인 허용, 준비중 공연은 멤버만 — 아니면 404)")
     @GetMapping("/events/{eventId}/sections")
     fun getEventSections(
@@ -128,13 +133,9 @@ class V2EventController(
 
     @Operation(summary = "[E-10] 포스터 / 본문 이미지 업로드 url 발급 (매니저 이상)")
     @PostMapping("/events/{eventId}/images")
-    fun getImageUploadUrl(
+    fun getEventImageUploadUrl(
         @CurrentUserId userId: Long,
         @PathVariable eventId: Long,
         @RequestBody @Valid request: V2EventImageUploadRequest,
     ): V2EventImageUploadResponse = getEventImageUploadUrlUseCase.execute(userId, eventId, request)
-
-    companion object {
-        private const val MAX_PAGE_SIZE = 50L
-    }
 }

@@ -148,9 +148,9 @@ class V2ReadOrdersUseCase(
 
     /** F-1 환불 목록 (v1 환불 조회 쿼리 재사용, 최신 순) */
     @HostRolesAllowed(role = GUEST, findHostFrom = EVENT_ID)
-    fun refunds(userId: Long, eventId: Long, status: V2RefundStatusFilter?, page: Int, size: Int): V2PageResponse<V2RefundElement> {
+    fun refunds(userId: Long, eventId: Long, status: V2RefundStatusFilter, page: Int, size: Int): V2PageResponse<V2RefundElement> {
         eventAdaptor.findById(eventId)
-        val orders = orderAdaptor.findRefunds(eventId, status?.domain, null, PageRequest.of(page, size))
+        val orders = orderAdaptor.findRefunds(eventId, status.domain, null, PageRequest.of(page, size))
         val users = mapper.usersOf(orders.content.map { it.userId })
         val accounts = if (mapper.canSeeRefundAccount(userId, eventId)) v2UserOrderDomainService.refundAccountsOf(orders.content.mapNotNull { it.id }) else emptyMap()
         return V2PageResponse.of(orders.map { mapper.toRefundElement(it, users[it.userId], accounts[it.id]) })

@@ -14,6 +14,7 @@ data class V2HostEventResponse(
     val name: String?,
     val posterImageUrl: String?,
     @field:DateFormat
+    @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm")
     val startAt: LocalDateTime?,
     @field:Schema(description = "공연 장소 (공연 상세 P-3·E-3 과 같은 형태). 미입력이면 null")
     val place: V2EventPlaceResponse?,

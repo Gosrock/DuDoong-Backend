@@ -1,5 +1,6 @@
 package band.gosrock.api.v2.event.dto.response
 
+import band.gosrock.api.v2.common.V2ContactResponse
 import band.gosrock.api.v2.tag.dto.V2TagResponse
 import band.gosrock.common.annotation.DateFormat
 import band.gosrock.domain.domains.event.domain.Event
@@ -8,7 +9,6 @@ import band.gosrock.domain.domains.event.service.v2.EventChecklist
 import band.gosrock.domain.domains.event.service.v2.V2EventDisplayRule
 import band.gosrock.domain.domains.event.service.v2.V2EventDisplayStatus
 import band.gosrock.domain.domains.host.domain.Host
-import band.gosrock.domain.domains.host.domain.HostContactType
 import band.gosrock.domain.domains.tag.domain.Tag
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
@@ -19,20 +19,22 @@ data class V2EventManageResponse(
     val eventId: Long,
     val hostId: Long,
     val hostName: String?,
-    @field:Schema(description = "내 역할 (MASTER / MANAGER / GUEST). 멤버가 아닌 SUPER_ADMIN 이면 null")
+    @field:Schema(description = "내 역할 (MASTER / MANAGER / GUEST). 멤버가 아닌 SUPER_ADMIN 이면 null", allowableValues = ["MASTER", "MANAGER", "GUEST"])
     val myRole: String?,
     val posterImageKey: String?,
     val posterImageUrl: String?,
     val name: String?,
     @field:DateFormat
+    @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm")
     val startAt: LocalDateTime?,
     @field:DateFormat
+    @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm")
     val endAt: LocalDateTime?,
     @field:Schema(description = "진행 시간(분). v1 호환용 (endAt - startAt)")
     val runTime: Long?,
     @field:Schema(description = "공연 장소. 미입력이면 null")
     val place: V2EventPlaceResponse?,
-    val contacts: List<V2EventContactResponse>,
+    val contacts: List<V2ContactResponse>,
     val hasTicket: Boolean,
     @field:Schema(description = "태그 (분류 순 → 분류 안 순서)")
     val tags: List<V2TagResponse>,
@@ -60,7 +62,7 @@ data class V2EventManageResponse(
                 endAt = event.getEndAt(),
                 runTime = event.eventBasic?.runTime,
                 place = V2EventPlaceResponse.of(event.eventPlace),
-                contacts = event.contacts.map { V2EventContactResponse(type = it.type, value = it.value) },
+                contacts = event.contacts.map { V2ContactResponse(type = it.type, value = it.value) },
                 hasTicket = event.hasTicket,
                 tags = tags.map { V2TagResponse.from(it) },
                 status = event.status.name,
@@ -88,7 +90,3 @@ data class V2EventPlaceResponse(
     }
 }
 
-data class V2EventContactResponse(
-    val type: HostContactType,
-    val value: String,
-)

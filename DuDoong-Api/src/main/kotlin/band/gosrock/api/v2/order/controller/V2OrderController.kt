@@ -1,5 +1,6 @@
 package band.gosrock.api.v2.order.controller
 
+import band.gosrock.api.v2.common.V2Paging
 import band.gosrock.api.v2.common.swagger.V2ApiTags
 import band.gosrock.api.v2.common.V2PageResponse
 import band.gosrock.api.v2.order.dto.V2MyOrderStatusFilter
@@ -69,7 +70,7 @@ class V2OrderController(
         @CurrentUserId userId: Long,
         @RequestParam(defaultValue = "ALL") status: V2MyOrderStatusFilter,
         @RequestParam(defaultValue = "0") @Min(0) page: Int,
-        @RequestParam(defaultValue = "20") @Min(1) @Max(MAX_PAGE_SIZE) size: Int,
+        @RequestParam(defaultValue = V2Paging.DEFAULT_SIZE) @Min(1) @Max(V2Paging.MAX_SIZE) size: Int,
     ): V2PageResponse<V2MyOrderElement> = readMyOrdersUseCase.execute(userId, status.domain, page, size)
 
     @Operation(summary = "[O-3] 내 주문 상세 (로그인, 본인 주문만 — 남의 주문은 404). 거절 사유, 결제 계좌(유료), 본인 발급 티켓, canCancel")
@@ -99,8 +100,4 @@ class V2OrderController(
         @PathVariable orderUuid: String,
         @RequestBody @Valid request: V2RefundAccountRequest,
     ): V2MyOrderDetailResponse = putRefundAccountUseCase.execute(userId, orderUuid, request)
-
-    companion object {
-        const val MAX_PAGE_SIZE = 50L
-    }
 }
