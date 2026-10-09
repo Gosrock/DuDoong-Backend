@@ -42,13 +42,16 @@ class V2ConventionTest : V2OperationTestSupport() {
     @Test
     fun `F-1 status 기본값 ALL - 생략·ALL 이 같은 결과, 없는 값은 400`() {
         val shop = Shop()
-        val refused = shop.order(newBuyer())
-        refuse(shop.team.manager, shop.eventId, refused, "SOLD_OUT").andExpect { status { isOk() } }
-        val omitted = v2Get(shop.team.guest, "/events/${shop.eventId}/refunds").andExpect { status { isOk() } }.data()
-        val all = v2Get(shop.team.guest, "/events/${shop.eventId}/refunds", mapOf("status" to "ALL")).andExpect { status { isOk() } }.data()
-        assertEquals(1, omitted.at("/totalElements").asLong())
-        assertEquals(omitted, all)
-        assertEquals(0, v2Get(shop.team.guest, "/events/${shop.eventId}/refunds", mapOf("status" to "COMPLETED")).andExpect { status { isOk() } }.data().at("/totalElements").asLong())
+        val requested = shop.order(newBuyer())
+        refuse(shop.team.manager, shop.eventId, requested, "SOLD_OUT").andExpect { status { isOk() } }
+        val completed = shop.order(newBuyer())
+        refuse(shop.team.manager, shop.eventId, completed, "SOLD_OUT").andExpect { status { isOk() } }
+        v2Post(shop.team.manager, "/events/${shop.eventId}/refunds/$completed/complete").andExpect { status { isOk() } }
+        fun count(params: Map<String, String>) = v2Get(shop.team.guest, "/events/${shop.eventId}/refunds", params).andExpect { status { isOk() } }.data().at("/totalElements").asLong()
+        assertEquals(2, count(emptyMap()), "생략 = ALL = 요청·완료 전부")
+        assertEquals(2, count(mapOf("status" to "ALL")))
+        assertEquals(1, count(mapOf("status" to "REQUESTED")))
+        assertEquals(1, count(mapOf("status" to "COMPLETED")))
         v2Get(shop.team.guest, "/events/${shop.eventId}/refunds", mapOf("status" to "NONE")).andExpect { status { isBadRequest() } }
     }
 
