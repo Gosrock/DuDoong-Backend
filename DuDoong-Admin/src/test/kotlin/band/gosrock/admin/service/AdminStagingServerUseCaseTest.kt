@@ -6,6 +6,7 @@ import band.gosrock.common.exception.DuDoongCodeException
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
 import band.gosrock.domain.domains.user.domain.AccountRole
 import band.gosrock.domain.domains.user.domain.User
+import band.gosrock.infrastructure.outer.aws.StagingAppHealthChecker
 import band.gosrock.infrastructure.outer.aws.StagingServerClient
 import band.gosrock.infrastructure.outer.aws.StagingServerInfo
 import band.gosrock.infrastructure.outer.aws.StagingServerState
@@ -38,6 +39,9 @@ class AdminStagingServerUseCaseTest {
     @Mock
     private lateinit var stagingServerClient: StagingServerClient
 
+    @Mock
+    private lateinit var stagingAppHealthChecker: StagingAppHealthChecker
+
     private lateinit var getUseCase: AdminGetStagingServerUseCase
     private lateinit var startUseCase: AdminStartStagingServerUseCase
     private lateinit var stopUseCase: AdminStopStagingServerUseCase
@@ -47,7 +51,7 @@ class AdminStagingServerUseCaseTest {
     @BeforeEach
     fun setUp() {
         val adminAuthValidator = AdminAuthValidator(userAdaptor)
-        getUseCase = AdminGetStagingServerUseCase(adminAuthValidator, stagingServerClient)
+        getUseCase = AdminGetStagingServerUseCase(adminAuthValidator, stagingServerClient, stagingAppHealthChecker)
         startUseCase = AdminStartStagingServerUseCase(adminAuthValidator, stagingServerClient)
         stopUseCase = AdminStopStagingServerUseCase(adminAuthValidator, stagingServerClient)
     }
@@ -286,6 +290,78 @@ class AdminStagingServerUseCaseTest {
                 LocalDateTime.of(2026, 11, 1, 2, 0),
                 AdminStagingServerResponse.nextAutoStopAt(LocalDateTime.of(2026, 10, 31, 23, 30)),
             )
+        }
+    }
+
+    @Nested
+    @DisplayName("앱 상태 (조회)")
+    inner class AppStatusTest {
+
+        private val privateIp = "10.0.0.10"
+
+        @Test
+        @DisplayName("RUNNING 이고 헬스체크 200 이면 UP")
+        fun up() {
+            givenUser(1L, AccountRole.ADMIN)
+            `when`(stagingServerClient.describe())
+                .thenReturn(StagingServerInfo(StagingServerState.RUNNING, launchTime, privateIp))
+            `when`(stagingAppHealthChecker.isHealthy(privateIp)).thenReturn(true)
+
+            assertEquals("UP", getUseCase.execute(1L).appStatus)
+        }
+
+        @Test
+        @DisplayName("RUNNING 이고 헬스체크 실패여도 켠 지 5분 안이면 STARTING")
+        fun starting() {
+            givenUser(1L, AccountRole.ADMIN)
+            val justLaunched = Instant.now().minusSeconds(60)
+            `when`(stagingServerClient.describe())
+                .thenReturn(StagingServerInfo(StagingServerState.RUNNING, justLaunched, privateIp))
+            `when`(stagingAppHealthChecker.isHealthy(privateIp)).thenReturn(false)
+
+            assertEquals("STARTING", getUseCase.execute(1L).appStatus)
+        }
+
+        @Test
+        @DisplayName("RUNNING 이고 켠 지 5분이 지나도 헬스체크 실패면 DOWN")
+        fun down() {
+            givenUser(1L, AccountRole.ADMIN)
+            `when`(stagingServerClient.describe())
+                .thenReturn(StagingServerInfo(StagingServerState.RUNNING, launchTime, privateIp))
+            `when`(stagingAppHealthChecker.isHealthy(privateIp)).thenReturn(false)
+
+            assertEquals("DOWN", getUseCase.execute(1L).appStatus)
+        }
+
+        @Test
+        @DisplayName("사설 IP 를 모르면 헬스체크 없이 판단한다")
+        fun noPrivateIp() {
+            givenUser(1L, AccountRole.ADMIN)
+            `when`(stagingServerClient.describe()).thenReturn(info(StagingServerState.RUNNING))
+
+            assertEquals("DOWN", getUseCase.execute(1L).appStatus)
+            verifyNoInteractions(stagingAppHealthChecker)
+        }
+
+        @Test
+        @DisplayName("RUNNING 이 아니면 appStatus 는 null 이고 헬스체크를 하지 않는다")
+        fun notRunning() {
+            givenUser(1L, AccountRole.ADMIN)
+            `when`(stagingServerClient.describe())
+                .thenReturn(StagingServerInfo(StagingServerState.PENDING, launchTime, privateIp))
+
+            assertNull(getUseCase.execute(1L).appStatus)
+            verifyNoInteractions(stagingAppHealthChecker)
+        }
+
+        @Test
+        @DisplayName("appStatusOf 경계: 4분 59초는 STARTING, 5분은 DOWN, 켜진 시각 없으면 DOWN")
+        fun appStatusOfBoundary() {
+            val launched = LocalDateTime.of(2026, 10, 9, 10, 0)
+            assertEquals("STARTING", AdminStagingServerResponse.appStatusOf(false, launched, launched.plusMinutes(4).plusSeconds(59)))
+            assertEquals("DOWN", AdminStagingServerResponse.appStatusOf(false, launched, launched.plusMinutes(5)))
+            assertEquals("DOWN", AdminStagingServerResponse.appStatusOf(false, null, launched))
+            assertEquals("UP", AdminStagingServerResponse.appStatusOf(true, null, launched))
         }
     }
 }

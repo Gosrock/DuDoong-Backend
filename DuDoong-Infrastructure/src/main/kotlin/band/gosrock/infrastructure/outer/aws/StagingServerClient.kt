@@ -37,6 +37,7 @@ class StagingServerClient(
         return StagingServerInfo(
             state = StagingServerState.fromEc2StateName(instance.state()?.nameAsString()),
             launchTime = instance.launchTime(),
+            privateIp = instance.privateIpAddress(),
         )
     }
 
