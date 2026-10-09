@@ -235,9 +235,11 @@ def test_07_admin_withdraw(base_url, s):
     assert _me(base_url, s, "dropped").status_code == 401
     resp = requests.post(f"{base_url}/v1/auth/token/refresh", params={"token": s.refresh["dropped"]})
     assert resp.status_code == 403, resp.text
-    # 이미 탈퇴한 계정을 다시 탈퇴시키면 거절
-    resp = _set_status(base_url, s, "admin", "dropped", "DELETED")
-    assert resp.status_code == 403 and _code(resp) == "USER_403_2", resp.text
+    # 탈퇴는 되돌릴 수 없다: 정상 복구·다시 탈퇴 모두 400
+    for status in ("NORMAL", "SUSPENDED", "DELETED"):
+        resp = _set_status(base_url, s, "admin", "dropped", status)
+        assert resp.status_code == 400 and _code(resp) == "USER_400_7", resp.text
+    assert _state(s, "dropped") == "DELETED"
 
 
 def test_08_admin_adjust_stock_checks_event(base_url, s):
