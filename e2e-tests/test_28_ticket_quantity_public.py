@@ -77,7 +77,7 @@ def test_setup_event_for_quantity_test(base_url, auth_headers, state):
     print(f"[setup] 공개={_qty_state['public_ticket_id']}, 비공개={_qty_state['private_ticket_id']}")
 
 
-def test_public_ticket_shows_quantity(base_url, state):
+def test_public_ticket_shows_quantity(base_url, auth_headers, state):
     """재고 공개 티켓은 재고 수량 정보가 응답에 포함됩니다."""
     event_id = _qty_state.get("event_id")
     if not event_id:
@@ -85,7 +85,8 @@ def test_public_ticket_shows_quantity(base_url, state):
 
     url = f"{base_url}/v1/events/{event_id}/ticketItems"
     print(f"\n[test_public_ticket] GET {url}")
-    resp = requests.get(url)
+    # 준비중 공연의 공개 목록은 활성 호스트 멤버만 미리 볼 수 있다 (#761). 공개 목록 기준(재고 비공개)은 그대로다
+    resp = requests.get(url, headers=auth_headers)
     print(f"[test_public_ticket] status={resp.status_code}, body={resp.text[:600]}")
 
     assert_status(resp, 200)
@@ -114,7 +115,7 @@ def test_public_ticket_shows_quantity(base_url, state):
         print("[test_public_ticket] 공개 티켓을 목록에서 찾지 못함 (비로그인 조회 제한일 수 있음)")
 
 
-def test_private_ticket_hides_quantity(base_url):
+def test_private_ticket_hides_quantity(base_url, auth_headers):
     """재고 비공개 티켓은 재고 수량이 숨겨집니다."""
     event_id = _qty_state.get("event_id")
     if not event_id:
@@ -122,7 +123,8 @@ def test_private_ticket_hides_quantity(base_url):
 
     url = f"{base_url}/v1/events/{event_id}/ticketItems"
     print(f"\n[test_private_ticket] GET {url}")
-    resp = requests.get(url)
+    # 준비중 공연의 공개 목록은 활성 호스트 멤버만 미리 볼 수 있다 (#761). 공개 목록 기준(재고 비공개)은 그대로다
+    resp = requests.get(url, headers=auth_headers)
     print(f"[test_private_ticket] status={resp.status_code}")
 
     assert_status(resp, 200)
@@ -147,14 +149,15 @@ def test_private_ticket_hides_quantity(base_url):
         print("[test_private_ticket] 비공개 티켓을 목록에서 찾지 못함")
 
 
-def test_both_ticket_types_in_same_event(base_url):
+def test_both_ticket_types_in_same_event(base_url, auth_headers):
     """같은 이벤트에 재고 공개/비공개 티켓이 공존합니다."""
     event_id = _qty_state.get("event_id")
     if not event_id:
         pytest.skip("셋업 안 됨")
 
     url = f"{base_url}/v1/events/{event_id}/ticketItems"
-    resp = requests.get(url)
+    # 준비중 공연의 공개 목록은 활성 호스트 멤버만 미리 볼 수 있다 (#761). 공개 목록 기준(재고 비공개)은 그대로다
+    resp = requests.get(url, headers=auth_headers)
     assert_status(resp, 200)
     data = get_data(resp)
 

@@ -39,15 +39,17 @@ def test_create_free_ticket_item(base_url, auth_headers, state):
     print(f"[test_create_free_ticket_item] 티켓 상품 생성 완료: ticket_item_id={state.ticket_item_id}")
 
 
-def test_get_event_ticket_items(base_url, state):
+def test_get_event_ticket_items(base_url, auth_headers, state):
     """
-    인증 없이 이벤트의 티켓 상품 목록을 조회합니다.
-    생성된 티켓 상품이 목록에 포함되는지 확인합니다.
+    공개 티켓 상품 목록을 조회합니다. 아직 준비중 공연이라 비로그인이면 404 이고,
+    활성 호스트 멤버는 미리 볼 수 있다 (#761). 생성된 티켓 상품이 목록에 포함되는지 확인합니다.
     """
     assert state.event_id, "event_id가 없습니다."
     url = f"{base_url}/v1/events/{state.event_id}/ticketItems"
-    print(f"\n[test_get_event_ticket_items] GET {url} (인증 없음)")
-    resp = requests.get(url)
+    anonymous = requests.get(url)
+    assert anonymous.status_code == 404, f"준비중 공연 공개 목록이 비로그인에 노출: {anonymous.status_code}"
+    print(f"\n[test_get_event_ticket_items] GET {url} (호스트 멤버)")
+    resp = requests.get(url, headers=auth_headers)
     print(f"[test_get_event_ticket_items] status={resp.status_code}, body={resp.text[:400]}")
 
     assert_status(resp, 200)
