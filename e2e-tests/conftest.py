@@ -7,7 +7,7 @@ get_data() 헬퍼를 사용하여 data 필드를 추출하세요.
 
 DB 직접 접근(역할 승격·시각 이동·상태 확인)은 반드시 e2e_db fixture 하나로 한다 (#737). 접속 정보는 환경변수:
   E2E_DB(기본 dudoong) · E2E_DB_USER(dudoong) · E2E_DB_PASSWORD(dudoong) · E2E_DB_ROOT_PASSWORD(dudoong)
-  · E2E_DB_HOST(127.0.0.1) · E2E_DB_PORT(13306)
+  · E2E_DB_HOST(127.0.0.1) · E2E_DB_PORT(23306)
 기본값은 docker-compose.yml 의 로컬 개발용 값이다 (운영 값 아님). 처음 쓸 때 서버가 같은 DB 를 쓰는지 확인하고, 다르면 전체 실행을 멈춘다.
 """
 import os
@@ -134,7 +134,7 @@ class E2EDb:
             password=os.environ.get("E2E_DB_PASSWORD", "dudoong"),
             root_password=os.environ.get("E2E_DB_ROOT_PASSWORD", "dudoong"),
             host=os.environ.get("E2E_DB_HOST", "127.0.0.1"),
-            port=os.environ.get("E2E_DB_PORT", "13306"),
+            port=os.environ.get("E2E_DB_PORT", "23306"),
         )
 
     def command(self, *extra, root=False, database=True):

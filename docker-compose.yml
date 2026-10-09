@@ -8,7 +8,7 @@ services:
   mysql:
     image: 'mysql:8.4'
     ports:
-      - '13306:3306'
+      - '23306:3306'
     environment:
       MYSQL_ROOT_PASSWORD: dudoong
       MYSQL_ROOT_HOST: '%'

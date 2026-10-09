@@ -15,7 +15,7 @@
 # 사용: scripts/verify-migrations.sh                       # DB e2e_721_schema, 포트 18082
 #       DB=verify_my_check PORT=18083 scripts/verify-migrations.sh   # DB 이름은 e2e_ / verify_ 로 시작해야 함 (dudoong·시스템 스키마 보호)
 #       KEEP_DB=1 scripts/verify-migrations.sh             # 검증 후 DB 를 지우지 않음 (E2E 서버를 이 DB 에 붙일 때)
-# 필요: docker compose 의 mysql(MYSQL_PORT, 기본 13306)·redis(6379), Java 21. bootJar 가 없거나 src/main 보다 오래됐으면 다시 빌드한다
+# 필요: docker compose 의 mysql(MYSQL_PORT, 기본 23306)·redis(6379), Java 21. bootJar 가 없거나 src/main 보다 오래됐으면 다시 빌드한다
 # 자격 증명 기본값은 docker-compose.yml 의 로컬 개발용 값이다 (운영 값 아님).
 set -uo pipefail
 
@@ -24,7 +24,7 @@ DB="${DB:-e2e_721_schema}"
 ENTITY_DB="${DB}_entity"
 PORT="${PORT:-18082}"
 KEEP_DB="${KEEP_DB:-0}"
-MYSQL_PORT="${MYSQL_PORT:-13306}"
+MYSQL_PORT="${MYSQL_PORT:-23306}"
 CONTAINER="${MYSQL_CONTAINER:-$(docker ps --filter "publish=$MYSQL_PORT" --format '{{.Names}}' | head -1)}"
 ROOT_PW="${MYSQL_ROOT_PASSWORD:-dudoong}"
 APP_USER="${MYSQL_APP_USER:-dudoong}"

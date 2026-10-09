@@ -102,7 +102,7 @@ API_BASE_URL=http://127.0.0.1:18080/api pytest -v
 | `E2E_DB_USER` / `E2E_DB_PASSWORD` | `dudoong` / `dudoong` | 일반 SQL |
 | `E2E_DB_ROOT_PASSWORD` | `dudoong` | `performance_schema` 조회 (test_48 결정적 경합). 못 읽으면 그 테스트만 skip (`E2E_REQUIRE_LOCK_INSPECTION=1` 이면 실패) |
 | `E2E_ALLOW_REMOTE_DB` | (없음) | `1` 이면 원격 DB·서버 허용 (기본은 로컬만) |
-| `E2E_DB_HOST` / `E2E_DB_PORT` | `127.0.0.1` / `13306` | MySQL 주소 |
+| `E2E_DB_HOST` / `E2E_DB_PORT` | `127.0.0.1` / `23306` | MySQL 주소 |
 | `REDIS_HOST` / `REDIS_PORT` | `127.0.0.1` / `6379` | Redisson 락 키 확인 (test_25 test_03, #746). 서버가 쓰는 Redis 와 같아야 한다. redis-py → `redis-cli -h -p` → 소켓(RESP) 순으로 접속, 못 붙으면 그 테스트만 skip (`E2E_REQUIRE_LOCK_INSPECTION=1` 이면 실패) |
 
 - 필요: 호스트에 `mysql` CLI. 비밀번호는 인자가 아니라 `MYSQL_PWD` 환경변수로 넘긴다. mysql 호출은 30초, 사전 검사 HTTP 요청은 10초 제한.
@@ -123,7 +123,7 @@ docker exec -i -e MYSQL_PWD=dudoong dudoong-backend-mysql-1 mysql -uroot -e "CRE
 for f in ../db/schema/baseline-*.sql $(ls ../db/migration/V*.sql | sort); do docker exec -i -e MYSQL_PWD=dudoong dudoong-backend-mysql-1 mysql -uroot e2e_mine < "$f"; done
 # 2) 서버를 그 DB 로 (Java 21)
 java -jar ../DuDoong-Api/build/libs/DuDoong-Api-0.0.1-SNAPSHOT.jar --spring.profiles.active=local --server.port=18080 \
-  --spring.datasource.url="jdbc:mysql://127.0.0.1:13306/e2e_mine?useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true&tinyInt1isBit=false"
+  --spring.datasource.url="jdbc:mysql://127.0.0.1:23306/e2e_mine?useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true&tinyInt1isBit=false"
 # 3) 같은 DB 이름으로 테스트
 E2E_DB=e2e_mine API_BASE_URL=http://127.0.0.1:18080/api pytest -q
 ```
