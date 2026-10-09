@@ -18,9 +18,9 @@ data class V2CreateTicketOptionRequest(
     @field:Size(max = V2TicketOptionDomainService.NAME_MAX_LENGTH)
     val name: String?,
 
-    @field:Schema(description = "옵션 설명 (1~${V2TicketOptionDomainService.DESCRIPTION_MAX_LENGTH}자)", example = "공연 후 뒷풀이에 참석하나요?")
+    @field:Schema(description = "옵션 설명 (1~${V2TicketOptionDomainService.DESCRIPTION_MAX_LENGTH}자, 앞뒤 공백 제외). 넘으면 Option_Group_400_6", example = "공연 후 뒷풀이에 참석하나요?")
     @field:NotBlank
-    @field:Size(max = V2TicketOptionDomainService.DESCRIPTION_MAX_LENGTH)
+    @field:Size(max = V2TicketOptionDomainService.DESCRIPTION_COLUMN_LENGTH)
     val description: String?,
 
     @field:Schema(description = "응답 형식 SUBJECTIVE / YES_NO (MULTIPLE_CHOICE 는 400). 만든 뒤 바꿀 수 없음", example = "YES_NO")

@@ -1,5 +1,6 @@
 package band.gosrock.domain.domains.order.service.v2
 
+import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.domains.order.adaptor.OrderAdaptor
 import band.gosrock.domain.domains.order.domain.Order
 import band.gosrock.domain.domains.order.domain.OrderRefuseReasonType
@@ -10,7 +11,6 @@ import band.gosrock.domain.domains.order.exception.InvalidRefuseReasonException
 import band.gosrock.domain.domains.order.exception.OrderNotFoundException
 import band.gosrock.domain.domains.order.exception.OrderRefundNotRequestedException
 import band.gosrock.domain.domains.order.service.OrderApproveService
-import band.gosrock.domain.domains.order.service.WithdrawOrderService
 import java.time.LocalDateTime
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -31,9 +31,9 @@ class V2OrderDomainServiceTest {
 
     private val orderAdaptor = mock(OrderAdaptor::class.java)
     private val orderApproveService = mock(OrderApproveService::class.java)
-    private val withdrawOrderService = mock(WithdrawOrderService::class.java)
     private val v2OrderQuery = mock(V2OrderQuery::class.java)
-    private val service = V2OrderDomainService(orderAdaptor, mock(OrderValidator::class.java), orderApproveService, withdrawOrderService, v2OrderQuery)
+    private val orderValidator = mock(OrderValidator::class.java)
+    private val service = V2OrderDomainService(orderAdaptor, orderValidator, orderApproveService, v2OrderQuery)
 
     private fun order(
         status: OrderStatus,
@@ -96,28 +96,35 @@ class V2OrderDomainServiceTest {
     @Nested
     inner class EventScope {
         @Test
-        fun `다른 공연 주문은 404, 승인·취소는 v1 도메인 서비스로 넘기지 않는다`() {
+        fun `다른 공연 주문은 404, 승인은 v1 도메인 서비스로 넘기지 않고 취소는 상태를 바꾸지 않는다`() {
             `when`(orderAdaptor.findByOrderUuid("u")).thenReturn(order(OrderStatus.PENDING_APPROVE, eventId = 2L))
             `when`(v2OrderQuery.findEventId("u")).thenReturn(2L)
             assertThrows<OrderNotFoundException> { service.queryEventOrder(1L, "u") }
             assertThrows<OrderNotFoundException> { service.approve(1L, "u") }
             assertThrows<OrderNotFoundException> { service.cancel(1L, "u", null) }
             verify(orderApproveService, never()).execute("u")
-            verify(withdrawOrderService, never()).cancelOrder("u", null)
+            assertEquals(OrderStatus.PENDING_APPROVE, orderAdaptor.findByOrderUuid("u").orderStatus)
             // 없는 주문도 404
             assertThrows<OrderNotFoundException> { service.approve(1L, "none") }
         }
 
         @Test
-        fun `같은 공연이면 v1 승인 서비스 그대로 호출, 취소 사유는 trim`() {
+        fun `같은 공연이면 v1 승인 서비스 그대로 호출, 취소 사유는 trim (0원은 환불 요청 없음, #752)`() {
             val o = order(OrderStatus.PENDING_APPROVE)
             `when`(orderAdaptor.findByOrderUuid("u")).thenReturn(o)
             `when`(v2OrderQuery.findEventId("u")).thenReturn(1L)
             assertSame(o, service.queryEventOrder(1L, "u"))
             service.approve(1L, "u")
             verify(orderApproveService).execute("u")
-            service.cancel(1L, "u", "  일정 변경 ")
-            verify(withdrawOrderService).cancelOrder("u", "일정 변경")
+            // 취소: 같은 공연 주문의 v2 전이, 사유 trim, 0원이면 환불 요청 없음 / 유료면 환불 요청
+            for ((price, requested) in listOf(Money.ZERO to false, Money.wons(1000) to true)) {
+                val target = mock(Order::class.java)
+                `when`(target.eventId).thenReturn(1L)
+                `when`(target.getTotalPaymentPrice()).thenReturn(price)
+                `when`(orderAdaptor.findByOrderUuid("c")).thenReturn(target)
+                service.cancel(1L, "c", "  일정 변경 ")
+                verify(target).cancelByHost(orderValidator, "일정 변경", requested)
+            }
         }
     }
 

@@ -52,9 +52,11 @@ class LockCallerConnectionTest : V2OperationTestSupport() {
         assertTrue(approvePeak <= 2, "최대 $approvePeak — 락 트랜잭션 1 + 그 안의 발급 락 트랜잭션 1 까지만 (호출 측 트랜잭션이 락을 기다리며 쥐면 3)")
         assertNull(LockConnectionProbe.lastCallerTxOf("OrderApproveService.execute"), "v1 주문 락을 부를 때 진행 중인 호출 측 트랜잭션이 없다")
         assertEquals(OrderStatus.APPROVED, orderRepository.findByOrderUuid(orderUuid).get().orderStatus)
+        // 호스트 취소는 #752 부터 자기 `주문` 락 메서드 (v1 철회 락을 안에서 다시 부르지 않음)
         val cancelPeak = peakOf { v2OrderDomainService.cancel(shop.eventId, orderUuid, "취소") }
-        assertTrue(cancelPeak <= 2, "최대 $cancelPeak — 락 트랜잭션 1 + 그 안의 철회 락 트랜잭션 1 까지만 (호출 측 트랜잭션이 락을 기다리며 쥐면 3)")
-        assertNull(LockConnectionProbe.lastCallerTxOf("WithdrawOrderService.cancelOrder"))
+        assertTrue(cancelPeak <= 2, "최대 $cancelPeak — 락 트랜잭션 1 (+ 철회 이벤트 처리) 까지만 (호출 측 트랜잭션이 락을 기다리며 쥐면 3)")
+        assertTrue(LockConnectionProbe.wasCalled("V2OrderDomainService.cancel"))
+        assertNull(LockConnectionProbe.lastCallerTxOf("V2OrderDomainService.cancel"))
         assertEquals(OrderStatus.CANCELED, orderRepository.findByOrderUuid(orderUuid).get().orderStatus)
     }
 

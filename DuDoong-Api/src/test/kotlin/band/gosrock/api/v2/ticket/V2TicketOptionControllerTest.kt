@@ -93,15 +93,23 @@ class V2TicketOptionControllerTest : V2TicketApiTestSupport() {
             }.andExpect { status { isOk() } }.data().at("/optionGroupId").asLong()
 
         @Test
-        fun `생성(O-2)은 50자까지, 51자는 400`() {
+        fun `생성(O-2)은 앞뒤 공백 제외 50자까지, 51자는 Option_Group_400_6 (수정과 같은 기준)`() {
             val team = Team()
             fun body(description: String) = mapOf("name" to "옵션", "description" to description, "type" to "YES_NO")
             postOption(team.manager, team.eventId, body("가".repeat(50))).andExpect {
                 status { isOk() }
                 jsonPath("$.data.description") { value("가".repeat(50)) }
             }
-            postOption(team.manager, team.eventId, body("가".repeat(51))).andExpect { status { isBadRequest() } }
-            options(team.guest, team.eventId).andExpect { jsonPath("$.data.length()") { value(1) } }
+            postOption(team.manager, team.eventId, body("가".repeat(51))).andExpect {
+                status { isBadRequest() }
+                jsonPath("$.code") { value("Option_Group_400_6") }
+            }
+            postOption(team.manager, team.eventId, body("  ${"가".repeat(50)}  ")).andExpect {
+                status { isOk() }
+                jsonPath("$.data.description") { value("가".repeat(50)) }
+            }
+            postOption(team.manager, team.eventId, body("가".repeat(256))).andExpect { status { isBadRequest() } }
+            options(team.guest, team.eventId).andExpect { jsonPath("$.data.length()") { value(2) } }
         }
 
         @Test

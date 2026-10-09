@@ -7,7 +7,11 @@ import band.gosrock.domain.domains.notification.repository.NotificationRepositor
 import band.gosrock.domain.domains.order.domain.OrderStatus
 import band.gosrock.domain.domains.order.domain.RefundStatus
 import band.gosrock.domain.domains.ticket_item.adaptor.OptionAdaptor
+import band.gosrock.domain.domains.issuedTicket.domain.IssuedTicketStatus
 import band.gosrock.domain.domains.ticket_item.repository.OptionGroupRepository
+import band.gosrock.domain.domains.ticket_item.repository.OptionRepository
+import band.gosrock.common.consts.DuDoongStatic.KR_YES
+import band.gosrock.domain.common.vo.Money
 import band.gosrock.domain.domains.user.domain.User
 import jakarta.persistence.EntityManagerFactory
 import org.hibernate.Hibernate
@@ -21,6 +25,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.http.MediaType
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
+import org.springframework.test.util.ReflectionTestUtils
 import org.springframework.test.web.servlet.post
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
@@ -43,6 +49,8 @@ class V2ZeroRefuseAndOptionDescriptionTest : V2UserOrderTestSupport() {
 
     @Autowired private lateinit var mapper: V2OperationMapper
 
+    @Autowired private lateinit var optionRepository: OptionRepository
+
     private fun v1Refuse(host: User, eventId: Long, orderUuid: String) =
         mockMvc.post("/api/v1/events/$eventId/orders/$orderUuid/refuse") {
             with(auth(host))
@@ -50,14 +58,18 @@ class V2ZeroRefuseAndOptionDescriptionTest : V2UserOrderTestSupport() {
             content = json(mapOf("reason" to "v1 거절"))
         }
 
-    private fun refusedBody(user: User, orderUuid: String): String {
+    private fun refusedBody(user: User, orderUuid: String): String = notificationBody(user, NotificationType.ORDER_REFUSED, orderUuid)
+
+    private fun notificationBody(user: User, type: NotificationType, orderUuid: String): String {
         val deadline = System.currentTimeMillis() + 10_000
         while (System.currentTimeMillis() < deadline) {
-            notificationRepository.findAllByUserId(user.id!!).firstOrNull { it.type == NotificationType.ORDER_REFUSED && it.targetId == orderUuid }?.let { return it.body }
+            notificationRepository.findAllByUserId(user.id!!).firstOrNull { it.type == type && it.targetId == orderUuid }?.let { return it.body }
             Thread.sleep(50)
         }
-        throw AssertionError("ORDER_REFUSED 알림 없음")
+        throw AssertionError("$type 알림 없음")
     }
+
+    private fun refundCount(shop: Shop): Long = v2Get(shop.team.guest, "/events/${shop.eventId}/refunds").andExpect { status { isOk() } }.data().at("/totalElements").asLong()
 
     @Nested
     @DisplayName("0원 주문 거절 (A)")
@@ -102,6 +114,28 @@ class V2ZeroRefuseAndOptionDescriptionTest : V2UserOrderTestSupport() {
         }
 
         @Test
+        fun `경계 - 무료 승인형 티켓이라도 옵션 추가금으로 결제 금액이 0보다 크면 v2 거절에 환불 요청`() {
+            val shop = Shop()
+            val free = freeTicket(shop, approvalRequired = true)
+            val option = createOption(shop.team.manager, shop.eventId, yesAdditionalPrice = 0, name = "굿즈")
+            putOptions(shop.team.manager, shop.eventId, free, listOf(option)).andExpect { status { isOk() } }
+            // 무료 티켓에는 유료 옵션을 붙일 수 없으므로(Item_Option_Group_400_4) 예전 데이터처럼 '예' 추가금을 직접 바꾼다
+            tx().executeWithoutResult {
+                val yes = optionGroupRepository.findById(option).get().options.first { it.answer == KR_YES }
+                ReflectionTestUtils.setField(yes, "additionalPrice", Money.wons(1000))
+                optionRepository.save(yes)
+            }
+            val body = orderBody(shop.eventId, free, 1, method = "FREE", depositorName = null) +
+                mapOf("options" to mapOf("applyToAll" to true, "answers" to listOf(mapOf("optionId" to option, "answer" to "YES"))))
+            val created = v2OrderOk(newBuyer(), body)
+            assertEquals(1000, created.at("/payment/totalAmount").asLong())
+            val orderUuid = created.at("/orderUuid").asText()
+            refuse(shop.team.manager, shop.eventId, orderUuid, "SOLD_OUT").andExpect { status { isOk() } }
+            assertEquals(RefundStatus.REFUND_REQUESTED, orderRepository.findByOrderUuid(orderUuid).get().refundStatus)
+            assertEquals(1, refundCount(shop))
+        }
+
+        @Test
         fun `v1 거절은 그대로 - 0원 주문도 환불 요청 (v1 동작 고정)`() {
             val shop = Shop()
             val free = freeTicket(shop, approvalRequired = true)
@@ -111,6 +145,78 @@ class V2ZeroRefuseAndOptionDescriptionTest : V2UserOrderTestSupport() {
             assertEquals(OrderStatus.CANCELED, saved.orderStatus)
             assertEquals(RefundStatus.REFUND_REQUESTED, saved.refundStatus)
             assertEquals(1, v2Get(shop.team.guest, "/events/${shop.eventId}/refunds").andExpect { status { isOk() } }.data().at("/totalElements").asLong())
+        }
+    }
+
+    @Nested
+    @DisplayName("0원 주문 호스트 취소 (리뷰 #1)")
+    inner class ZeroHostCancel {
+
+        private fun adminCancel(orderUuid: String) =
+            mockMvc.post("/internal-api/v1/orders/$orderUuid/cancel") {
+                with(SecurityMockMvcRequestPostProcessors.user(superAdmin().id.toString()).roles("SUPER_ADMIN"))
+                contentType = MediaType.APPLICATION_JSON
+                content = json(mapOf("reason" to "운영 취소"))
+            }
+
+        @Test
+        fun `v2 취소(R-5) - 0원 승인 주문은 환불 요청 없음, 티켓 철회·재고 복구·대기 선물 취소·알림은 v1 과 같다`() {
+            val shop = Shop()
+            val free = freeTicket(shop, approvalRequired = false)
+            val buyer = newBuyer()
+            val orderUuid = v2OrderOk(buyer, freeBodyOf(shop, free, quantity = 2)).at("/orderUuid").asText()
+            val tickets = issuedTicketRepository.findAllByOrderUuid(orderUuid).sortedBy { it.id }
+            val token = v2Post(buyer, "/me/tickets/${tickets[0].uuid}/gift", mapOf("memo" to null)).andExpect { status { isOk() } }.data().at("/giftToken").asText()
+            val stockBefore = stock(free)
+
+            v2Post(shop.team.manager, "/events/${shop.eventId}/orders/$orderUuid/cancel", mapOf("reason" to " 공연 취소 ")).andExpect { status { isOk() } }
+            val saved = orderRepository.findByOrderUuid(orderUuid).get()
+            assertEquals(OrderStatus.CANCELED, saved.orderStatus)
+            assertEquals("공연 취소", saved.cancelReason)
+            assertEquals(RefundStatus.NONE, saved.refundStatus)
+            assertEquals(0, refundCount(shop))
+            assertEquals(0, v2Get(shop.team.guest, "/events/${shop.eventId}/dashboard").andExpect { status { isOk() } }.data().at("/orders/refundRequested").asLong())
+            assertTrue(issuedTicketRepository.findAllByOrderUuid(orderUuid).all { it.issuedTicketStatus == IssuedTicketStatus.CANCELED })
+            assertEquals(stockBefore + 2, stock(free))
+            assertEquals("CANCELED", v2Get(newBuyer(), "/gifts/$token").andExpect { status { isOk() } }.data().at("/viewState").asText())
+            val body = notificationBody(buyer, NotificationType.ORDER_CANCELED_BY_HOST, orderUuid)
+            assertTrue(body.endsWith("사유: 공연 취소"), body)
+            val mine = myOrder(buyer, orderUuid).andExpect { status { isOk() } }.data()
+            assertEquals("NONE", mine.at("/refundStatus").asText())
+            assertFalse(mine.at("/refundAccountRequired").asBoolean())
+            // 다른 공연 경로로는 404 (존재를 드러내지 않음), 이미 취소된 주문은 400
+            val other = Shop()
+            assertEquals("Order_404_1", v2Post(other.team.manager, "/events/${other.eventId}/orders/$orderUuid/cancel").andExpect { status { isNotFound() } }.code())
+            v2Post(shop.team.manager, "/events/${shop.eventId}/orders/$orderUuid/cancel").andExpect { status { isBadRequest() } }
+        }
+
+        @Test
+        fun `v2 취소 - 유료 승인 주문은 지금처럼 환불 요청`() {
+            val shop = Shop()
+            val orderUuid = shop.approved(newBuyer())
+            v2Post(shop.team.manager, "/events/${shop.eventId}/orders/$orderUuid/cancel").andExpect { status { isOk() } }
+            assertEquals(RefundStatus.REFUND_REQUESTED, orderRepository.findByOrderUuid(orderUuid).get().refundStatus)
+            assertEquals(1, refundCount(shop))
+        }
+
+        @Test
+        fun `v1 호스트 취소·운영 어드민 취소는 그대로 - 0원 주문도 환불 요청 (v1 동작 고정)`() {
+            val shop = Shop()
+            val free = freeTicket(shop, approvalRequired = false)
+            val v1Canceled = v2OrderOk(newBuyer(), freeBodyOf(shop, free)).at("/orderUuid").asText()
+            mockMvc.post("/api/v1/events/${shop.eventId}/orders/$v1Canceled/cancel") {
+                with(auth(shop.team.master))
+                contentType = MediaType.APPLICATION_JSON
+                content = json(mapOf("reason" to "v1 취소"))
+            }.andExpect { status { isOk() } }
+            val adminCanceled = v2OrderOk(newBuyer(), freeBodyOf(shop, free)).at("/orderUuid").asText()
+            adminCancel(adminCanceled).andExpect { status { isOk() } }
+            for (uuid in listOf(v1Canceled, adminCanceled)) {
+                val saved = orderRepository.findByOrderUuid(uuid).get()
+                assertEquals(OrderStatus.CANCELED, saved.orderStatus, uuid)
+                assertEquals(RefundStatus.REFUND_REQUESTED, saved.refundStatus, uuid)
+            }
+            assertEquals(2, refundCount(shop))
         }
     }
 
@@ -139,7 +245,7 @@ class V2ZeroRefuseAndOptionDescriptionTest : V2UserOrderTestSupport() {
         @Test
         fun `옵션 질문은 옵션 그룹과 함께 쿼리 1개로 읽는다 (옵션 수와 무관, N+1 없음)`() {
             val shops = (1..3).map { Shop() }
-            val tx = TransactionTemplate(transactionManager)
+            val tx = tx()
             val optionIds = tx.execute {
                 shops.flatMap { shop -> optionGroupRepository.findAllById(listOf(shop.yesNoOptionId, shop.subjectiveOptionId)).flatMap { g -> g.options.map { it.id!! } } }
             }!!
@@ -164,4 +270,6 @@ class V2ZeroRefuseAndOptionDescriptionTest : V2UserOrderTestSupport() {
             }
         }
     }
+
+    private fun tx() = TransactionTemplate(transactionManager)
 }

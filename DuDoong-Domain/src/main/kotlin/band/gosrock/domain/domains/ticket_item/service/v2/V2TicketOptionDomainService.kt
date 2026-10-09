@@ -214,7 +214,7 @@ class V2TicketOptionDomainService(
         /** 옵션 설명 (Figma 50자, 사용자 결정 2026-10-09 #752). prod 기존 설명은 모두 50자 이하 (2026-10-09 읽기 전용 확인) */
         const val DESCRIPTION_MAX_LENGTH = 50
 
-        /** 저장 컬럼 길이. O-3 요청은 값이 바뀔 때만 [DESCRIPTION_MAX_LENGTH] 를 보므로 DTO 상한은 이 값 */
+        /** 저장 컬럼 길이. [DESCRIPTION_MAX_LENGTH] 는 도메인이 trim 후 검사하므로(생성 O-2, 수정 O-3 은 값이 바뀔 때만) 요청 DTO 상한은 이 값 */
         const val DESCRIPTION_COLUMN_LENGTH = 255
     }
 }

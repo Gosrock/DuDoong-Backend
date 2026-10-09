@@ -12,15 +12,14 @@ import band.gosrock.domain.domains.order.exception.InvalidRefuseReasonException
 import band.gosrock.domain.domains.order.exception.OrderNotFoundException
 import band.gosrock.domain.domains.order.exception.OrderRefundNotRequestedException
 import band.gosrock.domain.domains.order.service.OrderApproveService
-import band.gosrock.domain.domains.order.service.WithdrawOrderService
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 
 /**
  * v2 호스트 주문 처리 규칙 (DEC-018, #712). v1 코드는 이 서비스를 호출하지 않는다.
  *
- * 승인·취소는 v1 도메인 서비스([OrderApproveService], [WithdrawOrderService])를 그대로 쓴다 (같은 `주문:{uuid}` 락, 같은 검증·도메인 이벤트).
- * v2 에만 있는 것: 주문이 경로의 공연 것인지 확인(다른 공연 주문은 404), 거절 사유 종류, 환불 완료 상태 검증.
+ * 승인은 v1 도메인 서비스([OrderApproveService])를 그대로 쓴다. 거절·취소는 v1 과 같은 `주문:{uuid}` 락·검증·도메인 이벤트로 엔티티의 v2 전이를 부른다
+ * (0원은 환불 요청 없음, #752). v2 에만 있는 것: 주문이 경로의 공연 것인지 확인(다른 공연 주문은 404), 거절 사유 종류, 환불 완료 상태 검증.
  */
 @DomainService
 @Transactional(readOnly = true)
@@ -28,7 +27,6 @@ class V2OrderDomainService(
     private val orderAdaptor: OrderAdaptor,
     private val orderValidator: OrderValidator,
     private val orderApproveService: OrderApproveService,
-    private val withdrawOrderService: WithdrawOrderService,
     private val v2OrderQuery: V2OrderQuery,
 ) {
 
@@ -60,15 +58,19 @@ class V2OrderDomainService(
         orderApproveService.execute(orderUuid)
     }
 
-    /** 승인 완료(APPROVED/CONFIRM) 주문 취소 (v1 과 같은 로직). [approve] 와 같은 이유·조건으로 트랜잭션 밖에서 v1 [WithdrawOrderService] 락을 기다린다 (#746) */
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    /**
+     * 승인 완료(APPROVED/CONFIRM) 주문 호스트 취소. v1 [WithdrawOrderService.cancelOrder] 와 같은 `주문` 락·검증·철회 이벤트(발급 티켓 철회·선물 연쇄·알림)이고,
+     * 환불 요청은 결제 금액이 있을 때만 건다 — 0원은 환불 목록에 올리지 않는다 (#752, [refuse] 와 같은 기준. v1·운영 어드민 취소는 그대로).
+     * 락 AOP 가 트랜잭션 바깥이라(#743) 락을 기다리는 동안 커넥션을 쥐지 않는다
+     */
+    @RedissonLock(LockName = ORDER_LOCK, identifier = "orderUuid")
     fun cancel(eventId: Long, orderUuid: String, reason: String?) {
-        validateEventOrder(eventId, orderUuid)
-        withdrawOrderService.cancelOrder(orderUuid, reason?.trim()?.ifEmpty { null })
+        val order = queryEventOrder(eventId, orderUuid)
+        order.cancelByHost(orderValidator, reason?.trim()?.ifEmpty { null }, refundRequested = order.getTotalPaymentPrice().isGreaterThan(Money.ZERO))
     }
 
     /**
-     * 승인 대기 주문 거절. 상태는 v1 과 같은 CANCELED 이고 환불 요청은 결제 금액이 있을 때만 건다(0원은 환불 목록에 올리지 않음, #752 — v1 거절은 그대로).
+     * 승인 대기 주문 거절. 상태는 v1 과 같은 CANCELED 이고 환불 요청은 결제 금액이 있을 때만 건다(0원은 환불 목록에 올리지 않음, #752 — v1 거절은 그대로, 호스트 취소 [cancel] 도 같은 기준).
      * 사유 종류는 refuse_reason_type, 표시 문구는 v1 화면 호환을 위해 cancel_reason 에 기록한다 (기타는 직접 입력값)
      */
     @RedissonLock(LockName = ORDER_LOCK, identifier = "orderUuid")

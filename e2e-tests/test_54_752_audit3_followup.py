@@ -352,3 +352,17 @@ def test_11_o3_option_answer_has_description(base_url, s):
     detail = get_data(requests.get(f"{base_url}/v2/me/orders/{order_uuid}", headers=_h(s, "buyer")))
     answers = [a for line in detail["lines"] for a in line["optionAnswers"]] + [a for t in detail["issuedTickets"] for a in t["optionAnswers"]]
     assert answers and all(a == {"optionName": "요청사항", "description": "좌석 관련 요청을 적어 주세요", "answer": "통로 쪽", "additionalPrice": 0} for a in answers)
+
+
+def test_12_zero_amount_host_cancel_has_no_refund_request(base_url, s):
+    ev = s.events["order"]
+    v2_order, uuids = _buy(base_url, s, "other", "order")
+    # v2 호스트 취소(R-5): 0원은 환불 요청 없음, 발급 티켓은 v1 과 같이 철회
+    assert_status(requests.post(_ev(base_url, ev, f"/orders/{v2_order}/cancel"), json={"reason": "공연 취소"}, headers=_h(s, "manager")), 200)
+    assert _sql(f"SELECT order_status, refund_status FROM tbl_order WHERE uuid = '{v2_order}'").split() == ["CANCELED", "NONE"]
+    assert _sql(f"SELECT issued_ticket_status FROM tbl_issued_ticket WHERE uuid = '{uuids[0]}'").strip() == "CANCELED"
+    assert v2_order not in [r["orderUuid"] for r in get_data(requests.get(_ev(base_url, ev, "/refunds"), headers=_h(s, "guest")))["content"]]
+    # v1 호스트 취소는 그대로: 0원도 환불 요청
+    v1_order, _ = _buy(base_url, s, "other", "order")
+    assert_status(requests.post(f"{base_url}/v1/events/{ev}/orders/{v1_order}/cancel", json={"reason": "v1 취소"}, headers=_h(s, "master")), 200)
+    assert _sql(f"SELECT order_status, refund_status FROM tbl_order WHERE uuid = '{v1_order}'").split() == ["CANCELED", "REFUND_REQUESTED"]

@@ -541,7 +541,8 @@ class V2VerifyFollowupTest : V2UserOrderTestSupport() {
             val freeBuyer = newBuyer()
             val free = freeTicket(shop, approvalRequired = true)
             val freeOrder = v2OrderOk(freeBuyer, freeBodyOf(shop, free)).at("/orderUuid").asText()
-            refuse(shop.team.manager, shop.eventId, freeOrder, "SOLD_OUT").andExpect { status { isOk() } }
+            // 0원 v2 거절은 환불 요청이 없어(#752) v1 거절로 환불 요청을 만든 뒤 완료
+            mockMvc.post("/api/v1/events/${shop.eventId}/orders/$freeOrder/refuse") { with(auth(shop.team.master)) }.andExpect { status { isOk() } }
             complete(shop.team.manager, shop.eventId, freeOrder)
             laterReference(shop, freeBuyer)
             assertEquals(0, count(freeBuyer, NotificationType.ORDER_REFUND_COMPLETED))

@@ -256,7 +256,7 @@ class V2RefundAccountInputTest : V2UserOrderTestSupport() {
             val freeBuyer = newBuyer()
             val freeOrder = v2OrderOk(freeBuyer, freeBodyOf(shop, free)).at("/orderUuid").asText()
             v2Post(shop.team.manager, "/events/${shop.eventId}/orders/$freeOrder/cancel").andExpect { status { isOk() } }
-            assertEquals(RefundStatus.REFUND_REQUESTED, orderRepository.findByOrderUuid(freeOrder).get().refundStatus, "무료여도 v1 취소는 환불 요청 상태를 건다")
+            assertEquals(RefundStatus.NONE, orderRepository.findByOrderUuid(freeOrder).get().refundStatus, "0원 v2 호스트 취소는 환불 요청 없음 (#752)")
             assertEquals("Order_400_27", putAccount(freeBuyer, freeOrder, refundAccount).andExpect { status { isBadRequest() } }.code())
             assertFalse(detail(freeBuyer, freeOrder).at("/refundAccountRequired").asBoolean())
 

@@ -102,7 +102,7 @@ enum class TicketItemErrorCode(
     @ExplainError("잠긴 티켓(재고 감소 또는 승인 대기 주문 있음)에 붙은 옵션의 추가 금액을 바꾸려는 경우 (DEC-012). 이름·설명만 수정 가능")
     FORBIDDEN_LOCKED_OPTION_CHANGE(BAD_REQUEST, "Option_Group_400_5", "판매된 티켓에 붙은 옵션은 이름·설명만 수정할 수 있습니다."),
 
-    @ExplainError("v2 옵션 수정(O-3)에서 값을 바꾼 설명이 50자를 넘는 경우. 기존 설명을 그대로 다시 보내면 길어도 통과 (#752)")
+    @ExplainError("v2 옵션 설명이 50자(앞뒤 공백 제외, UTF-16 길이)를 넘는 경우: 생성(O-2), 수정(O-3)은 값을 바꿀 때만 — 기존 설명을 그대로 다시 보내면 길어도 통과 (#752)")
     INVALID_OPTION_DESCRIPTION(BAD_REQUEST, "Option_Group_400_6", "옵션 설명은 50자까지 입력할 수 있습니다.");
 
     override fun getErrorReason(): ErrorReason =
