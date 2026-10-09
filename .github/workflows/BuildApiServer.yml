@@ -3,6 +3,17 @@ on:
   push:
     tags:
       - Api-v*.*.*
+  # 이미 배포된 버전을 같은 소스로 다시 빌드할 때 사용 (예: ref=Api-v2.2.5, version=2.2.5)
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: '빌드할 git 태그 (예: Api-v2.2.5)'
+        required: true
+        type: string
+      version:
+        description: '이미지 태그 (비우면 ref 에서 추출, 예: 2.2.5)'
+        required: false
+        type: string
 
 jobs:
   build:
@@ -16,6 +27,8 @@ jobs:
     steps:
       - name: Check Out The Repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -25,9 +38,22 @@ jobs:
 
       - name: Get the version
         id: get_version
+        env:
+          INPUT_REF: ${{ inputs.ref }}
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
-          RELEASE_VERSION_WITHOUT_V="$(cut -d'v' -f2 <<< ${GITHUB_REF#refs/*/})"
-          echo "VERSION=$RELEASE_VERSION_WITHOUT_V" >> $GITHUB_OUTPUT
+          if [ -n "$INPUT_VERSION" ]; then
+            RELEASE_VERSION_WITHOUT_V="$INPUT_VERSION"
+          elif [ -n "$INPUT_REF" ]; then
+            RELEASE_VERSION_WITHOUT_V="$(cut -d'v' -f2 <<< "${INPUT_REF#refs/*/}")"
+          else
+            RELEASE_VERSION_WITHOUT_V="$(cut -d'v' -f2 <<< "${GITHUB_REF#refs/*/}")"
+          fi
+          if ! [[ "$RELEASE_VERSION_WITHOUT_V" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "이미지 태그 형식이 잘못됨: '$RELEASE_VERSION_WITHOUT_V'" >&2
+            exit 1
+          fi
+          echo "VERSION=$RELEASE_VERSION_WITHOUT_V" >> "$GITHUB_OUTPUT"
 
       #테스트 수행용 도커 컴포즈
       - name: Start containers
@@ -38,6 +64,10 @@ jobs:
 
       - name: Execute Gradle build
         run: ./gradlew :DuDoong-Api:build --no-daemon
+
+      # arm64 이미지 빌드용 에뮬레이션 (jar 는 위에서 만들고 Dockerfile 은 COPY 만 하므로 부담이 작다)
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -51,5 +81,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./DuDoong-Api
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: water0641/dudoong-api:${{ steps.get_version.outputs.VERSION }}
