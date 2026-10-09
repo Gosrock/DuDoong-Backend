@@ -194,7 +194,7 @@ docker compose up -d
 
 **주의**: `local` 프로필 없이 기동하면 **H2 인메모리 DB**를 사용하게 되어 MySQL과 불일치 발생.
 - `spring.profiles.group.local` = `infrastructure, domain-local, common-local`
-- `domain-local` 프로필이 `jdbc:mysql://127.0.0.1:13306/dudoong` 설정
+- `domain-local` 프로필이 `jdbc:mysql://127.0.0.1:23306/dudoong` 설정
 
 ### E2E 테스트 (Python pytest)
 ```bash
