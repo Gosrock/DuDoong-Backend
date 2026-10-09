@@ -13,7 +13,6 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
-import org.springframework.web.util.WebUtils
 
 @Component
 class JwtTokenFilter(
@@ -43,9 +42,9 @@ class JwtTokenFilter(
             return adminToken
         }
         // 쿠키방식 지원
-        val accessTokenCookie = WebUtils.getCookie(request, cookieHelper.getAccessTokenName())
+        val accessTokenCookie = cookieHelper.getAccessTokenFromRequest(request)
         if (accessTokenCookie != null) {
-            return accessTokenCookie.value
+            return accessTokenCookie
         }
         // 기존 jwt 방식 지원
         val rawHeader = request.getHeader(DuDoongStatic.AUTH_HEADER) ?: return null

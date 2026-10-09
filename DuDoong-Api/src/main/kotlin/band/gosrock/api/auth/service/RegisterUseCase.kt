@@ -22,8 +22,8 @@ class RegisterUseCase(
     fun getKaKaoOauthLinkTest(): OauthLoginLinkResponse =
         OauthLoginLinkResponse(kakaoOauthHelper.getKaKaoOauthLinkTest())
 
-    fun getKaKaoOauthLink(referer: String): OauthLoginLinkResponse =
-        OauthLoginLinkResponse(kakaoOauthHelper.getKaKaoOauthLink(referer))
+    fun getKaKaoOauthLink(redirectBase: String, state: String): OauthLoginLinkResponse =
+        OauthLoginLinkResponse(kakaoOauthHelper.getKaKaoOauthLink(redirectBase, state))
 
     fun upsertKakaoOauthUser(code: String): TokenAndUserResponse {
         val oauthAccessToken = kakaoOauthHelper.getOauthTokenTest(code).accessToken
@@ -55,8 +55,8 @@ class RegisterUseCase(
         return tokenGenerateHelper.execute(user)
     }
 
-    fun getCredentialFromKaKao(code: String, referer: String): OauthTokenResponse =
-        OauthTokenResponse.from(kakaoOauthHelper.getOauthToken(code, referer))
+    fun getCredentialFromKaKao(code: String, redirectBase: String): OauthTokenResponse =
+        OauthTokenResponse.from(kakaoOauthHelper.getOauthToken(code, redirectBase))
 
     fun getCredentialFromKaKaoTest(code: String): OauthTokenResponse =
         OauthTokenResponse.from(kakaoOauthHelper.getOauthTokenTest(code))

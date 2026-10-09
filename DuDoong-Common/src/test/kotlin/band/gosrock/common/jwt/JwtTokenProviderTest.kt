@@ -190,4 +190,22 @@ class JwtTokenProviderTest {
             assertFalse(jwtTokenProvider.isAccessToken(token))
         }
     }
+
+    @Nested
+    @DisplayName("isSignedByThisServer (#763 같은 이름 쿠키 고르기)")
+    inner class SignedByThisServer {
+
+        @Test
+        fun `이 서버 키로 서명한 토큰은 만료돼도 true, 다른 키·깨진 값은 false`() {
+            assertTrue(jwtTokenProvider.isSignedByThisServer(jwtTokenProvider.generateAccessToken(1L)))
+            assertTrue(jwtTokenProvider.isSignedByThisServer(jwtTokenProvider.generateRefreshToken(1L)))
+
+            val expired = JwtTokenProvider(JwtProperties(secretKey, accessExp = -10, refreshExp = -10)).generateAccessToken(1L)
+            assertTrue(jwtTokenProvider.isSignedByThisServer(expired))
+
+            val otherKey = JwtTokenProvider(JwtProperties("other" + secretKey, accessExp, refreshExp)).generateAccessToken(1L)
+            assertFalse(jwtTokenProvider.isSignedByThisServer(otherKey))
+            assertFalse(jwtTokenProvider.isSignedByThisServer("garbage"))
+        }
+    }
 }

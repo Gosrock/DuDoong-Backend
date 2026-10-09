@@ -1,5 +1,6 @@
 package band.gosrock.api.event.service
 
+import band.gosrock.api.common.aop.hostRole.SuperAdminBypass
 import band.gosrock.api.event.model.dto.response.EventDetailResponse
 import band.gosrock.api.event.model.mapper.EventMapper
 import band.gosrock.common.annotation.UseCase
@@ -13,13 +14,16 @@ import org.springframework.transaction.annotation.Transactional
 class ReadEventDetailUseCase(
     private val eventAdaptor: EventAdaptor,
     private val eventMapper: EventMapper,
-    private val hostAdaptor: HostAdaptor
+    private val hostAdaptor: HostAdaptor,
+    private val superAdminBypass: SuperAdminBypass,
 ) {
     fun execute(userId: Long, eventId: Long): EventDetailResponse {
         val event = eventAdaptor.findById(eventId)
         val host = hostAdaptor.findById(event.hostId!!)
-        // 호스트 유저가 아닐 경우 준비 상태일 때 조회할 수 없음
-        if (event.isPreparing() && !host.isActiveHostUserId(userId)) {
+        // 호스트 유저가 아닐 경우 준비 상태일 때 조회할 수 없음. SUPER_ADMIN 은 v2 와 같이 예외 (#763, 비로그인 userId = 0)
+        if (event.isPreparing() && !host.isActiveHostUserId(userId) &&
+            (userId == 0L || !superAdminBypass.bypass(userId, "ReadEventDetailUseCase.execute", "EVENT", eventId))
+        ) {
             throw EventNotOpenException.EXCEPTION
         }
         return eventMapper.toEventDetailResponse(host, event)

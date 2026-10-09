@@ -1,5 +1,6 @@
 package band.gosrock.api.host.model.mapper
 
+import band.gosrock.api.common.aop.hostRole.SuperAdminBypass
 import band.gosrock.api.host.model.dto.request.CreateHostRequest
 import band.gosrock.api.host.model.dto.request.UpdateHostRequest
 import band.gosrock.api.host.model.dto.response.HostDetailResponse
@@ -13,7 +14,6 @@ import band.gosrock.domain.domains.host.domain.HostRole
 import band.gosrock.domain.domains.host.domain.HostUser
 import band.gosrock.domain.domains.host.exception.AlreadyJoinedHostException
 import band.gosrock.domain.domains.user.adaptor.UserAdaptor
-import band.gosrock.domain.domains.user.domain.AccountRole
 import org.springframework.transaction.annotation.Transactional
 
 @Mapper
@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional
 class HostMapper(
     private val hostAdaptor: HostAdaptor,
     private val userAdaptor: UserAdaptor,
+    private val superAdminBypass: SuperAdminBypass,
 ) {
     fun toEntity(createHostRequest: CreateHostRequest, masterUserId: Long): Host {
         return Host(
@@ -85,6 +86,7 @@ class HostMapper(
     private fun canViewSlackUrl(host: Host, viewerUserId: Long): Boolean {
         val viewerRole = host.getActiveRoleOf(viewerUserId)
         if (viewerRole == HostRole.MASTER || viewerRole == HostRole.MANAGER) return true
-        return userAdaptor.queryUser(viewerUserId).accountRole == AccountRole.SUPER_ADMIN
+        // SUPER_ADMIN 예외는 SuperAdminBypass 한 곳에서 판정하고 감사 로그를 남긴다 (#763)
+        return superAdminBypass.bypass(viewerUserId, "HostMapper.canViewSlackUrl", "HOST", host.id)
     }
 }

@@ -119,7 +119,21 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4
 ### 인증 방식
 - **로그인**: 카카오 OAuth (`/api/v1/auth/oauth/kakao`) 또는 로컬 개발용 (`/api/v1/auth/oauth/local/login`, dev 전용)
 - **토큰 전달**: `accessToken` 쿠키 (기본) 또는 `Authorization: Bearer` 헤더
-- **토큰 갱신**: `POST /api/v1/auth/token/refresh`
+- **토큰 갱신**: `POST /api/v1/auth/token/refresh` — 본문 `refreshToken` → `refreshToken` 쿠키 → 쿼리 `?token=`(전환 기간, deprecated 경고 로그) 순 (#763)
+- **카카오 id_token·access_token**: 본문(`idToken`·`accessToken`)으로 받는다. 쿼리스트링은 전환 기간에만 받고 `[DEPRECATED]` 경고 로그를 남긴다 (#763)
+- **카카오 로그인**: redirect_uri 는 `KakaoRedirectPolicy` 허용 목록에서만 고른다. 링크에 state 를 붙이고 `oauth_state` HttpOnly 쿠키와 비교(`AUTH_OAUTH_STATE_REQUIRED` 기본 false = 전환 기간) (#763)
+
+### 쿠키·CORS·출처 (#763)
+| 항목 | prod | staging | local·dev |
+|------|------|---------|-----------|
+| 쿠키 domain | `.dudoong.com` | 없음(호스트 전용) | 없음 |
+| SameSite | Strict | Lax | None |
+| HttpOnly | `AUTH_COOKIE_HTTP_ONLY` (기본 false — 프론트가 JS 로 쿠키를 읽는 동안) | 〃 | 〃 |
+| CORS 허용 출처 (`WebOriginPolicy`) | dudoong.com, internal-admin.dudoong.com | staging·staging-internal-admin + localhost:3000·5173 | 전부 |
+
+- 같은 이름 쿠키가 여럿이면(스테이징에 운영 쿠키가 함께 옴) 이 서버가 서명한 토큰을 쓴다
+- **쿠키 인증 상태 변경 요청**(POST·PUT·PATCH·DELETE, Authorization 헤더 없음)은 Origin(없으면 Referer)이 허용 출처여야 한다 → 아니면 403 `AUTH_403_3` (`CookieOriginFilter`). refresh·logout 은 제외
+- 운영·스테이징에 새로 넣어야 하는 env 는 없다 (위 값은 코드 기본값). 필요할 때만 덮어쓰는 env: `AUTH_ALLOWED_ORIGINS`, `AUTH_COOKIE_HTTP_ONLY`, `AUTH_COOKIE_NAME_PREFIX`, `AUTH_COOKIE_DOMAIN`, `AUTH_COOKIE_SAME_SITE`, `AUTH_KAKAO_REDIRECT_BASES`, `AUTH_OAUTH_STATE_REQUIRED` (없으면 위 프로필 기본값)
 
 ### 역할 (AccountRole)
 | 역할 | 설명 |
@@ -143,7 +157,7 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4
 ### 호스트 권한 (HostRole AOP)
 - `@HostRolesAllowed` AOP로 호스트 멤버십 기반 권한 체크
 - **userId를 메서드 파라미터로 명시적 전달** (SecurityContext 미사용)
-- `SUPER_ADMIN`은 호스트 멤버가 아니어도 모든 이벤트/호스트 접근 가능 (바이패스)
+- `SUPER_ADMIN`은 호스트 멤버가 아니어도 모든 이벤트/호스트 접근 가능 (바이패스). 판정은 `SuperAdminBypass` 한 곳(AOP, v1 공연 생성·준비중 상세, v2 준비중 섹션)에서 하고 `AUDIT.SuperAdminBypass` 감사 로그를 남긴다 (#763)
 - HostQualification: `MASTER` > `MANAGER` > `GUEST`
 
 ### Admin API (internal-api)
@@ -153,6 +167,7 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4
   - 쓰기: `validateAdminOrAbove` (ADMIN+)
   - 역할 변경: `validateSuperAdmin` (SUPER_ADMIN만)
 - 어드민 전용 로그인 엔드포인트 없음 — 일반 로그인 쿠키 사용
+- 감사 기록 (#763): 상태 변경 요청과 `export*` 엑셀 반출마다 `tbl_admin_audit_log`(V011) 1행 + `AUDIT.AdminAudit` 로그 (`AdminAuditAspect`)
 
 ### 어드민 토큰 관련 (레거시)
 - `X-Admin-Token` 헤더, `aud:admin` JWT claim — **사용하지 않음**

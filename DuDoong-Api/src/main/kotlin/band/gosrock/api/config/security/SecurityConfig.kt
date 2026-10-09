@@ -20,6 +20,7 @@ class SecurityConfig(
     private val jwtTokenFilter: JwtTokenFilter,
     private val accessDeniedFilter: AccessDeniedFilter,
     private val jwtExceptionFilter: JwtExceptionFilter,
+    private val cookieOriginFilter: CookieOriginFilter,
     private val objectMapper: ObjectMapper,
 ) {
 
@@ -74,6 +75,8 @@ class SecurityConfig(
         http.addFilterBefore(jwtTokenFilter, BasicAuthenticationFilter::class.java)
         http.addFilterBefore(jwtExceptionFilter, JwtTokenFilter::class.java)
         http.addFilterBefore(accessDeniedFilter, JwtTokenFilter::class.java)
+        // 쿠키 인증 상태 변경 요청의 출처 확인 (#763). 예외는 앞의 accessDeniedFilter 가 응답으로 바꾼다
+        http.addFilterBefore(cookieOriginFilter, JwtTokenFilter::class.java)
 
         return http.build()
     }

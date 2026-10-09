@@ -86,3 +86,5 @@ springdoc:
 logging:
   level:
     ROOT: WARN
+    # 감사 로그(AUDIT.*: 운영 어드민 변경·반출, SUPER_ADMIN 예외)는 운영에서도 남긴다 (#763)
+    AUDIT: INFO

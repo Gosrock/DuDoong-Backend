@@ -79,6 +79,17 @@ class JwtTokenProvider(
         return buildRefreshToken(id, issuedAt, refreshTokenExpiresIn)
     }
 
+    /** 이 서버의 키로 서명한 토큰인지 (만료는 보지 않는다). 같은 이름 쿠키가 여럿일 때 고르는 데 쓴다 (#763) */
+    fun isSignedByThisServer(token: String): Boolean =
+        try {
+            getJws(token)
+            true
+        } catch (e: ExpiredTokenException) {
+            true
+        } catch (e: InvalidTokenException) {
+            false
+        }
+
     fun isAccessToken(token: String): Boolean =
         getJws(token).payload.get(TOKEN_TYPE) == ACCESS_TOKEN
 

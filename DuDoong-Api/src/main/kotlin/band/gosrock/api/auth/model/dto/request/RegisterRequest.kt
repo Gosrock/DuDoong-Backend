@@ -12,7 +12,9 @@ data class RegisterRequest(
     val profileImage: String? = null,
     @field:NotEmpty
     val name: String? = null,
-    val marketingAgree: Boolean = false
+    val marketingAgree: Boolean = false,
+    /** 카카오 회원가입의 id_token. 쿼리스트링 id_token 대신 본문으로 받는다 (#763) */
+    val idToken: String? = null,
 ) {
     fun toProfile(): Profile = Profile(
         profileImage = profileImage?.takeIf { ImageVo.isKakaoImageUrl(it) },
