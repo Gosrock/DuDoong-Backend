@@ -1,5 +1,6 @@
 package band.gosrock.admin.service
 
+import band.gosrock.admin.model.dto.response.AdminBatchExecutionResponse
 import band.gosrock.admin.repository.AdminBatchExecutionQuery
 import band.gosrock.admin.repository.BatchExecutionRow
 import band.gosrock.admin.repository.BatchJobSummaryRow
@@ -185,7 +186,7 @@ class AdminBatchHistoryUseCaseTest {
             assertEquals("이벤트정산서", item.jobName)
             assertEquals("FAILED", item.status)
             assertEquals("FAILED", item.exitCode)
-            assertEquals(95L, item.durationSeconds)
+            assertEquals(95.0, item.durationSeconds)
             assertEquals(500, item.exitMessage?.length)
             assertEquals(mapOf("eventId" to "42"), item.parameters)
         }
@@ -203,6 +204,20 @@ class AdminBatchHistoryUseCaseTest {
             val items = adminGetBatchExecutionsUseCase.execute(1L, null, pageable).content
 
             assertTrue(items.all { it.durationSeconds == null && it.exitMessage == null })
+        }
+    }
+    @Nested
+    @DisplayName("소요 시간")
+    inner class DurationTest {
+
+        @Test
+        @DisplayName("밀리초를 소수 첫째 자리 초로 반올림한다 (1.743초 → 1.7)")
+        fun roundsToOneDecimal() {
+            val start = LocalDateTime.of(2026, 10, 9, 19, 41, 35, 477_000_000)
+            assertEquals(1.7, AdminBatchExecutionResponse.durationSecondsOf(start, start.plusNanos(1_743_000_000)))
+            assertEquals(0.1, AdminBatchExecutionResponse.durationSecondsOf(start, start.plusNanos(50_000_000)))
+            assertEquals(0.0, AdminBatchExecutionResponse.durationSecondsOf(start, start))
+            assertNull(AdminBatchExecutionResponse.durationSecondsOf(start, null))
         }
     }
 }
