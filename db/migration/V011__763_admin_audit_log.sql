@@ -2,7 +2,10 @@
 -- 이슈: Gosrock/DuDoong-Backend#763
 -- 목적: 운영 어드민(/internal-api) 감사 기록 — 상태 변경 요청(POST·PUT·PATCH·DELETE)과 엑셀 반출(export)마다 1행
 --   - 누가(actor_user_id) · 무엇을(action = 컨트롤러.메서드, http_method, request_path) · 대상(target = 경로 변수 JSON)
---   - 요청 내용(request_detail = 본문 JSON 또는 엑셀 필터 파라미터 JSON), 대상의 변경 전후 핵심 값(before_value·after_value JSON)
+--   - 요청 내용(request_detail = 본문 또는 엑셀 필터 파라미터 JSON), 대상의 변경 전후 핵심 값(before_value·after_value JSON)
+--   - 개인정보 최소화: request_detail 은 허용 키(id·상태·역할·수량·날짜)만 값을 남기고 그 밖(이름·연락처·사유·검색어 등)은 길이만,
+--     변경 전후 값에는 사용자 이름·연락처·계좌를 넣지 않는다
+--   - 보관 기간: 1년 (삭제 배치는 별도 작업)
 --   - 결과(result = SUCCESS / FAIL, error_code)
 --   - 긴 값은 앱에서 2000자로 자른다. 쓰기만 하고 고치지 않는다
 --   - 인덱스
@@ -10,7 +13,7 @@
 --     idx_admin_audit_log_created_at (created_at): 기간 조회
 -- v1 영향: 없음 (테이블 추가)
 -- 실행 순서: (1) 이 파일 DDL → (2) 앱 배포. [DATA] 없음
---   - DDL 없이 새 앱이 뜨면 어드민 요청은 그대로 처리되고 감사 기록 저장만 실패한다(오류 로그 + 구조화 로그는 남음)
+--   - DDL 없이 새 앱이 먼저 떠도 어드민 요청은 그대로 성공하고 감사 기록 저장만 실패한다(오류 로그 + 구조화 로그는 남음)
 -- 실행 기록:
 --   staging: YYYY-MM-DD (실행자)
 --   prod:    YYYY-MM-DD (실행자)

@@ -129,10 +129,13 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4
 | 쿠키 domain | `.dudoong.com` | 없음(호스트 전용) | 없음 |
 | SameSite | Strict | Lax | None |
 | HttpOnly | `AUTH_COOKIE_HTTP_ONLY` (기본 false — 프론트가 JS 로 쿠키를 읽는 동안) | 〃 | 〃 |
-| CORS 허용 출처 (`WebOriginPolicy`) | dudoong.com, internal-admin.dudoong.com | staging·staging-internal-admin + localhost:3000·5173 | 전부 |
+| CORS 허용 출처 (`WebOriginPolicy`) | dudoong.com, internal-admin.dudoong.com | staging.dudoong.com + localhost:3000·5173 | 전부 |
 
-- 같은 이름 쿠키가 여럿이면(스테이징에 운영 쿠키가 함께 옴) 이 서버가 서명한 토큰을 쓴다
-- **쿠키 인증 상태 변경 요청**(POST·PUT·PATCH·DELETE, Authorization 헤더 없음)은 Origin(없으면 Referer)이 허용 출처여야 한다 → 아니면 403 `AUTH_403_3` (`CookieOriginFilter`). refresh·logout 은 제외
+- 스테이징 내부 어드민은 `staging.dudoong.com/internal-admin/` 경로만 쓴다. 쿠키가 호스트 전용이라 `staging-internal-admin.dudoong.com` 서브도메인에는 로그인 쿠키가 가지 않는다 (CORS 목록에서도 뺐다)
+- 같은 이름 쿠키가 여럿이면(스테이징에 운영 쿠키가 함께 옴) 이 서버가 서명했고 만료 전 → 이 서버가 서명함 → 첫 번째 순으로 쓴다
+- 토큰 순서: `Authorization: Bearer` 헤더 → (레거시) `X-Admin-Token` → `accessToken` 쿠키
+- **쿠키 인증 상태 변경 요청**(POST·PUT·PATCH·DELETE, Bearer 헤더 없음)은 Origin(없으면 Referer)이 허용 출처여야 한다 (`CookieOriginFilter`). refresh·logout 은 제외
+  - `auth.origin-check.enforce` 기본 false = report-only: 막지 않고 `[AUTH] origin-check would-reject` 경고만. 로그 확인 후 다음 PR 에서 기본값 true(403 `AUTH_403_3`)
 - 운영·스테이징에 새로 넣어야 하는 env 는 없다 (위 값은 코드 기본값). 필요할 때만 덮어쓰는 env: `AUTH_ALLOWED_ORIGINS`, `AUTH_COOKIE_HTTP_ONLY`, `AUTH_COOKIE_NAME_PREFIX`, `AUTH_COOKIE_DOMAIN`, `AUTH_COOKIE_SAME_SITE`, `AUTH_KAKAO_REDIRECT_BASES`, `AUTH_OAUTH_STATE_REQUIRED` (없으면 위 프로필 기본값)
 
 ### 역할 (AccountRole)
@@ -168,6 +171,8 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4
   - 역할 변경: `validateSuperAdmin` (SUPER_ADMIN만)
 - 어드민 전용 로그인 엔드포인트 없음 — 일반 로그인 쿠키 사용
 - 감사 기록 (#763): 상태 변경 요청과 `export*` 엑셀 반출마다 `tbl_admin_audit_log`(V011) 1행 + `AUDIT.AdminAudit` 로그 (`AdminAuditAspect`)
+  - request_detail 은 허용 키(id·상태·역할·수량·날짜)만 값, 그 밖(이름·연락처·사유·검색어 등)은 길이만. 변경 전후 값에 사용자 이름·연락처 없음
+  - 보관 기간 1년 (삭제 배치는 별도). 저장이 실패해도(테이블 없음 포함) 어드민 요청은 성공
 
 ### 어드민 토큰 관련 (레거시)
 - `X-Admin-Token` 헤더, `aud:admin` JWT claim — **사용하지 않음**

@@ -176,6 +176,17 @@ class CookieHelperTest {
         }
 
         @Test
+        fun `이 서버 것 중 만료 전 토큰을 만료 토큰보다 먼저 고른다 (만료·다른 서버 쿠키가 앞에 와도)`() {
+            val h = helper("staging")
+            val expired = JwtTokenProvider(JwtProperties(secretKey = OWN_SECRET, accessExp = -10, refreshExp = -10)).generateAccessToken(1L)
+            val valid = ownJwt.generateAccessToken(2L)
+            val other = otherJwt.generateAccessToken(3L)
+            assertEquals(valid, h.getAccessTokenFromRequest(request(Cookie("accessToken", other), Cookie("accessToken", expired), Cookie("accessToken", valid))))
+            // 만료 전이 없으면 이 서버가 서명한 만료 토큰 (재발급 유도용 401 이 이 서버 기준으로 난다)
+            assertEquals(expired, h.getAccessTokenFromRequest(request(Cookie("accessToken", other), Cookie("accessToken", expired))))
+        }
+
+        @Test
         fun `여럿인데 이 서버 것이 없으면 첫 번째 (기존 동작)`() {
             val h = helper("staging")
             val first = otherJwt.generateAccessToken(1L)

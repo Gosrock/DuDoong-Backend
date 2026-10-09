@@ -23,8 +23,9 @@ internal class HostRoleHostTransaction(
 
     private fun validRole(userId: Long, hostId: Long, role: HostQualification, action: String) {
         // SUPER_ADMIN 예외는 SuperAdminBypass 한 곳에서 판정하고 감사 로그를 남긴다 (#763)
-        if (superAdminBypass.bypass(userId, action, "HOST", hostId)) return
+        // 대상 존재 확인은 SUPER_ADMIN 도 건너뛰지 않는다 (없으면 404). 권한 검사만 예외
         val host = hostAdaptor.findById(hostId)
+        if (superAdminBypass.bypass(userId, action, "HOST", hostId)) return
         role.validQualification(userId, host)
         log.info("[AUTH] Host role verified - userId={}, hostId={}, required={}", userId, hostId, role)
     }

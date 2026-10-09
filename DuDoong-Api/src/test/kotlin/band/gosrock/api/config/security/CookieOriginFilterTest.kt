@@ -5,6 +5,10 @@ import band.gosrock.common.exception.OriginNotAllowedException
 import band.gosrock.common.helper.SpringEnvironmentHelper
 import band.gosrock.common.jwt.JwtTokenProvider
 import jakarta.servlet.http.Cookie
+import ch.qos.logback.classic.Logger
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.read.ListAppender
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
@@ -13,17 +17,20 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.Mockito.mock
+import org.slf4j.LoggerFactory
 import org.springframework.mock.env.MockEnvironment
 import org.springframework.mock.web.MockFilterChain
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
 
-/** 쿠키 인증 상태 변경 요청의 Origin 검사 (#763). 운영 프로필 기준 */
+/** 쿠키 인증 상태 변경 요청의 Origin 검사 (#763). 운영 프로필 기준. 기본은 차단(enforce=true) 모드로 보고, report-only 는 따로 */
 @DisplayName("CookieOriginFilter")
 class CookieOriginFilterTest {
 
     private val env = SpringEnvironmentHelper(MockEnvironment().apply { setActiveProfiles("prod") })
-    private val filter = CookieOriginFilter(CookieHelper(env, mock(JwtTokenProvider::class.java)), WebOriginPolicy(env))
+    private val cookieHelper = CookieHelper(env, mock(JwtTokenProvider::class.java))
+    private val filter = CookieOriginFilter(cookieHelper, WebOriginPolicy(env), enforce = true)
+    private val reportOnly = CookieOriginFilter(cookieHelper, WebOriginPolicy(env), enforce = false)
 
     private fun request(
         method: String = "POST",
@@ -32,17 +39,19 @@ class CookieOriginFilterTest {
         origin: String? = null,
         referer: String? = null,
         authorization: String? = null,
+        adminToken: String? = null,
     ) = MockHttpServletRequest(method, uri).apply {
         if (cookie) setCookies(Cookie("accessToken", "token"))
         origin?.let { addHeader("Origin", it) }
         referer?.let { addHeader("Referer", it) }
         authorization?.let { addHeader("Authorization", it) }
+        adminToken?.let { addHeader("X-Admin-Token", it) }
     }
 
     /** 다음 필터로 넘어갔는지 */
-    private fun passes(request: MockHttpServletRequest): Boolean {
+    private fun passes(request: MockHttpServletRequest, target: CookieOriginFilter = filter): Boolean {
         val chain = MockFilterChain()
-        filter.doFilter(request, MockHttpServletResponse(), chain)
+        target.doFilter(request, MockHttpServletResponse(), chain)
         return chain.request != null
     }
 
@@ -77,9 +86,34 @@ class CookieOriginFilterTest {
     }
 
     @Test
-    fun `Authorization 헤더가 있으면 검사하지 않는다`() {
+    fun `Bearer 헤더가 있으면 인증이 헤더 토큰으로 되므로 검사하지 않는다 (CORS 단계 출처 거부는 별개)`() {
         assertTrue(passes(request(origin = "https://evil.example", authorization = "Bearer x")))
         assertTrue(passes(request(authorization = "Bearer x")))
+    }
+
+    @Test
+    fun `Bearer 가 아닌 Authorization 이나 레거시 X-Admin-Token 은 면제하지 않는다`() {
+        rejects(request(authorization = "Basic abc"))
+        rejects(request(authorization = "Bearer "))
+        rejects(request(adminToken = "x"))
+    }
+
+    @Test
+    fun `report-only(기본값) - 막지 않고 would-reject 경고만 남긴다 (토큰 값 없음)`() {
+        val appender = ListAppender<ILoggingEvent>().apply { start() }
+        val logger = LoggerFactory.getLogger(CookieOriginFilter::class.java) as Logger
+        logger.addAppender(appender)
+        try {
+            assertTrue(passes(request(origin = "https://evil.example"), reportOnly))
+            assertTrue(passes(request(), reportOnly))
+            assertTrue(passes(request(origin = "https://dudoong.com"), reportOnly))
+            val logs = appender.list.map { it.formattedMessage }
+            assertEquals(2, logs.count { it.startsWith("[AUTH] origin-check would-reject") }, "$logs")
+            assertTrue(logs.none { it.contains("token") }, "$logs")
+            assertTrue(logs.first().contains("origin=https://evil.example"), "$logs")
+        } finally {
+            logger.detachAppender(appender)
+        }
     }
 
     @Test

@@ -30,7 +30,15 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
+import com.fasterxml.jackson.databind.ObjectMapper
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.parameters.RequestBody as SwaggerRequestBody
+import java.io.IOException
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.http.server.ServletServerHttpRequest
 import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -56,6 +64,7 @@ class AuthController(
     private val localDevLoginUseCase: LocalDevLoginUseCase,
     private val kakaoRedirectPolicy: KakaoRedirectPolicy,
     private val oauthStateHelper: OauthStateHelper,
+    private val objectMapper: ObjectMapper,
 ) {
     private val log = LoggerFactory.getLogger(AuthController::class.java)
 
@@ -144,10 +153,12 @@ class AuthController(
     @Operation(summary = "id_token 으로 로그인을 합니다. id_token 은 본문 idToken 으로 보내 주세요 (쿼리스트링 id_token 은 전환 기간용)")
     @Tag(name = "1-2. [카카오]")
     @PostMapping("/oauth/kakao/login")
+    @SwaggerRequestBody(required = false, content = [Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = Schema(implementation = IdTokenRequest::class))])
     fun kakaoOauthUserLogin(
+        request: HttpServletRequest,
         @RequestParam(value = "id_token", required = false) queryToken: String?,
-        @RequestBody(required = false) body: IdTokenRequest?
     ): ResponseEntity<TokenAndUserResponse> {
+        val body = optionalJsonBody(request, IdTokenRequest::class.java)
         val token = body?.idToken.takeUnless { it.isNullOrBlank() }
             ?: queryToken?.also { warnQueryToken("id_token", "/oauth/kakao/login") }
         val tokenAndUserResponse = loginUseCase.execute(requireToken(token, "id_token"))
@@ -159,10 +170,12 @@ class AuthController(
     @Operation(summary = "accessToken 으로 oauth user 정보를 가져옵니다. 본문 accessToken 으로 보내 주세요 (쿼리스트링 access_token 은 전환 기간용)")
     @Tag(name = "1-2. [카카오]")
     @PostMapping("/oauth/kakao/info")
+    @SwaggerRequestBody(required = false, content = [Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = Schema(implementation = OauthAccessTokenRequest::class))])
     fun kakaoOauthUserInfo(
+        request: HttpServletRequest,
         @RequestParam(value = "access_token", required = false) queryToken: String?,
-        @RequestBody(required = false) body: OauthAccessTokenRequest?
     ): OauthUserInfoResponse {
+        val body = optionalJsonBody(request, OauthAccessTokenRequest::class.java)
         val token = body?.accessToken.takeUnless { it.isNullOrBlank() }
             ?: queryToken?.also { warnQueryToken("access_token", "/oauth/kakao/info") }
         return oauthUserInfoUseCase.execute(requireToken(token, "access_token"))
@@ -170,11 +183,12 @@ class AuthController(
 
     @Operation(summary = "refreshToken 용입니다. 본문 refreshToken 또는 refreshToken 쿠키로 보내 주세요 (쿼리스트링 token 은 전환 기간용)")
     @PostMapping("/token/refresh")
+    @SwaggerRequestBody(required = false, content = [Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = Schema(implementation = RefreshTokenRequest::class))])
     fun tokenRefresh(
         request: HttpServletRequest,
         @RequestParam(value = "token", required = false) queryToken: String?,
-        @RequestBody(required = false) body: RefreshTokenRequest?
     ): ResponseEntity<TokenAndUserResponse> {
+        val body = optionalJsonBody(request, RefreshTokenRequest::class.java)
         // 우선순위: 본문 → 쿠키 → 쿼리스트링(전환 기간)
         val refreshToken = body?.refreshToken.takeUnless { it.isNullOrBlank() }
             ?: cookieHelper.getRefreshTokenFromRequest(request)
@@ -219,6 +233,22 @@ class AuthController(
     /** 쿼리스트링 토큰은 전환 기간에만 받는다 (#763). 사용량 파악용 로그 — 토큰 값은 남기지 않는다 */
     private fun warnQueryToken(param: String, path: String) {
         log.warn("[DEPRECATED] 쿼리스트링 토큰 사용 - param={}, path=/api/v1/auth{}", param, path)
+    }
+
+    /**
+     * JSON 본문이 있을 때만 읽는다 (#763). `@RequestBody` 를 쓰지 않는 이유: 쿼리스트링만 보내는 기존 호출이
+     * form·text/plain Content-Type 에 빈 본문이면 415 가 나므로, JSON 이 아니거나 본문이 비면 null 로 둔다
+     */
+    private fun <T> optionalJsonBody(request: HttpServletRequest, type: Class<T>): T? {
+        val contentType = request.contentType?.let { runCatching { MediaType.parseMediaType(it) }.getOrNull() } ?: return null
+        if (!contentType.isCompatibleWith(MediaType.APPLICATION_JSON)) return null
+        val bytes = request.inputStream.readAllBytes()
+        if (bytes.all { it.toInt().toChar().isWhitespace() }) return null
+        return try {
+            objectMapper.readValue(bytes, type)
+        } catch (e: IOException) {
+            throw HttpMessageNotReadableException("JSON 본문을 읽을 수 없습니다.", e, ServletServerHttpRequest(request))
+        }
     }
 
     private fun requireToken(token: String?, name: String): String {

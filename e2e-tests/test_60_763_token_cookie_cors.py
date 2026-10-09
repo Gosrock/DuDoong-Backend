@@ -5,6 +5,8 @@
 쿠키 인증 상태 변경 요청의 Origin 검사(잘못된 Origin·Origin 없음 403, 허용 Origin·헤더 인증 통과, refresh·logout 제외) →
 운영 어드민 변경·엑셀 반출의 감사 기록(tbl_admin_audit_log) → SUPER_ADMIN 의 v1 공연 생성(v2 와 같은 예외).
 
+Origin 검사는 기본 report-only(auth.origin-check.enforce=false)다. 서버를 --auth.origin-check.enforce=true 로 띄우고
+E2E_ORIGIN_CHECK_ENFORCE=1 을 주면 차단(403 AUTH_403_3)을, 아니면 통과(경고 로그만)를 확인한다.
 운영 프로필 확인(CORS 에 localhost 없음, 운영 쿠키 속성)은 운영 프로필로 띄운 두 번째 서버가 있어야 한다:
   E2E_PROD_PROFILE_BASE_URL (예: http://localhost:18764/api) — 없으면 그 테스트만 skip (사유 표시).
   E2E_REQUIRE_PROD_PROFILE=1 이면 skip 대신 실패.
@@ -26,6 +28,7 @@ RUN = uuid.uuid4().hex[:8]
 FMT = "%Y.%m.%d %H:%M"
 START = (datetime.now() + timedelta(days=30)).replace(hour=18, minute=0, second=0, microsecond=0)
 PEOPLE = ["user", "admin", "target", "super", "master"]
+ENFORCE = os.environ.get("E2E_ORIGIN_CHECK_ENFORCE") == "1"
 ALLOWED_LOCAL_ORIGIN = "http://localhost:3000"
 EVIL_ORIGIN = "https://evil.example"
 
@@ -158,6 +161,15 @@ def test_05_refresh_by_query_still_works(base_url, s):
     s.tokens["user"], s.refresh["user"] = data["accessToken"], data["refreshToken"]
 
 
+def test_05b_refresh_query_with_form_content_type(base_url, s):
+    """쿼리 방식 호환: form Content-Type 에 빈 본문이어도 415 가 아니다"""
+    resp = requests.post(f"{base_url}/v1/auth/token/refresh?token={s.refresh['user']}",
+                         headers={"Content-Type": "application/x-www-form-urlencoded"})
+    assert_status(resp, 200)
+    data = get_data(resp)
+    s.tokens["user"], s.refresh["user"] = data["accessToken"], data["refreshToken"]
+
+
 def test_06_refresh_without_token_fails(base_url):
     resp = requests.post(f"{base_url}/v1/auth/token/refresh", json={})
     assert resp.status_code in (400, 401, 403, 404), resp.text
@@ -193,15 +205,19 @@ def test_08_kakao_code_state_mismatch_rejected(base_url):
 # ===== 5. 쿠키 인증 상태 변경 요청의 Origin =====
 
 def test_09_cookie_post_with_wrong_origin_is_403(base_url, s):
+    """허용 안 된 Origin 은 CORS 단계에서 403 (모드와 무관)"""
     resp = _new_host(base_url, cookies={"accessToken": s.tokens["user"]}, extra_headers={"Origin": EVIL_ORIGIN})
     assert resp.status_code == 403, resp.text
 
 
-def test_10_cookie_post_without_origin_is_403(base_url, s):
-    resp = _new_host(base_url, cookies={"accessToken": s.tokens["user"]})
-    assert resp.status_code == 403 and _code(resp) == "AUTH_403_3", resp.text
-    resp = _new_host(base_url, cookies={"accessToken": s.tokens["user"]}, extra_headers={"Referer": f"{EVIL_ORIGIN}/x"})
-    assert resp.status_code == 403 and _code(resp) == "AUTH_403_3", resp.text
+def test_10_cookie_post_without_origin(base_url, s):
+    """Origin·Referer 없음 / 허용 안 된 Referer: 차단 모드면 403 AUTH_403_3, report-only 면 통과"""
+    for extra in (None, {"Referer": f"{EVIL_ORIGIN}/x"}):
+        resp = _new_host(base_url, cookies={"accessToken": s.tokens["user"]}, extra_headers=extra)
+        if ENFORCE:
+            assert resp.status_code == 403 and _code(resp) == "AUTH_403_3", resp.text
+        else:
+            assert_status(resp, 200)
 
 
 def test_11_cookie_post_with_allowed_origin_passes(base_url, s):
@@ -210,9 +226,12 @@ def test_11_cookie_post_with_allowed_origin_passes(base_url, s):
 
 
 def test_12_header_auth_is_not_checked(base_url, s):
-    """Authorization 헤더 인증은 Origin 없이 통과 (쿠키가 함께 와도)"""
+    """Bearer 헤더 인증은 Origin 없이 통과 (쿠키가 함께 와도). 쿠키와 헤더가 다른 사용자면 헤더 사용자로 인증"""
     assert_status(_new_host(base_url, headers=_h(s, "user")), 200)
     assert_status(_new_host(base_url, headers=_h(s, "user"), cookies={"accessToken": s.tokens["user"]}), 200)
+    me = requests.get(f"{base_url}/v1/users/me", headers=_h(s, "master"), cookies={"accessToken": s.tokens["user"]})
+    assert_status(me, 200)
+    assert get_data(me)["userId"] == s.user_ids["master"], me.text
 
 
 def test_13_logout_by_cookie_without_origin(base_url, s):
@@ -247,6 +266,7 @@ def test_14_admin_change_is_audited(base_url, s):
     assert path == f"/internal-api/v1/users/{target}/status", rows[0]
     assert json.loads(tgt) == {"userId": str(target)}, rows[0]
     assert json.loads(detail) == {"status": "SUSPENDED"}, rows[0]
+    assert "name" not in json.loads(before), rows[0]  # 사용자 스냅샷에 이름 없음
     assert json.loads(before)["account_state"] == "NORMAL" and json.loads(after)["account_state"] == "SUSPENDED", rows[0]
     assert result == "SUCCESS" and err == "", rows[0]
     assert json.loads(rows[1][5])["account_state"] == "SUSPENDED" and json.loads(rows[1][6])["account_state"] == "NORMAL", rows[1]
@@ -270,7 +290,22 @@ def test_16_user_export_is_audited_and_reads_are_not(base_url, s):
     rows = _audit_rows(s.user_ids["admin"])
     assert len(rows) == before + 1, rows
     assert rows[-1][0] == "AdminUserController.exportUsers" and rows[-1][1] == "GET", rows[-1]
-    assert json.loads(rows[-1][4]) == {"keyword": [f"t763-{RUN}"]}, rows[-1]
+    # 검색어는 개인정보일 수 있어 길이만 남긴다
+    assert json.loads(rows[-1][4]) == {"keyword": f"***(len={len(f't763-{RUN}')})"}, rows[-1]
+
+
+def test_16b_admin_request_succeeds_without_audit_table(base_url, s):
+    """V011 DDL 이 아직 없는 DB 에 새 앱이 먼저 떠도 어드민 요청은 성공 (감사 저장만 실패)"""
+    _sql("RENAME TABLE tbl_admin_audit_log TO tbl_admin_audit_log_763_bak")
+    try:
+        target = s.user_ids["target"]
+        resp = requests.patch(f"{_admin(base_url)}/v1/users/{target}/status", json={"status": "SUSPENDED"}, headers=_h(s, "admin"))
+        assert_status(resp, 200)
+        assert get_data(resp)["accountState"] == "SUSPENDED", resp.text
+        assert_status(requests.patch(f"{_admin(base_url)}/v1/users/{target}/status", json={"status": "NORMAL"}, headers=_h(s, "admin")), 200)
+        assert_status(requests.get(f"{_admin(base_url)}/v1/users/export", headers=_h(s, "admin")), 200)
+    finally:
+        _sql("RENAME TABLE tbl_admin_audit_log_763_bak TO tbl_admin_audit_log")
 
 
 # ===== 9. SUPER_ADMIN 예외: v1 공연 생성 = v2 =====
@@ -283,6 +318,9 @@ def test_17_super_admin_v1_create_event_like_v2(base_url, s):
     assert_status(requests.post(f"{base_url}/v1/events", json=body, headers=_h(s, "super")), 200)
     resp = requests.post(f"{base_url}/v1/events", json=body, headers=_h(s, "user"))
     assert 400 <= resp.status_code < 500, resp.text
+    # 없는 호스트면 SUPER_ADMIN 이어도 404 (존재 확인은 예외 없음)
+    resp = requests.post(f"{base_url}/v1/events", json={**body, "hostId": 99999999}, headers=_h(s, "super"))
+    assert resp.status_code == 404, resp.text
 
 
 # ===== 4. 운영 프로필 (두 번째 서버) =====

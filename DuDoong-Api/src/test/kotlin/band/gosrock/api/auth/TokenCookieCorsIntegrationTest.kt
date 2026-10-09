@@ -36,6 +36,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
+import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.ResultActionsDsl
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
@@ -47,6 +49,7 @@ import org.springframework.test.web.servlet.post
  */
 @ApiIntegrateSpringBootTest
 @AutoConfigureMockMvc
+@TestPropertySource(properties = ["auth.origin-check.enforce=true"]) // 차단 모드. report-only(기본값)는 CookieOriginFilterTest
 @DisplayName("#763 토큰·쿠키·CORS·감사")
 class TokenCookieCorsIntegrationTest : V2TicketApiTestSupport() {
 
@@ -57,6 +60,8 @@ class TokenCookieCorsIntegrationTest : V2TicketApiTestSupport() {
     @Autowired private lateinit var jwtTokenProvider: JwtTokenProvider
 
     @Autowired private lateinit var adminAuditLogRepository: AdminAuditLogRepository
+
+    @Autowired private lateinit var jdbcTemplate: JdbcTemplate
 
     private fun ResultActionsDsl.code(): String? = body().at("/code").asText().ifEmpty { null }
 
@@ -82,6 +87,28 @@ class TokenCookieCorsIntegrationTest : V2TicketApiTestSupport() {
 
             mockMvc.post("/api/v1/auth/token/refresh") { cookie(Cookie("refreshToken", byQuery.at("/refreshToken").asText())) }
                 .andExpect { status { isOk() } }
+        }
+
+        @Test
+        fun `쿼리 방식 호환 - form·text plain Content-Type 에 빈 본문이어도 415 가 나지 않는다`() {
+            val first = tokenGenerateHelper.execute(newUser())
+            val byForm = mockMvc.post("/api/v1/auth/token/refresh") {
+                contentType = MediaType.APPLICATION_FORM_URLENCODED
+                param("token", first.refreshToken)
+            }.andExpect { status { isOk() } }.data()
+            mockMvc.post("/api/v1/auth/token/refresh?token=${byForm.at("/refreshToken").asText()}") { contentType = MediaType.TEXT_PLAIN }
+                .andExpect { status { isOk() } }
+
+            val u = newUser()
+            doReturn(u.oauthInfo).`when`(kakaoOauthHelper).getOauthInfoByIdToken("form-$u")
+            mockMvc.post("/api/v1/auth/oauth/kakao/login?id_token=form-$u") { contentType = MediaType.APPLICATION_FORM_URLENCODED }
+                .andExpect { status { isOk() } }
+        }
+
+        @Test
+        fun `깨진 JSON 본문은 400`() {
+            mockMvc.post("/api/v1/auth/token/refresh") { contentType = MediaType.APPLICATION_JSON; content = "{not json" }
+                .andExpect { status { isBadRequest() } }
         }
 
         @Test
@@ -200,6 +227,18 @@ class TokenCookieCorsIntegrationTest : V2TicketApiTestSupport() {
         }
 
         @Test
+        fun `쿠키와 다른 사용자의 Bearer 헤더가 함께 오면 헤더 사용자로 인증한다 (면제 토큰 = 인증 토큰)`() {
+            val cookieUser = newUser("쿠키")
+            val headerUser = newUser("헤더")
+            mockMvc.get("/api/v1/users/me") {
+                cookie(Cookie("accessToken", jwtTokenProvider.generateAccessToken(cookieUser.id!!)))
+                header("Authorization", "Bearer ${jwtTokenProvider.generateAccessToken(headerUser.id!!)}")
+            }.andExpect { status { isOk() } }.data().let { assertEquals(headerUser.id, it.at("/userId").asLong(), "$it") }
+            // 헤더가 Bearer 가 아니면 쿠키로 인증하고 출처 검사 대상
+            createHostByCookie(cookieUser).andExpect { status { isForbidden() } }
+        }
+
+        @Test
         fun `쿠키로 refresh·logout 은 Origin 없이도 된다 (SSR)`() {
             val tokens = tokenGenerateHelper.execute(newUser())
             mockMvc.post("/api/v1/auth/token/refresh") {
@@ -257,6 +296,46 @@ class TokenCookieCorsIntegrationTest : V2TicketApiTestSupport() {
         }
 
         @Test
+        fun `감사 테이블이 없어도 어드민 요청은 성공하고 응답(호스트 상세·멤버)도 정상이다`() {
+            val admin = newAdmin()
+            val team = Team()
+            jdbcTemplate.execute("ALTER TABLE tbl_admin_audit_log RENAME TO tbl_admin_audit_log_763_bak")
+            try {
+                val body = mockMvc.patch("/internal-api/v1/hosts/${team.hostId}/partner") {
+                    with(user(admin.id.toString()).roles("ADMIN"))
+                    contentType = MediaType.APPLICATION_JSON
+                    content = json(mapOf("partner" to true))
+                }.andExpect { status { isOk() } }.data()
+                assertEquals(team.hostId, body.at("/id").asLong(), "$body")
+                assertEquals(team.master.id, body.at("/masterUserId").asLong(), "$body")
+                assertEquals(3, body.at("/memberCount").asInt(), "멤버(지연 로딩)까지 직렬화: $body")
+                assertTrue(body.at("/partner").asBoolean(), "$body")
+                mockMvc.get("/internal-api/v1/users/export") { with(user(admin.id.toString()).roles("ADMIN")) }
+                    .andExpect { status { isOk() } }
+            } finally {
+                jdbcTemplate.execute("ALTER TABLE tbl_admin_audit_log_763_bak RENAME TO tbl_admin_audit_log")
+            }
+            assertEquals(emptyList<AdminAuditLog>(), logsOf(admin))
+        }
+
+        @Test
+        fun `개인정보 최소화 - 허용 키만 값, 이름·검색어는 길이만, 사용자 스냅샷에 이름 없음`() {
+            val admin = newAdmin()
+            val target = newUser("대상자")
+            mockMvc.patch("/internal-api/v1/users/${target.id}/name") {
+                with(user(admin.id.toString()).roles("ADMIN"))
+                contentType = MediaType.APPLICATION_JSON
+                content = json(mapOf("name" to "새이름"))
+            }.andExpect { status { isOk() } }
+            setStatus(admin, target, "SUSPENDED").andExpect { status { isOk() } }
+
+            val (rename, status) = logsOf(admin)
+            assertEquals("{\"name\":\"***(len=3)\"}", rename.requestDetail)
+            assertTrue(!rename.beforeValue!!.contains("대상자") && !rename.afterValue!!.contains("새이름"), "${rename.beforeValue} ${rename.afterValue}")
+            assertEquals("{\"status\":\"SUSPENDED\"}", status.requestDetail)
+        }
+
+        @Test
         fun `엑셀 반출은 필터(요청 파라미터)와 함께 남고 일반 조회는 남지 않는다`() {
             val admin = newAdmin()
             mockMvc.get("/internal-api/v1/users/export") {
@@ -267,7 +346,7 @@ class TokenCookieCorsIntegrationTest : V2TicketApiTestSupport() {
 
             val log = logsOf(admin).single()
             assertEquals("AdminUserController.exportUsers", log.action)
-            assertEquals("{\"keyword\":[\"없는사람\"]}", log.requestDetail)
+            assertEquals("{\"keyword\":\"***(len=4)\"}", log.requestDetail)
         }
     }
 
@@ -319,6 +398,15 @@ class TokenCookieCorsIntegrationTest : V2TicketApiTestSupport() {
             mockMvc.get("/api/v1/events/${team.eventId}") { with(auth(team.guest)) }.andExpect { status { isOk() } }
             assertEquals(listOf("ReadEventDetailUseCase.execute|EVENT:${team.eventId}"), bypassArgs(admin.id!!))
             assertEquals(emptyList<String>(), bypassArgs(team.guest.id!!))
+        }
+
+        @Test
+        fun `없는 호스트·공연이면 SUPER_ADMIN 이어도 404 (존재 확인은 예외 없음), 감사 로그도 없음`() {
+            val admin = superAdmin()
+            v1CreateEvent(admin, 99_999_999L).andExpect { status { isNotFound() } }
+            mockMvc.get("/api/v2/events/99999999/manage") { with(auth(admin)) }.andExpect { status { isNotFound() } }
+            mockMvc.get("/api/v2/hosts/99999999/members") { with(auth(admin)) }.andExpect { status { isNotFound() } }
+            assertEquals(emptyList<String>(), bypassArgs(admin.id!!))
         }
 
         @Test

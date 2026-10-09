@@ -1,5 +1,6 @@
 package band.gosrock.api.admin.audit
 
+import band.gosrock.api.config.security.SecurityUtils
 import band.gosrock.common.annotation.CurrentUserId
 import band.gosrock.common.exception.DuDoongCodeException
 import band.gosrock.domain.domains.audit.domain.AdminAuditLog
@@ -26,7 +27,8 @@ import org.springframework.web.servlet.HandlerMapping
  * 대상: GET 이 아닌 요청(상태 변경)과 `export` 로 시작하는 메서드(엑셀 반출). 요청마다 `tbl_admin_audit_log` 1행 +
  * 구조화 로그 1줄(`[AUDIT] ADMIN …`, 로거 `AUDIT.AdminAudit`, 변경 전후 값은 넣지 않는다)을 남긴다.
  * 변경 전후 값은 경로 변수로 대상을 정해 [AdminAuditSnapshotQuery] 로 읽는다 (주문 > 티켓 > 댓글 > 호스트 멤버 > 호스트 > 공연 > 유저 순).
- * 기록 저장이 실패해도 요청 처리 결과는 바꾸지 않는다.
+ * 기록 저장이 실패해도(테이블 없음 포함) 요청 처리 결과는 바꾸지 않는다 — 오류 로그만 남긴다.
+ * 보관 기간 1년 (삭제 배치는 별도 작업).
  */
 @Aspect
 @Component
@@ -61,23 +63,37 @@ class AdminAuditAspect(
     private fun isAudited(httpMethod: String, methodName: String): Boolean =
         httpMethod != "GET" || methodName.startsWith(EXPORT_PREFIX)
 
+    /** @CurrentUserId 인자, 없으면 SecurityContext 의 사용자 */
     private fun actorOf(method: Method, args: Array<Any?>): Long =
         method.parameters.indices
             .firstOrNull { method.parameters[it].isAnnotationPresent(CurrentUserId::class.java) }
-            ?.let { args[it] as? Long } ?: UNKNOWN_ACTOR
+            ?.let { args[it] as? Long }
+            ?: runCatching { SecurityUtils.getCurrentUserId() }.getOrDefault(UNKNOWN_ACTOR)
 
     @Suppress("UNCHECKED_CAST")
     private fun pathVariables(request: HttpServletRequest): Map<String, String> =
         (request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE) as? Map<String, String>).orEmpty()
 
-    /** 본문(@RequestBody) JSON, 없으면 요청 파라미터(엑셀 필터) JSON */
+    /**
+     * 본문(@RequestBody), 없으면 요청 파라미터(엑셀 필터)를 JSON 으로. 개인정보를 남기지 않도록
+     * [DETAIL_ALLOWED_KEYS](id·상태·역할·수량·날짜 등)만 값을 남기고 나머지(이름·연락처·사유·검색어·소개 등)는 `***(len=N)` 로 길이만 남긴다
+     */
     private fun requestDetail(method: Method, args: Array<Any?>, request: HttpServletRequest): String? {
         val body = method.parameters.indices
             .firstOrNull { method.parameters[it].isAnnotationPresent(RequestBody::class.java) }
             ?.let { args[it] }
-        if (body != null) return toJson(body)
-        return request.parameterMap.takeIf { it.isNotEmpty() }?.let(::toJson)
+        val fields: Map<String, Any?> = if (body != null) {
+            runCatching { objectMapper.convertValue(body, Map::class.java) }.getOrNull()
+                ?.entries?.associate { (k, v) -> k.toString() to v } ?: return null
+        } else {
+            request.parameterMap.mapValues { (_, v) -> if (v.size == 1) v[0] else v.toList() }
+        }
+        if (fields.isEmpty()) return null
+        return toJson(fields.mapValues { (key, value) -> maskUnlessAllowed(key, value) })
     }
+
+    private fun maskUnlessAllowed(key: String, value: Any?): Any? =
+        if (value == null || key in DETAIL_ALLOWED_KEYS) value else "***(len=${value.toString().length})"
 
     private fun snapshot(target: Map<String, String>): String? = try {
         val values = target["orderUuid"]?.let { snapshotQuery.order(it) }
@@ -147,6 +163,12 @@ class AdminAuditAspect(
     companion object {
         private const val EXPORT_PREFIX = "export"
         private const val UNKNOWN_ACTOR = 0L
+
+        /** request_detail 에 값을 그대로 남기는 키 (개인정보가 아닌 id·상태·역할·수량·날짜). 그 밖의 키는 길이만 */
+        val DETAIL_ALLOWED_KEYS = setOf(
+            "status", "role", "refundStatus", "partner", "userId", "newMasterUserId", "eventId",
+            "delta", "quantity", "purchaseLimit", "price", "runTime", "startAt", "startDate", "endDate", "jobName",
+        )
         private val auditLog = LoggerFactory.getLogger("AUDIT.AdminAudit")
     }
 }

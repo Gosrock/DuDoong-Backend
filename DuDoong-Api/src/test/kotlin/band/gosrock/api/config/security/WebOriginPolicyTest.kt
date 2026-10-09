@@ -29,6 +29,8 @@ class WebOriginPolicyTest {
         assertTrue("https://staging.dudoong.com" in origins)
         assertTrue("http://localhost:3000" in origins && "http://localhost:5173" in origins)
         assertFalse("https://dudoong.com" in origins)
+        // 스테이징 내부 어드민은 staging.dudoong.com/internal-admin/ 경로만 쓴다 (쿠키 호스트 전용)
+        assertFalse("https://staging-internal-admin.dudoong.com" in origins)
     }
 
     @Test

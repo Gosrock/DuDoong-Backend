@@ -46,13 +46,15 @@ class CookieHelper(
         request.cookies?.any { it.name == getAccessTokenName() } == true
 
     /**
-     * 이름이 같은 쿠키가 여럿이면 이 서버가 서명한 것을 쓴다 (#763).
-     * 스테이징(호스트 전용 쿠키)에는 운영의 .dudoong.com 쿠키가 같은 이름으로 함께 온다. 없으면 첫 번째(기존 동작)
+     * 이름이 같은 쿠키가 여럿이면 (#763) 이 서버가 서명했고 만료 전 → 이 서버가 서명함(만료) → 첫 번째(기존 동작) 순으로 고른다.
+     * 스테이징(호스트 전용 쿠키)에는 운영의 .dudoong.com 쿠키가 같은 이름으로 함께 온다
      */
     private fun getTokenCookie(request: HttpServletRequest, name: String): String? {
         val values = request.cookies?.filter { it.name == name }?.map { it.value }.orEmpty()
         if (values.size <= 1) return values.firstOrNull()
-        return values.firstOrNull { jwtTokenProvider.isSignedByThisServer(it) } ?: values.first()
+        return values.firstOrNull { jwtTokenProvider.isValidSignedToken(it) }
+            ?: values.firstOrNull { jwtTokenProvider.isSignedByThisServer(it) }
+            ?: values.first()
     }
 
     fun getTokenCookies(tokenAndUserResponse: TokenAndUserResponse): HttpHeaders {
