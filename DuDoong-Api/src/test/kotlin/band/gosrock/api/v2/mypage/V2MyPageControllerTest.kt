@@ -165,6 +165,15 @@ class V2MyPageControllerTest : V2OperationTestSupport() {
         }
 
         @Test
+        fun `사용자 id 는 토큰에서만 — query userId 를 보내도 무시 (Swagger 에서 숨긴 @CurrentUserId, #752)`() {
+            val user = newUser("나")
+            val other = newUser("남")
+            val data = mockMvc.get("/api/v2/me") { param("userId", other.id.toString()); with(auth(user)) }.andExpect { status { isOk() } }.data()
+            assertEquals(user.id, data.at("/userId").asLong())
+            mockMvc.get("/api/v2/me") { param("userId", other.id.toString()) }.andExpect { status { isUnauthorized() } }
+        }
+
+        @Test
         fun `카카오 가입 이미지는 카카오 url 그대로 (v1 과 같음)`() {
             val user = newUser()
             user.profile!!.profileImage = band.gosrock.domain.common.vo.ImageVo.valueOf("http://k.kakaocdn.net/img.jpg")

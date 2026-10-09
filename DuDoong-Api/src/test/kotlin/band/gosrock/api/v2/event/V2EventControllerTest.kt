@@ -555,6 +555,13 @@ class V2EventControllerTest {
                 mapOf("contacts" to listOf(null)),
                 mapOf("tagIds" to listOf(null)),
             ).forEach { body -> patchBasic(team.master, eventId, body).andExpect { status { isBadRequest() } } }
+            // 요청 검증을 지나 도메인에서 걸리는 문의처 형식 오류는 Event_400_20 (#752): null 원소, 요청 검증(Java trim)은 통과하지만 trim 하면 빈 값(전각 공백)
+            listOf(listOf(null), listOf(mapOf("type" to "ETC", "value" to "\u3000"))).forEach { contacts ->
+                patchBasic(team.master, eventId, mapOf("contacts" to contacts)).andExpect {
+                    status { isBadRequest() }
+                    jsonPath("$.code") { value("Event_400_20") }
+                }
+            }
 
             // 실패한 요청은 아무것도 바꾸지 않는다 (트랜잭션 롤백)
             val event = eventRepository.findById(eventId).get()

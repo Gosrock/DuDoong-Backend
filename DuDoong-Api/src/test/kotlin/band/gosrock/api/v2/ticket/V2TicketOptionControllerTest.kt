@@ -82,6 +82,64 @@ class V2TicketOptionControllerTest : V2TicketApiTestSupport() {
     }
 
     @Nested
+    @DisplayName("옵션 설명 50자 (#752)")
+    inner class DescriptionLength {
+
+        private fun v1Option(team: Team, description: String): Long =
+            mockMvc.post("/api/v1/events/${team.eventId}/ticketOptions") {
+                with(auth(team.manager))
+                contentType = MediaType.APPLICATION_JSON
+                content = json(mapOf("type" to "Y/N", "name" to "v1옵션", "description" to description, "additionalPrice" to 0))
+            }.andExpect { status { isOk() } }.data().at("/optionGroupId").asLong()
+
+        @Test
+        fun `생성(O-2)은 50자까지, 51자는 400`() {
+            val team = Team()
+            fun body(description: String) = mapOf("name" to "옵션", "description" to description, "type" to "YES_NO")
+            postOption(team.manager, team.eventId, body("가".repeat(50))).andExpect {
+                status { isOk() }
+                jsonPath("$.data.description") { value("가".repeat(50)) }
+            }
+            postOption(team.manager, team.eventId, body("가".repeat(51))).andExpect { status { isBadRequest() } }
+            options(team.guest, team.eventId).andExpect { jsonPath("$.data.length()") { value(1) } }
+        }
+
+        @Test
+        fun `수정(O-3)은 바뀐 설명만 50자 검증 - 51자 Option_Group_400_6, 50자 통과`() {
+            val team = Team()
+            val option = createOption(team.manager, team.eventId)
+            patchOption(team.manager, team.eventId, option, mapOf("description" to "나".repeat(51))).andExpect {
+                status { isBadRequest() }
+                jsonPath("$.code") { value("Option_Group_400_6") }
+            }
+            patchOption(team.manager, team.eventId, option, mapOf("description" to "나".repeat(50))).andExpect {
+                status { isOk() }
+                jsonPath("$.data.description") { value("나".repeat(50)) }
+            }
+            // 컬럼 길이(255)를 넘으면 요청 검증에서 400
+            patchOption(team.manager, team.eventId, option, mapOf("description" to "나".repeat(256))).andExpect { status { isBadRequest() } }
+        }
+
+        @Test
+        fun `v1 에서 만든 50자 넘는 설명 - v1 은 그대로 허용, v2 수정은 설명을 그대로 보내면 통과하고 바꾸면 400`() {
+            val team = Team()
+            val long = "다".repeat(60)
+            val option = v1Option(team, long)
+            // 폼 전체를 다시 보내는 수정 화면: 설명은 그대로(앞뒤 공백 무시), 이름만 바꿈
+            patchOption(team.manager, team.eventId, option, mapOf("name" to "새 이름", "description" to " $long ")).andExpect {
+                status { isOk() }
+                jsonPath("$.data.name") { value("새 이름") }
+                jsonPath("$.data.description") { value(long) }
+            }
+            patchOption(team.manager, team.eventId, option, mapOf("description" to long + "라")).andExpect {
+                status { isBadRequest() }
+                jsonPath("$.code") { value("Option_Group_400_6") }
+            }
+            options(team.guest, team.eventId).andExpect { jsonPath("$.data[0].description") { value(long) } }
+        }
+    }
+
+    @Nested
     @DisplayName("O-5 티켓 옵션 전체 지정")
     inner class Apply {
 

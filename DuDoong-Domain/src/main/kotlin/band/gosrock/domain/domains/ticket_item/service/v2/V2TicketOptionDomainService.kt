@@ -17,6 +17,7 @@ import band.gosrock.domain.domains.ticket_item.domain.TicketPayType
 import band.gosrock.domain.domains.ticket_item.exception.ForbiddenLockedOptionChangeException
 import band.gosrock.domain.domains.ticket_item.exception.ForbiddenOptionGroupDeleteException
 import band.gosrock.domain.domains.ticket_item.exception.ForbiddenOptionPriceException
+import band.gosrock.domain.domains.ticket_item.exception.InvalidOptionDescriptionException
 import band.gosrock.domain.domains.ticket_item.exception.InvalidOptionPriceException
 import band.gosrock.domain.domains.ticket_item.exception.OptionGroupNotFoundException
 import band.gosrock.domain.domains.ticket_item.exception.UnsupportedV2OptionTypeException
@@ -75,6 +76,7 @@ class V2TicketOptionDomainService(
     /** 생성 (저장 전). 주관식은 추가 금액 없음, 네/아니오는 0 이상 (없으면 0) */
     fun newOptionGroup(event: Event, name: String, description: String, type: OptionGroupType, yesAdditionalPrice: Long?): OptionGroup {
         v2EventDomainService.validateEditable(event)
+        if (description.trim().length > DESCRIPTION_MAX_LENGTH) throw InvalidOptionDescriptionException.EXCEPTION
         val price = validatePrice(type, yesAdditionalPrice)
         return OptionGroup(
             eventId = event.id,
@@ -92,7 +94,8 @@ class V2TicketOptionDomainService(
     /**
      * 부분 수정 (null 은 변경 안 함). 응답 형식은 바꿀 수 없다.
      * 잠긴 옵션(판매된 티켓에 붙음)은 이름·설명만, 추가 금액을 다른 값으로 바꾸면 400 (DEC-012).
-     * 무료티켓에 붙은 옵션은 추가 금액을 0 보다 크게 할 수 없다 (v1 옵션 적용 규칙과 같음)
+     * 무료티켓에 붙은 옵션은 추가 금액을 0 보다 크게 할 수 없다 (v1 옵션 적용 규칙과 같음).
+     * 설명 길이([DESCRIPTION_MAX_LENGTH])는 값이 바뀔 때만 검증한다 — v1 이 길이 제한 없이 만든 설명을 그대로 다시 보내도 통과 (#752, 티켓 이름·설명과 같은 방식)
      */
     fun applyUpdate(
         optionGroup: OptionGroup,
@@ -113,7 +116,11 @@ class V2TicketOptionDomainService(
             }
         }
         if (name != null) optionGroup.name = name.trim()
-        if (description != null) optionGroup.description = description.trim()
+        if (description != null) {
+            val trimmed = description.trim()
+            if (trimmed != optionGroup.description?.trim() && trimmed.length > DESCRIPTION_MAX_LENGTH) throw InvalidOptionDescriptionException.EXCEPTION
+            optionGroup.description = trimmed
+        }
     }
 
     /** 락 대기 동안 바깥 트랜잭션을 잡지 않는다 (판정·변경은 락 안의 새 트랜잭션) */
@@ -204,6 +211,10 @@ class V2TicketOptionDomainService(
         private const val MAX_LOCK_ATTEMPTS = 3
 
         const val NAME_MAX_LENGTH = 20
-        const val DESCRIPTION_MAX_LENGTH = 255
+        /** 옵션 설명 (Figma 50자, 사용자 결정 2026-10-09 #752). prod 기존 설명은 모두 50자 이하 (2026-10-09 읽기 전용 확인) */
+        const val DESCRIPTION_MAX_LENGTH = 50
+
+        /** 저장 컬럼 길이. O-3 요청은 값이 바뀔 때만 [DESCRIPTION_MAX_LENGTH] 를 보므로 DTO 상한은 이 값 */
+        const val DESCRIPTION_COLUMN_LENGTH = 255
     }
 }

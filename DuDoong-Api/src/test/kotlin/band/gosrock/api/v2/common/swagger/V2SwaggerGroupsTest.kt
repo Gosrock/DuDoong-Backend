@@ -1,6 +1,7 @@
 package band.gosrock.api.v2.common.swagger
 
 import band.gosrock.api.supports.ApiIntegrateSpringBootTest
+import band.gosrock.common.annotation.CurrentUserId
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
+import org.springframework.core.DefaultParameterNameDiscoverer
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
@@ -172,6 +174,25 @@ class V2SwaggerGroupsTest {
             assertEquals(tags.sorted(), tags, group)
             assertTrue(ops(group).flatMap { it.tags }.toSet().all { it in tags }, "$group 의 쓰인 태그가 tags 배열에 모두 있음")
         }
+    }
+
+    @Test
+    fun `@CurrentUserId 는 어느 그룹에도 요청 파라미터로 보이지 않는다 - 토큰에서 채우는 값 (#752)`() {
+        // 컨트롤러의 @CurrentUserId 인자 이름 (userId · currentUserId · adminUserId)
+        val tokenParams = handlerMapping.handlerMethods.values.flatMap { handler ->
+            handler.methodParameters.filter { it.hasParameterAnnotation(CurrentUserId::class.java) }
+                .map { it.also { p -> p.initParameterNameDiscovery(DefaultParameterNameDiscoverer()) }.parameterName }
+        }.toSet()
+        assertEquals(setOf("userId", "currentUserId", "adminUserId"), tokenParams)
+        for (group in listOf(V2SwaggerGroups.ALL, V2ApiArea.HOSTING.group, V2ApiArea.USER.group, "v1", "internal")) {
+            val params = docs(group)["paths"].flatMap { item -> item.flatMap { op -> op["parameters"]?.toList().orEmpty() } }
+            assertTrue(params.isNotEmpty(), "$group 에 파라미터가 하나도 없음 — 문서 생성 확인")
+            val leaked = params.filter { it["in"]?.asText() != "path" && it["name"]?.asText() in tokenParams }
+            assertEquals(emptyList<JsonNode>(), leaked, "$group 에 @CurrentUserId 가 파라미터로 보임")
+        }
+        // 이름이 같은 진짜 경로 변수는 그대로 (H-10 멤버 역할 변경 `{userId}`)
+        val roleChange = docs(V2SwaggerGroups.ALL)["paths"]["/api/v2/hosts/{hostId}/members/{userId}/role"]["patch"]["parameters"]
+        assertTrue(roleChange.any { it["name"].asText() == "userId" && it["in"].asText() == "path" && it["required"].asBoolean() })
     }
 
     companion object {

@@ -18,7 +18,7 @@ data class V2CreateTicketOptionRequest(
     @field:Size(max = V2TicketOptionDomainService.NAME_MAX_LENGTH)
     val name: String?,
 
-    @field:Schema(description = "옵션 설명", example = "공연 후 뒷풀이에 참석하나요?")
+    @field:Schema(description = "옵션 설명 (1~${V2TicketOptionDomainService.DESCRIPTION_MAX_LENGTH}자)", example = "공연 후 뒷풀이에 참석하나요?")
     @field:NotBlank
     @field:Size(max = V2TicketOptionDomainService.DESCRIPTION_MAX_LENGTH)
     val description: String?,
@@ -40,8 +40,11 @@ data class V2UpdateTicketOptionRequest(
     @field:Pattern(regexp = ".*\\S.*", message = "공백만으로는 이름을 지을 수 없습니다")
     val name: String? = null,
 
-    @field:Schema(description = "옵션 설명")
-    @field:Size(min = 1, max = V2TicketOptionDomainService.DESCRIPTION_MAX_LENGTH)
+    @field:Schema(
+        description = "옵션 설명 (1~${V2TicketOptionDomainService.DESCRIPTION_MAX_LENGTH}자). 길이는 값이 바뀔 때만 검증 — 기존 설명(v1 에서 만든 긴 설명 포함)을 그대로 다시 보내면 통과, " +
+            "바꾼 설명이 길면 Option_Group_400_6",
+    )
+    @field:Size(min = 1, max = V2TicketOptionDomainService.DESCRIPTION_COLUMN_LENGTH)
     @field:Pattern(regexp = "(?s).*\\S.*", message = "설명을 입력해주세요")
     val description: String? = null,
 
