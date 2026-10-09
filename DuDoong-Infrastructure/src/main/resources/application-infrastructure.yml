@@ -6,6 +6,8 @@ aws:
     bucket: ${AWS_S3_BUCKET:bucket}
     private-bucket : ${AWS_S3_BUCKET_PRIVATE:bucket-private}
     base-url: ${AWS_S3_BASE_URL:base-url}
+  staging:
+    instance-id: ${STAGING_INSTANCE_ID:}
 
 spring:
   redis:

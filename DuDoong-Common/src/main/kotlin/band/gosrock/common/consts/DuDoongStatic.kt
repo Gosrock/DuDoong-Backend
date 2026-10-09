@@ -18,7 +18,9 @@ object DuDoongStatic {
     const val UNAUTHORIZED = 401
     const val FORBIDDEN = 403
     const val NOT_FOUND = 404
+    const val CONFLICT = 409
     const val INTERNAL_SERVER = 500
+    const val SERVICE_UNAVAILABLE = 503
 
     const val NO_START_NUMBER = 1000000L
     const val MINIMUM_PAYMENT_WON = 1000L

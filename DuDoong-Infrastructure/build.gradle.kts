@@ -20,6 +20,9 @@ dependencies {
     api("nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect")
     api("software.amazon.awssdk:ses:2.19.29")
 
+    // for staging server control (#753)
+    api("software.amazon.awssdk:ec2:2.19.29")
+
     api("com.googlecode.libphonenumber:libphonenumber:8.13.5")
     api("org.xhtmlrenderer:flying-saucer-pdf:9.1.20")
     api("com.sun.mail:jakarta.mail:2.0.1")
