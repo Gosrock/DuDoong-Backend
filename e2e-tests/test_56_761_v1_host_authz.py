@@ -27,7 +27,7 @@ PLACE = {"name": "롤링홀", "address": "서울 마포구 어울마당로 35", 
 SECTIONS = [{"title": "공연 소개", "content": "<p>#761</p>", "sortOrder": 0}]
 PHONE = "010-7761-4321"
 SLACK = "https://hooks.slack.com/services/e2e-761"
-ACCOUNT = {"bank": "신한은행", "holder": "고스락", "number": "110-761-000000"}
+ACCOUNT = {"bankName": "신한은행", "accountHolder": "고스락", "accountNumber": "110-761-000000"}
 PEOPLE = ["master", "manager", "guest", "outsider", "pending", "target"]
 PRIVATE_MEMBER_FIELDS = ["email", "phoneNumber", "receiveMail", "marketingAgree", "createdAt"]
 
@@ -105,7 +105,7 @@ def _new_event(base_url, s, key, open_event):
     if open_event:
         key_img = get_data(requests.post(_ev(base_url, event_id, "/images"), json={"purpose": "POSTER", "extension": "PNG"}, headers=_h(s, "manager")))["key"]
         assert_status(requests.patch(_ev(base_url, event_id, "/basic"), json={"posterImageKey": key_img, "place": PLACE, "contacts": [{"type": "EMAIL", "value": "a@a.com"}]}, headers=_h(s, "manager")), 200)
-        assert_status(requests.put(_ev(base_url, event_id, "/sections"), json=SECTIONS, headers=_h(s, "manager")), 200)
+        assert_status(requests.put(_ev(base_url, event_id, "/sections"), json={"sections": SECTIONS}, headers=_h(s, "manager")), 200)
         assert_status(requests.post(_ev(base_url, event_id, "/open"), headers=_h(s, "manager")), 200)
     return event_id
 
@@ -248,16 +248,16 @@ def test_09_public_ticket_items(base_url, s):
         _assert_error(requests.get(prep_url, headers=_h(s, who)), 404, "Event_404_1")
     resp = requests.get(prep_url, headers=_h(s, "guest"))
     assert_status(resp, 200)
-    assert ACCOUNT["number"] not in resp.text
+    assert ACCOUNT["accountNumber"] not in resp.text
     # 공개 공연: 비로그인 조회 가능, 계좌 없음
     resp = requests.get(_v1(base_url, f"/events/{s.events['open']}/ticketItems"))
     assert_status(resp, 200)
     items = get_data(resp)["ticketItems"]
     assert [i["ticketItemId"] for i in items] == [s.tickets["open"]]
-    assert items[0]["accountInfo"] is None and ACCOUNT["number"] not in resp.text
+    assert items[0]["accountInfo"] is None and ACCOUNT["accountNumber"] not in resp.text
     # 호스트 관리용 목록에는 계좌가 있다
     admin = get_data(requests.get(_v1(base_url, f"/events/{s.events['open']}/ticketItems/admin"), headers=_h(s, "guest")))
-    assert admin["ticketItems"][0]["accountInfo"]["accountNumber"] == ACCOUNT["number"]
+    assert admin["ticketItems"][0]["accountInfo"]["accountNumber"] == ACCOUNT["accountNumber"]
 
 
 def test_10_option_reads(base_url, s):
