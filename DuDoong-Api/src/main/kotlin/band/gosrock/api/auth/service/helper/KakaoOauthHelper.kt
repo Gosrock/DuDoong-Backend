@@ -28,17 +28,18 @@ class KakaoOauthHelper(
             oauthProperties.getKakaoRedirectUrl()
         )
 
-    fun getKaKaoOauthLink(referer: String): String =
+    /** redirectBase 는 [KakaoRedirectPolicy] 허용 목록의 값. state 는 [OauthStateHelper] 가 발급한 값(base64url) */
+    fun getKaKaoOauthLink(redirectBase: String, state: String): String =
         oauthProperties.getKakaoBaseUrl() + String.format(
             KAKAO_OAUTH_QUERY_STRING,
             oauthProperties.getKakaoClientId(),
-            "$referer/kakao/callback"
-        )
+            "$redirectBase/kakao/callback"
+        ) + "&state=$state"
 
-    fun getOauthToken(code: String, referer: String): KakaoTokenResponse =
+    fun getOauthToken(code: String, redirectBase: String): KakaoTokenResponse =
         kakaoOauthClient.kakaoAuth(
             oauthProperties.getKakaoClientId(),
-            "$referer/kakao/callback",
+            "$redirectBase/kakao/callback",
             code,
             oauthProperties.getKakaoClientSecret()
         )

@@ -32,6 +32,12 @@ enum class GlobalErrorCode(
     @ExplainError("헤더에 올바른 accessToken을 담지않았을 때 발생하는 오류(형식 불일치 등)")
     ACCESS_TOKEN_NOT_EXIST(FORBIDDEN, "AUTH_403_2", "알맞은 accessToken을 넣어주세요."),
 
+    @ExplainError("쿠키로 인증된 상태 변경 요청(POST·PUT·PATCH·DELETE)의 Origin(없으면 Referer)이 허용 출처가 아닐 때 (#763). Authorization 헤더로 인증하면 검사하지 않는다")
+    ORIGIN_NOT_ALLOWED(FORBIDDEN, "AUTH_403_3", "허용되지 않은 출처의 요청입니다."),
+
+    @ExplainError("카카오 로그인 state 가 발급한 값과 다르거나 없을 때 (#763). 로그인을 처음부터 다시 시작하면 된다")
+    OAUTH_STATE_MISMATCH(BAD_REQUEST, "AUTH_400_1", "로그인 요청이 만료되었거나 올바르지 않습니다. 다시 로그인해 주세요."),
+
     @ExplainError("인증 토큰이 잘못됐을 때 발생하는 오류입니다.")
     INVALID_TOKEN(UNAUTHORIZED, "GLOBAL_401_1", "잘못된 토큰입니다. 재 로그인 해주세요"),
 

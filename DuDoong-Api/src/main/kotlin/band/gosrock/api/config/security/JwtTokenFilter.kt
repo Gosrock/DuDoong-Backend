@@ -13,7 +13,6 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
-import org.springframework.web.util.WebUtils
 
 @Component
 class JwtTokenFilter(
@@ -36,26 +35,15 @@ class JwtTokenFilter(
         filterChain.doFilter(request, response)
     }
 
+    /**
+     * 순서: Authorization Bearer 헤더 → (레거시) X-Admin-Token → accessToken 쿠키.
+     * 헤더를 쿠키보다 먼저 본다 (#763): Origin 검사를 면제받는 토큰([CookieOriginFilter])과 실제 인증 토큰이 같아야 한다.
+     * 프론트는 헤더와 쿠키에 같은 사용자의 토큰을 함께 보낸다(헤더 쪽이 같거나 더 최근 값)
+     */
     private fun resolveToken(request: HttpServletRequest): String? {
-        // Admin 전용 헤더 우선
-        val adminToken = request.getHeader(DuDoongStatic.ADMIN_TOKEN_HEADER)
-        if (adminToken != null) {
-            return adminToken
-        }
-        // 쿠키방식 지원
-        val accessTokenCookie = WebUtils.getCookie(request, cookieHelper.getAccessTokenName())
-        if (accessTokenCookie != null) {
-            return accessTokenCookie.value
-        }
-        // 기존 jwt 방식 지원
-        val rawHeader = request.getHeader(DuDoongStatic.AUTH_HEADER) ?: return null
-
-        if (rawHeader.length > DuDoongStatic.BEARER.length &&
-            rawHeader.startsWith(DuDoongStatic.BEARER)
-        ) {
-            return rawHeader.substring(DuDoongStatic.BEARER.length)
-        }
-        return null
+        BearerToken.from(request)?.let { return it }
+        request.getHeader(DuDoongStatic.ADMIN_TOKEN_HEADER)?.let { return it }
+        return cookieHelper.getAccessTokenFromRequest(request)
     }
 
     /** 정상이 아닌 계정이면 null (익명 처리) */

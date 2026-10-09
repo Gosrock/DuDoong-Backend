@@ -7,6 +7,7 @@ import band.gosrock.common.consts.DuDoongStatic.REFRESH_TOKEN
 import band.gosrock.common.consts.DuDoongStatic.TOKEN_ISSUER
 import band.gosrock.common.consts.DuDoongStatic.TOKEN_TYPE
 import band.gosrock.common.dto.AccessTokenInfo
+import band.gosrock.common.exception.DuDoongCodeException
 import band.gosrock.common.exception.ExpiredTokenException
 import band.gosrock.common.exception.InvalidTokenException
 import band.gosrock.common.exception.RefreshTokenExpiredException
@@ -78,6 +79,26 @@ class JwtTokenProvider(
         val refreshTokenExpiresIn = Date(issuedAt.time + jwtProperties.refreshExp * MILLI_TO_SECOND)
         return buildRefreshToken(id, issuedAt, refreshTokenExpiresIn)
     }
+
+    /** 이 서버의 키로 서명했고 만료 전인 토큰인지. 같은 이름 쿠키가 여럿일 때 고르는 데 쓴다 (#763) */
+    fun isValidSignedToken(token: String): Boolean =
+        try {
+            getJws(token)
+            true
+        } catch (e: DuDoongCodeException) {
+            false
+        }
+
+    /** 이 서버의 키로 서명한 토큰인지 (만료는 보지 않는다). 같은 이름 쿠키가 여럿일 때 고르는 데 쓴다 (#763) */
+    fun isSignedByThisServer(token: String): Boolean =
+        try {
+            getJws(token)
+            true
+        } catch (e: ExpiredTokenException) {
+            true
+        } catch (e: InvalidTokenException) {
+            false
+        }
 
     fun isAccessToken(token: String): Boolean =
         getJws(token).payload.get(TOKEN_TYPE) == ACCESS_TOKEN

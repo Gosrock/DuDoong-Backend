@@ -1,5 +1,6 @@
 package band.gosrock.api.v2.event.usecase
 
+import band.gosrock.api.common.aop.hostRole.SuperAdminBypass
 import band.gosrock.api.v2.event.dto.response.V2EventSectionResponse
 import band.gosrock.common.annotation.UseCase
 import band.gosrock.domain.domains.event.adaptor.EventAdaptor
@@ -7,15 +8,13 @@ import band.gosrock.domain.domains.event.domain.Event
 import band.gosrock.domain.domains.event.exception.EventNotFoundException
 import band.gosrock.domain.domains.event.service.v2.V2EventDomainService
 import band.gosrock.domain.domains.host.adaptor.HostAdaptor
-import band.gosrock.domain.domains.user.adaptor.UserAdaptor
-import band.gosrock.domain.domains.user.domain.AccountRole
 import org.springframework.transaction.annotation.Transactional
 
 @UseCase
 class V2ReadEventSectionsUseCase(
     private val eventAdaptor: EventAdaptor,
     private val hostAdaptor: HostAdaptor,
-    private val userAdaptor: UserAdaptor,
+    private val superAdminBypass: SuperAdminBypass,
     private val v2EventDomainService: V2EventDomainService,
 ) {
     /**
@@ -33,7 +32,7 @@ class V2ReadEventSectionsUseCase(
     private fun canViewPreparing(userId: Long, event: Event): Boolean {
         if (userId == ANONYMOUS_USER_ID) return false
         if (hostAdaptor.findById(event.hostId!!).isActiveHostUserId(userId)) return true
-        return userAdaptor.queryUser(userId).accountRole == AccountRole.SUPER_ADMIN
+        return superAdminBypass.bypass(userId, "V2ReadEventSectionsUseCase.execute", "EVENT", event.id)
     }
 
     companion object {

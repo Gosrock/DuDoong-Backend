@@ -145,4 +145,10 @@ class SensitiveBodyMaskingTest {
             secrets.forEach { assertFalse(sent.contains(it), "$it Slack 노출: $sent") }
         }
     }
+
+    @Test
+    fun `카카오 accessToken 본문 값도 가린다 (#763 토큰 본문 전달)`() {
+        val masked = SensitiveBodyMasker.mask("""{"accessToken":"kakao.at.1","refreshToken":"rt.1","idToken":"id.1"}""")!!
+        listOf("kakao.at.1", "rt.1", "id.1").forEach { assertFalse(masked.contains(it), "$it 노출: $masked") }
+    }
 }
