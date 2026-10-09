@@ -12,7 +12,7 @@
 
 ### 기술 스택
 - **언어**: Kotlin 1.9.22 (Java → Kotlin 마이그레이션 완료)
-- **프레임워크**: Spring Boot 3.2.0
+- **프레임워크**: Spring Boot 3.2.12 (내장 Tomcat 은 루트 build.gradle.kts 의 `tomcat.version` 으로 10.1.x 최신 패치 고정, #765)
 - **런타임**: Java 21
 - **빌드**: Gradle 8.5 Kotlin DSL
 - **DB**: MySQL + Spring Data JPA + QueryDSL
