@@ -30,7 +30,8 @@ class HostProfile(
     var coverImage: ImageVo? = null
 
     fun updateProfile(hostProfile: HostProfile) {
-        this.name = hostProfile.name
+        // v1 프로필 수정 요청에는 이름이 없다 → null 이면 기존 이름 유지 (#786: null 로 덮어써 이름이 지워졌다)
+        hostProfile.name?.let { this.name = it }
         this.profileImage = hostProfile.profileImage
         this.introduce = hostProfile.introduce
         this.contactEmail = hostProfile.contactEmail
