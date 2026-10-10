@@ -265,9 +265,13 @@ class V2AuditFollowupTest : V2GiftTestSupport() {
                 val statistics = entityManagerFactory.unwrap(SessionFactory::class.java).statistics
                 statistics.isStatisticsEnabled = true
                 try {
-                    statistics.clear()
-                    v2Get(shop.team.guest, "/events/${shop.eventId}/issued-tickets/export").andExpect { status { isOk() } }
-                    return statistics.prepareStatementCount
+                    // Statistics 는 SessionFactory 전체 공유라 다른 스레드(비동기 알림 등)의 쿼리가 섞일 수 있다.
+                    // 간섭은 수를 늘리기만 하므로 3번 재서 최솟값을 쓴다 (#782)
+                    return (1..3).minOf {
+                        statistics.clear()
+                        v2Get(shop.team.guest, "/events/${shop.eventId}/issued-tickets/export").andExpect { status { isOk() } }
+                        statistics.prepareStatementCount
+                    }
                 } finally {
                     statistics.isStatisticsEnabled = false
                 }
@@ -294,10 +298,11 @@ class V2AuditFollowupTest : V2GiftTestSupport() {
             val statistics = entityManagerFactory.unwrap(SessionFactory::class.java).statistics
             statistics.isStatisticsEnabled = true
             try {
-                fun count(size: Int): Long {
+                // 다른 스레드 쿼리 간섭을 피하려고 3번 재서 최솟값 (#782)
+                fun count(size: Int): Long = (1..3).minOf {
                     statistics.clear()
                     v2Get(shop.team.guest, "/events/${shop.eventId}/issued-tickets", mapOf("size" to size.toString())).andExpect { status { isOk() } }
-                    return statistics.prepareStatementCount
+                    statistics.prepareStatementCount
                 }
                 val one = count(1)
                 val all = count(100)
