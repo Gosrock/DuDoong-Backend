@@ -42,3 +42,7 @@ out/
 
 **/src/main/generated/
 .omc/
+
+# Claude Code 로컬 파일 (#780)
+.claude/worktrees/
+.claude/settings.local.json
