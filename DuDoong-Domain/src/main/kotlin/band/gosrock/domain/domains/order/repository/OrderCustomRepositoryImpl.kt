@@ -90,9 +90,12 @@ class OrderCustomRepositoryImpl(
         return PageableExecutionUtils.getPage(orders, pageable) { countQuery.fetchOne() ?: 0L }
     }
 
+    /** 삭제된 공연(@Where)의 주문은 건너뛴다 — [findMyOrders] 와 같은 event join (#788) */
     override fun findRecentOrder(userId: Long): Optional<Order> {
         val findOrder = queryFactory
             .selectFrom(order)
+            .join(event)
+            .on(order.eventId.eq(event.id))
             .where(
                 eqUserId(userId),
                 order.orderStatus.`in`(

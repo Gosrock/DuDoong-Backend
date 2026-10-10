@@ -145,12 +145,16 @@ class V2MyTicketUseCase(
         }
     }
 
+    /**
+     * 공연이 삭제(@Where)됐으면 T-1 목록과 같이 event = null 로 200 (#788). 공연이 있어야 의미 있는 값은 끈다:
+     * 입장 QR(체크인할 공연이 없음) null, 선물·반환 불가, 선물 만료 판정 없음(목록과 같은 기준)
+     */
     private fun detail(ticket: IssuedTicket, order: Order, userId: Long): V2MyTicketDetailResponse {
         val now = LocalDateTime.now()
-        val event = eventAdaptor.findById(ticket.eventId!!)
+        val event = ticket.eventId?.let { eventAdaptor.findByIdOrNull(it) }
         val latest = giftDomainService.latestGiftsOf(listOf(ticket.id!!))[ticket.id]
         val giftState = giftDomainService.giftStateOf(ticket, order.userId, latest, userId)
-        val expired = giftState == V2GiftState.PENDING && giftDomainService.isEventEnded(event, now)
+        val expired = giftState == V2GiftState.PENDING && event != null && giftDomainService.isEventEnded(event, now)
         val myOrder = order.userId == userId
         val sent = giftState == V2GiftState.SENT
         return V2MyTicketDetailResponse(
@@ -166,12 +170,12 @@ class V2MyTicketUseCase(
             giftState = giftState,
             isGiftExpired = expired,
             isReceived = giftState == V2GiftState.RECEIVED,
-            qrValue = ticket.uuid.takeIf { !sent && giftState != V2GiftState.PENDING && !ticket.issuedTicketStatus.isCanceled() },
-            event = eventResponse(event, now),
+            qrValue = ticket.uuid.takeIf { event != null && !sent && giftState != V2GiftState.PENDING && !ticket.issuedTicketStatus.isCanceled() },
+            event = event?.let { eventResponse(it, now) },
             orderUuid = order.uuid.takeIf { myOrder },
             orderNo = order.orderNo.takeIf { myOrder },
             gift = latest?.let { giftInfo(it, giftState) },
-            canGift = !sent && giftDomainService.giftBlocker(ticket, order, event, latest, userId, now) == null,
+            canGift = !sent && event != null && giftDomainService.giftBlocker(ticket, order, event, latest, userId, now) == null,
             canReturn = giftState == V2GiftState.RECEIVED && giftDomainService.returnBlocker(ticket, latest, event, userId, now) == null,
         )
     }
