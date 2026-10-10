@@ -11,9 +11,12 @@ on:
         required: true
         type: string
       version:
-        description: '이미지 태그 (비우면 ref 에서 추출, 예: 2.2.5)'
+        description: '이미지 태그 (비우면 ref 에서 추출, 예: 2.2.5). 지정하면 ref 의 버전과 같아야 한다'
         required: false
         type: string
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -25,35 +28,49 @@ jobs:
       version: ${{ steps.get_version.outputs.BRANCH_NAME }}
 
     steps:
+      # 빌드할 태그와 이미지 버전을 먼저 확정한다.
+      # 수동 실행 시 ref 는 Api-vX.Y.Z 태그만 허용하고 refs/tags/ 로 고정해 브랜치·포크 PR ref(refs/pull/...) 빌드를 막는다.
+      # version 은 ref 에서 뽑은 버전과 같아야 한다 (다른 버전 이미지 태그 덮어쓰기 방지).
+      - name: Get the version
+        id: get_version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_REF: ${{ inputs.ref }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            TAG="$INPUT_REF"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          TAG_RE='^Api-v([0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?)$'
+          if ! [[ "$TAG" =~ $TAG_RE ]]; then
+            echo "태그 형식이 잘못됨(Api-vX.Y.Z 필요): '$TAG'" >&2
+            exit 1
+          fi
+          RELEASE_VERSION_WITHOUT_V="${BASH_REMATCH[1]}"
+          if [ -n "$INPUT_VERSION" ] && [ "$INPUT_VERSION" != "$RELEASE_VERSION_WITHOUT_V" ]; then
+            echo "version('$INPUT_VERSION')이 ref 의 버전('$RELEASE_VERSION_WITHOUT_V')과 다름" >&2
+            exit 1
+          fi
+          if ! [[ "$RELEASE_VERSION_WITHOUT_V" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "이미지 태그 형식이 잘못됨: '$RELEASE_VERSION_WITHOUT_V'" >&2
+            exit 1
+          fi
+          echo "REF=refs/tags/$TAG" >> "$GITHUB_OUTPUT"
+          echo "VERSION=$RELEASE_VERSION_WITHOUT_V" >> "$GITHUB_OUTPUT"
+
       - name: Check Out The Repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref || github.ref }}
+          ref: ${{ steps.get_version.outputs.REF }}
+          persist-credentials: false
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           java-version: ${{ matrix.java-version }}
           distribution: 'temurin'
-
-      - name: Get the version
-        id: get_version
-        env:
-          INPUT_REF: ${{ inputs.ref }}
-          INPUT_VERSION: ${{ inputs.version }}
-        run: |
-          if [ -n "$INPUT_VERSION" ]; then
-            RELEASE_VERSION_WITHOUT_V="$INPUT_VERSION"
-          elif [ -n "$INPUT_REF" ]; then
-            RELEASE_VERSION_WITHOUT_V="$(cut -d'v' -f2 <<< "${INPUT_REF#refs/*/}")"
-          else
-            RELEASE_VERSION_WITHOUT_V="$(cut -d'v' -f2 <<< "${GITHUB_REF#refs/*/}")"
-          fi
-          if ! [[ "$RELEASE_VERSION_WITHOUT_V" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
-            echo "이미지 태그 형식이 잘못됨: '$RELEASE_VERSION_WITHOUT_V'" >&2
-            exit 1
-          fi
-          echo "VERSION=$RELEASE_VERSION_WITHOUT_V" >> "$GITHUB_OUTPUT"
 
       #테스트 수행용 도커 컴포즈
       - name: Start containers
