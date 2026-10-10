@@ -68,11 +68,14 @@ class V2ReadMyOrdersUseCase(
         )
     }
 
-    /** O-3. 변경 API(O-1·O-4) 응답도 이것으로, 변경 트랜잭션 커밋 뒤에 읽는다 */
+    /**
+     * O-3. 변경 API(O-1·O-4) 응답도 이것으로, 변경 트랜잭션 커밋 뒤에 읽는다.
+     * 공연이 삭제(@Where)됐으면 O-2 목록과 같이 event = null, 취소 불가로 보여 준다 (#788 — 목록엔 있는데 상세만 404 이던 버그)
+     */
     @Transactional(readOnly = true)
     fun detail(userId: Long, orderUuid: String): V2MyOrderDetailResponse {
         val order = v2UserOrderDomainService.queryMyOrder(userId, orderUuid)
-        val event = eventAdaptor.findById(order.eventId!!)
+        val event = order.eventId?.let { eventAdaptor.findByIdOrNull(it) }
         val now = LocalDateTime.now()
         val lines = order.orderLineItems.sortedBy { it.id }
         val firstLine = lines.firstOrNull()
@@ -99,7 +102,7 @@ class V2ReadMyOrdersUseCase(
             approvedAt = order.approvedAt,
             withdrawnAt = order.withDrawAt,
             refundStatusChangedAt = order.refundStatusChangedAt,
-            event = eventResponse(event, now),
+            event = event?.let { eventResponse(it, now) },
             ticket = V2MyOrderTicketResponse(
                 ticketItemId = firstLine?.orderItem?.itemId,
                 name = firstLine?.orderItem?.name ?: order.orderName,
@@ -146,11 +149,11 @@ class V2ReadMyOrdersUseCase(
                     enteredAt = t.enteredAt,
                     optionAnswers = mapper.toOptionAnswers(ticketAnswers.getValue(t.id), names),
                     giftState = giftState,
-                    isGiftExpired = giftState == V2GiftState.PENDING && giftDomainService.isEventEnded(event, now),
+                    isGiftExpired = giftState == V2GiftState.PENDING && event != null && giftDomainService.isEventEnded(event, now),
                     giftId = latestGifts[t.id]?.id?.takeIf { giftState == V2GiftState.PENDING || giftState == V2GiftState.SENT },
                 )
             },
-            canCancel = v2UserOrderDomainService.canCancel(order, event, now),
+            canCancel = event != null && v2UserOrderDomainService.canCancel(order, event, now),
         )
     }
 

@@ -63,6 +63,7 @@ data class V2MyOrderDetailResponse(
     @field:DateFormat
     @field:Schema(type = "string", pattern = "yyyy.MM.dd HH:mm", description = "환불 상태가 바뀐 시각 (요청·완료)")
     val refundStatusChangedAt: LocalDateTime?,
+    @field:Schema(description = "공연. 삭제된 공연이면 null (O-2 목록과 같다, #788)")
     val event: V2MyOrderEventResponse?,
     val ticket: V2MyOrderTicketResponse,
     @field:Schema(description = "주문 시점의 승인형 여부 (#740): true = 호스트 승인 후 발급(두둥티켓·무료 승인형), false = 바로 확정(무료 선착순·PG). 티켓 설정이 나중에 바뀌어도 그대로")

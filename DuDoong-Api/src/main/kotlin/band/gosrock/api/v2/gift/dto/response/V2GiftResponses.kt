@@ -96,9 +96,10 @@ data class V2MyTicketDetailResponse(
     val giftState: V2GiftState,
     val isGiftExpired: Boolean,
     val isReceived: Boolean,
-    @field:Schema(description = "입장 QR 값 (= 티켓 uuid). 선물 대기·취소 티켓은 null. 선물 수락·반환 때 바뀐다 (옛 값 무효)")
+    @field:Schema(description = "입장 QR 값 (= 티켓 uuid). 선물 대기·취소 티켓, 삭제된 공연의 티켓은 null. 선물 수락·반환 때 바뀐다 (옛 값 무효)")
     val qrValue: String?,
-    val event: V2MyOrderEventResponse,
+    @field:Schema(description = "공연. 삭제된 공연이면 null (T-1 목록과 같다, #788)")
+    val event: V2MyOrderEventResponse?,
     @field:Schema(description = "주문 uuid·예매 번호 (내 주문일 때만, 받은 티켓은 null)")
     val orderUuid: String?,
     val orderNo: String?,
